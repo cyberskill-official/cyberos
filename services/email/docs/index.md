@@ -1,7 +1,7 @@
 ---
 title: EMAIL - Capture surface, Genie draft, thread-to-issue bridge
 source: website/docs/modules/email/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 EMAIL is CyberOS's **mail server, shared inbox, and AI-native composition surface** in a single bundled module. The protocol stack is Stalwart (Rust, single binary) speaking JMAP / IMAP / SMTP / ManageSieve to the world. On top sits a Missive-style UX where a team can manage `support@cyberskill.world` together - assignment, internal comments, snooze, tagging. Every inbound body passes through a CaMeL quarantined LLM before any privileged CUO context can see it; the privileged side operates on the sanitised extraction (sender, recipient, subject, gist, action requests, entities), never on raw HTML. Outbound mail is DKIM-signed with per-tenant keys, ARC-stamped on forward, and tagged with BIMI for inbox-list branding. Threading is JMAP-native; search is PGroonga (Vietnamese-aware bigram); calendar is iCal. DSAR export bundles every message a subject participated in.
@@ -102,7 +102,7 @@ A structured decomposition of EMAIL's scope. Every cell traces back to §11.2.3.
 | **5W - Why** | Why own the plane? | Three reasons: (a) prompt-injection defence requires the CaMeL boundary, which a SaaS does not allow; (b) shared-inbox UX needs internal-comments and assignment primitives that Gmail does not provide natively; (c) Vietnamese data-residency obligations under Decree 53. |
 | **1H - How** | How does it work? | Inbound: SMTP -> DKIM / SPF / DMARC verify -> spam triage -> CaMeL quarantined extraction -> thread merge by JMAP `threadId` -> notification fan-out. Outbound: composer -> CaMeL outbound scan (block PII leaks) -> DKIM sign -> MTA-STS / DANE next-hop -> SMTP send. AI: the composer pulls a draft from AI Gateway with a persona-stamped JWT. |
 | **2C - Cost** | Cost budget? | P1: ~$110 / month for the SG-1 single-tenant pilot (Stalwart Fargate + RDS Postgres + S3 + Redis cache). 50-tenant: ~$420 / month. Per-message inbound CaMeL cost ~$0.0004 (gpt-4o-mini-equivalent extraction). |
-| **2C - Constraints** | Constraints? | (a) AGPL-3.0 - Stalwart's licence means our distribution model is service-only. (b) DMARC alignment mandatory - strict policy from P0 exit. (c) No body content into memory by default (FR pending); opt-in per Member. (d) CaMeL on every ingest path - non-negotiable. |
+| **2C - Constraints** | Constraints? | (a) AGPL-3.0 - Stalwart's licence means our distribution model is service-only. (b) DMARC alignment mandatory - strict policy from P0 exit. (c) No body content into memory by default (task pending); opt-in per Member. (d) CaMeL on every ingest path - non-negotiable. |
 | **5M - Materials** | Stack? | Stalwart Mail Server (Rust), axum HTTP API, sqlx, PostgreSQL 16, PGroonga search, Redis 7 cache, S3 + KMS for bodies, CaMeL adapter on top of AI Gateway, OpenTelemetry SDK, React / TypeScript SPA, htmx + Alpine for the inbox shell. |
 | **5M - Methods** | Method choices? | JMAP-native threading (no Reply-To header heuristics). PGroonga over tsvector (Vietnamese bigram quality wins). CaMeL dual-LLM (quarantined no-tools + privileged). Per-tenant DKIM keypair stored in KMS. ARC stamping on forward. Single-binary Stalwart deployment (no separate MTA / MDA / MUA processes). |
 | **5M - Machines** | Deployment? | Fargate task per region for SMTP + JMAP + IMAP listeners. RDS Postgres for metadata. S3 + KMS for bodies and attachments. Redis for hot-thread cache. Per-tenant DKIM keypair in KMS. |
@@ -202,8 +202,8 @@ graph TB
 | `sieve.rs` | services/email/src/sieve.rs | ManageSieve rules engine - per-Member auto-tag, auto-snooze, auto-route. Rules compiled to Stalwart's sieve runtime. |
 | `ical.rs` | services/email/src/ical.rs | iCal parser / generator. Calendar invites surface as native events in CyberOS Calendar. |
 | `draft_ai.rs` | services/email/src/draft_ai.rs | AI-suggested-reply pipeline. Pulls from AI Gateway; persona-stamped; CyberSkill voice; Vietnamese-aware salutation logic. |
-| `memory_summariser.rs` | services/email/src/memory_summariser.rs | Per-thread summary writer. Calls AI Gateway in summarise mode; writes a single memory row per thread with citations back to message IDs. Body bytes never enter memory by default (FR pending). |
-| `dmarc_report.rs` | services/email/src/dmarc_report.rs | Aggregate DMARC RUA / RUF reports per tenant; surfaced to the Trust Center (FR pending). |
+| `memory_summariser.rs` | services/email/src/memory_summariser.rs | Per-thread summary writer. Calls AI Gateway in summarise mode; writes a single memory row per thread with citations back to message IDs. Body bytes never enter memory by default (task pending). |
+| `dmarc_report.rs` | services/email/src/dmarc_report.rs | Aggregate DMARC RUA / RUF reports per tenant; surfaced to the Trust Center (task pending). |
 | `dsar_export.rs` | services/email/src/dsar_export.rs | DSAR bundle: every message a subject participated in, with attachments and decisions. |
 | `migration_import.rs` | services/email/src/migration_import.rs | Gmail / M365 / IMAP import. Walks the source via JMAP / IMAP, replays threads in CaMeL-filtered order, writes an audit row per imported message. |
 | `migrations/` | services/email/migrations/ | sqlx migrations. All identity-touching tables RLS-keyed by `tenant_id`; shared-inbox tables additionally RLS-keyed by `inbox_id`. |
@@ -676,9 +676,9 @@ stateDiagram-v2
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
@@ -686,19 +686,19 @@ NFRs that EMAIL must satisfy. Cross-referenced at [nfr-catalog.html#email](../..
 
 | NFR ID | Concern | Target | Measurement |
 |---|---|---|---|
-| `N(FR pending)` | Inbound message -> thread visible to recipient | p95 <= 5 s | k6 SMTP-to-UI test, nightly |
-| `N(FR pending)` | Outbound message accepted to relay | p95 <= 2 s | k6 send-loop, nightly |
-| `N(FR pending)` | CaMeL extraction latency | p95 <= 1.2 s | AI Gateway histogram |
-| `N(FR pending)` | Thread list page load (50 threads) | p95 <= 350 ms | SPA RUM |
-| `N(FR pending)` | Outbound DMARC pass rate | >= 99% of attempted | weekly DMARC aggregate |
-| `N(FR pending)` | Inbound deliverability (Tier-1 MX accept rate) | >= 99.5% | SMTP 250-OK ratio |
-| `N(FR pending)` | SMTP-receive availability (28-day) | >= 99.9% | OBS SLO monitor |
-| `N(FR pending)` | CaMeL injection-block rate on red-team corpus | >= 99.5% | monthly red-team replay |
-| `N(FR pending)` | Body bytes in memory without opt-in | = 0 | CI gate on memory ingestion paths |
-| `N(FR pending)` | Message durability after acceptance | 0 lost messages under crash | chaos test, memory ledger walk |
-| `N(FR pending)` | AI-draft acceptance rate | >= 40% by Member | SPA telemetry |
-| `N(FR pending)` | Shared-inbox first-response time | p50 <= 30 min business hours | memory assignment events |
-| `N(FR pending)` | VN-residency tenant message storage region | 100% hanoi-1 | S3 key-prefix audit |
+| `N(task pending)` | Inbound message -> thread visible to recipient | p95 <= 5 s | k6 SMTP-to-UI test, nightly |
+| `N(task pending)` | Outbound message accepted to relay | p95 <= 2 s | k6 send-loop, nightly |
+| `N(task pending)` | CaMeL extraction latency | p95 <= 1.2 s | AI Gateway histogram |
+| `N(task pending)` | Thread list page load (50 threads) | p95 <= 350 ms | SPA RUM |
+| `N(task pending)` | Outbound DMARC pass rate | >= 99% of attempted | weekly DMARC aggregate |
+| `N(task pending)` | Inbound deliverability (Tier-1 MX accept rate) | >= 99.5% | SMTP 250-OK ratio |
+| `N(task pending)` | SMTP-receive availability (28-day) | >= 99.9% | OBS SLO monitor |
+| `N(task pending)` | CaMeL injection-block rate on red-team corpus | >= 99.5% | monthly red-team replay |
+| `N(task pending)` | Body bytes in memory without opt-in | = 0 | CI gate on memory ingestion paths |
+| `N(task pending)` | Message durability after acceptance | 0 lost messages under crash | chaos test, memory ledger walk |
+| `N(task pending)` | AI-draft acceptance rate | >= 40% by Member | SPA telemetry |
+| `N(task pending)` | Shared-inbox first-response time | p50 <= 30 min business hours | memory assignment events |
+| `N(task pending)` | VN-residency tenant message storage region | 100% hanoi-1 | S3 key-prefix audit |
 
 ## Dependencies
 
@@ -962,7 +962,7 @@ if address:is "from" "noreply@github.com" {
 
 - **Module strategy** - EMAIL strategy: Stalwart + Missive-style UX + CaMeL.
 - **NFR inheritance** - security NFRs that EMAIL must satisfy.
-- **FR mapping** - formal FRs (pending) with verification methods.
+- **task mapping** - formal tasks (pending) with verification methods.
 - **Stalwart Mail Server** - `github.com/stalwartlabs/mail-server` (AGPL-3.0).
 - **CaMeL paper** - Google DeepMind, May 2025; "Defending LLM agents against prompt injection via privilege separation".
 - **EchoLeak (CVE-2025-32711)** - May 2025 advisory on M365 Copilot prompt-injection exfiltration.
@@ -979,7 +979,7 @@ if address:is "from" "noreply@github.com" {
 - **Cross-module page links:** [crm.html](../crm/index.html), [proj.html](../proj/index.html), [cuo.html](../cuo/index.html), [memory.html](../memory/index.html), [kb.html](../kb/index.html), [ai.html](../ai/index.html), [obs.html](../obs/index.html)
 - **Memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - sanitised CaMeL extractions feed memory; raw bodies never.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - EMAIL at P1 mid (P1).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **Decree 13/2023/NĐ-CP (Vietnam)** - personal data processing protection.
 - **Law 91/2025/QH15 (Vietnam PDPL)** - Personal Data Protection Law.
 - **BIMI v1** - Brand Indicators for Message Identification.

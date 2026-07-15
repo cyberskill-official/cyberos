@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FR-CHAT-001 §4 #4 — drift watcher detects synthetic license commit.
+# TASK-CHAT-001 §4 #4 — drift watcher detects synthetic license commit.
 #
 # Strategy:
 #   - Stage a temporary "mock commits" file with one fake SHA.

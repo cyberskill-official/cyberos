@@ -1,7 +1,7 @@
 ---
 title: KB - RAG corpus, memory companion, auto-runbook source
 source: website/docs/modules/kb/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 KB is CyberOS's **documentation surface and the canonical source for AI-grounded retrieval**. The data model is simple: a `Document` has a slug, a markdown body, YAML frontmatter, a category, a permission tier, and a chain of `Version`s. Every save produces a new immutable version with a chained audit row in memory. The renderer produces sanitised HTML (server-side) for human reading and a clean plaintext stream for memory ingestion. Search is a three-layer stack: FTS5 / PGroonga (Vietnamese bigram tokenisation) for lexical, BGE-M3 embeddings (memory Layer 2) for semantic, and BGE-rerank-v2-m3 cross-encoder for re-ranking. "Ask this page" produces an answer grounded only in the current doc + explicitly linked docs, with span-level citations. Permissions: public, org-only, role-restricted (with share-link tokens for time-bound external access). Dual-language: a doc has a `language` field and an optional `translation_of` link to its counterpart.
@@ -16,7 +16,7 @@ KB is CyberOS's **documentation surface and the canonical source for AI-grounded
 | Search stack | 3 layers: FTS5 + semantic + reranker |
 | AI Q&A | Grounded; span-level citations |
 | Languages | vi + en; translation_of linkage |
-| memory ingest | <= 5 s p95 (FR pending) |
+| memory ingest | <= 5 s p95 (task pending) |
 | Est. LoC | ~6,500 (Rust + TS editor) |
 
 ## The bigger picture - three strategic roles
@@ -84,7 +84,7 @@ Axis| Question| Answer
 **5W - Why**| Why a separate module?| Off-the-shelf wikis do not treat AI-grounded retrieval as a first-class concern; folding KB into memory corrupts the memory ingestion ledger; folding it into PROJ ties it to engagement-scoped lifetimes. Standalone module with tight memory integration is the right shape.
 **1H - How**| How does it work?| Editor writes markdown + frontmatter; on save, server validates, renders HTML (sanitised), computes diff vs prior version, creates a Version row, queues memory ingest. Search: FTS5 / PGroonga produces top-100 lexical, BGE-M3 reranks, BGE-rerank-v2-m3 picks top-10. Q&A: pull top spans, format prompt, call AI Gateway with citation-required system instruction.
 **2C - Cost**| Cost budget?| P1: ~$55 / month single-tenant pilot (Fargate + RDS + Redis + S3). Embedding cost ~$0.0001 / doc-version; reranker ~$0.0005 / query. 50-tenant: ~$220 / month.
-**2C - Constraints**| Constraints?| (a) memory ingest p95 <= 5 s (FR pending). (b) Q&A must cite (FR pending). (c) Permissions enforced at retrieval time - ACL leak via Q&A is a sev-0 bug. (d) Trust Center pages are public-readable only when explicitly opted in (FR pending). (e) Vietnamese-quality search >= 90% recall on a fixed evaluation corpus.
+**2C - Constraints**| Constraints?| (a) memory ingest p95 <= 5 s (task pending). (b) Q&A must cite (task pending). (c) Permissions enforced at retrieval time - ACL leak via Q&A is a sev-0 bug. (d) Trust Center pages are public-readable only when explicitly opted in (task pending). (e) Vietnamese-quality search >= 90% recall on a fixed evaluation corpus.
 **5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16 + PGroonga, pulldown-cmark for markdown, ammonia for HTML sanitisation, Redis 7, S3 + KMS, BGE-M3 embedder + BGE-rerank-v2-m3 reranker (memory-shared), TipTap or CodeMirror for the editor, OpenTelemetry SDK.
 **5M - Methods**| Method choices?| Markdown source of truth (not block-based proprietary). Immutable versioning (no in-place edit). Server-side render (no client-side trust). FTS5 / PGroonga + semantic + reranker triple-layer (not just one). ACL at retrieval time (not at display time).
 **5M - Machines**| Deployment?| Fargate axum service. RDS Postgres Multi-AZ. PGroonga compiled into the RDS image. Redis hot cache. Embedding + reranker GPU node shared with memory.
@@ -127,17 +127,17 @@ Component| Path (planned)| Responsibility
 `version.rs`| services/kb/src/version.rs| Version archiver. Every save -> new immutable row. Retains markdown + rendered HTML hash.
 `renderer.rs`| services/kb/src/renderer.rs| Server-side markdown -> HTML. Uses pulldown-cmark + ammonia (sanitise). No client-side JS execution.
 `diff.rs`| services/kb/src/diff.rs| Unified diff between versions. Powers the version-history UI.
-`memory_ingest.rs`| services/kb/src/memory_ingest.rs| On every version save: strip markdown, chunk at semantic boundaries, write memory Layer 2 rows + embeddings. p95 <= 5 s (FR pending).
+`memory_ingest.rs`| services/kb/src/memory_ingest.rs| On every version save: strip markdown, chunk at semantic boundaries, write memory Layer 2 rows + embeddings. p95 <= 5 s (task pending).
 `search.rs`| services/kb/src/search.rs| Triple-layer search. FTS5 / PGroonga -> top-100; BGE-M3 cosine top-30; BGE-rerank-v2-m3 -> top-10.
 `qa.rs`| services/kb/src/qa.rs| Q&A composer. Pull top spans -> format prompt with citation-required system instruction -> call AI Gateway -> parse cited answer.
 `acl.rs`| services/kb/src/acl.rs| ACL gate at retrieval time. Filters spans before they reach the QA composer.
-`share_link.rs`| services/kb/src/share_link.rs| Time-bound share-link tokens for external readers (FR pending).
+`share_link.rs`| services/kb/src/share_link.rs| Time-bound share-link tokens for external readers (task pending).
 `translation.rs`| services/kb/src/translation.rs| Translation-of linkage. Reader sees doc in JWT-locale; AI grounds across language pairs.
 `backlink.rs`| services/kb/src/backlink.rs| Backlink graph: "what links here" query.
-`promote.rs`| services/kb/src/promote.rs| "Promote to canonical" - elevates a doc to a high-authority memory source (FR pending). Requires CDO approval.
-`notion_import.rs`| services/kb/src/notion_import.rs| Notion-export ZIP import (FR pending). Preserves links + categories.
+`promote.rs`| services/kb/src/promote.rs| "Promote to canonical" - elevates a doc to a high-authority memory source (task pending). Requires CDO approval.
+`notion_import.rs`| services/kb/src/notion_import.rs| Notion-export ZIP import (task pending). Preserves links + categories.
 `export.rs`| services/kb/src/export.rs| Per-page or per-tree markdown export.
-`trust_center.rs`| services/kb/src/trust_center.rs| Public-readable Trust Center pages. Opt-in per tenant (FR pending).
+`trust_center.rs`| services/kb/src/trust_center.rs| Public-readable Trust Center pages. Opt-in per tenant (task pending).
 `migrations/`| services/kb/migrations/| sqlx migrations + PGroonga index DDL. RLS on every table.
 
 ## Data model
@@ -284,7 +284,7 @@ Tool name| Inputs| Outputs| Annotations
 ### Flow 1 - Create / edit a doc with memory re-ingest
 
 ```mermaid
-sequenceDiagram autonumber participant U as Editor SPA participant API as KB GraphQL participant V as Version archiver participant R as Renderer participant BI as memory ingester participant EMB as BGE-M3 embedder participant BR as 🧠 memory Layer 2 participant B as memory audit U->>API: saveDocument(id, markdown, change_summary) API->>API: parse + validate frontmatter API->>R: render markdown → sanitised HTML R-->>API: html · body_text · hash API->>V: INSERT version (immutable) V-->>API: version_id API->>B: kb.version_saved (audit chain) API->>BI: enqueue ingest job API-->>U: 200 Version (≤ 150 ms) BI->>BI: strip markdown · semantic chunking BI->>EMB: embed chunks (batch) EMB-->>BI: vectors BI->>BR: upsert chunks + vectors BI->>B: kb.memory_ingested {chunks, ms} Note over BI,B: total p95 ≤ 5 s ((FR pending))
+sequenceDiagram autonumber participant U as Editor SPA participant API as KB GraphQL participant V as Version archiver participant R as Renderer participant BI as memory ingester participant EMB as BGE-M3 embedder participant BR as 🧠 memory Layer 2 participant B as memory audit U->>API: saveDocument(id, markdown, change_summary) API->>API: parse + validate frontmatter API->>R: render markdown → sanitised HTML R-->>API: html · body_text · hash API->>V: INSERT version (immutable) V-->>API: version_id API->>B: kb.version_saved (audit chain) API->>BI: enqueue ingest job API-->>U: 200 Version (≤ 150 ms) BI->>BI: strip markdown · semantic chunking BI->>EMB: embed chunks (batch) EMB-->>BI: vectors BI->>BR: upsert chunks + vectors BI->>B: kb.memory_ingested {chunks, ms} Note over BI,B: total p95 ≤ 5 s ((task pending))
 ```
 
 ### Flow 2 - Triple-layer search
@@ -335,9 +335,9 @@ Category| Retention| Notes
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
@@ -347,7 +347,7 @@ NFR ID| Concern| Target| Measurement
 ---|---|---|---
 (NFR pending)| Search p95| <= 350 ms| OBS histogram
 (NFR pending)| Q&A p95 (end-to-end)| <= 4 s| OBS + AI Gateway
-(NFR pending)| memory ingest p95| <= 5 s (FR pending)| BI histogram
+(NFR pending)| memory ingest p95| <= 5 s (task pending)| BI histogram
 (NFR pending)| Document render p95 (cache-cold)| <= 250 ms| OBS histogram
 (NFR pending)| Vietnamese-query recall (eval corpus)| >= 90%| quarterly review
 (NFR pending)| Citation accuracy| >= 95%| monthly human review of 50 Q&A pairs
@@ -578,14 +578,14 @@ Translation auto-draft via AI| planned - P2+
 
 ## References
 
-- **FR catalogue** - KB product FRs.
+- **task catalogue** - KB product tasks.
 - **NFR catalogue** - KB NFRs.
 - **Bigger picture (above):** 3 strategic roles + KB-in-platform diagram + 10-row auto-vs-human matrix.
 - **Cross-module page links:** [memory.html](../memory/index.html), [obs.html](../obs/index.html), [cuo.html](../cuo/index.html), [ai.html](../ai/index.html), [proj.html](../proj/index.html), [portal.html](../portal/index.html)
 - **OBS auto-runbook contract:** [OBS §2.6](../obs/index.html#auto-runbook) - KB is the runbook catalogue source for the triage router.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §6](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - KB docs promoted to canonical become high-authority source for Lumi cross-tenant synthesis (sync_class permitting).
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - KB at P1-mid (P1, alongside PROJ).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **BAAI BGE-M3** - multilingual embedding model (used for semantic layer).
 - **BAAI BGE-rerank-v2-m3** - cross-encoder reranker.
 - **PGroonga** - Postgres full-text search with Vietnamese bigram tokenisation.

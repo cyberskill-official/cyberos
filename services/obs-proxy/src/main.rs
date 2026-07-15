@@ -1,4 +1,4 @@
-//! obs-proxy binary - the axum HTTP shell around `handler::handle` (FR-OBS-002).
+//! obs-proxy binary - the axum HTTP shell around `handler::handle` (TASK-OBS-002).
 //!
 //! Every Grafana datasource query lands on the fallback handler, is tenant-scoped by `handle`, and is
 //! forwarded to the matching backend. The verifier is built from the auth JWKS at boot (or a dev HS256

@@ -9,15 +9,15 @@ phase: P0
 slo: "100% of payroll runs are bit-identical on rerun with same inputs + parameter version"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-REW-005, FR-REW-002]
+related_tasks: [TASK-REW-005, TASK-REW-002]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. The monthly payroll compute (`FR-REW-005`) **MUST** produce byte-identical outputs when rerun with the same `{member_set, parameter_version, period, 3p_income_set}` tuple.
+1. The monthly payroll compute (`TASK-REW-005`) **MUST** produce byte-identical outputs when rerun with the same `{member_set, parameter_version, period, 3p_income_set}` tuple.
 2. Floating-point arithmetic **MUST** use `Decimal` (Python) or `rust_decimal` (Rust) with explicit precision (10 digits past the point for VND); no IEEE-754 float anywhere in the compute path.
 3. Iteration order over the member set **MUST** be deterministic (sorted by member_id ascending).
-4. The parameter version (`FR-REW-002`) **MUST** be stamped onto every output row — the same period can have multiple recomputes under different versions and they are NOT merged.
+4. The parameter version (`TASK-REW-002`) **MUST** be stamped onto every output row — the same period can have multiple recomputes under different versions and they are NOT merged.
 5. Compute outputs **MUST** be hashed (SHA-256 of the canonical CSV/JSON) and the hash stored alongside the output — operators can verify integrity at any time.
 
 ## §2 — Why this constraint

@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of messages where subject is author OR recipient are included; memory chain proof attached"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-CHAT-012]
+related_tasks: [TASK-CHAT-012]
 ---
 
 ## §1 — Statement (BCP-14 normative)

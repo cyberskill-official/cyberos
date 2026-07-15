@@ -9,13 +9,13 @@ phase: P0
 slo: "0 memory rows referencing REW comp tables; CI gate enforces per DEC-036"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-REW-010]
+related_tasks: [TASK-REW-010]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
 1. Per DEC-036, comp/payroll data (salary, bonus, 3P income, distributions) **MUST NOT** be written to memory Layer-1 or Layer-2 — REW maintains its own segregated audit log.
-2. The CI gate (`FR-REW-010`) **MUST** scan every memory-write call-site in `services/rew/` and assert none reference comp tables (`rew_*`, `payroll_*`, `bp_ledger`, `p3_distribution`).
+2. The CI gate (`TASK-REW-010`) **MUST** scan every memory-write call-site in `services/rew/` and assert none reference comp tables (`rew_*`, `payroll_*`, `bp_ledger`, `p3_distribution`).
 3. The REW-specific audit log **MUST** be retained separately at `services/rew/audit/` with its own retention policy (7 years per VN tax law).
 4. References to comp data from other modules' memory rows (e.g., HR linking to payroll period) **MUST** use opaque identifiers, never amounts or formulas.
 5. Any CI failure on the memory-exclusion gate **MUST** block merge unconditionally.

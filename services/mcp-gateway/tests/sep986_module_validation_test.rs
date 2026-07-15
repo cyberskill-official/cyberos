@@ -21,7 +21,7 @@ fn module_count_is_23() {
     assert_eq!(
         all_modules().len(),
         23,
-        "approved module count must be 23 per FR-MCP-003"
+        "approved module count must be 23 per TASK-MCP-003"
     );
 }
 

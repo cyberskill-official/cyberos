@@ -1,9 +1,9 @@
-//! FR-MCP-008 elicitation: server-initiated structured prompts for mid-call user input.
+//! TASK-MCP-008 elicitation: server-initiated structured prompts for mid-call user input.
 //!
 //! In the synchronous gateway - no long-running tasks runtime, NATS, KMS, or S3 yet - this realizes the
 //! build-plan slice ("an elicitation request round-trips; a declined elicitation aborts the call
 //! cleanly") as an in-memory store, the dev-real analog of the in-memory
-//! [`ToolRegistry`](crate::federation::registry::ToolRegistry). A destructive `tools/call` (FR-MCP-006)
+//! [`ToolRegistry`](crate::federation::registry::ToolRegistry). A destructive `tools/call` (TASK-MCP-006)
 //! that needs confirmation creates a `confirmation` elicitation here, the caller responds via the REST
 //! endpoints, and the gate consults [`ElicitationStore::is_confirmed`].
 //!
@@ -252,7 +252,7 @@ pub struct Elicitation {
 }
 
 impl Elicitation {
-    /// Whether this is a confirmation the caller approved (`confirmed == true`). The FR-MCP-006 gate
+    /// Whether this is a confirmation the caller approved (`confirmed == true`). The TASK-MCP-006 gate
     /// forwards a held destructive call only when this is true.
     pub fn is_confirmed(&self) -> bool {
         self.status == ElicitationStatus::Responded
@@ -341,7 +341,7 @@ impl ElicitationStore {
         e
     }
 
-    /// Create a `confirmation` elicitation for a destructive action (the FR-MCP-006 hold).
+    /// Create a `confirmation` elicitation for a destructive action (the TASK-MCP-006 hold).
     pub fn create_confirmation(&self, tool_id: &str, prompt: Value) -> Elicitation {
         self.create(tool_id, ElicitationType::Confirmation, prompt, Vec::new())
     }
@@ -351,12 +351,12 @@ impl ElicitationStore {
         self.inner.read().expect("poisoned").get(&id).cloned()
     }
 
-    /// Whether the elicitation is a caller-approved confirmation (used by the FR-MCP-006 gate).
+    /// Whether the elicitation is a caller-approved confirmation (used by the TASK-MCP-006 gate).
     pub fn is_confirmed(&self, id: Uuid) -> bool {
         self.get(id).map(|e| e.is_confirmed()).unwrap_or(false)
     }
 
-    /// The confirmation verdict for the FR-MCP-006 gate: `Some(true)` approved, `Some(false)` declined,
+    /// The confirmation verdict for the TASK-MCP-006 gate: `Some(true)` approved, `Some(false)` declined,
     /// `None` when there is no responded confirmation for that id (unknown, pending, or non-confirmation).
     pub fn confirmation_state(&self, id: Uuid) -> Option<bool> {
         self.get(id).and_then(|e| {

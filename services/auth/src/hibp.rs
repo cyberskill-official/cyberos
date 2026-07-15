@@ -1,4 +1,4 @@
-//! FR-AUTH-107 — Have I Been Pwned breach check (k-anonymity protocol).
+//! TASK-AUTH-107 — Have I Been Pwned breach check (k-anonymity protocol).
 //!
 //! Computes SHA-1(password) → splits into 5-char prefix + 35-char suffix.
 //! Sends the 5-char prefix to <https://api.pwnedpasswords.com/range/{prefix}>.

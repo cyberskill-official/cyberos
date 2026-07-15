@@ -1,4 +1,4 @@
-//! FR-MEMORY-123 §1 #2,#12,#13 — the brain ingest worker: consume FR-MEMORY-121 events -> embed via the
+//! TASK-MEMORY-123 §1 #2,#12,#13 — the brain ingest worker: consume TASK-MEMORY-121 events -> embed via the
 //! ai-gateway -> idempotent UPSERT into `brain_event_embedding` with provenance -> advance the cursor, all
 //! per-tenant.
 //!

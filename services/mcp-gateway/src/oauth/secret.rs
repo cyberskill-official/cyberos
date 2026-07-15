@@ -1,4 +1,4 @@
-//! Opaque-token generation and hashing for FR-MCP-004. Refresh tokens are opaque 256-bit strings
+//! Opaque-token generation and hashing for TASK-MCP-004. Refresh tokens are opaque 256-bit strings
 //! (clause #8), stored only as their SHA-256 hash; never the token itself.
 
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};

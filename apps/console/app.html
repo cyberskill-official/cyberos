@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CyberOS</title>
 <!--
-  FR-APP-001 shell - the auth-gated CyberOS operator console: login, then a dashboard of modules.
+  TASK-APP-001 shell - the auth-gated CyberOS operator console: login, then a dashboard of modules.
 
-  Flow: login (password grant against cyberos-auth, FR-AUTH-004) -> dashboard -> pick a module. The
+  Flow: login (password grant against cyberos-auth, TASK-AUTH-004) -> dashboard -> pick a module. The
   access token is stored client-side and handed to each module. The Chat tile opens the chat client
-  (apps/console/chat.html, FR-APP-007), which auto-connects from the stored token; the chat service
+  (apps/console/chat.html, TASK-APP-007), which auto-connects from the stored token; the chat service
   verifies that token against the auth JWKS. No backend of its own.
 
   Run: serve this folder and open app.html. Auth on :7700, chat on :7720 (started with CHAT_DEV_CORS=1
@@ -144,10 +144,10 @@
   var MODULES = [
     { id: "chat", icon: "💬", name: "Chat", desc: "Channels, messages, and live presence on the CyberOS identity.", live: true, href: "chat.html" },
     { id: "assistant", icon: "✨", name: "Assistant", desc: "Talk to your model through the CyberOS AI gateway.", live: true, href: "index.html", hidden: true },
-    { id: "ai", icon: "🛠", name: "AI Ops", desc: "Provider routing, spend caps, residency (FR-APP-003).", live: true, href: "ai.html", hidden: true },
-    { id: "mcp", icon: "🔌", name: "MCP Registry", desc: "Tools the MCP gateway is serving now (FR-APP-004).", live: true, href: "mcp.html", hidden: true },
-    { id: "memory", icon: "🧾", name: "Memory & Audit", desc: "Browse the tenant's hash-chained audit log (FR-APP-005).", live: true, href: "audit.html", hidden: true },
-    { id: "cuo", icon: "🧠", name: "Workflows & GENIE", desc: "Dream-loop envelope and the FR backlog (FR-APP-006).", live: true, href: "cuo.html", hidden: true }
+    { id: "ai", icon: "🛠", name: "AI Ops", desc: "Provider routing, spend caps, residency (TASK-APP-003).", live: true, href: "ai.html", hidden: true },
+    { id: "mcp", icon: "🔌", name: "MCP Registry", desc: "Tools the MCP gateway is serving now (TASK-APP-004).", live: true, href: "mcp.html", hidden: true },
+    { id: "memory", icon: "🧾", name: "Memory & Audit", desc: "Browse the tenant's hash-chained audit log (TASK-APP-005).", live: true, href: "audit.html", hidden: true },
+    { id: "cuo", icon: "🧠", name: "Workflows & GENIE", desc: "Dream-loop envelope and the task backlog (TASK-APP-006).", live: true, href: "cuo.html", hidden: true }
   ];
 
   function renderDashboard() {

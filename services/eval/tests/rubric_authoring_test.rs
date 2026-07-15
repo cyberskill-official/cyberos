@@ -1,4 +1,4 @@
-//! FR-EVAL-002 - rubric authoring integration tests (§1 #2 #3 #4 #5, §4 #2 #3 #4 #5 #6).
+//! TASK-EVAL-002 - rubric authoring integration tests (§1 #2 #3 #4 #5, §4 #2 #3 #4 #5 #6).
 //!
 //! Mirrors `endpoints_test.rs`: build the real `AppState` + `router`, mint an HS256 CyberOS token (the
 //! test/local verifier), drive the router with `tower::ServiceExt::oneshot`, and assert on the JSON and the

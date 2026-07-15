@@ -12,7 +12,7 @@ This file is NOT a §0.1-precedence override.
   PR that softens this is a spec violation.
 
 - **No custom statuses at slice 1.** Per DEC-210 the 5-state FSM is closed.
-  Adding new statuses without amending FR-PROJ-001 §1 #2 is forbidden.
+  Adding new statuses without amending TASK-PROJ-001 §1 #2 is forbidden.
 
 - **Status transitions go through the FSM.** Any code path that writes
   `issues.status` MUST first call `status_fsm::validate`. The illegal-
@@ -58,4 +58,4 @@ This file is NOT a §0.1-precedence override.
   `DOUBLE PRECISION` with a CHECK constraint capping at 9999.99 — avoids
   adding the `sqlx/bigdecimal` workspace feature for the slice-1 surface.
 - **RLS GUC name:** spec §3 uses `app.tenant_id`. Implementation aligns
-  with FR-AUTH-003 §10.6 amendment using `app.current_tenant_id`.
+  with TASK-AUTH-003 §10.6 amendment using `app.current_tenant_id`.

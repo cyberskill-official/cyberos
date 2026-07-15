@@ -1,4 +1,4 @@
-//! FR-AUTH-109 — stub→full migration state + grace-window enforcer.
+//! TASK-AUTH-109 — stub→full migration state + grace-window enforcer.
 //!
 //! Two surfaces:
 //!   * `MigrationState::load_from_db` — read the singleton row at boot +
@@ -32,7 +32,7 @@ use crate::AppState;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct MigrationState {
-    pub fr_auth_101_shipped_at: DateTime<Utc>,
+    pub task_auth_101_shipped_at: DateTime<Utc>,
     pub grace_window_days: i32,
     pub grace_closes_at: DateTime<Utc>,
     pub extended_by: Option<Uuid>,
@@ -48,14 +48,14 @@ impl MigrationState {
             Option<Uuid>,
             Option<String>,
         )> = sqlx::query_as(
-            "SELECT fr_auth_101_shipped_at, grace_window_days, grace_closes_at,
+            "SELECT task_auth_101_shipped_at, grace_window_days, grace_closes_at,
                         extended_by, extension_reason
                    FROM auth_migration_state WHERE id = 1",
         )
         .fetch_optional(pool)
         .await?;
         Ok(row.map(|(shipped, days, closes, ext_by, reason)| Self {
-            fr_auth_101_shipped_at: shipped,
+            task_auth_101_shipped_at: shipped,
             grace_window_days: days,
             grace_closes_at: closes,
             extended_by: ext_by,
@@ -129,7 +129,7 @@ pub async fn preview(
     tx.commit().await.map_err(internal)?;
 
     Ok(Json(PreviewResponse {
-        shipped_at: ms.fr_auth_101_shipped_at,
+        shipped_at: ms.task_auth_101_shipped_at,
         grace_closes_at: ms.grace_closes_at,
         grace_open: ms.grace_is_open(),
         seconds_remaining: (ms.grace_closes_at - Utc::now()).num_seconds().max(0),

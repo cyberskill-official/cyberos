@@ -1,11 +1,11 @@
 //! cyberos-obs-sdk - shared RED (rate / errors / duration) metrics for every CyberOS service
-//! (FR-OBS-003).
+//! (TASK-OBS-003).
 //!
 //! Slice 1 (this crate) ships the metric core: `red::record_request` plus the cardinality guard, built
 //! on the OTel 0.27 metrics API and the global meter. The service installs the OTel SDK provider and
 //! OTLP exporter at boot (see ai-gateway's `otel/init.rs`); this crate only builds the instruments and
 //! records to them. The `#[red_instrument]` proc macro, the per-service application, and the
-//! completeness lint land in the next slice. See `docs/feature-requests/obs/FR-OBS-003-red-metrics.md`.
+//! completeness lint land in the next slice. See `docs/tasks/obs/TASK-OBS-003-red-metrics.md`.
 
 pub mod cardinality_guard;
 pub mod exemplar;

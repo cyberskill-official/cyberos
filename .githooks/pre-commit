@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # CyberOS pre-commit hook (active via core.hooksPath=.githooks, like commit-msg/pre-push).
-# FR-IMP-068 §1 #4: when a payload source is staged, rebuild dist/cyberos and verify every
+# TASK-IMP-068 §1 #4: when a payload source is staged, rebuild dist/cyberos and verify every
 # stamp equals VERSION. Rebuild or check failure aborts the commit; non-matching commits no-op.
 # The trigger regex mirrors .pre-commit-hooks/cyberos-payload-build.sh (cross-commented there).
 set -euo pipefail
@@ -22,11 +22,11 @@ if matches "$trigger"; then
   bash "$root/tools/cyberos-init/check-version-sync.sh" "$root/dist/cyberos"
 fi
 
-# FR-DOCS-007: any staged change to FR specs, backlog inputs, templates, or the site tooling
+# TASK-DOCS-007: any staged change to task specs, backlog inputs, templates, or the site tooling
 # regenerates dist/website locally (gitignored) - the HTML deliverables can never lag the
 # markdown truth on the machine that authored the change. Published freshness rides deploy.yml
 # (same paths) + version.yml's post-bump dispatch + release.yml's docs job.
-docs_trigger='^(docs/feature-requests/|docs/|modules/templates/|modules/[a-z-]+/docs/|tools/docs-site/|CHANGELOG\.md$|VERSION$)'
+docs_trigger='^(docs/tasks/|docs/|modules/templates/|modules/[a-z-]+/docs/|tools/docs-site/|CHANGELOG\.md$|VERSION$)'
 if matches "$docs_trigger"; then
   if command -v node >/dev/null 2>&1; then
     echo "cyberos: docs sources changed - regenerating dist/website ..."
@@ -40,25 +40,51 @@ if matches "$docs_trigger"; then
   fi
 fi
 
-# FR-IMP-074 group A: any staged FR/CHANGELOG/VERSION change regenerates docs/status/ and
+# TASK-IMP-074 group A: any staged task/CHANGELOG/VERSION change regenerates docs/status/ and
 # stages it IN THE SAME COMMIT, so the status page can never lag the frontmatter it renders.
 # Best-effort-loud: a render failure warns (with the fix command) but never blocks the commit -
-# a docs-render bug must not dead-lock all FR work (mirrors run-gates.sh's posture).
-status_trigger='^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)'
+# a docs-render bug must not dead-lock all task work (mirrors run-gates.sh's posture).
+status_trigger='^(docs/tasks/|CHANGELOG\.md$|VERSION$)'
 if matches "$status_trigger"; then
-  migrate="$root/.cyberos/migrate-frs.sh"
-  [ -f "$migrate" ] || migrate="$root/tools/cyberos-init/migrate-frs.sh"   # self-hosting repo fallback
-  if [ -f "$migrate" ] && command -v node >/dev/null 2>&1; then
-    if bash "$migrate" --page "$root" >/dev/null 2>&1; then
+  # BUG (fixed 2026-07-14): this pointed at `migrate-frs.sh`, which was DELETED in
+  # 0a7553f25 ("Drop migrate-frs shim"). The `[ -f "$migrate" ]` guard then made the
+  # whole block a silent no-op — so docs/status/ has not been auto-regenerated since
+  # that commit, which is exactly why it sat there full of stale FR-*.js chunks.
+  # A guard that skips when its own tool is missing is indistinguishable from success.
+  status_page="$root/.cyberos/lib/status-page.sh"
+  [ -f "$status_page" ] || status_page="$root/tools/cyberos-init/lib/status-page.sh"  # self-hosting fallback
+  if [ -f "$status_page" ] && command -v node >/dev/null 2>&1; then
+    if bash "$status_page" "$root" >/dev/null 2>&1; then
       git add "$root/docs/status/" 2>/dev/null || true
-      echo "cyberos: docs/status regenerated + staged (FR sources changed)"
+      echo "cyberos: docs/status regenerated + staged (task sources changed)"
     else
-      echo "cyberos: WARN docs/status regeneration failed - run: bash $migrate --page ." >&2
+      echo "cyberos: WARN docs/status regeneration failed - run: bash $status_page ." >&2
     fi
+  else
+    echo "cyberos: WARN status-page tool missing at $status_page - docs/status NOT regenerated" >&2
   fi
 fi
 
-# FR-IMP-072: a staged VERSION change must carry the whole codebase with it.
+# Retired-vocabulary gate. The fr->task rename touched ~32,000 sites; without a gate
+# the old words creep back through vendored skill prose. See docs/tasks/RENAME-EPOCH.md.
+# NOTE: the filename says `fr`, deliberately. It names what the gate BLOCKS (the
+# legacy FR vocabulary), not the vocabulary we migrated to. The codemod renamed
+# this line once and left the target behind, which aborted the rename commit —
+# frozen in migrate_fr_to_task.py:FROZEN_LITERALS.
+bash "$root/.pre-commit-hooks/no-legacy-fr-vocabulary.sh"
+
+# Shell test suites (glob-discovered, ~10s). Until 2026-07-15 NOTHING ran these — not this
+# hook, not local_verify.sh, not any of the 24 CI workflows — and three of the six had been
+# red for months without reporting it. Gated here rather than by name so a new test file
+# under scripts/tests/ or tools/docs-site/tests/ is covered the moment it exists.
+if grep -qE '^(scripts/|tools/docs-site/|modules/templates/|modules/skill/|modules/cuo/|tools/cyberos-init/)' <<<"$staged"; then
+  bash "$root/scripts/tests/run_all.sh" || {
+    echo "cyberos: shell test suites failed - fix before committing (run: bash scripts/tests/run_all.sh)" >&2
+    exit 1
+  }
+fi
+
+# TASK-IMP-072: a staged VERSION change must carry the whole codebase with it.
 if grep -qx "VERSION" <<<"$staged"; then
   if ! node "$root/scripts/stamp-release-version.mjs" --check --exit-code >/dev/null 2>&1; then
     echo "cyberos: VERSION is staged but release artifacts drift - run:" >&2

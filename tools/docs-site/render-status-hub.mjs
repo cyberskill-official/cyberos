@@ -1,18 +1,18 @@
 #!/usr/bin/env node
-// tools/docs-site/render-status-hub.mjs - FR-DOCS-006 / FR-DOCS-007 / FR-IMP-074.
+// tools/docs-site/render-status-hub.mjs - TASK-DOCS-006 / TASK-DOCS-007 / TASK-IMP-074.
 // ONE page answers "where is the project". Roadmap, Backlog and Changelog stopped being
 // three tabs: they are three lenses (board / table / releases) over one filtered corpus,
-// with an FR detail drawer that carries the full spec.
-// Inputs (exactly three, unchanged): FR frontmatter, CHANGELOG.md version sections, VERSION.
+// with a task detail drawer that carries the full spec.
+// Inputs (exactly three, unchanged): task frontmatter, CHANGELOG.md version sections, VERSION.
 // Node stdlib only; deterministic stamp (VERSION + commit, no wall clock); honest failures.
-// Emits: reference/status.html, reference/data/fr/<ID>.js (per-FR spec chunks, lazy-loaded),
+// Emits: reference/status.html, reference/data/task/<ID>.js (per-task spec chunks, lazy-loaded),
 //        reference/assets/{status.css,status.js,favicon.svg} when CYBEROS_PAGE_ASSETS=1,
 //        reference/roadmap.html (redirect stub - bookmarks stay alive).
 // Usage: node render-status-hub.mjs [repoRoot] [outDir]
 // Env:   CYBEROS_PROJECT     page title (default: basename of repoRoot)
 //        CYBEROS_PAGE_ASSETS 1 = emit assets/ and link them instead of inlining
 //        CYBEROS_HUB_LENIENT 1 = warn instead of failing on bad frontmatter / missing inputs
-//        CYBEROS_STATUS_SPECS 0 = skip the per-FR spec chunks (drawer links out instead)
+//        CYBEROS_STATUS_SPECS 0 = skip the per-task spec chunks (drawer links out instead)
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 import { join, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -91,8 +91,12 @@ function frontmatter(text, file) {
 }
 const str = v => (Array.isArray(v) ? '' : String(v ?? '')).trim();
 const list = v => Array.isArray(v) ? v : (str(v) && str(v) !== 'null' ? [str(v)] : []);
-const FRID = /\bFR-[A-Z][A-Z0-9]*-\d+\b/g;
-const ids = s => (String(s ?? '').match(FRID) || []);
+// Matches TASK-*, not FR-*. The constant was renamed FRID -> TASKID in the 2026-07-15
+// rename; this body was not, so it matched an id shape that no longer exists anywhere.
+// Result: `cited` came back [] for every release and the changelog -> task binding was
+// dead on the live status page. A renamed name over an unrenamed body reads as correct.
+const TASKID = /\bTASK-[A-Z][A-Z0-9]*-\d+\b/g;
+const ids = s => (String(s ?? '').match(TASKID) || []);
 
 // A one-paragraph summary: the first prose paragraph of the body (the §1 lead, in practice).
 function summarize(body) {
@@ -118,19 +122,19 @@ function summarize(body) {
 }
 
 // ---- corpus: one object drives the deck, every lens, and the drawer -------------------
-const FR_ROOT = join(ROOT, 'docs', 'feature-requests');
-if (!existsSync(FR_ROOT)) die(`no docs/feature-requests under ${ROOT}`);
+const TASK_ROOT = join(ROOT, 'docs', 'tasks');
+if (!existsSync(TASK_ROOT)) die(`no docs/tasks under ${ROOT}`);
 
-const frs = [];
+const tasks = [];
 const invalid = [];
 const specs = new Map();               // id -> rendered spec HTML (chunked out below)
 const safeId = id => /^[A-Za-z0-9._-]+$/.test(id);
 
-for (const mod of readdirSync(FR_ROOT, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+for (const mod of readdirSync(TASK_ROOT, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
   if (!mod.isDirectory() || mod.name.startsWith('_') || mod.name.startsWith('.')) continue;
-  for (const d of readdirSync(join(FR_ROOT, mod.name), { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
-    if (!d.isDirectory() || !d.name.startsWith('FR-')) continue;
-    const p = join(FR_ROOT, mod.name, d.name, 'spec.md');
+  for (const d of readdirSync(join(TASK_ROOT, mod.name), { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    if (!d.isDirectory() || !d.name.startsWith('TASK-')) continue;
+    const p = join(TASK_ROOT, mod.name, d.name, 'spec.md');
     if (!existsSync(p)) continue;
     let parsed;
     try { parsed = frontmatter(readFileSync(p, 'utf-8'), p); }
@@ -140,21 +144,30 @@ for (const mod of readdirSync(FR_ROOT, { withFileTypes: true }).sort((a, b) => a
       continue;
     }
     const m = parsed.meta;
-    const id = str(m.id) || str(m.fr_id) || d.name;
+    const id = str(m.id) || str(m.task_id) || d.name;
     const fr = {
       i: id, k: d.name, dm: mod.name,
       t: str(m.title) || '(untitled)',
       m: (str(m.module) || mod.name).toLowerCase(),
-      c: str(m.class) || (mod.name === 'improvement' ? 'improvement' : 'product'),
+      // `type` is the schema field since the 2026-07-14 migration; `class` was folded
+      // into it. Read type first, keep class as a transition fallback, and only then
+      // fall back to the module-name guess.
+      //
+      // This read was `m.class` alone. The migration moved 509 specs to `type:` and left
+      // zero carrying `class:`, so every task silently fell through to the guess below —
+      // module `improvement` -> "improvement", everything else -> "product". The whole
+      // feature/bug/chore distinction was invisible on the status page, and the class
+      // facet was really a module facet wearing its name.
+      c: str(m.type) || str(m.class) || (mod.name === 'improvement' ? 'improvement' : 'product'),
       p: str(m.priority), s: str(m.status) || '(none)',
       ph: str(m.phase), ms: str(m.milestone), sl: str(m.slice),
       o: str(m.owner), cr: str(m.created), sh: str(m.shipped),
       e: str(m.effort_hours), v: str(m.verify), r: str(m.risk_if_skipped),
-      st: list(m.sub_tasks),
+      st: list(m.subtasks),
       // relations are resolved AFTER the corpus is known: a repo's ids are not always
-      // FR-shaped (strategem carries COV-001, API-READY...), so an id-regex alone would
+      // TASK-shaped (strategem carries COV-001, API-READY...), so an id-regex alone would
       // silently drop those edges. Keep the raw values; resolve against the real corpus below.
-      _d: list(m.depends_on), _b: list(m.blocks), _rl: list(m.related_frs),
+      _d: list(m.depends_on), _b: list(m.blocks), _rl: list(m.related_tasks),
       d: [], b: [], rl: [],
       sm: summarize(parsed.body),
       pg: null, sp: 0,
@@ -165,50 +178,50 @@ for (const mod of readdirSync(FR_ROOT, { withFileTypes: true }).sort((a, b) => a
       console.error(`status-hub: WARN invalid status '${fr.s}' on ${fr.i}`);
     }
     if (SPECS && safeId(fr.i) && parsed.body.trim()) {
-      if (specs.has(fr.i)) console.error(`status-hub: WARN duplicate FR id ${fr.i} - the later spec wins`);
+      if (specs.has(fr.i)) console.error(`status-hub: WARN duplicate task id ${fr.i} - the later spec wins`);
       specs.set(fr.i, renderMarkdown(parsed.body));
       fr.sp = 1;
     }
-    frs.push(fr);
+    tasks.push(fr);
   }
 }
-frs.sort((a, b) => a.i.localeCompare(b.i));
-if (!frs.length && !LENIENT) die('zero FR specs found under docs/feature-requests');
+tasks.sort((a, b) => a.i.localeCompare(b.i));
+if (!tasks.length && !LENIENT) die('zero task specs found under docs/tasks');
 
-// per-FR pages (rendered by render-fr-pages.mjs) sit next to the hub in the website build
-for (const f of frs) {
-  const rel = join('frs', f.dm, f.k, 'index.html');
+// per-task pages (rendered by render-task-pages.mjs) sit next to the hub in the website build
+for (const f of tasks) {
+  const rel = join('tasks', f.dm, f.k, 'index.html');
   if (existsSync(join(OUT, rel))) f.pg = `../${rel}`;
 }
-const byId = new Map(frs.map(f => [f.i, f]));
+const byId = new Map(tasks.map(f => [f.i, f]));
 
 // resolve relations now that every id is known: an entry counts as an edge when it names a real
-// FR in this corpus, or when it carries an FR-shaped id (a forward reference to one not written
+// task in this corpus, or when it carries an TASK-shaped id (a forward reference to one not written
 // yet). Prose entries ("none", "n/a", a sentence) resolve to nothing and are dropped - honestly.
 const resolveRefs = raw => [...new Set(raw.flatMap(v => {   // NOT `resolve` - node:path owns that name
   const t = String(v).trim();
   if (byId.has(t)) return [t];   // an id of this corpus, whatever shape it has
-  return ids(t);                 // else: FR-shaped tokens inside the value (forward refs included)
+  return ids(t);                 // else: TASK-shaped tokens inside the value (forward refs included)
 }))];
-for (const f of frs) {
+for (const f of tasks) {
   f.d = resolveRefs(f._d); f.b = resolveRefs(f._b); f.rl = resolveRefs(f._rl);
   delete f._d; delete f._b; delete f._rl;
 }
 
-const modules = [...new Set(frs.map(f => f.m))].sort();
-const phases = [...new Set(frs.map(f => f.ph).filter(Boolean))].sort();
-const priorities = [...new Set(frs.map(f => f.p).filter(Boolean))].sort();
-const classes = [...new Set(frs.map(f => f.c).filter(Boolean))].sort();
+const modules = [...new Set(tasks.map(f => f.m))].sort();
+const phases = [...new Set(tasks.map(f => f.ph).filter(Boolean))].sort();
+const priorities = [...new Set(tasks.map(f => f.p).filter(Boolean))].sort();
+const classes = [...new Set(tasks.map(f => f.c).filter(Boolean))].sort();
 // the facet lists every status the corpus actually carries - including the invalid ones,
 // so the data-quality problem is reachable, not hidden
 const statusesSeen = [
-  ...STATUSES.filter(s => frs.some(f => f.s === s)),
+  ...STATUSES.filter(s => tasks.some(f => f.s === s)),
   ...[...new Set(invalid.map(f => f.s))].sort(),
 ];
 
-// ---- CHANGELOG -> releases, bound to the FRs they shipped ----------------------------
-// The changelog stops being a wall of text: every FR id it names becomes a chip that opens
-// the FR, and FRs whose `shipped:` date matches a release date are folded in as well
+// ---- CHANGELOG -> releases, bound to the tasks they shipped ----------------------------
+// The changelog stops being a wall of text: every task id it names becomes a chip that opens
+// the task, and tasks whose `shipped:` date matches a release date are folded in as well
 // (dashed chips - date-matched, not cited). Prose is kept, but collapsed behind the chips.
 const clPath = join(ROOT, 'CHANGELOG.md');
 if (!existsSync(clPath) && !LENIENT) die('CHANGELOG.md missing');
@@ -219,10 +232,10 @@ const clText = existsSync(clPath) ? readFileSync(clPath, 'utf-8') : '';
 const clRe = /^## \[?v?(\d+\.\d+\.\d+|\d{4}-\d{2}-\d{2})\]?(?:\s*[-–—(]\s*(.*?)\)?\s*)?$/gm;
 const SEC_RE = /^(Added|Changed|Fixed|Removed|Security|Deprecated|Notes?)\s*:?\s*$/i;
 const inlineHtml = md => renderMarkdown(md).replace(/^<p>([\s\S]*)<\/p>\s*$/, '$1').trim();
-// linkify FR ids inside already-rendered HTML without touching tags
+// linkify task ids inside already-rendered HTML without touching tags
 const linkify = html => html.split(/(<[^>]+>)/).map(part => part.startsWith('<') ? part
-  : part.replace(FRID, id => byId.has(id)
-    ? `<button class="chip ${bucketOf(byId.get(id).s)}" data-fr="${esc(id)}">${esc(id)}</button>`
+  : part.replace(TASKID, id => byId.has(id)
+    ? `<button class="chip ${bucketOf(byId.get(id).s)}" data-task="${esc(id)}">${esc(id)}</button>`
     : id)).join('');
 
 const marks = [];
@@ -257,8 +270,8 @@ const releases = marks.map((mk, i) => {
   flushItem();
   flushPara();
   const cited = [...new Set(ids(raw))].sort();
-  // "FR-IMP-071/072" - the slash run is a real habit in this changelog; expand it
-  for (const run of raw.match(/\bFR-[A-Z][A-Z0-9]*-\d+(?:\/\d+)+/g) || []) {
+  // "TASK-IMP-071/072" - the slash run is a real habit in this changelog; expand it
+  for (const run of raw.match(/\bTASK-[A-Z][A-Z0-9]*-\d+(?:\/\d+)+/g) || []) {
     const [head, ...rest] = run.split('/');
     const prefix = head.replace(/\d+$/, '');
     for (const n of rest) if (!cited.includes(prefix + n)) cited.push(prefix + n);
@@ -272,16 +285,16 @@ if (!releases.length) {
   console.error('status-hub: WARN no CHANGELOG version sections (lenient - the releases lens is empty)');
 }
 
-// date-matched FRs: bind to the newest release carrying that date, and never twice
+// date-matched tasks: bind to the newest release carrying that date, and never twice
 const citedAll = new Set(releases.flatMap(r => r.cited));
 const firstByDate = new Map();
 releases.forEach((r, i) => { if (r.d && !firstByDate.has(r.d)) firstByDate.set(r.d, i); });
-for (const f of frs) {
+for (const f of tasks) {
   if (!f.sh || citedAll.has(f.i) || !firstByDate.has(f.sh)) continue;
   releases[firstByDate.get(f.sh)].dated.push(f.i);
 }
 releases.forEach(r => r.dated.sort());
-// every FR a release accounts for - so the "unreleased" card can name the ones no release does
+// every task a release accounts for - so the "unreleased" card can name the ones no release does
 const bound = [...new Set(releases.flatMap(r => [...r.cited, ...r.dated]))].sort();
 
 // ---- deck, facets, no-JS fallback (server-rendered: the page is true before JS runs) --
@@ -293,11 +306,11 @@ const VERSION = existsSync(join(ROOT, 'VERSION'))
 // differ from it by the stamp alone. Pinning lets a freshness check compare CONTENT.
 const COMMIT = process.env.CYBEROS_COMMIT || gitCommit(ROOT);
 
-const count = b => frs.filter(f => bucketOf(f.s) === b).length;
+const count = b => tasks.filter(f => bucketOf(f.s) === b).length;
 const doneN = count('done'), activeN = count('active'), holdN = count('hold'), todoN = count('todo');
-const pct = n => frs.length ? (100 * n / frs.length).toFixed(1) : '0.0';
-const moving = frs.filter(f => bucketOf(f.s) === 'active');
-const effortOpen = frs.filter(f => bucketOf(f.s) !== 'done')
+const pct = n => tasks.length ? (100 * n / tasks.length).toFixed(1) : '0.0';
+const moving = tasks.filter(f => bucketOf(f.s) === 'active');
+const effortOpen = tasks.filter(f => bucketOf(f.s) !== 'done')
   .reduce((a, f) => a + (parseFloat(f.e) || 0), 0);
 
 const kpi = (b, n, label) =>
@@ -305,7 +318,7 @@ const kpi = (b, n, label) =>
   `<span><i class="dot seg-${b}"></i>${label}</span></button>`;
 const deck = `
 <div class="panel">
-  <h2>Overall progress · ${frs.length} feature requests · ${modules.length} modules</h2>
+  <h2>Overall progress · ${tasks.length} tasks · ${modules.length} modules</h2>
   <div class="kpis">
     ${kpi('done', doneN, 'done')}
     ${kpi('active', activeN, 'in flight')}
@@ -323,7 +336,7 @@ const deck = `
     <span><i class="dot seg-active"></i> in flight — ready_to_implement → testing</span>
     <span><i class="dot seg-todo"></i> draft</span>
     <span><i class="dot seg-hold"></i> on hold</span>
-    <span class="muted">click a number to filter · click any FR to open it</span>
+    <span class="muted">click a number to filter · click any task to open it</span>
   </div>
 </div>
 <div class="panel">
@@ -331,19 +344,19 @@ const deck = `
   ${releases.length ? `<div class="spark">${releases.slice(0, 12).reverse().map(r => {
     const n = r.cited.length + r.dated.length;
     const max = Math.max(1, ...releases.map(x => x.cited.length + x.dated.length));
-    return `<a href="#timeline" title="${esc(r.vl)}${r.d ? ' · ' + esc(r.d) : ''} — ${n} FRs">` +
+    return `<a href="#timeline" title="${esc(r.vl)}${r.d ? ' · ' + esc(r.d) : ''} — ${n} tasks">` +
       `<b>${n}</b><i style="height:${Math.max(4, Math.round(46 * n / max))}px"></i>` +
       `<span>${esc(r.vl.replace(/^v/, ''))}</span></a>`;
   }).join('')}</div>
-  <p class="relnote">FRs bound to each release — cited in the entry, or matched by <code>shipped:</code> date.</p>`
+  <p class="relnote">tasks bound to each release — cited in the entry, or matched by <code>shipped:</code> date.</p>`
     : '<p class="relnote">No release sections parsed from CHANGELOG.md.</p>'}
 </div>`;
 
 const nowHtml = moving.length ? `
 <section class="now">
   <h2>Now shipping (${moving.length})</h2>
-  <div class="frs">${moving.map(f =>
-    `<button class="chip active" data-fr="${esc(f.i)}" title="${esc(`${f.i} — ${f.t} [${f.s}]`)}">${esc(f.i.replace(/^FR-/, ''))}</button>`
+  <div class="tasks">${moving.map(f =>
+    `<button class="chip active" data-task="${esc(f.i)}" title="${esc(`${f.i} — ${f.t} [${f.s}]`)}">${esc(f.i.replace(/^TASK-/, ''))}</button>`
   ).join('')}</div>
 </section>` : '';
 
@@ -361,21 +374,21 @@ const facets = [
     .map(([v, l]) => `<option value="${v}">${l}</option>`).join('') + '</select></label>',
 ].join('\n  ');
 
-// No-JS: the same truth, statically. Every FR in one table, every release in one list.
+// No-JS: the same truth, statically. Every task in one table, every release in one list.
 const nojs = `
-<p class="relnote">JavaScript is off, so the lenses, filters and the FR drawer are unavailable.
+<p class="relnote">JavaScript is off, so the lenses, filters and the task drawer are unavailable.
 Everything below is the same corpus, rendered statically.</p>
 <div class="tbl-wrap"><table><thead><tr>
 <th>id</th><th>title</th><th>module</th><th>class</th><th>priority</th><th>phase</th><th>status</th>
 </tr></thead><tbody>
-${frs.map(f => `<tr><td class="code">${f.pg ? `<a href="${esc(f.pg)}">${esc(f.i)}</a>` : esc(f.i)}</td>` +
+${tasks.map(f => `<tr><td class="code">${f.pg ? `<a href="${esc(f.pg)}">${esc(f.i)}</a>` : esc(f.i)}</td>` +
   `<td>${esc(f.t)}</td><td>${esc(f.m)}</td><td>${esc(f.c)}</td><td>${esc(f.p)}</td>` +
   `<td>${esc(f.ph)}</td><td>${esc(f.s)}</td></tr>`).join('\n')}
 </tbody></table></div>
 <h3 class="groupq">Releases</h3>
 ${releases.map(r => `<article class="rel"><span class="tick">✓</span><div>
   <div class="rel-h"><b>${esc(r.vl)}</b>${r.d ? `<span class="muted">${esc(r.d)}</span>` : ''}</div>
-  ${[...r.cited, ...r.dated].length ? `<p class="relnote">FRs: ${[...r.cited, ...r.dated].map(esc).join(', ')}</p>` : ''}
+  ${[...r.cited, ...r.dated].length ? `<p class="relnote">tasks: ${[...r.cited, ...r.dated].map(esc).join(', ')}</p>` : ''}
   ${r.sec.map(s => `<div class="rel-sec"><h4>${esc(s.h)}</h4><ul>${s.items.map(x => `<li>${x}</li>`).join('')}</ul></div>`).join('')}
 </div></article>`).join('\n')}`;
 
@@ -383,18 +396,20 @@ ${releases.map(r => `<article class="rel"><span class="tick">✓</span><div>
 const data = {
   project: NAME, version: VERSION, commit: COMMIT,
   statuses: STATUSES,
-  specDir: 'data/fr',
+  // The client reads specDir out of the emitted JSON (status-app.js:312), so this
+  // one string is the whole producer/consumer contract for the chunk path.
+  specDir: 'data/task',
   // where spec.md lives *relative to this page* - empty when the markdown is not shipped
-  // next to the output (the website build links the rendered FR page instead).
-  frBase: process.env.CYBEROS_FR_BASE || '',
-  frs, releases, bound,
+  // next to the output (the website build links the rendered task page instead).
+  frBase: process.env.CYBEROS_TASK_BASE || '',
+  tasks, releases, bound,
 };
 // empty scalars carry no information and cost ~25% of the payload - drop them.
 // (d / b / rl / st stay: the client reads .length on them.)
 const KEEP = new Set(['i', 'k', 'dm', 't', 'm', 's', 'd', 'b', 'rl', 'st']);
 const compact = f => Object.fromEntries(Object.entries(f)
   .filter(([k, v]) => KEEP.has(k) || (Array.isArray(v) ? v.length : v !== '' && v !== null && v !== 0)));
-const dataJson = JSON.stringify({ ...data, frs: frs.map(compact) }).replace(/</g, '\\u003c');
+const dataJson = JSON.stringify({ ...data, tasks: tasks.map(compact) }).replace(/</g, '\\u003c');
 
 // ---- templates ------------------------------------------------------------------------
 const tpl = (sub, name) => {
@@ -415,7 +430,7 @@ const REF = join(OUT, 'reference');
 mkdirSync(REF, { recursive: true });
 
 let specBytes = 0;
-const dataDir = join(REF, 'data', 'fr');
+const dataDir = join(REF, 'data', 'task');
 rmSync(join(REF, 'data'), { recursive: true, force: true });   // stale chunks must not linger
 if (specs.size) {
   mkdirSync(dataDir, { recursive: true });
@@ -431,9 +446,9 @@ let page = SHELL;
 for (const [k, v] of Object.entries({
   'title': `${esc(NAME)} status`,
   'initial': initial,
-  'subtitle': `Where ${esc(NAME)} is and what is coming — generated from FR frontmatter, CHANGELOG and VERSION`,
-  'search_placeholder': `Search ${frs.length} FRs — id, title, module, owner, phase…`,
-  'meta:html': `VERSION <span class="code">${esc(VERSION)}</span> · built from <span class="code">${esc(COMMIT)}</span> · ${frs.length} FRs · ${releases.length} releases`,
+  'subtitle': `Where ${esc(NAME)} is and what is coming — generated from task frontmatter, CHANGELOG and VERSION`,
+  'search_placeholder': `Search ${tasks.length} tasks — id, title, module, owner, phase…`,
+  'meta:html': `VERSION <span class="code">${esc(VERSION)}</span> · built from <span class="code">${esc(COMMIT)}</span> · ${tasks.length} tasks · ${releases.length} releases`,
   'deck:html': deck,
   'now:html': nowHtml,
   'facets:html': facets,
@@ -469,12 +484,12 @@ if (ASSETS) {
 writeFileSync(join(REF, 'roadmap.html'), `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=status.html#roadmap">
 <title>Roadmap moved</title></head>
-<body><p>The roadmap is a lens of the <a href="status.html#roadmap">status hub</a> now (FR-DOCS-006).</p></body></html>
+<body><p>The roadmap is a lens of the <a href="status.html#roadmap">status hub</a> now (TASK-DOCS-006).</p></body></html>
 `);
 
-const summary = STATUSES.filter(s => frs.some(f => f.s === s))
-  .map(s => `${frs.filter(f => f.s === s).length} ${s}`).join(', ');
-console.log(`status-hub: ${frs.length} FRs (${summary}), ${modules.length} modules, ${releases.length} releases, ` +
+const summary = STATUSES.filter(s => tasks.some(f => f.s === s))
+  .map(s => `${tasks.filter(f => f.s === s).length} ${s}`).join(', ');
+console.log(`status-hub: ${tasks.length} tasks (${summary}), ${modules.length} modules, ${releases.length} releases, ` +
   `VERSION ${VERSION} - one page, three lenses` +
   (specs.size ? `, ${specs.size} spec chunks (${(specBytes / 1048576).toFixed(1)} MB)` : ', no spec chunks (CYBEROS_STATUS_SPECS=0)') +
   (invalid.length ? `, ${invalid.length} invalid status` : ''));

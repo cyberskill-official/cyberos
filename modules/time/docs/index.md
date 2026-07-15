@@ -1,7 +1,7 @@
 ---
 title: TIME - Billable-hours engine, PROJ-to-INV bridge, labour-law guardrails
 source: website/docs/modules/time/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 TIME is CyberOS's **time-entry, leave-management, and expense-capture spine**. The basic primitives are simple: a `TimeEntry` records minutes worked against an Engagement / Project / Issue with a billable flag; an `Expense` records VND or USD spent with vendor, VAT, and receipt image; a `LeaveRequest` records absence with a kind and approver flow. What is hard is the integrity model: entries are append-only at the audit layer, every mutation writes a fresh row with a `correction_to` link, the weekly approval flow goes Member -> Account Manager -> CFO/CEO visibility, and Vietnamese labour-law caps (40 h regular / week; 200 h overtime / year standard, up to 300 h with employee consent and MoLISA notification) are enforced as hard rules. Expense receipts run through a Vietnamese-hóa-đơn-aware OCR pipeline (MST extraction, line-item parsing, VAT split). Multi-currency at every layer. Feeds INV (weekly billable summary), feeds REW (members' total hours fold into compensation context), feeds OBS (audit replay).
@@ -79,13 +79,13 @@ A structured decomposition of TIME's scope. Every cell traces back to §19.5.
 Axis| Question| Answer
 ---|---|---
 **5W - What**| What is TIME?| Three sub-modules: time tracking (start/stop, retroactive, billable flag), leave management (annual, sick, sabbatical, unpaid, other), and expense capture (camera + OCR + categorise). All three share a Postgres canonical store, an append-only audit chain into memory, and a weekly approval workflow.
-**5W - Who**| Who uses it?| **Members:** log time + expense + leave daily; submit weekly. **Account Managers:** approve weekly per Engagement. **CFO:** view consolidated dashboards, approve overtime exceptions, sign off on reimbursement batches. **CHRO:** own leave policy + labour-law cap enforcement. **Agents:** CUO/COO-skill nudges Members who haven't logged time in 2 days (FR pending).
+**5W - Who**| Who uses it?| **Members:** log time + expense + leave daily; submit weekly. **Account Managers:** approve weekly per Engagement. **CFO:** view consolidated dashboards, approve overtime exceptions, sign off on reimbursement batches. **CHRO:** own leave policy + labour-law cap enforcement. **Agents:** CUO/COO-skill nudges Members who haven't logged time in 2 days (task pending).
 **5W - When**| When does it run?| Continuous: SPA timer, mobile capture. Weekly: batch approval cycle (Sunday 23:59 -> Monday 09:00 AM review). Nightly: leave accrual recompute, overtime cap check, expense reimbursement batch. Monthly: hours summary to REW.
 **5W - Where**| Where does it run?| P1: single region (SG-1) with VN-residency S3 for receipt images. P3+: multi-region. The OCR pipeline runs as a Fargate task per OCR job; bursty workloads scale to 50 parallel tasks via SQS.
 **5W - Why**| Why a separate module?| Audit integrity, labour-law caps, and receipt OCR are three concerns that do not belong in PROJ. Splitting them out keeps PROJ's sync-engine simple and gives the regulator a single place to look.
 **1H - How**| How does it work?| Timer: SPA writes start_time; on stop, end_time + duration computed server-side as a generated column. Retroactive: Member enters duration + date; same path. Expense: camera capture -> S3 -> OCR Lambda -> categoriser -> Member confirm -> entry. Leave: form submit -> approver Notify -> decision -> calendar sync.
 **2C - Cost**| Cost budget?| P1: ~$70 / month for SG-1 single-tenant pilot. OCR cost averages $0.002 per receipt (AWS Textract); ~$50 / month for 25k receipts at 50 Members. 50-tenant: ~$280 / month.
-**2C - Constraints**| Constraints?| (a) Audit append-only - non-negotiable. (b) Labour-law caps enforced as hard rules. (c) Multi-currency at every layer. (d) Member time-log annotations are private namespace (FR pending) - not visible to AM. (e) Receipt OCR must handle hóa đơn (Vietnamese VAT invoice) format.
+**2C - Constraints**| Constraints?| (a) Audit append-only - non-negotiable. (b) Labour-law caps enforced as hard rules. (c) Multi-currency at every layer. (d) Member time-log annotations are private namespace (task pending) - not visible to AM. (e) Receipt OCR must handle hóa đơn (Vietnamese VAT invoice) format.
 **5M - Materials**| Stack?| Rust 1.81, axum 0.7, sqlx, PostgreSQL 16, Redis 7, S3 + KMS, AWS Textract (or PaddleOCR self-hosted at P2+), vietnam-mst-validate skill, OpenTelemetry SDK, React + Zustand SPA, React Native (P3+).
 **5M - Methods**| Method choices?| Append-only with `correction_to` (not in-place edit). Generated column for `duration_minutes`. Per-Engagement billable_default + per-entry override. Weekly batch approval (not per-entry). Camera-first expense capture. Multi-currency stored as canonical-VND + spot-FX-rate snapshot.
 **5M - Machines**| Deployment?| Fargate axum service. RDS Postgres Multi-AZ. Redis hot cache. S3 + KMS for receipt images. SQS-driven OCR pool. Calendar sync via OAuth (Google / Outlook).
@@ -124,13 +124,13 @@ Component| Path (planned)| Responsibility
 `expense.rs`| services/time/src/expense.rs| Expense CRUD. Camera-capture -> S3 -> OCR queue. Categorisation via per-tenant chart of accounts.
 `leave_request.rs`| services/time/src/leave_request.rs| LeaveRequest CRUD. Kinds: annual, sick, sabbatical, unpaid, other. Approver flow via Notify.
 `law_caps.rs`| services/time/src/law_caps.rs| Vietnamese Labour Code Art. 105 / 107 enforcement. 40 h regular / week; overtime 200 h / year standard, up to 300 h / year with employee consent and MoLISA notification. Hard-blocks save above the ceiling; pages CHRO.
-`approval.rs`| services/time/src/approval.rs| Weekly approval workflow. Member submit -> AM approve -> CFO visibility. Self-approval rejected (FR pending).
+`approval.rs`| services/time/src/approval.rs| Weekly approval workflow. Member submit -> AM approve -> CFO visibility. Self-approval rejected (task pending).
 `fx.rs`| services/time/src/fx.rs| FX rate snapshotter. Pulls Vietcombank rate daily; stores snapshot per entry for invoice-time fidelity.
 `ocr_pipeline.rs`| services/time/src/ocr_pipeline.rs| SQS-driven OCR worker. Calls AWS Textract (P1) or PaddleOCR self-hosted (P2+). Parses Vietnamese hóa đơn format.
 `categoriser.rs`| services/time/src/categoriser.rs| Expense categoriser via AI Gateway. Picks from per-tenant chart of accounts; confidence threshold for auto-apply.
-`calendar_sync.rs`| services/time/src/calendar_sync.rs| Two-way Google / Outlook sync for leave events (FR pending).
-`nudge.rs`| services/time/src/nudge.rs| CUO/COO-skill nudge for Members who haven't logged time in 2 days (FR pending).
-`inconsistency.rs`| services/time/src/inconsistency.rs| Detect overlapping entries, > 12 h continuous, and other anomalies (FR pending).
+`calendar_sync.rs`| services/time/src/calendar_sync.rs| Two-way Google / Outlook sync for leave events (task pending).
+`nudge.rs`| services/time/src/nudge.rs| CUO/COO-skill nudge for Members who haven't logged time in 2 days (task pending).
+`inconsistency.rs`| services/time/src/inconsistency.rs| Detect overlapping entries, > 12 h continuous, and other anomalies (task pending).
 `inv_export.rs`| services/time/src/inv_export.rs| Weekly batched billable summary export to INV.
 `dsar_export.rs`| services/time/src/dsar_export.rs| DSAR bundle for a Member.
 `migrations/`| services/time/migrations/| sqlx migrations. All tables RLS by `tenant_id`; `time_entry.member_id` additionally enforced.
@@ -273,7 +273,7 @@ sequenceDiagram autonumber participant M as Member participant API as TIME parti
 overtime exceptions require explicit CFO sign-off
 ```
 
-(FR pending) - a Member MUST NOT be able to approve their own entries; self-approval attempts rejected at the API.
+(task pending) - a Member MUST NOT be able to approve their own entries; self-approval attempts rejected at the API.
 
 ### Flow 3 - Expense capture with OCR
 
@@ -291,7 +291,7 @@ sequenceDiagram autonumber participant CR as Weekly cron (Mon 10:00) participant
 ### Flow 5 - Leave request with calendar sync
 
 ```mermaid
-sequenceDiagram autonumber participant M as Member participant API as TIME participant CHRO as CHRO leave-policy check participant APPR as Approver (manager) participant CAL as Google / Outlook participant N as Notify participant B as memory audit M->>API: POST /time/leave {kind:annual, start, end, reason} API->>CHRO: check quota + blackout dates alt within quota + valid CHRO-->>API: ok else quota exceeded CHRO-->>API: 422 + remaining quota end API->>N: ping manager "Member X requested leave" API->>B: time.leave_requested APPR->>API: approve API->>API: status=approved · decided_at=now API->>CAL: create event (two-way sync, (FR pending)) CAL-->>API: provider_event_id API->>B: time.leave_approved API->>N: ping Member "approved"
+sequenceDiagram autonumber participant M as Member participant API as TIME participant CHRO as CHRO leave-policy check participant APPR as Approver (manager) participant CAL as Google / Outlook participant N as Notify participant B as memory audit M->>API: POST /time/leave {kind:annual, start, end, reason} API->>CHRO: check quota + blackout dates alt within quota + valid CHRO-->>API: ok else quota exceeded CHRO-->>API: 422 + remaining quota end API->>N: ping manager "Member X requested leave" API->>B: time.leave_requested APPR->>API: approve API->>API: status=approved · decided_at=now API->>CAL: create event (two-way sync, (task pending)) CAL-->>API: provider_event_id API->>B: time.leave_approved API->>N: ping Member "approved"
 ```
 
 ## Entry lifecycle
@@ -317,9 +317,9 @@ Status| Trigger| memory row
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
@@ -366,7 +366,7 @@ Vietnam Circular 88/2020 (Ministry of Finance)| Hóa đơn electronic invoice fo
 Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| DSAR export includes time entries, expenses, leave.
 GDPR (EU 2016/679)| Art. 32 - Security of processing| KMS-encrypted receipt images, RLS, audit chain.
 ISO/IEC 27001:2022| A.5.36 - Compliance with policies| Approval workflow enforces policy on every entry.
-SOC 2 Type II| CC6.1 - Logical access| RBAC + per-Member private namespace (FR pending).
+SOC 2 Type II| CC6.1 - Logical access| RBAC + per-Member private namespace (task pending).
 SOC 2 Type II| CC7.1 - Detection / monitoring| Inconsistency detection (overlap / > 12 h).
 
 ## Risk entries
@@ -555,7 +555,7 @@ Native mobile (offline-first capture)| planned - P3+
 - **Billable cascade rules:** [PROJ §2.6](../proj/index.html#engagement-economics) - 4-step cascade definition.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - TimeEntry rows are memory audit events.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - TIME at P1-exit (P1, after PROJ + CRM).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **Vietnam Labour Code (Law 45/2019/QH14)** - Art. 105 (working hours), Art. 107 (overtime), Art. 113 (annual leave).
 - **Vietnam Decree 13/2023/NĐ-CP** - Personal data processing.
 - **Vietnam Decree 53/2022/NĐ-CP** - Data residency.

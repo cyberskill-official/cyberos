@@ -6,7 +6,7 @@ This file is copied verbatim into every skill bundle. Customize only if the skil
 
 ---
 
-## §0  Two layers — declaration vs runtime wrap (FR-SKILL-113 registry v0.2.5)
+## §0  Two layers — declaration vs runtime wrap (TASK-SKILL-113 registry v0.2.5)
 
 This discipline lives in **two layers**:
 
@@ -15,7 +15,7 @@ This discipline lives in **two layers**:
 
 By convention, the frontmatter marker name (`"untrusted_content"`) matches the body XML tag name (`<untrusted_content>`). The two layers stay in sync; the runtime can mechanically construct the body wrapper from the frontmatter declaration.
 
-Future marker namespace expansion (FR-SKILL-117+) will add variants like `"untrusted_content_strict"` or `"untrusted_pii_redacted"` for skills with elevated trust requirements; the body XML tag names will track the marker name automatically.
+Future marker namespace expansion (TASK-SKILL-117+) will add variants like `"untrusted_content_strict"` or `"untrusted_pii_redacted"` for skills with elevated trust requirements; the body XML tag names will track the marker name automatically.
 
 ---
 

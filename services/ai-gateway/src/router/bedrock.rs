@@ -1,4 +1,4 @@
-//! FR-AI-008 — AWS Bedrock provider implementation.
+//! TASK-AI-008 — AWS Bedrock provider implementation.
 
 use std::time::Instant;
 

@@ -15,11 +15,11 @@ allowed_memory_scopes:
   read:
     - project:*
   write:
-    - project:fr/{fr_id}/observability-injection.audit
+    - project:task/{task_id}/observability-injection.audit
 
 audit:
   row_kind: observability_injection_audited
-  required_fields: [fr_id, score, issues_open, issues_resolved]
+  required_fields: [task_id, score, issues_open, issues_resolved]
 
 inputs:
   - { name: obs_injection, format: observability-injection@1, required: true }
@@ -37,7 +37,7 @@ outputs:
 | OBS-002 | Every external IO in impl_plan has ≥1 trace_span (wraps + attributes set) | 20% | error |
 | OBS-003 | Every error branch in impl_plan has ≥1 error_counter | 20% | error |
 | OBS-004 | `branch_coverage.coverage_pct ≥ 80` | 15% | error |
-| OBS-005 | If FR touches PII, `redaction_policy` is non-empty + covers obvious fields | 10% | error |
+| OBS-005 | If task touches PII, `redaction_policy` is non-empty + covers obvious fields | 10% | error |
 | OBS-006 | `subscriber` matches the project's configured subscriber (no rogue libs) | 10% | warning |
 
 ## 2. Pass criterion
@@ -49,6 +49,6 @@ this audit passes.
 
 *End of observability-injection-audit SKILL.md.*
 
-## Contract files (FR-SKILL-118)
+## Contract files (TASK-SKILL-118)
 
 This pair is at full contract parity: `RUBRIC.md` (versioned rules + prose->rule map), `AUDIT_LOOP.md` (canonical-loop binding), `REPORT_FORMAT.md`, `envelopes/` (I/O schemas), `acceptance/README.md`. SKILL.md remains the normative prose; the files encode it.

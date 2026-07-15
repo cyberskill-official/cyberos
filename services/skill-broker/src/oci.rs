@@ -1,4 +1,4 @@
-//! FR-SKILL-102/201 — OCI bundle publishing primitives.
+//! TASK-SKILL-102/201 — OCI bundle publishing primitives.
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};

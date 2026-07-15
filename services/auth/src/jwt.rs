@@ -1,4 +1,4 @@
-//! FR-AUTH-004 — RS256 JWT issuance + verification + JWKS publication.
+//! TASK-AUTH-004 — RS256 JWT issuance + verification + JWKS publication.
 //!
 //! - `issue` mints a JWT for a (tenant, subject, scopes) tuple.
 //! - `verify` validates incoming JWTs against the published JWKS.
@@ -39,9 +39,9 @@ pub enum JwtError {
 
 /// Claims included in every issued JWT.
 ///
-/// FR-AUTH-101 §1 #8 added two new claims (`roles`, `rbac_v`). The verifier
+/// TASK-AUTH-101 §1 #8 added two new claims (`roles`, `rbac_v`). The verifier
 /// treats absent `rbac_v` as implicit `rbac_v = 1` for the 30-day grace
-/// window after FR-AUTH-101 ships (DEC-125).
+/// window after TASK-AUTH-101 ships (DEC-125).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Claims {
     /// Issuer — the auth service URL.
@@ -60,7 +60,7 @@ pub struct Claims {
     pub jti: String,
     /// CyberOS extensions — tenant id, persona, scopes, traceparent.
     pub tenant_id: String,
-    /// FR-AUTH-004 §1 #2 — subject's primary email. Empty string when the
+    /// TASK-AUTH-004 §1 #2 — subject's primary email. Empty string when the
     /// subject has no email (agent / system subjects). `#[serde(default)]`
     /// so legacy tokens issued before this field landed still verify.
     #[serde(default)]
@@ -69,11 +69,11 @@ pub struct Claims {
     pub kind: String,
     /// Granted scopes (e.g. `["admin:tenants", "admin:subjects"]`).
     pub scope_grants: Vec<String>,
-    /// FR-AUTH-101 §1 #8 — array of role names (kebab-case) the subject
+    /// TASK-AUTH-101 §1 #8 — array of role names (kebab-case) the subject
     /// holds at issuance time. Empty array for subjects with no roles.
     #[serde(default)]
     pub roles: Vec<String>,
-    /// FR-AUTH-101 §1 #8 — catalogue version embedded for replay-resistance.
+    /// TASK-AUTH-101 §1 #8 — catalogue version embedded for replay-resistance.
     /// Absent claim → implicit 1 (grace window). Verifiers can challenge
     /// tokens issued > 2 versions behind the live `RoleMatrix.version`.
     #[serde(default)]
@@ -128,12 +128,12 @@ impl JwtService {
 
     /// Mint an access + refresh token pair.
     ///
-    /// `roles` + `rbac_v` are FR-AUTH-101 additions. Callers SHOULD pass the
+    /// `roles` + `rbac_v` are TASK-AUTH-101 additions. Callers SHOULD pass the
     /// subject's current role membership + the live `RoleMatrix.version`.
     /// Empty `roles` and `rbac_v = None` produce a stub-era token compatible
     /// with verifiers running under the grace window.
     ///
-    /// `email` is the FR-AUTH-004 §1 #2 addition — pass the subject's
+    /// `email` is the TASK-AUTH-004 §1 #2 addition — pass the subject's
     /// primary email or empty string when not applicable.
     #[allow(clippy::too_many_arguments)]
     pub async fn issue(
@@ -208,9 +208,9 @@ impl JwtService {
         Ok(data.claims)
     }
 
-    /// FR-AUTH-110 — expose the active signing key (kid + private PEM) so the
+    /// TASK-AUTH-110 — expose the active signing key (kid + private PEM) so the
     /// OIDC provider's id_token (`op::id_token::sign_id_token`) signs against the
-    /// same FR-AUTH-004 key the JWKS publishes (DEC-2481, one key system).
+    /// same TASK-AUTH-004 key the JWKS publishes (DEC-2481, one key system).
     pub async fn active_signing_key(&self) -> Result<(String, String), JwtError> {
         let k = self.load_active_key().await?;
         Ok((k.kid, k.private_pem))

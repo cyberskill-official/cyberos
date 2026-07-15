@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of cross-service requests carry an unbroken traceparent chain ≥ 2 hops"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-OBS-005, FR-OBS-001]
+related_tasks: [TASK-OBS-005, TASK-OBS-001]
 ---
 
 ## §1 — Statement (BCP-18 normative)

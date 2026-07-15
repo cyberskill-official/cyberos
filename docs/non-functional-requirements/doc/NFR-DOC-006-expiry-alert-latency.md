@@ -9,13 +9,13 @@ phase: P0
 slo: "100% of tracked-expiry documents fire alerts at the four scheduled cadences within ±1 day"
 owner: CLO-Legal
 created: 2026-05-18
-related_frs: [FR-DOC-008]
+related_tasks: [TASK-DOC-008]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
 1. Documents with `expiry_at:` metadata **MUST** trigger alerts at 90, 30, 7, and 1 day(s) before expiry, each within ±1 day of the scheduled point.
-2. Alerts **MUST** target the document owner + the CLO-Legal admin role + the renewal-proposal CUO workflow (`FR-DOC-009`).
+2. Alerts **MUST** target the document owner + the CLO-Legal admin role + the renewal-proposal CUO workflow (`TASK-DOC-009`).
 3. Each alert fires exactly once per cadence per document (idempotent on retry).
 4. Missing/malformed `expiry_at` **MUST NOT** silently disable alerts — the document import gate refuses to accept docs with declared category requiring expiry but missing the field.
 5. Already-expired documents **MUST** stay alerted at daily cadence until owner action.

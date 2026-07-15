@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CyberOS CUO Workflows</title>
 <!--
-  FR-APP-006 - CyberOS CUO Workflows & GENIE panel.
+  TASK-APP-006 - CyberOS CUO Workflows & GENIE panel.
 
   A self-contained operator page over the CUO module's read-only status endpoint (GET /v1/cuo/status). It
-  shows the idle-time dream loop's safety envelope (FR-CUO-204) - whether it is enabled, its mode, the idle
-  window, and the allowlist / denylist that bound what it may ever touch - plus a summary of the FR backlog
+  shows the idle-time dream loop's safety envelope (TASK-CUO-204) - whether it is enabled, its mode, the idle
+  window, and the allowlist / denylist that bound what it may ever touch - plus a summary of the task backlog
   it operates over. The GENIE assistant runs on the AI gateway (the Assistant tile). Adds no backend.
 
   Run: serve this folder and start the CUO status server with CUO_DEV_CORS=1 (scripts/dev/cuo-up.sh). In
@@ -102,7 +102,7 @@
     var deny = (env.denylist || []).map(function (d) { return '<span class="tag deny">' + esc(d) + '</span>'; }).join("");
     var allow = (env.allowlist || []).map(function (a) { return '<span class="tag allow">' + esc(a) + '</span>'; }).join("");
     cards.insertAdjacentHTML("beforeend",
-      '<div class="card"><h3>Dream loop (FR-CUO-204)</h3>' +
+      '<div class="card"><h3>Dream loop (TASK-CUO-204)</h3>' +
       kv("Enabled", pill(!!env.enabled, env.enabled ? "enabled" : "disabled")) +
       kv("Mode", pill(env.effective_mode === "apply", env.effective_mode || "off", env.effective_mode === "apply")) +
       kv("Idle window", (env.idle_window_minutes != null ? env.idle_window_minutes + " min" : "-")) +
@@ -113,15 +113,15 @@
     // Backlog summary
     var statusRows = Object.keys(bk.by_status || {}).map(function (s) { return kv(s, bk.by_status[s]); }).join("");
     cards.insertAdjacentHTML("beforeend",
-      '<div class="card"><h3>FR backlog</h3>' +
-      kv("Total FRs", '<span class="pill">' + (bk.total != null ? bk.total : "-") + '</span>') +
+      '<div class="card"><h3>task backlog</h3>' +
+      kv("Total tasks", '<span class="pill">' + (bk.total != null ? bk.total : "-") + '</span>') +
       '<div class="sub">By status</div>' + (statusRows || kv("(none)", "")) +
       '</div>');
 
     // By module
     var modRows = Object.keys(bk.by_module || {}).map(function (m) { return kv(m, bk.by_module[m]); }).join("");
     if (modRows) {
-      cards.insertAdjacentHTML("beforeend", '<div class="card"><h3>FRs by module</h3>' + modRows + '</div>');
+      cards.insertAdjacentHTML("beforeend", '<div class="card"><h3>tasks by module</h3>' + modRows + '</div>');
     }
 
     // GENIE
@@ -132,7 +132,7 @@
       ' (the same routing and policy shown in <a class="link" href="ai.html">AI Ops</a>).</div></div>');
 
     $("summary").textContent = "The CUO dream loop is " + (env.enabled ? "enabled in " + (env.effective_mode || "off") + " mode" : "disabled") +
-      "; " + (bk.total != null ? bk.total : 0) + " FRs in the backlog it operates over.";
+      "; " + (bk.total != null ? bk.total : 0) + " tasks in the backlog it operates over.";
   }
 
   async function load() {

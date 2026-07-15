@@ -1,5 +1,5 @@
 """
-cyberos.core.store_acl — per-subtree write ACL (FR-MEMORY-117, AGENTS.md §14.4).
+cyberos.core.store_acl — per-subtree write ACL (TASK-MEMORY-117, AGENTS.md §14.4).
 
 The ACL layer sits between the canonical Writer and the filesystem. Every
 ``put`` / ``move`` / ``delete`` consults the nearest ``STORE.yaml`` walking
@@ -113,7 +113,7 @@ class AclResult:
     def to_aux_payload(
         self, actor: str, target_path: str, attempt_kind: str
     ) -> dict:
-        """Render the FR-MEMORY-117 §1 #7 / AGENTS.md §14.4.4 aux row shape."""
+        """Render the TASK-MEMORY-117 §1 #7 / AGENTS.md §14.4.4 aux row shape."""
         return {
             "actor": actor,
             "target_path": target_path,

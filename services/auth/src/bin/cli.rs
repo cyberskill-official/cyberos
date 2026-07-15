@@ -1,12 +1,12 @@
 //! `cyberos-authctl` — unified operations CLI for the AUTH module.
 //!
-//! Per FR-AUTH-006 §1 #1, #8, #9, #10, #11 — single binary with subcommands
-//! for `bootstrap`, `rotate-keys`, `sweepers`. Slice-2 of FR-AUTH-006.
+//! Per TASK-AUTH-006 §1 #1, #8, #9, #10, #11 — single binary with subcommands
+//! for `bootstrap`, `rotate-keys`, `sweepers`. Slice-2 of TASK-AUTH-006.
 //!
 //! Naming note: the spec'd binary name `cyberos-auth` is already taken by
 //! the HTTP daemon (`services/auth/src/main.rs`). Following industry
 //! convention (`systemctl` / `journalctl` / `kubectl`), this CLI is
-//! `cyberos-authctl`. See FR-AUTH-006-bootstrap-cli.audit.md §10 for the
+//! `cyberos-authctl`. See TASK-AUTH-006-bootstrap-cli.audit.md §10 for the
 //! divergence note. The previous `cyberos-auth-bootstrap` binary remains
 //! as a transitional alias for slice-1 scripts.
 
@@ -27,7 +27,7 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Command {
-    /// FR-AUTH-006 §1 #1 — Initialise tenant 0 + root-admin + initial signing key.
+    /// TASK-AUTH-006 §1 #1 — Initialise tenant 0 + root-admin + initial signing key.
     Bootstrap {
         /// Root-admin email. Defaults to `AUTH_BOOTSTRAP_EMAIL` env var.
         #[arg(long)]
@@ -35,25 +35,25 @@ enum Command {
         /// Root-admin password. Defaults to `AUTH_BOOTSTRAP_PASSWORD` env var.
         #[arg(long)]
         password: Option<String>,
-        /// FR-AUTH-006 §1 #10 — Destructive re-bootstrap: drops tenant 0 + cascades.
+        /// TASK-AUTH-006 §1 #10 — Destructive re-bootstrap: drops tenant 0 + cascades.
         /// Requires `--confirm` alongside. In production also requires `--force-prod-reset`.
         #[arg(long, requires = "confirm")]
         reset: bool,
         /// Second-flag confirmation for `--reset`.
         #[arg(long)]
         confirm: bool,
-        /// FR-AUTH-006 §1 #11 — Production-environment override. Without this,
+        /// TASK-AUTH-006 §1 #11 — Production-environment override. Without this,
         /// `--reset --confirm` exits with PreconditionFailed when
         /// `CYBEROS_DEPLOYMENT_TIER=production`.
         #[arg(long)]
         force_prod_reset: bool,
     },
-    /// FR-AUTH-006 §1 #8 — Rotate the active RSA-2048 signing key. The new
+    /// TASK-AUTH-006 §1 #8 — Rotate the active RSA-2048 signing key. The new
     /// key becomes `status='active'`; the previous active key is marked
     /// `status='retired'` with `retired_at = NOW()`. Useful for emergency
     /// rotation (suspected compromise) — the same path the quarterly cron uses.
     RotateKeys,
-    /// FR-AUTH-006 §1 #9 — Sweep stale rows from three tables:
+    /// TASK-AUTH-006 §1 #9 — Sweep stale rows from three tables:
     /// expired sessions, old `admin_idempotency_keys` (>24h), retired
     /// `auth_signing_keys` (>7d after retirement). Reports per-table counts.
     /// Cron runs hourly; manual invocation is for ops investigation.
@@ -128,7 +128,7 @@ async fn bootstrap_cmd(
         }
     };
 
-    // FR-AUTH-006 §1 #10 + #11 — Destructive --reset path.
+    // TASK-AUTH-006 §1 #10 + #11 — Destructive --reset path.
     if reset {
         if !confirm {
             // clap's `requires = "confirm"` should prevent this, but defence-in-depth.
@@ -222,7 +222,7 @@ async fn perform_reset(pool: &PgPool) -> Result<(), sqlx::Error> {
 }
 
 // ===========================================================================
-// `rotate-keys` subcommand (FR-AUTH-006 §1 #8)
+// `rotate-keys` subcommand (TASK-AUTH-006 §1 #8)
 // ===========================================================================
 
 async fn rotate_keys_cmd(pool: &PgPool) -> ExitCode {
@@ -297,7 +297,7 @@ async fn rotate_keys_cmd(pool: &PgPool) -> ExitCode {
 }
 
 // ===========================================================================
-// `sweepers` subcommand (FR-AUTH-006 §1 #9)
+// `sweepers` subcommand (TASK-AUTH-006 §1 #9)
 // ===========================================================================
 
 async fn sweepers_cmd(pool: &PgPool) -> ExitCode {
@@ -340,7 +340,7 @@ async fn sweepers_cmd(pool: &PgPool) -> ExitCode {
         }
     }
 
-    // 3. Expired `sessions` rows. Note: a `sessions` table is FR-AUTH-004
+    // 3. Expired `sessions` rows. Note: a `sessions` table is TASK-AUTH-004
     // slice-3 work; today the table may not exist. Skip cleanly if absent
     // (information_schema check).
     let sessions_exists: bool = sqlx::query_scalar(
@@ -365,7 +365,7 @@ async fn sweepers_cmd(pool: &PgPool) -> ExitCode {
             }
         }
     } else {
-        println!("• sessions table absent — FR-AUTH-004 slice-3 will introduce it");
+        println!("• sessions table absent — TASK-AUTH-004 slice-3 will introduce it");
     }
 
     println!();

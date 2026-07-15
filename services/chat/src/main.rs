@@ -28,7 +28,7 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
     // DEC-2713 — CHAT_AUDIT_DATABASE_URL is the chat->brain link: when set, chat's audit rows (and, when
-    // CAPTURE_ENABLED is on, its FR-MEMORY-122 interaction-events) chain into MEMORY's l1_audit_log. P0
+    // CAPTURE_ENABLED is on, its TASK-MEMORY-122 interaction-events) chain into MEMORY's l1_audit_log. P0
     // left it unset; this is REQUIRED in production (see docs/deploy/p0-google-chat-runbook.md). The "unset"
     // line is now info, not warn, because dev/local legitimately runs without it.
     // An empty value (the compose default `${CHAT_AUDIT_DATABASE_URL:-}`) is "set but blank", which must be
@@ -53,7 +53,7 @@ async fn main() -> anyhow::Result<()> {
         }
     };
 
-    // FR-MEMORY-122 §1 #4 — build the capturer over the chat->brain audit pool. `Some` ONLY when
+    // TASK-MEMORY-122 §1 #4 — build the capturer over the chat->brain audit pool. `Some` ONLY when
     // CAPTURE_ENABLED is truthy AND audit_pool is present (default off), so capture is dormant by default.
     // audit_pool is cloned so chat's existing audit::emit path keeps using it unchanged.
     let capturer = cyberos_capture::maybe_capturer(audit_pool.clone());
@@ -112,12 +112,12 @@ async fn main() -> anyhow::Result<()> {
         presence: Presence::default(),
         notifier: Notifier::default(),
         attachments,
-        // FR-CHAT-268 — starts cold; each blocker's set is loaded on first use and invalidated
+        // TASK-CHAT-268 — starts cold; each blocker's set is loaded on first use and invalidated
         // on every block/unblock.
         blocks: cyberos_chat::blocks::BlockCache::default(),
     };
 
-    // FR-CHAT-269 §1 #17 — purge resolved reports (snapshot included) once past their 90-day window.
+    // TASK-CHAT-269 §1 #17 — purge resolved reports (snapshot included) once past their 90-day window.
     //
     // A job, not a DB trigger: a trigger would delete rows out from under an administrator mid-read. Hourly
     // is ample for a 90-day window, and the first sweep runs at boot so a long-stopped instance catches up.

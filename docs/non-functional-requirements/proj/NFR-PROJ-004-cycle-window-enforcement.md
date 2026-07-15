@@ -9,7 +9,7 @@ phase: P1
 slo: "100% of mid-cycle additions/removals tracked + visible in the cycle review draft"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-PROJ-012, FR-PROJ-004]
+related_tasks: [TASK-PROJ-012, TASK-PROJ-004]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -17,7 +17,7 @@ related_frs: [FR-PROJ-012, FR-PROJ-004]
 1. Cycle windows (default 2-week sprint, configurable) **MUST** be persisted with `{start_at, end_at, frozen_at}` where `frozen_at` is the moment scope is closed.
 2. Issues added to a cycle after `frozen_at` **MUST** carry a `cycle_added_post_freeze=true` flag — visible in the cycle review draft.
 3. Issues removed from a cycle after `frozen_at` **MUST** retain a stub row showing they were removed, with `removed_at + remover_id + reason`.
-4. The cycle review draft (`FR-PROJ-012`) **MUST** summarise additions/removals separately from completed work — operators see scope drift clearly.
+4. The cycle review draft (`TASK-PROJ-012`) **MUST** summarise additions/removals separately from completed work — operators see scope drift clearly.
 5. Mid-cycle frozen-scope mutations **MUST NOT** retroactively change a closed (historical) cycle.
 
 ## §2 — Why this constraint

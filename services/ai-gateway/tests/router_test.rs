@@ -1,4 +1,4 @@
-//! FR-AI-008 §5 — Integration tests for the multi-provider router.
+//! TASK-AI-008 §5 — Integration tests for the multi-provider router.
 //!
 //! Tests use mock providers that return scripted responses to verify
 //! retry, failover, deadline, and error handling behavior.

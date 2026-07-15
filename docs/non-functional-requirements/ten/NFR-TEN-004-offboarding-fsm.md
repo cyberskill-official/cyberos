@@ -9,14 +9,14 @@ phase: P0
 slo: "100% of offboarded tenants follow the 90-day FSM with declared milestones"
 owner: CLO-Legal
 created: 2026-05-18
-related_frs: [FR-TEN-104]
+related_tasks: [TASK-TEN-104]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
 1. Tenant offboarding **MUST** advance through the FSM: `requested → grace_30d → final_export → cold_storage_60d → permanent_delete`.
-2. The transition `final_export → cold_storage_60d` requires the tenant admin to confirm receipt of the signed bundle (`FR-TEN-105`).
-3. `permanent_delete` **MUST** require an explicit attestation signed by CLO-Legal (`FR-TEN-106`).
+2. The transition `final_export → cold_storage_60d` requires the tenant admin to confirm receipt of the signed bundle (`TASK-TEN-105`).
+3. `permanent_delete` **MUST** require an explicit attestation signed by CLO-Legal (`TASK-TEN-106`).
 4. Cancellation/reversal is possible up to `cold_storage_60d`; beyond that, restoration requires CEO override.
 5. The FSM state **MUST** be visible in the admin SPA + emit audit rows on every transition.
 

@@ -1,4 +1,4 @@
-//! FR-AUTH-102 — MFA lockout state machine.
+//! TASK-AUTH-102 — MFA lockout state machine.
 //!
 //! Policy: 5 failed MFA attempts within a 15-minute rolling window locks
 //! the account for 30 minutes. A root-admin can unlock early via the admin

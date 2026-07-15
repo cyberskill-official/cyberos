@@ -50,7 +50,7 @@ class ConsolidationReport:
     started_ns: int = 0
     finished_ns: int = 0
     errors: list[str] = field(default_factory=list)
-    # FR-MEMORY-116 SemanticDedup phase (optional, opt-in via flag).
+    # TASK-MEMORY-116 SemanticDedup phase (optional, opt-in via flag).
     # None when the phase did not run.
     semantic_dedup_ran: bool = False
     semantic_dedup_dry_run: bool = True
@@ -221,7 +221,7 @@ def run(
     semantic_dedup_scope: str = "",
 ) -> ConsolidationReport:
     """Run the 4-phase consolidation, optionally followed by SemanticDedup
-    (FR-MEMORY-116 §1 #1, §1 #2, §1 #3, §1 #6).
+    (TASK-MEMORY-116 §1 #1, §1 #2, §1 #3, §1 #6).
 
     Phase ordering: ``Walk → Compact → Sign → Publish → SemanticDedup``
     (the last is opt-in). A failure in any of the four legacy phases
@@ -238,15 +238,15 @@ def run(
         Segments with mtime older than this are eligible for zstd archival.
         Default 90 days — leaves recent ops live for fast tail-reading.
     semantic_dedup:
-        FR-MEMORY-116 — when True, run the SemanticDedup phase after Publish.
+        TASK-MEMORY-116 — when True, run the SemanticDedup phase after Publish.
         Default False (back-compat: existing callers unchanged).
     semantic_dedup_apply:
         When True AND ``semantic_dedup`` is True, apply the duplicates
         detector's proposals to the chain. Default False (dry-run; per
-        FR-MEMORY-116 §1 #2 the operator must explicitly opt in to writes).
+        TASK-MEMORY-116 §1 #2 the operator must explicitly opt in to writes).
     semantic_dedup_threshold:
         Cosine-style threshold for the duplicates detector. Default 0.92
-        per FR-MEMORY-116 §1 #4 (mirrors FR-MEMORY-115 default).
+        per TASK-MEMORY-116 §1 #4 (mirrors TASK-MEMORY-115 default).
     semantic_dedup_scope:
         Limit SemanticDedup to a subtree (e.g. ``"memories/facts"``).
     """
@@ -288,11 +288,11 @@ def _phase_semantic_dedup(
     threshold: float,
     scope: str,
 ) -> None:
-    """FR-MEMORY-116 — opt-in SemanticDedup phase.
+    """TASK-MEMORY-116 — opt-in SemanticDedup phase.
 
-    Reuses FR-MEMORY-115's ``duplicates`` detector + ``apply`` to keep the
+    Reuses TASK-MEMORY-115's ``duplicates`` detector + ``apply`` to keep the
     semantic-dedup logic in one place. The audit rows produced carry
-    ``extra.invocation = "consolidate"`` so FR-MEMORY-120 history can
+    ``extra.invocation = "consolidate"`` so TASK-MEMORY-120 history can
     distinguish dedup-from-consolidate vs dedup-from-explicit-dream-run.
     """
     from datetime import timedelta
@@ -331,7 +331,7 @@ def _phase_semantic_dedup(
 
             # Tag the dream rows from this run with invocation="consolidate".
             # The applier already wrote them; we append a marker aux row so
-            # the history projection (FR-MEMORY-120) can scan for the tag.
+            # the history projection (TASK-MEMORY-120) can scan for the tag.
             writer.submit(AuditRecord(
                 op="dream.complete",
                 path="",

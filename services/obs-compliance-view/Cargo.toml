@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "CyberOS obs-compliance-view - read-only compliance views over the memory audit chain (FR-OBS-008)"
+description = "CyberOS obs-compliance-view - read-only compliance views over the memory audit chain (TASK-OBS-008)"
 
 [lib]
 name = "cyberos_obs_compliance_view"
@@ -29,7 +29,7 @@ axum.workspace = true
 sqlx.workspace = true
 uuid.workspace = true
 chrono.workspace = true
-# The access-audit row (obs.compliance_view_accessed) appended to the memory chain (FR-OBS-008 §1 #10).
+# The access-audit row (obs.compliance_view_accessed) appended to the memory chain (TASK-OBS-008 §1 #10).
 cyberos-audit-chain = { path = "../shared/cyberos-audit-chain" }
 
 [[bin]]

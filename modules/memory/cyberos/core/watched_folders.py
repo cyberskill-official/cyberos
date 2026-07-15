@@ -1,4 +1,4 @@
-"""FR-MEMORY-105 — Watched-folder invariants.
+"""TASK-MEMORY-105 — Watched-folder invariants.
 
 Each Personal memory tracks a list of folders the capture daemon watches.
 The list lives at ``<store>/watched_folders.json`` with shape::
@@ -22,7 +22,7 @@ The doctor invariants enforce:
 * Every path is absolute and exists on this device.
 * Every path is unique (no double-watch).
 * No path is inside another watched path (no nested duplication).
-* ``sync_class_default`` is a closed-enum value (matches FR-MEMORY-106).
+* ``sync_class_default`` is a closed-enum value (matches TASK-MEMORY-106).
 * No path is in a known-toxic location (``/`` root, ``/etc``, ``/var``, etc.)
   that would either flood the daemon or capture system files.
 

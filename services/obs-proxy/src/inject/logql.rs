@@ -1,4 +1,4 @@
-//! LogQL label injection (FR-OBS-002 §1 #5, §3). Hand-rolled because no mature Rust LogQL crate
+//! LogQL label injection (TASK-OBS-002 §1 #5, §3). Hand-rolled because no mature Rust LogQL crate
 //! exists; this covers the subset Grafana actually emits - a `{...}` stream selector optionally
 //! wrapped in a metric function and followed by pipe stages.
 //!

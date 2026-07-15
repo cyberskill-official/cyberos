@@ -1,16 +1,16 @@
-//! FR-EVAL-002 versioning + the human-in-the-loop publish transition (§1 #6 #7 #8 #13).
+//! TASK-EVAL-002 versioning + the human-in-the-loop publish transition (§1 #6 #7 #8 #13).
 //!
 //! A rubric is versioned and effective-dated; a published version is immutable, and re-curation produces a
-//! NEW version while the prior one is superseded (DEC-2603). The two seams FR-EVAL-003 and the authoring
+//! NEW version while the prior one is superseded (DEC-2603). The two seams TASK-EVAL-003 and the authoring
 //! surface use:
-//!   * [`resolve_effective`] - the single read FR-EVAL-003 calls to anchor an assessment to the standard
+//!   * [`resolve_effective`] - the single read TASK-EVAL-003 calls to anchor an assessment to the standard
 //!     that was actually in force on a date (§1 #7);
 //!   * [`publish_version`] - the HITL transition: a human approver is mandatory, the version must be
 //!     coherent (every item cited + bilingual + check-shape valid, non-empty), and its effective interval
 //!     must not overlap a live published version; on success the prior open-ended version is superseded and
 //!     this one becomes published (§1 #8 #13).
 //!
-//! All writes run inside a tenant-scoped transaction (the FR-AUTH-003 RLS GUC, via [`crate::db::tenant_tx`]),
+//! All writes run inside a tenant-scoped transaction (the TASK-AUTH-003 RLS GUC, via [`crate::db::tenant_tx`]),
 //! so RLS confines them to one tenant. The audit row is emitted best-effort AFTER the transaction commits,
 //! on the separate memory-chain pool - the same contract `crate::handlers` and `crate::access` use (the L1
 //! chain lives in the memory module's Postgres, not the eval DB, so it cannot share the eval transaction).
@@ -86,7 +86,7 @@ pub async fn open_version(
     Ok(version)
 }
 
-/// The published version effective on `at` (§1 #7). FR-EVAL-003 anchors an assessment to whatever standard
+/// The published version effective on `at` (§1 #7). TASK-EVAL-003 anchors an assessment to whatever standard
 /// was actually in force for the period: the published version whose half-open `[effective_from,
 /// effective_to)` interval contains `at`. `Err(NoEffectiveVersion)` if none covers the date.
 pub async fn resolve_effective(

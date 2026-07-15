@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FR-CHAT-001 §1 #5 — operator workflow for cherry-picking upstream security
+# TASK-CHAT-001 §1 #5 — operator workflow for cherry-picking upstream security
 # fixes into the CyberOS patch series.
 #
 # Per DEC-422 we DO NOT rebase from upstream master. Each upstream commit

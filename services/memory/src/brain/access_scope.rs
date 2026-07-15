@@ -1,4 +1,4 @@
-//! FR-MEMORY-123 §1 #8 / DEC-2722 — the FR-EVAL-001 per-subject access predicate, applied AFTER tenant RLS.
+//! TASK-MEMORY-123 §1 #8 / DEC-2722 — the TASK-EVAL-001 per-subject access predicate, applied AFTER tenant RLS.
 //!
 //! Tenant RLS (the brain-table policies) stops cross-company leakage, but WITHIN a company the brain holds
 //! every employee's record and the closest vector neighbour to a query is returned regardless of subject.

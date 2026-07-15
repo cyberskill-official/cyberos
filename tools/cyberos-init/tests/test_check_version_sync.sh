@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_check_version_sync.sh - FR-IMP-068 §5 verification suite (t01-t10 -> AC 1-10).
+# test_check_version_sync.sh - TASK-IMP-068 §5 verification suite (t01-t10 -> AC 1-10).
 # Standalone bash, no framework. Run: bash tools/cyberos-init/tests/test_check_version_sync.sh
 set -uo pipefail
 
@@ -17,30 +17,55 @@ echo "building scratch payload..."
 bash "$BUILD" "$TMP/payload" >/dev/null 2>&1 || { echo "FATAL: scratch build failed"; exit 1; }
 
 t01_fresh_build_syncs() {                                             # AC 1
+  # Count NOT pinned. This asserted "across 6 artifacts" and went red at dd9070e33
+  # (FR-IMP-080), which added a 7th stamped artifact and updated the comparator's own
+  # header comment to "across 7 artifacts" — but not this assert. Nobody noticed: this
+  # file is in no gate.
+  #
+  # AC 1 is "a fresh build is in sync", not "there are exactly six artifacts". Pinning a
+  # number the tool is expected to grow guarantees the next artifact breaks the test —
+  # the same mistake as pinning status-hub@1 in test_templates_module.sh t02. Assert the
+  # shape and rc; t02 below is what proves each artifact is individually guarded.
   out="$(bash "$CHECK" "$TMP/payload")" && rc=0 || rc=$?
-  [ "$rc" -eq 0 ] && echo "$out" | grep -q "sync OK .* across 6 artifacts" \
+  [ "$rc" -eq 0 ] && echo "$out" | grep -qE "sync OK [0-9]+\.[0-9]+\.[0-9]+ across [0-9]+ artifacts" \
     && ok t01 || fail t01 "rc=$rc out=$out"
 }
 
 t02_each_artifact_guarded() {                                         # AC 2
   local all=1
-  declare -A tamper=(
-    [VERSION]='echo 9.9.9 > "$P/VERSION"'
-    [plugin/.claude-plugin/plugin.json]='sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"9.9.9\"/" "$P/plugin/.claude-plugin/plugin.json"'
-    [.claude-plugin/marketplace.json]='sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"9.9.9\"/" "$P/.claude-plugin/marketplace.json"'
-    [mcp/package.json]='sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"9.9.9\"/" "$P/mcp/package.json"'
-    [manifest.yaml]='sed -i "s/^cyberos_version: [0-9.]*/cyberos_version: 9.9.9/" "$P/manifest.yaml"'
-  )
-  for art in "${!tamper[@]}"; do
+  # bash 3.2 SAFE. This was `declare -A tamper=(...)`, a bash-4 associative array. macOS
+  # ships bash 3.2 (GPLv2, frozen 2007), where `declare -A` is a syntax error — so on the
+  # machine this repo is developed on, t02 never ran at all. Exactly what made
+  # check-chain-coverage.sh a no-op on macOS. A `name|command` list plus a case split is
+  # ordered, readable, and runs everywhere.
+  #
+  # `sed -i EXPR file` is likewise GNU-only: BSD/macOS sed reads the next arg as the
+  # backup suffix, so the tamper would silently not apply and t02 would report a false
+  # PASS — a gate that cannot fail. `-i.bak` + cleanup is accepted by both.
+  local tamper='VERSION|echo 9.9.9 > "$P/VERSION"
+plugin/.claude-plugin/plugin.json|_bump_json "$P/plugin/.claude-plugin/plugin.json"
+.claude-plugin/marketplace.json|_bump_json "$P/.claude-plugin/marketplace.json"
+mcp/package.json|_bump_json "$P/mcp/package.json"
+manifest.yaml|sed -i.bak "s/^cyberos_version: [0-9.]*/cyberos_version: 9.9.9/" "$P/manifest.yaml" && rm -f "$P/manifest.yaml.bak"'
+
+  _bump_json() { sed -i.bak 's/"version": "[0-9.]*"/"version": "9.9.9"/' "$1" && rm -f "$1.bak"; }
+
+  local art cmd line
+  while IFS= read -r line; do
+    art="${line%%|*}"; cmd="${line#*|}"
     P="$TMP/t02"; rm -rf "$P"; cp -r "$TMP/payload" "$P"
-    eval "${tamper[$art]}"
+    eval "$cmd"
+    # The tamper MUST have applied, or the assert below tests nothing and reports a pass.
+    grep -q '9\.9\.9' "$P/$art" || { fail "t02[$art]" "tamper did not apply — sed portability?"; all=0; continue; }
     out="$(bash "$CHECK" "$P" 2>&1)" && rc=0 || rc=$?
     if [ "$rc" -ne 10 ] || ! echo "$out" | grep -q "DRIFT $P/$art"; then
       fail "t02[$art]" "rc=$rc out=$out"; all=0
     fi
     n="$(echo "$out" | grep -c '^DRIFT ')"
     [ "$n" -eq 1 ] || { fail "t02[$art]" "expected 1 DRIFT line, got $n"; all=0; }
-  done
+  done <<EOF
+$tamper
+EOF
   # missing artifact (edge rows 3/9): removed file -> exit 2, never a pass
   P="$TMP/t02"; rm -rf "$P"; cp -r "$TMP/payload" "$P"; rm "$P/manifest.yaml"
   bash "$CHECK" "$P" >/dev/null 2>&1 && { fail "t02[missing]" "passed with missing manifest"; all=0; } || rc=$?
@@ -98,7 +123,24 @@ hook_fixture() { # builds a fixture repo with the real wrapper + recording stubs
   cp "$repo/.githooks/pre-commit" "$F/.githooks/pre-commit"; chmod +x "$F/.githooks/pre-commit"
   printf '#!/usr/bin/env bash\necho engine >> "%s/calls.log"\nexit ${ENGINE_RC:-0}\n' "$F" > "$F/.pre-commit-hooks/cyberos-payload-build.sh"
   printf '#!/usr/bin/env bash\necho check >> "%s/calls.log"\nexit 0\n' "$F" > "$F/tools/cyberos-init/check-version-sync.sh"
-  chmod +x "$F/.pre-commit-hooks/cyberos-payload-build.sh" "$F/tools/cyberos-init/check-version-sync.sh"
+  # EVERY command the real hook invokes needs a stub here, or the fixture aborts on a
+  # missing file and the assert reports something unrelated. This fixture copies the real
+  # .githooks/pre-commit but stubs only what it called ON THE DAY IT WAS WRITTEN, so every
+  # new gate added to that hook silently breaks t07/t08 until someone re-stubs it.
+  #
+  # Added 2026-07-15, both by me, both unnoticed for hours because this file is in no gate:
+  #   no-legacy-fr-vocabulary.sh  — unconditional, so it broke EVERY hook_fixture commit
+  #   scripts/tests/run_all.sh    — fires on ^modules/skill/, which is exactly what t07 stages
+  # SILENT stubs — they must not touch calls.log. t07 uses that file to decide whether the
+  # STATUS-SYNC engine fired, and asserts it stays absent on a non-trigger path. The vocab
+  # gate is unconditional, so a logging stub writes on every commit and t07 reads it as
+  # "engine fired on a non-trigger path" — a real assert failing on a fixture artefact.
+  # Stub what the hook calls; log only what the test is actually measuring.
+  mkdir -p "$F/scripts/tests"
+  printf '#!/usr/bin/env bash\nexit 0\n' > "$F/.pre-commit-hooks/no-legacy-fr-vocabulary.sh"
+  printf '#!/usr/bin/env bash\nexit 0\n' > "$F/scripts/tests/run_all.sh"
+  chmod +x "$F/.pre-commit-hooks/cyberos-payload-build.sh" "$F/tools/cyberos-init/check-version-sync.sh" \
+           "$F/.pre-commit-hooks/no-legacy-fr-vocabulary.sh" "$F/scripts/tests/run_all.sh"
   (cd "$F" && git add -A && git -c core.hooksPath=/dev/null commit -qm init)  # baseline commit without hooks
   rm -f "$F/calls.log"
 }

@@ -1,4 +1,4 @@
-//! PromQL label injection (FR-OBS-002 §1 #5, §3) via promql-parser@0.4.
+//! PromQL label injection (TASK-OBS-002 §1 #5, §3) via promql-parser@0.4.
 //!
 //! AST-based, never string concatenation (DEC-146): parse the query, push a `key="value"` matcher
 //! onto every vector selector in the tree, and reserialise via the AST's Display. Because the parser

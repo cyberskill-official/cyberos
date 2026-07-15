@@ -9,7 +9,7 @@ CyberOS Layer-1 Memory Protocol); it does NOT override the protocol's
 
 ## §1 — Read order for any change
 
-1. The FR being implemented — `docs/feature-requests/email/FR-EMAIL-<N>-<slug>.md`.
+1. The task being implemented — `docs/tasks/email/task-EMAIL-<N>-<slug>.md`.
 2. Its audit dossier — same name + `.audit.md`.
 3. This file.
 4. The root `AGENTS.md` if a protocol-level concern surfaces.
@@ -18,13 +18,13 @@ CyberOS Layer-1 Memory Protocol); it does NOT override the protocol's
 
 ## §2 — Hard rules for EMAIL work
 
-- **Bodies live in S3+KMS, not Postgres.** Per FR-EMAIL-001 §1 DEC-311 and
+- **Bodies live in S3+KMS, not Postgres.** Per TASK-EMAIL-001 §1 DEC-311 and
   the `disallowed_tools` line, message bodies MUST NOT be stored on a
   Postgres-readable row. The metadata mirror in `message_metadata` carries
   `s3_body_key` + `s3_body_kms_key_id` + `body_sha256_hex` — that is the
   ONLY place body provenance lives.
 
-- **Outbound mail MUST be DKIM-signed.** Per FR-EMAIL-001 §1 #15. Any
+- **Outbound mail MUST be DKIM-signed.** Per TASK-EMAIL-001 §1 #15. Any
   outbound path that bypasses the DKIM verification step is a spec
   violation. The `on_outbound` adapter checks `dkim_keys.status =
   'active'` before submitting; do not add a path that skips the check.
@@ -80,7 +80,7 @@ cd services && cargo test -p cyberos-email
 
 ## §5 — Spec divergences
 
-Documented in `FR-EMAIL-001-stalwart-deployment.audit.md` §10.6:
+Documented in `TASK-EMAIL-001-stalwart-deployment.audit.md` §10.6:
 
 - `auth.tenant_id` (spec §1 #10) → `app.current_tenant_id` (impl,
-  aligned with FR-AUTH-003 §10.6 amendment).
+  aligned with TASK-AUTH-003 §10.6 amendment).

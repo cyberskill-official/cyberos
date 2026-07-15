@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of plan-quota violations either blocked OR queued with operator-visible state"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-TEN-002, FR-TEN-004]
+related_tasks: [TASK-TEN-002, TASK-TEN-004]
 ---
 
 ## §1 — Statement (BCP-14 normative)

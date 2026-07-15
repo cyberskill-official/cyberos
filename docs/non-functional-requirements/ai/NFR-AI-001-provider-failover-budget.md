@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 < 5s from primary upstream error to first byte from secondary provider"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-AI-008, FR-AI-009, FR-AI-010]
+related_tasks: [TASK-AI-008, TASK-AI-009, TASK-AI-010]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -36,8 +36,8 @@ Histogram metric `ai_gateway_failover_latency_seconds{primary_provider, secondar
 ## §5 — Failure handling
 
 - p95 > 5s for 10 minutes → sev-2 alert, on-call investigates whether secondary provider has degraded.
-- p99 > 8s for 5 minutes → sev-1 alert, on-call considers manually promoting tertiary provider via `cyberos-ai promote-provider <tertiary>` (FR-AI-021 CLI).
-- Two consecutive failovers > 8s on the same secondary → automatic circuit-break of secondary; tertiary becomes new secondary (FR-AI-009 circuit breaker FSM).
+- p99 > 8s for 5 minutes → sev-1 alert, on-call considers manually promoting tertiary provider via `cyberos-ai promote-provider <tertiary>` (TASK-AI-021 CLI).
+- Two consecutive failovers > 8s on the same secondary → automatic circuit-break of secondary; tertiary becomes new secondary (TASK-AI-009 circuit breaker FSM).
 
 ---
 

@@ -1,4 +1,4 @@
--- FR-EMAIL-004 — DKIM/ARC/BIMI delivery-auth persistence.
+-- TASK-EMAIL-004 — DKIM/ARC/BIMI delivery-auth persistence.
 --
 -- This migration turns the slice from detached helpers into an auditable
 -- service surface: DNS setup/verification state is durable, and every

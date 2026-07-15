@@ -1,4 +1,4 @@
-//! FR-AUTH-106 slice 2 — GeoIP resolver. Pluggable behind a trait so production
+//! TASK-AUTH-106 slice 2 — GeoIP resolver. Pluggable behind a trait so production
 //! reads MaxMind GeoLite2-City.mmdb, dev/test uses a hand-rolled in-memory
 //! map, and a null resolver lets the rest of AUTH degrade gracefully when no
 //! DB is configured.
@@ -29,7 +29,7 @@ pub struct GeoLookup {
     pub continent: Option<String>,
 }
 
-/// FR-AUTH-106 slice-3 — Anonymous-IP DB lookup result. MaxMind's
+/// TASK-AUTH-106 slice-3 — Anonymous-IP DB lookup result. MaxMind's
 /// GeoIP2-Anonymous-IP DB flags an IP as VPN, hosting provider, public
 /// proxy, residential proxy, or Tor exit. Any TRUE flag is considered
 /// "anonymous" for the purposes of `block_anonymous_ip`.
@@ -190,7 +190,7 @@ pub fn from_env() -> Result<Arc<dyn GeoIpResolver>, GeoIpError> {
             let mut r = MaxMindResolver::from_path(&path)?;
             tracing::info!(path = %path, "GeoIP enrichment enabled (MaxMind)");
             // Optional Anonymous-IP DB — when present, VPN/Tor flagging
-            // activates. Per FR-AUTH-106 slice-3, this is supplementary —
+            // activates. Per TASK-AUTH-106 slice-3, this is supplementary —
             // missing DB does not error.
             if let Ok(anon_path) = std::env::var("AUTH_GEOIP_ANONYMOUS_DB") {
                 if !anon_path.is_empty() {

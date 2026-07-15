@@ -1,4 +1,4 @@
-//! FR-MCP-001 §1 #6 — `tools/list` handler with cursor pagination.
+//! TASK-MCP-001 §1 #6 — `tools/list` handler with cursor pagination.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -16,7 +16,7 @@ pub struct ToolsListParams {
     pub cursor: Option<String>,
 }
 
-/// One tool as exposed to the MCP client (FR-MCP-001 §1 #6).
+/// One tool as exposed to the MCP client (TASK-MCP-001 §1 #6).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolDescriptor {
     /// SEP-986 name (`cyberos.<module>.<verb>_<noun>`).
@@ -48,7 +48,7 @@ pub fn build_response(registry: &ToolRegistry, params: &ToolsListParams) -> Tool
         .and_then(decode_cursor)
         .unwrap_or(0);
 
-    // FR-MCP-002: only list tools whose owning module is currently available (healthy or
+    // TASK-MCP-002: only list tools whose owning module is currently available (healthy or
     // degraded). Unhealthy/deregistered modules' tools are withdrawn until heartbeats resume.
     let all = registry.available_descriptors_sorted(std::time::SystemTime::now());
     let total = all.len();

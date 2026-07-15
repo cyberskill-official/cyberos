@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of unbilled time entries reflect the current rate-card within 60s of rate change"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-PROJ-005, FR-PROJ-006]
+related_tasks: [TASK-PROJ-005, TASK-PROJ-006]
 ---
 
 ## §1 — Statement (BCP-14 normative)

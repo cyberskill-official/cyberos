@@ -1,4 +1,4 @@
-//! FR-CHAT-269 — moderation queue, integration tests.
+//! TASK-CHAT-269 — moderation queue, integration tests.
 //!
 //!   cd services/dev && docker compose up -d
 //!   DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos \
@@ -30,7 +30,7 @@ use std::sync::Arc;
 use tower::ServiceExt;
 use uuid::Uuid;
 
-const HS256_SECRET: &[u8] = b"cyberos-chat-test-secret-fr-chat-269";
+const HS256_SECRET: &[u8] = b"cyberos-chat-test-secret-task-chat-269";
 
 async fn pool() -> PgPool {
     let url = std::env::var("DATABASE_URL").expect("DATABASE_URL env var");
@@ -102,7 +102,7 @@ fn token_with_roles(subject: Uuid, tenant: Uuid, roles: &[&str]) -> String {
     sign(&claims)
 }
 
-/// A token with NO `roles` claim at all — the pre-FR-AUTH-101 shape. AC 1 turns on this case.
+/// A token with NO `roles` claim at all — the pre-TASK-AUTH-101 shape. AC 1 turns on this case.
 fn token_without_roles_claim(subject: Uuid, tenant: Uuid) -> String {
     let claims = json!({
         "sub": subject.to_string(),
@@ -395,7 +395,7 @@ async fn duplicates_fold_and_severity_outranks_age() {
     assert_eq!(q[1]["report_count"], json!(3));
 }
 
-/// AC 7 — the privacy property this FR turns on. A DM report discloses the reported message and NOTHING
+/// AC 7 — the privacy property this task turns on. A DM report discloses the reported message and NOTHING
 /// else. Not the thread. Not one line of it.
 #[tokio::test]
 #[ignore = "requires Postgres (DATABASE_URL)"]

@@ -1,28 +1,28 @@
--- FR-EVAL-002: the evaluation rubric built from the three signed employment documents.
+-- TASK-EVAL-002: the evaluation rubric built from the three signed employment documents.
 --
 -- Turns the Labor Contract, the NDA/non-compete/IP agreement, and the Total Rewards & Career Path
 -- Appendix (bilingual VN/EN, dated 2026-01-01, under Labor Code 45/2019/QH14 + Decree 145/2020) into a
--- structured, versioned, clause-cited framework FR-EVAL-003 can evaluate evidence against - with a human
+-- structured, versioned, clause-cited framework TASK-EVAL-003 can evaluate evidence against - with a human
 -- approving every item before it is effective. This migration is the schema; the human-curated authoring
 -- path is services/eval/src/rubric/. Continues the EVAL migration numbering at 0003 (0001 = governance
--- core, 0002 = subject_request); the FR's draft named it 0002_rubric.sql before 0002_subject_request.sql
+-- core, 0002 = subject_request); the task's draft named it 0002_rubric.sql before 0002_subject_request.sql
 -- existed.
 --
 -- THREE TABLES (§1 #1): `rubric` is the named framework for a tenant; `rubric_version` is one immutable,
 -- effective-dated published cut of it; `rubric_item` is one checkable obligation / working term / KPI /
 -- milestone within a version. Re-curation is a NEW version, never a row mutation - the same append-only
--- discipline as 0001's governance ledgers and the FR-PROJ-008 history layer.
+-- discipline as 0001's governance ledgers and the TASK-PROJ-008 history layer.
 --
 -- DISABLED-BY-DEFAULT, HUMAN-ONLY (DEC-2602): nothing here scores a person or calls a model. The schema
 -- only lets a human author and publish clause-cited criteria. The GENIE/Lumi draft path (DEC-2602) needs
 -- the AI gateway and is a later slice; this migration carries the provenance columns it will write into
 -- (authored_by / genie_confidence / needs_clause_ref) but no automated path populates them yet.
 --
--- GOVERNANCE-FIRST (DEC-2601): FR-EVAL-002 is a hard dependent of FR-EVAL-001. These tables ship only
+-- GOVERNANCE-FIRST (DEC-2601): TASK-EVAL-002 is a hard dependent of TASK-EVAL-001. These tables ship only
 -- after the 0001 governance layer exists, and rubric authoring / reads are access-gated by its grants in
 -- the handler layer (founder + designated rubric admins), not by an access rule this migration invents.
 --
--- Reuses AUTH's per-tenant RLS GUC (app.current_tenant_id, FR-AUTH-003) verbatim from 0001_governance.sql,
+-- Reuses AUTH's per-tenant RLS GUC (app.current_tenant_id, TASK-AUTH-003) verbatim from 0001_governance.sql,
 -- and the same append-only REVOKE idiom (the runtime role gets SELECT + INSERT so RLS predicates fire, but
 -- not UPDATE/DELETE). Requires pgcrypto (gen_random_uuid), enabled per database by the deploy bootstrap.
 
@@ -75,7 +75,7 @@ CREATE INDEX IF NOT EXISTS rubric_version_published_idx
 --    not a rubric item - source_doc and clause_ref are NOT NULL and the handler rejects an empty clause_ref
 --    (422 rubric_item_uncited) before insert. Bilingual VN/EN with _vi required (Vietnamese is the
 --    legally-operative text). No per-employee / score / evidence column exists anywhere here by design
---    (§1 #14) - the standard and the judgement stay separate; per-person scoring is FR-EVAL-003's.
+--    (§1 #14) - the standard and the judgement stay separate; per-person scoring is TASK-EVAL-003's.
 CREATE TABLE IF NOT EXISTS rubric_item (
     id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     rubric_version_id    UUID NOT NULL REFERENCES rubric_version(id),
@@ -92,12 +92,12 @@ CREATE TABLE IF NOT EXISTS rubric_item (
     -- the three NDA obligation families; required for obligation items, null otherwise (handler-enforced).
     obligation_kind      TEXT CHECK (obligation_kind IN
                          ('confidentiality','non_compete','ip_assignment')),
-    -- check descriptor consumed by FR-EVAL-003 (§1 #4). A small closed set keeps the evaluation engine
+    -- check descriptor consumed by TASK-EVAL-003 (§1 #4). A small closed set keeps the evaluation engine
     -- bounded; check_params carries typed parameters keyed by check_type, validated in the handler.
     check_type           TEXT NOT NULL CHECK (check_type IN
                          ('evidence_presence','threshold_numeric','attestation','periodic_review','milestone_reached')),
     check_params         JSONB NOT NULL DEFAULT '{}',
-    -- relative within a version; the roll-up math is FR-EVAL-003's, this only stores the weight (§1 #4 #14).
+    -- relative within a version; the roll-up math is TASK-EVAL-003's, this only stores the weight (§1 #4 #14).
     weight               NUMERIC(5,2) NOT NULL DEFAULT 0 CHECK (weight >= 0),
     -- bilingual (§1 #5): _vi is required (legally-operative), _en is the working translation.
     title_vi             TEXT NOT NULL CHECK (length(btrim(title_vi)) > 0),
@@ -179,7 +179,7 @@ CREATE TRIGGER rubric_item_immutable
     BEFORE UPDATE OR DELETE ON rubric_item
     FOR EACH ROW EXECUTE FUNCTION rubric_item_block_published_mutation();
 
--- 5. Row-level security: every rubric row is scoped to its tenant via the FR-AUTH-003 GUC
+-- 5. Row-level security: every rubric row is scoped to its tenant via the TASK-AUTH-003 GUC
 --    app.current_tenant_id (set per transaction). The nil tenant bypasses for admin paths. Identical idiom
 --    to 0001_governance.sql / 0002_subject_request.sql.
 DO $$

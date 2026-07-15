@@ -62,7 +62,7 @@
 | `QA-BREAK-001` | Breaking change in §Changed instead of explicit upgrade notes | A bullet in §Changed contains "breaking", "incompatible", "removed", "renamed" | error → needs_human (`scope_decomposition`) |
 | `QA-CVE-001` | Security advisory uses fabricated CVE | A CVE-YYYY-NNNN in §Security or `security_advisories` doesn't match NVD/MITRE format pattern AND has no `source_ref` | error |
 | `QA-CVE-002` | Security advisory without severity | A `security_advisories` entry missing `severity:` (low/medium/high/critical) | error |
-| `QA-JARGON-001` | Customer-facing audience receives engineering jargon | `audience: customer_public` AND body contains: webhook, schema migration, RBAC, JWT, raw HTTP verbs, regex, latency p99, kubernetes, dashmap (engineering jargon list per FR audit QA-009) | warning |
+| `QA-JARGON-001` | Customer-facing audience receives engineering jargon | `audience: customer_public` AND body contains: webhook, schema migration, RBAC, JWT, raw HTTP verbs, regex, latency p99, kubernetes, dashmap (engineering jargon list per task audit QA-009) | warning |
 | `QA-SEMVER-001` | Release ID and breaking flag inconsistent | `release_id` differs from `prior_release_id` only at patch level but `breaking: true` (or vice-versa) | error → needs_human |
 | `QA-COMPAT-001` | Breaking but no `compat_target_version` | error |
 | `QA-EMPTY-001` | Highlights empty or generic | §Highlights contains "various improvements" / "bug fixes" only with no specific item | warning |
@@ -86,7 +86,7 @@
 | `XCHAIN-001` | `provenance.source_path` matches author manifest | warning |
 | `XCHAIN-002` | `provenance.source_hash` matches at write time | error |
 | `XCHAIN-003` | If a deploy-checklist exists for this release, it references this artefact at DEP-002 | warning |
-| `XCHAIN-004` | Every merged FR since `prior_release_id` is represented in at least one of §Added / §Changed / §Fixed (or has `release_notes_excluded: true` in its FR frontmatter) | warning |
+| `XCHAIN-004` | Every merged task since `prior_release_id` is represented in at least one of §Added / §Changed / §Fixed (or has `release_notes_excluded: true` in its task frontmatter) | warning |
 
 ## §8  Staleness
 

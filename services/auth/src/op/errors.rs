@@ -1,4 +1,4 @@
-//! FR-AUTH-110 - closed error type for the OIDC-provider surface.
+//! TASK-AUTH-110 - closed error type for the OIDC-provider surface.
 //!
 //! Codes are the RFC 6749 / OIDC error strings used either as the `error=` query
 //! param on a redirect back to the RP, or as the `error` field of a JSON body on
@@ -24,7 +24,7 @@ pub enum OpError {
     /// `response_type` other than `code` (implicit / hybrid forbidden).
     #[error("unsupported_response_type")]
     UnsupportedResponseType,
-    /// The resolved subject is revoked (FR-AUTH-005). The kick.
+    /// The resolved subject is revoked (TASK-AUTH-005). The kick.
     #[error("access_denied")]
     AccessDenied,
     /// Auth code missing / expired / replayed, or PKCE verifier mismatch.

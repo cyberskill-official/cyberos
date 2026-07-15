@@ -1,4 +1,4 @@
-//! FR-AUTH-004 — JWT-verification middleware.
+//! TASK-AUTH-004 — JWT-verification middleware.
 //!
 //! Tower middleware layered onto every admin route. Responsibilities:
 //!   1. Pull `Authorization: Bearer <jwt>` from the request.
@@ -39,7 +39,7 @@ pub async fn verify_jwt(
         .await
         .map_err(|e| unauthorized(&format!("jwt verification failed: {e}")))?;
 
-    // FR-AUTH-005 §1 #3 + #11 + G-011/G-017 — deny-list check. If revoke
+    // TASK-AUTH-005 §1 #3 + #11 + G-011/G-017 — deny-list check. If revoke
     // pushed this jti into the deny-list, the JWT is no longer valid even
     // though its signature + exp + iss verify. Returns 401 with explicit
     // `token_revoked` so the client can distinguish from "expired" and
@@ -48,7 +48,7 @@ pub async fn verify_jwt(
         return Err(unauthorized("token_revoked"));
     }
 
-    // FR-AUTH-101 §1 #10 — set the per-connection `app.roles` GUC so
+    // TASK-AUTH-101 §1 #10 — set the per-connection `app.roles` GUC so
     // RLS policies can call `auth.has_role(<role>)` directly. The GUC is
     // a comma-separated list; the SQL function splits on `,`.
     // Best-effort: failure to set the GUC doesn't fail the request, but it
@@ -61,7 +61,7 @@ pub async fn verify_jwt(
             .await;
     }
 
-    // FR-OBS-003 - hand the tenant to the RED middleware (outer layer) via the response extensions, so
+    // TASK-OBS-003 - hand the tenant to the RED middleware (outer layer) via the response extensions, so
     // the metric's tenant_id label is real rather than "unknown".
     let tenant_id = claims.tenant_id.clone();
     request.extensions_mut().insert(claims);

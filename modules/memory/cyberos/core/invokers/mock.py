@@ -5,9 +5,9 @@ Used by tests (CI without API keys) and by `--invoker mock` deployments
 that don't have / don't want LLM calls. The mock's score is derived from
 ``sha256(content)[:8]`` so the same content always produces the same
 score — which is exactly what we want for cache-invalidation tests AND
-for reproducible dream-pipeline behaviour (FR-MEMORY-115).
+for reproducible dream-pipeline behaviour (TASK-MEMORY-115).
 
-Per FR-MEMORY-114 implementation note: the mock score is clamped to
+Per TASK-MEMORY-114 implementation note: the mock score is clamped to
 ``[0.1, 0.95]`` so it never produces literal 0.0 or 1.0 — those values
 would conflate with the fallback / pinned-by-operator paths.
 """

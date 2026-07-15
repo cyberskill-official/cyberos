@@ -1,5 +1,5 @@
 //! pgvector projection — upsert l2_memory rows + optional embedding population
-//! (FR-MEMORY-101 + FR-AI-019).
+//! (TASK-MEMORY-101 + TASK-AI-019).
 //!
 //! Two write paths:
 //!   * `upsert_memory(pool, row)` — basic upsert without an embedding; used
@@ -34,7 +34,7 @@ pub async fn upsert_memory(pool: &PgPool, row: &L1Row) -> Result<(), sqlx::Error
     .map(|_| ())
 }
 
-/// FR-AI-019 — Upsert + populate the `embedding` vector column. The caller
+/// TASK-AI-019 — Upsert + populate the `embedding` vector column. The caller
 /// is responsible for obtaining the embedding from `EmbeddingClient::embed_one`
 /// (or `embed_batch` for throughput). If the upsert is a no-op (PK conflict),
 /// the existing embedding is preserved — we use a separate UPDATE for the
@@ -61,7 +61,7 @@ pub async fn upsert_memory_with_embedding(
     .map(|_| ())
 }
 
-/// FR-AI-019 — One-shot helper used by the ingest hot path. Tries to embed
+/// TASK-AI-019 — One-shot helper used by the ingest hot path. Tries to embed
 /// `row.body` via the configured sidecar, then writes both the row and the
 /// embedding. If the sidecar is unconfigured or fails, falls back to a
 /// bare `upsert_memory` and returns `Ok(false)` so the caller can record
@@ -93,7 +93,7 @@ pub async fn try_embed_and_upsert(
     Ok(false)
 }
 
-/// FR-AI-019 — Background re-embedder. Picks up to `batch_size` rows whose
+/// TASK-AI-019 — Background re-embedder. Picks up to `batch_size` rows whose
 /// `embedding IS NULL` and fills them in. Called by a periodic task in
 /// `main.rs`. Returns the number of rows successfully embedded.
 pub async fn reembed_missing(

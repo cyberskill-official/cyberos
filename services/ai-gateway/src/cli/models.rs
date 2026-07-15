@@ -1,4 +1,4 @@
-//! FR-AI-021 — `cyberos-ai models` subcommand.
+//! TASK-AI-021 — `cyberos-ai models` subcommand.
 
 use super::auth::OperatorClaims;
 use super::output;

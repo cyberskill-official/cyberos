@@ -1,4 +1,4 @@
-//! FR-OBS-002 §4 #5 / §8 - TraceQL injection acceptance tests (integration).
+//! TASK-OBS-002 §4 #5 / §8 - TraceQL injection acceptance tests (integration).
 
 use cyberos_obs_proxy::inject::traceql;
 

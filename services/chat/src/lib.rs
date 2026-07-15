@@ -1,5 +1,5 @@
-//! CyberOS-native chat (FR-CHAT-101 slice 1): router, shared state, health, and a small error helper.
-//! A first-party Rust service on the CyberOS identity (FR-AUTH-110), Postgres with per-tenant RLS, and
+//! CyberOS-native chat (TASK-CHAT-101 slice 1): router, shared state, health, and a small error helper.
+//! A first-party Rust service on the CyberOS identity (TASK-AUTH-110), Postgres with per-tenant RLS, and
 //! the memory audit chain - replacing the Mattermost dependency.
 
 pub mod ai;
@@ -39,7 +39,7 @@ pub struct AppState {
     /// row per channel/message event; when unset (tests/local), the event is logged. DEC-2713 makes this
     /// the chat->brain link.
     pub audit_pool: Option<db::Pool>,
-    /// FR-MEMORY-122 §1 #4 — the BRAIN capture mechanism over `audit_pool`. `Some` ONLY when
+    /// TASK-MEMORY-122 §1 #4 — the BRAIN capture mechanism over `audit_pool`. `Some` ONLY when
     /// `CAPTURE_ENABLED` is truthy AND `audit_pool` is configured (default off). When `None`, every chat
     /// emitter (`capture::emit_*`) is a complete no-op, so capture costs nothing and message send / channel
     /// activity are unchanged — safe to deploy during a live team load-test.
@@ -53,7 +53,7 @@ pub struct AppState {
     pub notifier: notify::Notifier,
     /// Attachment byte-store backend + limits (richer-messages cluster). See storage.rs.
     pub attachments: storage::AttachmentConfig,
-    /// FR-CHAT-268 — memoised blocker -> blocked-set, invalidated on every block/unblock. Read by all
+    /// TASK-CHAT-268 — memoised blocker -> blocked-set, invalidated on every block/unblock. Read by all
     /// four enforcement points; the realtime one needs it per-frame, so it must not hit the DB.
     pub blocks: blocks::BlockCache,
 }
@@ -105,16 +105,16 @@ pub fn router(state: AppState) -> Router {
             axum::routing::delete(reactions::remove),
         )
         .route("/v1/chat/translate", post(translate::translate))
-        // FR-CHAT-267. Deliberately tenant-wide, not nested under a channel: a report can target a person
+        // TASK-CHAT-267. Deliberately tenant-wide, not nested under a channel: a report can target a person
         // with whom the reporter shares no channel (§1 #3 - the DM harassment path).
         .route("/v1/chat/reports", post(reports::create))
-        // FR-CHAT-268. Tenant-wide like reports: you can block someone you share no channel with.
+        // TASK-CHAT-268. Tenant-wide like reports: you can block someone you share no channel with.
         .route("/v1/chat/blocks", post(blocks::block).get(blocks::list))
         .route(
             "/v1/chat/blocks/:subject_id",
             axum::routing::delete(blocks::unblock),
         )
-        // FR-CHAT-269 — the moderation queue. Every one of these is gated on a WORKSPACE role
+        // TASK-CHAT-269 — the moderation queue. Every one of these is gated on a WORKSPACE role
         // (auth::require_moderator, fail-closed); a channel role grants nothing here.
         .route("/v1/chat/admin/reports", get(moderation::queue))
         .route("/v1/chat/admin/reports/:id", get(moderation::detail))
@@ -161,7 +161,7 @@ pub fn router(state: AppState) -> Router {
         ))
         .with_state(state);
 
-    // FR-APP-007: opt-in permissive CORS so a local browser (the CDS chat web client) can call the
+    // TASK-APP-007: opt-in permissive CORS so a local browser (the CDS chat web client) can call the
     // service cross-origin in dev. In production Caddy serves the page and proxies the service under
     // one origin, so this stays off. Set CHAT_DEV_CORS=1 only for local development.
     if std::env::var("CHAT_DEV_CORS").is_ok() {

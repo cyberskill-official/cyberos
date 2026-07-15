@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# check_doc_anchors.sh - FR-SKILL-119 §1 #3. Scans modules/skill/**/*.md + modules/cuo/**/*.md
+# check_doc_anchors.sh - TASK-SKILL-119 §1 #3. Scans modules/skill/**/*.md + modules/cuo/**/*.md
 # for repo-relative markdown links and inline `path#anchor` citations; verifies the target file
 # exists and, when an anchor is given, that it resolves to a heading (GitHub slug rules).
 # exit 0 clean | exit 10 with `DEAD <citing-file>:<line> -> <target>` lines | exit 2 unusable.
@@ -28,7 +28,7 @@ def slug(h):
     return re.sub(r"\s+", "-", h).strip("-")
 
 def planned_files(src):
-    """new_files/modified_files entries of an FR spec (planned deliverables are valid citations)."""
+    """new_files/modified_files entries of a task spec (planned deliverables are valid citations)."""
     out = set()
     try:
         txt = open(src, encoding="utf-8", errors="replace").read()
@@ -48,11 +48,11 @@ def corpus_planned(repo):
     if CORPUS_PLANNED is None:
         CORPUS_PLANNED = set()
         import glob as g
-        for spec in g.glob(os.path.join(repo, "docs", "feature-requests", "*", "FR-*", "spec.md")):
+        for spec in g.glob(os.path.join(repo, "docs", "tasks", "*", "TASK-*", "spec.md")):
             CORPUS_PLANNED |= planned_files(spec)
     return CORPUS_PLANNED
 
-def fr_status(src):
+def task_status(src):
     try:
         head = open(src, encoding="utf-8", errors="replace").read(2000)
         m = re.search(r"^status:\s*([a-z_]+)", head, re.M)
@@ -69,21 +69,21 @@ def headings(path):
 
 dead, listed = [], []
 planned_cache = {}
-roots = [os.path.join(repo, "modules", "skill"), os.path.join(repo, "modules", "cuo"), os.path.join(repo, "docs", "feature-requests")]
+roots = [os.path.join(repo, "modules", "skill"), os.path.join(repo, "modules", "cuo"), os.path.join(repo, "docs", "tasks")]
 for root in roots:
     for dp, _, files in os.walk(root):
         for f in files:
             if not f.endswith(".md"): continue
-            if "feature-requests" in dp and (os.sep + "." in dp or "_audits" in dp or "_archive" in dp): continue
+            if "tasks" in dp and (os.sep + "." in dp or "_audits" in dp or "_archive" in dp): continue
             src = os.path.join(dp, f)
             rel_src = os.path.relpath(src, repo)
             for ln, line in enumerate(open(src, encoding="utf-8", errors="replace"), 1):
                 targets = MD_LINK.findall(line) + INLINE.findall(line)
                 for t in targets:
                     if t.startswith(("http://", "https://", "mailto:")): continue
-                    if "<" in t or "{" in t: continue  # scaffold placeholders by design (FR-SKILL-115)
+                    if "<" in t or "{" in t: continue  # scaffold placeholders by design (TASK-SKILL-115)
                     if re.search(r"YYYY|XX|\bN\.N\b", t): continue  # date/number placeholder patterns
-                    if "feature-requests" in rel_src and f == "spec.md":
+                    if "tasks" in rel_src and f == "spec.md":
                         base = t.split("#")[0]
                         if base in planned_cache.setdefault(src, planned_files(src)) or base in corpus_planned(repo):
                             listed.append(f"planned     {rel_src}:{ln} -> {t}"); continue
@@ -108,7 +108,7 @@ for root in roots:
                         if want not in headings(target):
                             status = "dead-anchor"
                     if status.startswith("dead"):
-                        if "feature-requests" in rel_src and f == "spec.md" and fr_status(src) in ("done", "closed", "on_hold"):
+                        if "tasks" in rel_src and f == "spec.md" and task_status(src) in ("done", "closed", "on_hold"):
                             print(f"WARN historical spec ref: {rel_src}:{ln} -> {t}", file=sys.stderr)
                             listed.append(f"hist-stale  {rel_src}:{ln} -> {t}"); continue
                         dead.append(f"DEAD {rel_src}:{ln} -> {t}")

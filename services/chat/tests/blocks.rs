@@ -1,4 +1,4 @@
-//! FR-CHAT-268 — user blocking, integration tests.
+//! TASK-CHAT-268 — user blocking, integration tests.
 //!
 //! Same harness shape as tests/reports.rs: the REAL router in-process via `tower::ServiceExt::oneshot`,
 //! against a live Postgres with the chat migrations applied (through 0015_chat_blocks.sql), HS256 tokens so
@@ -8,11 +8,11 @@
 //!   DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos \
 //!     cargo test -p cyberos-chat --test blocks -- --ignored --test-threads=1
 //!
-//! AC coverage (§4 of the FR):
+//! AC coverage (§4 of the task):
 //!   AC 1        block_is_directional_and_private
 //!   AC 2,3,15   self_block_refused_and_mutations_are_idempotent
 //!   AC 4,5,6    group_collapses_dm_disappears
-//!   AC 7        the_blocked_sender_observes_nothing        <- the security property the FR turns on
+//!   AC 7        the_blocked_sender_observes_nothing        <- the security property the task turns on
 //!   AC 10       blocked_reactions_are_not_counted
 //!   AC 11       unblock_restores_in_place
 //!   AC 13       blocking_removes_nobody_from_the_channel
@@ -22,9 +22,9 @@
 //!   AC 8  (realtime socket drop/redact) — needs a websocket client against a running server; the enforcement
 //!         is in realtime::ws_loop and is exercised by the chat smoke suite.
 //!   AC 9  (zero notification, zero push, not even for a mention) — needs to observe the notifier fan-out.
-//!         This is the point the FR calls out as previously broken, so it is the one most worth an eyeball:
+//!         This is the point the task calls out as previously broken, so it is the one most worth an eyeball:
 //!         the enforcement is `blockers_of` in notify::fanout.
-//!   AC 12 (moderation queue ignores blocks) — belongs to FR-CHAT-269, which does not exist yet.
+//!   AC 12 (moderation queue ignores blocks) — belongs to TASK-CHAT-269, which does not exist yet.
 
 use axum::body::{to_bytes, Body};
 use axum::http::{Request, StatusCode};
@@ -35,7 +35,7 @@ use std::sync::Arc;
 use tower::ServiceExt;
 use uuid::Uuid;
 
-const HS256_SECRET: &[u8] = b"cyberos-chat-test-secret-fr-chat-268";
+const HS256_SECRET: &[u8] = b"cyberos-chat-test-secret-task-chat-268";
 
 /// Connects, then drops to `cyberos_app` — the runtime app's database identity.
 ///
@@ -417,7 +417,7 @@ async fn group_collapses_dm_disappears() {
     );
 }
 
-/// AC 7 — the security property the FR turns on. B is told nothing, by any means. Telling a harasser they
+/// AC 7 — the security property the task turns on. B is told nothing, by any means. Telling a harasser they
 /// have been blocked is an escalation trigger; every mature messenger lets the blocked sender believe the
 /// message went out, and so do we.
 #[tokio::test]

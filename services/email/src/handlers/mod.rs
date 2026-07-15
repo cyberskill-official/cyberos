@@ -1,4 +1,4 @@
-//! FR-EMAIL-001 §1 #19 — internal REST handlers.
+//! TASK-EMAIL-001 §1 #19 — internal REST handlers.
 
 pub mod camel;
 pub mod delivery_auth;

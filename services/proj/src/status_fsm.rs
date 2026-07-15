@@ -1,4 +1,4 @@
-//! FR-PROJ-001 §1 #3 — Issue status finite-state machine.
+//! TASK-PROJ-001 §1 #3 — Issue status finite-state machine.
 //!
 //! Legal transitions:
 //!   triage  → todo
@@ -157,7 +157,7 @@ mod tests {
     }
 
     #[test]
-    fn canonical_lifecycle_matches_fr_proj_004() {
+    fn canonical_lifecycle_matches_task_proj_004() {
         assert!(validate_lifecycle(
             LifecycleStatus::Backlog,
             LifecycleStatus::Todo

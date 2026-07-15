@@ -1,4 +1,4 @@
-//! HTTP-facing orchestration for FR-EMAIL-004.
+//! HTTP-facing orchestration for TASK-EMAIL-004.
 
 use crate::delivery_auth::{
     attach_bimi, dns_setup_records, mark_dns_verification, upsert_dns_setup, BimiIndicator,

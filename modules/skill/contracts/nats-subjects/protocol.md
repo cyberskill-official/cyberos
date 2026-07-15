@@ -59,7 +59,7 @@ Replay does NOT bypass ack semantics. Subscribers replaying historical messages 
 
 ## Cross-tenant isolation
 
-NATS subjects are tenant-scoped by virtue of the cluster URL. Each tenant runs its own NATS cluster (or a logically-isolated leaf-node attached to a shared cluster with import/export rules). Subjects do NOT cross tenant boundaries. A skill in tenant A cannot subscribe to `cuo.fr_author.fr_written` in tenant B even if the subject string is identical — the cluster URLs differ and the NKeys/JWTs do not authenticate across.
+NATS subjects are tenant-scoped by virtue of the cluster URL. Each tenant runs its own NATS cluster (or a logically-isolated leaf-node attached to a shared cluster with import/export rules). Subjects do NOT cross tenant boundaries. A skill in tenant A cannot subscribe to `cuo.task_author.task_written` in tenant B even if the subject string is identical — the cluster URLs differ and the NKeys/JWTs do not authenticate across.
 
 ## Observability
 

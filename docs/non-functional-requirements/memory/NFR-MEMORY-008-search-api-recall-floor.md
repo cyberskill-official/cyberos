@@ -9,13 +9,13 @@ phase: P0
 slo: "Hybrid lexical + vector search recall@10 ≥ 0.85 on the memory search test corpus"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-MEMORY-108, FR-AI-019, FR-AI-020]
+related_tasks: [TASK-MEMORY-108, TASK-AI-019, TASK-AI-020]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
 1. The `services/memory/src/search.rs` search API **MUST** achieve **recall@10 ≥ 0.85** on the curated memory search test corpus (`services/memory/tests/fixtures/search_corpus_v*.jsonl`).
-2. The search MUST be hybrid: BM25 lexical (Postgres full-text) + dense vector (pgvector, BGE-M3 embeddings per FR-AI-019), with reciprocal-rank fusion at top-50 and BGE reranker (FR-AI-020) producing the top-10.
+2. The search MUST be hybrid: BM25 lexical (Postgres full-text) + dense vector (pgvector, BGE-M3 embeddings per TASK-AI-019), with reciprocal-rank fusion at top-50 and BGE reranker (TASK-AI-020) producing the top-10.
 3. The test corpus **MUST** carry ≥ 200 (query, expected_chunk_ids) pairs across English and Vietnamese, refreshed quarterly.
 4. Per-language recall **MUST** be ≥ 0.80 individually — neither English-only nor Vietnamese-only may carry the average above the floor.
 5. The CI gate **MUST** run the recall test on every `services/memory/src/search.rs` or `services/ai-gateway/src/embeddings/*` change; PR blocks below 0.85 overall.

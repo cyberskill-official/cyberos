@@ -1,5 +1,5 @@
 //! Postgres pool plus per-request tenant scoping. Every read and write that must respect tenant
-//! isolation runs inside a transaction that first sets the RLS GUC (app.current_tenant_id, FR-AUTH-003),
+//! isolation runs inside a transaction that first sets the RLS GUC (app.current_tenant_id, TASK-AUTH-003),
 //! so a caller can only touch rows in their own tenant. Mirrors `cyberos_chat::db`.
 
 use uuid::Uuid;

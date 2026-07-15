@@ -1,4 +1,4 @@
--- FR-AUTH-101 — closed 22-role catalogue + permission matrix + subject_roles.
+-- TASK-AUTH-101 — closed 22-role catalogue + permission matrix + subject_roles.
 --
 -- DEC-121 / DEC-122: the closed catalogue is the design assertion. Adding a
 -- 23rd role / 41st resource / 6th action requires an ADR + a matching SQL
@@ -19,7 +19,7 @@ CREATE TABLE roles (
 );
 
 INSERT INTO roles (name, display, reserved, requires_webauthn, stub_tier) VALUES
--- stub-tier (FR-AUTH-002 strict prefix per DEC-123)
+-- stub-tier (TASK-AUTH-002 strict prefix per DEC-123)
 ('root-admin',          'Root Admin (cross-tenant operator)',          TRUE,  FALSE, TRUE),
 ('tenant-admin',        'Tenant Admin',                                 FALSE, FALSE, TRUE),
 ('tenant-member',       'Tenant Member',                                FALSE, FALSE, TRUE),
@@ -162,7 +162,7 @@ SELECT 'service-account', resource, action FROM role_permissions WHERE role = 't
 INSERT INTO role_permissions (role, resource, action)
 SELECT 'agent-persona',   resource, action FROM role_permissions WHERE role = 'tenant-member';
 
--- C-suite per-officer focal points (minimum seed; full matrix grows with FRs).
+-- C-suite per-officer focal points (minimum seed; full matrix grows with tasks).
 INSERT INTO role_permissions (role, resource, action) VALUES
 ('cfo',   'inv-invoice',    'read'),
 ('cfo',   'inv-invoice',    'approve'),

@@ -1,4 +1,4 @@
--- FR-BRAIN-101 — Layer-2 ingest pipeline · core schema
+-- TASK-BRAIN-101 — Layer-2 ingest pipeline · core schema
 --
 -- Layer 2 is a READ scale-out of Layer 1 (the append-only chain in BRAIN
 -- Personal). Per DEC-070, Layer 1 is the source of truth; Layer 2 holds
@@ -35,7 +35,7 @@ CREATE INDEX l2_memory_chain_anchor_idx ON l2_memory (chain_anchor_hex);
 CREATE INDEX l2_memory_path_idx          ON l2_memory (tenant_id, path);
 CREATE INDEX l2_memory_ingested_at_idx   ON l2_memory (ingested_at DESC);
 
--- Approximate nearest-neighbour index for similarity queries (FR-BRAIN-108
+-- Approximate nearest-neighbour index for similarity queries (TASK-BRAIN-108
 -- search-api). HNSW preferred over IVFFlat for low-recall-budget reads.
 -- Created when first row lands — keep migration cheap.
 -- CREATE INDEX l2_memory_embedding_hnsw_idx

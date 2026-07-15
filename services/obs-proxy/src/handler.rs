@@ -1,4 +1,4 @@
-//! The request lifecycle (FR-OBS-002 §3), independent of the HTTP framework.
+//! The request lifecycle (TASK-OBS-002 §3), independent of the HTTP framework.
 //!
 //! `handle` authenticates, detects the backend, finds the `query` parameter, refuses a user-supplied
 //! tenant (sev-1 audit), passes a root-admin query through unfiltered, otherwise injects the tenant
@@ -68,7 +68,7 @@ pub async fn handle<F: Forwarder>(
             }
         }
         // No `query` parameter (e.g. /api/v1/labels, /series). Forwarded as-is; per-tenant scoping of
-        // the label/series endpoints is a documented follow-up beyond the query path (FR §1 #13).
+        // the label/series endpoints is a documented follow-up beyond the query path (task §1 #13).
         None => {
             outcome = Outcome::Proxied;
             audited_query = raw_query.to_string();

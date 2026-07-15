@@ -1,4 +1,4 @@
-//! FR-MEMORY-123 §1 #1 — the per-tenant ingest cursor over the FR-MEMORY-121 event stream, plus the read
+//! TASK-MEMORY-123 §1 #1 — the per-tenant ingest cursor over the TASK-MEMORY-121 event stream, plus the read
 //! that lifts new interaction-event rows out of `l1_audit_log`.
 //!
 //! The cursor key is `l1_audit_log.seq`. `get` reads the last consumed seq (0 if never ingested); the
@@ -6,9 +6,9 @@
 //! the two is impossible. A restart resumes from `last_source_seq + 1`.
 //!
 //! The event read selects ONLY interaction-event rows (`event_type = 'memory.interaction_event'`, the
-//! FR-MEMORY-121 row kind) and reaches into the JSON payload via the generated columns migration 0005 added
+//! TASK-MEMORY-121 row kind) and reaches into the JSON payload via the generated columns migration 0005 added
 //! (`iev_event_type` = the interaction's own verb/kind). WIDE day-1 capture (DEC-2720): no event kind is
-//! special-cased out. `subject_id` (the FR-EVAL-001 access subject) and the channel ref are pulled from the
+//! special-cased out. `subject_id` (the TASK-EVAL-001 access subject) and the channel ref are pulled from the
 //! Layer-1 row + payload; `chain_anchor_hex` is carried verbatim for read-time tamper detection (§1 #10).
 
 use sqlx::{PgPool, Row};
@@ -141,7 +141,7 @@ pub async fn read_after(
         .collect())
 }
 
-/// Map a FR-MEMORY-121 `target_ref` `{kind,id}` to a channel UUID when the ref points at a channel/dm and
+/// Map a TASK-MEMORY-121 `target_ref` `{kind,id}` to a channel UUID when the ref points at a channel/dm and
 /// the id parses as a UUID. Message/issue/document refs (or non-UUID ids) yield `None` — the brain only
 /// tracks the channel surface for the recall `channel_scope` filter, not every target kind.
 fn parse_channel(kind: Option<String>, id: Option<String>) -> Option<Uuid> {

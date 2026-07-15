@@ -1,4 +1,4 @@
-//! FR-AI-021 §1 #15 — Shell completion generation.
+//! TASK-AI-021 §1 #15 — Shell completion generation.
 
 use clap::CommandFactory;
 use clap_complete::{

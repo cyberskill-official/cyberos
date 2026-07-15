@@ -1,4 +1,4 @@
-//! FR-MEMORY-123 §5 / AC #9, #10, #11 — recall is access-scoped: tenant RLS PLUS the FR-EVAL-001 per-subject
+//! TASK-MEMORY-123 §5 / AC #9, #10, #11 — recall is access-scoped: tenant RLS PLUS the TASK-EVAL-001 per-subject
 //! predicate. A semantically-closest neighbour the caller may not see is EXCLUDED (not deranked); an unknown
 //! subject denies by default. Requires Postgres + pgvector; `#[ignore]` by default.
 
@@ -50,7 +50,7 @@ async fn recall_excludes_closest_neighbour_outside_access_scope() {
 #[tokio::test]
 #[ignore = "requires Postgres + pgvector"]
 async fn deny_by_default_on_unknown_subject() {
-    // AC #11: a subject with NO FR-EVAL-001 entitlement returns 0 hits for that subject. The caller is
+    // AC #11: a subject with NO TASK-EVAL-001 entitlement returns 0 hits for that subject. The caller is
     // entitled to nobody; an event for an unknown subject must not surface.
     let env = BrainTestEnv::new().await;
     let stranger = uuid::Uuid::new_v4();

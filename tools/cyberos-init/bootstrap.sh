@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bootstrap.sh - one-liner installer (FR-IMP-069). Fetch the released CyberOS payload, verify its
+# bootstrap.sh - one-liner installer (TASK-IMP-069). Fetch the released CyberOS payload, verify its
 # checksum against the SHA256SUMS published beside it, and init the target repo:
 #   curl -fsSL https://raw.githubusercontent.com/cyberskill-official/cyberos/main/tools/cyberos-init/bootstrap.sh | bash
 # env:

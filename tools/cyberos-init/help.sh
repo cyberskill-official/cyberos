@@ -10,7 +10,7 @@ cat <<'TXT'
 CyberOS — root CLI (payload dir or installed .cyberos/)
 
   bash install.sh [repo]     install / re-vendor CyberOS into a repo
-  bash uninstall.sh [repo]   remove the vendored machine (keeps FRs + BRAIN by default)
+  bash uninstall.sh [repo]   remove the vendored machine (keeps tasks + BRAIN by default)
   bash version.sh [repo]     check for a newer CyberOS; if stale, ask to run install
   bash status.sh [repo]      open docs/status/index.html in your default browser
   bash help.sh               this text
@@ -26,7 +26,7 @@ Channels:
   cli/bin/*.mjs
 
 Plugin slash commands (Claude Code): /install /uninstall /version /status /help
-  plus /ship-feature-requests and /create-feature-requests
+  plus /ship-tasks and /create-tasks
 
 Docs: GUIDE.md · https://cyberos.cyberskill.world/docs
 TXT

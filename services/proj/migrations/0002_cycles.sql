@@ -1,4 +1,4 @@
--- FR-PROJ-001 §3 — cycles table.
+-- TASK-PROJ-001 §3 — cycles table.
 --
 -- A cycle is a time-boxed window within an engagement (sprint-equivalent).
 -- The CHECK constraint enforces `ends_at > starts_at` per §1 #12.

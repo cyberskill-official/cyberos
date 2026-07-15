@@ -1,12 +1,12 @@
-"""FR-MEMORY-107 — Filesystem watcher for the personal-memory capture daemon.
+"""TASK-MEMORY-107 — Filesystem watcher for the personal-memory capture daemon.
 
 Watches every opted-in folder (per AGENTS.md §11 watched-folder list) and
 emits :class:`FsEvent` rows when files are created, modified, moved, or
-deleted. The capture daemon (FR-MEMORY-110) subscribes to this stream and
+deleted. The capture daemon (TASK-MEMORY-110) subscribes to this stream and
 decides which events should produce memory ``put`` / ``move`` / ``delete``
 ops.
 
-Design choices (DEC-091 / DEC-092 from the FR spec):
+Design choices (DEC-091 / DEC-092 from the task spec):
 
 * **Polling vs native watcher.** Slice 1 ships a portable polling implementation
   in pure stdlib so the personal-memory runs on every platform without
@@ -25,7 +25,7 @@ Design choices (DEC-091 / DEC-092 from the FR spec):
 
 This module ships the data types + scaffold loop; the polling implementation
 is intentionally minimal — the production watcher will live alongside the
-capture daemon in :mod:`cyberos.core.capture_daemon` (FR-MEMORY-110).
+capture daemon in :mod:`cyberos.core.capture_daemon` (TASK-MEMORY-110).
 """
 
 from __future__ import annotations
@@ -100,7 +100,7 @@ class FsWatcher:
         """Infinite generator. Calls :meth:`_scan_once` on each tick.
 
         Coalescing IS NOT done here — that's the capture daemon's job (it
-        carries the 250ms window per FR spec §1 #5).
+        carries the 250ms window per task spec §1 #5).
         """
         while self._running:
             for ev in self._scan_once():

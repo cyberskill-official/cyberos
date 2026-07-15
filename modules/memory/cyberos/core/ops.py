@@ -60,7 +60,7 @@ class NotFound(FileNotFoundError):
 
 
 class AclDenied(PermissionError):
-    """Per AGENTS.md §14.4 / FR-MEMORY-117 — the active actor isn't permitted
+    """Per AGENTS.md §14.4 / TASK-MEMORY-117 — the active actor isn't permitted
     to write to this subtree under the governing STORE.yaml. Raised AFTER
     the `memory.acl_denied` aux row is emitted so operators have an audit
     trail of the attempt."""
@@ -77,7 +77,7 @@ from dataclasses import dataclass as _dataclass
 
 @_dataclass(frozen=True)
 class PutIfResult:
-    """Result of a put_if op (FR-MEMORY-118 §1 #9, AGENTS.md §3.1.5).
+    """Result of a put_if op (TASK-MEMORY-118 §1 #9, AGENTS.md §3.1.5).
 
     Attributes
     ----------
@@ -105,7 +105,7 @@ class PutIfResult:
 
 
 def _acl_check(writer: Writer, rel_path: str, actor: str, attempt_kind: str) -> bool:
-    """Run the FR-MEMORY-117 ACL gate.
+    """Run the TASK-MEMORY-117 ACL gate.
 
     Emits a `memory.acl_denied` aux row on every refusal (and on WARN-ONLY
     proceed-with-log). Returns True if the write may proceed; False on
@@ -220,7 +220,7 @@ def put(
     Content-addressed: the on-disk effect is identical regardless of
     whether ``rel_path`` previously existed.
 
-    Audit row uses ``op="put"``. Per AGENTS.md §14.4 / FR-MEMORY-117, the
+    Audit row uses ``op="put"``. Per AGENTS.md §14.4 / TASK-MEMORY-117, the
     write is also gated by the nearest `STORE.yaml` ACL — a denied write
     emits a `memory.acl_denied` aux row and refuses the put (or, in
     WARN-ONLY mode pre-§14.4-anchor, emits the row and proceeds).
@@ -229,7 +229,7 @@ def put(
     if len(body) > _MAX_BYTES:
         raise ContentTooLarge(f"{len(body)} > {_MAX_BYTES}")
 
-    # FR-MEMORY-117 ACL gate
+    # TASK-MEMORY-117 ACL gate
     if not _acl_check(writer, rel_path, actor, "put"):
         # Denied + not warn-only → refuse the write; the aux row was
         # already emitted by _acl_check.
@@ -257,7 +257,7 @@ def put(
 
 
 def _has_section_3_1_put_if(store: Path) -> bool:
-    """Anchor check for the FR-MEMORY-118 protocol amendment (§3.1 extension).
+    """Anchor check for the TASK-MEMORY-118 protocol amendment (§3.1 extension).
 
     Searches the same set of locations as the §7.7 and §14.4 checks. The
     extension must include `put_if` somewhere in the §3.1 canonical-op
@@ -293,7 +293,7 @@ def put_if(
 ) -> PutIfResult:
     """Canonical op — content-conditional put.
 
-    Per AGENTS.md §3.1 (extended by P21 / FR-MEMORY-118). The write
+    Per AGENTS.md §3.1 (extended by P21 / TASK-MEMORY-118). The write
     proceeds only when the current on-disk body's SHA-256 matches
     ``precondition_body_hash`` (or, when the precondition is ``None``,
     the target MUST NOT currently exist — the create-only variant).
@@ -304,7 +304,7 @@ def put_if(
       hex, not ``None``) → ``ValueError``.
     * Protocol amendment §3.1 extension not anchored in AGENTS.md →
       ``ProtocolAmendmentMissing``.
-    * ACL gate (FR-MEMORY-117) refuses → ``PutIfResult(outcome="rejected",
+    * ACL gate (TASK-MEMORY-117) refuses → ``PutIfResult(outcome="rejected",
       reason="acl_denied")``.
     * Body-hash mismatch → ``PutIfResult(outcome="rejected",
       reason="precondition_failed", expected=..., actual=...)`` + a
@@ -332,7 +332,7 @@ def put_if(
                 f"got {precondition_body_hash!r}"
             )
 
-    # Protocol amendment anchor check (FR-MEMORY-118 §1 #12)
+    # Protocol amendment anchor check (TASK-MEMORY-118 §1 #12)
     if not _has_section_3_1_put_if(writer.store):
         from cyberos.core.dream.applier import ProtocolAmendmentMissing
         raise ProtocolAmendmentMissing(
@@ -342,7 +342,7 @@ def put_if(
             "canonical-op table."
         )
 
-    # FR-MEMORY-117 ACL gate (runs BEFORE the precondition check per
+    # TASK-MEMORY-117 ACL gate (runs BEFORE the precondition check per
     # AGENTS.md §3.1.7 — policy is a stronger refusal than concurrency).
     if not _acl_check(writer, rel_path, actor, "put_if"):
         return PutIfResult(
@@ -423,7 +423,7 @@ def _emit_precondition_failed(
     expected: "str | None",
     actual: "str | None",
 ) -> None:
-    """Emit the AGENTS.md §3.1.5 / FR-MEMORY-118 §1 #7 aux row."""
+    """Emit the AGENTS.md §3.1.5 / TASK-MEMORY-118 §1 #7 aux row."""
     import time as _time
     from datetime import datetime, timezone
 
@@ -461,7 +461,7 @@ def move(
     if src_rel == dst_rel:
         raise ValueError("src_rel and dst_rel are identical")
 
-    # FR-MEMORY-117 / AGENTS.md §14.4.5 — both src and dst must be writable
+    # TASK-MEMORY-117 / AGENTS.md §14.4.5 — both src and dst must be writable
     if not _acl_check(writer, src_rel, actor, "move"):
         raise AclDenied(
             f"ACL denies actor={actor!r} moving from {src_rel!r} (src side)"
@@ -547,7 +547,7 @@ def delete(
     if mode not in ("tombstone", "purge"):
         raise ValueError(f"unknown delete mode: {mode!r}")
 
-    # FR-MEMORY-117 ACL gate
+    # TASK-MEMORY-117 ACL gate
     if not _acl_check(writer, rel_path, actor, "delete"):
         raise AclDenied(f"ACL denies actor={actor!r} deleting {rel_path!r}")
 

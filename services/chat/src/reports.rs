@@ -1,6 +1,6 @@
-//! In-app content reporting (FR-CHAT-267). A member reports a message, an attachment, or a person; the
+//! In-app content reporting (TASK-CHAT-267). A member reports a message, an attachment, or a person; the
 //! service records it and does nothing else. It does not hide, delete, or flag the content — deciding what
-//! happens is FR-CHAT-269's job and a human's decision (§1 #13).
+//! happens is TASK-CHAT-269's job and a human's decision (§1 #13).
 //!
 //! Two properties carry the whole design:
 //!
@@ -51,7 +51,7 @@ impl TargetKind {
     }
 }
 
-/// Closed set (§1 #2). Closed because FR-CHAT-269 groups and prioritises the queue by reason, and free text
+/// Closed set (§1 #2). Closed because TASK-CHAT-269 groups and prioritises the queue by reason, and free text
 /// cannot be grouped.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -350,7 +350,7 @@ async fn snapshot_target(
             require_member(tx, channel_id, reporter).await?;
             // The bytes are NOT snapshotted — only the metadata. Copying the payload of a reported file into
             // a second table doubles the blast radius of the very content someone asked us to remove; the
-            // attachment row itself is the evidence and FR-CHAT-269 renders from this metadata.
+            // attachment row itself is the evidence and TASK-CHAT-269 renders from this metadata.
             Ok(Snapshot {
                 channel_id: Some(channel_id),
                 filename: Some(filename),

@@ -1,4 +1,4 @@
-//! FR-AI-015 §5 — Integration tests for ZDR attestation table.
+//! TASK-AI-015 §5 — Integration tests for ZDR attestation table.
 //!
 //! Tests the parse/validation logic and the is_zdr gate.
 

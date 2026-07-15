@@ -1,4 +1,4 @@
-//! FR-PROJ-001 §4 #10 + §4 #11 — bidirectional symmetric links + cross-module link types.
+//! TASK-PROJ-001 §4 #10 + §4 #11 — bidirectional symmetric links + cross-module link types.
 
 use cyberos_proj::types::LinkType;
 

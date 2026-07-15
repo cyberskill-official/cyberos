@@ -1,6 +1,6 @@
 """MultiOutputHandler — chain runs once; final-step output fans out per recipient.
 
-Per FR-CUO-106 §1.5 + DEC-2384. Affects 1 workflow today:
+Per TASK-CUO-106 §1.5 + DEC-2384. Affects 1 workflow today:
     - chief-legal-officer/quarterly-regulatory-cycle (1 source artefact → N regulator filings)
 
 The handler invokes the chain ONCE end-to-end. After completion, it reads

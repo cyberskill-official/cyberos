@@ -1,6 +1,6 @@
-# Runbook corpus for obs.triage-alert (FR-OBS-007).
+# Runbook corpus for obs.triage-alert (TASK-OBS-007).
 #
 # Drop per-incident runbooks here as markdown, one file per runbook, each with a clear "triggers"
 # section (the alert name or symptom it applies to) so the skill can match an alert to a runbook
 # without keyword-guessing. Empty for now; the skill returns suggested_runbook: null until runbooks
-# land. The KB integration (FR-KB-008, which this FR blocks) is the durable home for these.
+# land. The KB integration (TASK-KB-008, which this task blocks) is the durable home for these.

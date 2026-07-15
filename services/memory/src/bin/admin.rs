@@ -2,7 +2,7 @@
 //!
 //! Subcommands:
 //!   * `rebuild --tenant <UUID>` — wipe + re-ingest Layer 2 for one tenant
-//!     (FR-MEMORY-102). Useful after a Layer-2 schema migration or to recover
+//!     (TASK-MEMORY-102). Useful after a Layer-2 schema migration or to recover
 //!     from a corruption event.
 //!   * `reconcile --tenant <UUID> [--sample 100]` — non-destructive sample
 //!     verification that l2_memory's chain_anchor matches what we'd compute
@@ -106,7 +106,7 @@ async fn main() -> ExitCode {
                 ExitCode::UsageError
             }
         },
-        // FR-MEMORY-123 §1 #14 — BRAIN backfill / rebuild paths. The derived lens is reproducible from the
+        // TASK-MEMORY-123 §1 #14 — BRAIN backfill / rebuild paths. The derived lens is reproducible from the
         // Layer-1 chain; these re-derive it. The embedding client is the env (ai-gateway) one — these still
         // route every embedding through the gateway (residency + spend cap), never a provider directly.
         "brain-rebuild" => match parse_tenant(&args) {
@@ -216,7 +216,7 @@ fn usage() {
     eprintln!("USAGE:");
     eprintln!("  cyberos-memory-admin rebuild   --tenant <UUID>");
     eprintln!("  cyberos-memory-admin reconcile --tenant <UUID> [--sample 100]");
-    eprintln!("  cyberos-memory-admin brain-rebuild     --tenant <UUID>            # FR-MEMORY-123: re-derive embeddings + summaries from Layer 1");
+    eprintln!("  cyberos-memory-admin brain-rebuild     --tenant <UUID>            # TASK-MEMORY-123: re-derive embeddings + summaries from Layer 1");
     eprintln!("  cyberos-memory-admin brain-reembed     --tenant <UUID> [--model bge-m3]   # migrate to a new embedding model version");
     eprintln!("  cyberos-memory-admin brain-resummarize --tenant <UUID>            # rebuild all current summaries from events");
     eprintln!("  cyberos-memory-admin brain-reindex                                # REINDEX the partial hot HNSW index");

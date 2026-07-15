@@ -1,12 +1,12 @@
-//! FR-MCP-001 §1 #7 — `tools/call` handler, with FR-MCP-002 federated dispatch.
+//! TASK-MCP-001 §1 #7 — `tools/call` handler, with TASK-MCP-002 federated dispatch.
 //!
 //! The handler validates the request shape, looks up the tool in the federated
 //! registry, enforces the per-tool scope gate, then forwards the call over JSON-RPC
 //! to the owning module's registered MCP endpoint and returns the module's result.
 //! Transport failures (the module is down, unreachable, or returns a non-2xx / non-JSON
-//! response) map to the closed error code `-32004 module_unreachable` (FR-MCP-001 §1 #8);
+//! response) map to the closed error code `-32004 module_unreachable` (TASK-MCP-001 §1 #8);
 //! `tool_not_found` (-32003) and `insufficient_scope` (-32001) are raised before any
-//! network call. Tools reach the registry via `federation::register` (FR-MCP-002).
+//! network call. Tools reach the registry via `federation::register` (TASK-MCP-002).
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -28,7 +28,7 @@ pub struct ToolsCallParams {
     /// Arguments object (validated against the tool's `inputSchema` server-side).
     #[serde(default)]
     pub arguments: Value,
-    /// Optional MCP `_meta` envelope. The gateway reads the FR-MCP-006 confirmation reference from it
+    /// Optional MCP `_meta` envelope. The gateway reads the TASK-MCP-006 confirmation reference from it
     /// when a caller re-invokes a destructive tool after answering its confirmation elicitation.
     #[serde(rename = "_meta", default, skip_serializing_if = "Option::is_none")]
     pub meta: Option<ToolCallMeta>,
@@ -37,7 +37,7 @@ pub struct ToolsCallParams {
 /// The subset of MCP `_meta` the gateway reads on `tools/call`.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ToolCallMeta {
-    /// The id of an elicited confirmation (FR-MCP-006), set when re-invoking after confirming.
+    /// The id of an elicited confirmation (TASK-MCP-006), set when re-invoking after confirming.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub confirmation_id: Option<String>,
 }
@@ -76,7 +76,7 @@ pub struct ResourceRef {
     pub uri: String,
 }
 
-/// `tools/call` response shape per FR-MCP-001 §1 #7.
+/// `tools/call` response shape per TASK-MCP-001 §1 #7.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolsCallResult {
     /// One or more content blocks.
@@ -123,7 +123,7 @@ pub fn prepare(
 }
 
 /// Dispatch a `tools/call`: lookup + scope gate, then forward to the owning module's
-/// registered MCP endpoint (FR-MCP-002) and return its result.
+/// registered MCP endpoint (TASK-MCP-002) and return its result.
 pub async fn dispatch(
     registry: &ToolRegistry,
     params: &ToolsCallParams,
@@ -131,7 +131,7 @@ pub async fn dispatch(
 ) -> Result<ToolsCallResult, RpcError> {
     let entry = prepare(registry, params, caller_scopes)?;
 
-    // FR-MCP-002: refuse before any network call if the owning module's server is unhealthy
+    // TASK-MCP-002: refuse before any network call if the owning module's server is unhealthy
     // or deregistered (it has missed its heartbeats). A module with no health record is
     // treated as available (defensive; registration always creates one).
     if let Some(status) = registry.server_status(&entry.module, std::time::SystemTime::now()) {

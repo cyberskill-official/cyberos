@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 < 30s from Alertmanager rule fire to CUO runbook surfaced to on-call"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-OBS-007, FR-OBS-001]
+related_tasks: [TASK-OBS-007, TASK-OBS-001]
 ---
 
 ## §1 — Statement (BCP-14 normative)

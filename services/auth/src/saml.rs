@@ -1,4 +1,4 @@
-//! FR-AUTH-103 — SAML 2.0 SSO (SP-initiated flow).
+//! TASK-AUTH-103 — SAML 2.0 SSO (SP-initiated flow).
 //!
 //! Three endpoints under the public router (no JWT required to initiate):
 //!   * `GET  /v1/auth/saml/initiate`        — generate AuthnRequest, 302 to IdP
@@ -190,7 +190,7 @@ pub async fn acs(
         .or_else(|| extract_saml_attribute(&xml, "Email"))
         .or_else(|| extract_saml_attribute(&xml, "mail"));
 
-    // FR-AUTH-111 §1 #6 — SAML carried the identical defect (it bound the email into display_name too), so
+    // TASK-AUTH-111 §1 #6 — SAML carried the identical defect (it bound the email into display_name too), so
     // it is fixed in the same change with the same chain. Fixing one door and not the other guarantees the
     // bug is rediscovered through the other.
     //
@@ -263,7 +263,7 @@ pub async fn acs(
     }
 
     // Load IdP config for issuer + signature validation.
-    // Slice-2 (FR-AUTH-103 hardening): `allow_unsigned` column replaces the
+    // Slice-2 (TASK-AUTH-103 hardening): `allow_unsigned` column replaces the
     // legacy `AUTH_SAML_ALLOW_UNSIGNED=1` env-var escape hatch. Default FALSE
     // — operators must explicitly opt-in per IdP. Production deploys ship
     // FALSE everywhere; dev fixtures may set TRUE on the fixture IdP.
@@ -307,7 +307,7 @@ pub async fn acs(
         }
     }
 
-    // FR-AUTH-103 slice-2 — verify the <ds:Signature> with the IdP's configured
+    // TASK-AUTH-103 slice-2 — verify the <ds:Signature> with the IdP's configured
     // signing cert. The verifier supports RSA-SHA256 + SHA-256 + exclusive-c14n;
     // these are the algorithms produced by every modern SAML 2.0 IdP. If the
     // verifier fails (or no Signature element is present) we surface a
@@ -358,7 +358,7 @@ pub async fn acs(
     )
     .await?;
 
-    // FR-AUTH-111 §1 #4 + #5 — same repair as OIDC, on every path, for the same reason: the existing-link
+    // TASK-AUTH-111 §1 #4 + #5 — same repair as OIDC, on every path, for the same reason: the existing-link
     // fast path returns before any INSERT, so a rule living in the upsert would never reach an already
     // provisioned person. A failed heal must not fail the login.
     if let Err(e) =
@@ -387,7 +387,7 @@ pub async fn acs(
         .issue(
             cyberos_types::TenantId(tenant_id),
             cyberos_types::SubjectId(subject_id),
-            "", // FR-AUTH-004 §1 #2 — SAML callback doesn't pass plaintext email through
+            "", // TASK-AUTH-004 §1 #2 — SAML callback doesn't pass plaintext email through
             "human",
             vec![],
             roles,
@@ -398,7 +398,7 @@ pub async fn acs(
         .await
         .map_err(|e| internal(e))?;
 
-    // FR-AUTH-106 slice-3 — apply policy-aware impossible-travel detection.
+    // TASK-AUTH-106 slice-3 — apply policy-aware impossible-travel detection.
     let deps = crate::travel::AssessDeps {
         pool: &state.pg,
         geoip: &state.geoip,
@@ -618,7 +618,7 @@ fn html_escape(s: &str) -> String {
     xml_escape(s).replace('\'', "&#39;")
 }
 
-// FR-AUTH-111: `display_name` is resolved by the caller from the assertion's name attributes, via the one
+// TASK-AUTH-111: `display_name` is resolved by the caller from the assertion's name attributes, via the one
 // shared chain in display_name.rs. Passed in rather than derived here, so OIDC and SAML cannot drift.
 #[allow(clippy::too_many_arguments)]
 async fn resolve_subject(
@@ -683,7 +683,7 @@ async fn resolve_subject(
         .execute(&mut *tx)
         .await
         .map_err(internal)?;
-    // FR-AUTH-111 — was `email.unwrap_or("")`. Same bug as OIDC, same fix, one resolver (§1 #6). The
+    // TASK-AUTH-111 — was `email.unwrap_or("")`. Same bug as OIDC, same fix, one resolver (§1 #6). The
     // ON CONFLICT path deliberately does not touch display_name; `display_name::heal` owns that rule.
     let jit_display_name = if display_name.trim().is_empty() {
         handle.as_str()

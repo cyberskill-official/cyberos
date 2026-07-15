@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 < 50ms for verify_jwt + RBAC admit on /v1/admin/* routes"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-AUTH-004, FR-AUTH-005, FR-AUTH-101]
+related_tasks: [TASK-AUTH-004, TASK-AUTH-005, TASK-AUTH-101]
 ---
 
 ## §1 — Statement (BCP-14 normative)

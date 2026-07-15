@@ -3,7 +3,7 @@
 contract_id: prd
 contract_version: v1
 template_literal: product-requirements-document@1
-description: Canonical product-requirements-document@1 schema body — frontmatter contract + Markdown skeleton for the Product Requirements Document artefact emitted by `cuo/cpo/product-requirements-document-author`. Consumed downstream by `cuo/cpo/product-requirements-document-audit` (when registered v0.2.5), `cuo/cpo/feature-request-author` (existing), and the future `cuo/chief-technology-officer/software-requirements-specification-author`.
+description: Canonical product-requirements-document@1 schema body — frontmatter contract + Markdown skeleton for the Product Requirements Document artefact emitted by `cuo/cpo/product-requirements-document-author`. Consumed downstream by `cuo/cpo/product-requirements-document-audit` (when registered v0.2.5), `cuo/cpo/task-author` (existing), and the future `cuo/chief-technology-officer/software-requirements-specification-author`.
 contract_kind: artefact_schema
 locked_at: 2026-05-06
 
@@ -25,7 +25,7 @@ emitted_source_freshness_tier: 18   # high authority — a passed-audit PRD is s
 
 # `product-requirements-document@1` — canonical PRD contract
 
-> A **contract**, not a skill. Holds the single source of truth for the Product Requirements Document artefact shape across CyberOS. Loaded by `cuo/cpo/product-requirements-document-author` (as the generation skeleton); will be loaded by `cuo/cpo/product-requirements-document-audit` (registry v0.2.5) as the validation target. Consumed by `cuo/cpo/feature-request-author` as the canonical PRD shape it decomposes into FRs.
+> A **contract**, not a skill. Holds the single source of truth for the Product Requirements Document artefact shape across CyberOS. Loaded by `cuo/cpo/product-requirements-document-author` (as the generation skeleton); will be loaded by `cuo/cpo/product-requirements-document-audit` (registry v0.2.5) as the validation target. Consumed by `cuo/cpo/task-author` as the canonical PRD shape it decomposes into tasks.
 
 ## Why a separate contract for PRDs
 
@@ -51,7 +51,7 @@ The frontmatter that every `product-requirements-document@1` document MUST carry
 | `client_id` | required when client_visible is true | conditional | FM-114 |
 | `eu_ai_act_risk_class` | mirrors the brief's value at FM-time; can be re-classified upward during PRD authoring (CLO sign-off required for upward moves) | yes | FM-115 |
 | `confidentiality` | mirrors the brief; can be tightened (e.g. brief was `internal`, PRD becomes `client_confidential`) | yes | FM-116 |
-| `prd_iteration` | integer ≥ 1 — increments on each amendment-batch round (mirrors feature-request-author's pattern) | yes | FM-117 |
+| `prd_iteration` | integer ≥ 1 — increments on each amendment-batch round (mirrors task-author's pattern) | yes | FM-117 |
 | `chain_profile` | `lean` / `standard` / `full` — inherited from `project_brief.chain_profile`; PRD CANNOT override (chain-selector decides at brief time) | yes | FM-118 |
 | `superseded_by` | optional path to a successor PRD when prd_status is `superseded` | conditional | FM-118 |
 | `cl_sign_off` | optional — CLO handle + ISO timestamp when CLO has signed off on EU AI Act / compliance assertions | optional | FM-119 |
@@ -63,13 +63,13 @@ Every `product-requirements-document@1` body MUST contain these H2 sections in t
 
 1. **`## Background`** — link to project_brief; 2-3 paragraphs of additional context not in the brief.
 2. **`## Goals`** — restated from the brief; refined where PRD authoring sharpened them. Each goal carries authority marker.
-3. **`## Non-goals`** — what this PRD explicitly does NOT cover. Out-of-scope is a feature (mirrors feature-request-audit's QA-006 spirit at the PRD level).
+3. **`## Non-goals`** — what this PRD explicitly does NOT cover. Out-of-scope is a feature (mirrors task-audit's QA-006 spirit at the PRD level).
 4. **`## User Stories`** — 1-N stories, each with the form "As a <persona>, I want <capability>, so that <outcome>." Each story has its own `### Story N` H3 + acceptance criteria sub-section.
 5. **`## Quality Bars`** — performance, availability, privacy, accessibility, security baselines the PRD commits to. Each as a measurable target with baseline + threshold.
 6. **`## Open Questions`** — questions still requiring decision (carried over from the brief or surfaced during PRD authoring). Each has a `<!-- needs: <persona|human> -->` marker.
 7. **`## EU AI Act Considerations`** — required if eu_ai_act_risk_class ∈ {limited, high}; otherwise the section contains the explicit statement "Not in scope of EU AI Act — feature involves no AI/ML inference / biometric data / Annex III activity. Reviewed: <ISO date> by <persona|human>."
 8. **`## Compliance and Privacy`** — what frameworks are in play (GDPR / HIPAA / SOC 2 / etc.); what data flows touch PII; what consent is required.
-9. **`## Rough Sizing`** — high-level engineering effort estimate (N × engineer-month). This is a hint for downstream `software-requirements-specification-author` and `feature-request-author`, not a commitment.
+9. **`## Rough Sizing`** — high-level engineering effort estimate (N × engineer-month). This is a hint for downstream `software-requirements-specification-author` and `task-author`, not a commitment.
 10. **`## Success Definition`** — what does success look like 12 weeks post-launch? Required even if the brief had similar; PRD restates with sharper measurable criteria.
 11. **`## Research Signals`** — appendix listing the Common Room signals, customer interviews, in-product feedback, support tickets, or other evidence that triggered this PRD. Required even if "no formal research; founder intuition based on <reasoning>" — forces honesty.
 
@@ -102,7 +102,7 @@ Authority hierarchy:
 
 ## Iteration model
 
-`product-requirements-document-author` follows feature-request-author's amendment-batch protocol (per Q5 of registry v0.2.4 design):
+`product-requirements-document-author` follows task-author's amendment-batch protocol (per Q5 of registry v0.2.4 design):
 
 1. v1 of the PRD is authored from the brief + targeted memory reads.
 2. User reviews, batches amendments via the standard PLAN_AMENDMENT_REQUEST format.
@@ -114,5 +114,5 @@ Authority hierarchy:
 - Registry v0.2.4 — first contract authored downstream of `project_brief@1`.
 - DEC-090 — skills↔contracts split.
 - AGENTS.md §5.3 — authority hierarchy for the embedded markers.
-- `cuo/cpo/feature-request-author/references/AMENDMENT_PROTOCOL.md` — amendment-batch pattern this contract's author skill mirrors.
-- Future consumers: `cuo/cpo/product-requirements-document-author` v0.1.0 (this version), `cuo/cpo/product-requirements-document-audit` v0.1.0 (registry v0.2.5), `cuo/cpo/feature-request-author` v0.3.0+ (when feature-request-author migrates to consume `product-requirements-document@1` instead of generic "PRD/spec docs").
+- `cuo/cpo/task-author/references/AMENDMENT_PROTOCOL.md` — amendment-batch pattern this contract's author skill mirrors.
+- Future consumers: `cuo/cpo/product-requirements-document-author` v0.1.0 (this version), `cuo/cpo/product-requirements-document-audit` v0.1.0 (registry v0.2.5), `cuo/cpo/task-author` v0.3.0+ (when task-author migrates to consume `product-requirements-document@1` instead of generic "PRD/spec docs").

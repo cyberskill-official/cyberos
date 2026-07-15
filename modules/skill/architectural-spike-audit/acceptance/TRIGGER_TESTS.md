@@ -6,7 +6,7 @@
 
         # TRIGGER_TESTS for architectural-spike-audit
 
-        > Pair verification (FR-SKILL-117 §5, executable line by line):
+        > Pair verification (TASK-SKILL-117 §5, executable line by line):
         >   grep -q "SPK-STRUCT" ../RUBRIC.md && grep -q "SPK-EVID" ../RUBRIC.md   # families (AC 5)
         >   grep -q "SPK-BOX" ../RUBRIC.md && grep -q "SPK-DISC" ../RUBRIC.md
         >   grep -q "10/10" ../RUBRIC.md                                            # pass bar (AC 5)

@@ -9,7 +9,7 @@ phase: P0
 slo: "Accept TOTP codes within ±1 30s step (90s window); reject ±2; rate-limit 5 attempts per minute"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-AUTH-102]
+related_tasks: [TASK-AUTH-102]
 ---
 
 ## §1 — Statement (BCP-14 normative)

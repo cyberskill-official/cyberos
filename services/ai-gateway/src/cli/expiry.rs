@@ -1,4 +1,4 @@
-//! FR-AI-021 — `cyberos-ai expiry` subcommand.
+//! TASK-AI-021 — `cyberos-ai expiry` subcommand.
 
 use sha2::{Digest, Sha256};
 

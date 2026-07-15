@@ -1,9 +1,9 @@
-//! FR-AI-008 — Multi-provider router with retry + failover.
+//! TASK-AI-008 — Multi-provider router with retry + failover.
 //!
 //! Calls the resolved LLM provider, retries on transient failures, fails over to
 //! the fallback chain on persistent failures, and enforces a per-call deadline.
 //!
-//! See FR-AI-008 for normative behaviour and acceptance criteria.
+//! See TASK-AI-008 for normative behaviour and acceptance criteria.
 
 pub mod anthropic;
 pub mod bedrock;
@@ -160,7 +160,7 @@ pub trait Provider: Send + Sync {
 
 /// Call the resolved LLM provider with retry + failover semantics.
 ///
-/// §1 #1: Accepts (a) the ChatCompleteRequest, (b) ResolvedModel from FR-AI-006,
+/// §1 #1: Accepts (a) the ChatCompleteRequest, (b) ResolvedModel from TASK-AI-006,
 /// (c) a tokio Instant deadline, (d) a reference to TenantPolicy.
 pub async fn call_provider(
     req: &ChatCompleteRequest,
@@ -422,7 +422,7 @@ pub async fn call_provider(
                 let base_ms = RETRY_DELAYS_MS[(attempt_num - 1) as usize];
                 // Scope the (!Send) thread rng to this synchronous jitter call so it is never held across
                 // the sleep await below. Otherwise call_provider's future is not Send and cannot be driven
-                // from the Send + Sync ChatBackend trait object (the FR-AI-105 serving path).
+                // from the Send + Sync ChatBackend trait object (the TASK-AI-105 serving path).
                 let sleep_ms = {
                     let mut rng = rand::thread_rng();
                     jitter::jitter_ms(base_ms, JITTER_FACTOR, &mut rng)

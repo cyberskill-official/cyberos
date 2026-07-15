@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of bulk sends (>100 recipients) carry a recorded approval; 0 auto-sent bulks"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-EMAIL-010]
+related_tasks: [TASK-EMAIL-010]
 ---
 
 ## §1 — Statement (BCP-14 normative)

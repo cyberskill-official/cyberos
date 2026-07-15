@@ -1,4 +1,4 @@
--- FR-AUTH-003 — RLS role + per-connection tenant pin.
+-- TASK-AUTH-003 — RLS role + per-connection tenant pin.
 --
 -- The `cyberos_app` role is the runtime app's database identity. Every
 -- query runs as this role with `SET LOCAL app.current_tenant_id = '<uuid>'`

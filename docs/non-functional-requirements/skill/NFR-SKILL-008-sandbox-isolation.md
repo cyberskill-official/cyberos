@@ -9,7 +9,7 @@ phase: P0
 slo: "0 cap-bypass incidents in 90 days; 100% of attempted escapes blocked + audited"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-SKILL-104, FR-SKILL-101]
+related_tasks: [TASK-SKILL-104, TASK-SKILL-101]
 ---
 
 ## §1 — Statement (BCP-14 normative)

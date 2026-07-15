@@ -1,8 +1,8 @@
-//! FR-AI-010 §4 — Integration tests for streaming SSE.
+//! TASK-AI-010 §4 — Integration tests for streaming SSE.
 //!
 //! Tests the streaming infrastructure: types, SSE serialization, heartbeat,
 //! backpressure, and reconcile guard. Provider-level integration tests
-//! require real provider impls (future FRs).
+//! require real provider impls (future tasks).
 
 use std::time::Duration;
 

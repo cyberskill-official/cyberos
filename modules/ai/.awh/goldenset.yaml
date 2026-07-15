@@ -1,5 +1,5 @@
 # AI module (ai-gateway) golden set (awh). AI was red-deferred during the absorption; this
-# golden set wires its gate so the 20 ai FRs can reach done once the suite is verified GREEN.
+# golden set wires its gate so the 20 ai tasks can reach done once the suite is verified GREEN.
 #
 # REQUIRES a running Redis (the cache-isolation tests connect to 127.0.0.1:6379):
 #   docker run -d --name cyberos-redis -p 6379:6379 redis:7
@@ -22,10 +22,10 @@ tasks:
     weight: 3.0
     timeout_sec: 1800
 
-  # Held-out acceptance: FR-AI-018 cross-tenant cache isolation (adversarial). Sealed read-only
+  # Held-out acceptance: TASK-AI-018 cross-tenant cache isolation (adversarial). Sealed read-only
   # so the agent cannot edit the security bar it is graded against. Requires Redis.
   - id: acceptance-ai-cross-tenant-cache-isolation
-    description: held-out FR-AI-018 adversarial cross-tenant cache-isolation test
+    description: held-out TASK-AI-018 adversarial cross-tenant cache-isolation test
     cmd: "cd services && cargo test -p cyberos-ai-gateway --test cache_isolation_adversarial_test -- --test-threads=1"
     weight: 5.0
     timeout_sec: 900

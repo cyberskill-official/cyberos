@@ -1,6 +1,6 @@
-//! FR-MCP-004 access-token minting and verification (clauses #7, #23, #24; DEC-805, DEC-814).
+//! TASK-MCP-004 access-token minting and verification (clauses #7, #23, #24; DEC-805, DEC-814).
 //!
-//! Access tokens are RS256 JWTs signed with the FR-AUTH-004 keys in the shared `auth_signing_keys`
+//! Access tokens are RS256 JWTs signed with the TASK-AUTH-004 keys in the shared `auth_signing_keys`
 //! table (the same keys the auth service publishes at `/.well-known/jwks.json`), so any MCP resource
 //! server can verify them against that JWKS. The claim set is clause #7; the audience is bound at mint
 //! time and checked exactly at verify time, which is the cross-server-replay defense (clause #23).
@@ -49,7 +49,7 @@ pub enum JwtError {
     Sqlx(#[from] sqlx::Error),
 }
 
-/// The claims carried by an MCP access token (FR-MCP-004 clause #7).
+/// The claims carried by an MCP access token (TASK-MCP-004 clause #7).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpAccessClaims {
     /// Issuer - the MCP-gateway URL.

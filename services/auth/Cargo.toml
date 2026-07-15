@@ -4,7 +4,7 @@ version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "AUTH module — tenant + subject + RLS + JWT + MFA (FR-AUTH-001..109)"
+description = "AUTH module — tenant + subject + RLS + JWT + MFA (TASK-AUTH-001..109)"
 
 [[bin]]
 name = "cyberos-auth"
@@ -14,12 +14,12 @@ path = "src/main.rs"
 name = "cyberos-auth-bootstrap"
 path = "src/bin/bootstrap.rs"
 
-# FR-AUTH-006 slice-2 — unified operations CLI. Name follows industry
-# convention (`systemctl`, `journalctl`, `kubectl`) — the FR's spec'd
+# TASK-AUTH-006 slice-2 — unified operations CLI. Name follows industry
+# convention (`systemctl`, `journalctl`, `kubectl`) — the task's spec'd
 # `cyberos-auth` name collides with the HTTP server's binary, so
 # `cyberos-authctl` resolves the conflict without renaming the daemon.
 # `cyberos-auth-bootstrap` remains as a transitional alias for slice-1
-# scripts; slice-3 (future FR) removes it.
+# scripts; slice-3 (future task) removes it.
 [[bin]]
 name = "cyberos-authctl"
 path = "src/bin/cli.rs"
@@ -62,7 +62,7 @@ zeroize = { version = "1.8", features = ["zeroize_derive"] }
 cyberos-cli-exit.workspace = true
 cyberos-types.workspace = true
 cyberos-obs-sdk.workspace = true
-# FR-MEMORY-122 — shared capture mechanism. AUTH emits auth.signed_in / auth.sign_in_failed
+# TASK-MEMORY-122 — shared capture mechanism. AUTH emits auth.signed_in / auth.sign_in_failed
 # interaction-events through this, gated behind CAPTURE_ENABLED (default off). Carries the real consent
 # gate (queries eval's governance tables, not the eval binary).
 cyberos-capture = { path = "../shared/cyberos-capture" }

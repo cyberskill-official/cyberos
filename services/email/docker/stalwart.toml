@@ -1,4 +1,4 @@
-# FR-EMAIL-001 §3.1 — Stalwart server config baked into the CyberOS image.
+# TASK-EMAIL-001 §3.1 — Stalwart server config baked into the CyberOS image.
 # Pin: stalwartlabs/mail-server:0.10
 #
 # Env vars resolved at container start:
@@ -6,7 +6,7 @@
 #   S3_REGION_DEFAULT, S3_BUCKET_DEFAULT, KMS_KEY_DEFAULT
 #
 # Per-tenant residency routing overrides the default S3 bucket via the
-# Stalwart directory-tag mechanism; the FR-EMAIL-001 adapter layer
+# Stalwart directory-tag mechanism; the TASK-EMAIL-001 adapter layer
 # (cyberos-email-cli + the gateway) sets tenant.{id, residency,
 # primary_domain} on user records.
 

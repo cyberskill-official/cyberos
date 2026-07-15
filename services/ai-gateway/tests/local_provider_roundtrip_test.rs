@@ -1,4 +1,4 @@
-//! FR-AI-105 - local model providers end to end.
+//! TASK-AI-105 - local model providers end to end.
 //!
 //! One test runs in CI (it needs no server): it proves a local provider resolves through
 //! `alias::resolve` without a cost-table row or a ZDR attestation - the zero-cost, inherently-ZDR
@@ -83,7 +83,7 @@ impl PolicySource for FixedPolicy {
 }
 
 /// CI test (no server): a local provider resolves with no cost-table row and no ZDR attestation, and is
-/// marked ZDR. This is the FR-AI-105 clause 5 + 7 exemption; it needs no global init because the local
+/// marked ZDR. This is the TASK-AI-105 clause 5 + 7 exemption; it needs no global init because the local
 /// path skips both lookups.
 #[test]
 fn local_provider_resolves_without_cost_or_zdr_fixture() {

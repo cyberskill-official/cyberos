@@ -1,6 +1,6 @@
 """
 cyberos.core.invokers — pluggable LLM invokers for write-time scoring
-(FR-MEMORY-114 §1 #3, §1 #5).
+(TASK-MEMORY-114 §1 #3, §1 #5).
 
 Mirrors the ``modules/cuo/cuo/invokers.py`` Phase-3 pattern:
 

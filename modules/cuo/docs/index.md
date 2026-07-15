@@ -1,20 +1,20 @@
 ---
 title: cuo - the CyberOS workflow engine · CyberOS
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
-cuo is the workflow engine: it drives every unit of work - a feature request - through one governed lifecycle, with humans holding the two acceptance gates. There is exactly one implementation workflow; improvement and hardening work runs the same machinery as net-new features.
+cuo is the workflow engine: it drives every unit of work - a task - through one governed lifecycle, with humans holding the two acceptance gates. There is exactly one implementation workflow; improvement and hardening work runs the same machinery as net-new features.
 
 ## The single workflow
 
-`ship-feature-requests` (v2.3.x) picks the first eligible FR from `docs/feature-requests/BACKLOG.md` and drives it end to end:
+`ship-tasks` (v2.3.x) picks the first eligible task from `docs/tasks/BACKLOG.md` and drives it end to end:
 
 ```
 draft -> ready_to_implement -> implementing -> ready_to_review -> reviewing
       -> ready_to_test -> testing -> done        (off-ramps: on_hold, closed)
 ```
 
-- FR frontmatter `status` is the record of truth; BACKLOG.md is the index kept in lockstep.
+- Task frontmatter `status` is the record of truth; BACKLOG.md is the index kept in lockstep.
 - One backlog for both classes: `class: improvement` rows carry an `(improvement)` tag, product rows are untagged. There is never a second backlog file.
 - Failures route back to `ready_to_implement` with `routed_back_count += 1` - there are no terminal failure states.
 
@@ -23,9 +23,9 @@ draft -> ready_to_implement -> implementing -> ready_to_review -> reviewing
 Two transitions are human-acceptance gates the agent must never cross by itself:
 
 1. Review acceptance (`reviewing -> ready_to_test`): a human accepts the code-review packet.
-2. Final acceptance (`testing -> done`): a human accepts the shipped FR after every machine gate is green.
+2. Final acceptance (`testing -> done`): a human accepts the shipped task after every machine gate is green.
 
-Between the gates the agent runs continuously and self-resolves everything it can verify. The doctrine lives in `modules/cuo/EXECUTION-DISCIPLINE.md`; the status contract in `modules/skill/contracts/feature-request/STATUS-REFERENCE.md`.
+Between the gates the agent runs continuously and self-resolves everything it can verify. The doctrine lives in `modules/cuo/EXECUTION-DISCIPLINE.md`; the status contract in `modules/skill/contracts/task/STATUS-REFERENCE.md`.
 
 ## Gates
 
@@ -33,13 +33,13 @@ Machine gates derive from the touched module's `audit-profile.yaml`: build, lint
 
 ## Where things live
 
-- Workflow: `modules/cuo/chief-technology-officer/workflows/ship-feature-requests.md`
-- FRs: `docs/feature-requests/<module>/FR-<MOD>-NNN-slug.md`; cross-cutting hardening under `docs/feature-requests/improvement/`
-- In any CyberOS-initialised repo: `.cyberos/cuo/` carries the same workflow, doctrine, status contract, skills, and gate runner - trigger it with the prompt in `tools/cyberos-init/docs/index.md` or the `/ship-feature-requests` plugin skill.
+- Workflow: `modules/cuo/chief-technology-officer/workflows/ship-tasks.md`
+- tasks: `docs/tasks/<module>/task-<MOD>-NNN-slug.md`; cross-cutting hardening under `docs/tasks/improvement/`
+- In any CyberOS-initialised repo: `.cyberos/cuo/` carries the same workflow, doctrine, status contract, skills, and gate runner - trigger it with the prompt in `tools/cyberos-init/docs/index.md` or the `/ship-tasks` plugin skill.
 
 ## Guides
 
-- [Ship your first feature request](./guides/ship-your-first-fr.html) - the day-one, step-by-step walkthrough for employees: install, write an FR, trigger the agent, hold the two gates, land the change.
+- [Ship your first task](./guides/ship-your-first-task.html) - the day-one, step-by-step walkthrough for employees: install, write a task, trigger the agent, hold the two gates, land the change.
 
 ## Changelog
 

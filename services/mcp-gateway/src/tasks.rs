@@ -1,4 +1,4 @@
-//! FR-MCP-007 tasks primitive: a long-running tool call tracked by an opaque handle, polled for status,
+//! TASK-MCP-007 tasks primitive: a long-running tool call tracked by an opaque handle, polled for status,
 //! and read for its result when complete.
 //!
 //! In the synchronous gateway this realizes the build-plan slice ("a task starts and returns a handle;

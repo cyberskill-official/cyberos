@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FR-CHAT-001 §4 #3 + §4 #5 — verify the GitHub Actions workflows exist
+# TASK-CHAT-001 §4 #3 + §4 #5 — verify the GitHub Actions workflows exist
 # and carry the right cron / trigger / label-gate semantics.
 #
 # We parse the YAML conservatively with grep — the workflow harness will

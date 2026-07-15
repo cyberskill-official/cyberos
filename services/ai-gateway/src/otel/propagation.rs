@@ -1,4 +1,4 @@
-//! FR-AI-022 §1 #2 — W3C TraceContext extraction (incoming) + injection (outgoing).
+//! TASK-AI-022 §1 #2 — W3C TraceContext extraction (incoming) + injection (outgoing).
 
 use opentelemetry::propagation::{Extractor, Injector, TextMapPropagator};
 use opentelemetry_sdk::propagation::TraceContextPropagator;

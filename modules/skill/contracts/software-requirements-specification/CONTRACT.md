@@ -2,7 +2,7 @@
 contract_id: srs
 contract_version: v1
 template_literal: software-requirements-specification@1
-description: "Canonical software-requirements-specification@1 schema body — frontmatter contract + Markdown skeleton for the Software Requirements Specification artefact emitted by `cuo/chief-technology-officer/software-requirements-specification-author`. Consumed by `cuo/chief-technology-officer/software-requirements-specification-audit` (validation target) and downstream by `cuo/chief-technology-officer/fr-to-tech-spec` (input context). Documents the system in technical detail (architecture, runtime, data flows, non-functional requirements); distinct from the `product-requirements-document@1` contract which describes the product at a user-outcome level."
+description: "Canonical software-requirements-specification@1 schema body — frontmatter contract + Markdown skeleton for the Software Requirements Specification artefact emitted by `cuo/chief-technology-officer/software-requirements-specification-author`. Consumed by `cuo/chief-technology-officer/software-requirements-specification-audit` (validation target) and downstream by `cuo/chief-technology-officer/task-to-tech-spec` (input context). Documents the system in technical detail (architecture, runtime, data flows, non-functional requirements); distinct from the `product-requirements-document@1` contract which describes the product at a user-outcome level."
 contract_kind: artefact_schema
 locked_at: 2026-05-06
 
@@ -27,7 +27,7 @@ emitted_source_freshness_tier: 20
 
 SRS ≠ PRD. PRD answers "what should we build and why?" (audience: product, leadership). SRS answers "what does the system actually do, in technical detail?" (audience: engineering, ops). They have different lifecycles (PRD changes when goals shift; SRS changes when tech changes), different content density, different review processes (PRDs go through stakeholder approval; SRSs go through architectural review).
 
-SRS ≠ tech-spec. The tech-spec (`tech_spec@1`, future contract owned by fr-to-tech-spec) decomposes a single FR into work-packages. The SRS describes the SYSTEM as a whole — components, data flows, runtime mechanisms, NFRs (non-functional requirements). One PRD typically begets one SRS; one SRS typically begets many tech-specs (one per FR).
+SRS ≠ tech-spec. The tech-spec (`tech_spec@1`, future contract owned by task-to-tech-spec) decomposes a single task into work-packages. The SRS describes the SYSTEM as a whole — components, data flows, runtime mechanisms, NFRs (non-functional requirements). One PRD typically begets one SRS; one SRS typically begets many tech-specs (one per task).
 
 ## Frontmatter contract
 
@@ -79,4 +79,4 @@ Same pattern as `product-requirements-document@1`. Every claim in `## System Arc
 - Registry v0.2.6 — first version of this contract registered.
 - DEC-090 — skills↔contracts split.
 - AGENTS.md §5.3 — authority hierarchy.
-- Future consumers: `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0, `cuo/chief-technology-officer/software-requirements-specification-audit` v0.1.0, `cuo/chief-technology-officer/fr-to-tech-spec` v0.2.0+.
+- Future consumers: `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0, `cuo/chief-technology-officer/software-requirements-specification-audit` v0.1.0, `cuo/chief-technology-officer/task-to-tech-spec` v0.2.0+.

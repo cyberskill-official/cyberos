@@ -1,11 +1,11 @@
-//! FR-MCP-006 tool-annotation gating: a `destructiveHint` tool's `tools/call` is held for an elicited
-//! confirmation (FR-MCP-008) before the gateway forwards it.
+//! TASK-MCP-006 tool-annotation gating: a `destructiveHint` tool's `tools/call` is held for an elicited
+//! confirmation (TASK-MCP-008) before the gateway forwards it.
 //!
 //! The decision is pure ([`evaluate`]); the router owns the side effects (creating the confirmation
 //! elicitation, auditing, forwarding). A read-only tool calls straight through; a destructive tool is
 //! held until the caller answers its confirmation, then forwards on approval or aborts on decline. This
 //! de-stubs the elicit mode the annotation gate referenced - the `destructive()` annotation constructor
-//! already noted "requires Elicitation per FR-MCP-006".
+//! already noted "requires Elicitation per TASK-MCP-006".
 
 use serde_json::{json, Value};
 use uuid::Uuid;

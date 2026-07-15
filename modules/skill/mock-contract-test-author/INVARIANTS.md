@@ -1,6 +1,6 @@
 # `mock-contract-test-author` - invariants
 
-Lifted from SKILL.md's normative prose (FR-SKILL-118 AC 2 discipline: no invariant without a prose source).
+Lifted from SKILL.md's normative prose (TASK-SKILL-118 AC 2 discipline: no invariant without a prose source).
 
 1. The mock satisfies the SAME contract tests the real service must pass - one suite, two implementations.
 2. Swap is a one-line import change at swap_target; anything wider is a design failure.

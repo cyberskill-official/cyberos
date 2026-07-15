@@ -1,11 +1,11 @@
 //! Password complexity validation + memory hygiene.
 //!
-//! FR-AUTH-002 §1 #4 — Validate password against four NIST-SP-800-63B-aligned
+//! TASK-AUTH-002 §1 #4 — Validate password against four NIST-SP-800-63B-aligned
 //! rules: length, character-class diversity, not-equal-to-email-local-part,
 //! not-in-common-password-list. Returns a structured error body with ALL
 //! failing reasons (per §1 #4 — "multiple reasons reported in one response").
 //!
-//! FR-AUTH-002 §1 #3 — Memory hygiene: the `Zeroizing<String>` newtype from
+//! TASK-AUTH-002 §1 #3 — Memory hygiene: the `Zeroizing<String>` newtype from
 //! the `zeroize` crate wraps plaintext passwords so they're overwritten on
 //! Drop. Callers should accept `&Zeroizing<String>` (not `&str`) wherever
 //! plaintext is held; this module's `validate_plaintext` accepts a `&str`
@@ -40,7 +40,7 @@ pub fn wrap(s: &str) -> Zeroizing<String> {
     Zeroizing::new(s.to_string())
 }
 
-/// Per FR-AUTH-002 §1 #4 — validate password complexity. Aggregates ALL
+/// Per TASK-AUTH-002 §1 #4 — validate password complexity. Aggregates ALL
 /// failing reasons into a single error body so the client can render one
 /// "fix these issues" message instead of trial-and-error.
 ///
@@ -142,7 +142,7 @@ pub fn validate_plaintext(
 /// password that happens to be in the list) are dramatically better
 /// than false negatives (accepting "password123!"). Operators who hit
 /// a false positive can either choose a different password OR (in
-/// future) request an admin override per FR-AUTH-107 slice-2.
+/// future) request an admin override per TASK-AUTH-107 slice-2.
 const COMMON_PASSWORDS: &[&str] = &[
     "1234567890",
     "12345678901",

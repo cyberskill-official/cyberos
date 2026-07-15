@@ -1,29 +1,29 @@
-//! FR-MEMORY-123 — the BRAIN: the captured FR-MEMORY-121 interaction-event log becomes a fast, persistent,
+//! TASK-MEMORY-123 — the BRAIN: the captured TASK-MEMORY-121 interaction-event log becomes a fast, persistent,
 //! citable brain. Ingestion + embedding (via the ai-gateway) + rolling summaries + hot/warm/cold tiering +
 //! access-scoped, provenance-carrying recall.
 //!
-//! Design invariants (the FR's load-bearing decisions):
+//! Design invariants (the task's load-bearing decisions):
 //!   * DEC-2721 — `l1_audit_log` (the hash chain) is the SYSTEM OF RECORD; `brain_event_embedding` +
 //!     `brain_summary` are a DERIVED, rebuildable fast lens. Layer 1 wins on any conflict. The worker is
 //!     READ-ONLY over the chain (it never writes, deletes, or mutates an audit row).
-//!   * DEC-2722 — recall is ACCESS-SCOPED: tenant RLS at the DB PLUS the FR-EVAL-001 per-subject access
+//!   * DEC-2722 — recall is ACCESS-SCOPED: tenant RLS at the DB PLUS the TASK-EVAL-001 per-subject access
 //!     predicate ([`access_scope`]), applied as an EXCLUDE (a closest neighbour the caller may not see never
 //!     appears, it is not merely deranked) with deny-by-default on an unknown subject.
 //!   * DEC-2723 — embeddings + summaries are generated ONLY through the ai-gateway ([`embed_client`]), which
 //!     pins residency + ZDR + the tenant spend cap. Over-cap degrades to `pending_*` with backoff, never to a
 //!     direct provider call.
 //!   * DEC-2726 — every recall hit carries a [`Provenance`] pointer back to the exact `l1_audit_log` row(s)
-//!     it was derived from, with a read-time `chain_anchor` verify ([`provenance`]) so FR-EVAL-003 can cite
+//!     it was derived from, with a read-time `chain_anchor` verify ([`provenance`]) so TASK-EVAL-003 can cite
 //!     tamper-evident events.
 //!
 //! Layout:
-//!   * [`mod@event_cursor`]  — per-tenant cursor over the FR-MEMORY-121 event stream; restart resume (§1 #1).
+//!   * [`mod@event_cursor`]  — per-tenant cursor over the TASK-MEMORY-121 event stream; restart resume (§1 #1).
 //!   * [`mod@embed_client`]  — the ONLY embedding path: the ai-gateway embeddings call (§1 #2, #13).
 //!   * [`mod@ingest_worker`] — consume events -> embed -> idempotent UPSERT into pgvector (§1 #2, #12).
 //!   * [`mod@summarize`]     — rolling per-subject / per-channel / per-window summaries (§1 #4).
 //!   * [`mod@tiering`]       — age-based hot -> warm -> cold transitions (§1 #6).
 //!   * [`mod@recall`]        — `POST /v1/memory/recall`: summaries-first, access-scoped (§1 #5, #7, #8, #9).
-//!   * [`mod@access_scope`]  — the FR-EVAL-001 per-subject access predicate (§1 #8).
+//!   * [`mod@access_scope`]  — the TASK-EVAL-001 per-subject access predicate (§1 #8).
 //!   * [`mod@provenance`]    — map every row to its Layer-1 source + read-time chain-anchor verify (§1 #10).
 //!   * [`mod@backfill`]      — re-embed / re-summarise / index-rebuild from the chain (§1 #14).
 //!   * [`mod@metrics`]       — OTel ingest lag, recall p50/p99, index size, spend, access-denied (§1 #15).
@@ -46,7 +46,7 @@ use uuid::Uuid;
 
 pub use embed_client::{EmbedClient, EmbedError};
 
-/// The embedding dimension every brain vector carries (bge-m3 via the ai-gateway, FR-AI-019). Mirrors the
+/// The embedding dimension every brain vector carries (bge-m3 via the ai-gateway, TASK-AI-019). Mirrors the
 /// `VECTOR(1024)` column and the existing `crate::embeddings::DEFAULT_DIM`.
 pub const EMBED_DIM: usize = 1024;
 
@@ -58,11 +58,11 @@ pub struct BrainEvent {
     pub source_seq: i64,
     /// Provenance pointer into `l1_audit_log` (§1 #9, #26) — `l1:<tenant>:<seq>`.
     pub audit_row_id: String,
-    /// Whose interaction — the FR-EVAL-001 access subject (the Layer-1 row's `subject_id`).
+    /// Whose interaction — the TASK-EVAL-001 access subject (the Layer-1 row's `subject_id`).
     pub subject_id: Uuid,
     /// Where — chat channel / module surface; `None` for surfaces without one.
     pub channel_id: Option<Uuid>,
-    /// The interaction kind from the FR-MEMORY-121 payload (`payload.event_type`, e.g. `chat.message_created`).
+    /// The interaction kind from the TASK-MEMORY-121 payload (`payload.event_type`, e.g. `chat.message_created`).
     pub kind: String,
     /// Occurred-at ns — the interaction's own `occurred_at_ns` from the Layer-1 payload (NOT the
     /// audit write time), so age-based tiering + recency reflect when the interaction happened.
@@ -81,12 +81,12 @@ impl BrainEvent {
     }
 }
 
-/// The caller of a recall, resolved from the FR-AUTH-004 JWT: their tenant + their subject identity. The
+/// The caller of a recall, resolved from the TASK-AUTH-004 JWT: their tenant + their subject identity. The
 /// access predicate ([`access_scope`]) resolves what subjects this caller may see (§1 #8).
 #[derive(Clone, Copy, Debug)]
 pub struct Caller {
     pub tenant_id: Uuid,
-    /// The caller's own subject id (their `viewer_subject_id` in FR-EVAL-001's `access_grant`).
+    /// The caller's own subject id (their `viewer_subject_id` in TASK-EVAL-001's `access_grant`).
     pub viewer_subject_id: Uuid,
 }
 
@@ -95,7 +95,7 @@ pub struct Caller {
 #[derive(Debug, Deserialize)]
 pub struct RecallQuery {
     pub q: String,
-    /// Optional narrowing to specific subjects; STILL re-checked against FR-EVAL-001 (a subject_scope value
+    /// Optional narrowing to specific subjects; STILL re-checked against TASK-EVAL-001 (a subject_scope value
     /// the caller may not see is excluded — narrowing can only ever reduce, never widen, the access set).
     #[serde(default)]
     pub subject_scope: Option<Vec<Uuid>>,
@@ -165,7 +165,7 @@ pub struct RecallResults {
     pub degraded_backends: Vec<String>,
 }
 
-/// Brain runtime config, read from the environment at startup. Defaults match the FR (30d hot / 180d warm,
+/// Brain runtime config, read from the environment at startup. Defaults match the task (30d hot / 180d warm,
 /// §1 #6). Kept in one place so the worker, the tiering pass, and the tests agree.
 #[derive(Clone, Copy, Debug)]
 pub struct BrainConfig {

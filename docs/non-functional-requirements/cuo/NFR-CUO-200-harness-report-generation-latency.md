@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 < 5s; p99 < 15s end-to-end `cyberos-cuo harness report --since 30d` on a chain of up to 10⁶ rows + 250 skills"
 owner: CTO
 created: 2026-05-19
-related_frs: [FR-CUO-200]
+related_tasks: [TASK-CUO-200]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -41,13 +41,13 @@ Inspection: `cuo.core.harness.compute_report` is single-pass over `all_rows`; th
 
 ## §5 — Failure handling
 
-**Detection:** p95 monitoring via the OTel span `event: workflow.complete` (FR-OBS-001 wiring) on the `cyberos-cuo harness report` invocation.
+**Detection:** p95 monitoring via the OTel span `event: workflow.complete` (TASK-OBS-001 wiring) on the `cyberos-cuo harness report` invocation.
 
 **Alert:** p95 > 5s for two consecutive daily runs → sev-3 alert ("harness latency degraded") in `docs/runbooks/cuo-harness-slo-breach.md`.
 
 **On-call action:** profile the run with `py-spy` against the failing chain; common cause is an unbounded `evidence_rows` list that the markdown formatter materialises into a single string. Mitigation: cap `evidence_row_ids` per breach to 10 (already done in `compute_report`); cap evidence-table rows in markdown to 20 (already done).
 
-**Escalation:** if profiling shows N²-style scaling, file a follow-up FR to introduce a row-index keyed by skill name (avoid the per-skill list comprehension over `rows`).
+**Escalation:** if profiling shows N²-style scaling, file a follow-up task to introduce a row-index keyed by skill name (avoid the per-skill list comprehension over `rows`).
 
 ## §6 — Notes
 

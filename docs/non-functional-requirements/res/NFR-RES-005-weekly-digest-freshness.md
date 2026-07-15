@@ -9,7 +9,7 @@ phase: P1
 slo: "100% of Monday digests include data current through prior Sunday 23:59 local tenant time"
 owner: COO
 created: 2026-05-18
-related_frs: [FR-RES-001, FR-RES-003]
+related_tasks: [TASK-RES-001, TASK-RES-003]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -1,11 +1,11 @@
 name: payload-gate
 
-# FR-IMP-068: the distributable payload (dist/cyberos) is gitignored and built on demand, so
+# TASK-IMP-068: the distributable payload (dist/cyberos) is gitignored and built on demand, so
 # this gate proves the invariant instead: a payload built AT THIS COMMIT stamps every artifact
 # (VERSION, plugin.json, marketplace.json, mcp/package.json, manifest.yaml, and the plugin.json
 # sealed inside cyberos.plugin) with exactly the root VERSION. No network beyond checkout.
 # Note: the bot's version-bump commit carries [skip ci] and never triggers this workflow -
-# version.yml runs the same build+check inline before pushing a bump (FR-IMP-068 §1 #7).
+# version.yml runs the same build+check inline before pushing a bump (TASK-IMP-068 §1 #7).
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
         run: bash tools/cyberos-init/build.sh "$RUNNER_TEMP/payload"
       - name: Check every stamp equals VERSION
         run: bash tools/cyberos-init/check-version-sync.sh "$RUNNER_TEMP/payload"
-      - name: Doc anchors resolve (FR-SKILL-119)
+      - name: Doc anchors resolve (TASK-SKILL-119)
         run: bash scripts/check_doc_anchors.sh
-      - name: Version stamps consistent repo-wide (FR-IMP-072)
+      - name: Version stamps consistent repo-wide (TASK-IMP-072)
         run: node scripts/stamp-release-version.mjs --check --exit-code

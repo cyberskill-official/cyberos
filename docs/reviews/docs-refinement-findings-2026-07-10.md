@@ -1,6 +1,6 @@
 # Docs refinement pass - findings for operator resolution (2026-07-10)
 
-The FR-DOCS-002 dedicated refinement pass (30 pages, three parallel editors under a
+The TASK-DOCS-002 dedicated refinement pass (30 pages, three parallel editors under a
 strict no-invention rule) cleaned every migrated page to current-state prose. Real
 content contradictions were deliberately LEFT AS WRITTEN and recorded here - each
 needs an operator ruling, then a one-line doc fix.
@@ -25,9 +25,9 @@ needs an operator ruling, then a one-line doc fix.
 - ten pricing: per-seat ($49/$39) vs flat ($49/$249) for the same plans; Team AI
   tokens 5M vs 3M.
 
-## Systematic migration placeholders (pending FR re-authoring)
+## Systematic migration placeholders (pending task re-authoring)
 
-- "(FR pending)" / "(NFR pending)" placeholders are pervasive in vision pages.
+- "(task pending)" / "(NFR pending)" placeholders are pervasive in vision pages.
 - "P0 -> P3/P4 horizon" phrases (esop, hr, rew, compliance Decree-53 trigger) are
   find-replace artifacts standing in for original durations - originals unrecoverable.
 - Every vision page's "N KPIs" intro undercounts its KPI table (rows were appended

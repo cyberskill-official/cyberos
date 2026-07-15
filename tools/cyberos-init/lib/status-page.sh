@@ -24,8 +24,8 @@ _cyberos_status_page() {
     _cyberos_update_check || true
   fi
   # shellcheck source=/dev/null
-  source "$kit/lib/fr-migrate.sh"
-  PAGE_ONLY=1 _cyberos_fr_migrate "$root" "$kit"
+  source "$kit/lib/task-migrate.sh"
+  PAGE_ONLY=1 _cyberos_task_migrate "$root" "$kit"
 }
 
 if [ "${BASH_SOURCE[0]:-}" = "$0" ]; then

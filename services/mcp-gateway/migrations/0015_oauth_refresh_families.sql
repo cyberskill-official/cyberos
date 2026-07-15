@@ -1,4 +1,4 @@
--- FR-MCP-004 Migration 0012: oauth_refresh_families, oauth_revocation_list, oauth_consents
+-- TASK-MCP-004 Migration 0012: oauth_refresh_families, oauth_revocation_list, oauth_consents
 -- DEC-805 (TTLs), DEC-806 (rotation), §1.17 (enum), §1.21 (revocation), §1.29 (consent)
 
 CREATE TYPE oauth_refresh_state AS ENUM ('active', 'used', 'compromised');

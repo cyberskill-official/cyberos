@@ -8,7 +8,7 @@ The awh gate run #5 (commit 761c948, the run that includes the cost-ledger migra
 
 ai scores 62.5 percent. The `acceptance-ai-cross-tenant-cache-isolation` task passes, so Redis is reachable in the gate. The `ai-gateway-rust` task, which is the full `cargo test -p cyberos-ai-gateway` run (serial, 1800s timeout), regressed. The weight split, 3 of 8, lands on that full suite, not on the cache-isolation tests, and the generous timeout rules out a timeout.
 
-memory scores 27.3 percent. The weight split, 3 of 11 passing, indicates the Rust service task (`memory-service-rust`) passes while the two Python tasks fail: `memory-module-suite` and its acceptance subset `acceptance-fr-memory-116`. The Python suite is "509 passing on main", so this reads as an environment gap in the gate, not a code regression.
+memory scores 27.3 percent. The weight split, 3 of 11 passing, indicates the Rust service task (`memory-service-rust`) passes while the two Python tasks fail: `memory-module-suite` and its acceptance subset `acceptance-task-memory-116`. The Python suite is "509 passing on main", so this reads as an environment gap in the gate, not a code regression.
 
 Both failures match the earlier ai, cuo, memory, and skill failures that were traced to a missing CI environment rather than to regressions. The other eight modules passing, the suites passing locally against the full stack, and the gate hiding each task's captured output all point the same way.
 

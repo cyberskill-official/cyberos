@@ -1,11 +1,11 @@
-# FR-APP-005: Flathub manifest for CyberOS - PROVISIONAL until the app-id decision lands.
+# TASK-APP-005: Flathub manifest for CyberOS - PROVISIONAL until the app-id decision lands.
 #
 # ── PROVISIONAL APP-ID ────────────────────────────────────────────────────────────────
 # `os.cyberskill.world.desktop` is the working candidate (mirrors the Tauri identifier),
 # but Flathub's app-id convention is tied to a domain-ownership verification model that
 # MUST be checked against Flathub's current submission docs before this file, its
 # filename, and the (deliberately not-yet-authored) .desktop entry are finalized
-# (spec §1 #5, §9). Renaming at that point touches only files this FR introduces.
+# (spec §1 #5, §9). Renaming at that point touches only files this task introduces.
 #
 # ── SUBMISSION MODEL (why there is no CI job for this file) ──────────────────────────
 # Flathub does not accept pre-built artifact uploads: its own build infrastructure

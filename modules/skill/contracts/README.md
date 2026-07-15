@@ -33,7 +33,7 @@ Per registry v0.2.4 audit (REF-018 in memory), the v<n>/-folder layout was over-
 
 | `contract_kind` | Schema body lives in | Used for |
 | --- | --- | --- |
-| `artefact_schema` | `template.md` (Markdown skeleton) | Markdown artefacts written by skills (e.g. Feature Requests, tech specs, postmortems). |
+| `artefact_schema` | `template.md` (Markdown skeleton) | Markdown artefacts written by skills (e.g. Tasks, tech specs, postmortems). |
 | `envelope_schema` | `schema.json` (JSON Schema) | Skill input/output envelopes referenced via `expects.schema_ref` / `produces.schema_ref`. |
 | `wire_protocol` | `schema.json` + `protocol.md` | MCP tool descriptors, audit row formats, plug-in manifests. |
 
@@ -42,10 +42,10 @@ Per registry v0.2.4 audit (REF-018 in memory), the v<n>/-folder layout was over-
 ```yaml
 # In the skill's SKILL.md frontmatter:
 depends_on_contracts:
-  - id:        feature-request          # contract folder name
+  - id:        task          # contract folder name
     version:   v1                        # locks to this major version
     purpose:   generation_skeleton       # human-readable: why this skill needs it
-    pin_path:  cyberos/docs/contracts/feature-request/
+    pin_path:  cyberos/docs/contracts/task/
 ```
 
 The registry validator confirms:
@@ -58,18 +58,18 @@ The registry validator confirms:
 
 | Contract | Latest version | Kind | Stewarded by | Consumed by |
 | --- | --- | --- | --- | --- |
-| [`feature-request`](./feature-request/CONTRACT.md) | v1 (`feature_request@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/feature-request-author`, `cuo/cpo/feature-request-audit`, `cuo/chief-technology-officer/fr-to-tech-spec` |
-| [`nats-subjects`](./nats-subjects/CONTRACT.md) | v1 (`nats_subjects@1`) | wire_protocol | `cuo-cto` | `cuo/cpo/feature-request-author`, `cuo/cpo/feature-request-audit`, `cuo/chief-technology-officer/fr-to-tech-spec`, the supervisor |
+| [`task`](./task/CONTRACT.md) | v1 (`task@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/task-author`, `cuo/cpo/task-audit`, `cuo/chief-technology-officer/task-to-tech-spec` |
+| [`nats-subjects`](./nats-subjects/CONTRACT.md) | v1 (`nats_subjects@1`) | wire_protocol | `cuo-cto` | `cuo/cpo/task-author`, `cuo/cpo/task-audit`, `cuo/chief-technology-officer/task-to-tech-spec`, the supervisor |
 | [`project-brief`](./project-brief/CONTRACT.md) | v1 (`project_brief@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/requirements-discovery`, `cuo/cpo/product-requirements-document-author` |
-| [`prd`](./product-requirements-document/CONTRACT.md) | v1 (`product-requirements-document@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/product-requirements-document-author` v0.1.0+, `cuo/cpo/product-requirements-document-audit` v0.1.0+, `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0+ (input), `cuo/cpo/feature-request-author` v0.3.0+ (planned) |
-| [`srs`](./software-requirements-specification/CONTRACT.md) | v1 (`software-requirements-specification@1`) | artefact_schema | `cuo-cto` | `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0+, `cuo/chief-technology-officer/software-requirements-specification-audit` v0.1.0+, `cuo/chief-technology-officer/fr-to-tech-spec` v0.2.0+ (input context) |
+| [`prd`](./product-requirements-document/CONTRACT.md) | v1 (`product-requirements-document@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/product-requirements-document-author` v0.1.0+, `cuo/cpo/product-requirements-document-audit` v0.1.0+, `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0+ (input), `cuo/cpo/task-author` v0.3.0+ (planned) |
+| [`srs`](./software-requirements-specification/CONTRACT.md) | v1 (`software-requirements-specification@1`) | artefact_schema | `cuo-cto` | `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0+, `cuo/chief-technology-officer/software-requirements-specification-audit` v0.1.0+, `cuo/chief-technology-officer/task-to-tech-spec` v0.2.0+ (input context) |
 | [`impl-plan`](./implementation-plan/CONTRACT.md) | v1 (`impl_plan@1`) | artefact_schema | `cuo-cto` | `cuo/chief-technology-officer/spec-to-impl-plan` v0.1.0+ |
 
 ## How to add a new contract
 
 1. Decide the kind: artefact, envelope, or wire-protocol.
 2. `mkdir cyberos/docs/contracts/<contract-id>/`.
-3. Author `CONTRACT.md` with the small contract frontmatter (see `feature-request/CONTRACT.md` as the worked example). Carry `contract_version: v1` in the frontmatter — that's where major-version is tracked.
+3. Author `CONTRACT.md` with the small contract frontmatter (see `task/CONTRACT.md` as the worked example). Carry `contract_version: v1` in the frontmatter — that's where major-version is tracked.
 4. Author the schema body — `template.md` for artefact, `schema.json` (+ optional `protocol.md`) for envelope/wire-protocol.
 5. Author `CHANGELOG.md` with a v1.0.0 entry. Future major versions append to this single CHANGELOG.
 6. Add a row to the index above.

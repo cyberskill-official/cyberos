@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of tenant lifecycle events (create/upgrade/offboard/delete) reach the durable audit store"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-TEN-001, FR-TEN-104, FR-TEN-106]
+related_tasks: [TASK-TEN-001, TASK-TEN-104, TASK-TEN-106]
 ---
 
 ## §1 — Statement (BCP-14 normative)

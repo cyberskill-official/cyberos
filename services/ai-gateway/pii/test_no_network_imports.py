@@ -1,4 +1,4 @@
-"""FR-AI-012 §5 — AST-walk lint test.
+"""TASK-AI-012 §5 — AST-walk lint test.
 
 §1 #12 mandates no network calls in recognizers.
 This test catches forbidden imports at PR time.

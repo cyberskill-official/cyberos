@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 < 30s from SMTP MAIL FROM to inbox-row visible in user UI"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-EMAIL-001, FR-EMAIL-003]
+related_tasks: [TASK-EMAIL-001, TASK-EMAIL-003]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -9,13 +9,13 @@ phase: P0
 slo: "100% conservation: |pool_in - (pool_distributed + carry_over)| < 1 VND per quarter"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-REW-007, FR-REW-008]
+related_tasks: [TASK-REW-007, TASK-REW-008]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. The bonus-pool ledger (`FR-REW-007`) **MUST** satisfy: every inflow row sums to the same total as the corresponding outflow rows (distribution) plus the carry-over balance, per quarter.
-2. The conservation check **MUST** run automatically at every P3 quarterly distribution (`FR-REW-008`) and refuse to commit if conservation drifts > 1 VND.
+1. The bonus-pool ledger (`TASK-REW-007`) **MUST** satisfy: every inflow row sums to the same total as the corresponding outflow rows (distribution) plus the carry-over balance, per quarter.
+2. The conservation check **MUST** run automatically at every P3 quarterly distribution (`TASK-REW-008`) and refuse to commit if conservation drifts > 1 VND.
 3. Every ledger row **MUST** carry `{quarter, kind=inflow|distribution|carry_over, member_id?, amount_vnd, source, committed_at}`.
 4. Ledger rows **MUST** be append-only; corrections take the form of compensating rows referencing the original.
 5. The quarterly conservation result **MUST** be exposed in the P3 distribution attestation memo.

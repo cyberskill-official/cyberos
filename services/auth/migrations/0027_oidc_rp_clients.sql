@@ -1,4 +1,4 @@
--- FR-AUTH-110 §1 #1 - first-party OIDC relying-party (RP) registry.
+-- TASK-AUTH-110 §1 #1 - first-party OIDC relying-party (RP) registry.
 --
 -- Admin-registered confidential clients (CHAT/Mattermost, PORTAL) that federate
 -- to AUTH's OIDC provider. redirect_uris are locked (exact-match enforced in

@@ -1,4 +1,4 @@
-//! FR-EMAIL-011 — DSAR JSONL export primitives.
+//! TASK-EMAIL-011 — DSAR JSONL export primitives.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

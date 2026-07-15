@@ -1,4 +1,4 @@
-"""dream_runner - FR-CUO-204 operator entrypoint that runs the dream loop *safely*.
+"""dream_runner - TASK-CUO-204 operator entrypoint that runs the dream loop *safely*.
 
 `dream_loop.run_dream_cycle` is pure orchestration with injected dependencies. This module is the thin,
 safety-enforcing layer an operator actually invokes. It resolves the enablement mode, picks the apply
@@ -18,8 +18,8 @@ so the loop runs every gate and records what it would do, but cannot change a si
 the audit trail, then moves to `auto` deliberately.
 
 All dependencies are injectable so the safety logic is unit-tested with fakes; `main()` builds the real
-defaults. The default proposer is intentionally empty - wiring the FR-CUO-201 refinement proposer (and, for
-auto, the real FR-CUO-202 applier) is a deliberate operator step, fed through this same gated runner.
+defaults. The default proposer is intentionally empty - wiring the TASK-CUO-201 refinement proposer (and, for
+auto, the real TASK-CUO-202 applier) is a deliberate operator step, fed through this same gated runner.
 """
 
 from __future__ import annotations
@@ -114,13 +114,13 @@ def choose_apply_fn(
 
 
 def _empty_proposer() -> Iterable:
-    """Default proposal source: none. Wiring the real FR-CUO-201 refinement proposer is an operator step."""
+    """Default proposal source: none. Wiring the real TASK-CUO-201 refinement proposer is an operator step."""
     return []
 
 
 def _review_required_classifier(_prop: object) -> object:
     """Default classifier: hold everything for review (never auto-applicable). Safe placeholder until the
-    real FR-CUO-202 `classify_proposal` is bound."""
+    real TASK-CUO-202 `classify_proposal` is bound."""
     return SimpleNamespace(will_auto_apply=False, risk_class="minor")
 
 
@@ -138,7 +138,7 @@ class _RefinementProposal:
 def build_refinement_bindings(
     proposals_root, skill_root, repo_root=None
 ) -> tuple[Callable[[], Iterable], Callable[[object], object]]:
-    """Bind the real FR-CUO-201 proposal feed and FR-CUO-202 classifier for propose mode.
+    """Bind the real TASK-CUO-201 proposal feed and TASK-CUO-202 classifier for propose mode.
 
     `propose_fn` enumerates OPEN refinement proposals under `proposals_root` and maps each to its target
     SKILL.md (`skill_root/<skill_name>/SKILL.md`, expressed repo-relative so the path envelope matches).
@@ -189,7 +189,7 @@ def build_refinement_bindings(
 
 
 def build_apply_binding(proposals_root, skill_root, repo_root=None) -> Callable[[object], object]:
-    """Bind the real FR-CUO-202 applier (`apply_proposal`) as the dream loop's `real_apply_fn`.
+    """Bind the real TASK-CUO-202 applier (`apply_proposal`) as the dream loop's `real_apply_fn`.
 
     This only makes auto-apply POSSIBLE; it never decides to apply. Three independent layers still stand in
     front of an actual file change: `choose_apply_fn` requires all four locks (enabled + mode=auto +
@@ -294,7 +294,7 @@ def _print_result(result: RunResult) -> None:
 
 
 def main(argv: Optional[list] = None) -> int:
-    parser = argparse.ArgumentParser(description="Run one FR-CUO-204 dream cycle, safely.")
+    parser = argparse.ArgumentParser(description="Run one TASK-CUO-204 dream cycle, safely.")
     parser.add_argument("--config", default=str(_DEFAULT_CONFIG), help="path to dream.yaml")
     parser.add_argument(
         "--mode",
@@ -321,7 +321,7 @@ def main(argv: Optional[list] = None) -> int:
     parser.add_argument(
         "--apply-proposals",
         action="store_true",
-        help="bind the real FR-CUO-202 applier so auto mode can actually apply (still requires "
+        help="bind the real TASK-CUO-202 applier so auto mode can actually apply (still requires "
         "--allow-auto-apply + mode=auto + a dream branch; requires --proposals-dir/--skill-root). "
         "Without it the runner records only and changes nothing.",
     )
@@ -341,7 +341,7 @@ def main(argv: Optional[list] = None) -> int:
             "(name contains 'dream'). Propose mode is unaffected."
         )
 
-    # Bind the real FR-CUO-201 proposer + FR-CUO-202 classifier when an operator points at a proposals
+    # Bind the real TASK-CUO-201 proposer + TASK-CUO-202 classifier when an operator points at a proposals
     # directory; otherwise the runner proposes nothing (safe default). The real applier (real_apply_fn) is
     # bound only when the operator additionally passes --apply-proposals; even then it is reached only when
     # all four auto-apply locks hold (see choose_apply_fn), so every other path records and changes nothing.

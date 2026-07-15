@@ -1,7 +1,7 @@
 ---
 title: ESOP - Phantom Stock vesting, Good/Bad Leaver branch, Singapore HoldCo flip
 source: website/docs/modules/esop/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 ESOP is the **synthetic equity plane** - a tracked-on-books economic interest in the company that vests over time, can be valued, and can be cashed out under defined windows. No share certificates are ever issued; no Vietnamese securities-regulation filing applies (Decree 38/2020 corporate governance treatment instead, as deferred compensation). The core entities are **Grants** (each tied to a Member, type, schedule), **VestingEvents** (the monthly vest after the phased cliff), **Valuations** (annual, signed by CFO + Board), **PutOptionExercises** (Year-3+ cash-out windows), and **PoolBalance** (the pool replenishment from % of annual profit, with GL/BL branches for top-performers vs broad distribution).
@@ -87,7 +87,7 @@ Axis| Question| Answer
 **5W - Why**| Why a separate module?| Because grant + valuation history is sensitive board-level data that must be append-only and dual-signed. Co-mingling with HR or REW would weaken the audit posture and risk leakage.
 **1H - How**| How does it work?| Append-only grant + vesting_event + valuation rows in Postgres. Vesting compute is a deterministic function of (grant, today, valuation). Put-option exercise schedules a wire transfer via Wise (multi-currency) or VietQR (VND). HoldCo flip is a one-way migration - phantom row -> real_share row with full audit trail.
 **2C - Cost**| Cost budget?| P2: ~$25/month (small RDS schema + Fargate share + S3 retention). 50-tenant: ~$80/month. Per-grant cost negligible.
-**2C - Constraints**| Constraints?| (a) Dual sign-off mandatory on grants + valuations (FR pending). (b) Append-only (FR pending). (c) Zero memory ingestion ((FR pending) + DEC-036). (d) 10-year retention. (e) M&A acceleration is Board-only. (f) HoldCo flip is CEO-only designation.
+**2C - Constraints**| Constraints?| (a) Dual sign-off mandatory on grants + valuations (task pending). (b) Append-only (task pending). (c) Zero memory ingestion ((task pending) + DEC-036). (d) 10-year retention. (e) M&A acceleration is Board-only. (f) HoldCo flip is CEO-only designation.
 **5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, tectonic for grant + valuation PDFs, ring for SHA-256, cyberskill-vn skills (vietnam-bank-transfer for put-option wires), AWS S3 with retention lock, KMS.
 **5M - Methods**| Method choices?| Append-only with supersession. Deterministic vesting compute (pure fn). Dual sign-off enforced at AUTH cosign predicate. Annual valuation is a versioned row analogous to REW parameter versioning.
 **5M - Machines**| Deployment?| Fargate in SG-1 (P2). Multi-AZ Postgres RDS. S3 retention 10 years.
@@ -139,7 +139,7 @@ Component| Path (planned)| Responsibility
 `vesting.rs`| services/esop/src/vesting.rs| Pure-function vesting compute. Input: (grant, asof_date). Output: vested_sp count. Phased cliff + monthly thereafter. Deterministic.
 `vesting_cron.rs`| services/esop/src/vesting_cron.rs| Monthly cron that materialises vesting_event rows. Idempotent (UNIQUE by (grant_id, period)).
 `valuation.rs`| services/esop/src/valuation.rs| Annual valuation cycle. CFO inputs base value; Board signs Industry Multiplier; auditor attests. New `valuation` row supersedes prior.
-`put_option.rs`| services/esop/src/put_option.rs| Put-option exercise. Year 3+ window (annual July). Capped by (FR pending) per-Member per-year limit. Wires cash via vietnam-bank-transfer or Wise.
+`put_option.rs`| services/esop/src/put_option.rs| Put-option exercise. Year 3+ window (annual July). Capped by (task pending) per-Member per-year limit. Wires cash via vietnam-bank-transfer or Wise.
 `leaver.rs`| services/esop/src/leaver.rs| Termination handler. Good Leaver: vested retained, future vesting halted, put rights preserved. Bad Leaver: vested retained at appendix discount, put rights frozen. Requires CFO + CEO co-sign.
 `pool.rs`| services/esop/src/pool.rs| Pool balance. Replenishment annually by % of profit (Board-signed parameter). GL/BL split for top-performers vs broad.
 `ma_acceleration.rs`| services/esop/src/ma_acceleration.rs| M&A acceleration. Board fires; bulk vesting event for all open grants. Tax-implication note attached.
@@ -330,9 +330,9 @@ The branch decision is human-only - no system path selects GL vs BL automaticall
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
@@ -629,10 +629,10 @@ Narrator MCP (read-only, simulation only)| planned - P2
 
 ## References
 
-- **FR catalogue** - ESOP module FRs ((FR pending) through (FR pending)).
+- **task catalogue** - ESOP module tasks ((task pending) through (task pending)).
 - **Architecture spec** - ESOP architecture posture, Phantom Stock framing.
 - **NFR catalogue** - Security NFRs (zero ESOP in memory, dual sign-off).
-- **FR mapping** - Formal (FR pending) through (FR pending) with verification methods.
+- **task mapping** - Formal (task pending) through (task pending) with verification methods.
 - **Total Rewards & Career Path Appendix** - ESOP allocation, BL discount %, vesting defaults.
 - **Vietnam Law on Enterprises (Law 59/2020/QH14)** - Art. 114 share issuance (which Phantom Stock avoids).
 - **Vietnam Securities Law (Law 54/2019/QH14)** - Art. 30 public offering (which Phantom Stock is not).
@@ -644,7 +644,7 @@ Narrator MCP (read-only, simulation only)| planned - P2
 - **Cross-module page links:** [hr.html](../hr/index.html), [rew.html](../rew/index.html), [memory.html](../memory/index.html), [auth.html](../auth/index.html), [doc.html](../doc/index.html)
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) + DEC-036 - ESOP value structurally excluded from memory.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - ESOP at P2-exit (P2).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **Singapore Companies Act (Cap. 50)** - S 67 share issuance, applicable post-HoldCo-flip.
 - **Singapore ACRA filings** - Form 24 (share allotment), Form 45 (allotment return).
 - **VAS 17 - Income Taxes** - deferred-comp liability accrual.

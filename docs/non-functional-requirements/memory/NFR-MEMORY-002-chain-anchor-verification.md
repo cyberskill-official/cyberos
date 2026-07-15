@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of l2_memory reads re-verify the chain anchor; any mismatch quarantines the row and sev-1 alerts"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-MEMORY-101, FR-MEMORY-102]
+related_tasks: [TASK-MEMORY-101, TASK-MEMORY-102]
 ---
 
 ## §1 — Statement (BCP-14 normative)

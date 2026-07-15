@@ -1,4 +1,4 @@
-//! TraceQL filter injection (FR-OBS-002 §1 #5, §4 #5, §8). Hand-rolled subset covering the
+//! TraceQL filter injection (TASK-OBS-002 §1 #5, §4 #5, §8). Hand-rolled subset covering the
 //! `{ <conditions> }` spanset filter Grafana emits. The tenant filter is AND-ed in with `&&`:
 //!
 //!   `{ service.name = "x" }`  ->  `{ service.name = "x" && resource.tenant_id = "T" }`
@@ -143,7 +143,7 @@ mod tests {
 
     #[test]
     fn injects_spec_example_exactly() {
-        // FR-OBS-002 §8.
+        // TASK-OBS-002 §8.
         assert_eq!(
             add_label(
                 "{ service.name = \"ai-gateway\" }",

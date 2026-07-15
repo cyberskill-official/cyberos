@@ -4,7 +4,7 @@ version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "PROJ module — Issue + Cycle + Engagement + RLS + FSM + memory audit emission (FR-PROJ-001 slice 1)"
+description = "PROJ module — Issue + Cycle + Engagement + RLS + FSM + memory audit emission (TASK-PROJ-001 slice 1)"
 
 [lib]
 name = "cyberos_proj"

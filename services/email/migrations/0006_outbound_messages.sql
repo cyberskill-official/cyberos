@@ -1,4 +1,4 @@
--- FR-EMAIL-009 — outbound 1:1 send queue + suppression list.
+-- TASK-EMAIL-009 — outbound 1:1 send queue + suppression list.
 
 BEGIN;
 

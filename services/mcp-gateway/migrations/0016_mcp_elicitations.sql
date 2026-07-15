@@ -1,4 +1,4 @@
--- FR-MCP-008 Migration 0016: mcp_elicitations + closed enums
+-- TASK-MCP-008 Migration 0016: mcp_elicitations + closed enums
 -- DEC-1141 (elicitation_type), DEC-1144 (pending TTL row), DEC-1150 (retry cap), DEC-1157 (PII scrub).
 --
 -- Persistence for the elicitation primitive that ships in-memory in services/mcp-gateway/src/elicitation.
@@ -43,7 +43,7 @@ CREATE TABLE mcp_elicitations (
     choices                   JSONB NOT NULL DEFAULT '[]'::jsonb,    -- allowed values for the choice types ([] otherwise); lets a persisted elicitation be re-validated on respond
     response_payload_kms_blob BYTEA,                                 -- filled on respond; KMS-encrypted
     response_payload_sha256   CHAR(64),                              -- the only payload form in the chain
-    confirmed                 BOOLEAN,                               -- set on respond for confirmation types; the FR-MCP-006 gate reads it without opening the sealed blob
+    confirmed                 BOOLEAN,                               -- set on respond for confirmation types; the TASK-MCP-006 gate reads it without opening the sealed blob
     validation_errors         JSONB,
     retry_count               INT NOT NULL DEFAULT 0 CHECK (retry_count BETWEEN 0 AND 3),
     timeout_seconds           INT NOT NULL CHECK (timeout_seconds BETWEEN 1 AND 1800),

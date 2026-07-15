@@ -3,7 +3,7 @@
 # behind both callers (.github/workflows/deploy.yml `docs` job + .github/workflows/release.yml
 # `docs` job).
 #
-# Why a shared script with a lock (FR-IMP-079): the two workflows used to inline the same
+# Why a shared script with a lock (TASK-IMP-079): the two workflows used to inline the same
 # snippet, both staging into the SAME ~/cyberos/apps/console/docs.new. A branch push followed
 # seconds later by the v1.0.0 tag push ran both docs jobs concurrently; the release shipper's
 # `rm -rf docs.new` deleted the deploy shipper's staging between its tar extract and its mv -

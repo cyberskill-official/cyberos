@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of perf-signal rows retained ≥ 7 years; 0 unauthorized deletions"
 owner: CHRO
 created: 2026-05-18
-related_frs: [FR-HR-008]
+related_tasks: [TASK-HR-008]
 ---
 
 ## §1 — Statement (BCP-14 normative)

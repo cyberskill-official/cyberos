@@ -130,10 +130,10 @@ def run(
     cuo_root: Path | None = None,
     skill_root: Path | None = None,
 ) -> None:
-    """Drain eligible FRs through a persona workflow.
+    """Drain eligible tasks through a persona workflow.
 
     This is the high-level zero-touch entry point. Reads BACKLOG.md,
-    finds eligible FRs, and runs the workflow on each one.
+    finds eligible tasks, and runs the workflow on each one.
     """
     from cuo.core.backlog_reader import (
         parse_backlog, next_eligible, routed_back_count,
@@ -154,7 +154,7 @@ def run(
     # Resolve BACKLOG path
     if backlog_path is None:
         cyberos_root = cuo_path.parent.parent  # modules/cuo → cyberos
-        backlog_path = cyberos_root / "docs" / "feature-requests" / "BACKLOG.md"
+        backlog_path = cyberos_root / "docs" / "tasks" / "BACKLOG.md"
     if not backlog_path.is_file():
         print(f"error: BACKLOG.md not found at {backlog_path}", file=sys.stderr)
         sys.exit(2)
@@ -162,7 +162,7 @@ def run(
     audit_dir = cuo_path.parent.parent / ".cyberos/memory/store" / "audit"
 
     if output_dir is None:
-        # Backlog lives at docs/feature-requests/BACKLOG.md — walk up 3 levels
+        # Backlog lives at docs/tasks/BACKLOG.md — walk up 3 levels
         # to reach the project root for .cyberos/memory/store/ placement.
         project_root = backlog_path.parent.parent.parent
         output_dir = project_root / ".cyberos/memory/store" / "cuo-steps"
@@ -197,40 +197,40 @@ def run(
     if invoker == "brief":
         from cuo.core.supervisor import brief_chain
         frs_run = 0
-        processed_fr_ids: set[str] = set()
+        processed_task_ids: set[str] = set()
         while True:
             if max_frs and frs_run >= max_frs:
                 break
             rows = parse_backlog(backlog_path)
             eligible = next_eligible(rows, module=module, rework=rework,
-                                      skip_fr_ids=processed_fr_ids)
+                                      skip_task_ids=processed_task_ids)
             if eligible is None:
                 break
             frs_run += 1
-            processed_fr_ids.add(eligible.fr_id)
+            processed_task_ids.add(eligible.task_id)
             brief = brief_chain(
                 persona=persona,
                 workflow_slug=workflow_slug,
                 skill_root=skill_path,
                 output_dir=output_dir,
-                fr_id=eligible.fr_id,
-                inputs={"fr_id": eligible.fr_id, "module": module or eligible.module,
+                task_id=eligible.task_id,
+                inputs={"task_id": eligible.task_id, "module": module or eligible.module,
                         "rework": rework},
                 project_root=Path.cwd(),
             )
             if brief_output:
                 brief_output.parent.mkdir(parents=True, exist_ok=True)
                 if max_frs != 1 and frs_run > 1:
-                    # Multiple FRs: append with separator
+                    # Multiple tasks: append with separator
                     with open(brief_output, "a", encoding="utf-8") as f:
-                        f.write(f"\n\n---\n\n## [{frs_run}] {eligible.fr_id}\n\n")
+                        f.write(f"\n\n---\n\n## [{frs_run}] {eligible.task_id}\n\n")
                         f.write(brief)
                 else:
                     brief_output.write_text(brief, encoding="utf-8")
             elif max_frs == 1:
                 print(brief)
             else:
-                print(f"## [{frs_run}] {eligible.fr_id}")
+                print(f"## [{frs_run}] {eligible.task_id}")
                 print(brief)
                 print("")
         if brief_output:
@@ -241,29 +241,29 @@ def run(
     frs_run = 0
     completed = 0
     routed_back = 0
-    processed_fr_ids: set[str] = set()
+    processed_task_ids: set[str] = set()
     while True:
         if max_frs and frs_run >= max_frs:
-            print(f"# drain halted: --max-frs={max_frs} reached")
+            print(f"# drain halted: --max-tasks={max_frs} reached")
             break
         rows = parse_backlog(backlog_path)
         eligible = next_eligible(rows, module=module, rework=rework,
-                                  skip_fr_ids=processed_fr_ids)
+                                  skip_task_ids=processed_task_ids)
         if eligible is None:
-            print(f"# drain complete: no more eligible FRs"
+            print(f"# drain complete: no more eligible tasks"
                   f"{' in module=' + module if module else ''}")
             break
 
-        fr_output_dir = output_dir
-        print(f"## [{frs_run + 1}] {eligible.fr_id} — {eligible.title[:60]}")
+        task_output_dir = output_dir
+        print(f"## [{frs_run + 1}] {eligible.task_id} — {eligible.title[:60]}")
 
         result = execute_chain(
             persona=persona,
             workflow_slug=workflow_slug,
             skill_root=skill_path,
-            output_dir=fr_output_dir,
-            fr_id=eligible.fr_id,
-            inputs={"fr_id": eligible.fr_id, "auto_claim": True,
+            output_dir=task_output_dir,
+            task_id=eligible.task_id,
+            inputs={"task_id": eligible.task_id, "auto_claim": True,
                     "module": module or eligible.module,
                     "rework": rework},
             invoker=inv,
@@ -271,7 +271,7 @@ def run(
             backlog_path=backlog_path,
         )
         frs_run += 1
-        processed_fr_ids.add(eligible.fr_id)
+        processed_task_ids.add(eligible.task_id)
         print(f"   outcome: {result.outcome}  ({len(result.step_results)} steps, "
               f"{result.total_duration_ms} ms)")
 
@@ -284,30 +284,30 @@ def run(
             completed += 1
         elif result.outcome == "ROUTED_BACK":
             routed_back += 1
-            rbc = routed_back_count(eligible.fr_id, audit_dir)
-            print(f"   routed_back_count for {eligible.fr_id}: {rbc}")
+            rbc = routed_back_count(eligible.task_id, audit_dir)
+            print(f"   routed_back_count for {eligible.task_id}: {rbc}")
             if halt_on_repeat_rework and rbc >= halt_on_repeat_rework:
-                print(f"# drain HALTED: {eligible.fr_id} routed back "
+                print(f"# drain HALTED: {eligible.task_id} routed back "
                       f"{rbc} times (>= --halt-on-repeat-rework={halt_on_repeat_rework})")
                 halt_reason_path.write_text(
                     f"# DRAIN HALT\n\n"
-                    f"FR `{eligible.fr_id}` has been rework-routed {rbc} times — "
+                    f"task `{eligible.task_id}` has been rework-routed {rbc} times — "
                     f"likely a real spec issue. HITL inspection required.\n\n"
                     f"## Last attempt\n\n"
                     f"- outcome: {result.outcome}\n"
                     f"- notes: {result.notes}\n"
-                    f"- output dir: {fr_output_dir}\n\n"
+                    f"- output dir: {task_output_dir}\n\n"
                     f"## Next action\n\n"
-                    f"Review the FR spec + last debug trace. Either patch the spec, "
+                    f"Review the task spec + last debug trace. Either patch the spec, "
                     f"flip status to on_hold/closed, or override routed_back_count.\n",
                     encoding="utf-8",
                 )
                 sys.exit(2)
         elif result.outcome in ("FAILED", "HITL_HALT"):
-            print(f"# drain HALTED: {eligible.fr_id} hit {result.outcome}")
+            print(f"# drain HALTED: {eligible.task_id} hit {result.outcome}")
             halt_reason_path.write_text(
                 f"# DRAIN HALT\n\n"
-                f"FR `{eligible.fr_id}` outcome: **{result.outcome}**.\n\n"
+                f"task `{eligible.task_id}` outcome: **{result.outcome}**.\n\n"
                 f"- notes: {result.notes}\n"
                 f"- step results:\n"
                 + "\n".join(f"  - step {s.step} [{s.status}] {s.skill}: "
@@ -320,6 +320,6 @@ def run(
             sys.exit(2)
 
     print("")
-    print(f"# drain summary: {frs_run} FRs run, {completed} completed, "
+    print(f"# drain summary: {frs_run} tasks run, {completed} completed, "
           f"{routed_back} routed back")
     sys.exit(0 if frs_run > 0 else 0)

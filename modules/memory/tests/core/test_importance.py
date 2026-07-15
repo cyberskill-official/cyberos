@@ -1,7 +1,7 @@
-"""Tests for FR-MEMORY-114 — write-time importance scoring.
+"""Tests for TASK-MEMORY-114 — write-time importance scoring.
 
 Covers acceptance criteria from
-`docs/feature-requests/memory/FR-MEMORY-114-write-time-importance/spec.md`:
+`docs/tasks/memory/TASK-MEMORY-114-write-time-importance/spec.md`:
 
 * AC #4 — CLI flag wins (explicit invoker name beats default)
 * AC #5 — env wins over default

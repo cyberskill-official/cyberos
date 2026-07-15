@@ -1,4 +1,4 @@
-//! Verify an FR-AUTH-004 session JWT presented as a bearer to `/authorize` (subject identity) and to
+//! Verify an TASK-AUTH-004 session JWT presented as a bearer to `/authorize` (subject identity) and to
 //! confidential `/register` (tenant + role). Reuses the shared `auth_signing_keys`; returns None on any
 //! failure so callers can map that to `login_required` or `invalid_client`.
 

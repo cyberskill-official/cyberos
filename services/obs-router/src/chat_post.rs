@@ -1,5 +1,5 @@
-//! HTTP client that posts a triage summary to the CHAT `#oncall` channel (FR-OBS-007 §1 #4). Targets a
-//! CHAT (Mattermost, FR-CHAT-001) incoming-webhook URL and includes the alert badge, the CUO summary and
+//! HTTP client that posts a triage summary to the CHAT `#oncall` channel (TASK-OBS-007 §1 #4). Targets a
+//! CHAT (Mattermost, TASK-CHAT-001) incoming-webhook URL and includes the alert badge, the CUO summary and
 //! suspected cause, the suggested runbook, a trace_id link, and ack / escalate actions whose buttons call
 //! back to this service. An unset URL fails, so the §1 #11 fallback to PagerDuty takes over.
 

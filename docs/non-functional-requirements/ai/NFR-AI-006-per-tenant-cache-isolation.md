@@ -9,7 +9,7 @@ phase: P0
 slo: "Property test: 0 cross-tenant cache hits over 10,000 random JWT pairings"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-AI-017, FR-AI-018]
+related_tasks: [TASK-AI-017, TASK-AI-018]
 ---
 
 ## §1 — Statement (BCP-14 normative)

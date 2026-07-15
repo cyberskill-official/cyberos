@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of executed chains produce 1 row per step + 1 summary row; reconciliation drift < 0.001%"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-CUO-101, FR-CUO-103]
+related_tasks: [TASK-CUO-101, TASK-CUO-103]
 ---
 
 ## §1 — Statement (BCP-14 normative)

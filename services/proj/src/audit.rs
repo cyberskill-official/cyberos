@@ -1,4 +1,4 @@
-//! FR-PROJ-001 §1 #6 — memory audit row builders.
+//! TASK-PROJ-001 §1 #6 — memory audit row builders.
 //!
 //! Four canonical kinds:
 //!   - `proj.issue_created`         per POST /v1/proj/issues

@@ -1,4 +1,4 @@
-"""Tests for the FR-CUO-201/202 binding into the dream runner (propose mode).
+"""Tests for the TASK-CUO-201/202 binding into the dream runner (propose mode).
 
 These prove the proposal feed maps each open refinement proposal to its target SKILL.md (repo-relative, so
 the path envelope matches), the real classifier is wired, and propose mode surfaces and records candidates
@@ -114,7 +114,7 @@ def test_missing_proposals_dir_yields_no_candidates(tmp_path):
     assert list(propose_fn()) == []
 
 
-# ── FR-CUO-204 real applier binding (--apply-proposals) ──────────────────────────────────────────
+# ── TASK-CUO-204 real applier binding (--apply-proposals) ──────────────────────────────────────────
 
 
 def test_build_apply_binding_invokes_the_real_applier(tmp_path):

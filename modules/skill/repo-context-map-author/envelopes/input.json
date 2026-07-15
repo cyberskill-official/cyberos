@@ -4,12 +4,12 @@
   "title": "repo-context-map-author input envelope",
   "type": "object",
   "required": [
-    "fr_path",
+    "task_path",
     "output_dir"
   ],
   "additionalProperties": false,
   "properties": {
-    "fr_path": {
+    "task_path": {
       "type": "string"
     },
     "output_dir": {

@@ -1,4 +1,4 @@
-//! FR-EMAIL-001 §1 #13 + §1 #14 — canonical email.* memory audit row
+//! TASK-EMAIL-001 §1 #13 + §1 #14 — canonical email.* memory audit row
 //! builders.
 //!
 //! The 5 row kinds:

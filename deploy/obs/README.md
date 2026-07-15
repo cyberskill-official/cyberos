@@ -1,6 +1,6 @@
 # CyberOS observability stack (tenant-aware)
 
-This stack runs Grafana and the LGTM backends (Loki, Prometheus, Tempo) with the FR-OBS-002 proxy in
+This stack runs Grafana and the LGTM backends (Loki, Prometheus, Tempo) with the TASK-OBS-002 proxy in
 front. The point is tenant isolation: a tenant can only ever read its own telemetry.
 
 ```

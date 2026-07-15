@@ -48,7 +48,7 @@ Some supplies are *exempt* from VAT rather than zero-rated. The distinction matt
 - **0% rate**: supplier charges 0% but can claim input VAT credits.
 - **Exempt**: supplier charges nothing but cannot claim input VAT credits.
 
-Exempt supplies include agricultural production at the farmer stage, some financial services, and specific educational/medical services. Exempt invoices are issued without a `<VatRate>` element (or with `KCT` / `Không chịu thuế` in some legacy formats). This skill currently does **not** model exempt supplies — submit a feature request if you need that.
+Exempt supplies include agricultural production at the farmer stage, some financial services, and specific educational/medical services. Exempt invoices are issued without a `<VatRate>` element (or with `KCT` / `Không chịu thuế` in some legacy formats). This skill currently does **not** model exempt supplies — submit a task if you need that.
 
 ## Source documents
 

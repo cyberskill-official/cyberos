@@ -1,6 +1,6 @@
 ---
 title: memory - the CyberOS BRAIN · CyberOS
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 memory is the platform's remembering faculty - BRAIN when you speak about it, `memory` in code. It is two layers with one truth: an append-only, audit-chained Layer-1 store on local disk, and a Layer-2 service that derives searchable structure from it.

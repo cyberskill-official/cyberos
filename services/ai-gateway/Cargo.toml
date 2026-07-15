@@ -49,7 +49,7 @@ chrono.workspace = true
 clap.workspace = true
 sha2.workspace = true
 
-# FR-AI-005 specific
+# TASK-AI-005 specific
 serde_yaml = "0.9"
 schemars = { version = "0.8", features = ["rust_decimal", "chrono", "uuid1"] }
 rust_decimal = { version = "1.36", features = ["serde-with-str"] }
@@ -57,54 +57,54 @@ notify = "6.1"
 arc-swap = "1.7"
 once_cell = "1.20"
 
-# FR-AI-007 specific (cost-table metrics)
+# TASK-AI-007 specific (cost-table metrics)
 # default-features = false drops the `protobuf` exposition feature (pulls the vulnerable protobuf 2.28,
 # RUSTSEC-2024-0437); we only use the text format + core metric types, so this removes the advisory with
 # no API change.
 prometheus = { version = "0.13", default-features = false }
 
-# FR-AI-014 specific (persona version stamping)
+# TASK-AI-014 specific (persona version stamping)
 semver = "1"
 
-# FR-AI-003 specific (subprocess writer bridge)
+# TASK-AI-003 specific (subprocess writer bridge)
 hex = "0.4"
 unicode-normalization = "0.1"
 futures = "0.3"
 
-# FR-AI-015 specific (ZDR source_url validation)
+# TASK-AI-015 specific (ZDR source_url validation)
 url = "2"
 
-# FR-AI-016 specific (AZ-suffix regex)
+# TASK-AI-016 specific (AZ-suffix regex)
 regex = "1"
 
-# FR-AI-008 specific (multi-provider router)
+# TASK-AI-008 specific (multi-provider router)
 async-trait = "0.1"
 rand = "0.8"
 reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
 
-# FR-AI-009 specific (circuit breaker)
+# TASK-AI-009 specific (circuit breaker)
 dashmap = "6"
 
-# FR-OBS-003/004/005 - RED metrics middleware + shared W3C TraceContext primitives for the HTTP server.
+# TASK-OBS-003/004/005 - RED metrics middleware + shared W3C TraceContext primitives for the HTTP server.
 cyberos-obs-sdk = { path = "../shared/cyberos-obs-sdk" }
 
-# FR-AI-017 specific (per-tenant cache)
+# TASK-AI-017 specific (per-tenant cache)
 redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
 
-# FR-AI-010 specific (streaming SSE)
+# TASK-AI-010 specific (streaming SSE)
 tokio-stream = "0.1"
 
-# FR-AI-011 specific (PII redaction)
+# TASK-AI-011 specific (PII redaction)
 zeroize = { version = "1.8", features = ["derive"] }
 
-# FR-AI-022 specific (OTel tracing)
+# TASK-AI-022 specific (OTel tracing)
 opentelemetry.workspace = true
 opentelemetry-otlp.workspace = true
 opentelemetry_sdk.workspace = true
 tracing-opentelemetry.workspace = true
 http.workspace = true
 
-# FR-AI-021 specific (operator CLI)
+# TASK-AI-021 specific (operator CLI)
 jsonwebtoken.workspace = true
 clap_complete = "4"
 comfy-table = "7"

@@ -1,7 +1,7 @@
 ---
 title: Memory - Appendices & Extended Reference
 source: website/docs/modules/memory/appendices.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 # MEMORY appendices - detailed reference

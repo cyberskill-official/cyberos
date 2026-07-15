@@ -1,4 +1,4 @@
-//! FR-APP-001 — CyberOS operations from the desktop UI: build the distributable payload,
+//! TASK-APP-001 — CyberOS operations from the desktop UI: build the distributable payload,
 //! list candidate projects, check installed-vs-available, and init/update a project.
 //!
 //! Doctrine (§1 #2): every operation shells out to the canonical `tools/cyberos-init`

@@ -1,4 +1,4 @@
-//! reqwest-backed Forwarder + backend base URLs (FR-OBS-002 production shell).
+//! reqwest-backed Forwarder + backend base URLs (TASK-OBS-002 production shell).
 
 use crate::error::{Backend, ProxyError};
 use crate::handler::Forwarder;

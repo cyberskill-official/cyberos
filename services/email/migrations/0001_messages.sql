@@ -1,4 +1,4 @@
--- FR-EMAIL-001 §3.2 — message_metadata + thread_metadata tables
+-- TASK-EMAIL-001 §3.2 — message_metadata + thread_metadata tables
 --
 -- The Stalwart adapter writes here on every inbound/outbound delivery.
 -- Bodies live in S3 (encrypted via KMS, residency-pinned per tenant); this
@@ -61,9 +61,9 @@ CREATE INDEX message_metadata_stalwart_idx        ON message_metadata (stalwart_
 CREATE INDEX thread_metadata_tenant_last_idx      ON thread_metadata (tenant_id, last_message_at DESC);
 
 -- ----- RLS per §1 #10 -------------------------------------------------------
--- Follows the GUC-based pattern from FR-AUTH-003 §10.6 (uses
+-- Follows the GUC-based pattern from TASK-AUTH-003 §10.6 (uses
 -- `app.current_tenant_id` rather than the spec's `auth.tenant_id` — the
--- divergence is documented in FR-EMAIL-001.audit.md §10.6).
+-- divergence is documented in TASK-EMAIL-001.audit.md §10.6).
 ALTER TABLE message_metadata ENABLE ROW LEVEL SECURITY;
 ALTER TABLE message_metadata FORCE ROW LEVEL SECURITY;
 ALTER TABLE thread_metadata  ENABLE ROW LEVEL SECURITY;
@@ -96,7 +96,7 @@ CREATE POLICY thread_metadata_tenant_scoped ON thread_metadata
 -- email service. It can INSERT + SELECT but NOT UPDATE/DELETE. Status
 -- transitions write a NEW row carrying `prior_message_id = <old.id>`.
 -- The migration script that creates `cyberos_app` lives in services/auth/
--- (FR-AUTH-003); a no-op guard here makes the REVOKE statement skip
+-- (TASK-AUTH-003); a no-op guard here makes the REVOKE statement skip
 -- gracefully when the role is absent (e.g. in a fresh test database).
 DO $$
 BEGIN

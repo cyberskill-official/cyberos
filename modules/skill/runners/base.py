@@ -4,7 +4,7 @@ runtime/skill_runners/base.py — base class for deterministic per-skill runners
 
 Tier α.1 (Batch 21).
 
-Each skill (fr-with-tasks, feature-request-author, product-requirements-document-author, etc.) gets a concrete
+Each skill (task-with-subtasks, task-author, product-requirements-document-author, etc.) gets a concrete
 subclass that implements the small fraction of skill logic that is
 deterministic (interview loop, INVARIANT checks, content-gate filtering,
 audit-fix loop). Only the judgement-driven authoring is delegated to
@@ -16,8 +16,8 @@ Claude and trusts it to follow. This base class flips the ratio:
 
 Subclass contract:
 
-  class FrWithTasksRunner(BaseSkillRunner):
-      skill_id = "cuo/cpo/fr-with-tasks"
+  class TaskWithSubtasksRunner(BaseSkillRunner):
+      skill_id = "cuo/cpo/task-with-subtasks"
       interview_questions = [...]   # from STANDALONE_INTERVIEW.md
       invariants = [...]            # from INVARIANTS.md
       output_template = "..."       # from cyberos/docs/contracts/*
@@ -30,7 +30,7 @@ Subclass contract:
 
 Then the chain calls:
 
-  runner = FrWithTasksRunner(memory_root, manifest)
+  runner = TaskWithSubtasksRunner(memory_root, manifest)
   artefact_path = runner.run(inputs, max_iterations=3)
 """
 from __future__ import annotations

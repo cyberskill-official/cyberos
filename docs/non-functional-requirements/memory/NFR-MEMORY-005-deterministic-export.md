@@ -9,7 +9,7 @@ phase: P1
 slo: "Two consecutive `cyberos-memory export` runs on an unchanged store produce identical SHA-256 hashes on the output bundle"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-MEMORY-103]
+related_tasks: [TASK-MEMORY-103]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FR-CHAT-001 §4 #1 + §4 #10 — PINNED_COMMIT file invariants + patches/ exists.
+# TASK-CHAT-001 §4 #1 + §4 #10 — PINNED_COMMIT file invariants + patches/ exists.
 #
 # Assertions:
 #   - PINNED_COMMIT file is present.

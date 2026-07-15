@@ -1,4 +1,4 @@
-//! FR-OBS-001 §3 — Validate the otelcol-contrib YAML config matches the contract.
+//! TASK-OBS-001 §3 — Validate the otelcol-contrib YAML config matches the contract.
 //!
 //! The validation runs at supervisor startup. The collector is rejected from starting
 //! if the receivers / processors / exporters / pipelines do not match the required
@@ -19,39 +19,39 @@ pub enum ConfigError {
     /// YAML did not parse.
     #[error("parse: {0}")]
     Parse(#[from] serde_yaml::Error),
-    /// Config parsed but did not satisfy the FR-OBS-001 §3 contract.
+    /// Config parsed but did not satisfy the TASK-OBS-001 §3 contract.
     #[error("validation: {0}")]
     Validation(String),
 }
 
-/// FR-OBS-001 §3 — Validate the config matches the slice-1 pipeline contract.
+/// TASK-OBS-001 §3 — Validate the config matches the slice-1 pipeline contract.
 pub fn validate(path: &Path) -> Result<(), ConfigError> {
     let raw = std::fs::read_to_string(path)?;
     let cfg: CollectorConfig = serde_yaml::from_str(&raw)?;
 
-    // FR-OBS-001 §3 — required receivers/processors/exporters.
+    // TASK-OBS-001 §3 — required receivers/processors/exporters.
     if cfg.receivers.otlp.is_none() {
         return Err(ConfigError::Validation(
-            "missing receiver: otlp (FR-OBS-001 §3)".into(),
+            "missing receiver: otlp (TASK-OBS-001 §3)".into(),
         ));
     }
     if cfg.exporters.loki.is_none() {
         return Err(ConfigError::Validation(
-            "missing exporter: loki (FR-OBS-001 §3)".into(),
+            "missing exporter: loki (TASK-OBS-001 §3)".into(),
         ));
     }
     if cfg.exporters.prometheusremotewrite.is_none() {
         return Err(ConfigError::Validation(
-            "missing exporter: prometheusremotewrite (FR-OBS-001 §3)".into(),
+            "missing exporter: prometheusremotewrite (TASK-OBS-001 §3)".into(),
         ));
     }
     if cfg.exporters.otlp_tempo.is_none() {
         return Err(ConfigError::Validation(
-            "missing exporter: otlp/tempo (FR-OBS-001 §3)".into(),
+            "missing exporter: otlp/tempo (TASK-OBS-001 §3)".into(),
         ));
     }
 
-    // FR-OBS-001 §1 #11 — pii_scrub processor MUST be present on logs+traces pipelines.
+    // TASK-OBS-001 §1 #11 — pii_scrub processor MUST be present on logs+traces pipelines.
     let pipelines = &cfg.service.pipelines;
     for (signal, p) in [("logs", &pipelines.logs), ("traces", &pipelines.traces)] {
         if !p
@@ -60,22 +60,22 @@ pub fn validate(path: &Path) -> Result<(), ConfigError> {
             .any(|s: &String| s.contains("pii_scrub"))
         {
             return Err(ConfigError::Validation(format!(
-                "pipeline {signal}: missing pii_scrub processor (FR-OBS-001 §1 #11)"
+                "pipeline {signal}: missing pii_scrub processor (TASK-OBS-001 §1 #11)"
             )));
         }
     }
 
-    // FR-OBS-001 §1 #2 — bearertokenauth extension MUST be configured.
+    // TASK-OBS-001 §1 #2 — bearertokenauth extension MUST be configured.
     if cfg.extensions.bearertokenauth.is_none() {
         return Err(ConfigError::Validation(
-            "missing extension: bearertokenauth (FR-OBS-001 §1 #2)".into(),
+            "missing extension: bearertokenauth (TASK-OBS-001 §1 #2)".into(),
         ));
     }
 
-    // FR-OBS-001 §1 #7 — file_storage extension MUST be configured.
+    // TASK-OBS-001 §1 #7 — file_storage extension MUST be configured.
     if cfg.extensions.file_storage.is_none() {
         return Err(ConfigError::Validation(
-            "missing extension: file_storage (FR-OBS-001 §1 #7)".into(),
+            "missing extension: file_storage (TASK-OBS-001 §1 #7)".into(),
         ));
     }
 

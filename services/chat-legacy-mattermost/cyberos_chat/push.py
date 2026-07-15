@@ -1,4 +1,4 @@
-"""FR-CHAT-011 — privacy-preserving mobile push payloads."""
+"""TASK-CHAT-011 — privacy-preserving mobile push payloads."""
 
 from __future__ import annotations
 

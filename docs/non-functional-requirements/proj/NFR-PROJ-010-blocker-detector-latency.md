@@ -9,12 +9,12 @@ phase: P1
 slo: "p95 < 4h from blocker condition to dashboard surfacing"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-PROJ-011]
+related_tasks: [TASK-PROJ-011]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. The blocker detector (`FR-PROJ-011`) **MUST** surface blockers (issues stalled > 3d, missing assignee, missing estimate, etc.) within 4h of the triggering condition becoming true.
+1. The blocker detector (`TASK-PROJ-011`) **MUST** surface blockers (issues stalled > 3d, missing assignee, missing estimate, etc.) within 4h of the triggering condition becoming true.
 2. The detector runs on a fixed cadence (default 1h) plus event-triggered re-runs on relevant mutations.
 3. Surfaced blockers **MUST** appear in the team's blocker dashboard + notification stream within 2 minutes of detection.
 4. False positives (issue correctly flagged but reason no longer valid) **MUST NOT** linger > 1 cycle — the detector self-clears.

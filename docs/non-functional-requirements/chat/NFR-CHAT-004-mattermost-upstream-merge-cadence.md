@@ -9,7 +9,7 @@ phase: P0
 slo: "Fork rebased onto upstream minor monthly; major version quarterly; security CVEs within 14 days"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-CHAT-001]
+related_tasks: [TASK-CHAT-001]
 ---
 
 ## §1 — Statement (BCP-14 normative)

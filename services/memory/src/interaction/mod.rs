@@ -1,4 +1,4 @@
-//! FR-MEMORY-121 — the single BRAIN capture primitive: the one work-interaction event shape every CyberOS
+//! TASK-MEMORY-121 — the single BRAIN capture primitive: the one work-interaction event shape every CyberOS
 //! module emits, plus its emit API, content-reference discipline, and consent gate.
 //!
 //! Layout:
@@ -6,7 +6,7 @@
 //!     audit-row body (DEC-2700, DEC-2704).
 //!   * [`content_ref`] — [`ContentRef`], a closed pointer/hash/none union; never raw content (DEC-2701).
 //!   * [`consent_gate`] — the [`ConsentGate`] hook + default-deny [`DenyAll`] stub (DEC-2702); the real
-//!     FR-EVAL-001-backed impl is wired by FR-MEMORY-122.
+//!     TASK-EVAL-001-backed impl is wired by TASK-MEMORY-122.
 //!   * [`emit`] — [`emit`], which validates, consults the gate, and writes the event as an aux row on the
 //!     hash-chained `l1_audit_log` via `cyberos-audit-chain` (DEC-2703).
 //!

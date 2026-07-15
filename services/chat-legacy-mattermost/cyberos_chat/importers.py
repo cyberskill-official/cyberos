@@ -1,4 +1,4 @@
-"""FR-CHAT-006/007 — Slack and Zalo importers."""
+"""TASK-CHAT-006/007 — Slack and Zalo importers."""
 
 from __future__ import annotations
 

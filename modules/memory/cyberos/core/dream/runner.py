@@ -1,6 +1,6 @@
 """
 cyberos.core.dream.runner — orchestrates one dream pass
-(FR-MEMORY-115 §1 #1, §1 #5, §1 #6).
+(TASK-MEMORY-115 §1 #1, §1 #5, §1 #6).
 
 Lifecycle (synchronous from the operator's POV; async for detector
 implementations):
@@ -19,7 +19,7 @@ implementations):
    and snapshot_head metric.
 
 No memory state is changed by the runner. Apply requires a separate
-``cyberos dream apply <id>`` invocation (FR-MEMORY-115 §1 #4).
+``cyberos dream apply <id>`` invocation (TASK-MEMORY-115 §1 #4).
 """
 
 from __future__ import annotations
@@ -52,7 +52,7 @@ async def run(
 ) -> DreamDiff:
     """Execute one dream pass.
 
-    Parameters mirror the CLI surface in FR-MEMORY-115 §1 #1 / #8.
+    Parameters mirror the CLI surface in TASK-MEMORY-115 §1 #1 / #8.
     """
     from cyberos.core.writer import AuditRecord
     from cyberos.core.dream.detectors import (
@@ -137,7 +137,7 @@ async def run(
         dream_id=dream_id,
         scope=scope or "*",
         since=(started_at - since).isoformat(),
-        input_sessions=[],  # FR-MEMORY-119 will populate when transcripts land
+        input_sessions=[],  # TASK-MEMORY-119 will populate when transcripts land
         proposals=dedup,
         metrics={
             "proposals_count_by_kind": by_kind,

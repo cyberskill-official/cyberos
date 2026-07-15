@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Obs triage as an MCP-gateway tool (FR-OBS-007 x FR-MCP-002 federation).
+"""Obs triage as an MCP-gateway tool (TASK-OBS-007 x TASK-MCP-002 federation).
 
 This exposes the `obs.triage-alert` path the obs-router already calls over HTTP as a tool on the
 mcp-gateway, so an observability alert can be triaged through `tools/call` the same way any other
@@ -303,7 +303,7 @@ def _post_module_control(gateway: str, path: str, timeout: float = 5.0) -> int:
 
 
 def heartbeat_loop(gateway: str, stop: threading.Event) -> None:
-    """Send a heartbeat every interval until stopped (FR-MCP-002 DEC-2350)."""
+    """Send a heartbeat every interval until stopped (TASK-MCP-002 DEC-2350)."""
     while not stop.wait(HEARTBEAT_INTERVAL_SECS):
         try:
             _post_module_control(gateway, "/v1/mcp/heartbeat")

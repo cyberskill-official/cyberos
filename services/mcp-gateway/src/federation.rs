@@ -1,4 +1,4 @@
-//! Federation surface — the in-memory tool registry + dispatch (later FRs).
+//! Federation surface — the in-memory tool registry + dispatch (later tasks).
 
 pub mod health;
 pub mod register;

@@ -9,12 +9,12 @@ phase: P0
 slo: "Recall ≥ 95% on the platform's adversarial prompt-injection email corpus"
 owner: CISO
 created: 2026-05-18
-related_frs: [FR-EMAIL-005]
+related_tasks: [TASK-EMAIL-005]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. The CaMeL dual-LLM defence (`FR-EMAIL-005`) **MUST** detect prompt-injection content in inbound mail at **recall ≥ 95%** on the platform's held-out adversarial corpus (200+ samples curated by CISO).
+1. The CaMeL dual-LLM defence (`TASK-EMAIL-005`) **MUST** detect prompt-injection content in inbound mail at **recall ≥ 95%** on the platform's held-out adversarial corpus (200+ samples curated by CISO).
 2. False-positive rate on the legitimate-mail corpus **MUST** stay ≤ 0.5%.
 3. The held-out corpus **MUST** be refreshed quarterly with new adversarial patterns; benchmark metrics tracked over time.
 4. CaMeL block decisions **MUST** be auditable: every blocked message carries `{block_reason, classifier_score, classifier_version, sampled_for_review=bool}`.

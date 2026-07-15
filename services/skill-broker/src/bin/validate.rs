@@ -1,6 +1,6 @@
 //! `cyberos-skill-validate` CLI — validate one or more SKILL.md bundles.
 //!
-//! Per FR-SKILL-103 §3 + FR-SKILL-111 §3 + FR-SKILL-113 §3.
+//! Per TASK-SKILL-103 §3 + TASK-SKILL-111 §3 + TASK-SKILL-113 §3.
 
 use std::path::PathBuf;
 
@@ -11,7 +11,7 @@ use cyberos_skill_broker::{frontmatter, FrontmatterError};
 #[derive(Parser)]
 #[command(
     name = "cyberos-skill-validate",
-    about = "Validate SKILL.md frontmatter against FR-SKILL-103/111/113 rules"
+    about = "Validate SKILL.md frontmatter against TASK-SKILL-103/111/113 rules"
 )]
 struct Args {
     /// Bundle directory or SKILL.md path

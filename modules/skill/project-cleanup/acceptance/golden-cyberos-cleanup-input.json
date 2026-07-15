@@ -5,14 +5,14 @@
   "absorb_threshold_lines": 80,
   "_fixture_seed": {
     "fragments_at_input": [
-      {"path": "docs/feature-requests/ai/SLICE_1_AUDIT_SUMMARY.md", "lines": 132},
-      {"path": "docs/feature-requests/ai/SLICE_2_AUDIT_SUMMARY.md", "lines": 74},
-      {"path": "docs/feature-requests/ai/SLICE_3_AUDIT_SUMMARY.md", "lines": 17},
-      {"path": "docs/feature-requests/ai/AI_GATEWAY_COMPLETE_SUMMARY.md", "lines": 45}
+      {"path": "docs/tasks/ai/SLICE_1_AUDIT_SUMMARY.md", "lines": 132},
+      {"path": "docs/tasks/ai/SLICE_2_AUDIT_SUMMARY.md", "lines": 74},
+      {"path": "docs/tasks/ai/SLICE_3_AUDIT_SUMMARY.md", "lines": 17},
+      {"path": "docs/tasks/ai/AI_GATEWAY_COMPLETE_SUMMARY.md", "lines": 45}
     ],
     "orphan_audits_at_input": [],
     "broken_links_at_input": 0,
-    "fr_count_at_input": 241,
+    "task_count_at_input": 241,
     "reciprocity_errors_at_input": 0
   }
 }

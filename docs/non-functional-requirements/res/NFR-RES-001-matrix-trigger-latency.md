@@ -9,12 +9,12 @@ phase: P1
 slo: "p95 < 1h from allocation change to over/under flag visibility"
 owner: COO
 created: 2026-05-18
-related_frs: [FR-RES-001, FR-RES-003]
+related_tasks: [TASK-RES-001, TASK-RES-003]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. The capacity-demand matrix (`FR-RES-001`) **MUST** refresh on allocation, hiring, or scope mutations within 1h.
+1. The capacity-demand matrix (`TASK-RES-001`) **MUST** refresh on allocation, hiring, or scope mutations within 1h.
 2. Over-allocated (> 100% capacity) and under-allocated (< 50% capacity) flags **MUST** surface in the resource dashboard within the refresh cadence.
 3. The matrix **MUST** include forward-looking horizon (4 weeks default) — flags warn before the period starts, not after.
 4. Manual recompute **MUST** be available via UI action for COO + team leads.

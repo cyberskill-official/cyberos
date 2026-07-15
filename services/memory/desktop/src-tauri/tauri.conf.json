@@ -47,7 +47,7 @@
     ],
     "category": "Productivity",
     "shortDescription": "Local memory — append-only memory inspector + sync supervisor",
-    "longDescription": "CyberOS memory desktop client. Runs the memory-sync daemon, hosts a quick-capture inbox, exposes local search, and reports sync state. See FR-MEMORY-104.",
+    "longDescription": "CyberOS memory desktop client. Runs the memory-sync daemon, hosts a quick-capture inbox, exposes local search, and reports sync state. See TASK-MEMORY-104.",
     "linux": {
       "deb": {
         "depends": ["python3", "python3-pip"]

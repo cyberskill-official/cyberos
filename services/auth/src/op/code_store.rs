@@ -1,4 +1,4 @@
-//! FR-AUTH-110 §1 #2 + #16 - the authorization-code store.
+//! TASK-AUTH-110 §1 #2 + #16 - the authorization-code store.
 //!
 //! Codes are single-use, 60-second-TTL, PKCE-bound. The table key is the
 //! SHA-256 hash of the code (never the code itself). Single-use is enforced by

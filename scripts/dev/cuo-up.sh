@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Optional: bring up the CUO status server that backs the dashboard's CUO Workflows & GENIE tile
-# (FR-APP-006). Read-only; no LLM call. Dev only. Stop with dev-down.sh.
+# (TASK-APP-006). Read-only; no LLM call. Dev only. Stop with dev-down.sh.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -27,9 +27,9 @@ Postgres 16 (pgvector) + Redis on 5432 / 6379, seeded by `services/dev/postgres-
 | AUTH | `services/auth` (Rust, `main.rs`) | HTTP service, binds `AUTH_LISTEN_ADDR` | `AUTH_DB` | `services/auth/migrations` |
 | MEMORY | `services/memory` (Rust, `main.rs`) + `modules/memory` (Python) | HTTP service, binds `MEMORY_LISTEN_ADDR`; needs an embeddings endpoint `MEMORY_EMBED_URL` (see `services/embed-sidecar`) | `MEMORY_DB` | `services/memory/migrations` |
 | PROJ | `services/proj` (Rust, library `cyberos_proj` - no `main.rs`) | linked into a host binary, not a standalone server - confirm which binary serves the proj API | `PROJ_DB` | `services/proj/migrations` |
-| SKILL | `services/skill-broker` (Rust, `[[bin]]`) | broker service; skills ship as OCI artifacts (FR-SKILL-201-oci-registry-deploy) | - | - |
-| CHAT | separate service, `services/chat/Dockerfile` | pinned container in the compose (`CHAT_IMAGE_TAG`); Fargate is an alternative (FR-CHAT-003-fargate-deployment) | `CHAT_POSTGRES_DB` | - |
-| CUO | `modules/cuo` (Python, `[project.scripts]`) | orchestration runtime (personas + workflows incl. ship-feature-requests); launches via its console script | - | - |
+| SKILL | `services/skill-broker` (Rust, `[[bin]]`) | broker service; skills ship as OCI artifacts (TASK-SKILL-201-oci-registry-deploy) | - | - |
+| CHAT | separate service, `services/chat/Dockerfile` | pinned container in the compose (`CHAT_IMAGE_TAG`); Fargate is an alternative (TASK-CHAT-003-fargate-deployment) | `CHAT_POSTGRES_DB` | - |
+| CUO | `modules/cuo` (Python, `[project.scripts]`) | orchestration runtime (personas + workflows incl. ship-tasks); launches via its console script | - | - |
 
 Two of the six are not plain Rust servers: PROJ is a library (its HTTP surface is served by another
 binary), and CUO is the Python orchestration layer. Treat those two specially.
@@ -148,7 +148,7 @@ curl -fsS https://<domain>/healthz            # via Caddy
 curl -fsS http://127.0.0.1:8090/healthz       # AUTH direct (adjust to the real health path)
 # AUTH: log in with AUTH_BOOTSTRAP_EMAIL/PASSWORD, confirm a JWT comes back.
 # MEMORY: write one audit row, read it back.
-# CUO: run one ship-feature-requests iteration end-to-end (it now passes through both the awh and the
+# CUO: run one ship-tasks iteration end-to-end (it now passes through both the awh and the
 #      new caf gate before testing -> done).
 ```
 

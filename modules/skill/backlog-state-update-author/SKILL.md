@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: backlog-state-update-author
 description: >-
-  Write `docs/feature-requests/BACKLOG.md` mutations as backlog-state-update@2: rewrite one status cell atomically (used by `chief-technology-officer/ship-feature-requests` between every phase; the same write emits the `workflow_complete` memory row), or INSERT one new row (`mutation_kind: insert-row` - /create-feature-requests step 3; regenerator-identical grammar, uniqueness-gated). Statuses constrained to the 10-value enum in `modules/skill/contracts/feature-request/STATUS-REFERENCE.md` §1; failures route the FR back to `ready_to_implement` (§1.3) incrementing `routed_back_count`. Use when user asks to "draft a backlog state update" or "create the backlog state update". Do NOT use for "audit existing backlog state update" (use backlog-state-update-audit instead). HITL note - operators can override any cell at any time; this skill writes only the default workflow-driven transition (§1.4).
+  Write `docs/tasks/BACKLOG.md` mutations as backlog-state-update@2: rewrite one status cell atomically (used by `chief-technology-officer/ship-tasks` between every phase; the same write emits the `workflow_complete` memory row), or INSERT one new row (`mutation_kind: insert-row` - /create-tasks step 3; regenerator-identical grammar, uniqueness-gated). Statuses constrained to the 10-value enum in `modules/skill/contracts/task/STATUS-REFERENCE.md` §1; failures route the task back to `ready_to_implement` (§1.3) incrementing `routed_back_count`. Use when user asks to "draft a backlog state update" or "create the backlog state update". Do NOT use for "audit existing backlog state update" (use backlog-state-update-audit instead). HITL note - operators can override any cell at any time; this skill writes only the default workflow-driven transition (§1.4).
 license: Apache-2.0
 metadata:
   version: 2.1.0
@@ -16,23 +16,23 @@ allowed_memory_scopes:
   read:
     - project:*
   write:
-    - project:fr/{fr_id}/backlog-state-update
-    - project:backlog/{fr_id}
+    - project:task/{task_id}/backlog-state-update
+    - project:backlog/{task_id}
 audit:
   row_kind: backlog_state_update_authored
-  required_fields: [fr_id, prior_status, new_status, line_number, evidence_artefact_ids]
+  required_fields: [task_id, prior_status, new_status, line_number, evidence_artefact_ids]
 
 # ── Inputs / outputs ─────────────────────────────────────────────────
 inputs:
-  - { name: fr,      format: feature-request@1,                 required: true }
+  - { name: task,      format: task@1,                 required: true }
   - { name: outcome, format: workflow-step-outcome-bundle@1,    required: true }
 outputs:
   - { name: backlog_mutation, format: backlog-state-update@2 }
 
 # ── Triggers / blockers ──────────────────────────────────────────────
 triggers:
-  - workflow `chief-technology-officer/ship-feature-requests` — invoked between every phase transition (mutation_kind: status-cell-only)
-  - command `/create-feature-requests` step 3 — one insert-row mutation per landed FR (batched per module section allowed)
+  - workflow `chief-technology-officer/ship-tasks` — invoked between every phase transition (mutation_kind: status-cell-only)
+  - command `/create-tasks` step 3 — one insert-row mutation per landed task (batched per module section allowed)
 blockers:
   - "BACKLOG.md is locked by another concurrent workflow — wait for lock"
   - "BACKLOG.md has divergent uncommitted changes — escalate to operator"
@@ -42,9 +42,9 @@ blockers:
 
 ## 1. Purpose
 
-The BACKLOG is the **single source of truth** for FR state. This skill is the only authorised writer; every other step in the workflow emits artefacts, but this is the step that flips the status cell. The mutation is atomic with the `workflow_complete` memory row, so the chain and the state file can never disagree.
+The BACKLOG is the **single source of truth** for task state. This skill is the only authorised writer; every other step in the workflow emits artefacts, but this is the step that flips the status cell. The mutation is atomic with the `workflow_complete` memory row, so the chain and the state file can never disagree.
 
-This skill is called between **every phase transition** of `ship-feature-requests`, not just on terminal outcomes:
+This skill is called between **every phase transition** of `ship-tasks`, not just on terminal outcomes:
 
 - `ready_to_implement → implementing` (workflow start)
 - `implementing → ready_to_review` (build complete)
@@ -58,9 +58,9 @@ This skill is called between **every phase transition** of `ship-feature-request
 
 ```yaml
 # backlog-state-update@1
-fr_id: FR-<MODULE>-<NNN>
+task_id: task-<MODULE>-<NNN>
 generated_at: <ISO-8601>
-backlog_path: docs/feature-requests/BACKLOG.md
+backlog_path: docs/tasks/BACKLOG.md
 prior_status: <one of the 10 enum values from STATUS-REFERENCE.md §1>
 new_status: <one of the 10 enum values from STATUS-REFERENCE.md §1>
 transition_kind: forward | rework | off_ramp
@@ -78,55 +78,55 @@ evidence_artefact_ids:
   obs_injection: "<artefact id | null>"
   coverage_report: "<artefact id | null>"
   debug_trace: "<artefact id | null>"
-  feature_request_audit: "<artefact id | null>"   # populated on draft → ready_to_implement
+  task_audit: "<artefact id | null>"   # populated on draft → ready_to_implement
   coverage_gate_audit: "<artefact id | null>"     # populated on testing → done
 rework_reason: "<one-sentence reason | null>"      # required when transition_kind == "rework"
 mutation_kind: status-cell-only | insert-row   # closed enum (@2); one cell OR one new row per mutation
-# insert-row payload (FR-CUO-205; null/omitted for status-cell-only). line_number/old_line are
+# insert-row payload (TASK-CUO-205; null/omitted for status-cell-only). line_number/old_line are
 # null for inserts; new_line carries the full inserted row:
 insert:
-  fr_id: FR-<MODULE>-<NNN>
-  slug: FR-<MODULE>-<NNN>-<slug>
-  title: "<FR title>"
+  task_id: task-<MODULE>-<NNN>
+  slug: task-<MODULE>-<NNN>-<slug>
+  title: "<task title>"
   class: product | improvement
-  status: <one of the 10 enum values - MUST equal the FR frontmatter status at write time>
+  status: <one of the 10 enum values - MUST equal the task frontmatter status at write time>
   module: <module folder name>
-  expected_absent: true   # the concurrency gate, inverse of old_line: no row for fr_id may pre-exist
+  expected_absent: true   # the concurrency gate, inverse of old_line: no row for task_id may pre-exist
 memory_emit:
-  row_kind: workflow_complete | workflow_phase_complete | fr_routed_back
-  fr_id: FR-<MODULE>-<NNN>
+  row_kind: workflow_complete | workflow_phase_complete | task_routed_back
+  task_id: task-<MODULE>-<NNN>
   outcome_summary: "<one-paragraph human-readable summary>"
 ```
 
 ## 2b. Insert-row placement (regenerator-identical)
 
-The inserted row MUST match `regen_backlog()` in `scripts/migrate_improvement_to_fr.py`
+The inserted row MUST match `regen_backlog()` in `scripts/migrate_improvement_to_task.py`
 byte-for-byte - that function is the byte-authority for row grammar and placement; keep the
 two in sync when either changes:
 
-- row grammar: `- [<status>] <FR-ID-slug> - <title>` with a ` (improvement)` suffix when
+- row grammar: `- [<status>] <task-ID-slug> - <title>` with a ` (improvement)` suffix when
   `class: improvement`; product rows untagged.
 - placement: inside the section's CONTIGUOUS row block (the blank line after the header
-  stays outside the block), rows sorted ascending by FR STEM (the
-  `FR-<MODULE>-<NNN>-<slug>` token) - NOT by the rendered row string, whose `[status]` prefix
+  stays outside the block), rows sorted ascending by task STEM (the
+  `task-<MODULE>-<NNN>-<slug>` token) - NOT by the rendered row string, whose `[status]` prefix
   would reorder rows (regen_backlog() sorts the (stem, ...) tuple). When the module has no
   section, create `## <module>  (<counts>)` per the regenerator's conventions.
 - whole-file discipline: no other line changes, except that section's header counts when present.
 
 ## 3. Quality gates
 
-- `new_status` is one of the 10 enum values listed in `modules/skill/contracts/feature-request/STATUS-REFERENCE.md` §1 — never freeform, never with embedded modifiers like `+ strict-audited`.
+- `new_status` is one of the 10 enum values listed in `modules/skill/contracts/task/STATUS-REFERENCE.md` §1 — never freeform, never with embedded modifiers like `+ strict-audited`.
 - `transition_kind` MUST match the direction of the status change:
   - `forward` — moving down the §1.1 lifecycle (e.g. `implementing → ready_to_review`)
   - `rework` — moving back to `ready_to_implement` from any downstream state; increments `routed_back_count`; `rework_reason` is required
   - `off_ramp` — moving to `on_hold` or `closed` from any state
-- `line_number` resolves to a real BACKLOG row whose `fr_id` matches.
+- `line_number` resolves to a real BACKLOG row whose `task_id` matches.
 - `old_line` matches the current contents of that line byte-for-byte (optimistic concurrency check; if the file shifted underneath us, refuse and re-enter the queue).
-- `evidence_artefact_ids` references real memory audit rows from the same workflow run (cross-reference check). Which fields are required depends on the transition — e.g. `coverage_gate_audit` is required for the `testing → done` transition; `feature_request_audit` is required for `draft → ready_to_implement`.
-- `mutation_kind` ∈ {status-cell-only, insert-row} (closed enum). This skill never moves rows, reorders the queue, or deletes FRs.
-- insert-row only: `expected_absent` verified against the pre-image (no row for `fr_id` exists); post-image carries exactly one; row grammar + placement per §2b; `insert.status` equals the FR file's frontmatter status at write time.
+- `evidence_artefact_ids` references real memory audit rows from the same workflow run (cross-reference check). Which fields are required depends on the transition — e.g. `coverage_gate_audit` is required for the `testing → done` transition; `task_audit` is required for `draft → ready_to_implement`.
+- `mutation_kind` ∈ {status-cell-only, insert-row} (closed enum). This skill never moves rows, reorders the queue, or deletes tasks.
+- insert-row only: `expected_absent` verified against the pre-image (no row for `task_id` exists); post-image carries exactly one; row grammar + placement per §2b; `insert.status` equals the task file's frontmatter status at write time.
 - Back-compat: a `backlog-state-update@1` artefact (no `mutation_kind`, or `status-cell-only`) stays valid for one release window; the audit accepts both versions during the transition.
-- The `memory_emit.row_kind` MUST be one of: `workflow_phase_complete` (intra-lifecycle forward transition), `workflow_complete` (only when `new_status == "done"`), or `fr_routed_back` (when `transition_kind == "rework"`).
+- The `memory_emit.row_kind` MUST be one of: `workflow_phase_complete` (intra-lifecycle forward transition), `workflow_complete` (only when `new_status == "done"`), or `task_routed_back` (when `transition_kind == "rework"`).
 
 ## 4. HITL bypass
 
@@ -136,12 +136,12 @@ If the operator's override leaves the BACKLOG in a state that the next workflow 
 
 ## 5. Chains to
 
-`backlog-state-update-audit` — the only successor. The audit emits the `workflow_complete` / `workflow_phase_complete` / `fr_routed_back` memory row as a side effect of passing.
+`backlog-state-update-audit` — the only successor. The audit emits the `workflow_complete` / `workflow_phase_complete` / `task_routed_back` memory row as a side effect of passing.
 
 ---
 
 *End of backlog-state-update-author SKILL.md.*
 
-## Contract files (FR-SKILL-118)
+## Contract files (TASK-SKILL-118)
 
 This pair is at full contract parity: `PIPELINE.md` (chain binding + HALT points), `INVARIANTS.md`, `envelopes/` (I/O schemas), `references/FAILURE_MODES.md`, `acceptance/README.md`. SKILL.md remains the normative prose; the files encode it.

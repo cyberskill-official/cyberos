@@ -1,8 +1,8 @@
 # CyberOS PROJ — Issue + Cycle + Engagement model
 
-**Status:** FR-PROJ-001..018 shipped as service slices — schema + types + FSM + audit row builders + handler orchestration + bidirectional symmetric link writer + memory decision anchoring + rate-card versioning + typed MEMORY_LINK helpers + CRDT/LWW collaboration + billing cascade/modes + mutation history events + citation drift + blocker detection + cycle review + estimate calibration + board/timeline/gantt/brief view models + design tokens/a11y gate.
-**Depends on:** FR-AUTH-001 (tenants) + FR-AUTH-003 (RLS pattern) — both shipped.
-**Blocks (downstream):** FR-EMAIL-007 (convert-to-issue), FR-RES-001, FR-TIME-004/005, FR-HR-008, FR-LEARN-003.
+**Status:** TASK-PROJ-001..018 shipped as service slices — schema + types + FSM + audit row builders + handler orchestration + bidirectional symmetric link writer + memory decision anchoring + rate-card versioning + typed MEMORY_LINK helpers + CRDT/LWW collaboration + billing cascade/modes + mutation history events + citation drift + blocker detection + cycle review + estimate calibration + board/timeline/gantt/brief view models + design tokens/a11y gate.
+**Depends on:** TASK-AUTH-001 (tenants) + TASK-AUTH-003 (RLS pattern) — both shipped.
+**Blocks (downstream):** TASK-EMAIL-007 (convert-to-issue), TASK-RES-001, TASK-TIME-004/005, TASK-HR-008, TASK-LEARN-003.
 
 ---
 
@@ -34,7 +34,7 @@
               review ─▶  todo      (significant rework)
 ```
 
-`done` is terminal — reopening requires the explicit reopen API (not in this FR). `deleted` is a reserved soft-delete state usable only by root-admin.
+`done` is terminal — reopening requires the explicit reopen API (not in this task). `deleted` is a reserved soft-delete state usable only by root-admin.
 
 Illegal transitions return `400 BAD_REQUEST` with body:
 
@@ -56,7 +56,7 @@ Illegal transitions return `400 BAD_REQUEST` with body:
 | `blocks` | `blocked_by` (auto) | A must complete before B can progress |
 | `duplicates` | `duplicated_by` (auto) | A is the same as B |
 | `related` | — | Loose association |
-| `derived_from_email_thread` | — | Issue was created from an EMAIL thread (FR-EMAIL-007) |
+| `derived_from_email_thread` | — | Issue was created from an EMAIL thread (TASK-EMAIL-007) |
 | `derived_from_chat_thread` | — | Issue was created from a CHAT thread |
 | `derived_from_meeting_decision` | — | Issue was created from a meeting decision |
 
@@ -81,7 +81,7 @@ Canonical kinds emitted by the PROJ service slices:
 | `proj.memory_link_created` | Issue cites/implements/supersedes a memory | issue_id, memory_id, relation |
 | `proj.memory_link_removed` | MEMORY_LINK is soft-removed | link_id, reason |
 
-The memory write transport is wired in the binary (FR-PROJ-008 expands handler-level mutation coverage and carries the chain-anchor responsibility).
+The memory write transport is wired in the binary (TASK-PROJ-008 expands handler-level mutation coverage and carries the chain-anchor responsibility).
 
 ---
 
@@ -121,24 +121,24 @@ services/proj/
 │   ├── errors.rs                 IssueError + .code() + .http_status()
 │   ├── status_fsm.rs             allowed_transitions + validate (with same-status no-op)
 │   ├── audit.rs                  4 memory row builders + ProjAuditRow struct
-│   ├── decisions.rs              FR-PROJ-002 memory decision anchoring + DB writer
-│   ├── crdt.rs                   FR-PROJ-003 collaboration update journal
-│   ├── rate_card.rs              FR-PROJ-005 append-only rate-card DB writer
-│   ├── billing.rs                FR-PROJ-006/007 cascade + rollups
-│   ├── history.rs                FR-PROJ-008 history_event hash helpers
-│   ├── memory_link.rs            FR-PROJ-009 typed MEMORY_LINK DB writer
-│   ├── drift.rs                  FR-PROJ-010 citation drift detector
-│   ├── blockers.rs               FR-PROJ-011 blocker parser/dwell monitor
-│   ├── cycle_review.rs           FR-PROJ-012 deterministic review draft inputs
-│   ├── estimate.rs               FR-PROJ-013 calibration snapshots
-│   ├── views.rs                  FR-PROJ-014..018 view models + a11y gate
+│   ├── decisions.rs              TASK-PROJ-002 memory decision anchoring + DB writer
+│   ├── crdt.rs                   TASK-PROJ-003 collaboration update journal
+│   ├── rate_card.rs              TASK-PROJ-005 append-only rate-card DB writer
+│   ├── billing.rs                TASK-PROJ-006/007 cascade + rollups
+│   ├── history.rs                TASK-PROJ-008 history_event hash helpers
+│   ├── memory_link.rs            TASK-PROJ-009 typed MEMORY_LINK DB writer
+│   ├── drift.rs                  TASK-PROJ-010 citation drift detector
+│   ├── blockers.rs               TASK-PROJ-011 blocker parser/dwell monitor
+│   ├── cycle_review.rs           TASK-PROJ-012 deterministic review draft inputs
+│   ├── estimate.rs               TASK-PROJ-013 calibration snapshots
+│   ├── views.rs                  TASK-PROJ-014..018 view models + a11y gate
 │   ├── links.rs                  bidirectional symmetric link writer + self-link guard
 │   ├── repo.rs                   sqlx CRUD layer (engagement, cycle, issue) + RLS GUC setter + validators
 │   └── handlers.rs               handler-layer orchestration + audit-row construction
 └── tests/
-    ├── status_fsm_test.rs        FR-PROJ-001 §4 #3 + §4 #4 — FSM coverage
+    ├── status_fsm_test.rs        TASK-PROJ-001 §4 #3 + §4 #4 — FSM coverage
     ├── audit_row_test.rs         §4 #1 + §4 #5 — memory row builders
     ├── link_types_test.rs        §4 #10 + §4 #11 — link inverses + cross-module
     ├── error_mapping_test.rs     §4 #3 + §4 #6 + §4 #7 + §4 #14 — error → HTTP status
-    └── productivity_slice_test.rs FR-PROJ-003..018 coverage
+    └── productivity_slice_test.rs TASK-PROJ-003..018 coverage
 ```

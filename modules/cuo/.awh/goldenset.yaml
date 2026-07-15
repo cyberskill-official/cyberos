@@ -11,7 +11,7 @@ tasks:
     weight: 3.0
     timeout_sec: 900
 
-  # Held-out acceptance: the supervisor runtime (FR-CUO-101 territory). Sealed read-only.
+  # Held-out acceptance: the supervisor runtime (TASK-CUO-101 territory). Sealed read-only.
   - id: acceptance-cuo-supervisor-runtime
     description: held-out CUO supervisor/runtime test
     cmd: "cd modules/cuo && python -m pytest tests/test_langgraph_runtime.py -q"

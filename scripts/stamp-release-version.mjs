@@ -68,7 +68,7 @@ if (buildNumberFile <= PLAY_HIGH_WATER_MARK) {
   process.exit(2);
 }
 
-// --store-monotonic (FR-IMP-078, release CI only): lift the EFFECTIVE build number to
+// --store-monotonic (TASK-IMP-078, release CI only): lift the EFFECTIVE build number to
 // max(BUILD_NUMBER, minutes-since-epoch). BUILD_NUMBER only moves when version.yml bumps
 // VERSION - so while `Release-As` pins the version (as the whole 1.0.0 run-up does), every
 // re-tag rebuilt the SAME committed number, and both stores refuse a build number they have
@@ -148,7 +148,7 @@ function stampXcodeProj(rel) {
 }
 
 stampJson("apps/desktop/src-tauri/tauri.conf.json");
-// FR 1.0.0-consistency leg: the tauri CARGO package version feeds about-dialogs and crate metadata -
+// task 1.0.0-consistency leg: the tauri CARGO package version feeds about-dialogs and crate metadata -
 // stamp it too so the desktop app never self-reports a stale number.
 stampCargo("apps/desktop/src-tauri/Cargo.toml");
 // The MCP server source lives at tools/cyberos-init/mcp/ (build.sh copies $here/mcp into the

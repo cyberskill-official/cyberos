@@ -1,6 +1,6 @@
 # project-cleanup — golden expected output (generic flavor)
 
-For a generic repo without feature-request-audit skill (or the legacy feature-request-audit skill), the skill
+For a generic repo without task-audit skill (or the legacy task-audit skill), the skill
 runs the generic verification pipeline.
 
 ---

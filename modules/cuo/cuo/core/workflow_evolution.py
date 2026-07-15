@@ -1,9 +1,9 @@
-"""workflow_evolution — FR-CUO-203 Wave 4 of the harness.
+"""workflow_evolution — TASK-CUO-203 Wave 4 of the harness.
 
 Aggregates per-workflow outcome distribution across the memory audit chain
 window, trips workflow-level threshold signals (`routed_back_rate_above`,
 `hitl_halt_rate_above`, `repeat_phase_failure_above`, `chain_length_efficiency_below`),
-emits workflow_refinement proposals through the same FR-CUO-201 stripe machinery.
+emits workflow_refinement proposals through the same TASK-CUO-201 stripe machinery.
 
 Workflow stripe format: `<persona>/<workflow_slug>:<signal_id>:<8-hex>` —
 disjoint from skill stripes (`<skill>:<signal>:<hex>`) by the `/` separator.
@@ -134,7 +134,7 @@ def _eval_workflow_signal(
         ]
         return value, evidence
     if sig_id == "repeat_phase_failure_above":
-        # Count distinct FRs that failed at the same phase across this workflow.
+        # Count distinct tasks that failed at the same phase across this workflow.
         phase_failures: dict[str, set] = {}
         for r in rows:
             extra = r.get("extra") or {}
@@ -145,7 +145,7 @@ def _eval_workflow_signal(
             phase = extra.get("failed_phase") or extra.get("rework_phase", "")
             if not phase:
                 continue
-            phase_failures.setdefault(phase, set()).add(extra.get("fr_id", ""))
+            phase_failures.setdefault(phase, set()).add(extra.get("task_id", ""))
         max_distinct = max((len(s) for s in phase_failures.values()), default=0)
         evidence = [
             r for r in rows
@@ -214,7 +214,7 @@ def emit_workflow_proposal(
     risk_class: str = "minor",
     memory_root: Optional[Path] = None,
 ) -> EmissionResult:
-    """Emit a workflow_refinement proposal through the FR-CUO-201 emitter.
+    """Emit a workflow_refinement proposal through the TASK-CUO-201 emitter.
 
     Reuses emit_or_halt with kind=workflow_refinement. The stripe is
     workflow-shaped (`<persona>/<wf>:<sig>:<hex>`) so it's disjoint from
@@ -224,7 +224,7 @@ def emit_workflow_proposal(
         f"Workflow `{workflow_id}` tripped `{signal_id}` "
         f"(value={value:.3f}, threshold={threshold:.3f}). "
         f"Consider editing the `skill_chain:` block to address the failing "
-        f"phase. Default classifier bucket: see FR-CUO-203 §1 #6."
+        f"phase. Default classifier bucket: see TASK-CUO-203 §1 #6."
     )
 
     # Build the synthetic stripe id we want to use

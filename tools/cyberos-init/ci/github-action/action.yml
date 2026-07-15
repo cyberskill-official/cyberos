@@ -1,9 +1,9 @@
-name: "CyberOS FR gates"
+name: "CyberOS task gates"
 description: "Run the CyberOS machine-gate floor (build, lint, test, coverage; plus caf/awh if enabled) on a repo that has the CyberOS payload installed."
 runs:
   using: composite
   steps:
-    - name: Run FR machine gates
+    - name: Run task machine gates
       shell: bash
       run: |
         if [ ! -f .cyberos/gates.env ]; then

@@ -1,12 +1,12 @@
 name: release-msstore
 
-# FR-APP-004: Microsoft Store channel - Tauri Windows build, MSIX wrap via makeappx.exe,
+# TASK-APP-004: Microsoft Store channel - Tauri Windows build, MSIX wrap via makeappx.exe,
 # optional self-managed EV signing, Partner Center submission via the Store Submission API.
 # Manual dispatch only; inert until repo variable MSSTORE_RELEASE=true, and even then the
 # identity lint blocks any run whose AppxManifest still carries the CHANGEME placeholder
-# (a second, independent gate - FR-APP-004 AC #3).
+# (a second, independent gate - TASK-APP-004 AC #3).
 #
-# Divergences from the FR's §3 skeleton, on purpose (recorded in the FR review packet):
+# Divergences from the task's §3 skeleton, on purpose (recorded in the task review packet):
 #   - staging paths are repo-root-relative (the skeleton's `src-tauri\...` only resolved
 #     from apps/desktop, but its staging step ran at repo root)
 #   - the raw binary is located defensively: Tauri v2 renames the main binary to

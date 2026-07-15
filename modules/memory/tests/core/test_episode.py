@@ -1,7 +1,7 @@
-"""Tests for FR-MEMORY-112 — episodic memory + recall-similar.
+"""Tests for TASK-MEMORY-112 — episodic memory + recall-similar.
 
 Covers acceptance criteria from
-`docs/feature-requests/memory/FR-MEMORY-112-episodic-memory/spec.md`:
+`docs/tasks/memory/TASK-MEMORY-112-episodic-memory/spec.md`:
 
 * AC #1 – schema accepts `kind: episode` (verified via Frontmatter round-trip)
 * AC #2 – missing required Episode extras rejected by validate_episode_extras
@@ -197,7 +197,7 @@ def test_validate_extras_error_required_on_non_success() -> None:
 def test_episode_log_writes_audit_row(store: Path) -> None:
     """AC #4 — `log()` advances HEAD via canonical writer."""
     ep = Episode(
-        task="ship FR", approach="audit-revise loop", outcome="success",
+        task="ship task", approach="audit-revise loop", outcome="success",
         duration_ms=1800_000, quality_score=0.92,
     )
     with Writer(store) as writer:
@@ -210,11 +210,11 @@ def test_episode_log_writes_audit_row(store: Path) -> None:
     fm, body = parse(raw)
     assert fm.kind == "episode"
     assert fm.actor == "stephen"
-    assert fm.extra["task"] == "ship FR"
+    assert fm.extra["task"] == "ship task"
     assert fm.extra["outcome"] == "success"
     assert fm.extra["quality_score"] == 0.92
     # Body matches the searchable document
-    assert body.startswith(b"Task: ship FR\n")
+    assert body.startswith(b"Task: ship task\n")
 
 
 def test_recall_similar_filters_to_episode_kind(store: Path) -> None:
@@ -225,13 +225,13 @@ def test_recall_similar_filters_to_episode_kind(store: Path) -> None:
     fact_fm = Frontmatter(
         id="FACT-1", kind="fact", ts_ns=1, actor="t", tags=[], extra={},
     )
-    fact_path.write_bytes(serialize(fact_fm, b"ship a feature request together"))
+    fact_path.write_bytes(serialize(fact_fm, b"ship a task together"))
     # Seed two episodes
     with Writer(store) as writer:
         episode_log(
             writer,
             Episode(
-                task="ship a feature request",
+                task="ship a task",
                 approach="audit-revise loop",
                 outcome="success", duration_ms=10,
             ),
@@ -259,7 +259,7 @@ def test_recall_similar_combined_score_orders_by_quality(store: Path) -> None:
         episode_log(
             writer,
             Episode(
-                task="ship the feature request",
+                task="ship the task",
                 approach="loop",
                 outcome="success", duration_ms=10, quality_score=0.4,
             ),
@@ -268,13 +268,13 @@ def test_recall_similar_combined_score_orders_by_quality(store: Path) -> None:
         episode_log(
             writer,
             Episode(
-                task="ship the feature request",
+                task="ship the task",
                 approach="loop",
                 outcome="success", duration_ms=10, quality_score=0.9,
             ),
             actor="t",
         )
-    result = recall_similar(store, "ship the feature request", k=2, min_relevance=0.0)
+    result = recall_similar(store, "ship the task", k=2, min_relevance=0.0)
     assert len(result["matches"]) == 2
     qs = [m["quality_score"] for m in result["matches"]]
     # The higher quality_score must come first
@@ -331,7 +331,7 @@ def test_recall_similar_no_matches_above_threshold(store: Path) -> None:
         )
     # Query is totally unrelated → relevance 0 (filtered out by min)
     result = recall_similar(
-        store, "ship a feature request", k=3, min_relevance=0.65,
+        store, "ship a task", k=3, min_relevance=0.65,
     )
     assert result["matches"] == []
     assert result["reason"] == "no_episodes_above_min_relevance"

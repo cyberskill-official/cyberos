@@ -1,4 +1,4 @@
-//! FR-MEMORY-102 — Rebuild Layer 2 from Layer 1.
+//! TASK-MEMORY-102 — Rebuild Layer 2 from Layer 1.
 //!
 //! Two surfaces:
 //!   * `rebuild::run_full(pool, tenant)` — truncate l2_memory + l2_entity +
@@ -12,7 +12,7 @@
 //! Wired into the CLI: `cyberos-memory rebuild --tenant <UUID>` and
 //! `cyberos-memory reconcile --tenant <UUID> --sample 100`. A cron / OBS
 //! alert can call these on a schedule; the 30-minute reconcile cadence
-//! lands in FR-OBS-001's alertmanager config (not in this crate).
+//! lands in TASK-OBS-001's alertmanager config (not in this crate).
 
 use crate::layer2::{chain_anchor, ingest};
 use cyberos_types::TenantId;

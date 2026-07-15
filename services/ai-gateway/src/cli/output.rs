@@ -1,9 +1,9 @@
-//! FR-AI-021 §1 #2 — Human-readable and JSON output formatting.
+//! TASK-AI-021 §1 #2 — Human-readable and JSON output formatting.
 
 use comfy_table::{presets::UTF8_FULL, Cell, Color, Table};
 use serde::Serialize;
 
-/// FR-AI-021 §1 #8 — Versioned JSON envelope.
+/// TASK-AI-021 §1 #8 — Versioned JSON envelope.
 #[derive(Debug, Serialize)]
 pub struct JsonEnvelope<T: Serialize> {
     pub schema_version: &'static str,

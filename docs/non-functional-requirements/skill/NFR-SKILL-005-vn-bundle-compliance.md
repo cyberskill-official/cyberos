@@ -9,7 +9,7 @@ phase: P0
 slo: "100% pass rate against GDT MST + NAPAS VietQR + GDT hoadondientu sandboxes weekly"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-SKILL-108, FR-SKILL-109, FR-SKILL-110]
+related_tasks: [TASK-SKILL-108, TASK-SKILL-109, TASK-SKILL-110]
 ---
 
 ## §1 — Statement (BCP-14 normative)

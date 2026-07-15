@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FR-CHAT-002 structural tests. Go is intentionally not required in the
+# TASK-CHAT-002 structural tests. Go is intentionally not required in the
 # agent/runtime image; these checks pin the authbridge source contract.
 set -euo pipefail
 
@@ -31,4 +31,4 @@ grep -q 'sync.Mutex' "$ROOT/jit_provision.go" || fail "JIT provisioner must seri
 grep -q 'sanitizeUsername' "$ROOT/jit_provision.go" || fail "username sanitizer missing"
 ok "JIT provision markers present"
 
-echo "✓ FR-CHAT-002 authbridge structural tests pass"
+echo "✓ TASK-CHAT-002 authbridge structural tests pass"

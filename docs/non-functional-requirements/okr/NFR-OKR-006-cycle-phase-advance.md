@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of cycles advance phase per schedule; 0 stuck or auto-jumped phases"
 owner: CEO
 created: 2026-05-18
-related_frs: [FR-OKR-007]
+related_tasks: [TASK-OKR-007]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -18,7 +18,7 @@ related_frs: [FR-OKR-007]
 2. Phase transitions **MUST** be either time-triggered (per schedule) or operator-triggered (early advance); auto-jumping multiple phases is forbidden.
 3. Each transition **MUST** emit an audit row.
 4. Stuck phase (no advance > schedule + 7 days) **MUST** trigger sev-3 alert to objective owners.
-5. The retro draft (`FR-OKR-007`) **MUST** be available at `final-check → retro-draft` transition.
+5. The retro draft (`TASK-OKR-007`) **MUST** be available at `final-check → retro-draft` transition.
 
 ## §2 — Why this constraint
 

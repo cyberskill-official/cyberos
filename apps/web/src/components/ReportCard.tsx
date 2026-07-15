@@ -1,7 +1,7 @@
 import { t } from "../lib/i18n";
 import type { CatalogKey } from "../lib/i18n";
 
-// FR-CHAT-269 — one entry in the moderation queue, and the detail panel for the selected one.
+// TASK-CHAT-269 — one entry in the moderation queue, and the detail panel for the selected one.
 //
 // Everything an attacker controls is rendered as TEXT (§1 #20). `snapshot_body`, `detail` and `note` are
 // strings a reporter or a reported person authored, displayed in an administrator's browser. React escapes
@@ -40,7 +40,7 @@ export type ReportDetail = {
 };
 
 /** Every string this surface renders, checked against the catalog at compile time — same guarantee as
- *  FR-CHAT-267's REPORT_DIALOG_KEYS. A missing key is a build failure, so §1 #21 (en + vi) cannot silently
+ *  TASK-CHAT-267's REPORT_DIALOG_KEYS. A missing key is a build failure, so §1 #21 (en + vi) cannot silently
  *  regress. */
 export const MODERATION_KEYS = [
   "mod.title",

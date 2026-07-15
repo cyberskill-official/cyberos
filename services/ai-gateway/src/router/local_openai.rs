@@ -1,4 +1,4 @@
-//! FR-AI-105 - LM Studio / OpenAI-compatible local provider (no API key).
+//! TASK-AI-105 - LM Studio / OpenAI-compatible local provider (no API key).
 //!
 //! LM Studio, llama.cpp's server, vLLM, and text-generation-webui all expose the OpenAI chat-completions
 //! shape on a local endpoint (LM Studio defaults to `http://localhost:1234`). This adapter speaks that
@@ -358,7 +358,7 @@ mod tests {
     #[tokio::test]
     async fn call_chat_fails_closed_on_unreachable_server() {
         // Nothing listens on 127.0.0.1:1, so the call must surface an Err - never a fabricated
-        // completion (FR-AI-105 clause 4, fail-closed). Deterministic: no server required.
+        // completion (TASK-AI-105 clause 4, fail-closed). Deterministic: no server required.
         let p = LocalOpenaiProvider::new("http://127.0.0.1:1");
         let deadline = std::time::Instant::now() + std::time::Duration::from_millis(500);
         assert!(p

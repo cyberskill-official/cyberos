@@ -9,7 +9,7 @@ phase: P1
 slo: "Signed Tree Head (STH) published every 24h OR 100MB of new rows, whichever occurs first"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-MEMORY-102, FR-MEMORY-101]
+related_tasks: [TASK-MEMORY-102, TASK-MEMORY-101]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -1,4 +1,4 @@
-//! FR-AI-010 §3 — SSE event serialization.
+//! TASK-AI-010 §3 — SSE event serialization.
 //!
 //! Converts `StreamEvent` into axum `sse::Event` with the canonical wire format:
 //!   event: token / usage / done / error / heartbeat

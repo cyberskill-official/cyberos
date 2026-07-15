@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 // cyberos-mcp - a zero-dependency stdio MCP server that exposes the CyberOS
-// ship-feature-requests workflow as tools, so ANY MCP-capable agent (Codex, zcode,
+// ship-tasks workflow as tools, so ANY MCP-capable agent (Codex, zcode,
 // Antigravity, Cursor, Claude Code, Command Code...) can trigger it with no files.
 //
 // Transport: newline-delimited JSON-RPC 2.0 over stdin/stdout (the MCP stdio transport).
 // Tools:
 //   fr_install   {repo?}           - vendor the CyberOS machine into a repo (needs the payload)
 //   fr_gates  {repo?}           - run the machine gates (repo's own build/lint/test + coverage)
-//   fr_status {repo?}           - summarize the FR backlog + installed version
-//   ship_fr   {repo?, fr_id?}   - return the canonical, HITL-gated trigger for the next FR
+//   fr_status {repo?}           - summarize the task backlog + installed version
+//   ship_fr   {repo?, task_id?}   - return the canonical, HITL-gated trigger for the next task
 //
-// HITL is preserved: ship_fr never drives or accepts a feature-request itself. It hands the
+// HITL is preserved: ship_fr never drives or accepts a task itself. It hands the
 // calling agent the exact instruction to follow; the human still holds the two acceptance gates.
 //
 // Nothing but protocol JSON is ever written to stdout. Diagnostics go to stderr.
@@ -83,19 +83,19 @@ function toolFrInstall(a = {}) {
   if (!init) {
     return err(
       `No install.sh reachable. Run the MCP server from the payload (dist/cyberos/mcp/) or set ` +
-      `CYBEROS_PAYLOAD to the payload dir. Post-install, use fr_gates / fr_status / ship_fr - ` +
+      `CYBEROS_PAYLOAD to the payload dir. Post-install, use task_gates / task_status / ship_task - ` +
       `they need only ${repo}/.cyberos/.`,
     );
   }
   const { code, out } = run("bash", [init, repo], dirname(init));
-  return text(`fr_install on ${repo} (exit ${code})\n\n${out}`, code !== 0);
+  return text(`task_install on ${repo} (exit ${code})\n\n${out}`, code !== 0);
 }
 
 function toolFrGates(a = {}) {
   const repo = repoRoot(a.repo);
   softUpdateCheck(repo);
   const gates = join(repo, ".cyberos", "cuo", "gates", "run-gates.sh");
-  if (!isFile(gates)) return err(`No gates at ${gates}. Run fr_install first.`);
+  if (!isFile(gates)) return err(`No gates at ${gates}. Run task_install first.`);
   const { code, out } = run("bash", [gates], repo);
   return text(`gates on ${repo} (exit ${code} - green is necessary, never sufficient)\n\n${out}`, code !== 0);
 }
@@ -104,8 +104,8 @@ function toolFrStatus(a = {}) {
   const repo = repoRoot(a.repo);
   softUpdateCheck(repo);
   const ver = readIf(join(repo, ".cyberos", "VERSION")).trim() || "not installed";
-  const bl = readIf(join(repo, "docs", "feature-requests", "BACKLOG.md"));
-  if (!bl) return text(`CyberOS ${ver} @ ${repo}\nNo docs/feature-requests/BACKLOG.md yet - run fr_install, then add FRs.`);
+  const bl = readIf(join(repo, "docs", "tasks", "BACKLOG.md"));
+  if (!bl) return text(`CyberOS ${ver} @ ${repo}\nNo docs/tasks/BACKLOG.md yet - run task_install, then add tasks.`);
   const rows = bl.split("\n").filter((l) => /^\s*-\s*\[/.test(l));
   const counts = {};
   for (const l of rows) { const m = l.match(/\[([a-z_]+)\]/); if (m) counts[m[1]] = (counts[m[1]] || 0) + 1; }
@@ -117,21 +117,21 @@ function toolFrStatus(a = {}) {
 function toolShipFr(a = {}) {
   const repo = repoRoot(a.repo);
   softUpdateCheck(repo);
-  const bl = readIf(join(repo, "docs", "feature-requests", "BACKLOG.md"));
-  let next = a.fr_id ? `FR ${a.fr_id}` : "the next eligible FR";
-  if (!a.fr_id && bl) {
+  const bl = readIf(join(repo, "docs", "tasks", "BACKLOG.md"));
+  let next = a.task_id ? `task ${a.task_id}` : "the next eligible task";
+  if (!a.task_id && bl) {
     const row = bl.split("\n").find((l) => /\[ready_to_implement\]/.test(l));
     if (row) next = row.replace(/^\s*-\s*/, "").trim();
   }
   const prompt =
-    `Follow .cyberos/cuo/ship-feature-requests.md and drive ${next} in ` +
-    `docs/feature-requests/BACKLOG.md through implement -> review -> test. ` +
+    `Follow .cyberos/cuo/ship-tasks.md and drive ${next} in ` +
+    `docs/tasks/BACKLOG.md through implement -> review -> test. ` +
     `HITL is required: HALT at review acceptance (reviewing -> ready_to_test) and at final ` +
     `acceptance (testing -> done) for a recorded human verdict, and never set done yourself. ` +
     `Run gates with bash .cyberos/cuo/gates/run-gates.sh. repo_root is ${repo}. ` +
     `Never push, deploy, or merge without an explicit operator instruction.`;
   return text(
-    `ship_fr hands you the trigger below (it does NOT auto-run - the human holds the two ` +
+    `ship_task hands you the trigger below (it does NOT auto-run - the human holds the two ` +
     `acceptance gates). Follow it now:\n\n${prompt}`,
   );
 }
@@ -141,10 +141,10 @@ function readIf(p) { try { return readFileSync(p, "utf8"); } catch { return ""; 
 // --- MCP tool registry ---------------------------------------------------------
 const repoArg = { repo: { type: "string", description: "Absolute path to the target repo (default: cwd, walked up to the repo root)." } };
 const TOOLS = [
-  { name: "fr_install",   description: "Install the CyberOS machine into a repo (gate autodetect, FR backlog, agent surface, BRAIN). Needs the payload reachable.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrInstall },
-  { name: "fr_gates",  description: "Run the CyberOS machine gates (the repo's own build/lint/test + coverage, plus caf/awh if present). Green is necessary, never sufficient.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrGates },
-  { name: "fr_status", description: "Summarize the feature-request backlog (counts by status, next eligible FR) and the installed CyberOS version.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrStatus },
-  { name: "ship_fr",   description: "Return the canonical, HITL-gated trigger to drive the next (or a named) feature-request. Does NOT auto-run or self-accept.", inputSchema: { type: "object", properties: { ...repoArg, fr_id: { type: "string", description: "Optional FR id, e.g. FR-012-slug. Omit to take the next ready_to_implement row." } } }, run: toolShipFr },
+  { name: "task_install",   description: "Install the CyberOS machine into a repo (gate autodetect, task backlog, agent surface, BRAIN). Needs the payload reachable.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrInstall },
+  { name: "task_gates",  description: "Run the CyberOS machine gates (the repo's own build/lint/test + coverage, plus caf/awh if present). Green is necessary, never sufficient.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrGates },
+  { name: "task_status", description: "Summarize the task backlog (counts by status, next eligible task) and the installed CyberOS version.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrStatus },
+  { name: "ship_task",   description: "Return the canonical, HITL-gated trigger to drive the next (or a named) task. Does NOT auto-run or self-accept.", inputSchema: { type: "object", properties: { ...repoArg, task_id: { type: "string", description: "Optional task id, e.g. TASK-012-slug. Omit to take the next ready_to_implement row." } } }, run: toolShipFr },
 ];
 
 // --- helpers -------------------------------------------------------------------
@@ -182,7 +182,7 @@ function handle(msg) {
 function reply(id, result) { return id === undefined || id === null ? null : { jsonrpc: "2.0", id, result }; }
 function rpcError(id, code, message) { return { jsonrpc: "2.0", id, error: { code, message } }; }
 
-// --- remote connector mode: `--http [port]` (FR-IMP-076) -----------------------
+// --- remote connector mode: `--http [port]` (TASK-IMP-076) -----------------------
 // MCP streamable-HTTP transport, zero-dep: POST /mcp carries one JSON-RPC message
 // (or a batch array) and gets application/json back; GET /healthz for probes.
 // This is the endpoint agent UIs' "custom connector" dialogs point at (Claude:

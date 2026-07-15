@@ -1,6 +1,6 @@
 //! Polls Layer-1's append-only audit log for new rows.
 //!
-//! Strategy (FR-MEMORY-101 §1 #5 — 1s p95 lag floor):
+//! Strategy (TASK-MEMORY-101 §1 #5 — 1s p95 lag floor):
 //!   * Per-tenant cursor → `SELECT * FROM l1_audit_log WHERE tenant_id=$1
 //!     AND seq > $cursor ORDER BY seq ASC LIMIT $batch_size`.
 //!   * 200ms poll interval (configurable via `MEMORY_TAIL_POLL_MS`).

@@ -1,4 +1,4 @@
-//! FR-PROJ-001 — structured error type.
+//! TASK-PROJ-001 — structured error type.
 
 use crate::types::IssueStatus;
 use chrono::{DateTime, Utc};

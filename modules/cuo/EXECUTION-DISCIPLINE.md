@@ -6,14 +6,14 @@ Scope: every CUO workflow, and every agent (Claude, Codex, or any other) that ex
 
 ## §1  Continue by default
 
-An agent executing a CyberOS workflow SHALL run continuously to completion. It MUST NOT stop to request confirmation, approval, permission, or acknowledgement for any work it can perform and verify by itself. Reaching the end of one unit of work (a slice, a phase, an FR) is NOT a reason to pause: the agent advances to the next eligible unit on its own.
+An agent executing a CyberOS workflow SHALL run continuously to completion. It MUST NOT stop to request confirmation, approval, permission, or acknowledgement for any work it can perform and verify by itself. Reaching the end of one unit of work (a slice, a phase, a task) is NOT a reason to pause: the agent advances to the next eligible unit on its own.
 
 ## §2  The only permitted halts (exhaustive)
 
 An agent MAY stop ONLY for one of these four conditions. Nothing else is a halt.
 
 1. **Operator-decision fork.** A choice the spec, the codebase, and sensible defaults cannot resolve, AND that materially changes direction or is costly to reverse (ADR-class: a real architectural or product fork). Self-resolvable ambiguity is NOT a fork. Pick the obvious default, record it (an ADR or a one-line note), and continue.
-2. **Manual or operator-only action.** An action the agent must not perform itself: `git push`, deploy or promote, a destructive operation (hard delete, purge, history rewrite, dropping data), entering or rotating a secret or credential, a financial action, **accepting an FR across a human-acceptance gate (see §2a)**, or anything policy reserves for the human. The agent prepares and names the action; the operator runs it.
+2. **Manual or operator-only action.** An action the agent must not perform itself: `git push`, deploy or promote, a destructive operation (hard delete, purge, history rewrite, dropping data), entering or rotating a secret or credential, a financial action, **accepting a task across a human-acceptance gate (see §2a)**, or anything policy reserves for the human. The agent prepares and names the action; the operator runs it.
 3. **Hard blocker past the budget.** A failure the agent cannot self-resolve within the workflow's circuit-breaker budget (for example, 5 consecutive test failures). The agent documents the blocker, routes the unit back cleanly (status to `ready_to_implement` with the reason), and moves to the next eligible unit. It does NOT spin, and it does NOT silently ship a partial result.
 4. **Operator stop signal.** An explicit Ctrl-C or workflow-stop event.
 
@@ -21,7 +21,7 @@ An agent MAY stop ONLY for one of these four conditions. Nothing else is a halt.
 
 HITL is required platform-wide, not optional. This section supersedes any earlier text (in this file, in `STATUS-REFERENCE.md`, or in a workflow `.md`) that described human-in-the-loop as optional or the lifecycle as fully auto-flipping.
 
-Two lifecycle transitions are human-acceptance gates and therefore fall under §2 condition 2 (operator-only action): review acceptance (`reviewing -> ready_to_test`) and final acceptance (`testing -> done`). At each of these, the agent MUST drive the unit up to the gate with every machine gate green (coverage, TRACE-004, awh, caf), record the evidence, and then HALT for a recorded human verdict. The agent MUST NOT self-certify either transition, and MUST NOT set an FR to `done` itself.
+Two lifecycle transitions are human-acceptance gates and therefore fall under §2 condition 2 (operator-only action): review acceptance (`reviewing -> ready_to_test`) and final acceptance (`testing -> done`). At each of these, the agent MUST drive the unit up to the gate with every machine gate green (coverage, TRACE-004, awh, caf), record the evidence, and then HALT for a recorded human verdict. The agent MUST NOT self-certify either transition, and MUST NOT set a task to `done` itself.
 
 This does not loosen §1 or §3. Between the gates the agent still runs continuously and self-resolves everything it can verify (compile, lint, tests it broke, a red module gate on its own change); it does not pause for self-resolvable work. The only added stops are the two human-acceptance verdicts. A human recording acceptance is the permission to cross the gate, exactly as a green build is the permission to proceed within a phase.
 
@@ -33,7 +33,7 @@ The following are the agent's own responsibility. It fixes them and proceeds; it
 - a test the agent's own change broke;
 - a module gate (awh or caf) that goes RED on the agent's own change;
 - a choice between equivalent implementations;
-- the order of slices within an FR, or of FRs within the backlog;
+- the order of slices within a task, or of tasks within the backlog;
 - routine re-verification.
 
 Verification, not confirmation, earns the right to proceed. When the build, the tests, and the module gates pass, that IS the permission.
@@ -44,9 +44,9 @@ An agent MAY emit a progress note at a milestone. Emitting a note MUST NOT block
 
 ## §5  Relationship to the lifecycle
 
-This doctrine sharpens, and is consistent with, `chief-technology-officer/ship-feature-requests.md` §12 (no partial-ship-and-pause within an FR) and its outer loop §11 (`while ! stop_signal`). §12's "pause between FRs" is NOT a mandatory stop: the outer loop advances to the next eligible FR on its own, and the agent halts between FRs only when a §2 condition applies. The same rule governs the `architect-new-system` workflow and any net-new project build (including projects CyberOS drives through an external executor such as Codex).
+This doctrine sharpens, and is consistent with, `chief-technology-officer/ship-tasks.md` §12 (no partial-ship-and-pause within a task) and its outer loop §11 (`while ! stop_signal`). §12's "pause between tasks" is NOT a mandatory stop: the outer loop advances to the next eligible task on its own, and the agent halts between tasks only when a §2 condition applies. The same rule governs the `architect-new-system` workflow and any net-new project build (including projects CyberOS drives through an external executor such as Codex).
 
-## Run-state manifests (FR-CUO-206)
+## Run-state manifests (TASK-CUO-206)
 
-Interrupted ship runs resume from `docs/feature-requests/.workflow/<FR-ID>.ship.json` (ship-manifest@1) instead of restarting the 31-step chain - see 'Resume semantics' in `chief-technology-officer/workflows/ship-feature-requests.md`. The manifest is a cache: artefacts are re-hashed on resume and HITL gates always re-ask. A session ending mid-FR is therefore recoverable state, not lost work - but it is never a licence to skip a gate.
+Interrupted ship runs resume from `docs/tasks/.workflow/<task-ID>.ship.json` (ship-manifest@1) instead of restarting the 31-step chain - see 'Resume semantics' in `chief-technology-officer/workflows/ship-tasks.md`. The manifest is a cache: artefacts are re-hashed on resume and HITL gates always re-ask. A session ending mid-task is therefore recoverable state, not lost work - but it is never a licence to skip a gate.
 

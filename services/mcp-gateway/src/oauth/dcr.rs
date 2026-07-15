@@ -1,4 +1,4 @@
-//! FR-MCP-004 dynamic client registration (RFC 7591), POST /register.
+//! TASK-MCP-004 dynamic client registration (RFC 7591), POST /register.
 //!
 //! Public clients (CLIs, desktop apps - the primary MCP case, DEC-803) carry no secret and prove
 //! possession via PKCE; registration is open. Confidential clients require an authenticated

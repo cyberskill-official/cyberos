@@ -1,4 +1,4 @@
-//! FR-AI-007 §3 — Cost table schema types.
+//! TASK-AI-007 §3 — Cost table schema types.
 //!
 //! Defines the public `CostRate` struct and internal YAML deserialization types.
 

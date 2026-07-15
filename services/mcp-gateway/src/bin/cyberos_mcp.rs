@@ -33,7 +33,7 @@ async fn main() {
 
     let registry = Arc::new(ToolRegistry::new());
 
-    // FR-MCP-004: connect Postgres for the OAuth endpoints when configured. Absent (dev), the OAuth
+    // TASK-MCP-004: connect Postgres for the OAuth endpoints when configured. Absent (dev), the OAuth
     // endpoints report unconfigured and the rest of the gateway runs unaffected.
     let oauth_pool = match std::env::var("MCP_DATABASE_URL") {
         Ok(url) if !url.trim().is_empty() => {
@@ -43,7 +43,7 @@ async fn main() {
                 .await
             {
                 Ok(pool) => {
-                    println!("OAuth: connected to Postgres - FR-MCP-004 endpoints enabled");
+                    println!("OAuth: connected to Postgres - TASK-MCP-004 endpoints enabled");
                     Some(pool)
                 }
                 Err(e) => {
@@ -60,7 +60,7 @@ async fn main() {
         }
     };
 
-    // FR-MCP-007/008 DB store-of-record: the payload sealer. `None` when MCP_KMS_KEY is unset (the
+    // TASK-MCP-007/008 DB store-of-record: the payload sealer. `None` when MCP_KMS_KEY is unset (the
     // in-memory path). A malformed key fails the boot loudly rather than silently running unencrypted.
     let kms: Option<Arc<dyn cyberos_mcp_gateway::kms::Kms>> =
         match cyberos_mcp_gateway::kms::EnvKeyKms::from_env() {

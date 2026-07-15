@@ -12,14 +12,14 @@ use thiserror::Error;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(try_from = "String", into = "String")]
 pub enum Role {
-    // --- Stub-tier (FR-AUTH-002 strict prefix; DEC-123) ---
+    // --- Stub-tier (TASK-AUTH-002 strict prefix; DEC-123) ---
     RootAdmin,
     TenantAdmin,
     TenantMember,
     ServiceAccount,
     AgentPersona,
 
-    // --- Production-tier additions (FR-AUTH-101) ---
+    // --- Production-tier additions (TASK-AUTH-101) ---
     Founder,
     Cfo,
     Cto,
@@ -138,12 +138,12 @@ impl Role {
     }
 
     /// DEC-128 — the founder role grants cross-module privileged read.
-    /// Assignment requires a registered WebAuthn factor (FR-AUTH-105).
+    /// Assignment requires a registered WebAuthn factor (TASK-AUTH-105).
     pub const fn requires_webauthn(self) -> bool {
         matches!(self, Role::Founder)
     }
 
-    /// Whether this role was present in the FR-AUTH-002 stub catalogue
+    /// Whether this role was present in the TASK-AUTH-002 stub catalogue
     /// (used by the `rbac_stub_compat_test` regression test).
     pub const fn is_stub_tier(self) -> bool {
         matches!(

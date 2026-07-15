@@ -1,4 +1,4 @@
-"""Tests for FR-CUO-204 evolution_envelope - the path-based safety boundary.
+"""Tests for TASK-CUO-204 evolution_envelope - the path-based safety boundary.
 
 These prove the boundary is safe by construction: denylist beats allowlist, unknown targets are denied by
 default, the named security invariants are always denied, and the loop is disabled by default with a kill

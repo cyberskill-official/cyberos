@@ -1,7 +1,7 @@
 ---
 title: OBS - Observability spine, auto-runbook router, compliance evidence surface
 source: website/docs/modules/obs/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 OBS is the **shared telemetry plane**: logs, metrics, traces, and AI-trace observability for every CyberOS module. Operationally, OpenTelemetry SDKs in every service ship to a single OTel collector that fans out - logs to Loki, metrics to Prometheus, traces to Tempo. Grafana renders dashboards (per-module SLO, per-tenant cost, per-region health). LangSmith captures full LLM call traces independently from the operational pipeline so AI debugging doesn't require correlating across three tools. Alert Manager fans critical alerts to PagerDuty, mid alerts to `#cyberos-alerts`, low signals into the CUO morning digest. The audit chain - owned by memory - is exposed via a separate read-only OBS surface for regulators (PDPL Art. 14, EU AI Act Art. 12). Tenant scoping is enforced at the query proxy so a member of tenant A cannot see tenant B's logs.
@@ -136,7 +136,7 @@ The bet: pay the LGTM operational cost once, plug LangSmith in beside it, and yo
 | **5M - Methods** | Method choices? | OTel for everything except AI traces (LangSmith). Trace-id propagation via W3C TraceContext. PII redaction at the collector. tenant_id injected as a label by the collector based on JWT inspection. |
 | **5M - Machines** | Deployment? | Loki + Tempo on S3-backed object storage; Prometheus on a single Fargate task (P0); Grafana on Fargate; the query proxy on Fargate. |
 | **5M - Manpower** | Who maintains? | 0.3 FTE CTO at P0. P1+: dedicated SRE/on-call rotation. |
-| **5M - Measurement** | How measured? | N(FR pending) (platform availability >= 99.5%), N(FR pending) (SLO dashboard <= 60 s freshness), N(FR pending) (log PII recall >= 99.5%). |
+| **5M - Measurement** | How measured? | N(task pending) (platform availability >= 99.5%), N(task pending) (SLO dashboard <= 60 s freshness), N(task pending) (log PII recall >= 99.5%). |
 
 ## Three-pillars unified pane - logs, metrics, traces, AI traces
 
@@ -364,19 +364,19 @@ graph TB
 
 | Component | Where | Responsibility |
 |---|---|---|
-| `cyberos-obs-collector` | services/obs-collector | Rust supervisor around the upstream `otelcol-contrib` binary (bin `cyberos-obs`). Validates the OTLP -> resource -> attributes/pii_scrub -> batch -> Loki/Prometheus/Tempo pipeline shape, manages the bearer-token file, and exposes `obs_collector_*` self-metrics. FR-OBS-001. |
+| `cyberos-obs-collector` | services/obs-collector | Rust supervisor around the upstream `otelcol-contrib` binary (bin `cyberos-obs`). Validates the OTLP -> resource -> attributes/pii_scrub -> batch -> Loki/Prometheus/Tempo pipeline shape, manages the bearer-token file, and exposes `obs_collector_*` self-metrics. TASK-OBS-001. |
 | `attributes/pii_scrub` processor | otelcol pipeline (logs + traces) | PII scrubber the collector requires on the logs and traces pipelines; redaction recall target >= 99.5%. Same rule set as the AI Gateway redactor. |
 | `resource` / `attributes` processors | otelcol pipeline | Set the `tenant.id` label from incoming resource attributes so every signal is tenant-scoped. Source of truth: the `tenant.id` attribute. |
 | tail sampling | otelcol pipeline (planned) | Keep 100% of error + slow traces, sample a fraction of the rest. Slice 1 runs a batch processor; the tail sampler is a later addition. |
 | `Loki` | backend | Log storage. S3-backed. Compressed gzip. 7d hot / 90d warm. |
 | `Tempo` | backend | Trace storage. S3-backed. 7d hot / 30d warm. |
 | `Prometheus` | backend | Metrics. Local 15d. Mimir for 1y at P1+. |
-| `cyberos-obs-proxy` | services/obs-proxy | Rust axum proxy between Grafana and the backends. AST-injects a `tenant_id` filter into every LogQL / PromQL / TraceQL query so no tenant can read another's telemetry; cross-tenant queries are rejected with 403. Slice 1 ships the LogQL injector. FR-OBS-002. |
+| `cyberos-obs-proxy` | services/obs-proxy | Rust axum proxy between Grafana and the backends. AST-injects a `tenant_id` filter into every LogQL / PromQL / TraceQL query so no tenant can read another's telemetry; cross-tenant queries are rejected with 403. Slice 1 ships the LogQL injector. TASK-OBS-002. |
 | `Grafana` | frontend | 11.x. Per-module SLO dashboards + per-tenant cost dashboards + read-only audit-log view (datasource: memory). |
-| `cyberos-obs-router` | services/obs-router | Rust service that parses Alertmanager webhooks and routes each alert through CUO's `obs.triage-alert` skill to CHAT or PagerDuty. Severity parsing, confidence-based routing, the P0/P1-always-page rule, deduplication, and ack handling. FR-OBS-007. |
+| `cyberos-obs-router` | services/obs-router | Rust service that parses Alertmanager webhooks and routes each alert through CUO's `obs.triage-alert` skill to CHAT or PagerDuty. Severity parsing, confidence-based routing, the P0/P1-always-page rule, deduplication, and ack handling. TASK-OBS-007. |
 | `SLO engine` | services/obs-slo (planned) | Sloth-based. SLO definitions in YAML committed to the repo. Burn-rate alerts generated automatically. |
 | `cost pipeline` | services/obs-cost (planned) | Daily cost roll-up from AWS Cost Explorer + AI Gateway usage + storage metrics. Per-tenant breakdown. |
-| `cyberos-obs-compliance-view` | services/obs-compliance-view | Read-only per-regulator views over the memory audit chain. Per-view audit-kind scoping, time-window validation, PII scan, and an Ed25519-signed manifest with chain proof the auditor verifies independently. Exposed as a Grafana datasource so compliance queries in the same UI as operations. FR-OBS-008. |
+| `cyberos-obs-compliance-view` | services/obs-compliance-view | Read-only per-regulator views over the memory audit chain. Per-view audit-kind scoping, time-window validation, PII scan, and an Ed25519-signed manifest with chain proof the auditor verifies independently. Exposed as a Grafana datasource so compliance queries in the same UI as operations. TASK-OBS-008. |
 | `LangSmith client` | integrated in AI Gateway | Sends prompt/completion/tool-call traces directly to LangSmith. Zero-retention contract in place. |
 
 ## Data model
@@ -615,7 +615,7 @@ sequenceDiagram
   LOKI-->>COL: 204 No Content
 ```
 
-(FR pending): PII recall >= 99.5%. Redaction at the collector is the last point at which PII can be stopped before it lands on S3.
+(task pending): PII recall >= 99.5%. Redaction at the collector is the last point at which PII can be stopped before it lands on S3.
 
 ### Flow 2 - metric scrape + alert evaluation
 
@@ -672,7 +672,7 @@ sequenceDiagram
   BR->>TEMPO: span (x2)
 ```
 
-(FR pending): end-to-end trace continuity verified. W3C TraceContext propagation through every internal call. One `trace_id` stitches the whole transaction.
+(task pending): end-to-end trace continuity verified. W3C TraceContext propagation through every internal call. One `trace_id` stitches the whole transaction.
 
 ### Flow 4 - alert escalation (severity-based routing)
 
@@ -701,7 +701,7 @@ sequenceDiagram
   end
 ```
 
-(FR pending): PagerDuty for critical, CHAT for low, CUO digest for trends.
+(task pending): PagerDuty for critical, CHAT for low, CUO digest for trends.
 
 ### Flow 5 - audit-log query (compliance review)
 
@@ -766,29 +766,29 @@ stateDiagram-v2
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
 | NFR ID | Concern | Target | Measurement |
 |---|---|---|---|
-| `N(FR pending)` | Platform availability (28-day rolling) | >= 99.5% | SLO target, burn-rate alerts |
-| `N(FR pending)` | CHAT availability | >= 99.9% | SLO |
-| `N(FR pending)` | memory search availability | >= 99.5% | SLO |
-| `N(FR pending)` | Backup RPO | <= 1 h | scheduled backup audit |
-| `N(FR pending)` | Backup RTO | <= 4 h | quarterly restore drill |
-| `N(FR pending)` | Cross-region failover (P3) | <= 24 h | annual DR drill |
-| `N(FR pending)` | SLO dashboard refresh latency | <= 60 s | monitor synthetic SLO breach |
-| `N(FR pending)` | Log ingest end-to-end latency | <= 30 s p95 | synthetic log -> query |
-| `N(FR pending)` | Trace ingest end-to-end | <= 60 s p95 | synthetic trace |
-| `N(FR pending)` | Log PII redaction recall | >= 99.5% | test set |
-| `N(FR pending)` | Log PII redaction precision | >= 95% | test set |
-| `N(FR pending)` | OBS plane availability | >= 99.5% | SLO (recursive) |
-| `N(FR pending)` | Decision-log retention | >= 180 d | config audit, S3 lifecycle |
-| `N(FR pending)` | Cross-tenant query leakage | = 0 | property-based test |
-| `N(FR pending)` | OBS plane infra cost (P0) | <= $130/month | cost dashboard |
+| `N(task pending)` | Platform availability (28-day rolling) | >= 99.5% | SLO target, burn-rate alerts |
+| `N(task pending)` | CHAT availability | >= 99.9% | SLO |
+| `N(task pending)` | memory search availability | >= 99.5% | SLO |
+| `N(task pending)` | Backup RPO | <= 1 h | scheduled backup audit |
+| `N(task pending)` | Backup RTO | <= 4 h | quarterly restore drill |
+| `N(task pending)` | Cross-region failover (P3) | <= 24 h | annual DR drill |
+| `N(task pending)` | SLO dashboard refresh latency | <= 60 s | monitor synthetic SLO breach |
+| `N(task pending)` | Log ingest end-to-end latency | <= 30 s p95 | synthetic log -> query |
+| `N(task pending)` | Trace ingest end-to-end | <= 60 s p95 | synthetic trace |
+| `N(task pending)` | Log PII redaction recall | >= 99.5% | test set |
+| `N(task pending)` | Log PII redaction precision | >= 95% | test set |
+| `N(task pending)` | OBS plane availability | >= 99.5% | SLO (recursive) |
+| `N(task pending)` | Decision-log retention | >= 180 d | config audit, S3 lifecycle |
+| `N(task pending)` | Cross-tenant query leakage | = 0 | property-based test |
+| `N(task pending)` | OBS plane infra cost (P0) | <= $130/month | cost dashboard |
 
 ## Dependencies
 
@@ -1035,7 +1035,7 @@ slo:
 - **SLOs at P0:** ~11 - platform + per-module
 - **P0 budget:** ~$130/mo - LGTM hosting + LangSmith starter
 - **Decision-log retention:** >= 180 d - EU AI Act Art. 12
-- **PII recall target:** >= 99.5% - (FR pending)
+- **PII recall target:** >= 99.5% - (task pending)
 
 | Capability | Status |
 |---|---|
@@ -1063,7 +1063,7 @@ slo:
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - OBS placed at P0 slice 1 alongside AI Gateway as the two earliest P0 modules.
 - **Research review:** `archive/2026-05-14/RESEARCH_REVIEW.md` (archived; see `cyberos/CHANGELOG.md`) - OBS rated "Strong" (9/10); the auto-runbook-router framing flagged as the most differentiated operational play.
 - **Memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §8](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - OBS reads from memory's audit chain for compliance exports; it never writes back (memory is upstream).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **EU AI Act** (Reg. 2024/1689) - Art. 12 logging, Art. 13 transparency, Art. 14 human oversight, Art. 26 deployer obligations.
 - **ISO/IEC 27001:2022** - A.8.15 logging, A.8.16 monitoring activities.
 - **ISO/IEC 42001 (AIMS)** - § 9.1 performance evaluation.

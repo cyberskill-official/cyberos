@@ -35,24 +35,24 @@ def matches_leftover(name: str, patterns: list[str]) -> bool:
 
 
 def detect_scope(project_root: str) -> str:
-    # Cyberos signal: BACKLOG.md plus the feature-request-audit-co-located feature-request-audit skill
-    # (the latter moved 2026-05-18 from feature-request-audit skill).
-    has_backlog = os.path.exists(os.path.join(project_root, "docs/feature-requests/BACKLOG.md"))
-    has_new_discipline = os.path.exists(os.path.join(project_root, "feature-request-audit skill"))
-    has_legacy_authoring = os.path.exists(os.path.join(project_root, "feature-request-audit skill"))
+    # Cyberos signal: BACKLOG.md plus the task-audit-co-located task-audit skill
+    # (the latter moved 2026-05-18 from task-audit skill).
+    has_backlog = os.path.exists(os.path.join(project_root, "docs/tasks/BACKLOG.md"))
+    has_new_discipline = os.path.exists(os.path.join(project_root, "task-audit skill"))
+    has_legacy_authoring = os.path.exists(os.path.join(project_root, "task-audit skill"))
     if has_backlog and (has_new_discipline or has_legacy_authoring):
         return "cyberos"
     return "generic"
 
 
 def find_orphan_audits(project_root: str) -> list[dict]:
-    """For cyberos repos: find FR-*.audit.md files without matching FR-*.md, and vice versa."""
-    fr_dir = os.path.join(project_root, "docs/feature-requests")
-    if not os.path.isdir(fr_dir):
+    """For cyberos repos: find TASK-*.audit.md files without matching TASK-*.md, and vice versa."""
+    task_dir = os.path.join(project_root, "docs/tasks")
+    if not os.path.isdir(task_dir):
         return []
     orphans = []
-    for dirpath, _, files in os.walk(fr_dir):
-        specs = {f[:-3] for f in files if f.startswith("FR-") and f.endswith(".md") and not f.endswith(".audit.md")}
+    for dirpath, _, files in os.walk(task_dir):
+        specs = {f[:-3] for f in files if f.startswith("TASK-") and f.endswith(".md") and not f.endswith(".audit.md")}
         audits = {f[:-len(".audit.md")] for f in files if f.endswith(".audit.md")}
         for spec_stem in specs - audits:
             orphans.append({"kind": "spec_no_audit", "path": os.path.join(dirpath, f"{spec_stem}.md")})
@@ -160,7 +160,7 @@ def main():
                     "reason": "matches_leftover_pattern",
                 })
                 continue
-            if line_count < args.threshold and f not in ("README.md", "CHANGELOG.md", "feature-request-audit skill", "feature-request-audit skill", "LICENSE.md"):
+            if line_count < args.threshold and f not in ("README.md", "CHANGELOG.md", "task-audit skill", "task-audit skill", "LICENSE.md"):
                 fragments.append({
                     "path": rel,
                     "lines": line_count,

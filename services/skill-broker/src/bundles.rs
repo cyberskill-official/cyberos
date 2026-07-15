@@ -1,4 +1,4 @@
-//! FR-SKILL-105..110 — built-in bundle helper contracts.
+//! TASK-SKILL-105..110 — built-in bundle helper contracts.
 
 use serde::{Deserialize, Serialize};
 

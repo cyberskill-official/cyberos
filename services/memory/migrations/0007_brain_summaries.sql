@@ -1,4 +1,4 @@
--- FR-MEMORY-123 §3 / §1 #4,#5,#9 — the BRAIN rolling-summary table.
+-- TASK-MEMORY-123 §3 / §1 #4,#5,#9 — the BRAIN rolling-summary table.
 --
 -- DEC-2724 (summaries-first): one row per (scope_kind, scope_id, version). A summary compacts the events
 -- in its window into a short natural-language digest + its own embedding (generated via the SAME ai-gateway
@@ -10,7 +10,7 @@
 -- Recall reads only the current version (`superseded_by IS NULL`).
 --
 -- Provenance (§1 #9): `covered_seq_range` is the inclusive source_seq range compacted; `top_contributors`
--- holds the top audit_row_ids so a summary hit can cite exact Layer-1 rows for FR-EVAL-003.
+-- holds the top audit_row_ids so a summary hit can cite exact Layer-1 rows for TASK-EVAL-003.
 
 CREATE TABLE IF NOT EXISTS brain_summary (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),

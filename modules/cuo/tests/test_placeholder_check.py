@@ -1,4 +1,4 @@
-"""Tests for cuo.placeholder_check — FR-SKILL-115 SKB-030 validator."""
+"""Tests for cuo.placeholder_check — TASK-SKILL-115 SKB-030 validator."""
 
 from __future__ import annotations
 
@@ -98,7 +98,7 @@ metadata:
 
 
 def test_wrap_in_marker_not_flagged(tmp_path: Path):
-    """Post-FR-SKILL-113 form: wrap_in_marker is a plain string, never flagged."""
+    """Post-TASK-SKILL-113 form: wrap_in_marker is a plain string, never flagged."""
     skill = tmp_path / "SKILL.md"
     skill.write_text("""---
 name: foo-author

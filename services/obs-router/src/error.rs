@@ -1,4 +1,4 @@
-//! obs-router error type (FR-OBS-007).
+//! obs-router error type (TASK-OBS-007).
 
 /// Errors from receiving or parsing an Alertmanager webhook.
 #[derive(Debug, thiserror::Error)]

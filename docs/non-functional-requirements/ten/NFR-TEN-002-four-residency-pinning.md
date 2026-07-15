@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of tenant writes land in pinned region; cross-region writes audited + blocked"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-TEN-103]
+related_tasks: [TASK-TEN-103]
 ---
 
 ## §1 — Statement (BCP-14 normative)

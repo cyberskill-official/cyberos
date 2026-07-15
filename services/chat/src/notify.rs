@@ -123,8 +123,8 @@ pub async fn fanout(
         .await
         .unwrap_or_default();
 
-    // ───────── FR-CHAT-268 enforcement point 3 of 4: notification + push fan-out (§1 #4, #9) ─────────
-    // THIS is the point that was silently broken before FR-CHAT-268. The fan-out selects channel members and
+    // ───────── TASK-CHAT-268 enforcement point 3 of 4: notification + push fan-out (§1 #4, #9) ─────────
+    // THIS is the point that was silently broken before TASK-CHAT-268. The fan-out selects channel members and
     // pushes to their devices; it did not know blocks existed. So a blocked person's message would still have
     // arrived on the blocker's lock screen, carrying their name and the first 80 characters of their text —
     // the single most intrusive surface in the product, and the one a block most obviously has to cover.

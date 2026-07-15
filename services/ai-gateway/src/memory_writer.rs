@@ -1,4 +1,4 @@
-//! FR-AI-003 — Canonical memory audit-row writer.
+//! TASK-AI-003 — Canonical memory audit-row writer.
 //!
 //! Bridges the AI Gateway to the canonical Python Writer subprocess (`python3 -m
 //! cyberos.writer put`). Every AI Gateway audit emission MUST route through this module;
@@ -15,7 +15,7 @@
 //! - The `python3 -m cyberos.writer put` Python subprocess is supplied by
 //!   `modules/memory/runtime/`. When that interface is not on PATH, `check_writer_available`
 //!   returns `Err(WriterUnreachable)` and the gateway should exit non-zero at boot
-//!   (FR-AI-003 §1 #10).
+//!   (TASK-AI-003 §1 #10).
 
 pub mod canonical;
 
@@ -38,19 +38,19 @@ const WRITER_TIMEOUT: Duration = Duration::from_secs(5);
 
 // --- Types ------------------------------------------------------------------
 
-/// FR-AI-003 §1 #8 — closed initial set of `ai.*` row kinds for slice 1.
+/// TASK-AI-003 §1 #8 — closed initial set of `ai.*` row kinds for slice 1.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AiInvocationKind {
-    /// Emitted by FR-AI-001 (cost-ledger pre-call check).
+    /// Emitted by TASK-AI-001 (cost-ledger pre-call check).
     Precheck,
-    /// Emitted by FR-AI-002 (success path).
+    /// Emitted by TASK-AI-002 (success path).
     Invocation,
-    /// Emitted by FR-AI-002 (refund path).
+    /// Emitted by TASK-AI-002 (refund path).
     InvocationFailed,
-    /// Emitted by FR-AI-004 (cleanup job).
+    /// Emitted by TASK-AI-004 (cleanup job).
     HoldExpired,
-    /// Emitted by FR-AI-014 (persona stamping).
+    /// Emitted by TASK-AI-014 (persona stamping).
     PersonaLoaded,
 }
 
@@ -67,7 +67,7 @@ impl AiInvocationKind {
     }
 }
 
-/// FR-AI-003 §3 — Emission request.
+/// TASK-AI-003 §3 — Emission request.
 #[derive(Debug, Clone)]
 pub struct MemoryEmit {
     /// Row kind tag (closed set).
@@ -79,7 +79,7 @@ pub struct MemoryEmit {
     pub extra: serde_json::Value,
 }
 
-/// FR-AI-003 §3 — Outcome of a successful emit.
+/// TASK-AI-003 §3 — Outcome of a successful emit.
 #[derive(Debug, Clone)]
 pub struct EmittedRow {
     /// HEAD seq counter at time of emission.
@@ -92,7 +92,7 @@ pub struct EmittedRow {
     pub path: String,
 }
 
-/// FR-AI-003 §3 — Writer process metadata used by the startup health check.
+/// TASK-AI-003 §3 — Writer process metadata used by the startup health check.
 #[derive(Debug, Clone)]
 pub struct WriterVersion {
     /// Semver of the Writer module.
@@ -103,7 +103,7 @@ pub struct WriterVersion {
     pub schema_version: u32,
 }
 
-/// FR-AI-003 §3 — Error taxonomy.
+/// TASK-AI-003 §3 — Error taxonomy.
 #[derive(Debug, Error)]
 pub enum MemoryWriterError {
     /// Subprocess returned non-zero exit code.
@@ -162,7 +162,7 @@ struct WriterStdout {
 
 // --- Public entry points ----------------------------------------------------
 
-/// FR-AI-003 §3 — Emit one audit row via the canonical Writer subprocess.
+/// TASK-AI-003 §3 — Emit one audit row via the canonical Writer subprocess.
 pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
     // 1. Validate path BEFORE spawning anything (AC #7).
     validate_path(&req.path).map_err(|reason| MemoryWriterError::PathRejected {
@@ -248,7 +248,7 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
             stderr: format!("stdout parse: {e}"),
         })?;
 
-    // 7. Verify chain hash locally (FR-AI-003 §1 #7).
+    // 7. Verify chain hash locally (TASK-AI-003 §1 #7).
     let expected = compute_chain(&payload, &row.prev_chain);
     let got_vec = hex::decode(&row.chain).unwrap_or_default();
     let mut got = [0u8; 32];
@@ -274,7 +274,7 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
     })
 }
 
-/// FR-AI-003 §1 #10 — Startup health check.
+/// TASK-AI-003 §1 #10 — Startup health check.
 pub async fn check_writer_available() -> Result<WriterVersion, MemoryWriterError> {
     let out = Command::new(WRITER_BIN)
         .args(["-m", "cyberos.writer", "--version"])
@@ -361,11 +361,11 @@ async fn read_all(mut stream: impl tokio::io::AsyncRead + Unpin) -> std::io::Res
 
 // --- Public typed builders --------------------------------------------------
 
-/// FR-AI-003 §3 — Typed builders for the slice-1 closed set.
+/// TASK-AI-003 §3 — Typed builders for the slice-1 closed set.
 pub mod builders {
     use super::*;
 
-    /// `ai.precheck` row (FR-AI-001).
+    /// `ai.precheck` row (TASK-AI-001).
     #[allow(clippy::too_many_arguments)]
     pub fn precheck(
         tenant_id: &str,
@@ -393,7 +393,7 @@ pub mod builders {
         }
     }
 
-    /// `ai.invocation` row (FR-AI-002 success path).
+    /// `ai.invocation` row (TASK-AI-002 success path).
     #[allow(clippy::too_many_arguments)]
     pub fn invocation(
         tenant_id: &str,
@@ -423,7 +423,7 @@ pub mod builders {
         }
     }
 
-    /// `ai.invocation_failed` row (FR-AI-002 refund path).
+    /// `ai.invocation_failed` row (TASK-AI-002 refund path).
     #[allow(clippy::too_many_arguments)]
     pub fn invocation_failed(
         tenant_id: &str,
@@ -453,7 +453,7 @@ pub mod builders {
         }
     }
 
-    /// `ai.hold_expired` row (FR-AI-004 cleanup job).
+    /// `ai.hold_expired` row (TASK-AI-004 cleanup job).
     pub fn hold_expired(
         tenant_id: &str,
         hold_id: Uuid,
@@ -472,7 +472,7 @@ pub mod builders {
         }
     }
 
-    /// `ai.persona_loaded` row (FR-AI-014).
+    /// `ai.persona_loaded` row (TASK-AI-014).
     pub fn persona_loaded(
         tenant_id: &str,
         persona_id: &str,

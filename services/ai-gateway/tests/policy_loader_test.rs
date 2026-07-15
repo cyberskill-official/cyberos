@@ -1,4 +1,4 @@
-//! FR-AI-005 §5 — Integration tests for the tenant-policy loader.
+//! TASK-AI-005 §5 — Integration tests for the tenant-policy loader.
 //!
 //! AC#1 valid YAML loads · AC#2 missing returns PolicyMissing · AC#3 invalid schema rejected
 //! on init · AC#5 path traversal rejected · AC#6 cache hit · AC#9 1000 concurrent reads.

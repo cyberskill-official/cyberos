@@ -1,4 +1,4 @@
-"""FR-CHAT-004 — Vietnamese message search helpers."""
+"""TASK-CHAT-004 — Vietnamese message search helpers."""
 
 from __future__ import annotations
 

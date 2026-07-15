@@ -9,12 +9,12 @@ phase: P0
 slo: "100% of onboarding sagas reach terminal state; crashes recover from last step"
 owner: CHRO
 created: 2026-05-18
-related_frs: [FR-HR-007]
+related_tasks: [TASK-HR-007]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. The HR onboarding saga (`FR-HR-007`) **MUST** persist step state in a durable journal — process crashes resume at last completed step.
+1. The HR onboarding saga (`TASK-HR-007`) **MUST** persist step state in a durable journal — process crashes resume at last completed step.
 2. Each step **MUST** be idempotent — replay produces same outcome.
 3. Failed steps **MUST** be retryable; persistent failure (3 retries) opens a manual-intervention ticket.
 4. Cancellation mid-saga **MUST** trigger rollback of completed steps (account de-provisioning, etc.).

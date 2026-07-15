@@ -1,10 +1,10 @@
-//! FR-OBS-003 - RED (rate, errors, duration) metrics for every CyberOS service.
+//! TASK-OBS-003 - RED (rate, errors, duration) metrics for every CyberOS service.
 //!
 //! `init` builds the three instruments off the global meter (the service installs the OTel SDK provider
 //! and OTLP exporter at boot). `record_request` is called once per handled request - by the
 //! `#[red_instrument]` macro on axum handlers, or by hand in non-HTTP paths. Status is bucketed to a
 //! class (2xx/3xx/4xx/5xx/other) to bound cardinality (DEC-152); a cardinality guard refuses a label
-//! set that would explode the series count (DEC, FR-OBS-003 §1 #9).
+//! set that would explode the series count (DEC, TASK-OBS-003 §1 #9).
 //!
 //! Robustness note: unlike the spec's panic-on-missing-init, `record_request` is a safe no-op before
 //! `init`. A metrics call must never crash a request path - a service that forgets `init` emits nothing
@@ -29,7 +29,7 @@ pub const HISTOGRAM_BUCKETS_MS: &[f64] = &[
 const REQUESTS_METRIC: &str = "cyberos_requests_total";
 const ERRORS_METRIC: &str = "cyberos_errors_total";
 const DURATION_METRIC: &str = "cyberos_duration_ms";
-// FR-OBS-005 §1 #12 - correlation self-observability.
+// TASK-OBS-005 §1 #12 - correlation self-observability.
 const TRACECONTEXT_EXTRACTED_METRIC: &str = "obs_tracecontext_extracted_total";
 const EXEMPLAR_EMISSION_METRIC: &str = "obs_exemplar_emission_total";
 
@@ -62,7 +62,7 @@ pub fn init(service: &str, version: &str) {
     cardinality_guard::init(service);
 }
 
-/// FR-OBS-005 §1 #12 - count a traceparent extraction by outcome. `outcome` is the bounded set
+/// TASK-OBS-005 §1 #12 - count a traceparent extraction by outcome. `outcome` is the bounded set
 /// `extracted | malformed | missing_generated_new`, mirroring the `trace_ctx` boundary's three paths.
 /// A safe no-op before `init`.
 pub fn record_tracecontext_extracted(outcome: &str) {
@@ -71,7 +71,7 @@ pub fn record_tracecontext_extracted(outcome: &str) {
     }
 }
 
-/// Count one histogram exemplar emission (FR-OBS-005 §1 #12). Called by `exemplar::record_with_exemplar`
+/// Count one histogram exemplar emission (TASK-OBS-005 §1 #12). Called by `exemplar::record_with_exemplar`
 /// each time a sample is recorded with a trace in context. A safe no-op before `init`.
 pub(crate) fn note_exemplar_emission() {
     if let Some(counter) = EXEMPLAR_EMISSIONS.get() {
@@ -88,7 +88,7 @@ fn endpoint_from_env() -> Option<String> {
 }
 
 /// If an OTLP endpoint is configured, install an OTLP gRPC meter provider as the global meter so the RED
-/// instruments export to the collector (FR-OBS-001). Unset means no exporter: the instruments record to
+/// instruments export to the collector (TASK-OBS-001). Unset means no exporter: the instruments record to
 /// the default no-op meter, so a dev/local run without a collector stays quiet. Best-effort: an exporter
 /// that fails to build logs and leaves metrics disabled rather than crashing the service.
 fn install_exporter(service: &str, version: &str) {
@@ -178,7 +178,7 @@ pub fn record_request(
         requests.add(1, &labels);
     }
     if let Some(duration) = DURATION.get() {
-        // FR-OBS-005 §1 #3 - record with an exemplar so a duration sample links to its trace (the
+        // TASK-OBS-005 §1 #3 - record with an exemplar so a duration sample links to its trace (the
         // trace_id rides via the current OTel context set at the request boundary).
         crate::exemplar::record_with_exemplar(duration, f64::from(duration_ms), &labels);
     }

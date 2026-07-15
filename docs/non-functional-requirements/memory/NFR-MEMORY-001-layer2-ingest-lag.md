@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 < 1s; p99 < 3s end-to-end Layer-1 commit to Layer-2 visibility"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-MEMORY-101, FR-MEMORY-108]
+related_tasks: [TASK-MEMORY-101, TASK-MEMORY-108]
 ---
 
 ## §1 — Statement (BCP-14 normative)

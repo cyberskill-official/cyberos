@@ -1,4 +1,4 @@
-"""Tests for cuo.baseline — FR-SKILL-114 BASELINE.md validator."""
+"""Tests for cuo.baseline — TASK-SKILL-114 BASELINE.md validator."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from cuo.baseline import validate
 _VALID_BODY = """
 ## Workflow under test
 
-The workflow is "turn a PRD into a feature-request backlog".
+The workflow is "turn a PRD into a task backlog".
 
 ## Without-skill baseline
 
@@ -43,14 +43,14 @@ def _write_fixture(tmp_path: Path, frontmatter: str, body: str = _VALID_BODY) ->
 
 
 def test_valid_baseline_passes(tmp_path: Path):
-    path = _write_fixture(tmp_path, """skill_id: feature-request-author
+    path = _write_fixture(tmp_path, """skill_id: task-author
 baseline_version: 1.0.0
 baseline_measured_at: 2026-05-19T15:30:00+07:00
 attested_by: cuo-cpo
 next_review_due: 2099-05-19T00:00:00+07:00""")
     result = validate(path)
     assert result.valid is True
-    assert result.skill_id == "feature-request-author"
+    assert result.skill_id == "task-author"
     assert result.issues == []
     assert result.warnings == []
 

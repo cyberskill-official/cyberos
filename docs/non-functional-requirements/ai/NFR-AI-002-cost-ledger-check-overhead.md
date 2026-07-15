@@ -9,7 +9,7 @@ phase: P0
 slo: "p99 < 10ms; p95 < 5ms for cost-ledger pre-call admission check"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-AI-007, FR-AI-008]
+related_tasks: [TASK-AI-007, TASK-AI-008]
 ---
 
 ## §1 — Statement (BCP-14 normative)

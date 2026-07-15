@@ -1,4 +1,4 @@
-//! FR-AI-003 §1 #6 + AGENTS.md §6.2 — Canonical JSON serialisation.
+//! TASK-AI-003 §1 #6 + AGENTS.md §6.2 — Canonical JSON serialisation.
 //!
 //! Rules:
 //! - NFC-normalised UTF-8 throughout (§6 AC #6 — round-trip combining-acute → pre-composed).
@@ -17,7 +17,7 @@ use super::MemoryEmit;
 const ACTOR: &str = "agent:cyberos-ai-gateway";
 const ACTOR_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// FR-AI-003 §1 #6 — Build the canonical-JSON payload that gets piped to the Writer
+/// TASK-AI-003 §1 #6 — Build the canonical-JSON payload that gets piped to the Writer
 /// subprocess's stdin. Single line, no trailing newline (caller adds it).
 pub fn serialise(req: &MemoryEmit) -> Result<String, String> {
     let body = build_body_markdown(req);

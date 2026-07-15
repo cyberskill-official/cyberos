@@ -1,4 +1,4 @@
--- FR-OBS-008 - a generated `event_type` column on l1_audit_log so the compliance views can query audit
+-- TASK-OBS-008 - a generated `event_type` column on l1_audit_log so the compliance views can query audit
 -- rows by kind. The audit row's kind is the `event_type` field of its JSON body; querying it directly
 -- with `body::jsonb` is unsafe because memory-file `put` rows carry non-JSON markdown bodies, so the
 -- cast would error mid-query. A generated column backed by an error-swallowing immutable extractor makes

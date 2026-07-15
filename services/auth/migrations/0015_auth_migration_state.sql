@@ -1,12 +1,12 @@
--- FR-AUTH-109 — stub→full migration state.
+-- TASK-AUTH-109 — stub→full migration state.
 --
--- Per DEC-125 + AUTHORING_DISCIPLINE §3.4: existing FR-AUTH-002 / 005 / 006
--- access tokens (issued before FR-AUTH-101 RBAC catalogue shipped) carry no
+-- Per DEC-125 + AUTHORING_DISCIPLINE §3.4: existing TASK-AUTH-002 / 005 / 006
+-- access tokens (issued before TASK-AUTH-101 RBAC catalogue shipped) carry no
 -- `rbac_v` claim. The verifier honours them as implicit `rbac_v = 1` for a
--- 30-day grace window after FR-AUTH-101 lands. After grace closes,
+-- 30-day grace window after TASK-AUTH-101 lands. After grace closes,
 -- missing-claim tokens are rejected with `401 rbac_version_required`.
 --
--- This table is a singleton state row: when the FR-AUTH-101 migration ran,
+-- This table is a singleton state row: when the TASK-AUTH-101 migration ran,
 -- and when the grace closes. The verifier reads it on every request via
 -- a cached `MigrationState` snapshot refreshed alongside the RBAC matrix.
 --
@@ -14,7 +14,7 @@
 
 CREATE TABLE auth_migration_state (
     id                      INT PRIMARY KEY CHECK (id = 1),
-    fr_auth_101_shipped_at  TIMESTAMPTZ NOT NULL,        -- when migration 0007 ran (RBAC catalogue)
+    task_auth_101_shipped_at  TIMESTAMPTZ NOT NULL,        -- when migration 0007 ran (RBAC catalogue)
     grace_window_days       INTEGER NOT NULL DEFAULT 30,
     grace_closes_at         TIMESTAMPTZ NOT NULL,        -- computed at row insert
     extended_by             UUID,                        -- subject_id of operator who extended
@@ -26,7 +26,7 @@ CREATE TABLE auth_migration_state (
 -- migration's apply (close enough — operators care about the boundary in
 -- days, not seconds).
 INSERT INTO auth_migration_state
-    (id, fr_auth_101_shipped_at, grace_window_days, grace_closes_at)
+    (id, task_auth_101_shipped_at, grace_window_days, grace_closes_at)
 VALUES
     (1, NOW(), 30, NOW() + INTERVAL '30 days');
 

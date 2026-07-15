@@ -1,4 +1,4 @@
-//! CHAT and PagerDuty delivery (FR-OBS-007 §1 #3, #4). The orchestration (`handle.rs`) drives these
+//! CHAT and PagerDuty delivery (TASK-OBS-007 §1 #3, #4). The orchestration (`handle.rs`) drives these
 //! with the §1 #11 fallback chain so an alert is never silently dropped.
 
 use crate::alertmanager_webhook::Alert;

@@ -1,4 +1,4 @@
--- FR-AUTH-004 — RS256 signing keys + JWKS publication.
+-- TASK-AUTH-004 — RS256 signing keys + JWKS publication.
 --
 -- One active key per tenant (or per cluster for the shared issuer). Older
 -- keys remain published in JWKS until expiry so in-flight JWTs verify.

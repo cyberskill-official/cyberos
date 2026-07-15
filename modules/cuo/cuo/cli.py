@@ -209,10 +209,10 @@ def cmd_dry_run(ctx: click.Context, persona_workflow: str) -> None:
     help="Bypass Phase 4 handler dispatch; always use linear execute_chain (debug).",
 )
 @click.option(
-    "--fr-id",
+    "--task-id",
     default=None,
-    help="Force a specific FR (e.g. FR-MEMORY-117). Shorthand for `--input fr_id=<value>`. "
-         "Used by ship-feature-requests to target one FR rather than picking from BACKLOG.",
+    help="Force a specific task (e.g. TASK-MEMORY-117). Shorthand for `--input task_id=<value>`. "
+         "Used by ship-tasks to target one task rather than picking from BACKLOG.",
 )
 @click.option(
     "--auto-claim/--no-auto-claim",
@@ -237,7 +237,7 @@ def cmd_dry_run(ctx: click.Context, persona_workflow: str) -> None:
     "--backlog",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     default=None,
-    help="Path to BACKLOG.md for FR status lookup. Defaults to cyberos docs/feature-requests/BACKLOG.md.",
+    help="Path to BACKLOG.md for task status lookup. Defaults to cyberos docs/tasks/BACKLOG.md.",
 )
 @click.pass_context
 def cmd_execute(
@@ -251,7 +251,7 @@ def cmd_execute(
     actor: str,
     explain: bool,
     no_handler_dispatch: bool,
-    fr_id: str | None,
+    task_id: str | None,
     auto_claim: bool,
     rework: bool,
     brief_output: Path | None,
@@ -285,9 +285,9 @@ def cmd_execute(
         k, v = raw.split("=", 1)
         parsed_inputs[k.strip()] = v.strip()
 
-    # --fr-id is a typed shorthand for --input fr_id=<value>.
-    if fr_id is not None:
-        parsed_inputs["fr_id"] = fr_id
+    # --fr-id is a typed shorthand for --input task_id=<value>.
+    if task_id is not None:
+        parsed_inputs["task_id"] = task_id
     # --auto-claim flag flows into the workflow's input bundle so phase
     # transitions can read it from the hand-off map.
     parsed_inputs["auto_claim"] = auto_claim
@@ -316,7 +316,7 @@ def cmd_execute(
             skill_root=skill_path,
             output_dir=output_dir,
             inputs=parsed_inputs,
-            fr_id=fr_id,
+            task_id=task_id,
             project_root=Path.cwd(),
             backlog_path=backlog,
         )
@@ -456,9 +456,9 @@ def cmd_execute(
     help="Directory containing existing step output JSON files from a previous run.",
 )
 @click.option(
-    "--fr-id",
+    "--task-id",
     required=True,
-    help="FR to resume (e.g. FR-MEMORY-117).",
+    help="task to resume (e.g. TASK-MEMORY-117).",
 )
 @click.option(
     "--invoker",
@@ -470,14 +470,14 @@ def cmd_execute(
     "--backlog",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     default=None,
-    help="Path to BACKLOG.md for FR status lookup.",
+    help="Path to BACKLOG.md for task status lookup.",
 )
 @click.pass_context
 def cmd_resume(
     ctx: click.Context,
     persona_workflow: str,
     output_dir: Path,
-    fr_id: str,
+    task_id: str,
     invoker: str,
     backlog: Path | None,
 ) -> None:
@@ -504,7 +504,7 @@ def cmd_resume(
     existing = sorted(output_dir.glob(f"step*_*.json"))
     click.echo(f"# resume {persona_workflow}")
     click.echo(f"  output dir: {output_dir}")
-    click.echo(f"  fr_id:      {fr_id}")
+    click.echo(f"  task_id:      {task_id}")
     click.echo(f"  existing:   {len(existing)} step file(s)")
     for f in existing:
         click.echo(f"    {f.name}")
@@ -531,8 +531,8 @@ def cmd_resume(
         workflow_slug=workflow_slug,
         skill_root=skill_path,
         output_dir=output_dir,
-        fr_id=fr_id,
-        inputs={"fr_id": fr_id, "auto_claim": True},
+        task_id=task_id,
+        inputs={"task_id": task_id, "auto_claim": True},
         invoker=inv,
         stop_on_failure=True,
         backlog_path=backlog,
@@ -549,27 +549,27 @@ def cmd_resume(
     "--output-dir",
     type=click.Path(file_okay=False, path_type=Path),
     required=True,
-    help="Directory where per-FR run artefacts are written. One subdir per FR.",
+    help="Directory where per-task run artefacts are written. One subdir per task.",
 )
 @click.option(
     "--module",
     "module_filter",
     default=None,
-    help="Filter FRs by module (e.g. 'memory'). Only FRs whose ID matches "
-         "FR-<MODULE>-<NNN> with matching module slug are picked.",
+    help="Filter tasks by module (e.g. 'memory'). Only tasks whose ID matches "
+         "TASK-<MODULE>-<NNN> with matching module slug are picked.",
 )
 @click.option(
     "--backlog",
     "backlog_path",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     default=None,
-    help="Path to BACKLOG.md. Defaults to <cyberos_root>/docs/feature-requests/BACKLOG.md.",
+    help="Path to BACKLOG.md. Defaults to <cyberos_root>/docs/tasks/BACKLOG.md.",
 )
 @click.option(
-    "--max-frs",
+    "--max-tasks",
     type=int,
     default=0,
-    help="Max FRs to drain in this run. 0 = unbounded (until empty or HITL halt).",
+    help="Max tasks to drain in this run. 0 = unbounded (until empty or HITL halt).",
 )
 @click.option(
     "--invoker",
@@ -582,13 +582,13 @@ def cmd_resume(
     "--halt-on-repeat-rework",
     type=int,
     default=2,
-    help="Halt the drain loop when an FR routes back this many times "
+    help="Halt the drain loop when a task routes back this many times "
          "(default 2). Set 0 to disable.",
 )
 @click.option(
     "--rework/--no-rework",
     default=False,
-    help="Rework mode: allow selecting done FRs and re-running them from implementing to done.",
+    help="Rework mode: allow selecting done tasks and re-running them from implementing to done.",
 )
 @click.option(
     "--brief-output",
@@ -611,7 +611,7 @@ def cmd_drain(
     rework: bool,
     brief_output: Path | None,
 ) -> None:
-    """Drain a module's BACKLOG by running PERSONA_WORKFLOW on each eligible FR."""
+    """Drain a module's BACKLOG by running PERSONA_WORKFLOW on each eligible task."""
     from cuo.api import run
     run(
         persona_workflow,
@@ -633,7 +633,7 @@ def cmd_drain(
 @main.group("harness")
 @click.pass_context
 def cmd_harness(ctx: click.Context) -> None:
-    """Continuous-improvement harness (FR-CUO-200..203)."""
+    """Continuous-improvement harness (TASK-CUO-200..203)."""
     pass
 
 
@@ -672,7 +672,7 @@ def cmd_harness_report(
     watch: bool,
     watch_interval: int,
 ) -> None:
-    """Build the FR-CUO-200 daily report and write it to disk."""
+    """Build the TASK-CUO-200 daily report and write it to disk."""
     from cuo.core.harness import compute_report, emit_report, parse_window
     import time as _time
 
@@ -720,7 +720,7 @@ def cmd_harness_report(
 @main.group("proposal")
 @click.pass_context
 def cmd_proposal(ctx: click.Context) -> None:
-    """Refinement-proposal operator workflow (FR-CUO-201)."""
+    """Refinement-proposal operator workflow (TASK-CUO-201)."""
     pass
 
 
@@ -736,7 +736,7 @@ def _proposals_root(ctx: click.Context) -> Path:
               default="all")
 @click.pass_context
 def cmd_proposal_list(ctx: click.Context, status: str) -> None:
-    """List refinement proposals by status (FR-CUO-201 AC #6)."""
+    """List refinement proposals by status (TASK-CUO-201 AC #6)."""
     from cuo.core.refinement_proposal import list_proposals
     listing = list_proposals(_proposals_root(ctx))
     statuses = (["open", "pending_approval", "applied", "rejected"]
@@ -775,7 +775,7 @@ def cmd_proposal_show(ctx: click.Context, stripe_id: str) -> None:
 @click.argument("stripe_id")
 @click.pass_context
 def cmd_proposal_apply(ctx: click.Context, stripe_id: str) -> None:
-    """Move an open proposal to applied/ (lifecycle only; FR-CUO-202 wires diff)."""
+    """Move an open proposal to applied/ (lifecycle only; TASK-CUO-202 wires diff)."""
     from cuo.core.refinement_proposal import apply_proposal_lifecycle
     applied = apply_proposal_lifecycle(_proposals_root(ctx), stripe_id)
     if applied is None:

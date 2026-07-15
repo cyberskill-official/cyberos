@@ -1,4 +1,4 @@
-//! FR-EMAIL-001 §1 #8 — RFC 5322 subject normalisation for thread merge.
+//! TASK-EMAIL-001 §1 #8 — RFC 5322 subject normalisation for thread merge.
 
 use cyberos_email::repo::messages::normalise_subject;
 

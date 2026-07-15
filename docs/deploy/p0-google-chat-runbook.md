@@ -148,12 +148,12 @@ is the Workspace restriction working.
   instance. For more than one, move it to Redis or a short-TTL table; oidc_login_history already records
   the state token and verifier hash.
 - The chat hash-chained audit log writes to the memory database via CHAT_AUDIT_DATABASE_URL (the
-  chat->brain link, DEC-2713). See "Company-brain capture (FR-MEMORY-122)" below for how to turn it on and
+  chat->brain link, DEC-2713). See "Company-brain capture (TASK-MEMORY-122)" below for how to turn it on and
   verify it; it stays off by default and does not affect the P0 team test.
 - Real-time voice or video (WebRTC media and TURN), mobile push (APNS or FCM), and the desktop app are
   later phases; the chat signalling relay and device registration that back them already exist server-side.
 
-## Company-brain capture (FR-MEMORY-122)
+## Company-brain capture (TASK-MEMORY-122)
 
 This is where employee platform work-interactions (sign-ins, presence, chat activity) start flowing into
 the company brain. It is OFF by default and has two independent switches; BOTH must be on for any data to be
@@ -169,8 +169,8 @@ recorded, and even then only for a subject who has acknowledged the monitoring n
    chaining them. AUTH writes to its own database, which is the same brain database, so no separate variable
    is needed for AUTH.
 
-The consent prerequisite. Capture routes every event through the FR-MEMORY-121 emit path, which is gated on
-the FR-EVAL-001 acknowledgment ledger. A subject is recorded only after an acknowledgment of the tenant's
+The consent prerequisite. Capture routes every event through the TASK-MEMORY-121 emit path, which is gated on
+the TASK-EVAL-001 acknowledgment ledger. A subject is recorded only after an acknowledgment of the tenant's
 current published monitoring notice is on file (normally the signed employment-document clause, recorded by
 HR). A subject with no acknowledgment produces zero rows, by design - that is why a given person may show no
 capture even when capture is on.

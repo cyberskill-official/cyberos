@@ -123,7 +123,7 @@ services:
     env_file: [.env]
     command: ["--listen", "0.0.0.0:8090"]
     environment:
-      # OAuth (FR-MCP-004) turns on only when MCP_DATABASE_URL is set; leave unset to run open in dev.
+      # OAuth (TASK-MCP-004) turns on only when MCP_DATABASE_URL is set; leave unset to run open in dev.
       # CONFIRM: to enable OAuth, add MCP_DATABASE_URL to .env, create its DB, run mcp-gateway migrations.
       MCP_ISSUER_URL: ${MCP_ISSUER_URL:-https://mcp.example.com}
       MCP_AUTH_ISSUER: ${MCP_AUTH_ISSUER:-https://auth.example.com}
@@ -219,11 +219,11 @@ services:
       CHAT_LISTEN_ADDR: 0.0.0.0:7720
       DATABASE_URL: ${CHAT_DATABASE_URL}
       CHAT_AUTH_JWKS_URL: ${CHAT_AUTH_JWKS_URL:-http://auth:7700/.well-known/jwks.json}
-      # FR-MEMORY-122 / DEC-2713 — the chat->brain audit link. Point this at the memory module's
+      # TASK-MEMORY-122 / DEC-2713 — the chat->brain audit link. Point this at the memory module's
       # l1_audit_log database (here the same local Postgres) so chat audit rows AND interaction-events chain
       # into MEMORY. Defaults to the local memory DB; in P0/Supabase it is set from the env.
       CHAT_AUDIT_DATABASE_URL: ${CHAT_AUDIT_DATABASE_URL:-${MEMORY_DATABASE_URL}}
-      # FR-MEMORY-122 master switch (default OFF). Capture only emits interaction-events when this is true
+      # TASK-MEMORY-122 master switch (default OFF). Capture only emits interaction-events when this is true
       # AND the subject has acknowledged the monitoring notice. Leave unset to keep capture dormant.
       CAPTURE_ENABLED: ${CAPTURE_ENABLED:-false}
     depends_on:

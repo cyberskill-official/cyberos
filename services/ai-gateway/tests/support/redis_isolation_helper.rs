@@ -1,4 +1,4 @@
-//! FR-AI-018 §1 #11 — Per-case Redis isolation via UUID prefix + Drop cleanup.
+//! TASK-AI-018 §1 #11 — Per-case Redis isolation via UUID prefix + Drop cleanup.
 
 use uuid::Uuid;
 

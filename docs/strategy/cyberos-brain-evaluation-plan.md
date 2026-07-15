@@ -121,7 +121,7 @@ the appendix.
 
 - Reuse: AUTH (identity, tenancy), the audit chain (capture and integrity), MEMORY plus pgvector (the
   brain and fast recall), CUO / GENIE (analysis), the AI gateway (models and policy), obs (signals).
-- New work, as feature requests to add to the catalog: a unified interaction-event schema and emitters
+- New work, as tasks to add to the catalog: a unified interaction-event schema and emitters
   (capture); the MEMORY ingestion and summarization worker (brain); the rubric model built from the three
   documents; the evaluation engine and its human-review workflow; the governance, consent, and retention
   layer; and the manager and employee views.

@@ -1,14 +1,14 @@
-# cyberos pack - run ship-feature-requests in any repo
+# cyberos pack - run ship-tasks in any repo
 
-This is the portable form of the single `ship-feature-requests` workflow. It runs in any repo, any language, with no CyberOS clone required. It is exposed through many channels so a user can pick whatever fits their setup.
+This is the portable form of the single `ship-tasks` workflow. It runs in any repo, any language, with no CyberOS clone required. It is exposed through many channels so a user can pick whatever fits their setup.
 
-New to it? `GUIDE.md` is the step-by-step walkthrough (zero to your first shipped FR). This README is the channel catalog and reference.
+New to it? `GUIDE.md` is the step-by-step walkthrough (zero to your first shipped task). This README is the channel catalog and reference.
 
-`install` sets up two things by default: the FR workflow AND the BRAIN memory protocol. It scaffolds a local `.cyberos/memory/store/` store (gitignored tenant data) and drops the `AGENTS.md` Layer-1 memory rules, so the project gets both the workflow and the memory discipline. Skip the memory half with `CYBEROS_NO_MEMORY=1`.
+`install` sets up two things by default: the task workflow AND the BRAIN memory protocol. It scaffolds a local `.cyberos/memory/store/` store (gitignored tenant data) and drops the `AGENTS.md` Layer-1 memory rules, so the project gets both the workflow and the memory discipline. Skip the memory half with `CYBEROS_NO_MEMORY=1`.
 
-`install` also runs the FR migration automatically (skip with `CYBEROS_NO_MIGRATE=1`): pre-existing FRs move to the folder-per-FR layout (root-level flat FRs included - module comes from frontmatter `module:`, else the FR id segment), a `CHANGELOG.md` is seeded once if the repo has none, and the status page (Roadmap | Backlog | Changelog tabs) is (re)generated at `docs/status/` - a folder holding `index.html` plus `assets/` (stylesheet + favicon), titled after the target repo (never "CyberOS" for someone else's project). That one page REPLACES the old standalone documents: a pre-existing `docs/BACKLOG.md` is adopted into `docs/feature-requests/BACKLOG.md` and a `docs/CHANGELOG.md` into the root `CHANGELOG.md` (content preserved, each only when the canonical home is empty), then any remaining `docs/ROADMAP.md` / `docs/BACKLOG.md` / `docs/CHANGELOG.md` is REMOVED - the page is those documents now, and git history keeps the old text. The migration ends with a machine-readable verify line (`cyberos-migrate verify: fr_specs=N flat_fr_files_remaining=0 fr_folders_missing_spec=0 status_page=present`) and WARNs for anything it could not place.
+`install` also runs the task migration automatically (skip with `CYBEROS_NO_MIGRATE=1`): pre-existing tasks move to the folder-per-task layout (root-level flat tasks included - module comes from frontmatter `module:`, else the task id segment), a `CHANGELOG.md` is seeded once if the repo has none, and the status page (Roadmap | Backlog | Changelog tabs) is (re)generated at `docs/status/` - a folder holding `index.html` plus `assets/` (stylesheet + favicon), titled after the target repo (never "CyberOS" for someone else's project). That one page REPLACES the old standalone documents: a pre-existing `docs/BACKLOG.md` is adopted into `docs/tasks/BACKLOG.md` and a `docs/CHANGELOG.md` into the root `CHANGELOG.md` (content preserved, each only when the canonical home is empty), then any remaining `docs/ROADMAP.md` / `docs/BACKLOG.md` / `docs/CHANGELOG.md` is REMOVED - the page is those documents now, and git history keeps the old text. The migration ends with a machine-readable verify line (`cyberos-migrate verify: task_specs=N flat_task_files_remaining=0 task_folders_missing_spec=0 status_page=present`) and WARNs for anything it could not place.
 
-The page stays synced with the markdown it renders - markdown remains the record of truth, the page only renders it. Two auto-sync touchpoints: a managed `pre-commit` hook (installed only when no foreign hook exists; never blocks a commit; `CYBEROS_NO_HOOK=1` skips) regenerates `docs/status/` whenever `docs/feature-requests/**`, `CHANGELOG.md`, or `VERSION` is staged, and `run-gates.sh` regenerates it after every gates run. Manual refresh any time: `bash .cyberos/lib/status-page.sh`.
+The page stays synced with the markdown it renders - markdown remains the record of truth, the page only renders it. Two auto-sync touchpoints: a managed `pre-commit` hook (installed only when no foreign hook exists; never blocks a commit; `CYBEROS_NO_HOOK=1` skips) regenerates `docs/status/` whenever `docs/tasks/**`, `CHANGELOG.md`, or `VERSION` is staged, and `run-gates.sh` regenerates it after every gates run. Manual refresh any time: `bash .cyberos/lib/status-page.sh`.
 
 ## What init writes: tracked vs gitignored
 
@@ -19,12 +19,12 @@ One managed block in `.gitignore` (between `# >>> cyberos ... >>>` and `# <<< cy
 | `.cyberos/` (machine, gates.env, config.yaml, BRAIN store, render intermediates, migration kit)    | gitignored  | regenerable via init; BRAIN is local tenant data              |
 | `docs/status/` (index.html + assets/ - the generated Roadmap / Backlog / Changelog page)           | tracked     | the repo's published status view; replaces standalone docs    |
 | `.git/hooks/pre-commit` (cyberos-status-hook, when no foreign hook exists)                          | local       | auto-regenerates docs/status/ when its inputs are committed   |
-| skill symlinks (`.claude/skills/ship-feature-requests`, ...)                                        | gitignored  | they point INTO the ignored `.cyberos/`                     |
+| skill symlinks (`.claude/skills/ship-tasks`, ...)                                        | gitignored  | they point INTO the ignored `.cyberos/`                     |
 | skill copies (`CYBEROS_COPY_SKILLS=1`)                                                              | tracked     | self-contained; commit them                                   |
 | `AGENTS.md` + pointer files (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.grok/GROK.md`, ...) | tracked     | teammates' agents need them                                   |
 | `.mcp.json`, `.cursor/mcp.json`                                                                   | tracked     | project MCP registration for the whole team                   |
-| `docs/feature-requests/**` (BACKLOG.md, specs, audits)                                              | tracked     | the work record itself                                        |
-| `docs/feature-requests/.workflow/*.ship.json`                                                        | gitignored  | run state (nested .gitignore, FR-CUO-206)                     |
+| `docs/tasks/**` (BACKLOG.md, specs, audits)                                              | tracked     | the work record itself                                        |
+| `docs/tasks/.workflow/*.ship.json`                                                        | gitignored  | run state (nested .gitignore, TASK-CUO-206)                     |
 | `CHANGELOG.md`                                                                                      | tracked     | release history; feeds the status page's Changelog tab        |
 
 Existing files are never clobbered: `BACKLOG.md`, `CHANGELOG.md`, `config.yaml`, pointer files, and `.mcp.json` are create-if-absent; `AGENTS.md` gets a marked append at most once; `gates.env` is regenerated with a timestamped backup; the vendored machine (`.cyberos/cuo|plugin|mcp`) is replaced wholesale on every init (that is the update path).
@@ -33,13 +33,13 @@ Existing files are never clobbered: `BACKLOG.md`, `CHANGELOG.md`, `config.yaml`,
 
 Two layers:
 
-- The machine (doc-driven, always works): three normative docs - `ship-feature-requests.md`, `EXECUTION-DISCIPLINE.md`, `STATUS-REFERENCE.md`. An agent (Claude Code, Cowork, Codex) given these drives a feature-request through implement -> review -> test -> done.
+- The machine (doc-driven, always works): three normative docs - `ship-tasks.md`, `EXECUTION-DISCIPLINE.md`, `STATUS-REFERENCE.md`. An agent (Claude Code, Cowork, Codex) given these drives a task through implement -> review -> test -> done.
 - The gates (repo-local): a runner that shells out to the target repo's own build/lint/test/coverage. Full deterministic gates (caf, awh) vendor in only if the source repo has them; otherwise the reduced-profile floor applies.
 
 Two rules hold on every channel:
 
 - HITL is required. The agent halts at review acceptance (`reviewing -> ready_to_test`) and final acceptance (`testing -> done`) for a recorded human verdict, and never sets `done` itself.
-- Improvement is not separate. Hardening/refactor/audit work is a feature-request with `class: improvement`; same lifecycle.
+- Improvement is not separate. Hardening/refactor/audit work is a task with `class: improvement`; same lifecycle.
 
 Profiles: `reduced` = doc-driven + the repo's own build/lint/test + coverage + code review + the two human gates (works anywhere). `full` = reduced plus the vendored caf/awh deterministic gates (when the pack was built from a repo that has them). `manifest.yaml` in a built pack records which you have.
 
@@ -93,20 +93,20 @@ git submodule add <payload-repo-url> .cyberos-init
 bash .cyberos-init/install.sh
 ```
 
-### 2a. What the payload covers (FR-CUO-209)
+### 2a. What the payload covers (TASK-CUO-209)
 
 The payload vendors the FULL 14-stage SDP skill catalog (52 skills: 24 author/audit
 pairs + the four NFR singles) - SOW through decommissioning. The two commands automate
 stages 5-10; everything else is standalone-invocable. See the lifecycle map in GUIDE.md.
 
-### 2b. Update awareness (FR-IMP-070)
+### 2b. Update awareness (TASK-IMP-070)
 
 `install.sh --check <repo>` reports three values - `installed=`, `payload=`, `latest=` (the newest
 published release, resolved by `check-latest.sh` with a 3s budget; `CYBEROS_OFFLINE=1` skips it) -
 plus one `verdict=` line (`up_to_date` | `repo_stale` | `payload_stale`) and the exact `next:`
 command. Machine-parseable key=value lines; the desktop Ops tab and `/version` consume them.
 
-### 3. One-liner curl | sh (from GitHub Releases - FR-IMP-069)
+### 3. One-liner curl | sh (from GitHub Releases - TASK-IMP-069)
 
 ```bash
 tar -czf cyberos.tar.gz -C dist cyberos     # publish this to a URL
@@ -121,16 +121,16 @@ curl -fsSL https://raw.githubusercontent.com/cyberskill-official/cyberos/main/to
 
 ### 4. Claude plugin (available)
 
-The payload IS a plugin marketplace: `dist/cyberos/.claude-plugin/marketplace.json` catalogs the plugin at `dist/cyberos/plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`; the `/install`, `/version`, `/status`, `/help` commands and the `ship-feature-requests` skill (typeable as `/ship-feature-requests`, and used automatically when you ask to ship an FR)). Install:
+The payload IS a plugin marketplace: `dist/cyberos/.claude-plugin/marketplace.json` catalogs the plugin at `dist/cyberos/plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`; the `/install`, `/version`, `/status`, `/help` commands and the `ship-tasks` skill (typeable as `/ship-tasks`, and used automatically when you ask to ship a task)). Install:
 
 - Claude Code: `/plugin marketplace add /path/to/dist/cyberos`, then `/plugin install cyberos@cyberos`.
 - Claude desktop / Cowork: the Add picker wants a FILE - use `dist/cyberos/cyberos.plugin` (the one-file bundle build.sh produces; selecting a folder greys the Open button). The folder route works where marketplaces are supported: add `dist/cyberos` as a marketplace (its root carries `.claude-plugin/marketplace.json`).
 
-Then run `/install` in a repo and `/ship-feature-requests` (or just ask to ship the next FR) to drive the backlog; `/version` and `/status` keep the repo current, `/help` orients a new user.
+Then run `/install` in a repo and `/ship-tasks` (or just ask to ship the next task) to drive the backlog; `/version` and `/status` keep the repo current, `/help` orients a new user.
 
 ### 4b. Every other agent (Codex, Cursor, Gemini, Antigravity, Grok, zcode, Command Code, Copilot, Windsurf) - agent-independent
 
-The core is doc-driven, so no plugin is required for any agent. `install.sh` writes the canonical `AGENTS.md` spine plus each agent's preferred pointer file (all create-if-absent), and installs the `ship-feature-requests` skill natively into every skill-aware agent's folder (`.claude/skills`, `.grok/skills`, `.commandcode/skills`, `.codex/skills`, `.opencode/skill`) so it is invocable as `/ship-feature-requests` or `$ship-feature-requests`, not just prose. It also drops `.cyberos/AGENT-ENTRY.md`, the one-page canonical trigger. See the Agent support matrix above. Point any file-and-shell agent at `AGENTS.md` (or `.cyberos/AGENT-ENTRY.md`) and it drives the same workflow, the same gates, the same required human verdicts. The Claude plugin is convenience sugar, not a dependency.
+The core is doc-driven, so no plugin is required for any agent. `install.sh` writes the canonical `AGENTS.md` spine plus each agent's preferred pointer file (all create-if-absent), and installs the `ship-tasks` skill natively into every skill-aware agent's folder (`.claude/skills`, `.grok/skills`, `.commandcode/skills`, `.codex/skills`, `.opencode/skill`) so it is invocable as `/ship-tasks` or `$ship-tasks`, not just prose. It also drops `.cyberos/AGENT-ENTRY.md`, the one-page canonical trigger. See the Agent support matrix above. Point any file-and-shell agent at `AGENTS.md` (or `.cyberos/AGENT-ENTRY.md`) and it drives the same workflow, the same gates, the same required human verdicts. The Claude plugin is convenience sugar, not a dependency.
 
 ### 5. GitHub Action (available)
 
@@ -154,7 +154,7 @@ cyberos-gates: ; bash .cyberos/cuo/gates/run-gates.sh
 
 ### 8. MCP server (available) - any MCP agent, zero files
 
-`dist/cyberos/mcp/cyberos-mcp.mjs` is a zero-dependency Node stdio MCP server exposing `fr_init`, `fr_gates`, `fr_status`, and `ship_fr`. Any MCP-capable agent (Codex, zcode, Antigravity, Cursor, Claude Code, Command Code) triggers the workflow tool-natively. `install.sh` vendors it to `.cyberos/mcp/` and writes `.mcp.json` (and `.cursor/mcp.json`) when absent. Registration snippets for every agent: `mcp/README.md`. `ship_fr` hands the agent the HITL-gated trigger - it never self-accepts. Quick check:
+`dist/cyberos/mcp/cyberos-mcp.mjs` is a zero-dependency Node stdio MCP server exposing `task_init`, `task_gates`, `task_status`, and `ship_task`. Any MCP-capable agent (Codex, zcode, Antigravity, Cursor, Claude Code, Command Code) triggers the workflow tool-natively. `install.sh` vendors it to `.cyberos/mcp/` and writes `.mcp.json` (and `.cursor/mcp.json`) when absent. Registration snippets for every agent: `mcp/README.md`. `ship_task` hands the agent the HITL-gated trigger - it never self-accepts. Quick check:
 
 ```bash
 printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
@@ -184,7 +184,7 @@ bash dist/cyberos/create.sh ../my-new-project     # git init + skeleton + instal
 ### Planned channels (say the word and I will build them)
 
 - Homebrew tap and Nix flake - `brew install cyberos` / `nix run`.
-- Published npm package (`npx cyberos-init`). The curl one-liner + hosted payload shipped via GitHub Releases (FR-IMP-069).
+- Published npm package (`npx cyberos-init`). The curl one-liner + hosted payload shipped via GitHub Releases (TASK-IMP-069).
 
 ### Add your own agent
 
@@ -192,8 +192,8 @@ Every agent is one data row in `install.sh`. For an instruction pointer file: ad
 
 ## After install: trigger, gate, sign off
 
-1. Write an FR: `cp .cyberos/cuo/templates/FR-TEMPLATE.md docs/feature-requests/FR-001-<slug>.md`, fill section 1, set `status: ready_to_implement`, add the row to `BACKLOG.md`.
-2. Trigger: tell your agent to follow `.cyberos/cuo/ship-feature-requests.md` and drive the next eligible FR, HITL required, `repo_root` = this repo. (Or `/ship-feature-requests` with the plugin.)
+1. Write a task: `cp .cyberos/cuo/templates/task-TEMPLATE.md docs/tasks/TASK-001-<slug>.md`, fill section 1, set `status: ready_to_implement`, add the row to `BACKLOG.md`.
+2. Trigger: tell your agent to follow `.cyberos/cuo/ship-tasks.md` and drive the next eligible task, HITL required, `repo_root` = this repo. (Or `/ship-tasks` with the plugin.)
 3. Gate: `bash .cyberos/cuo/gates/run-gates.sh`.
 4. Sign off: you record the review verdict and the final acceptance. The agent never sets `done`.
 
@@ -201,7 +201,7 @@ Every agent is one data row in `install.sh`. For an instruction pointer file: ad
 
 The pack is a build artifact. When the workflow improves in CyberOS, rebuild (`build.sh`) and re-distribute; consumers re-run `install.sh` (it backs up `gates.env` and never clobbers your BACKLOG).
 
-## Gate autodetection + per-repo config (FR-CUO-207)
+## Gate autodetection + per-repo config (TASK-CUO-207)
 
 `/install` detects gate commands per stack (union across stacks; first claim per gate wins; a command is
 never invented when its marker file is absent - root-only scanning):
@@ -221,6 +221,6 @@ never invented when its marker file is absent - root-only scanning):
 
 Overrides live in `.cyberos/config.yaml` (scaffolded once, all-commented, detected values shown as
 comments): `gates.build/lint/test/coverage` (each overrides only its own gate), `coverage_threshold`
-(default 90, exported as CYBEROS_COVERAGE_THRESHOLD), `fr_template`, `profile`. `run-gates.sh` prints
+(default 90, exported as CYBEROS_COVERAGE_THRESHOLD), `task_template`, `profile`. `run-gates.sh` prints
 one provenance line per gate: `gate <name>: <cmd> (source: config|autodetect:<stack>|absent)`.
 A malformed config fails loudly with its line number and runs no gate. Unknown keys warn only.

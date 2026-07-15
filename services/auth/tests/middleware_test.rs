@@ -1,4 +1,4 @@
-//! FR-AUTH-004 — JWT-verification middleware integration test.
+//! TASK-AUTH-004 — JWT-verification middleware integration test.
 //!
 //! Boots the in-process axum app, mints a JWT, hits an admin endpoint,
 //! verifies the middleware:
@@ -92,7 +92,7 @@ async fn admin_endpoint_accepts_valid_bearer() {
         sticky_suppress: cyberos_auth::travel_policy::StickySuppress::new(),
         rate_limit: std::sync::Arc::new(cyberos_auth::rate_limit::RateLimiter::new()),
         deny_list: cyberos_auth::deny_list::DenyList::new(),
-        // FR-MEMORY-122: capture is off in tests unless a test installs a Capturer; None = no-op emitters.
+        // TASK-MEMORY-122: capture is off in tests unless a test installs a Capturer; None = no-op emitters.
         capturer: None,
     });
 
@@ -144,7 +144,7 @@ async fn build_app() -> axum::Router {
         sticky_suppress: cyberos_auth::travel_policy::StickySuppress::new(),
         rate_limit: std::sync::Arc::new(cyberos_auth::rate_limit::RateLimiter::new()),
         deny_list: cyberos_auth::deny_list::DenyList::new(),
-        // FR-MEMORY-122: capture is off in tests unless a test installs a Capturer; None = no-op emitters.
+        // TASK-MEMORY-122: capture is off in tests unless a test installs a Capturer; None = no-op emitters.
         capturer: None,
     })
 }

@@ -1,4 +1,4 @@
-//! FR-AI-008 §3 — Jitter helper for exponential backoff.
+//! TASK-AI-008 §3 — Jitter helper for exponential backoff.
 
 use rand::Rng;
 

@@ -33,7 +33,7 @@ def test_checkpointer_and_replay_trace_contract():
 
     row = build_trace_row(
         run_id="run-1",
-        prompt="ship FR-CUO-103",
+        prompt="ship TASK-CUO-103",
         model="claude-sonnet",
         temperature=0.2,
         seed=42,

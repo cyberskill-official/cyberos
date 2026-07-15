@@ -1,4 +1,4 @@
-//! FR-AUTH-003 §1 #6 — slice-1 audit-fix G-006.
+//! TASK-AUTH-003 §1 #6 — slice-1 audit-fix G-006.
 //!
 //! Property test: 100 random tenant pairs × a mix of SELECT/INSERT/UPDATE/
 //! DELETE operations. For each pair (A, B), after setting

@@ -1,6 +1,6 @@
 //! In-memory `RoleMatrix` — the load-bearing performance contract.
 //!
-//! Per FR-AUTH-101 §1 #9 + §1 #21 + DEC-126: role checks MUST complete in
+//! Per TASK-AUTH-101 §1 #9 + §1 #21 + DEC-126: role checks MUST complete in
 //! < 50 µs at p99 against an in-memory snapshot. Per-request DB lookups are
 //! forbidden. The matrix is loaded at boot and refreshed every 60 s by a
 //! tokio task (refresher not yet wired — load-once-at-boot is the Wave 2
@@ -15,7 +15,7 @@ use std::collections::HashSet;
 pub struct RoleMatrix {
     /// Permitted `(role, resource, action)` tuples. ~280 entries typical.
     grants: HashSet<(Role, Resource, Action)>,
-    /// Catalogue version (FR-AUTH-101 §1 #8 — `rbac_v` JWT claim).
+    /// Catalogue version (TASK-AUTH-101 §1 #8 — `rbac_v` JWT claim).
     version: i32,
 }
 

@@ -9,7 +9,7 @@ phase: P0
 slo: "≥ 99% of incoming messages with In-Reply-To are correctly merged into the parent thread"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-EMAIL-003]
+related_tasks: [TASK-EMAIL-003]
 ---
 
 ## §1 — Statement (BCP-14 normative)

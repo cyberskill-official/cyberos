@@ -1,4 +1,4 @@
-//! FR-CHAT-267 — in-app content reporting, integration tests.
+//! TASK-CHAT-267 — in-app content reporting, integration tests.
 //!
 //! Drives the REAL router in-process (`tower::ServiceExt::oneshot`), the same way
 //! `services/auth/tests/admin_subject_create_test.rs` does, against a live Postgres with the chat
@@ -18,7 +18,7 @@
 //! one database. Each test seeds its own tenant + subjects (fresh UUIDs), so they do not collide on data —
 //! but the rate-limit counter is per-subject and the suite is cheaper to reason about run serially.
 //!
-//! AC coverage map (§4 of the FR):
+//! AC coverage map (§4 of the task):
 //!   AC 1,2,3   snapshot_survives_edit_and_delete
 //!   AC 4       non_member_cannot_report_a_message
 //!   AC 5       subject_report_needs_no_shared_channel
@@ -42,7 +42,7 @@ use std::sync::Arc;
 use tower::ServiceExt;
 use uuid::Uuid;
 
-const HS256_SECRET: &[u8] = b"cyberos-chat-test-secret-fr-chat-267";
+const HS256_SECRET: &[u8] = b"cyberos-chat-test-secret-task-chat-267";
 
 // ── Harness ──────────────────────────────────────────────────────────────────────────────────────
 
@@ -117,7 +117,7 @@ fn app(pool: PgPool) -> axum::Router {
         presence: realtime::Presence::default(),
         notifier: Notifier::default(),
         attachments: storage::AttachmentConfig::default(),
-        // FR-CHAT-268 added this field; reports does not exercise blocking, so a cold cache.
+        // TASK-CHAT-268 added this field; reports does not exercise blocking, so a cold cache.
         blocks: cyberos_chat::blocks::BlockCache::default(),
     })
 }
@@ -263,7 +263,7 @@ async fn count_reports(pool: &PgPool, tenant: Uuid) -> i64 {
 
 // ── Tests ────────────────────────────────────────────────────────────────────────────────────────
 
-/// AC 1, 2, 3 — the clause the whole FR turns on (§1 #4). The sender can edit and soft-delete the message
+/// AC 1, 2, 3 — the clause the whole task turns on (§1 #4). The sender can edit and soft-delete the message
 /// after it is reported; the snapshot must still hold the ORIGINAL text and the original sender.
 #[tokio::test]
 #[ignore = "requires Postgres (DATABASE_URL)"]
@@ -399,7 +399,7 @@ async fn resolved_report_does_not_block_a_new_one() {
     let (s1, _) = post_report(&app, &tok, body.clone()).await;
     assert_eq!(s1, StatusCode::CREATED);
 
-    // FR-CHAT-269 is the only real writer of `status`; here we stand in for it.
+    // TASK-CHAT-269 is the only real writer of `status`; here we stand in for it.
     let mut tx = tenant_tx(&pool, s.tenant).await;
     sqlx::query("UPDATE chat_reports SET status = 'dismissed', resolved_at = now() WHERE target_message_id = $1")
         .bind(msg)

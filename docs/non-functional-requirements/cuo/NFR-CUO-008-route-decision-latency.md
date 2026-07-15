@@ -9,7 +9,7 @@ phase: P1
 slo: "p95 < 1.5s for cyberos-cuo route <natural-language>"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-CUO-101]
+related_tasks: [TASK-CUO-101]
 ---
 
 ## §1 — Statement (BCP-14 normative)

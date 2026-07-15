@@ -1,4 +1,4 @@
-//! FR-AUTH-005 §1 #5 + #9 + G-005/G-009 — HMAC-SHA256-signed pagination cursors.
+//! TASK-AUTH-005 §1 #5 + #9 + G-005/G-009 — HMAC-SHA256-signed pagination cursors.
 //!
 //! Cursor wire format (decoded from URL-safe base64, no padding):
 //!
@@ -25,10 +25,10 @@
 //! unset) the key falls back to `SHA256("cyberos-cursor-dev-key-only")` with
 //! a startup warning so cursors remain functional during local development.
 //! In production the operator MUST set the env var alongside the JWT
-//! signing key (FR-AUTH-005 §1 #9: "same deployment secret as JWT signing,
+//! signing key (TASK-AUTH-005 §1 #9: "same deployment secret as JWT signing,
 //! separate scope: cursor signing key derived via HKDF").
 //!
-//! See also: FR-AUTH-001 §1 #11 for the structured `{error, field, reason}`
+//! See also: TASK-AUTH-001 §1 #11 for the structured `{error, field, reason}`
 //! response body shape used by [`ParseCursorError::into_response`].
 
 use std::sync::OnceLock;
@@ -58,7 +58,7 @@ impl CursorTable {
 
 /// Parse-time errors. Every variant maps to a `400 BAD_REQUEST` with the
 /// structured `{error: "invalid_cursor", field, reason}` body per
-/// FR-AUTH-005 §1 #9.
+/// TASK-AUTH-005 §1 #9.
 #[derive(Debug, Eq, PartialEq)]
 pub enum ParseCursorError {
     Base64,

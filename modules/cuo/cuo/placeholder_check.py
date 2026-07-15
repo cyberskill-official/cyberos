@@ -1,4 +1,4 @@
-"""Placeholder-syntax detector for FR-SKILL-115 / SKB-030.
+"""Placeholder-syntax detector for TASK-SKILL-115 / SKB-030.
 
 Identifies stale `<placeholder>` tokens in SKILL.md frontmatter values.
 
@@ -12,7 +12,7 @@ Used by:
   `python -m cuo.placeholder_check --catalog modules/skill/`
 - CI gate: integrates with the existing CUO pytest suite
 
-Per FR-SKILL-115 §3.
+Per TASK-SKILL-115 §3.
 """
 
 from __future__ import annotations
@@ -128,7 +128,7 @@ def summarize(results: dict[str, ScanResult], status_filter: str | None = None) 
     """Produce a human-readable summary of run_all() results.
 
     `status_filter` (optional): if provided, only count skills at that frontmatter
-    status. (Not yet wired — placeholder for future status-based gating per FR-115 §1 #11.)
+    status. (Not yet wired — placeholder for future status-based gating per TASK-115 §1 #11.)
     """
     total = len(results)
     exempt = sum(1 for r in results.values() if r.exempt)

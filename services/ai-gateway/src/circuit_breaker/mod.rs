@@ -1,4 +1,4 @@
-//! FR-AI-009 — Circuit breaker per (provider, model) with half-open recovery probing.
+//! TASK-AI-009 — Circuit breaker per (provider, model) with half-open recovery probing.
 
 use std::sync::atomic::{AtomicU32, AtomicU64, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};

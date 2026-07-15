@@ -1,9 +1,9 @@
-//! FR-AUTH-110 §1 #6 + DEC-2492 - OIDC + RFC 8414 provider discovery.
+//! TASK-AUTH-110 §1 #6 + DEC-2492 - OIDC + RFC 8414 provider discovery.
 //!
 //! `GET /.well-known/openid-configuration` returns this so first-party RPs
 //! (Mattermost's native OIDC connector, the portal) discover the endpoints
 //! without hard-coding them. `issuer` is the single configured canonical AUTH URL
-//! (DEC-2498); `jwks_uri` is the existing FR-AUTH-004 `/.well-known/jwks.json`
+//! (DEC-2498); `jwks_uri` is the existing TASK-AUTH-004 `/.well-known/jwks.json`
 //! (DEC-2481, one key system). The document pins the safe OIDC profile: code
 //! response type only, authorization_code grant, S256 PKCE, RS256 id_token.
 

@@ -32,7 +32,7 @@
 
 | rule_id | Heading | Severity |
 | ------- | ------- | -------- |
-| `SEC-001` | `## 1. Correctness vs Ticket` (does the diff implement the linked FR?) | error |
+| `SEC-001` | `## 1. Correctness vs Ticket` (does the diff implement the linked task?) | error |
 | `SEC-002` | `## 2. Readability` (naming, comments, structure) | error |
 | `SEC-003` | `## 3. Test Coverage` (new code covered? coverage % vs DoD threshold?) | error |
 | `SEC-004` | `## 4. Secrets / Credentials` (any hard-coded secrets? .env in diff?) | error |
@@ -100,7 +100,7 @@
 | `XCHAIN-001` | `provenance.source_path` matches author manifest | warning |
 | `XCHAIN-002` | `provenance.source_hash` matches at write time | error |
 | `XCHAIN-003` | `linked_impl_plan` resolves to an impl-plan that passed implementation-plan-audit at 10/10 | error |
-| `XCHAIN-004` | The linked FR's `priority` matches the urgency of the review (P0 PRs reviewed within SLA) | info |
+| `XCHAIN-004` | The linked task's `priority` matches the urgency of the review (P0 PRs reviewed within SLA) | info |
 
 ## §9  Staleness
 

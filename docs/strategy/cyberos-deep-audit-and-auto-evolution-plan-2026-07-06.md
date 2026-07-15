@@ -1,17 +1,17 @@
 # CyberOS deep audit and auto-evolution plan (2026-07-06)
 
-Purpose: a full-repo investigation of CyberOS with concrete recommendations to strengthen the platform, ending in a staged program that turns today's operator-driven loop into a system that fine-tunes and evolves itself. Method: three targeted audits (architecture and services; autonomy and evolution infrastructure; devops, security, observability), a verification pass that re-checked every load-bearing claim against the working tree, and outside research on self-improving agent systems (sources at the end). Recommendations are numbered R1-R52 so they can be referenced, turned into FRs, or fed to the backlog engine directly.
+Purpose: a full-repo investigation of CyberOS with concrete recommendations to strengthen the platform, ending in a staged program that turns today's operator-driven loop into a system that fine-tunes and evolves itself. Method: three targeted audits (architecture and services; autonomy and evolution infrastructure; devops, security, observability), a verification pass that re-checked every load-bearing claim against the working tree, and outside research on self-improving agent systems (sources at the end). Recommendations are numbered R1-R52 so they can be referenced, turned into tasks, or fed to the backlog engine directly.
 
 ## 1. Where the project stands
 
 The numbers, verified 2026-07-06 on `main`:
 
 - 100,037 lines of Rust across 465 files in `services/`, 18 workspace crates (13 services + 5 shared crates). P0 stack (auth, chat, eval, Caddy) is live at https://os.cyberskill.world; 8 images in `deploy/vps/docker-compose.p0.yml`.
-- 613 markdown files under `docs/feature-requests/`; by frontmatter grep: 141 draft, 113 done, 13 implementing, 5 ready_to_implement, 1 blocked, 20 superseded.
+- 613 markdown files under `docs/tasks/`; by frontmatter grep: 141 draft, 113 done, 13 implementing, 5 ready_to_implement, 1 blocked, 20 superseded.
 - 17 GitHub Actions workflows, including domain-specific gates (awh-gate, rls-property-gate, cache-isolation-gate, obs-correlation-gate, vn-pii-recall, zdr-staleness-check).
 - 49 migration files across services mention ROW LEVEL SECURITY; auth alone carries 32 migrations.
 - `modules/`: 26 directories, but roughly 88% are spec-only. Real code: memory (~28k LOC Python, 42 test files), cuo (~16k LOC, 20 tests), skill (small stub).
-- The dream loop (FR-CUO-204) is armed: `modules/cuo/config/dream.yaml` has `enabled: true`, `mode: propose`, a 30-minute idle window, hard caps (5 changes per window, 600 s wall clock), an allowlist limited to SKILL.md/workflow/threshold files, a denylist covering auth, audit, RLS, PII, cost ledger, secrets, deploy and tooling paths, plus a `CYBEROS_DREAM_KILL` env kill switch. Auto-apply requires mode `auto` AND a runtime `--allow-auto-apply` flag: triple-locked.
+- The dream loop (TASK-CUO-204) is armed: `modules/cuo/config/dream.yaml` has `enabled: true`, `mode: propose`, a 30-minute idle window, hard caps (5 changes per window, 600 s wall clock), an allowlist limited to SKILL.md/workflow/threshold files, a denylist covering auth, audit, RLS, PII, cost ledger, secrets, deploy and tooling paths, plus a `CYBEROS_DREAM_KILL` env kill switch. Auto-apply requires mode `auto` AND a runtime `--allow-auto-apply` flag: triple-locked.
 - `.awh/` evidence logs exist and are small but real: 7 evolution-log entries, 136 promotion-log entries.
 - `apps/web` (Vite + React + TS) is ~5.5k LOC with `strict: true` TS and zero test tooling (no vitest, no Playwright, no test script in package.json).
 
@@ -21,8 +21,8 @@ Read together: the platform is production-real, unusually well documented for it
 
 Keep and build on these; several are ahead of industry practice.
 
-- FR discipline. Uniform frontmatter (id, status, priority, depends_on, effort, ai_authorship, eu_ai_act_risk_class) makes the backlog machine-plannable; `backlog_reader.py` already computes dependency cones, and `scripts/rebaseline_fr_status.py` keeps BACKLOG.md honest.
-- The awh gate. `scripts/caf_gate.sh` + `scripts/awh_ai_gate.sh` give a deterministic testing-to-done gate with sealed per-FR audits under `docs/feature-requests/_audits/`, and outcomes append to immutable JSONL logs in `.awh/`.
+- Task discipline. Uniform frontmatter (id, status, priority, depends_on, effort, ai_authorship, eu_ai_act_risk_class) makes the backlog machine-plannable; `backlog_reader.py` already computes dependency cones, and `scripts/rebaseline_task_status.py` keeps BACKLOG.md honest.
+- The awh gate. `scripts/caf_gate.sh` + `scripts/awh_ai_gate.sh` give a deterministic testing-to-done gate with sealed per-task audits under `docs/tasks/_audits/`, and outcomes append to immutable JSONL logs in `.awh/`.
 - The memory protocol. `AGENTS.md` is a normative, RFC-2119 spec for a hash-chained, lock-disciplined, ACL-guarded store, with dreaming semantics (snapshot, precondition on body hash, audit rows) already specified. Decision ledger entries (DEC-xxxx) persist rationale across sessions.
 - A fenced self-modification loop. The dream loop's enablement ladder, envelope, caps and kill switch match current published safety practice for self-evolving agents better than most research prototypes do.
 - Security groundwork. NIST-aligned password policy, bcrypt, OIDC with JWKS (rotation refetch shipped), non-root slim containers, wide RLS coverage, per-IP and per-account login rate limits, nightly attachment backups, tracked env files limited to `*.example`.
@@ -40,7 +40,7 @@ Keep and build on these; several are ahead of industry practice.
 - R6. Remove the ~16 panic sites flagged in obs-proxy and mcp-gateway hot paths; a panicking proxy is an outage amplifier.
 - R7. Finish `shared/cyberos-audit-chain` (currently ~129 LOC) to fully match the AGENTS.md chain spec, and property-test it. It is the trust anchor for memory, eval and the BRAIN; it should be the best-tested code in the repo.
 - R8. Generate OpenAPI per service (utoipa) from the axum routes and publish to the wiki. This enables typed clients, contract tests (R14) and an API-drift gate.
-- R9. Resolve the spec-only Python modules honestly: mark them `spec` in a manifest (they already serve as excellent specs) rather than leaving 20+ importable-looking packages that contain no code. The FR catalog remains the source of truth.
+- R9. Resolve the spec-only Python modules honestly: mark them `spec` in a manifest (they already serve as excellent specs) rather than leaving 20+ importable-looking packages that contain no code. The task catalog remains the source of truth.
 - R10. Write a short API versioning and deprecation policy (all routes are /v1 today); the moment a second consumer appears (mobile, partners), silent breaking changes become incidents.
 
 ### 3.2 Testing and quality gates
@@ -50,7 +50,7 @@ Keep and build on these; several are ahead of industry practice.
 - R13. Ban defensive asserts. The memory-writer contract bug shipped because a test asserted `processed == 3 || failed > 0` (docs/KNOWN-ISSUES.md #1). Grep-audit for or-conditions inside asserts and add a review rule: a test must fail when the feature is broken.
 - R14. Add cross-service contract tests: auth JWKS consumed by chat and mcp-gateway; the ai-gateway -> memory writer stdin/stdout contract (which has already bitten once); console/web clients against OpenAPI (R8).
 - R15. Extend the RLS property gate to chat and memory tables and add a scheduled cross-tenant probe against staging (R31): isolation should be continuously proven, not just denied to the dream loop.
-- R16. Make goldensets first-class: `scripts/awh_goldenset_from_fr.py` exists; standardize per-module `.awh/goldenset.yaml`, run them in awh-gate.yml on every PR, and treat every fixed gate failure as a new goldenset case. This is the seed corpus for Stage 1 below.
+- R16. Make goldensets first-class: `scripts/awh_goldenset_from_task.py` exists; standardize per-module `.awh/goldenset.yaml`, run them in awh-gate.yml on every PR, and treat every fixed gate failure as a new goldenset case. This is the seed corpus for Stage 1 below.
 - R17. Add a small load/soak suite (k6) for chat ws fanout, message post, and auth token issuance; record baselines so regressions become gate failures instead of production surprises.
 - R18. Pilot mutation testing (cargo-mutants) on the shared crates. The whole auto-evolution premise is "the gate catches bad changes"; mutation score is the honest measure of that.
 
@@ -101,9 +101,9 @@ Keep and build on these; several are ahead of industry practice.
 
 ### 3.8 Process and knowledge
 
-- R49. Groom the 141 draft FRs with two new frontmatter fields, `value:` and `confidence:`, then rank. The dream loop's proposal ranker (Stage 2) needs exactly this metadata to order work by expected impact.
+- R49. Groom the 141 draft tasks with two new frontmatter fields, `value:` and `confidence:`, then rank. The dream loop's proposal ranker (Stage 2) needs exactly this metadata to order work by expected impact.
 - R50. Backfill ADRs for the big irreversible calls (own-chat-from-scratch, AGE removal, RouterBackend, unified SSO) and cross-link them to DEC ledger entries, so future agents read why, not only what.
-- R51. Add a wiki-link integrity check to the docs gate: broken FR cross-references rot the very corpus agents plan from.
+- R51. Add a wiki-link integrity check to the docs gate: broken task cross-references rot the very corpus agents plan from.
 - R52. Generate CONTINUE-HERE.md instead of hand-writing it: compose it from the decision ledger, BACKLOG deltas and recent git log at session end. The bootstrap doc is load-bearing; it must not be able to go stale.
 
 ## 4. The auto-evolution program
@@ -114,19 +114,19 @@ Target loop: propose -> implement -> verify -> deploy -> measure -> learn. Today
 
 Ship R29, R30, R36, R37-R41. Then two bridges:
 
-- Telemetry -> backlog. A scheduled triage job (the obs.triage-alert skill already sketches it) that converts SLO burns, error clusters and crash signatures into FR drafts with evidence links, deduplicated against open FRs. Production pain becomes proposals without waiting for a human to notice.
+- Telemetry -> backlog. A scheduled triage job (the obs.triage-alert skill already sketches it) that converts SLO burns, error clusters and crash signatures into task drafts with evidence links, deduplicated against open tasks. Production pain becomes proposals without waiting for a human to notice.
 - Gate-failure taxonomy. caf_gate and awh_ai_gate currently record HOLD/PROMOTE; extend the JSONL rows with a structured failure class (build, lint, test-name, flake, audit-conformance) so failures can be mined weekly for systemic fixes and for new goldenset cases.
 
 ### Stage 1 - eval-driven development as the spine (~60 days)
 
 - Per-module goldensets in CI (R16), with thresholds. Deterministic evals gate code; rubric evals gate LLM artifacts.
 - LLM-output regression evals: for GENIE/Lumi-produced artifacts (workflows, assessments, chat answers, triage notes), build small rubric evals scored by an LLM judge that is itself anchored by ~50 human-graded samples; re-anchor quarterly. Run nightly; post the scorecard to chat.
-- Outcome scoring: add `measured_outcome:` to FR frontmatter, filled 2-4 weeks after `done` from telemetry where possible (latency delta, error delta, usage) or a one-line human verdict otherwise. This is the reward signal the learn leg needs; without it the system optimizes for "gate passed", which is not the same as "problem solved".
+- Outcome scoring: add `measured_outcome:` to task frontmatter, filled 2-4 weeks after `done` from telemetry where possible (latency delta, error delta, usage) or a one-line human verdict otherwise. This is the reward signal the learn leg needs; without it the system optimizes for "gate passed", which is not the same as "problem solved".
 - Fix the known eval-integrity hole first (R13); an eval suite with defensive asserts is a placebo.
 
 ### Stage 2 - widen the envelope carefully (after Stages 0-1 have run ~4 weeks)
 
-- Proposal ranking: order dream proposals by value/confidence/risk (R49 metadata + the FR-CUO-202 risk classifier). High-impact low-risk first; `eu_ai_act_risk_class: high` never auto-applies.
+- Proposal ranking: order dream proposals by value/confidence/risk (R49 metadata + the TASK-CUO-202 risk classifier). High-impact low-risk first; `eu_ai_act_risk_class: high` never auto-applies.
 - New gates on auto-apply, beyond the existing three: an LLM spend budget per window (from the R41 ledger), a latency check against SLO baselines (a prompt change that doubles inference time currently passes), and an envelope-drift validator that replays the loop's historical actions against dream.yaml and alerts on any mismatch.
 - Auto-revert: if the first gate run after an auto-applied change regresses, revert without waiting for morning review; keep `cuo.dream_reverted` rows as the learning record.
 - Then flip `mode: auto` for the existing docs/skills/thresholds allowlist only. Code auto-apply comes later and in this order: tests first (the loop may add tests freely), then leaf crates, never the denylist (auth, audit, RLS, PII, cost, deploy), which is already correct.
@@ -136,7 +136,7 @@ Ship R29, R30, R36, R37-R41. Then two bridges:
 
 The published lesson from skill-library agents is blunt: the library is the performance (Voyager's ablation lost 15x task speed without it). CyberOS already has the substrate: 104 skills as SKILL.md files, workflows per persona, and AGENTS.md as the operating context.
 
-- Run an ACE-style loop over that substrate: a Reflector mines session transcripts (AGENTS.md §18 ledger), gate logs and DEC entries for lessons; a Curator merges compact delta entries into the relevant SKILL.md or AGENTS.md section, with dedup and aging. The memory dream detectors (FR-MEMORY-115) already sketch the curation half; connect them.
+- Run an ACE-style loop over that substrate: a Reflector mines session transcripts (AGENTS.md §18 ledger), gate logs and DEC entries for lessons; a Curator merges compact delta entries into the relevant SKILL.md or AGENTS.md section, with dedup and aging. The memory dream detectors (TASK-MEMORY-115) already sketch the curation half; connect them.
 - Paired-trajectory auditing before accepting a skill edit: run old and new skill on the same goldenset tasks and require non-regression; this is the cheap, ground-truth-free check from recent skill-evolution work and maps directly onto the awh gate.
 - Grow the corpus automatically: every fixed production incident and every mined gate failure becomes a goldenset case and, where general, a skill delta. The obs-triage smoke already caught a perfect example (the local model fabricating a runbook URL from the SKILL.md sample): that failure should exist forever as a regression case.
 
@@ -147,7 +147,7 @@ Everything above generates supervised data as a by-product; this stage spends it
 - Data: accepted diffs and answers paired with their task context, harvested from the session ledger, chat, gate outcomes and the R41 call ledger. Curate per domain into ChatML; current practice puts 500-2,000 well-curated examples as the useful band for a LoRA pass, with distillation from accepted frontier-model outputs (where terms allow) filling gaps.
 - Training: QLoRA adapters on a 7-8B open model (Qwen-class) via MLX on the Mac or a short-lived rented GPU; an 8B QLoRA run fits in about 10 GB VRAM and finishes in hours, so weekly refreshes are realistic.
 - Evaluation and rollout: a tuned adapter must beat the base model on the module goldensets and rubric evals before it ships; ship by pointing an ai-gateway alias (for example `chat.fast`) at the adapter, keeping the alias map as the instant rollback. The alias -> model indirection already exists; it is the deployment mechanism.
-- First targets, chosen for cheap wins and contained blast radius: the obs triage assistant (its known fabrication failure is exactly what tuning plus retrieval fixes), Vietnamese business correspondence in the company voice, and FR drafting in house style.
+- First targets, chosen for cheap wins and contained blast radius: the obs triage assistant (its known fabrication failure is exactly what tuning plus retrieval fixes), Vietnamese business correspondence in the company voice, and task drafting in house style.
 
 ### Stage 5 - governance that scales with autonomy (continuous)
 
@@ -158,7 +158,7 @@ Everything above generates supervised data as a by-product; this stage spends it
 
 ## 5. First moves
 
-Thirty days: R19, R23, R27 (cheap, closes real holes); R29, R30, R32 (see and survive production); R12, R16 (test spine + goldensets); R41 (call ledger); the telemetry -> FR bridge prototype. Sixty days: R11, R14, R20, R21, R31, R37-R39; outcome scoring live; nightly eval scorecard in chat; dream loop still in propose but emitting ranked proposals. Ninety days: `mode: auto` for the docs/skills envelope; first QLoRA pilot on obs triage; skill-curation loop running; one full restore drill completed.
+Thirty days: R19, R23, R27 (cheap, closes real holes); R29, R30, R32 (see and survive production); R12, R16 (test spine + goldensets); R41 (call ledger); the telemetry -> task bridge prototype. Sixty days: R11, R14, R20, R21, R31, R37-R39; outcome scoring live; nightly eval scorecard in chat; dream loop still in propose but emitting ranked proposals. Ninety days: `mode: auto` for the docs/skills envelope; first QLoRA pilot on obs triage; skill-curation loop running; one full restore drill completed.
 
 ## 6. Sources
 

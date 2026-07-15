@@ -1,10 +1,10 @@
-//! FR-AI-014 — Persona-version system-prompt injection.
+//! TASK-AI-014 — Persona-version system-prompt injection.
 //!
 //! Loads persona definitions from `<memory-root>/memories/personas/<handle>.md`,
 //! caches them via `ArcSwap`, and verifies source hashes on every load for
 //! tamper detection.
 //!
-//! See FR-AI-014 for normative behaviour and acceptance criteria.
+//! See TASK-AI-014 for normative behaviour and acceptance criteria.
 
 pub mod hash;
 pub mod parse;
@@ -23,7 +23,7 @@ use prometheus::{register_counter_vec, register_int_gauge, CounterVec, IntGauge}
 
 use self::types::REGISTRY;
 
-// ─── Metrics (FR-AI-014 §1 #15) ──────────────────────────────────────────────
+// ─── Metrics (TASK-AI-014 §1 #15) ──────────────────────────────────────────────
 
 static PERSONA_LOADS: Lazy<CounterVec> = Lazy::new(|| {
     register_counter_vec!(

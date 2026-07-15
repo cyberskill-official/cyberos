@@ -1,7 +1,7 @@
 ---
 title: CUO - Appendices & Extended Reference
 source: website/docs/modules/cuo/appendices.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 # CUO appendices
@@ -307,7 +307,7 @@ The Software Development Process (SDP) is the canonical, 14-stage lifecycle that
 2. **PRD (Product Requirements Document):** outcome-focused specification authored by the CPO.
 3. **SRS (Software Requirements Specification):** deep technical translation of the PRD authored by the CTO.
 4. **NFRs (Non-Functional Requirements):** systemic specs (performance, scale, security) authored and audited against the NFR catalog, then certified by the `certify-nfrs` CTO workflow.
-5. **FRs (Feature Requests):** granular, INVEST-compliant backlogs generated from the SRS.
+5. **tasks (Tasks):** granular, INVEST-compliant backlogs generated from the SRS.
 6. **ADR (Architecture Decision Record):** immutable technical decisions guiding the implementation.
 7. **SDD (Software Design Document):** technical blueprints mapping out components.
 8. **Implementation:** writing the code.

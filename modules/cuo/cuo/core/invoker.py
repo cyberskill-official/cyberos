@@ -75,7 +75,7 @@ class Invoker(abc.ABC):
             skill_root: filesystem path to `skill/` (must contain MODULE.md).
             output_dir: directory where step output JSON is written.
             step_num: 1-based step number for filename suffix.
-            file_prefix: optional prefix for output filename (e.g. "FR-AUTH-001_").
+            file_prefix: optional prefix for output filename (e.g. "TASK-AUTH-001_").
 
         Returns:
             StepResult with status + output + output_path + duration.

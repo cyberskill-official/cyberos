@@ -69,7 +69,7 @@ sha2        = { version = "0.10", features = ["oid"] }
 bcrypt      = "0.16"
 jsonwebtoken = "9.3"
 
-# Observability (FR-AI-022)
+# Observability (TASK-AI-022)
 opentelemetry         = { version = "0.27", default-features = false }
 opentelemetry-otlp    = { version = "0.27", features = ["grpc-tonic"] }
 opentelemetry_sdk     = { version = "0.27", features = ["rt-tokio"] }

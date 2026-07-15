@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- FR-APP-004: MSIX manifest for the Microsoft Store channel. Identity values are
+<!-- TASK-APP-004: MSIX manifest for the Microsoft Store channel. Identity values are
      DELIBERATE placeholders (CHANGEME-PENDING-PARTNER-CENTER-RESERVATION) - swapped in by
      Stephen once the Partner Center app-identity reservation exists. tools/msix-identity-lint.sh
      hard-fails any MSSTORE_RELEASE=true build while the placeholder remains, so the inert

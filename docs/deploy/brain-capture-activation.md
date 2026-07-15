@@ -7,12 +7,12 @@ the only one that actually works.
 
 ## What is already built
 
-- Capture: one interaction-event schema (`cyberos-capture` / `services/memory` FR-MEMORY-121) and the chat
-  emitters (`services/chat/src/capture.rs`, FR-MEMORY-122). Message bodies are never copied into the brain -
+- Capture: one interaction-event schema (`cyberos-capture` / `services/memory` TASK-MEMORY-121) and the chat
+  emitters (`services/chat/src/capture.rs`, TASK-MEMORY-122). Message bodies are never copied into the brain -
   events carry a pointer to `chat_messages`, not the text.
 - Consent gate: `SqlConsentGate` reads the acknowledgement ledger and denies by default. An unacknowledged
   person yields zero rows, so no one is recorded until they have acknowledged the current notice.
-- Governance: `services/eval` (FR-EVAL-001) - publish and read the monitoring notice, the
+- Governance: `services/eval` (TASK-EVAL-001) - publish and read the monitoring notice, the
   `subject_acknowledgment` ledger, `POST /v1/eval/ack`, access control, data-subject requests, and retention
   categories.
 - Deploy wiring: the P0 compose already carries `CAPTURE_ENABLED` (default `false`) and

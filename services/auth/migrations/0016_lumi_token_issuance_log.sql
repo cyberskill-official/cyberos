@@ -1,4 +1,4 @@
--- FR-AUTH-108 — Lumi tenant-identity JWT issuance log.
+-- TASK-AUTH-108 — Lumi tenant-identity JWT issuance log.
 --
 -- Lumi is the cloud-hosted org BRAIN that serves as the tenant identity
 -- federation point for Personal BRAINs syncing into a shared CyberSkill

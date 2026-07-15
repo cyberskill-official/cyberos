@@ -1,4 +1,4 @@
-//! FR-EMAIL-001 §1 #17 — append-only bounce log writer.
+//! TASK-EMAIL-001 §1 #17 — append-only bounce log writer.
 
 use crate::errors::EmailResult;
 use crate::types::{BounceEvent, BounceKind};

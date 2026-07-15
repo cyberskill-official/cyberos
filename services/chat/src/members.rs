@@ -1,6 +1,6 @@
 //! Channel membership: add (owner or admin), list (any member), remove (owner, or yourself - leaving),
 //! and role changes (owner only). Roles are owner > admin > member; the channel creator is the first
-//! owner (FR-CHAT-101 slice 2; leave + roles landed with the find-and-organize cluster).
+//! owner (TASK-CHAT-101 slice 2; leave + roles landed with the find-and-organize cluster).
 
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
@@ -134,7 +134,7 @@ pub async fn add(
             serde_json::json!({"channel_id": channel, "subject_id": body.subject_id, "role": body.role}),
         )
         .await;
-        // FR-MEMORY-122 §1 #4, #7 — chat.channel_joined for the ADDED subject (the person whose membership
+        // TASK-MEMORY-122 §1 #4, #7 — chat.channel_joined for the ADDED subject (the person whose membership
         // changed; the consent gate applies to them). Off the response path; no-op unless capture on.
         if let Some(cap) = st.capturer.clone() {
             let joined_subject = body.subject_id;
@@ -252,7 +252,7 @@ pub async fn remove(
         serde_json::json!({"channel_id": channel, "subject_id": subject}),
     )
     .await;
-    // FR-MEMORY-122 §1 #4, #7 — chat.channel_left for the REMOVED subject. Off the response path; no-op
+    // TASK-MEMORY-122 §1 #4, #7 — chat.channel_left for the REMOVED subject. Off the response path; no-op
     // unless capture on.
     if let Some(cap) = st.capturer.clone() {
         tokio::spawn(async move {

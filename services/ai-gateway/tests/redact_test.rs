@@ -1,4 +1,4 @@
-//! FR-AI-011 §4 — Integration tests for PII redaction.
+//! TASK-AI-011 §4 — Integration tests for PII redaction.
 //!
 //! Tests the redact module's HTTP contract with a local mock server
 //! (no real Presidio sidecar needed). Unit tests for PiiType mapping,

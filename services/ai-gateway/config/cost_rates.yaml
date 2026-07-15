@@ -1,10 +1,10 @@
-# FR-AI-007 — Provider cost rates (USD per 1,000 tokens).
+# TASK-AI-007 — Provider cost rates (USD per 1,000 tokens).
 #
 # This file is the canonical source for AI provider pricing.
 # Hot-reloaded by the cost_table module on file change (100ms debounce).
 #
-# Schema: FR-AI-007 §3
-# Validation: `cyberos-ai policy validate` (FR-AI-021)
+# Schema: TASK-AI-007 §3
+# Validation: `cyberos-ai policy validate` (TASK-AI-021)
 
 version: 1
 last_updated: 2026-05-15
@@ -46,7 +46,7 @@ rates:
       output_per_1k_usd: 0.0
       is_embedding: true
 
-  bge:                                          # self-hosted (FR-AI-019) — cost = 0
+  bge:                                          # self-hosted (TASK-AI-019) — cost = 0
     bge-m3:
       input_per_1k_usd:  0.0
       output_per_1k_usd: 0.0

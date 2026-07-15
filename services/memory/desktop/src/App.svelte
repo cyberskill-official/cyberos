@@ -78,7 +78,7 @@
     }
   }
 
-  // ── CyberOS operations (FR-APP-001) ──────────────────────────────────────
+  // ── CyberOS operations (TASK-APP-001) ──────────────────────────────────────
   type OpResult = { ok: boolean; output: string };
   type ProjectInfo = { path: string; name: string; installed_version: string | null };
 
@@ -143,7 +143,7 @@
     <h1 class="text-lg font-semibold tracking-tight">
       CyberOS BRAIN <span class="text-slate-500 font-normal">— desktop</span>
     </h1>
-    <span class="text-xs text-slate-500 font-mono">v0.1.0 · FR-BRAIN-104</span>
+    <span class="text-xs text-slate-500 font-mono">v0.1.0 · TASK-BRAIN-104</span>
   </header>
 
   <nav class="border-b border-slate-800 px-6 flex gap-2">
@@ -202,7 +202,7 @@
         <h2 class="text-base font-medium">Local search</h2>
         <p class="text-sm text-slate-400">
           Calls <code class="font-mono text-xs">POST 127.0.0.1:7901/v1/brain/search</code>
-          via the Rust BRAIN service (FR-BRAIN-108).
+          via the Rust BRAIN service (TASK-BRAIN-108).
         </p>
         <form
           class="flex gap-2"
@@ -244,7 +244,7 @@
         <h2 class="text-base font-medium">CyberOS operations</h2>
         <p class="text-sm text-slate-400">
           Build the distributable payload, then check or init/update any project. Every button
-          runs the canonical <code class="font-mono text-xs">tools/cyberos-init</code> scripts (FR-APP-001).
+          runs the canonical <code class="font-mono text-xs">tools/cyberos-init</code> scripts (TASK-APP-001).
         </p>
 
         <label class="block text-sm text-slate-400">

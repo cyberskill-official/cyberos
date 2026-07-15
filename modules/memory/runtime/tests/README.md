@@ -7,7 +7,7 @@ End-to-end tests that exercise the umbrella binary, the memory-mutation API, and
 ```
 runtime/tests/
 ├── skills/              ← per-skill fixture inputs + expected outputs
-│   └── fr-with-tasks/   ← reference fixtures for the fr-with-tasks runner
+│   └── task-with-subtasks/   ← reference fixtures for the task-with-subtasks runner
 ├── integration/         ← chain-end-to-end tests
 └── conftest.py          ← shared pytest fixtures
 ```
@@ -19,7 +19,7 @@ runtime/tests/
 cd runtime/tests && pytest
 
 # A single skill's tests
-pytest runtime/tests/skills/fr-with-tasks/
+pytest runtime/tests/skills/task-with-subtasks/
 
 # With live LLM (Anthropic API key required; flips into Tier α.10 streaming mode)
 ANTHROPIC_API_KEY=... pytest -m live_llm

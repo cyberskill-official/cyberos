@@ -1,6 +1,6 @@
 # CyberOS CHAT — Mattermost fork at pinned MIT-Apache commit
 
-**Status:** FR-CHAT-001..012 shipped as service slices. FR-CHAT-001 pins the fork, license-drift watcher, and cherry-pick policy; FR-CHAT-002 adds the CyberOS AuthBridge plugin scaffold for AUTH JWT login and tenant propagation; FR-CHAT-003..012 add deploy planning, Vietnamese search, memory bridge, imports, Lumi routing, retro-capture, decommission signal, privacy push, and DSAR export helpers.
+**Status:** TASK-CHAT-001..012 shipped as service slices. TASK-CHAT-001 pins the fork, license-drift watcher, and cherry-pick policy; TASK-CHAT-002 adds the CyberOS AuthBridge plugin scaffold for AUTH JWT login and tenant propagation; TASK-CHAT-003..012 add deploy planning, Vietnamese search, memory bridge, imports, Lumi routing, retro-capture, decommission signal, privacy push, and DSAR export helpers.
 **Upstream:** [`mattermost/mattermost-server`](https://github.com/mattermost/mattermost-server)
 **Pinned commit:** see [`PINNED_COMMIT`](PINNED_COMMIT)
 **CyberOS patch version:** see [`CYBEROS_PATCH_VERSION`](CYBEROS_PATCH_VERSION)
@@ -123,23 +123,23 @@ services/chat/
 ├── config/
 │   └── config.json                     default config baked into image
 ├── patches/                            CyberOS patch series (currently empty)
-│   ├── README.md                       why the series is empty (FR-CHAT-013)
-│   └── superseded/                     closed FR-CHAT-002 auth patches (010, 011)
+│   ├── README.md                       why the series is empty (TASK-CHAT-013)
+│   └── superseded/                     closed TASK-CHAT-002 auth patches (010, 011)
 ├── deploy/
-│   ├── oidc-sso-config.md              FR-CHAT-013 native OIDC SSO runbook
+│   ├── oidc-sso-config.md              TASK-CHAT-013 native OIDC SSO runbook
 │   └── mattermost-oidc.config.json     SSO config fragment (secret via env)
 ├── plugins/
-│   └── cyberos-authbridge/              FR-CHAT-002 plugin source (closed; superseded by FR-CHAT-013)
+│   └── cyberos-authbridge/              TASK-CHAT-002 plugin source (closed; superseded by TASK-CHAT-013)
 ├── scripts/
 │   ├── cyberos-chat                    operator CLI for CyberOS helper surfaces
 │   ├── check-license-drift.sh          drift watcher entry point
 │   └── cherry-pick-upstream.sh         operator cherry-pick helper
-├── cyberos_chat/                       FR-CHAT-003..012 helper package
+├── cyberos_chat/                       TASK-CHAT-003..012 helper package
 └── tests/
     ├── license_drift_test.sh           §5 test: drift detector finds license commits
     ├── pinned_commit_test.sh           §5 test: SHA is 40-char hex
     ├── patch_apply_test.sh             §5 test: patch series applies cleanly
-    └── test_cyberos_chat.py            FR-CHAT-003..012 control-plane tests
+    └── test_cyberos_chat.py            TASK-CHAT-003..012 control-plane tests
 ```
 
 ---
@@ -149,7 +149,7 @@ services/chat/
 - DEC-420 — fork at LATEST MIT-Apache commit; pin SHA.
 - DEC-421 — drift watcher cron; CI fails on drift.
 - DEC-422 — cherry-pick only via reviewed PR; no rebase.
-- FR-CHAT-001 — feature request authoring this fork policy.
-- FR-CHAT-002 - `cyberos-chat-authbridge` plugin (CLOSED, superseded by FR-CHAT-013; a Mattermost plugin cannot replace the core login route).
-- FR-CHAT-013 - native OIDC SSO: Mattermost federates to the FR-AUTH-110 CyberOS OIDC provider via its built-in connector (see `deploy/oidc-sso-config.md`).
-- FR-CHAT-003..012 — deployment, search, memory bridge, imports, Lumi, decommission, push, and DSAR slices.
+- TASK-CHAT-001 — task authoring this fork policy.
+- TASK-CHAT-002 - `cyberos-chat-authbridge` plugin (CLOSED, superseded by TASK-CHAT-013; a Mattermost plugin cannot replace the core login route).
+- TASK-CHAT-013 - native OIDC SSO: Mattermost federates to the TASK-AUTH-110 CyberOS OIDC provider via its built-in connector (see `deploy/oidc-sso-config.md`).
+- TASK-CHAT-003..012 — deployment, search, memory bridge, imports, Lumi, decommission, push, and DSAR slices.

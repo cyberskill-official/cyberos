@@ -4,7 +4,7 @@ When CUO runs inside Claude Code, Cursor, Codex, or another host LLM
 environment, the BriefGenerator produces a self-contained markdown runbook
 that the host LLM follows using its own tools (Read/Write/Edit/Bash).
 
-CUO does the planning (FR resolution, chain validation, input resolution,
+CUO does the planning (task resolution, chain validation, input resolution,
 condition evaluation, SKILL.md reading). The host LLM does the execution
 (code writing, file creation, tests, backlog updates).
 
@@ -20,7 +20,7 @@ from typing import Any
 
 from cuo.core.catalog import PersonaEntry, WorkflowEntry
 from cuo.core.backlog_reader import parse_backlog
-from cuo.core.supervisor import _eval_condition, _find_workflow, _resolve_step_inputs, _resolve_fr
+from cuo.core.supervisor import _eval_condition, _find_workflow, _resolve_step_inputs, _resolve_task
 
 
 # Applier instructions for skills with side effects.
@@ -28,7 +28,7 @@ from cuo.core.supervisor import _eval_condition, _find_workflow, _resolve_step_i
 # generating the skill's output JSON.
 _APPLIER_INSTRUCTIONS: dict[str, str] = {
     "backlog-state-update-author": """After writing the output JSON, you MUST update BACKLOG.md:
-1. Find the row with `{fr_id}` in `docs/feature-requests/BACKLOG.md`
+1. Find the row with `{task_id}` in `docs/tasks/BACKLOG.md`
 2. Replace the Status column (column 5, the cell between the 4th and 5th `|`) with `{new_status}`
 3. Write atomically: write to BACKLOG.md.tmp then rename to BACKLOG.md""",
     "coverage-gate-author": """After writing the output JSON, you MUST:
@@ -39,20 +39,20 @@ _APPLIER_INSTRUCTIONS: dict[str, str] = {
 1. Write the ADR to `docs/adrs/ADR-{NNN}-{slug}.md` with YAML frontmatter
 2. Include: title, adr_id, status, decision_date, decided_by""",
     "implementation-plan-author": """After writing the output JSON, you MUST also:
-1. Write the implementation plan to `docs/feature-requests/{module}/impl-plan-{fr_id}.md`
+1. Write the implementation plan to `docs/tasks/{module}/impl-plan-{task_id}.md`
 2. If the output contains `code_changes`, apply each entry:
    - `"action": "create"` → mkdir -p parent dir, write the file
    - `"action": "modify"` with `"content"` → overwrite the file
    - `"action": "modify"` with `"diff"` → apply the unified diff""",
     "code-review-author": """After writing the output JSON, you MUST also:
-1. Write the code review to `docs/feature-requests/{module}/code-review-{fr_id}.md`
+1. Write the code review to `docs/tasks/{module}/code-review-{task_id}.md`
 2. Include YAML frontmatter with template, verdict, reviewed_at""",
-    "feature-request-audit": """After writing the output JSON, you MUST also:
-1. Write the audit report to `{fr_file_stem}.audit.md` (sibling to the FR spec)
-2. Include YAML frontmatter with fr_id, audited, auditor, verdict, audited_file_sha256""",
+    "task-audit": """After writing the output JSON, you MUST also:
+1. Write the audit report to `{task_file_stem}.audit.md` (sibling to the task spec)
+2. Include YAML frontmatter with task_id, audited, auditor, verdict, audited_file_sha256""",
     "observability-injection-author": """After writing the output JSON, you MUST also:
-1. Write the observability plan to `docs/feature-requests/{module}/obs-injection-{fr_id}.md`
-2. Include YAML frontmatter with template, fr_id, language, subscriber""",
+1. Write the observability plan to `docs/tasks/{module}/obs-injection-{task_id}.md`
+2. Include YAML frontmatter with template, task_id, language, subscriber""",
 }
 
 
@@ -204,7 +204,7 @@ class BriefGenerator:
         workflow: WorkflowEntry,
         skill_root: Path,
         output_dir: Path,
-        fr_id: str,
+        task_id: str,
         inputs: dict | None = None,
         project_root: Path | None = None,
         backlog_path: Path | None = None,
@@ -213,7 +213,7 @@ class BriefGenerator:
         self.workflow = workflow
         self.skill_root = skill_root
         self.output_dir = output_dir
-        self.fr_id = fr_id
+        self.task_id = task_id
         self.inputs = dict(inputs or {})
         self.project_root = _resolve_project_root(output_dir, project_root)
         self.backlog_path = backlog_path
@@ -225,26 +225,26 @@ class BriefGenerator:
         # 1. Build hand_off (same as execute_chain setup phase)
         hand_off = dict(self.inputs)
         hand_off["_cyberos_root"] = str(self.skill_root.parent.parent)
-        hand_off.setdefault("fr_id", self.fr_id)
-        _resolve_fr(hand_off)
+        hand_off.setdefault("task_id", self.task_id)
+        _resolve_task(hand_off)
 
         # 2. Detect project context
         project_ctx = _detect_project_context(self.project_root)
 
-        # 3. Determine start step from FR status
+        # 3. Determine start step from task status
         current_status = "ready_to_implement"
         start_step = 1
         cyberos_root = self.skill_root.parent.parent
         if self.backlog_path is None:
-            backlog_path = cyberos_root / "docs" / "feature-requests" / "BACKLOG.md"
+            backlog_path = cyberos_root / "docs" / "tasks" / "BACKLOG.md"
         else:
             backlog_path = self.backlog_path
         if backlog_path.is_file():
             try:
                 rows = parse_backlog(backlog_path)
-                fr_row = next((r for r in rows if r.fr_id == self.fr_id), None)
-                if fr_row:
-                    current_status = fr_row.status
+                task_row = next((r for r in rows if r.task_id == self.task_id), None)
+                if task_row:
+                    current_status = task_row.status
             except Exception:
                 pass
 
@@ -256,16 +256,16 @@ class BriefGenerator:
             start_step = 21
 
         # 4. Build the brief
-        fr_body = hand_off.get("next_fr", "[FR content not available]")
-        fr_file_path = hand_off.get("fr_file_path", "unknown")
+        task_body = hand_off.get("next_task", "[task content not available]")
+        task_file_path = hand_off.get("task_file_path", "unknown")
 
         # Header
-        parts.append(f"# Execution Brief — {self.fr_id}")
+        parts.append(f"# Execution Brief — {self.task_id}")
         parts.append("")
         parts.append(f"**Workflow:** `{self.workflow.workflow_id}`")
         parts.append(f"**Project:** `{self.project_root}`")
-        parts.append(f"**FR file:** `{fr_file_path}`")
-        parts.append(f"**FR status:** `{current_status}` → start at step {start_step}")
+        parts.append(f"**task file:** `{task_file_path}`")
+        parts.append(f"**task status:** `{current_status}` → start at step {start_step}")
         parts.append(f"**Output dir:** `{self.output_dir}`")
         parts.append("")
 
@@ -276,13 +276,13 @@ class BriefGenerator:
             parts.append(f"- **{k}:** {v}")
         parts.append("")
 
-        # Feature request
-        parts.append("## 2. Feature Request")
+        # Task
+        parts.append("## 2. Task")
         parts.append("")
-        fr_preview = fr_body[:3000] if len(fr_body) > 3000 else fr_body
-        parts.append(fr_preview)
-        if len(fr_body) > 3000:
-            parts.append(f"\n... [truncated, full content in `{fr_file_path}`]")
+        task_preview = task_body[:3000] if len(task_body) > 3000 else task_body
+        parts.append(task_preview)
+        if len(task_body) > 3000:
+            parts.append(f"\n... [truncated, full content in `{task_file_path}`]")
         parts.append("")
 
         # Workflow overview
@@ -332,7 +332,7 @@ class BriefGenerator:
 
             # Phase skipping
             if step_num < start_step:
-                parts.append(f"### Step {step_num}: {skill_name} — **SKIPPED** (FR already `{current_status}`)")
+                parts.append(f"### Step {step_num}: {skill_name} — **SKIPPED** (task already `{current_status}`)")
                 parts.append("")
                 continue
 
@@ -400,8 +400,8 @@ class BriefGenerator:
             applier = _APPLIER_INSTRUCTIONS.get(skill_name)
             if applier:
                 parts.append("**Side Effects:**")
-                # Inject fr_id context
-                applier_text = applier.replace("{fr_id}", self.fr_id)
+                # Inject task_id context
+                applier_text = applier.replace("{task_id}", self.task_id)
                 parts.append(applier_text)
                 parts.append("")
 
@@ -425,13 +425,13 @@ class BriefGenerator:
         # Completion
         parts.append("## 6. Completion")
         parts.append("")
-        parts.append("The FR must reach status `done` in BACKLOG.md.")
+        parts.append("The task must reach status `done` in BACKLOG.md.")
         parts.append("If any step fails, update BACKLOG.md status back to `ready_to_implement`")
         parts.append("and note the failure reason.")
         parts.append("")
         parts.append("Output files go in: `" + str(self.output_dir) + "/`")
         parts.append("Deliverable files (.audit.md, ADR, impl-plan, code-review, etc.)")
-        parts.append("go alongside their respective FR spec files in the project.")
+        parts.append("go alongside their respective task spec files in the project.")
         parts.append("")
 
         # Output format reference

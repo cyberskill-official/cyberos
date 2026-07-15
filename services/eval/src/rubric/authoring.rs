@@ -1,5 +1,5 @@
-//! FR-EVAL-002 human-curated authoring (§1 #2 #3 #4 #5, §1 #12). The create / add-item flow a human (the
-//! founder or a designated rubric admin, gated by FR-EVAL-001 in the handler) uses to build a draft version.
+//! TASK-EVAL-002 human-curated authoring (§1 #2 #3 #4 #5, §1 #12). The create / add-item flow a human (the
+//! founder or a designated rubric admin, gated by TASK-EVAL-001 in the handler) uses to build a draft version.
 //!
 //! Authoring is the ONLY path that puts a row into the rubric in this slice, and it is human-only: every
 //! item is validated by [`super::model::validate_item`] before insert, so an uncited item (§1 #2), a missing
@@ -66,7 +66,7 @@ pub async fn create_rubric(
 ///   3. insert the item, authored_by='human';
 ///   4. emit `eval.rubric_drafted` with the citation (§1 #11).
 ///
-/// `weight` defaults to 0 when the draft omits it (relative within a version; the roll-up is FR-EVAL-003's).
+/// `weight` defaults to 0 when the draft omits it (relative within a version; the roll-up is TASK-EVAL-003's).
 pub async fn add_item(
     pool: &Pool,
     audit_pool: Option<&Pool>,
@@ -148,7 +148,7 @@ pub async fn add_item(
     Ok(item)
 }
 
-/// List the items of a version (§1 #12, the read side of authoring). Tenant-scoped by RLS. FR-EVAL-003 reads
+/// List the items of a version (§1 #12, the read side of authoring). Tenant-scoped by RLS. TASK-EVAL-003 reads
 /// only the items of a PUBLISHED version (via [`super::versioning::resolve_effective`] then this); a draft
 /// version's items are visible here to the authoring surface but are not yet operative.
 pub async fn list_items(

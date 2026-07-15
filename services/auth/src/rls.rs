@@ -1,4 +1,4 @@
-//! FR-AUTH-003 — Row-Level Security registry, boot-time invariant check,
+//! TASK-AUTH-003 — Row-Level Security registry, boot-time invariant check,
 //! 42501 error surfacing, and `cyberos_ops` BYPASSRLS audit emission.
 //!
 //! ### Architecture (per §10.6 spec amendment)
@@ -16,10 +16,10 @@
 //!
 //! This pattern is strictly better than the spec's per-tenant policy model:
 //! O(tables) policies instead of O(tenants × tables), no policy thrash on
-//! tenant onboard, no missed policies on legacy tenants. The FR §10.6 spec
+//! tenant onboard, no missed policies on legacy tenants. The task §10.6 spec
 //! amendment documents the divergence + operator-decision request.
 //!
-//! ### What this module ships (FR-AUTH-003 §10.2)
+//! ### What this module ships (TASK-AUTH-003 §10.2)
 //!
 //!   * `TENANT_SCOPED_TABLES` const — the registry that the boot-time check
 //!     reads (G-001 + G-007 invariant).
@@ -35,7 +35,7 @@ use axum::response::Json;
 use serde_json::{json, Value};
 use sqlx::PgPool;
 
-/// FR-AUTH-003 §1 #1 — the closed registry of tenant-scoped tables that
+/// TASK-AUTH-003 §1 #1 — the closed registry of tenant-scoped tables that
 /// MUST have RLS enabled. Adding a new tenant-scoped table requires:
 ///   1. Append to this list (alphabetical sorted; `rls::tests::list_is_sorted`
 ///      catches misorderings)
@@ -56,7 +56,7 @@ pub const TENANT_SCOPED_TABLES: &[&str] = &[
     "oidc_idp_configs",
     "passkey_enrolment_state",
     "saml_idp_configs",
-    // FR-AUTH-005 §1 #13 + G-013 — sessions tracks active jtis tenant-scoped;
+    // TASK-AUTH-005 §1 #13 + G-013 — sessions tracks active jtis tenant-scoped;
     // RLS prevents tenant-admin from enumerating other tenants' active jtis.
     "sessions",
     "subject_roles",
@@ -66,7 +66,7 @@ pub const TENANT_SCOPED_TABLES: &[&str] = &[
     "travel_policy_audit",
 ];
 
-/// FR-AUTH-003 §1 #9 — boot-time invariant: every table in
+/// TASK-AUTH-003 §1 #9 — boot-time invariant: every table in
 /// `TENANT_SCOPED_TABLES` MUST have `pg_tables.rowsecurity = true` AND at
 /// least one policy. Catches "operator added the table to the registry but
 /// forgot the migration" before traffic is accepted.
@@ -139,7 +139,7 @@ pub async fn verify_rls_at_boot(pool: &PgPool) -> Result<(), String> {
     }
 }
 
-/// FR-AUTH-003 §1 #8 — map Postgres `42501 insufficient_privilege` (the code
+/// TASK-AUTH-003 §1 #8 — map Postgres `42501 insufficient_privilege` (the code
 /// returned when WITH CHECK rejects an INSERT/UPDATE) to a structured 403
 /// `rls_check_violation` body so operators see exactly which table + which
 /// tenants were involved.
@@ -171,13 +171,13 @@ pub fn map_pg_error(err: &sqlx::Error) -> Option<(StatusCode, Json<Value>)> {
     ))
 }
 
-/// FR-AUTH-003 §1 #5 — emit `auth.rls_bypass_used` audit row when
+/// TASK-AUTH-003 §1 #5 — emit `auth.rls_bypass_used` audit row when
 /// application code legitimately uses the `cyberos_ops` BYPASSRLS role
 /// (compliance reports, regulator audits, ops investigations). Best-effort:
 /// failure to write the audit row does NOT block the bypass query (the
 /// alternative — failing legitimate ops queries because the audit table
 /// itself can't be written — is worse). Sev-2 alarm fires on counter
-/// increment beyond baseline (FR-OBS-001 wires the alarm).
+/// increment beyond baseline (TASK-OBS-001 wires the alarm).
 pub async fn emit_cyberos_ops_audit_row(
     pool: &PgPool,
     operator_id: &str,

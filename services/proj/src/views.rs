@@ -1,4 +1,4 @@
-//! FR-PROJ-014..018 — board/timeline/gantt/brief view models + tokens.
+//! TASK-PROJ-014..018 — board/timeline/gantt/brief view models + tokens.
 
 use crate::types::{Issue, IssueStatus};
 use chrono::NaiveDate;

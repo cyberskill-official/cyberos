@@ -1,4 +1,4 @@
--- FR-BRAIN-101 — per-tenant ingest cursor (DEC-073).
+-- TASK-BRAIN-101 — per-tenant ingest cursor (DEC-073).
 --
 -- Each tenant has its own cursor pointing at the highest L1 seq successfully
 -- materialized into l2_memory. On restart, the ingest worker resumes from

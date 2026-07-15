@@ -93,7 +93,7 @@ export function MessageList({
   onDelete: (m: Message) => void;
   onRetry?: (m: Message) => void;
   onLongPress?: (m: Message) => void;
-  /// FR-CHAT-267 — open the report dialog for a message (the §1 #10 message entry point).
+  /// TASK-CHAT-267 — open the report dialog for a message (the §1 #10 message entry point).
   onReport?: (m: Message) => void;
 }) {
   return (

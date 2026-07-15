@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_check_latest.sh - FR-IMP-070 §5 suite (t01-t08 -> AC 1-8).
+# test_check_latest.sh - TASK-IMP-070 §5 suite (t01-t08 -> AC 1-8).
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 repo="$(cd "$here/../../.." && pwd)"

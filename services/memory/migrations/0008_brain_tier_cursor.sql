@@ -1,4 +1,4 @@
--- FR-MEMORY-123 §3 / §1 #1,#6 — the BRAIN ingest cursor + tier watermark, per tenant.
+-- TASK-MEMORY-123 §3 / §1 #1,#6 — the BRAIN ingest cursor + tier watermark, per tenant.
 --
 -- brain_ingest_cursor (§1 #1): the last consumed l1_audit_log.seq per tenant. Persisting it to Postgres
 -- means a restart resumes without re-embedding or skipping (the ingest worker reads it at the start of each

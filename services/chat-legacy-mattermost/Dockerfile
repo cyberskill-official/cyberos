@@ -1,4 +1,4 @@
-# FR-CHAT-001 §1 #2 + §1 #8 — build Mattermost from pinned MIT-Apache commit
+# TASK-CHAT-001 §1 #2 + §1 #8 — build Mattermost from pinned MIT-Apache commit
 # and apply the CyberOS patch series. The image tag MUST include the pinned
 # SHA (short) plus the CyberOS patch series version so operators can identify
 # what is running without inspecting the image manifest.

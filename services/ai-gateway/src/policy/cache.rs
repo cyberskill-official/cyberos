@@ -1,4 +1,4 @@
-//! FR-AI-005 §3 — Lock-free policy cache backed by `arc_swap::ArcSwap`.
+//! TASK-AI-005 §3 — Lock-free policy cache backed by `arc_swap::ArcSwap`.
 //!
 //! AC #9 requires that 1000 tokio tasks × 100 reads each complete in under 1 second on a
 //! 4-core dev machine — i.e. effectively unbounded throughput on the read path. Use

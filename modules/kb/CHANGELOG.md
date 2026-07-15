@@ -9,5 +9,5 @@ Key changes:
 - NEW §0 "The bigger picture" — 3-card layout + KB-in-platform Mermaid + 10-row auto-vs-human matrix
 - Risks +5 (R-KB-011..015): runbook catalogue drift · OBS-KB tight coupling (KB outage breaks triage, High impact) · span-citation drift · vendor-pack malicious markdown · doc-gap-detector underperforms
 - KPIs +5: runbook applicability accuracy · span-citation integrity (= 1.0) · doc-gap-detector signal rate · cross-tenant retrieval reject rate · vendor-pack CSO-review rate (= 1.0)
-- References expanded: §0 + 6 cross-module links + OBS §2.6 auto-runbook contract link + MEMORY_AUTOSYNC_DESIGN.md §6 + AUDIT_AND_PLAN + feature-request-audit skill
+- References expanded: §0 + 6 cross-module links + OBS §2.6 auto-runbook contract link + MEMORY_AUTOSYNC_DESIGN.md §6 + AUDIT_AND_PLAN + task-audit skill
 

@@ -1,4 +1,4 @@
-"""refinement_proposal — FR-CUO-201 stripe-deduped proposal emitter.
+"""refinement_proposal — TASK-CUO-201 stripe-deduped proposal emitter.
 
 Load-bearing logic:
   * First occurrence of a stripe → write proposal to `<root>/open/<stripe>-<ts>.md`,
@@ -198,7 +198,7 @@ def _format_proposal(
     parts.append("")
     parts.append("## Risk class")
     parts.append("")
-    parts.append(f"**{risk_class}** — see FR-CUO-202 §2 bump-level table for classifier semantics.")
+    parts.append(f"**{risk_class}** — see TASK-CUO-202 §2 bump-level table for classifier semantics.")
     parts.append("")
     return "\n".join(parts)
 
@@ -211,8 +211,8 @@ def _row_summary(row: dict) -> str:
         bits.append(f"skill={extra['skill']}")
     if "outcome" in extra:
         bits.append(f"outcome={extra['outcome']}")
-    if "fr_id" in extra:
-        bits.append(f"fr={extra['fr_id']}")
+    if "task_id" in extra:
+        bits.append(f"fr={extra['task_id']}")
     if "rework_reason" in extra:
         bits.append(f"reason={extra['rework_reason'][:40]}")
     return ", ".join(bits) or "*(no metadata)*"
@@ -264,7 +264,7 @@ def approve_proposal(
     stripe_id: str,
 ) -> Optional[Path]:
     """Move a pending_approval proposal to applied/. The actual diff-apply
-    is FR-CUO-202's responsibility; this is just the lifecycle move.
+    is TASK-CUO-202's responsibility; this is just the lifecycle move.
 
     Returns the new path, or None if no matching pending proposal exists.
     """
@@ -287,7 +287,7 @@ def apply_proposal_lifecycle(
 ) -> Optional[Path]:
     """Move an open proposal to applied/ — lifecycle step only.
 
-    FR-CUO-202 will extend this with the actual diff-apply machinery.
+    TASK-CUO-202 will extend this with the actual diff-apply machinery.
     """
     open_dir = proposals_root / "open"
     applied_dir = proposals_root / "applied"

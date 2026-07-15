@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 < 60s from revoke action to refused-access at any edge"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-KB-003]
+related_tasks: [TASK-KB-003]
 ---
 
 ## §1 — Statement (BCP-14 normative)

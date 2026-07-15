@@ -29,13 +29,13 @@ inherently ZDR, no region so the sg-1 pin holds):
 
 ## Live vs dormant after this ships
 
-- LIVE: `POST /v1/embeddings` on the gateway (the brain's one embedding path, FR-MEMORY-123).
+- LIVE: `POST /v1/embeddings` on the gateway (the brain's one embedding path, TASK-MEMORY-123).
 - LIVE: health probes `https://os.cyberskill.world/status/ai` and `/status/embed`.
 - DORMANT: chat translation - `/v1/chat/translate` returns its clean 502 because the ollama container is
   not running (the gateway maps a dead provider to a typed error; chat degrades gracefully, proven in the
   pre-ship smoke). Flips on with the llm profile below.
 - DORMANT: brain ingest/capture - still governed by `CAPTURE_ENABLED=false` + the acknowledgment gate +
-  counsel clearance (FR-EVAL-001). This deploy only makes the embedding dependency available.
+  counsel clearance (TASK-EVAL-001). This deploy only makes the embedding dependency available.
 
 ## Turn translation on (the VPS LLM), step by step
 

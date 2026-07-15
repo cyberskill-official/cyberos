@@ -4,13 +4,13 @@
   "title": "debugging-cycle-author input envelope",
   "type": "object",
   "required": [
-    "fr_path",
+    "task_path",
     "coverage_artefact_path",
     "output_dir"
   ],
   "additionalProperties": false,
   "properties": {
-    "fr_path": {
+    "task_path": {
       "type": "string"
     },
     "coverage_artefact_path": {

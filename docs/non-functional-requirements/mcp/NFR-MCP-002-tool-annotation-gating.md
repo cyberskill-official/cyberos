@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of tools annotated destructive=true gate behind human approval; 0 silent destructions"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-MCP-006]
+related_tasks: [TASK-MCP-006]
 ---
 
 ## §1 — Statement (BCP-14 normative)

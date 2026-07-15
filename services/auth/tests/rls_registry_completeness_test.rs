@@ -1,4 +1,4 @@
-//! FR-AUTH-003 §1 #7 — slice-1 audit-fix G-007.
+//! TASK-AUTH-003 §1 #7 — slice-1 audit-fix G-007.
 //!
 //! Asserts every entry in `cyberos_auth::rls::TENANT_SCOPED_TABLES` is:
 //!   1. Present in `pg_tables` (schema=public)

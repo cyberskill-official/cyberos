@@ -9,7 +9,7 @@ phase: P1
 slo: "BIMI VMC + DNS record validated weekly; alert ≥ 30 days before expiry"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-EMAIL-004]
+related_tasks: [TASK-EMAIL-004]
 ---
 
 ## §1 — Statement (BCP-14 normative)

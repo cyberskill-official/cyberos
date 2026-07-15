@@ -1,4 +1,4 @@
-//! FR-MEMORY-121 §1 #5–#10 — the single emit path for interaction-events.
+//! TASK-MEMORY-121 §1 #5–#10 — the single emit path for interaction-events.
 //!
 //! `emit(pool, ev, gate)`:
 //!   1. validates the event (§1 #9, #10) — a malformed event never enters the chain;
@@ -17,7 +17,7 @@
 //!   memory_interaction_event_body_bytes{module}
 //! are emitted here as structured `tracing` events (this crate's metrics path is OTel via
 //! `cyberos-obs-sdk`, not the `metrics` facade). The structured fields carry the exact label set so the
-//! obs pipeline derives the counters/histograms; FR-MEMORY-122/OBS may promote them to native meters
+//! obs pipeline derives the counters/histograms; TASK-MEMORY-122/OBS may promote them to native meters
 //! without changing this call site's semantics.
 
 use crate::interaction::consent_gate::ConsentGate;
@@ -39,7 +39,7 @@ pub enum EmitOutcome {
 /// Why an emit wrote no row despite a valid event.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SkipReason {
-    /// The subject has not acknowledged the current FR-EVAL-001 monitoring notice (§1 #8).
+    /// The subject has not acknowledged the current TASK-EVAL-001 monitoring notice (§1 #8).
     ConsentNotAcknowledged,
 }
 
@@ -98,8 +98,8 @@ pub fn validate(ev: &InteractionEvent) -> Result<(), EmitError> {
 /// Emit an interaction-event as an aux row on `l1_audit_log`, gated on consent.
 ///
 /// `pool` is the memory module's Postgres (the one holding `l1_audit_log`). `gate` is the consent gate
-/// (DEC-2702): the default-deny [`crate::interaction::consent_gate::DenyAll`] until FR-MEMORY-122 wires the
-/// real FR-EVAL-001-backed gate. The gate is consulted ONLY for subject events; a system actor
+/// (DEC-2702): the default-deny [`crate::interaction::consent_gate::DenyAll`] until TASK-MEMORY-122 wires the
+/// real TASK-EVAL-001-backed gate. The gate is consulted ONLY for subject events; a system actor
 /// (`subject_id = None`) is exempt and always proceeds.
 ///
 /// Returns `EmitOutcome::Recorded { seq }` on a written row, `EmitOutcome::Skipped { reason }` when the

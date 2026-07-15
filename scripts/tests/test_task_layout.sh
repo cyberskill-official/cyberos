@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# test_task_layout.sh - TASK-DOCS-004 §5 suite (t01-t06 -> AC 1-6).
+set -uo pipefail
+here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../.." && pwd)"
+FRD="$repo/docs/tasks"
+PASS=0; FAIL=0
+ok()   { PASS=$((PASS+1)); echo "  ok   $1"; }
+fail() { FAIL=$((FAIL+1)); echo "  FAIL $1: $2"; }
+
+t01_no_flat_files() {                                                  # AC 1
+  n="$(find "$FRD" -maxdepth 2 -name 'TASK-*.md' ! -path '*_audits*' ! -path '*_archive*' | wc -l | tr -d ' ')"
+  [ "$n" -eq 0 ] && ok t01 || fail t01 "$n flat task files remain"
+}
+t02_folder_count_matches() {                                           # AC 1
+  folders="$(find "$FRD" -maxdepth 2 -type d -name 'TASK-*' ! -path '*/.*/*' | wc -l | tr -d ' ')"
+  specs="$(find "$FRD" -maxdepth 3 -name spec.md | wc -l | tr -d ' ')"
+  [ "$folders" -eq "$specs" ] && [ "$specs" -gt 400 ] && ok t02 || fail t02 "folders=$folders specs=$specs"
+}
+t03_idempotent_rerun() {                                               # AC 2
+  out="$(python3 "$repo/scripts/migrate_task_layout.py")"
+  grep -q "nothing to do" <<<"$out" && ok t03 || fail t03 "$out"
+}
+t04_regen_loud_and_reconciled() {                                      # AC 3+4
+  err="$(python3 "$repo/scripts/migrate_improvement_to_task.py" --backlog 2>&1 >/dev/null)"
+  if grep -q "unparseable" <<<"$err"; then fail t04 "regen still skipping: $err"; return; fi
+  bl="$(python3 "$repo/scripts/migrate_improvement_to_task.py" --backlog 2>/dev/null | grep -o '[0-9]* tasks' | grep -o '[0-9]*')"
+  rm="$(node "$repo/tools/docs-site/render-status-hub.mjs" "$repo" "$(mktemp -d)" 2>/dev/null | sed -n 's/^status-hub: \([0-9]*\) tasks.*/\1/p')"
+  [ "$bl" = "$rm" ] && ok t04 || fail t04 "backlog=$bl roadmap=$rm"
+}
+t05_repairs_minimal() {                                                # AC 5
+  python3 - "$FRD" <<'PY' && ok t05 || fail t05 "corpus not strict-yaml clean"
+import sys, yaml, re
+from pathlib import Path
+for f in Path(sys.argv[1]).glob("*/TASK-*/spec.md"):
+    m = re.match(r"\A---\n(.*?)\n---\n", f.read_text(), re.S)
+    if not m: sys.exit(1)
+    yaml.safe_load(m.group(1))
+PY
+}
+t06_anchors_green() {                                                  # AC 6
+  bash "$repo/scripts/check_doc_anchors.sh" >/dev/null 2>&1 && ok t06 || fail t06 "doc anchors exit != 0"
+}
+
+t01_no_flat_files; t02_folder_count_matches; t03_idempotent_rerun
+t04_regen_loud_and_reconciled; t05_repairs_minimal; t06_anchors_green
+echo "----"; echo "pass=$PASS fail=$FAIL"; [ "$FAIL" -eq 0 ]
+
+# --- TASK-SKILL-120 doc-wiring asserts (t07-t10 -> its AC 1-4) --------------------------
+t07_command_scaffolds_folders() {
+  c="$repo/tools/cyberos-init/plugin/commands/create-tasks.md"
+  grep -q "<STEM>/spec.md" "$c" && grep -q "<STEM>/audit.md" "$c" \
+    && ! grep -q 'sibling `.audit.md`' "$c" && ok t07 || fail t07 "command doc grammar"
+}
+t08_contracts_updated() {
+  grep -q "{slug}/spec.md" "$repo/modules/skill/task-author/SKILL.md" \
+    && grep -q "TEMPLATE.md" "$repo/modules/skill/task-author/SKILL.md" \
+    && grep -q "transition window" "$repo/modules/skill/task-audit/SKILL.md" \
+    && ok t08 || fail t08 "author/audit contracts"
+}
+t09_ship_and_init_coherent() {
+  # Asserts the scaffolder documents folder-per-task, not the flat FR-era layout.
+  #
+  # Was `tools/cyberos-init/init.sh` until bb0f2392e ("1.0.0 CLI surface") deleted
+  # init.sh and moved the scaffold grammar into install.sh. The assert did not
+  # follow, so t09 has been red ever since — `grep` on a missing file returns 1 and
+  # short-circuits the && chain into fail. It went unnoticed because this file is
+  # wired into NO gate: not .githooks/pre-commit, not local_verify.sh, not CI. A
+  # test nobody runs cannot report anything.
+  scaffold="$repo/tools/cyberos-init/install.sh"
+  [ -e "$scaffold" ] || { fail t09 "scaffold source missing: $scaffold"; return; }
+  grep -q "<task>/audit.md" "$repo/modules/cuo/chief-technology-officer/workflows/ship-tasks.md" \
+    && grep -q "TASK-001-<slug>/spec.md" "$scaffold" \
+    && ! grep -q "tasks/TASK-001-<slug>.md" "$scaffold" \
+    && ok t09 || fail t09 "ship/install scaffold grammar"
+}
+t10_asset_discipline_stated() {
+  grep -q "assets/<file>" "$repo/tools/cyberos-init/plugin/commands/create-tasks.md" \
+    && grep -q "own-folder assets only" "$repo/modules/skill/task-author/SKILL.md" \
+    && ok t10 || fail t10 "asset rule missing"
+}
+t07_command_scaffolds_folders; t08_contracts_updated; t09_ship_and_init_coherent; t10_asset_discipline_stated
+echo "----"; echo "pass=$PASS fail=$FAIL (with TASK-SKILL-120 asserts)"; [ "$FAIL" -eq 0 ]

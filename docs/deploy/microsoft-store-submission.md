@@ -1,4 +1,4 @@
-# Microsoft Store submission — answer sheet (FR-APP-004)
+# Microsoft Store submission — answer sheet (TASK-APP-004)
 
 Companion to `docs/deploy/RELEASE.md` (GitHub Releases NSIS channel, unchanged) and the per-store sheets (`play-store-submission.md`, `mac-app-store-submission.md`). The Store channel wraps the same Tauri Windows build in an MSIX (`makeappx.exe` over a staged layout + `AppxManifest.xml`) and submits via the Store Submission API — all behind `MSSTORE_RELEASE=true` (off today) plus the identity-placeholder lint (`tools/msix-identity-lint.sh`), which blocks any Store run until the Partner Center identity is real.
 
@@ -21,7 +21,7 @@ Companion to `docs/deploy/RELEASE.md` (GitHub Releases NSIS channel, unchanged) 
 | Category | Productivity (primary); Developer tools (secondary) — matches the other store listings | pending-human |
 | Pricing / markets | Free, all markets (matches iOS/Play decisions from the 2026-07 push) | pending-human |
 | Store listing copy + screenshots | Reuse the desktop marketing captures; capture real builds, never fabricate | pending-human |
-| Device family availability | Windows.Desktop only (manifest `TargetDeviceFamily`; min 10.0.17763) | human-confirmed (structural — set by the manifest this FR commits) |
+| Device family availability | Windows.Desktop only (manifest `TargetDeviceFamily`; min 10.0.17763) | human-confirmed (structural — set by the manifest this task commits) |
 | Capability justification (`runFullTrust`) | Structural requirement of packaging any Win32/Tauri/WebView2 app via Desktop Bridge — not optional, not a CyberOS-specific choice (spec §9) | human-confirmed (structural) |
 
 ## Operational notes + manual QA checklist

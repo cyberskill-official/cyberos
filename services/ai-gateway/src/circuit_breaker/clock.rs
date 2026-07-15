@@ -1,4 +1,4 @@
-//! FR-AI-009 §3 — Time-source abstraction for deterministic testing.
+//! TASK-AI-009 §3 — Time-source abstraction for deterministic testing.
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;

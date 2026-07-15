@@ -1,4 +1,4 @@
-//! FR-MEMORY-101 — end-to-end Layer-2 ingest integration tests.
+//! TASK-MEMORY-101 — end-to-end Layer-2 ingest integration tests.
 //!
 //! Requires Postgres + the memory + auth migrations applied. CI integration
 //! job boots services/dev/docker-compose.yml and runs `--ignored`.

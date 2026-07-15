@@ -1,15 +1,15 @@
-//! FR-AI-005 §3 — Loader entry points + file-watcher.
+//! TASK-AI-005 §3 — Loader entry points + file-watcher.
 //!
 //! See `policy.rs` for the public re-exports. Behaviour:
 //!
 //! - `init_loader` eagerly reads every YAML in `config_dir` matching the loadable-filename
 //!   regex, validates each against the schema, and aggregates ALL failures into one
-//!   `LoaderInitError::Schema` (FR-AI-005 §1 #11).
+//!   `LoaderInitError::Schema` (TASK-AI-005 §1 #11).
 //! - The file-watcher (`notify`) reacts to Modify/Remove/Create events and re-loads or
 //!   evicts as appropriate. Invalid hot-reloads preserve the cached (valid) policy
-//!   (FR-AI-005 §1 #5).
+//!   (TASK-AI-005 §1 #5).
 //! - `load_for_tenant` performs charset+traversal validation on the input, then hits the
-//!   lock-free cache (FR-AI-005 §1 #6, AC #5).
+//!   lock-free cache (TASK-AI-005 §1 #6, AC #5).
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -123,7 +123,7 @@ impl Loader {
 
 // --- Public entry points -----------------------------------------------------
 
-/// FR-AI-005 §3 — Eagerly load every YAML in `config_dir`, validate each, install the
+/// TASK-AI-005 §3 — Eagerly load every YAML in `config_dir`, validate each, install the
 /// file-watcher. Aggregates ALL failures into a single `LoaderInitError::Schema`.
 pub async fn init_loader(config_dir: &Path) -> Result<Loader, LoaderInitError> {
     if !config_dir.exists() || !config_dir.is_dir() {
@@ -185,7 +185,7 @@ pub async fn init_loader(config_dir: &Path) -> Result<Loader, LoaderInitError> {
     Ok(Loader { _watcher: watcher })
 }
 
-/// FR-AI-005 §3 — Hot-path lookup. Sub-microsecond on cache hit. Validates the supplied
+/// TASK-AI-005 §3 — Hot-path lookup. Sub-microsecond on cache hit. Validates the supplied
 /// `tenant_id` for traversal/charset/length before touching the filesystem.
 pub async fn load_for_tenant(tenant_id: &str) -> Result<Arc<TenantPolicy>, PolicyError> {
     validate_tenant_id(tenant_id)?;
@@ -224,7 +224,7 @@ pub async fn load_for_tenant(tenant_id: &str) -> Result<Arc<TenantPolicy>, Polic
     Ok(arc)
 }
 
-/// FR-AI-005 §1 #13 — Pure-function validator used by `cyberos-ai policy validate`.
+/// TASK-AI-005 §1 #13 — Pure-function validator used by `cyberos-ai policy validate`.
 pub fn validate_yaml(yaml: &str) -> Result<TenantPolicy, Vec<String>> {
     let policy: TenantPolicy = serde_yaml::from_str(yaml).map_err(|e| vec![e.to_string()])?;
     validate_policy_value(&policy)?;
@@ -248,7 +248,7 @@ fn load_file(path: &Path) -> Result<TenantPolicy, Vec<String>> {
     validate_yaml(&yaml)
 }
 
-/// FR-AI-005 §3 — Validate the loaded policy against the schema range/charset rules.
+/// TASK-AI-005 §3 — Validate the loaded policy against the schema range/charset rules.
 /// Schemars derives generate machine-readable JSONSchema; this function applies the
 /// runtime-equivalent checks. Errors are aggregated.
 fn validate_policy_value(p: &TenantPolicy) -> Result<(), Vec<String>> {
@@ -397,7 +397,7 @@ async fn handle_event(config_dir: &Path, event: Event) {
                         info!(tenant_id = %id, file = %full.display(), "policy hot-reloaded");
                     }
                     Err(errors) => {
-                        // FR-AI-005 §1 #5 — invalid hot-reload preserves cache.
+                        // TASK-AI-005 §1 #5 — invalid hot-reload preserves cache.
                         error!(file = %full.display(), errors = ?errors, "policy reload failed; cache preserved");
                     }
                 }
@@ -422,7 +422,7 @@ mod tests {
 
     #[test]
     fn validate_tenant_id_chars_charset() {
-        // Allowed: [A-Za-z0-9:_-]. Per FR-AI-005 §6 reference impl, uppercase is
+        // Allowed: [A-Za-z0-9:_-]. Per TASK-AI-005 §6 reference impl, uppercase is
         // permitted in tenant_id values themselves (though filenames are kebab-lowercase).
         assert!(validate_tenant_id_chars("org:cyberskill").is_ok());
         assert!(validate_tenant_id_chars("org-test-a").is_ok());

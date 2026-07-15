@@ -1,4 +1,4 @@
-//! FR-EMAIL-009 — outbound 1:1 send state machine.
+//! TASK-EMAIL-009 — outbound 1:1 send state machine.
 
 use crate::audit::email_events::hash16;
 use crate::delivery_auth::{sign_message, DkimMaterial, DkimOutcome};

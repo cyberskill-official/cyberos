@@ -1,4 +1,4 @@
-//! Histogram exemplar emission (FR-OBS-005 §1 #3).
+//! Histogram exemplar emission (TASK-OBS-005 §1 #3).
 //!
 //! An exemplar links a histogram bucket to the trace that produced the sample, so a Grafana operator can
 //! click a latency-spike bucket and jump straight to the offending trace in Tempo. With the OTel ->

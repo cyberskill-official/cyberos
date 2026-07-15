@@ -1,4 +1,4 @@
-//! FR-MCP-004 token revocation (RFC 7009), POST /revoke.
+//! TASK-MCP-004 token revocation (RFC 7009), POST /revoke.
 //!
 //! Revoking a refresh token compromises its whole family. This slice handles refresh tokens (the
 //! common revoke target); access-token (`jti`) revocation via the revocation list lands with the

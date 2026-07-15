@@ -1,4 +1,4 @@
-//! FR-AI-018 §1 #6 — 7 enumerated regression scenarios for cache isolation.
+//! TASK-AI-018 §1 #6 — 7 enumerated regression scenarios for cache isolation.
 
 mod support;
 use support::redis_isolation_helper::{redis_available, RedisTestNamespace};
@@ -31,7 +31,7 @@ async fn regression_001_underscore_collision() {
 
 /// REGRESSION-002 (incident 2026-04-15):
 /// Unicode normalisation form differences ("é" precomposed vs. e + combining acute)
-/// produced different hashes; the cache treats them as distinct (FR-AI-005 enforces NFC).
+/// produced different hashes; the cache treats them as distinct (TASK-AI-005 enforces NFC).
 #[tokio::test]
 async fn regression_002_unicode_normalization() {
     cache::redis_backend::init(
@@ -93,7 +93,7 @@ async fn regression_005_empty_prompt() {
     assert_ne!(k_empty.prompt_hash, k_space.prompt_hash);
 }
 
-/// REGRESSION-006: persona-handle MUST be in the key (FR-AI-017 ISS-001 fix verification).
+/// REGRESSION-006: persona-handle MUST be in the key (TASK-AI-017 ISS-001 fix verification).
 /// Pre-fix, persona changes didn't invalidate cache.
 #[tokio::test]
 async fn regression_006_persona_omitted() {

@@ -1,6 +1,6 @@
 # cyberos-auth — AUTH module runtime
 
-Implements **tenant + subject create + RLS** as the Wave 2 first-slice. Spec source: [`docs/feature-requests/auth/FR-AUTH-001…109`](../../docs/feature-requests/auth/).
+Implements **tenant + subject create + RLS** as the Wave 2 first-slice. Spec source: [`docs/tasks/auth/TASK-AUTH-001…109`](../../docs/tasks/auth/).
 
 ## Production deploy
 
@@ -35,24 +35,24 @@ curl -X POST http://localhost:7700/v1/admin/subjects \
 
 ## What ships in this slice
 
-| FR | Component | State |
+| Task | Component | State |
 |---|---|---|
-| FR-AUTH-001 | `POST /v1/admin/tenants` + idempotency table | ✓ shipped |
-| FR-AUTH-002 | `POST /v1/admin/subjects` + bcrypt | ✓ shipped |
-| FR-AUTH-003 | RLS USING + WITH CHECK on tenants/subjects/admin_idempotency | ✓ shipped (migrations 0004 + 0005) |
-| FR-AUTH-003 | RLS isolation integration test | ✓ shipped (`tests/rls_isolation_test.rs`, `#[ignore]` until CI sets up Postgres) |
-| FR-AUTH-004 | JWT issuance + JWKS endpoint | not yet |
-| FR-AUTH-005 | Admin REST (list/revoke/unrevoke + cursor pagination) | not yet |
-| FR-AUTH-006 | `cyberos-auth bootstrap` CLI | not yet |
-| FR-AUTH-101 | 22-role RBAC catalogue | not yet |
-| FR-AUTH-102 | TOTP + WebAuthn MFA | not yet |
-| FR-AUTH-103 | SAML 2.0 SSO | not yet |
-| FR-AUTH-104 | OIDC SSO | not yet |
-| FR-AUTH-105 | Passkey enrolment + login | not yet |
-| FR-AUTH-106 | Impossible-travel detection | not yet |
-| FR-AUTH-107 | HIBP breach check | not yet |
-| FR-AUTH-108 | Lumi tenant identity JWT | not yet |
-| FR-AUTH-109 | Stub-to-full migration tooling | not yet |
+| TASK-AUTH-001 | `POST /v1/admin/tenants` + idempotency table | ✓ shipped |
+| TASK-AUTH-002 | `POST /v1/admin/subjects` + bcrypt | ✓ shipped |
+| TASK-AUTH-003 | RLS USING + WITH CHECK on tenants/subjects/admin_idempotency | ✓ shipped (migrations 0004 + 0005) |
+| TASK-AUTH-003 | RLS isolation integration test | ✓ shipped (`tests/rls_isolation_test.rs`, `#[ignore]` until CI sets up Postgres) |
+| TASK-AUTH-004 | JWT issuance + JWKS endpoint | not yet |
+| TASK-AUTH-005 | Admin REST (list/revoke/unrevoke + cursor pagination) | not yet |
+| TASK-AUTH-006 | `cyberos-auth bootstrap` CLI | not yet |
+| TASK-AUTH-101 | 22-role RBAC catalogue | not yet |
+| TASK-AUTH-102 | TOTP + WebAuthn MFA | not yet |
+| TASK-AUTH-103 | SAML 2.0 SSO | not yet |
+| TASK-AUTH-104 | OIDC SSO | not yet |
+| TASK-AUTH-105 | Passkey enrolment + login | not yet |
+| TASK-AUTH-106 | Impossible-travel detection | not yet |
+| TASK-AUTH-107 | HIBP breach check | not yet |
+| TASK-AUTH-108 | Lumi tenant identity JWT | not yet |
+| TASK-AUTH-109 | Stub-to-full migration tooling | not yet |
 
 ## Layout
 
@@ -76,7 +76,7 @@ auth/
     └── rls_isolation_test.rs  # property test: cross-tenant SELECT returns 0 rows
 ```
 
-## Open invariants (per feature-request-audit skill)
+## Open invariants (per task-audit skill)
 
 - §3.1 rule 1 — root tenant is `Uuid::nil()`. ✓ enforced (`tenants` seed row + `cyberos_types::TenantId::ROOT`).
 - §3.4 rule 13 — RLS MUST have BOTH USING and WITH CHECK. ✓ enforced (migration 0005).
@@ -85,7 +85,7 @@ auth/
 
 ## Next implementation steps
 
-Per the BACKLOG `§0.6` deploy roadmap, Wave 2 advances in this order: FR-AUTH-001/002/003 (this slice) → 004 (JWT) → 005 (admin REST) → 006 (bootstrap CLI) → 101 (RBAC) → 102 (MFA) → 103/104 (SAML/OIDC) → 105 (Passkey) → 106 (impossible-travel) → 107 (HIBP) → 108 (Lumi) → 109 (migration).
+Per the BACKLOG `§0.6` deploy roadmap, Wave 2 advances in this order: TASK-AUTH-001/002/003 (this slice) → 004 (JWT) → 005 (admin REST) → 006 (bootstrap CLI) → 101 (RBAC) → 102 (MFA) → 103/104 (SAML/OIDC) → 105 (Passkey) → 106 (impossible-travel) → 107 (HIBP) → 108 (Lumi) → 109 (migration).
 
 ## License
 

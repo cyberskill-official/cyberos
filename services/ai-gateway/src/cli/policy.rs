@@ -1,4 +1,4 @@
-//! FR-AI-021 — `cyberos-ai policy` subcommand.
+//! TASK-AI-021 — `cyberos-ai policy` subcommand.
 
 use std::path::Path;
 

@@ -1,4 +1,4 @@
--- FR-MCP-004 Migration 0011: oauth_codes + oauth_code_state enum
+-- TASK-MCP-004 Migration 0011: oauth_codes + oauth_code_state enum
 -- DEC-811 (30s TTL), DEC-812 (one-time-use), §1.16 (enum), §1.27 (schema)
 
 CREATE TYPE oauth_code_state AS ENUM ('active', 'consumed', 'expired');

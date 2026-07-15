@@ -6,7 +6,7 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Required for the BRAIN module (FR-BRAIN-101 Layer-2 ingest).
+-- Required for the BRAIN module (TASK-BRAIN-101 Layer-2 ingest).
 CREATE EXTENSION IF NOT EXISTS vector;        -- pgvector for embeddings
 -- Graph edges live in the relational l2_edge table (traversed via recursive CTEs); no graph extension.
 

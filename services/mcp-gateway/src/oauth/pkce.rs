@@ -1,4 +1,4 @@
-//! FR-MCP-004 §1.2, §1.3, §3.4 — PKCE S256 verifier
+//! TASK-MCP-004 §1.2, §1.3, §3.4 — PKCE S256 verifier
 //!
 //! DEC-801: S256 only; plain is rejected at the authorize endpoint before this
 //! function is ever called. This module verifies at the token endpoint.
@@ -10,7 +10,7 @@ use sha2::{Digest, Sha256};
 /// Verify a PKCE code_verifier against a stored S256 code_challenge.
 ///
 /// Returns `true` iff SHA-256(code_verifier) base64url-no-pad == stored_challenge,
-/// using constant-time comparison to prevent timing-channel leakage (FR-MCP-004 §11.21).
+/// using constant-time comparison to prevent timing-channel leakage (TASK-MCP-004 §11.21).
 ///
 /// Returns `false` (without panicking) when:
 /// - verifier length outside [43, 128] (RFC 7636 §4.1)

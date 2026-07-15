@@ -1,4 +1,4 @@
-//! FR-AI-017 — Per-tenant response cache backed by Redis.
+//! TASK-AI-017 — Per-tenant response cache backed by Redis.
 //!
 //! Cache key = `ai_cache:v1:{tenant_id}:{sha256(redacted_prompt ␟ model ␟ persona)}`.
 //! TTL per alias-class with ±10% jitter. Graceful degradation on Redis failure.

@@ -1,22 +1,22 @@
 # Changelog — AUTH
 
-## 2026-05-18 — Wave-1+2 impl: FR-AUTH-103 SAML XML-DSig + FR-AUTH-106 GeoIP + policy
+## 2026-05-18 — Wave-1+2 impl: TASK-AUTH-103 SAML XML-DSig + TASK-AUTH-106 GeoIP + policy
 
-**FR-AUTH-103 SAML XML-DSig (slice-2) + xml-c14n hardening.** `services/auth/src/saml_sig.rs` (~520 lines): ds:Signature discovery, strict algorithm allowlist (RSA-SHA256 + SHA-256 + exc-c14n), enveloped-signature stripping, reference-by-ID resolution, RSA-PKCS1-v1.5 verify, hand-rolled X.509 → SPKI TLV walk. Migration 0017 adds per-IdP `allow_unsigned BOOLEAN DEFAULT FALSE`. `exc_c14n` rewritten as a proper tokeniser. 14 canonicaliser tests + 7 X.509/PEM tests.
+**TASK-AUTH-103 SAML XML-DSig (slice-2) + xml-c14n hardening.** `services/auth/src/saml_sig.rs` (~520 lines): ds:Signature discovery, strict algorithm allowlist (RSA-SHA256 + SHA-256 + exc-c14n), enveloped-signature stripping, reference-by-ID resolution, RSA-PKCS1-v1.5 verify, hand-rolled X.509 → SPKI TLV walk. Migration 0017 adds per-IdP `allow_unsigned BOOLEAN DEFAULT FALSE`. `exc_c14n` rewritten as a proper tokeniser. 14 canonicaliser tests + 7 X.509/PEM tests.
 
-**FR-AUTH-106 GeoIP + policy + CIDR + sticky-suppression (slices 2 + 3).** New `services/auth/src/geoip.rs` with `GeoIpResolver` trait, `MaxMindResolver`, `NullResolver` fallback. Activates `cross_continent_velocity` and `geo_velocity_exceeded` detectors. Migration 0018 ships `travel_policy`, `travel_cidr_allowlist`, `travel_policy_audit`. New `travel_policy.rs` — 60s `PolicyCache`, bounded-50k `StickySuppress` LRU. New `assess_login` wraps the detector chain. New `travel_admin.rs` exposes 5 routes. **All four login flows** now go through `assess_login`.
+**TASK-AUTH-106 GeoIP + policy + CIDR + sticky-suppression (slices 2 + 3).** New `services/auth/src/geoip.rs` with `GeoIpResolver` trait, `MaxMindResolver`, `NullResolver` fallback. Activates `cross_continent_velocity` and `geo_velocity_exceeded` detectors. Migration 0018 ships `travel_policy`, `travel_cidr_allowlist`, `travel_policy_audit`. New `travel_policy.rs` — 60s `PolicyCache`, bounded-50k `StickySuppress` LRU. New `assess_login` wraps the detector chain. New `travel_admin.rs` exposes 5 routes. **All four login flows** now go through `assess_login`.
 
 ---
 
-## 2026-05-19 — [AUTH] FR-AUTH-005 drained 17/17 + rustc floor bumped 1.83→1.88
+## 2026-05-19 — [AUTH] TASK-AUTH-005 drained 17/17 + rustc floor bumped 1.83→1.88
 
-**FR-AUTH-005** (admin REST list_tenants + list_subjects + revoke + unrevoke + cursor + jti deny-list) drained end-to-end in one Cowork session. 17 spec-vs-code gaps closed across 5 slices; ≈1,300 LOC src + tests. BACKLOG line 224 mutated `planned` → `[BLOCKED: 17 gaps]` → `shipped + strict-audited`. **All 6 Wave-1 MUST AUTH FRs (001/002/003/004/005/006) are now shipped + strict-audited** — wave-1-2 deploy table-stakes are drain-complete.
+**TASK-AUTH-005** (admin REST list_tenants + list_subjects + revoke + unrevoke + cursor + jti deny-list) drained end-to-end in one Cowork session. 17 spec-vs-code gaps closed across 5 slices; ≈1,300 LOC src + tests. BACKLOG line 224 mutated `planned` → `[BLOCKED: 17 gaps]` → `shipped + strict-audited`. **All 6 Wave-1 MUST AUTH tasks (001/002/003/004/005/006) are now shipped + strict-audited** — wave-1-2 deploy table-stakes are drain-complete.
 
 New modules: `services/auth/src/{cursor,deny_list,sessions}.rs`. New migration: `migrations/0021_sessions.sql` (relocated per DEC-MIGRATION-SLOT-001; slot 0007 was taken). New memory_bridge emitters: `emit_subject_revoked` + `emit_subject_unrevoked`. New test files: `admin_list_test.rs` + `admin_revoke_test.rs` + `admin_cursor_pagination_test.rs` + `admin_deny_list_test.rs`. OTel `#[tracing::instrument]` on all 4 admin handlers.
 
-Architecture decisions logged in FR-AUTH-005-admin-rest.audit.md §10.5: **DEC-DENY-LIST-001** (in-memory slice-1; Redis lift = FR-AUTH-110), **DEC-CURSOR-SIGN-001** (HMAC-SHA256 via HKDF from `AUTH_CURSOR_SIGNING_SECRET` env), **DEC-MIGRATION-SLOT-001** (0007→0021 relocation). Structural G-012 enforcement: `DenyList` exposes no `remove()` API — unrevoke literally cannot clear the deny-list at the compile-time level.
+Architecture decisions logged in TASK-AUTH-005-admin-rest.audit.md §10.5: **DEC-DENY-LIST-001** (in-memory slice-1; Redis lift = TASK-AUTH-110), **DEC-CURSOR-SIGN-001** (HMAC-SHA256 via HKDF from `AUTH_CURSOR_SIGNING_SECRET` env), **DEC-MIGRATION-SLOT-001** (0007→0021 relocation). Structural G-012 enforcement: `DenyList` exposes no `remove()` API — unrevoke literally cannot clear the deny-list at the compile-time level.
 
-Deferred follow-ups: **FR-AUTH-110** (Redis-backed deny-list lift for wave-2 horizontal scale) + **FR-AUTH-111** (closed revoke reason taxonomy enum: compromised / terminated / policy-violation / operator-error / other).
+Deferred follow-ups: **TASK-AUTH-110** (Redis-backed deny-list lift for wave-2 horizontal scale) + **TASK-AUTH-111** (closed revoke reason taxonomy enum: compromised / terminated / policy-violation / operator-error / other).
 
 **`services/Cargo.toml` `rust-version` bumped 1.83 → 1.88** — `webauthn-rs 0.5.5`, `time 0.3.47`, `icu_* 2.2.0`, `base64urlsafedata 0.5.5`, `home 0.5.12` all now require ≥1.86/1.88. One-time operator step: `rustup toolchain install 1.88.0`. README §1 prerequisites table updated.
 
@@ -46,7 +46,7 @@ Changes by section:
 - **NEW §2.8 "RFC open questions resolved"** — table addressing all 5 open Qs from RFC §6 with proposed defaults + rationale: Q1 workspace = new repo-root Cargo workspace · Q2 memory bridge = subprocess slice 4 → PyO3 slice 5 · Q3 tenant-0 bootstrap = `cyberos-auth bootstrap` CLI subcommand · Q4 HIBP = default-on with per-tenant opt-out · Q5 OBS = slice 1 stdout → slice 5 OTLP. Each becomes an ADR once Stephen signs off.
 - **§12 Risks** — added 7 new (R-AUTH-011..017): stub stays past P3 · reorder regret · Lumi tenant-id spoofing · cross-shard JWT replay · sub-process audit-bridge bottleneck · tenant-0 bootstrap leak · PDPL Art. 38 SME grace lapse.
 - **§13 KPIs** — added 7 new: stub-to-full migration coverage (≥95% T2+ subjects passkey-enrolled by P1 · exit) · mock-AUTH retirement · Lumi tenant-id verification rate · cross-shard rejection · audit-bridge p99 · SME-grace lapsed tenants · 22-role catalogue stability.
-- **§17 References** — replaced PRD/SRS section refs (stripped) with services/auth/RFC.md, sign-in mockup, MEMORY_AUTOSYNC_DESIGN.md §6, RESEARCH_REVIEW §2.4 (cited verbatim), AUDIT_AND_PLAN, feature-request-audit skill, AGENTS.md §3.6+§11.
+- **§17 References** — replaced PRD/SRS section refs (stripped) with services/auth/RFC.md, sign-in mockup, MEMORY_AUTOSYNC_DESIGN.md §6, RESEARCH_REVIEW §2.4 (cited verbatim), AUDIT_AND_PLAN, task-audit skill, AGENTS.md §3.6+§11.
 
 Verified:
 - 1442 lines parses cleanly

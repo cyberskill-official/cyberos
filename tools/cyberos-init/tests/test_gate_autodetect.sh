@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_gate_autodetect.sh - FR-CUO-207 §5 suite (t01-t08 -> AC 1-8).
+# test_gate_autodetect.sh - TASK-CUO-207 §5 suite (t01-t08 -> AC 1-8).
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../../.." && pwd)"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
@@ -51,7 +51,7 @@ rungates() { ( cd "$1" && bash "$1/.cyberos/cuo/gates/run-gates.sh" 2>&1 ); }
 t04_config_per_key_override() {                                        # AC 4
   d="$TMP/go"  # reuse go fixture (real gates.env with SRC_*)
   printf 'gates:\n  lint: "echo lint-from-config"\n' > "$d/.cyberos/config.yaml"
-  sed -i 's/^BUILD_CMD=.*/BUILD_CMD="echo build-ok"/;s/^TEST_CMD=.*/TEST_CMD="echo test-ok"/;s/^COVERAGE_CMD=.*/COVERAGE_CMD="echo cov-ok"/' "$d/.cyberos/gates.env"
+  sed -i.bak 's/^BUILD_CMD=.*/BUILD_CMD="echo build-ok"/;s/^TEST_CMD=.*/TEST_CMD="echo test-ok"/;s/^COVERAGE_CMD=.*/COVERAGE_CMD="echo cov-ok"/' "$d/.cyberos/gates.env" && rm -f "$d/.cyberos/gates.env.bak"
   out="$(rungates "$d")"
   grep -q "gate lint: echo lint-from-config (source: config)" <<<"$out" \
     && grep -q "gate build: echo build-ok (source: autodetect:go)" <<<"$out" \
@@ -84,7 +84,7 @@ t07_reduced_floor_message() {                                          # AC 7
 t08_malformed_config_loud() {                                          # AC 8
   d="$TMP/go"
   printf 'gates:\n\tlint: "tabbed"\n' > "$d/.cyberos/config.yaml"
-  sed -i 's|^BUILD_CMD=.*|BUILD_CMD="touch '"$d"'/ran-anyway"|' "$d/.cyberos/gates.env"
+  sed -i.bak 's|^BUILD_CMD=.*|BUILD_CMD="touch '"$d"'/ran-anyway"|' "$d/.cyberos/gates.env" && rm -f "$d/.cyberos/gates.env.bak"
   out="$(rungates "$d")"; rc=$?
   [ "$rc" -eq 2 ] && grep -q "MALFORMED" <<<"$out" && grep -q "line 2" <<<"$out" && [ ! -f "$d/ran-anyway" ] \
     && ok t08 || fail t08 "rc=$rc $out"

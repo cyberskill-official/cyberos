@@ -1,4 +1,4 @@
--- FR-PROJ-009 — typed Issue ↔ memory links.
+-- TASK-PROJ-009 — typed Issue ↔ memory links.
 
 BEGIN;
 

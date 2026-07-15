@@ -1,7 +1,7 @@
-//! CyberOS EVAL governance core (FR-EVAL-001 slice 1): router, shared state, health, and a small error
-//! helper. A first-party Rust service on the CyberOS identity (FR-AUTH-003 tenant RLS), Postgres, and the
+//! CyberOS EVAL governance core (TASK-EVAL-001 slice 1): router, shared state, health, and a small error
+//! helper. A first-party Rust service on the CyberOS identity (TASK-AUTH-003 tenant RLS), Postgres, and the
 //! memory audit chain (services/shared/cyberos-audit-chain). This is the Phase-0 gate every BRAIN/EVAL
-//! capture (FR-MEMORY-121/122) and evaluation (FR-EVAL-003) consults before it records or evaluates a
+//! capture (TASK-MEMORY-121/122) and evaluation (TASK-EVAL-003) consults before it records or evaluates a
 //! subject. Slice 1 = the governance tables, the per-subject consent/acknowledgment gate, the
 //! founder/manager-of/self access check, a /healthz, and an l1_audit_log row on every governance mutation.
 //!
@@ -37,7 +37,7 @@ pub struct AppState {
     /// The memory module's Postgres (holds l1_audit_log). When set, EVAL appends a hash-chained audit row
     /// per governance mutation (clause 12); when unset (tests/local), the event is logged. Mirrors chat.
     pub audit_pool: Option<db::Pool>,
-    /// Verifies the CyberOS access token (RS256 against AUTH's JWKS, FR-AUTH-004) and yields the caller
+    /// Verifies the CyberOS access token (RS256 against AUTH's JWKS, TASK-AUTH-004) and yields the caller
     /// identity for every governance endpoint (slice 2). Built once at boot; mirrors chat.
     pub authenticator: Arc<auth::Authenticator>,
     /// Crate version, surfaced in /healthz for at-a-glance build identification.
@@ -88,7 +88,7 @@ pub fn router(state: AppState) -> Router {
         // Data-subject self surface (clause 10): own record + file a request.
         .route("/v1/eval/me", get(handlers::get_me))
         .route("/v1/eval/me/requests", post(handlers::file_request))
-        // Rubric (FR-EVAL-002): the human-curated, clause-cited evaluation rubric. Authoring (create /
+        // Rubric (TASK-EVAL-002): the human-curated, clause-cited evaluation rubric. Authoring (create /
         // open version / add item / publish) is rubric-admin only; the effective-version read is
         // founder/manager. Every mutation chains an `eval.rubric_*` audit row. No scoring, no model here.
         .route("/v1/eval/rubrics", post(handlers::create_rubric))

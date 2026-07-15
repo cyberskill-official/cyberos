@@ -1,4 +1,4 @@
-//! FR-AI-004 §5 — Integration tests for cost-hold expiry cleanup.
+//! TASK-AI-004 §5 — Integration tests for cost-hold expiry cleanup.
 //!
 //! Requires a running Postgres instance. Set DATABASE_URL env var.
 //! Tests are ignored when DATABASE_URL is not set.

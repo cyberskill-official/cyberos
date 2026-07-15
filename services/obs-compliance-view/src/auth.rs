@@ -1,7 +1,7 @@
-//! Auditor authentication + tenant scoping for the compliance views (FR-OBS-008 §1 #2, #3, #13). Access
+//! Auditor authentication + tenant scoping for the compliance views (TASK-OBS-008 §1 #2, #3, #13). Access
 //! requires a JWT carrying the `external_auditor` role - tenant-admin does NOT grant it (§1 #2). The
 //! auditor sees only their assigned tenant, and a cross-tenant `?tenant_id=` is refused (§1 #3). The
-//! verifier is the FR-AUTH-004 JWKS (RS256), with an HS256 constructor for tests and local dev.
+//! verifier is the TASK-AUTH-004 JWKS (RS256), with an HS256 constructor for tests and local dev.
 
 use std::collections::HashMap;
 
@@ -61,7 +61,7 @@ impl Authenticator {
         }
     }
 
-    /// RS256 verifier built from the auth service JWKS (FR-AUTH-004).
+    /// RS256 verifier built from the auth service JWKS (TASK-AUTH-004).
     pub fn from_jwks(jwks_json: &str) -> Result<Self, AuthError> {
         let set: JwkSet = serde_json::from_str(jwks_json)
             .map_err(|e| AuthError::AuthFailed(format!("malformed jwks: {e}")))?;

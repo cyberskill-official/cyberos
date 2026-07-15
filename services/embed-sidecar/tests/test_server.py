@@ -1,4 +1,4 @@
-"""Tests for the FR-AI-019 embedding sidecar (mock backend only — `real`
+"""Tests for the TASK-AI-019 embedding sidecar (mock backend only — `real`
 backend tests live behind a `--ignored` flag because they need GPU+weights)."""
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-//! Ed25519 chain-proof over a compliance view response (FR-OBS-008 §1 #5, DEC-176). The view signs the
+//! Ed25519 chain-proof over a compliance view response (TASK-OBS-008 §1 #5, DEC-176). The view signs the
 //! canonical bytes of its response (the rows plus the summary) with the deployment signing key; an
 //! auditor verifies the signature against the published public key, independently of CyberOS. Signing is
 //! read-only - it never touches the audit chain (DEC-177).

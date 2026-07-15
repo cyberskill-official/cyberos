@@ -1,4 +1,4 @@
-//! FR-MCP-004 memory audit kinds (clause #25). Each is a best-effort genesis row appended to the shared
+//! TASK-MCP-004 memory audit kinds (clause #25). Each is a best-effort genesis row appended to the shared
 //! `l1_audit_log` via [`cyberos_audit_chain::emit_genesis`] - the same chain the obs services write to.
 //! A failed audit never fails the OAuth operation (the security action already happened); the error is
 //! logged and swallowed. Bodies carry only non-PII identifiers; any reason text must already be
@@ -133,7 +133,7 @@ pub async fn client_registered(
     .await;
 }
 
-/// `mcp.prm_unknown_module_requested` (sev-3) - FR-MCP-005 Protected Resource Metadata was requested
+/// `mcp.prm_unknown_module_requested` (sev-3) - TASK-MCP-005 Protected Resource Metadata was requested
 /// for a module not in the registry (client misconfiguration or a scanner probing module namespaces).
 pub async fn prm_unknown_module_requested(pool: &PgPool, module: &str) {
     emit(
@@ -146,7 +146,7 @@ pub async fn prm_unknown_module_requested(pool: &PgPool, module: &str) {
     .await;
 }
 
-// ---- FR-MCP-008 elicitation (DEC-1149) ---------------------------------------------
+// ---- TASK-MCP-008 elicitation (DEC-1149) ---------------------------------------------
 
 /// `mcp.elicitation_requested` (sev-3) - a tool/gate raised a server-initiated elicitation.
 pub async fn elicitation_requested(pool: &PgPool, id: Uuid, tool_id: &str, elicitation_type: &str) {
@@ -203,7 +203,7 @@ pub async fn elicitation_validation_failed(pool: &PgPool, id: Uuid) {
     .await;
 }
 
-// ---- FR-MCP-007 tasks (DEC-1124) ---------------------------------------------------
+// ---- TASK-MCP-007 tasks (DEC-1124) ---------------------------------------------------
 
 /// `mcp.task_started` (sev-3) - a long-running task began.
 pub async fn task_started(pool: &PgPool, id: Uuid, tool_id: &str) {
@@ -265,7 +265,7 @@ pub async fn task_expired(pool: &PgPool, id: Uuid) {
     .await;
 }
 
-// ---- FR-MCP-003 SEP-986 naming (DEC-2364) ------------------------------------------
+// ---- TASK-MCP-003 SEP-986 naming (DEC-2364) ------------------------------------------
 
 /// `mcp.skill_name_validated` (sev-3) - a module registered with SEP-986-conforming tool IDs.
 pub async fn skill_name_validated(pool: &PgPool, module: &str, tool_count: usize) {

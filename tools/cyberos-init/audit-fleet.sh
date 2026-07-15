@@ -19,9 +19,9 @@ for base in "$@"; do
     # --- core modules (must exist after init) ---
     for p in \
       install.sh uninstall.sh version.sh status.sh help.sh VERSION manifest.yaml \
-      lib/fr-migrate.sh lib/update-check.sh lib/status-page.sh \
+      lib/task-migrate.sh lib/update-check.sh lib/status-page.sh \
       cuo/gates/run-gates.sh \
-      cuo/ship-feature-requests.md \
+      cuo/ship-tasks.md \
       cuo/EXECUTION-DISCIPLINE.md \
       cuo/STATUS-REFERENCE.md \
       plugin/.claude-plugin/plugin.json \
@@ -47,7 +47,7 @@ for base in "$@"; do
     done
 
     # orphan / legacy must NOT remain
-    [ ! -f "$cy/migrate-frs.sh" ] || bad="$bad orphan:migrate-frs.sh"
+    [ ! -f "$cy/migrate-tasks.sh" ] || bad="$bad orphan:migrate-tasks.sh"
     [ ! -f "$cy/init.sh" ] || bad="$bad orphan:init.sh"
     [ ! -f "$cy/changelog.sh" ] || bad="$bad orphan:changelog.sh"
     [ ! -f "$cy/update.sh" ] || bad="$bad orphan:update.sh"
@@ -65,12 +65,12 @@ for base in "$@"; do
       pskill_n="$(find "$cy/plugin/skills" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')"
     fi
     [ "${pskill_n:-0}" -ge 5 ] || bad="$bad plugin-skills-thin($pskill_n)"
-    # ship-feature-requests skill must exist in plugin
-    [ -f "$cy/plugin/skills/ship-feature-requests/SKILL.md" ] \
-      || [ -f "$cy/cuo/skills/ship-feature-requests/SKILL.md" ] \
-      || bad="$bad missing:ship-feature-requests-skill"
+    # ship-tasks skill must exist in plugin
+    [ -f "$cy/plugin/skills/ship-tasks/SKILL.md" ] \
+      || [ -f "$cy/cuo/skills/ship-tasks/SKILL.md" ] \
+      || bad="$bad missing:ship-tasks-skill"
     # plugin commands
-    for cmd in install uninstall version status help create-feature-requests; do
+    for cmd in install uninstall version status help create-tasks; do
       [ -f "$cy/plugin/commands/${cmd}.md" ] || bad="$bad missing:plugin/commands/${cmd}.md"
     done
 
@@ -103,30 +103,30 @@ for base in "$@"; do
       fi
     fi
 
-    [ -d "$r/docs/feature-requests" ] || bad="$bad missing:docs/feature-requests"
+    [ -d "$r/docs/tasks" ] || bad="$bad missing:docs/tasks"
     if [ -d "$r/.git" ]; then
       grep -q '.cyberos/' "$r/.gitignore" 2>/dev/null || bad="$bad gitignore-block"
       hk="$r/.git/hooks/pre-commit"
       if [ "$(git -C "$r" config core.hooksPath 2>/dev/null)" = "" ]; then
         { [ -f "$hk" ] && grep -qE 'cyberos-status-hook|init\.sh --page|check-status-sync|docs/status' "$hk"; } \
           || bad="$bad status-hook"
-        # hook must not reference retired migrate-frs
-        if [ -f "$hk" ] && grep -qE 'migrate-frs|init\.sh --page' "$hk" 2>/dev/null; then
+        # hook must not reference retired migrate-tasks
+        if [ -f "$hk" ] && grep -qE 'migrate-tasks|init\.sh --page' "$hk" 2>/dev/null; then
           bad="$bad hook-legacy-status-path"
         fi
       fi
     fi
 
-    # --- FR layout ---
+    # --- task layout ---
     specs=0; flat=0; nospec=0; chunks=0
-    if [ -d "$r/docs/feature-requests" ]; then
-      specs="$(find "$r/docs/feature-requests" -mindepth 3 -maxdepth 3 -name spec.md -not -path '*/_*' -not -path '*/.*' 2>/dev/null | wc -l | tr -d ' ')"
-      flat="$(find "$r/docs/feature-requests" -mindepth 1 -maxdepth 2 -type f -name 'FR-*.md' -not -name '*.audit.md' -not -path '*/_*' -not -path '*/.*' 2>/dev/null | wc -l | tr -d ' ')"
-      nospec="$(find "$r/docs/feature-requests" -mindepth 2 -maxdepth 2 -type d -name 'FR-*' -not -path '*/_*' -not -path '*/.*' 2>/dev/null \
+    if [ -d "$r/docs/tasks" ]; then
+      specs="$(find "$r/docs/tasks" -mindepth 3 -maxdepth 3 -name spec.md -not -path '*/_*' -not -path '*/.*' 2>/dev/null | wc -l | tr -d ' ')"
+      flat="$(find "$r/docs/tasks" -mindepth 1 -maxdepth 2 -type f -name 'TASK-*.md' -not -name '*.audit.md' -not -path '*/_*' -not -path '*/.*' 2>/dev/null | wc -l | tr -d ' ')"
+      nospec="$(find "$r/docs/tasks" -mindepth 2 -maxdepth 2 -type d -name 'TASK-*' -not -path '*/_*' -not -path '*/.*' 2>/dev/null \
                  | while IFS= read -r d; do [ -f "$d/spec.md" ] || echo x; done | wc -l | tr -d ' ')"
     fi
-    [ "$flat" -eq 0 ]   || bad="$bad flat-frs($flat)"
-    [ "$nospec" -eq 0 ] || bad="$bad fr-folders-without-spec($nospec)"
+    [ "$flat" -eq 0 ]   || bad="$bad flat-tasks($flat)"
+    [ "$nospec" -eq 0 ] || bad="$bad task-folders-without-spec($nospec)"
 
     # --- status page ---
     page="$r/docs/status/index.html"
@@ -143,7 +143,10 @@ for base in "$@"; do
         [ -f "$r/docs/status/assets/status.js" ]  || bad="$bad missing:status.js"
         inpage="$(grep -o '"i":"' "$page" 2>/dev/null | wc -l | tr -d ' ')"
         [ "$inpage" -eq "$specs" ] || bad="$bad corpus-drift(page=$inpage disk=$specs)"
-        chunks="$(find "$r/docs/status/data/fr" -name '*.js' 2>/dev/null | wc -l | tr -d ' ')"
+        # data/fr -> data/task in the 2026-07-15 rename. `find` on a missing dir with
+        # stderr dropped yields 0, so this silently counted 0 chunks against 509 specs
+        # and flagged every healthy repo `no-spec-chunks`.
+        chunks="$(find "$r/docs/status/data/task" -name '*.js' 2>/dev/null | wc -l | tr -d ' ')"
         [ "$specs" -eq 0 ] || [ "$chunks" -gt 0 ] || bad="$bad no-spec-chunks"
 
         # freshness re-render
@@ -151,7 +154,7 @@ for base in "$@"; do
           t="$(mktemp -d)"
           pinned="$(grep -o '"commit":"[^"]*"' "$page" | head -1 | cut -d'"' -f4)"
           if CYBEROS_HUB_LENIENT=1 CYBEROS_PAGE_ASSETS=1 \
-             CYBEROS_PROJECT="$(basename "$r")" CYBEROS_FR_BASE="../feature-requests/" \
+             CYBEROS_PROJECT="$(basename "$r")" CYBEROS_TASK_BASE="../tasks/" \
              CYBEROS_COMMIT="${pinned:-unknown}" \
              CYBEROS_TEMPLATES="$cy/docs-tools/templates" \
              node "$cy/docs-tools/render-status-hub.mjs" "$r" "$t" >/dev/null 2>"$t/err"; then
@@ -191,15 +194,15 @@ for base in "$@"; do
     # mcp entry non-empty
     if [ -f "$cy/mcp/cyberos-mcp.mjs" ]; then
       head -1 "$cy/mcp/cyberos-mcp.mjs" | grep -q . || bad="$bad mcp-empty"
-      grep -q 'fr_init\|fr_gates\|ship_fr' "$cy/mcp/cyberos-mcp.mjs" || bad="$bad mcp-tools-missing"
+      grep -q 'task_init\|task_gates\|ship_task' "$cy/mcp/cyberos-mcp.mjs" || bad="$bad mcp-tools-missing"
     fi
     # workflow doc mentions HITL
-    if [ -f "$cy/cuo/ship-feature-requests.md" ]; then
-      grep -qi 'HITL\|human-acceptance\|human acceptance' "$cy/cuo/ship-feature-requests.md" \
+    if [ -f "$cy/cuo/ship-tasks.md" ]; then
+      grep -qi 'HITL\|human-acceptance\|human acceptance' "$cy/cuo/ship-tasks.md" \
         || bad="$bad workflow-no-hitl"
-      # no retired migrate-frs in workflow
-      grep -q 'migrate-frs' "$cy/cuo/ship-feature-requests.md" 2>/dev/null \
-        && bad="$bad workflow-still-migrate-frs"
+      # no retired migrate-tasks in workflow
+      grep -q 'migrate-tasks' "$cy/cuo/ship-tasks.md" 2>/dev/null \
+        && bad="$bad workflow-still-migrate-tasks"
     fi
 
     if [ -z "$bad" ]; then

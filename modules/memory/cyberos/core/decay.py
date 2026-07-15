@@ -1,5 +1,5 @@
 """
-cyberos.core.decay — pluggable recency-decay profiles (FR-MEMORY-113 §1 #4).
+cyberos.core.decay — pluggable recency-decay profiles (TASK-MEMORY-113 §1 #4).
 
 A *decay profile* is a stateless callable that maps `hours_old` (delta
 between "now" and a memory's `last_seen_at`) to a recency value in
@@ -97,7 +97,7 @@ def build_profile(name: str, params: Optional[dict] = None) -> DecayProfile:
     """Construct a profile by name.
 
     Slice-4 will replace this with an ``entry_points``-based plug-in
-    mechanism (see FR-MEMORY-113 §1 #13). Slice-3 ships the two built-ins.
+    mechanism (see TASK-MEMORY-113 §1 #13). Slice-3 ships the two built-ins.
     """
     params = params or {}
     if name == "exponential":

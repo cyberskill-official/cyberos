@@ -1,4 +1,4 @@
-//! FR-AUTH-003 — RLS isolation property test (skeleton).
+//! TASK-AUTH-003 — RLS isolation property test (skeleton).
 //!
 //! These tests require a live Postgres with migrations applied. CI runs them
 //! against `services/dev/docker-compose.yml`. Local dev: `docker compose up -d`

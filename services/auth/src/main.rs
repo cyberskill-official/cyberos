@@ -25,7 +25,7 @@ async fn main() -> ExitCode {
         }
     };
 
-    // FR-AUTH-003 §1 #9 — boot-time RLS invariant check. Refuses to accept
+    // TASK-AUTH-003 §1 #9 — boot-time RLS invariant check. Refuses to accept
     // traffic if any registered tenant-scoped table is missing RLS or has
     // zero policies. Catches the "registry says it's covered but the
     // migration was never written" failure mode before requests can leak.
@@ -34,7 +34,7 @@ async fn main() -> ExitCode {
         return ExitCode::ConfigError;
     }
 
-    // FR-AUTH-101 §1 #9 — spawn the 60s RoleMatrix refresher.
+    // TASK-AUTH-101 §1 #9 — spawn the 60s RoleMatrix refresher.
     let shutdown = Arc::new(Notify::new());
     let refresher = rbac::refresher::spawn(
         state.pg.clone(),
@@ -42,7 +42,7 @@ async fn main() -> ExitCode {
         shutdown.clone(),
     );
 
-    // FR-OBS-003 - build the RED instruments off the global meter before serving.
+    // TASK-OBS-003 - build the RED instruments off the global meter before serving.
     cyberos_obs_sdk::init("auth", cyberos_auth::VERSION);
 
     let app = handlers::router(state);

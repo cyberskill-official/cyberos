@@ -1,4 +1,4 @@
-# Dream loop operator runbook (FR-CUO-204)
+# Dream loop operator runbook (TASK-CUO-204)
 
 The dream loop lets CyberOS propose and, eventually, auto-apply small self-improvements when it is idle.
 It is now enabled in propose mode: it runs, evaluates every candidate through all the gates, and records
@@ -42,16 +42,16 @@ python3 -m cuo.core.dream_runner \
 ```
 
 Now each open proposal is mapped to its target SKILL.md, run through the path envelope and the real
-FR-CUO-202 classifier, and recorded - and still applied to nothing in propose mode. The proposal files are
+TASK-CUO-202 classifier, and recorded - and still applied to nothing in propose mode. The proposal files are
 read only; the feed never moves or edits them.
 
 ## What is wired, and what is left
 
-The FR-CUO-201 proposal feed and the FR-CUO-202 classifier are now bound through the runner: pass
+The TASK-CUO-201 proposal feed and the TASK-CUO-202 classifier are now bound through the runner: pass
 `--proposals-dir` and `--skill-root` and propose mode surfaces real candidates, evaluates each through every
 gate, and records them. It still applies nothing.
 
-One deliberate step remains: only when you trust what propose mode surfaces, bind the FR-CUO-202
+One deliberate step remains: only when you trust what propose mode surfaces, bind the TASK-CUO-202
 `apply_proposal` as the real applier and move to auto (the four locks above). That binding is intentionally
 not wired into the runner yet, so today nothing can auto-apply by any path.
 
@@ -66,7 +66,7 @@ run that changes nothing:
 4. you are on a dedicated dream branch (its name contains "dream", e.g. `auto/dream`).
 
 Even then, each individual change must independently clear the three content gates: the path envelope
-(allowlist and denylist below), the FR-CUO-202 low-risk classifier, and the AWH test gate. The runner never
+(allowlist and denylist below), the TASK-CUO-202 low-risk classifier, and the AWH test gate. The runner never
 commits, pushes, or deploys - review the applied diff and commit it yourself.
 
 ## The safety boundary (please review)

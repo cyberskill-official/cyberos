@@ -1,7 +1,7 @@
-//! FR-EMAIL-001 §3.5 — per-tenant residency resolver.
+//! TASK-EMAIL-001 §3.5 — per-tenant residency resolver.
 //!
 //! Slice 1 ships its own lookup against `tenant_residency`; slice 2
-//! delegates to FR-AI-016's broader residency-policy framework.
+//! delegates to TASK-AI-016's broader residency-policy framework.
 
 use crate::errors::{EmailError, EmailResult};
 use crate::types::EmailStorageBinding;

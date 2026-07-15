@@ -1,4 +1,4 @@
-//! W3C TraceContext parsing, validation, and propagation (FR-OBS-005 §1 #1, #4, #11).
+//! W3C TraceContext parsing, validation, and propagation (TASK-OBS-005 §1 #1, #4, #11).
 //!
 //! This is the pure correlation primitive every CyberOS service shares: parse an incoming `traceparent`
 //! header strictly per the W3C spec, format one for an outgoing request, and - when a header is malformed

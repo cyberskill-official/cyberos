@@ -1,4 +1,4 @@
-//! FR-EMAIL-001 — structured error type for the email crate.
+//! TASK-EMAIL-001 — structured error type for the email crate.
 
 use thiserror::Error;
 use uuid::Uuid;

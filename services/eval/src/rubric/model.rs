@@ -1,4 +1,4 @@
-//! FR-EVAL-002 rubric domain types and write-time validation.
+//! TASK-EVAL-002 rubric domain types and write-time validation.
 //!
 //! The five closed enums (`SourceDoc`, `ItemKind`, `ObligationKind`, `CheckType`, `VersionState`) mirror
 //! the migration's CHECK constraints exactly, so the Rust type system and the database agree on the legal
@@ -8,7 +8,7 @@
 //! inserted into a draft version: it rejects an uncited item (§1 #2), a missing Vietnamese title (§1 #5), an
 //! obligation with no obligation_kind (§1 #3), and a check_params shape that does not match its check_type
 //! (§1 #4). It performs NO scoring and reads NO model - it only checks that a human-authored standard cites
-//! a real clause and is shaped for FR-EVAL-003 to evaluate.
+//! a real clause and is shaped for TASK-EVAL-003 to evaluate.
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -80,7 +80,7 @@ impl ObligationKind {
     }
 }
 
-/// How an item is evaluated (§1 #4). A small closed set keeps FR-EVAL-003's evaluation logic bounded: is
+/// How an item is evaluated (§1 #4). A small closed set keeps TASK-EVAL-003's evaluation logic bounded: is
 /// there evidence of X; is a number at/above a threshold; is there a signed attestation; was a review done
 /// on cadence; was a milestone reached.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
@@ -156,7 +156,7 @@ pub struct RubricVersion {
     pub created_by: Uuid,
 }
 
-/// One persisted, clause-cited item within a version (§1 #2). Every field a reviewer or FR-EVAL-003 needs:
+/// One persisted, clause-cited item within a version (§1 #2). Every field a reviewer or TASK-EVAL-003 needs:
 /// the citation, the classification, the machine-usable check descriptor, the bilingual text, and the
 /// provenance. No per-employee / score / evidence field exists by design (§1 #14).
 #[derive(Debug, Clone, Serialize, sqlx::FromRow)]
@@ -185,7 +185,7 @@ pub struct RubricItem {
 
 /// A candidate item before it is written into a draft version. The authoring HTTP surface deserializes this
 /// from the request body; [`validate_item`] gates it; [`super::authoring::add_item`] inserts it. `weight`
-/// defaults to 0 (relative within a version; the roll-up is FR-EVAL-003's, §1 #4 #14).
+/// defaults to 0 (relative within a version; the roll-up is TASK-EVAL-003's, §1 #4 #14).
 #[derive(Debug, Clone, Deserialize)]
 pub struct RubricItemDraft {
     pub source_doc: SourceDoc,
@@ -227,7 +227,7 @@ pub enum RubricError {
     /// An obligation item without its obligation_kind - §1 #3.
     #[error("an obligation item must set obligation_kind (confidentiality / non_compete / ip_assignment)")]
     ObligationKindRequired,
-    /// A non-obligation item that set obligation_kind anyway - §1 #3 (kept clean for FR-EVAL-003).
+    /// A non-obligation item that set obligation_kind anyway - §1 #3 (kept clean for TASK-EVAL-003).
     #[error("obligation_kind is only valid on an obligation item")]
     ObligationKindNotAllowed,
     /// check_params does not match the shape required for its check_type - §1 #4, 422.
@@ -249,7 +249,7 @@ pub enum RubricError {
     /// Mutating a version that is not in a state that allows it (e.g. publishing a superseded one) - §1 #6.
     #[error("rubric version is not in a state that allows this transition")]
     NotMutable,
-    /// resolve_effective found no published version in force on the date - surfaced to FR-EVAL-003.
+    /// resolve_effective found no published version in force on the date - surfaced to TASK-EVAL-003.
     #[error("no rubric version is effective on the requested date")]
     NoEffectiveVersion,
     /// The named rubric / version was not found in this tenant.
@@ -313,7 +313,7 @@ pub fn validate_item(it: &RubricItemDraft) -> Result<(), RubricError> {
 }
 
 /// The shape of `check_params` keyed by `check_type` (§1 #4). An unknown / missing shape for a given
-/// check_type is rejected at write time so FR-EVAL-003 can consume the descriptor without per-item
+/// check_type is rejected at write time so TASK-EVAL-003 can consume the descriptor without per-item
 /// interpretation. The schemas are intentionally minimal in this slice; a formal JSON-Schema registry per
 /// check_type is the deferred §9 item.
 pub fn check_params_shape_for(
@@ -357,7 +357,7 @@ pub fn check_params_shape_for(
             }
         }
         // Evidence-presence, attestation, and milestone-reached carry an optional signal/marker, but an
-        // empty {} is a valid shape (the item title is the standard; FR-EVAL-003 looks for any evidence).
+        // empty {} is a valid shape (the item title is the standard; TASK-EVAL-003 looks for any evidence).
         // If params are present they must be a JSON object, never a scalar/array.
         CheckType::EvidencePresence | CheckType::Attestation | CheckType::MilestoneReached => {
             if is_empty_obj || params.is_object() {

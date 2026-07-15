@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_pair_parity.sh - FR-SKILL-118 §5 suite (t01-t06 -> AC 1-6).
+# test_pair_parity.sh - TASK-SKILL-118 §5 suite (t01-t06 -> AC 1-6).
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../../.." && pwd)"
 CHECK="$repo/tools/cyberos-init/check-pair-parity.sh"
@@ -16,13 +16,28 @@ t01_all_pairs_parity_clean() {                                         # AC 1
 }
 t02_prose_gate_rule_ids() {                                            # AC 2
   local bad=""
-  declare -A want=( [repo-context-map]=RCM- [edge-case-matrix]=ECM- [mock-contract-test]=MCT- \
-                    [observability-injection]=OBS- [backlog-state-update]=BSU- [coverage-gate]=COV- )
+  # bash 3.2 SAFE. This was `declare -A want=(...)`, bash 4 only — a syntax error on macOS
+  # (which ships bash 3.2, frozen 2007), so this whole suite aborted on the machine this
+  # repo is developed on. It never reported that, because until 2026-07-15 nothing ran it.
+  # Same root cause as check-chain-coverage.sh being a silent no-op on macOS.
+  _want_prefix() {
+    case "$1" in
+      repo-context-map)        echo "RCM-" ;;
+      edge-case-matrix)        echo "ECM-" ;;
+      mock-contract-test)      echo "MCT-" ;;
+      observability-injection) echo "OBS-" ;;
+      backlog-state-update)    echo "BSU-" ;;
+      coverage-gate)           echo "COV-" ;;
+      *)                       echo "" ;;
+    esac
+  }
   for n in $SIX; do
     r="$SKILLS/$n-audit/RUBRIC.md"
-    grep -q "prose source" "$r" && grep -q "${want[$n]}" "$r" || bad="$bad $n"
+    w="$(_want_prefix "$n")"
+    [ -n "$w" ] || { bad="$bad $n(no-prefix-mapped)"; continue; }
+    grep -q "prose source" "$r" && grep -q "$w" "$r" || bad="$bad $n"
   done
-  # spot gates from FR §1 #3 present as rules
+  # spot gates from task §1 #3 present as rules
   grep -q "TOTAL_ROWS_MIN" "$SKILLS/edge-case-matrix-audit/RUBRIC.md" \
     && grep -q "BRANCH_COVERAGE_MIN" "$SKILLS/observability-injection-audit/RUBRIC.md" \
     && grep -q "files_below_90pct" "$SKILLS/coverage-gate-audit/RUBRIC.md" \
@@ -36,14 +51,14 @@ t03_constants_block() {                                                # AC 3
   for n in $SIX; do
     head -5 "$SKILLS/$n-audit/RUBRIC.md" | grep -q "^constants: TOTAL_ROWS_MIN=8" || bad="$bad $n"
   done
-  grep -q "FR-CUO-207" "$SKILLS/coverage-gate-audit/RUBRIC.md" || bad="$bad cov-override-hook"
+  grep -q "TASK-CUO-207" "$SKILLS/coverage-gate-audit/RUBRIC.md" || bad="$bad cov-override-hook"
   [ -z "$bad" ] && ok t03 || fail t03 "constants header missing:$bad"
 }
 t04_artefact_sections_stable() {                                       # AC 4 (amended: at-rest guard)
   # additive-only guarantee AT REST: no SKILL.md in the seven pairs lost a line vs HEAD.
   # A DIRTY worktree on these files warns and skips instead of failing - legitimate mid-flight
-  # mutations (e.g. FR-SKILL-119's citation swaps) false-fired this three times; the guard's
-  # authority is the committed state, which CI always checks clean. (FR-SKILL-118 AC 4, amended.)
+  # mutations (e.g. TASK-SKILL-119's citation swaps) false-fired this three times; the guard's
+  # authority is the committed state, which CI always checks clean. (TASK-SKILL-118 AC 4, amended.)
   local bad="" dirty=""
   for n in $SIX debugging-cycle; do
     for side in author audit; do

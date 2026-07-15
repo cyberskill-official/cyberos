@@ -1,4 +1,4 @@
-//! FR-MCP-001 §1 #5 + DEC-266 — Server-advertised capabilities for `initialize`.
+//! TASK-MCP-001 §1 #5 + DEC-266 — Server-advertised capabilities for `initialize`.
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};

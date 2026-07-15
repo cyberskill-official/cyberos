@@ -1,4 +1,4 @@
-//! FR-AI-008 §3 — Failover chain construction.
+//! TASK-AI-008 §3 — Failover chain construction.
 
 use crate::alias::ResolvedModel;
 use crate::policy::{ProviderKind, TenantPolicy};
@@ -39,7 +39,7 @@ pub(crate) fn make_provider(kind: ProviderKind) -> Box<dyn Provider> {
         ProviderKind::Openai => Box::new(super::openai::OpenAIProvider),
         ProviderKind::Ollama => Box::new(super::ollama::OllamaProvider::from_env()),
         ProviderKind::LocalOpenai => Box::new(super::local_openai::LocalOpenaiProvider::from_env()),
-        ProviderKind::Vertex => unimplemented!("Vertex lands in slice 4 (FR-AI-017)"),
+        ProviderKind::Vertex => unimplemented!("Vertex lands in slice 4 (TASK-AI-017)"),
         ProviderKind::Bge => unimplemented!("BGE is embedding-only; chat path doesn't use BGE"),
     }
 }

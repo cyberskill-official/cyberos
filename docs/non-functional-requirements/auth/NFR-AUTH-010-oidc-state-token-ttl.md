@@ -9,7 +9,7 @@ phase: P0
 slo: "OIDC state tokens expire 10 minutes after issuance; single-use; CSRF-bound to session"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-AUTH-104]
+related_tasks: [TASK-AUTH-104]
 ---
 
 ## §1 — Statement (BCP-14 normative)

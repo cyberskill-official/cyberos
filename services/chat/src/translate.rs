@@ -1,4 +1,4 @@
-//! Inline translation (FR-CHAT-101): POST /v1/chat/translate {text, target_lang}. The caller is authenticated
+//! Inline translation (TASK-CHAT-101): POST /v1/chat/translate {text, target_lang}. The caller is authenticated
 //! and the request is rate-bounded by the usual auth path; chat then calls the ai-gateway SERVER-SIDE (so the
 //! message text only ever leaves chat to the one configured gateway, never to the browser's network) with a
 //! translation prompt and the `chat.fast` alias. The gateway is not in the prod stack yet, so this MUST fail

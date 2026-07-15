@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # check-version-sync.sh - read-only comparator: root VERSION vs every stamped payload artifact.
-# FR-IMP-068. Shared by payload-gate.yml (CI), .githooks/pre-commit (local), version.yml
-# (bump proof), and the FR-IMP-069 release job. Zero side effects on the payload.
+# TASK-IMP-068. Shared by payload-gate.yml (CI), .githooks/pre-commit (local), version.yml
+# (bump proof), and the TASK-IMP-069 release job. Zero side effects on the payload.
 #
 # usage: check-version-sync.sh [payload-dir]     default: <repo>/dist/cyberos
 # exit 0   in sync   (prints "sync OK <version> across 7 artifacts")
@@ -51,11 +51,11 @@ check "$payload/mcp/package.json" "$(json_field "$payload/mcp/package.json" ".ve
 m=""; [ -f "$payload/manifest.yaml" ] && m="$(grep -E '^cyberos_version:' "$payload/manifest.yaml" | awk '{print $2}')"
 check "$payload/manifest.yaml" "$m"
 
-# 5b. manifest.yaml rules_sha - FR-IMP-074: the rule-drift fingerprint must exist and be a
+# 5b. manifest.yaml rules_sha - TASK-IMP-074: the rule-drift fingerprint must exist and be a
 # 64-hex sha256. Not compared against VERSION (it changes independently); presence + shape only.
 rs=""; [ -f "$payload/manifest.yaml" ] && rs="$(grep -E '^rules_sha:' "$payload/manifest.yaml" | awk '{print $2}')"
 if ! printf '%s' "$rs" | grep -Eq '^[0-9a-f]{64}$'; then
-  echo "DRIFT $payload/manifest.yaml!rules_sha: '${rs:-<missing>}' is not a 64-hex sha256 (FR-IMP-074)"; drift=1
+  echo "DRIFT $payload/manifest.yaml!rules_sha: '${rs:-<missing>}' is not a 64-hex sha256 (TASK-IMP-074)"; drift=1
 fi
 
 # 6. plugin.json sealed inside cyberos.plugin (read in-stream, no extraction to disk)
@@ -66,7 +66,7 @@ if [ -f "$payload/cyberos.plugin" ]; then
 fi
 check "$payload/cyberos.plugin!.claude-plugin/plugin.json" "$s"
 
-# 7. the SERVED web bundle (FR-IMP-080): apps/console/web is the tracked vite output the VPS
+# 7. the SERVED web bundle (TASK-IMP-080): apps/console/web is the tracked vite output the VPS
 # serves via git pull, and its version.json is what the topbar badge shows. CI rebuilds the web
 # app fresh for the mobile shells but never recommits this dir, so after the 1.0.0 pin the live
 # site kept announcing v0.1.0. A stale bundle is now loud drift; the fix is one command.

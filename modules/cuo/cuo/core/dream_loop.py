@@ -1,6 +1,6 @@
-"""dream_loop - FR-CUO-204 idle-time autonomous evolution, fenced by the evolution envelope.
+"""dream_loop - TASK-CUO-204 idle-time autonomous evolution, fenced by the evolution envelope.
 
-When the machine is idle and the loop is explicitly enabled, this runs the existing FR-CUO-201/202/203
+When the machine is idle and the loop is explicitly enabled, this runs the existing TASK-CUO-201/202/203
 propose cycle against the golden sets and applies ONLY changes that clear all three gates:
 
   1. in-envelope - the target path is on the allowlist and off the denylist (`evolution_envelope`);
@@ -33,7 +33,7 @@ from typing import Callable, Iterable, Optional
 
 from cuo.core.evolution_envelope import EvolutionEnvelope
 
-# The five memory audit kinds FR-CUO-204 emits.
+# The five memory audit kinds TASK-CUO-204 emits.
 AUDIT_STARTED = "cuo.dream_started"
 AUDIT_PROPOSAL = "cuo.dream_proposal"
 AUDIT_APPLIED = "cuo.dream_applied"
@@ -106,7 +106,7 @@ def run_dream_cycle(
             _halt(report, audit, target, verdict.reason, gate="envelope")
             continue
 
-        # Gate 2: the content risk classifier (FR-CUO-202). Only auto-applicable, non-safety changes pass.
+        # Gate 2: the content risk classifier (TASK-CUO-202). Only auto-applicable, non-safety changes pass.
         classification = classify_fn(prop)
         will_auto = bool(getattr(classification, "will_auto_apply", False))
         risk_class = str(getattr(classification, "risk_class", "minor"))

@@ -1,6 +1,6 @@
 //! Session-token storage in the OS keychain (macOS Keychain via the `keyring` crate; the Windows
 //! Credential Manager and the Linux Secret Service back the follow-on targets). The token is never
-//! written to a plaintext file or a log line - FR-APP-002 clause 4.
+//! written to a plaintext file or a log line - TASK-APP-002 clause 4.
 
 const SERVICE: &str = "os.cyberskill.world.desktop";
 const ACCOUNT: &str = "session-token";

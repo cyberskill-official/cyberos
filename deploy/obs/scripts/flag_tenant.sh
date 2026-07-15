@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FR-OBS-006 §1 #3 - flag or unflag a tenant for 100% trace sampling by editing flagged_tenants.yaml.
+# TASK-OBS-006 §1 #3 - flag or unflag a tenant for 100% trace sampling by editing flagged_tenants.yaml.
 # The collector hot-reloads on the file change (no restart). This is the same edit the
 # `cyberos-ai flag-tenant <id> --confirm` subcommand performs; use it directly when the CLI is not handy.
 #

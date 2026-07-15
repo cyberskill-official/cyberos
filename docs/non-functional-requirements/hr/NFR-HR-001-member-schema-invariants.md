@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of member rows satisfy required-field + uniqueness invariants"
 owner: CHRO
 created: 2026-05-18
-related_frs: [FR-HR-001]
+related_tasks: [TASK-HR-001]
 ---
 
 ## §1 — Statement (BCP-14 normative)

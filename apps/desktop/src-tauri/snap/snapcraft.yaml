@@ -1,4 +1,4 @@
-# FR-APP-005: Snap Store recipe for CyberOS - strict confinement, gnome extension (core22),
+# TASK-APP-005: Snap Store recipe for CyberOS - strict confinement, gnome extension (core22),
 # dump-plugin over the SAME .deb payload the GitHub-Releases pipeline ships (no second build
 # config for the same binary; zero drift between channels). Packed + uploaded by
 # .github/workflows/release-snap.yml behind SNAP_RELEASE=true.
@@ -6,7 +6,7 @@
 # Lint invariants (enforced by the workflow's unconditional lint job):
 #   - `confinement: strict` must never regress (AC #2)
 #   - the plugs list is EXACTLY the six-entry set below (AC #3); any future addition
-#     needs a documented functional justification in the FR's §9 first (code-review norm)
+#     needs a documented functional justification in the task's §9 first (code-review norm)
 name: cyberos
 base: core22
 version: '1.0.0'

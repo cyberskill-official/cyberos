@@ -1,4 +1,4 @@
-//! PagerDuty Events API v2 client (FR-OBS-007 §1 #3). Triggers an incident via the enqueue endpoint,
+//! PagerDuty Events API v2 client (TASK-OBS-007 §1 #3). Triggers an incident via the enqueue endpoint,
 //! using the alert fingerprint as the `dedup_key` so PagerDuty does its own de-duplication of re-fires.
 //! An unset routing key fails, which (for a PagerDuty-intended route) the §1 #11 chain last-resorts to
 //! CHAT.

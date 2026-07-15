@@ -1,4 +1,4 @@
-//! FR-MCP-001 §1 #6 + DEC-264 — `ToolAnnotations` per MCP 2025-11-25 spec.
+//! TASK-MCP-001 §1 #6 + DEC-264 — `ToolAnnotations` per MCP 2025-11-25 spec.
 
 use serde::{Deserialize, Serialize};
 
@@ -33,7 +33,7 @@ impl ToolAnnotations {
         }
     }
 
-    /// Common pattern: destructive (delete-style tools — requires Elicitation per FR-MCP-006).
+    /// Common pattern: destructive (delete-style tools — requires Elicitation per TASK-MCP-006).
     pub fn destructive(title: &str) -> Self {
         Self {
             title: title.into(),

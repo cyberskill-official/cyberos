@@ -1,7 +1,7 @@
 ---
 workflow_id: chief-technology-officer/certify-nfrs
 workflow_version: 1.0.0
-purpose: Run systemic verification against the Non-Functional Requirements catalog to certify a deployment environment. Automatically handles regressions by spawning bug-fix FRs or escalating.
+purpose: Run systemic verification against the Non-Functional Requirements catalog to certify a deployment environment. Automatically handles regressions by spawning bug-fix tasks or escalating.
 persona: cuo/chief-technology-officer
 cadence: per-release
 status: shipped
@@ -13,7 +13,7 @@ inputs:
 
 outputs:
   - { name: nfr_certification_report, format: nfr-certification-report@1, recipient: cuo/cto + deploy owner }
-  - { name: regression_frs,           format: feature-request@1,          recipient: backlog }
+  - { name: regression_frs,           format: task@1,          recipient: backlog }
 
 skill_chain:
   - { step: 1, skill: nfr-test-runner,          inputs_from: { target_environment: target_environment, nfr_catalog: nfr_catalog, telemetry_window: telemetry_window }, outputs_to: test_results }
@@ -30,13 +30,13 @@ consults:
 
 audit_hooks:
   - each skill emits artefact_write rows per its frontmatter audit hook
-  - workflow emits a workflow_complete row with the final go/no-go verdict and the list of spawned regression FRs
-  - HITL pauses at step 4 on whether to auto-inject bug-fix FRs or halt
+  - workflow emits a workflow_complete row with the final go/no-go verdict and the list of spawned regression tasks
+  - HITL pauses at step 4 on whether to auto-inject bug-fix tasks or halt
 ---
 
 # NFR Certification Review — `chief-technology-officer/certify-nfrs`
 
-The CTO's gate for Non-Functional Requirements. While Functional Requirements are tested individually within the `ship-feature-requests` pipeline, systemic NFRs (load testing, prolonged security scanning, uptime monitoring) require systemic evaluation. This workflow runs against an entire environment to certify that the `docs/non-functional-requirements` catalog is upheld.
+The CTO's gate for Non-Functional Requirements. While Functional Requirements are tested individually within the `ship-tasks` pipeline, systemic NFRs (load testing, prolonged security scanning, uptime monitoring) require systemic evaluation. This workflow runs against an entire environment to certify that the `docs/non-functional-requirements` catalog is upheld.
 
 ## When to invoke
 
@@ -58,7 +58,7 @@ cyberos-cuo run cuo/chief-technology-officer/certify-nfrs \
 ## Expected duration
 
 - **Happy path:** 15–30 minutes (mostly waiting for test runners like Gatling or K6 to finish execution).
-- **With regressions:** +1-2 hours for manual triage of bug-fix FRs and escalations to CISO/CTO.
+- **With regressions:** +1-2 hours for manual triage of bug-fix tasks and escalations to CISO/CTO.
 
 ## Skill chain — step by step
 
@@ -81,10 +81,10 @@ cyberos-cuo run cuo/chief-technology-officer/certify-nfrs \
 - **Pause point:** None.
 
 ### Step 4: `nfr-regression-handler`
-- **What it does:** For any NFR that receives a `fail` or `degraded` verdict, automatically drafts a bug-fix FR (incorporating the failure logs and reproduction steps) and prepares to insert it into the backlog with a `ready_to_implement` status.
+- **What it does:** For any NFR that receives a `fail` or `degraded` verdict, automatically drafts a bug-fix task (incorporating the failure logs and reproduction steps) and prepares to insert it into the backlog with a `ready_to_implement` status.
 - **Inputs:** `evaluation_verdicts`.
 - **Outputs:** `regression_frs`.
-- **Pause point:** HITL on inserting the regression FRs into the backlog versus simply alerting a human to triage manually.
+- **Pause point:** HITL on inserting the regression tasks into the backlog versus simply alerting a human to triage manually.
 
 ## Failure modes — per step
 
@@ -92,11 +92,11 @@ cyberos-cuo run cuo/chief-technology-officer/certify-nfrs \
 |---|---|---|---|
 | 1 | BOOT-001 | nfr_catalog input missing or invalid | Point to the correct NFR docs directory |
 | 1 | TEST_TIMEOUT | External harness fails to return | Retry the harness or manually supply the test result payload |
-| 4 | HITL (PLAN) | Regression found | Operator decides to approve auto-FR injection or manually triage the regression |
+| 4 | HITL (PLAN) | Regression found | Operator decides to approve auto-task injection or manually triage the regression |
 
 ## Operator-side decisions
 
-1. **Auto-Remediation vs Manual Triage at step 4:** When regressions occur, the workflow proposes bug-fix FRs. The CTO decides if these should immediately hit the backlog or if the release should simply be halted for manual debugging.
+1. **Auto-Remediation vs Manual Triage at step 4:** When regressions occur, the workflow proposes bug-fix tasks. The CTO decides if these should immediately hit the backlog or if the release should simply be halted for manual debugging.
 2. **Escalations:** If security or privacy NFRs fail, the workflow alerts the CISO immediately, pausing further rollout until the vulnerability is addressed.
 
 ## Cross-references

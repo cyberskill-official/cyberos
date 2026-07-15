@@ -1,4 +1,4 @@
-//! FR-MEMORY-121 §1 #15 / §4 AC 1, 2, 4, 17 — the published contract is the dependency surface.
+//! TASK-MEMORY-121 §1 #15 / §4 AC 1, 2, 4, 17 — the published contract is the dependency surface.
 //!
 //! Every emitted interaction-event body MUST validate against contracts/interaction-event.schema.json
 //! (JSON Schema draft 2020-12); the schema pins `schema_version` const 1; a malformed content_ref arm

@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "CyberOS MCP Gateway — Model Context Protocol 2025-11-25 federation door (P0 module · FR-MCP-001..008)"
+description = "CyberOS MCP Gateway — Model Context Protocol 2025-11-25 federation door (P0 module · TASK-MCP-001..008)"
 
 [lib]
 name = "cyberos_mcp_gateway"
@@ -39,17 +39,17 @@ jsonwebtoken.workspace = true
 jsonrpsee = { version = "0.24", features = ["server", "client"] }
 async-trait = "0.1"
 base64 = "0.22"
-# FR-MCP-003 SEP-986 naming validator: the skill-ID pattern regex.
+# TASK-MCP-003 SEP-986 naming validator: the skill-ID pattern regex.
 regex = "1"
-# FR-MCP-004 OAuth: constant-time compare for the PKCE verifier.
+# TASK-MCP-004 OAuth: constant-time compare for the PKCE verifier.
 constant_time_eq = "0.3"
-# FR-MCP-004 close-out: Argon2 for confidential client secrets; audit-chain for the 8 memory audit kinds.
+# TASK-MCP-004 close-out: Argon2 for confidential client secrets; audit-chain for the 8 memory audit kinds.
 argon2 = "0.5"
 cyberos-audit-chain = { path = "../shared/cyberos-audit-chain" }
-# FR-MCP-007/008 DB slice: AEAD envelope encryption for payloads at rest (src/kms.rs). XChaCha20-Poly1305
+# TASK-MCP-007/008 DB slice: AEAD envelope encryption for payloads at rest (src/kms.rs). XChaCha20-Poly1305
 # under an operator-supplied MCP_KMS_KEY; swappable for a managed KMS behind the Kms trait.
 chacha20poly1305 = "0.10"
-# FR-MCP-002 federation: forward tools/call to a module's registered MCP endpoint.
+# TASK-MCP-002 federation: forward tools/call to a module's registered MCP endpoint.
 reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
 
 cyberos-types.workspace = true

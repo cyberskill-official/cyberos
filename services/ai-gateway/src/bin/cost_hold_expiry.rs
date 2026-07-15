@@ -1,9 +1,9 @@
-//! FR-AI-004 — Standalone cost-hold expiry cleanup binary.
+//! TASK-AI-004 — Standalone cost-hold expiry cleanup binary.
 //!
 //! Runs as a long-lived process, scanning for expired holds every 30 seconds
 //! (configurable via CYBEROS_AI_EXPIRY_TICK_SECONDS).
 //!
-//! See FR-AI-004 for normative behaviour and acceptance criteria.
+//! See TASK-AI-004 for normative behaviour and acceptance criteria.
 
 use std::time::Duration;
 

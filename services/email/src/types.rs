@@ -1,10 +1,10 @@
-//! FR-EMAIL-001 §1 #7 + §1 #9 — domain types.
+//! TASK-EMAIL-001 §1 #7 + §1 #9 — domain types.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-/// FR-EMAIL-001 §1 #9 closed enum — direction of a message.
+/// TASK-EMAIL-001 §1 #9 closed enum — direction of a message.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "message_direction", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
@@ -14,7 +14,7 @@ pub enum MessageDirection {
     Internal,
 }
 
-/// FR-EMAIL-001 §1 #9 closed enum — delivery status of a message.
+/// TASK-EMAIL-001 §1 #9 closed enum — delivery status of a message.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "message_status", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
@@ -38,7 +38,7 @@ impl MessageStatus {
     }
 }
 
-/// FR-EMAIL-001 §3.3 — bounce classification per RFC 3463.
+/// TASK-EMAIL-001 §3.3 — bounce classification per RFC 3463.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum BounceKind {
@@ -93,7 +93,7 @@ impl DkimKeyStatus {
     }
 }
 
-/// FR-EMAIL-001 §1 #7 — append-only message metadata row.
+/// TASK-EMAIL-001 §1 #7 — append-only message metadata row.
 ///
 /// Bodies live in S3 (encrypted via KMS, residency-pinned per tenant).
 /// Postgres holds only headers + delivery state. Status transitions
@@ -125,7 +125,7 @@ pub struct EmailMessage {
     pub created_at: DateTime<Utc>,
 }
 
-/// FR-EMAIL-001 §1 #8 — materialised thread view for fast list queries.
+/// TASK-EMAIL-001 §1 #8 — materialised thread view for fast list queries.
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct EmailThread {
     pub thread_id: String,
@@ -136,7 +136,7 @@ pub struct EmailThread {
     pub participant_addresses: Vec<String>,
 }
 
-/// FR-EMAIL-001 §1 #17 — append-only bounce log entry.
+/// TASK-EMAIL-001 §1 #17 — append-only bounce log entry.
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct BounceEvent {
     pub id: i64,
@@ -149,7 +149,7 @@ pub struct BounceEvent {
     pub ts: DateTime<Utc>,
 }
 
-/// FR-EMAIL-001 §1 #5 — per-tenant DKIM key registry row.
+/// TASK-EMAIL-001 §1 #5 — per-tenant DKIM key registry row.
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct DkimKey {
     pub id: Uuid,
@@ -165,7 +165,7 @@ pub struct DkimKey {
     pub rotated_at: Option<DateTime<Utc>>,
 }
 
-/// FR-EMAIL-001 §3.5 — residency binding for body storage.
+/// TASK-EMAIL-001 §3.5 — residency binding for body storage.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct EmailStorageBinding {
     pub residency: String,

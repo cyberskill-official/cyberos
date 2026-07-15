@@ -1,4 +1,4 @@
-//! FR-PROJ-001 §4 #3 + §4 #4 — FSM transition coverage.
+//! TASK-PROJ-001 §4 #3 + §4 #4 — FSM transition coverage.
 
 use cyberos_proj::status_fsm::{allowed_transitions, validate};
 use cyberos_proj::types::IssueStatus;

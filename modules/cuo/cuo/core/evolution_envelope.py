@@ -1,7 +1,7 @@
-"""evolution_envelope - FR-CUO-204 safety boundary for the idle-time dream loop.
+"""evolution_envelope - TASK-CUO-204 safety boundary for the idle-time dream loop.
 
 The dream loop (`dream_loop.py`) may AUTOMATICALLY apply a self-improvement only when the change clears
-three independent gates: it is gate-green (the AWH test gate), it is classified low-risk (FR-CUO-202
+three independent gates: it is gate-green (the AWH test gate), it is classified low-risk (TASK-CUO-202
 `proposal_applier`), and its TARGET sits inside this envelope. This module is that third gate - a
 path-based allow/deny boundary that is orthogonal to the content-based risk classifier, so a change that
 looks benign in its body but touches a security-critical file still halts for a human.
@@ -36,7 +36,7 @@ import yaml
 KILL_SWITCH_ENV = "CYBEROS_DREAM_KILL"
 _TRUE_VALUES = {"1", "true", "yes", "on"}
 
-# The enablement ladder (FR-CUO-204). `off` never runs; `propose` runs + records but applies nothing;
+# The enablement ladder (TASK-CUO-204). `off` never runs; `propose` runs + records but applies nothing;
 # `auto` may auto-apply within the gates (and only with the runner's explicit opt-in).
 VALID_MODES = ("off", "propose", "auto")
 

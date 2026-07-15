@@ -1,4 +1,4 @@
-//! FR-AUTH-101 §1 #9 + DEC-126 — background `RoleMatrix` refresher.
+//! TASK-AUTH-101 §1 #9 + DEC-126 — background `RoleMatrix` refresher.
 //!
 //! Spawns a tokio task that calls `RoleMatrix::load_from_db` every
 //! `MEMORY_RBAC_REFRESH_SECS` (default 60s) and atomically swaps the snapshot
@@ -8,7 +8,7 @@
 //! The 60s cadence is the documented design assertion (DEC-126): revocations
 //! are honoured within 60s. Time-critical revocations (terminated employee)
 //! go via a future per-tenant CRL-flush endpoint that targets the in-memory
-//! matrix directly (FR-AUTH-111 placeholder).
+//! matrix directly (TASK-AUTH-111 placeholder).
 
 use crate::rbac::RoleMatrix;
 use sqlx::PgPool;

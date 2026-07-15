@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CyberOS MCP Registry</title>
 <!--
-  FR-APP-004 - CyberOS MCP Registry & Tools panel.
+  TASK-APP-004 - CyberOS MCP Registry & Tools panel.
 
   A self-contained operator page that lists the tools the MCP gateway is currently serving, by calling the
   gateway's own protocol surface (POST /mcp, JSON-RPC method "tools/list"). It adds no backend. Each tool a
-  module self-registers (FR-MCP-002) appears here live; nothing is hard-coded.
+  module self-registers (TASK-MCP-002) appears here live; nothing is hard-coded.
 
   Run: serve this folder and start the gateway with MCP_DEV_CORS=1 (and MCP_DEV_REGISTRATION=1 so a module can
   register) plus at least one module. In production Caddy serves the page and proxies the gateway under one
@@ -73,7 +73,7 @@
   <main>
     <div class="summary" id="summary">Connect to the gateway to list its registered tools.</div>
     <div class="grid" id="grid"></div>
-    <div class="empty" id="empty" style="display:none;">The gateway is reachable but lists no tools. Register a module (FR-MCP-002) to populate it.</div>
+    <div class="empty" id="empty" style="display:none;">The gateway is reachable but lists no tools. Register a module (TASK-MCP-002) to populate it.</div>
   </main>
 
 <script>

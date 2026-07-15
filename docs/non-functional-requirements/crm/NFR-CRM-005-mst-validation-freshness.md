@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of VN business accounts carry a GDT MST validation within last 90 days"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-CRM-008, FR-CRM-003]
+related_tasks: [TASK-CRM-008, TASK-CRM-003]
 ---
 
 ## §1 — Statement (BCP-14 normative)

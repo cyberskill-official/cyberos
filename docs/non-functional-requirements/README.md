@@ -20,17 +20,17 @@ docs/non-functional-requirements/
 └── …                                            # one folder per module
 ```
 
-Folder naming mirrors `docs/feature-requests/` exactly — same `<module>/`
+Folder naming mirrors `docs/tasks/` exactly — same `<module>/`
 slugs, same `<ID>-<slug>.md` file shape. The renderer enumerates this tree
 and projects each frontmatter row into the catalog's `NFR_DATA` array.
 
-## NFR vs FR
+## NFR vs task
 
-- **FR** specifies a *feature surface* the system MUST expose.
+- **task** specifies a *feature surface* the system MUST expose.
 - **NFR** asserts a *cross-cutting quality property* the system MUST hold
   (performance, security, reliability, scalability, observability, etc.).
 
-NFRs are tighter than FRs by design: one constraint, one SLO, one
+NFRs are tighter than tasks by design: one constraint, one SLO, one
 measurement, one verification path. Target body size is 80-150 lines.
 
 ## Template
@@ -51,7 +51,7 @@ phase: P0..P4
 slo: "<measurable target>"
 owner: <CTO | CSO | CFO | …>
 created: 2026-05-18
-related_frs: [FR-…, FR-…]
+related_tasks: [task-…, task-…]
 ```
 
 ## Authoring discipline
@@ -66,6 +66,6 @@ related_frs: [FR-…, FR-…]
 ## Batch authoring history
 
 - **Batch 1 (2026-05-18)** — 42 NFRs across AI/OBS/AUTH/memory/CHAT.
-  Resolves ~50 of the `(FR pending)` placeholders in the rendered catalog.
+  Resolves ~50 of the `(task pending)` placeholders in the rendered catalog.
 - Subsequent batches will cover SKILL, CUO, MCP, GraphQL, REW, CP, TEN, KMS,
   EMAIL, KB, NATS, and the remaining cross-cutting modules.

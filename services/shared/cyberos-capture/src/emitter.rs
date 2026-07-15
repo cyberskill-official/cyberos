@@ -1,20 +1,20 @@
-//! FR-MEMORY-122 §1 #1, #2, #12 — the shared capture mechanism.
+//! TASK-MEMORY-122 §1 #1, #2, #12 — the shared capture mechanism.
 //!
 //! [`Capturer`] is the one path every module uses to record a work-interaction: it holds the brain audit
 //! pool + the consent gate, and `capture(ev)` builds nothing of its own — it takes an already-built
-//! FR-MEMORY-121 [`InteractionEvent`] and writes it via FR-MEMORY-121 `emit()` (validated, consent-gated,
+//! TASK-MEMORY-121 [`InteractionEvent`] and writes it via TASK-MEMORY-121 `emit()` (validated, consent-gated,
 //! chained as an aux row on `l1_audit_log`). No module ever constructs an `l1_audit_log` row directly
 //! (disallowed_tools); `emit()` is the only door, so the consent gate cannot be skipped (DEC-2712).
 //!
-//! **Best-effort, never on the critical path (§1 #7).** `capture` returns the FR-MEMORY-121
+//! **Best-effort, never on the critical path (§1 #7).** `capture` returns the TASK-MEMORY-121
 //! `EmitOutcome`/`EmitError`; callers match it for metrics and swallow errors. A capture failure (pool
 //! down, validation error, gated subject) MUST NOT fail or delay the sign-in / message send. Modules wire
 //! the emit so it cannot delay the response (after the response is built, or in a spawned task).
 //!
-//! **Reconciliation with the FR skeleton.** FR-MEMORY-122 §3 sketched `emit(&self.pool, ev)` (two args),
-//! but the shipped FR-MEMORY-121 `emit(pool, ev, gate)` takes the gate explicitly so the gate is a visible
+//! **Reconciliation with the task skeleton.** TASK-MEMORY-122 §3 sketched `emit(&self.pool, ev)` (two args),
+//! but the shipped TASK-MEMORY-121 `emit(pool, ev, gate)` takes the gate explicitly so the gate is a visible
 //! dependency, not a hidden global. The `Capturer` therefore *owns* the gate (built once, wrapped in the
-//! FR-MEMORY-121 `CachingGate`) and passes it into `emit` on every call — same effect, gate dependency
+//! TASK-MEMORY-121 `CachingGate`) and passes it into `emit` on every call — same effect, gate dependency
 //! made explicit. See [`crate::gate::build_default`].
 
 use std::sync::Arc;
@@ -22,10 +22,10 @@ use std::sync::Arc;
 use cyberos_memory::interaction::{emit, ConsentGate, EmitError, EmitOutcome, InteractionEvent};
 use sqlx::PgPool;
 
-/// The per-emitter outcome label (FR-MEMORY-122 §1 #12): the value of `outcome` on
-/// `memory_capture_emitter_calls_total{module, event_type, outcome}`. Derived from the FR-MEMORY-121
+/// The per-emitter outcome label (TASK-MEMORY-122 §1 #12): the value of `outcome` on
+/// `memory_capture_emitter_calls_total{module, event_type, outcome}`. Derived from the TASK-MEMORY-121
 /// `EmitOutcome`/`EmitError` so a per-module view of live capture (recorded vs gated vs error) is available
-/// in addition to FR-MEMORY-121's own counters.
+/// in addition to TASK-MEMORY-121's own counters.
 pub fn outcome_label(result: &Result<EmitOutcome, EmitError>) -> &'static str {
     match result {
         Ok(EmitOutcome::Recorded { .. }) => "recorded",
@@ -46,7 +46,7 @@ pub struct Capturer {
 impl Capturer {
     /// Build a `Capturer` over `pool` (the brain audit DB — the one holding `l1_audit_log`) with the
     /// production consent gate ([`crate::gate::build_default`], the SQL ledger read wrapped in the
-    /// FR-MEMORY-121 `CachingGate`). Both the audit writes and the gate reads go to the same governance
+    /// TASK-MEMORY-121 `CachingGate`). Both the audit writes and the gate reads go to the same governance
     /// deployment, so one pool serves both.
     pub fn new(pool: PgPool) -> Self {
         let gate = crate::gate::build_default(pool.clone());
@@ -63,7 +63,7 @@ impl Capturer {
         Self { pool, gate }
     }
 
-    /// Record a built interaction-event. Best-effort: returns the FR-MEMORY-121 outcome so the caller can
+    /// Record a built interaction-event. Best-effort: returns the TASK-MEMORY-121 outcome so the caller can
     /// emit the `memory_capture_emitter_calls_total` metric, then swallow. The underlying interaction
     /// (sign-in, message send) MUST proceed regardless of what this returns. The consent gate is consulted
     /// inside `emit` for subject events (system actors are exempt there); there is no way to capture a
@@ -110,7 +110,7 @@ impl Capturer {
     }
 }
 
-/// FR-MEMORY-122 §1 #2 / DEC-2714 — the per-module emitter convention. A module that captures holds a
+/// TASK-MEMORY-122 §1 #2 / DEC-2714 — the per-module emitter convention. A module that captures holds a
 /// `Capturer` (directly in its `AppState`, or reachable from it) and exposes a thin `capture.rs` of typed
 /// helpers (`emit_signed_in(..)`, `emit_message_created(..)`, ...) that translate that module's domain
 /// event into a built `InteractionEvent` and call [`Capturer::capture_metered`]. This trait names that

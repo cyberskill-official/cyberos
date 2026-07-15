@@ -1,4 +1,4 @@
-//! `cyberos-ai` operator CLI — FR-AI-021 full surface.
+//! `cyberos-ai` operator CLI — TASK-AI-021 full surface.
 
 use clap::Parser;
 use cyberos_ai_gateway::cli::exit_codes::ExitCode;

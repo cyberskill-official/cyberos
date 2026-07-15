@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: observability-injection-author
 description: >-
-  Walk the critical paths of the FR's implementation plan and emit an `observability-injection@1`: (a) structured-log lines at every state transition (always carrying tenant_id + subject_id when in-scope), (b) trace spans wrapping every external IO call, (c) counter increments for every error branch, (d) a coverage estimate (% of branches with a log/metric/trace point). Used by chief-technology-officer/ship-feature-requests as step 11. Use when user asks to "draft a observability injection" or "create the observability injection". Do NOT use for "audit existing observability injection" (use observability-injection-audit instead).
+  Walk the critical paths of the task's implementation plan and emit an `observability-injection@1`: (a) structured-log lines at every state transition (always carrying tenant_id + subject_id when in-scope), (b) trace spans wrapping every external IO call, (c) counter increments for every error branch, (d) a coverage estimate (% of branches with a log/metric/trace point). Used by chief-technology-officer/ship-tasks as step 11. Use when user asks to "draft a observability injection" or "create the observability injection". Do NOT use for "audit existing observability injection" (use observability-injection-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -17,24 +17,24 @@ allowed_memory_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/{fr_id}/observability-injection
+    - project:task/{task_id}/observability-injection
 audit:
   row_kind: observability_injection_authored
-  required_fields: [fr_id, log_points, trace_spans, error_counters, branch_coverage_pct]
+  required_fields: [task_id, log_points, trace_spans, error_counters, branch_coverage_pct]
 
 # ── Inputs / outputs ─────────────────────────────────────────────────
 inputs:
-  - { name: fr,        format: feature-request@1,       required: true }
+  - { name: task,        format: task@1,       required: true }
   - { name: impl_plan, format: implementation-plan@1,   required: true }
 outputs:
   - { name: obs_injection, format: observability-injection@1 }
 
 # ── Triggers / blockers ──────────────────────────────────────────────
 triggers:
-  - workflow `chief-technology-officer/ship-feature-requests` step 11
+  - workflow `chief-technology-officer/ship-tasks` step 11
 blockers:
   - "no observability sink configured in repo (tracing/log subscriber missing) — must be resolved first"
-  - "implementation-plan has zero critical paths — author misclassified the FR; escalate"
+  - "implementation-plan has zero critical paths — author misclassified the task; escalate"
 ---
 
 # observability-injection-author
@@ -51,13 +51,13 @@ required input for any path it generates.
 
 ```yaml
 # observability-injection@1
-fr_id: FR-<MODULE>-<NNN>
+task_id: task-<MODULE>-<NNN>
 generated_at: <ISO-8601>
 language: rust | python | typescript | mixed
 subscriber: "tracing / log / structlog / pino / ..."
 
 log_points:
-  - { id: LOG-001, file: "<absolute>", line_hint: "<int|null>", level: info | warn | error, message_shape: "...", carries: [tenant_id, subject_id, fr_id], when: "<state transition>" }
+  - { id: LOG-001, file: "<absolute>", line_hint: "<int|null>", level: info | warn | error, message_shape: "...", carries: [tenant_id, subject_id, task_id], when: "<state transition>" }
 
 trace_spans:
   - { id: SPAN-001, file: "<absolute>", wraps: "<function or external IO call>", attributes: [tenant_id, subject_id, downstream], propagates: true }
@@ -81,8 +81,8 @@ redaction_policy:
 - Every external IO in `impl_plan.external_calls` has ≥ 1 trace_span.
 - Every error branch in `impl_plan.error_branches` has ≥ 1 error_counter.
 - `branch_coverage.coverage_pct ≥ 80`.
-- `redaction_policy` is non-empty if the FR touches any PII (verified
-  against the FR's `data:` frontmatter classification).
+- `redaction_policy` is non-empty if the task touches any PII (verified
+  against the task's `data:` frontmatter classification).
 
 ## 4. Chains to
 
@@ -92,6 +92,6 @@ redaction_policy:
 
 *End of observability-injection-author SKILL.md.*
 
-## Contract files (FR-SKILL-118)
+## Contract files (TASK-SKILL-118)
 
 This pair is at full contract parity: `PIPELINE.md` (chain binding + HALT points), `INVARIANTS.md`, `envelopes/` (I/O schemas), `references/FAILURE_MODES.md`, `acceptance/README.md`. SKILL.md remains the normative prose; the files encode it.

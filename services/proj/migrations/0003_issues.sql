@@ -1,4 +1,4 @@
--- FR-PROJ-001 §3 — issues table.
+-- TASK-PROJ-001 §3 — issues table.
 --
 -- Per DEC-210, status is the 5-value closed enum; `deleted` is a reserved
 -- 6th value used by the soft-delete API path (root-admin only — §4 #17).

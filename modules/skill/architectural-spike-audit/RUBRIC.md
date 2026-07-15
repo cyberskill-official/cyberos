@@ -5,12 +5,12 @@ verdict: pass requires 10/10; any rule failure -> fail; ambiguity -> needs_human
 
 ## SPK-STRUCT - structural completeness
 - SPK-STRUCT-001 frontmatter carries every architectural-spike@1 field with the typed
-  shape (spike_id, fr_id, question, timebox_hours, actual_hours, halted, options[],
+  shape (spike_id, task_id, question, timebox_hours, actual_hours, halted, options[],
   recommendation, confidence, discarded[], created).
 - SPK-STRUCT-002 the five body sections present, in order: Question, Options probed,
   Evidence log, Recommendation, Discard log.
 - SPK-STRUCT-003 recommendation names EXACTLY ONE option that appears in options[].
-- SPK-STRUCT-004 spike_id matches `SPIKE-<FR-ID>-<n>`.
+- SPK-STRUCT-004 spike_id matches `SPIKE-<task-ID>-<n>`.
 
 ## SPK-EVID - evidence quality
 - SPK-EVID-001 >= 2 options probed (a one-option spike is not a fork - route to the
@@ -32,6 +32,6 @@ verdict: pass requires 10/10; any rule failure -> fail; ambiguity -> needs_human
 - SPK-DISC-001 discard log non-empty whenever any option was rejected.
 - SPK-DISC-002 every discard entry names a reason (not just the option name).
 
-## Prose -> rule mapping (FR-SKILL-118 discipline)
+## Prose -> rule mapping (TASK-SKILL-118 discipline)
 Every rule above encodes a clause of architectural-spike-author/SKILL.md §2-§4 or
-FR-SKILL-117 §1; no rule is stricter than its prose source.
+TASK-SKILL-117 §1; no rule is stricter than its prose source.

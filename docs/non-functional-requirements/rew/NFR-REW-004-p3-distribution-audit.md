@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of P3 distributions carry CFO + CHRO signatures; no auto-execute without both"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-REW-008]
+related_tasks: [TASK-REW-008]
 ---
 
 ## §1 — Statement (BCP-14 normative)

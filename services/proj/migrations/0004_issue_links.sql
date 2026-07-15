@@ -1,4 +1,4 @@
--- FR-PROJ-001 §3 — issue_links table.
+-- TASK-PROJ-001 §3 — issue_links table.
 --
 -- Cross-module + intra-issue links. The link_type enum is closed at this
 -- slice; symmetric types (blocks/blocked_by, duplicates/duplicated_by)

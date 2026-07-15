@@ -1,10 +1,10 @@
 ---
 name: nfr-regression-handler
 description: >-
-  Draft bug-fix feature requests for degraded or failed non-functional
+  Draft bug-fix tasks for degraded or failed non-functional
   requirements. Use when user asks to "turn NFR failures into backlog work",
-  "handle SLO regressions", or "prepare remediation FRs". Outputs ready-to-review
-  regression FR drafts with reproduction evidence and owner routing.
+  "handle SLO regressions", or "prepare remediation tasks". Outputs ready-to-review
+  regression task drafts with reproduction evidence and owner routing.
 metadata:
   version: 1.0.0
   module: skill
@@ -19,4 +19,4 @@ allowed_mcp_tools:
 
 # nfr-regression-handler
 
-Create remediation FR drafts for every failed or degraded NFR verdict.
+Create remediation task drafts for every failed or degraded NFR verdict.

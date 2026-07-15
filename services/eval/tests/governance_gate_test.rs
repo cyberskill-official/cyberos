@@ -1,4 +1,4 @@
-//! FR-EVAL-001 slice 1 - governance gate + access-control integration tests.
+//! TASK-EVAL-001 slice 1 - governance gate + access-control integration tests.
 //!
 //! Mirrors the auth / memory integration-test convention: these require a live Postgres with the eval
 //! migration applied, so they are `#[ignore]` by default and gate on `EVAL_DATABASE_URL` (falling back to

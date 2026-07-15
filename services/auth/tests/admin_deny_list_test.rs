@@ -1,4 +1,4 @@
-//! FR-AUTH-005 — in-memory deny-list behaviour tests.
+//! TASK-AUTH-005 — in-memory deny-list behaviour tests.
 //!
 //! Covers G-011 (deny-list primitive) + G-012 (deny-list-survives-unrevoke
 //! security default) + the §1 #11 propagation-SLO assertion that "within

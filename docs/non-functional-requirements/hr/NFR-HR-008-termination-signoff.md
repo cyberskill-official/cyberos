@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of terminations carry both signatures within 72h; expired approvals require resubmission"
 owner: CHRO
 created: 2026-05-18
-related_frs: [FR-HR-009]
+related_tasks: [TASK-HR-009]
 ---
 
 ## §1 — Statement (BCP-14 normative)

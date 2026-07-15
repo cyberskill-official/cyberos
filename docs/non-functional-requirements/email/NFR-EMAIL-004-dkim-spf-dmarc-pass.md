@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of outbound emails pass DKIM + SPF + DMARC alignment for the tenant's sending domain"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-EMAIL-004, FR-EMAIL-009]
+related_tasks: [TASK-EMAIL-004, TASK-EMAIL-009]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -18,7 +18,7 @@ related_frs: [FR-EMAIL-004, FR-EMAIL-009]
 2. The tenant's SPF record **MUST** include the platform's sending IPs/relay; provisioning checks this and refuses send-domain activation otherwise.
 3. The DMARC alignment **MUST** be strict — `From:` header domain matches DKIM `d=` and SPF Envelope-From.
 4. Outbound validation (synthetic mail-to-self) **MUST** run hourly and report DMARC-pass rate; sustained < 100% triggers sev-2.
-5. ARC seal (`FR-EMAIL-004`) **MUST** be applied for forwarded mail; ARC failures are diagnosed via the OBS dashboard.
+5. ARC seal (`TASK-EMAIL-004`) **MUST** be applied for forwarded mail; ARC failures are diagnosed via the OBS dashboard.
 
 ## §2 — Why this constraint
 

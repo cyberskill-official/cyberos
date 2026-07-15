@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Optional: bring up the MCP gateway + reference module that back the dashboard's MCP Registry tile
-# (FR-APP-004). Separate from dev-up.sh because it is heavier and optional. Stop with dev-down.sh.
+# (TASK-APP-004). Separate from dev-up.sh because it is heavier and optional. Stop with dev-down.sh.
 # Dev only. The gateway runs on 7730 (not 8090) so it does not collide with the console.
 set -euo pipefail
 

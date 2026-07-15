@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FR-MCP-003 slice 3 / DEC-2362 - CI grep gate for SEP-986 skill IDs.
+# TASK-MCP-003 slice 3 / DEC-2362 - CI grep gate for SEP-986 skill IDs.
 #
 # A cheap, source-side tripwire that complements the runtime validator in
 # services/mcp-gateway/src/naming (which rejects non-conforming tool IDs at registration). It scans

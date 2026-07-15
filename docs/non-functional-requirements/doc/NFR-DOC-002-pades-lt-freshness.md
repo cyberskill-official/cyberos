@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of PAdES-LT documents restamped at least 30 days before any contained timestamp expires"
 owner: CLO-Legal
 created: 2026-05-18
-related_frs: [FR-DOC-011]
+related_tasks: [TASK-DOC-011]
 ---
 
 ## §1 — Statement (BCP-14 normative)

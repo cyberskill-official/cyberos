@@ -1,4 +1,4 @@
-//! FR-EMAIL-005 — CaMeL dual-LLM isolation for email-derived tool calls.
+//! TASK-EMAIL-005 — CaMeL dual-LLM isolation for email-derived tool calls.
 //!
 //! This slice codifies the data-flow contract without binding to a model
 //! provider: privileged planning never receives raw mail, quarantined

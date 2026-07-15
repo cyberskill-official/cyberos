@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FR-AUTH-106 — installs MaxMind GeoLite2-City + GeoIP2-Anonymous-IP
+# TASK-AUTH-106 — installs MaxMind GeoLite2-City + GeoIP2-Anonymous-IP
 # into a vendored location the AUTH service reads at boot.
 #
 # Usage:

@@ -9,12 +9,12 @@ phase: P1
 slo: "100% of renewal drafts preserve original terms (parties, scope, term length) modulo explicit deltas"
 owner: CLO-Legal
 created: 2026-05-18
-related_frs: [FR-DOC-009]
+related_tasks: [TASK-DOC-009]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. The renewal-proposal CUO workflow (`FR-DOC-009`) **MUST** generate a renewal draft that preserves the original document's core terms unless the workflow explicitly flags a delta.
+1. The renewal-proposal CUO workflow (`TASK-DOC-009`) **MUST** generate a renewal draft that preserves the original document's core terms unless the workflow explicitly flags a delta.
 2. Preserved terms include: parties, scope of services, governing law, dispute resolution clause, payment terms.
 3. Delta proposals (e.g., updated term length, updated pricing) **MUST** be highlighted in the draft with `old → new` redline.
 4. The draft **MUST NOT** be auto-sent — it requires CLO-Legal review + approval before circulation.

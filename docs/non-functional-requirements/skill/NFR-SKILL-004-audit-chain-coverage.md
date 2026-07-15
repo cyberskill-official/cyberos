@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of skill invocations produce a Layer-1 row within 1s; reconciliation drift < 0.001%"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-SKILL-101, FR-SKILL-105, FR-SKILL-106]
+related_tasks: [TASK-SKILL-101, TASK-SKILL-105, TASK-SKILL-106]
 ---
 
 ## §1 — Statement (BCP-14 normative)

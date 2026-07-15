@@ -1,4 +1,4 @@
-//! Read receipts (FR-CHAT-101 slice 4): a per-(channel, subject) last-read marker, and an unread count.
+//! Read receipts (TASK-CHAT-101 slice 4): a per-(channel, subject) last-read marker, and an unread count.
 
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};

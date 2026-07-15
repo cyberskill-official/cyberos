@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""FR-AI-013 §1 #15 — Validate the VN PII corpus format.
+"""TASK-AI-013 §1 #15 — Validate the VN PII corpus format.
 
 Checks:
 - Every sample has id, text, expected_entities

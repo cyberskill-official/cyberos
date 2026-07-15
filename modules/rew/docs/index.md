@@ -1,7 +1,7 @@
 ---
 title: REW - Compensation engine, payroll bridge, bonus orchestrator
 source: website/docs/modules/rew/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 REW is the **compensation computation and ledger plane** - the place where Total Rewards parameters become payslips, and where every payslip is reproducible byte-for-byte from the parameters that were effective at its period_end. The cash side is split into P1 (Base), P2 (Allowance), and P3 (Performance overflow from the BP fund). The non-cash side - BP (Bonus Points), an inflation-indexed unit of account - runs as an append-only ledger. The hard rule across the board: **append-only, no mutations**. Amendments are supersession rows; corrections are reversal rows. The 10-year statutory retention is enforced at the storage layer (S3 object-lock) so even a malicious admin cannot back-date a payslip.
@@ -91,7 +91,7 @@ Axis| Question| Answer
 **5M - Methods**| Method choices?| Append-only with supersession (no UPDATE). Pure-function compute kernel with property tests for determinism. Tectonic for deterministic LaTeX. Co-sign predicate at AUTH gateway. CI replay job that recomputes the full retained payslip history on every parameter change.
 **5M - Machines**| Deployment?| Fargate task in SG-1 (P1). Multi-AZ Postgres RDS. S3 retention lock = 10 years. SG HoldCo branch: SGD payroll mode (P2 stretch).
 **5M - Manpower**| Who maintains?| HR/Ops Lead (R for operations) + CEO (A for sign-off) + CFO (R for commit co-sign) + CHRO (R for co-sign, P3+ seat).
-**5M - Measurement**| How measured?| (FR pending)..010. KPIs: close-cycle completion days, recompute-determinism CI pass rate, memory-leak incident count, P1-cut-attempt blocked count.
+**5M - Measurement**| How measured?| (task pending)..010. KPIs: close-cycle completion days, recompute-determinism CI pass rate, memory-leak incident count, P1-cut-attempt blocked count.
 
 ## Architecture
 
@@ -316,9 +316,9 @@ D+5 (VN)| BHXH remittance schedule (P3 stretch).| HR/Ops
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
@@ -367,7 +367,7 @@ REW is the EU AI Act Annex III §4 high-risk module (employment-decision automat
 
 Regulation / standard| Article / clause| REW feature that satisfies it
 ---|---|---
-EU AI Act (Reg. 2024/1689)| Annex III §4 - Employment & worker management| REW is the high-risk system. P2 conformity pack: risk management, data governance, technical docs, transparency, human oversight (FR pending), accuracy/robustness ((FR pending) determinism).
+EU AI Act (Reg. 2024/1689)| Annex III §4 - Employment & worker management| REW is the high-risk system. P2 conformity pack: risk management, data governance, technical docs, transparency, human oversight (task pending), accuracy/robustness ((task pending) determinism).
 EU AI Act| Art. 14 - Human oversight| Member can dispute -> CEO adjudicates within 5 working days; CEO can override any automated computation.
 EU AI Act| Art. 13 - Transparency| `cyberos.rew.payslip_explain` narrator; user-facing PDF includes parameter version + computation explanation.
 Vietnam Labour Code (2019)| Art. 90 - Wage / salary| P1 floor is the contractual base; P1-guard invariant enforces.
@@ -375,9 +375,9 @@ Vietnam Labour Code| Art. 96 - Pay period| Monthly cycle by default; per-tenant 
 Decree 152/2020/NĐ-CP| Art. 5 - SI contribution rates| BHXH 8%/17.5%, BHYT 1.5%/3%, BHTN 1%/1% encoded as versioned parameter `si-rates-vn`.
 Circular 111/2013/TT-BTC| Art. 7 - Personal income tax| PIT progressive schedule encoded as versioned parameter `pit-schedule-vn`.
 VN Tax Law| 10-year retention| S3 object-lock 10-year + DB row append-only.
-Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Member-self DSAR (FR pending); managers structurally blocked from cross-member comp views.
+Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Member-self DSAR (task pending); managers structurally blocked from cross-member comp views.
 Vietnam PDPL| Art. 7 - Sensitive data| Comp classified `restricted`; separate KMS; access requires `rew.payslip_read` scope.
-GDPR (EU 2016/679)| Art. 22 - Automated individual decision-making| EU AI Act conformity pack + Art. 14 human override (FR pending).
+GDPR (EU 2016/679)| Art. 22 - Automated individual decision-making| EU AI Act conformity pack + Art. 14 human override (task pending).
 GDPR| Art. 32 - Security of processing| KMS-wrapped at rest, co-sign at commit, append-only ledger.
 ISO/IEC 27001:2022| A.5.13 - Information labelling| Comp fields classified; cross-module exfiltration blocked at gateway.
 SOC 2 Type II| CC6.1, CC8.1| RBAC + co-sign + audit chain + deterministic replay.
@@ -586,12 +586,12 @@ Member-dispute -> CEO adjudication flow| planned - P2
 - **Cross-module page links:** [hr.html](../hr/index.html), [time.html](../time/index.html), [esop.html](../esop/index.html), [proj.html](../proj/index.html), [memory.html](../memory/index.html), [auth.html](../auth/index.html)
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) + DEC-036 - comp data structurally excluded from memory; Lumi cross-tenant synthesis cannot read REW.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - REW at P1-exit (P1, after HR).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
-- **REW module FRs** - ((FR pending) through (FR pending)).
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
+- **REW module tasks** - ((task pending) through (task pending)).
 - **REW architecture posture** - Bet 5 framing.
 - **Strategy Bet 5** - "The Total Rewards Appendix is a moat too" (DEC-036 memory exclusion).
 - **Security NFRs** - SEC-002: zero P1 reduction.
-- **Formal FR mapping** - (FR pending) through (FR pending) with verification methods.
+- **Formal task mapping** - (task pending) through (task pending) with verification methods.
 - **Total Rewards & Career Path Appendix** - Legal source of truth; 3P decomposition; P1 protection.
 - **EU AI Act (Reg. 2024/1689)** - Annex III §4 employment-decision automation high-risk classification; Art. 13 transparency; Art. 14 human oversight.
 - **GDPR (EU 2016/679)** - Art. 22 automated decision-making safeguards.

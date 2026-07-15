@@ -49,7 +49,7 @@ are not committed. Verify once: `git ls-files | grep -E '\.live$|/\.env$'` must 
   compose assumes AI_GATEWAY_BIND=0.0.0.0:8086 and health /healthz - confirm against the binary.
 - memory embeddings: services/embed-sidecar has no Dockerfile. Build it (or use an external embedder)
   and point MEMORY_EMBED_URL at it, then add the embed service to the compose.
-- MCP OAuth: set MCP_DATABASE_URL, create its DB, run the mcp-gateway migrations to turn FR-MCP-004 on.
+- MCP OAuth: set MCP_DATABASE_URL, create its DB, run the mcp-gateway migrations to turn TASK-MCP-004 on.
   Without it the gateway runs open (fine for a first smoke, not for production).
 - PROJ: cyberos_proj is a library, not a server. Decide which binary serves the proj API and add it.
 - CUO: Python orchestration (modules/cuo); supervise via its [project.scripts] entrypoint (compose

@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "CyberOS-native chat - channels, messages, and live delivery on the CyberOS identity, DB, and audit chain (FR-CHAT-101)"
+description = "CyberOS-native chat - channels, messages, and live delivery on the CyberOS identity, DB, and audit chain (TASK-CHAT-101)"
 
 [lib]
 name = "cyberos_chat"
@@ -27,7 +27,7 @@ uuid.workspace = true
 chrono.workspace = true
 jsonwebtoken.workspace = true
 cyberos-audit-chain = { path = "../shared/cyberos-audit-chain" }
-# FR-MEMORY-122 — shared capture mechanism. CHAT emits chat.message_created/_edited/_deleted,
+# TASK-MEMORY-122 — shared capture mechanism. CHAT emits chat.message_created/_edited/_deleted,
 # chat.channel_*, chat.dm_opened, and chat.presence_changed interaction-events through this, over the
 # chat->brain audit pool (CHAT_AUDIT_DATABASE_URL), gated behind CAPTURE_ENABLED (default off).
 cyberos-capture = { path = "../shared/cyberos-capture" }
@@ -35,7 +35,7 @@ base64 = "0.22"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 
 [dev-dependencies]
-# FR-CHAT-267: the reports integration tests drive the real router in-process with
+# TASK-CHAT-267: the reports integration tests drive the real router in-process with
 # `tower::ServiceExt::oneshot`, the same way services/auth/tests/admin_subject_create_test.rs does.
 # `tower` is not needed by the chat binary itself, only by the tests.
 tower.workspace = true

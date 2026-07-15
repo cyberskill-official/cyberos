@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of issue state transitions match the FSM; 0 illegal transitions in production"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-PROJ-004, FR-PROJ-001]
+related_tasks: [TASK-PROJ-004, TASK-PROJ-001]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -1,17 +1,17 @@
 ---
 title: Skill - Appendices & Extended Reference
 source: website/docs/modules/skill/appendices.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 # SKILL - Extended Reference & Appendices
 
-> This file contains Parts 11-30, appendices A-L, and portable FR-driven prompts from the SKILL module. For the core documentation (Parts 1-10), see [README.md](README.md).
+> This file contains Parts 11-30, appendices A-L, and portable task-driven prompts from the SKILL module. For the core documentation (Parts 1-10), see [README.md](README.md).
 
 
 ## Table of contents
 
-  * **Part 11** - Worked example end-to-end: feature-request-author -> feature-request-audit
+  * **Part 11** - Worked example end-to-end: task-author -> task-audit
   * **Part 12** - Runtime architecture: LangGraph + action_log + NATS
   * **Part 13** - Validate & debug
   * **Part 14** - The skill lifecycle
@@ -41,26 +41,26 @@ migrated: FR-DOCS-002
   * Appendix H - Architectural audit
   * Appendix I - Skill catalog (normative)
   * Appendix J - Anthropic guide gap analysis
-  * Appendix K - FR-SKILL-111..115 completion plan
+  * Appendix K - TASK-SKILL-111..115 completion plan
   * Appendix L - Bundle rubric (SKB-*)
-  * Portable FR-driven prompts
+  * Portable task-driven prompts
 
 
-## Part 11 - Worked example end-to-end: feature-request-author -> feature-request-audit
+## Part 11 - Worked example end-to-end: task-author -> task-audit
 
 The canonical chain. Walk through it once and you understand the whole architecture.
 
-![feature-request-author -> feature-request-audit chain sequence](./assets/diagrams/11-feature-request-author-feature-request-audit-chain-sequence.svg)
+![task-author -> task-audit chain sequence](./assets/diagrams/11-task-author-task-audit-chain-sequence.svg)
 
 ### 11.1 What happens, narrated
 
-A user types in CHAT: _"Turn this PRD into a backlog and audit it."_ The supervisor's `classify_act` node returns `{persona_id: cuo-cpo, skill_id: cuo/cpo/feature-request-author, confidence: 0.93}`. The supervisor synthesises the input envelope (it's chat-mode entry; `STANDALONE_INTERVIEW.md` runs to fill `requirements_files`; the rest defaults). It invokes `feature-request-author`. The skill enters PLAN phase: reads the PRD with sequential pagination (per AGENTS.md §4.10), enumerates feature requests, runs INV-003 (ingestion-coverage check). PLAN appends one `row_kind: question` row to `genie.action_log` and emits the proposed FR backlog as a Question primitive. The supervisor halts, surfaces the backlog to the user via `HUMAN_SUMMARY.md`. The user replies "APPROVE."
+A user types in CHAT: _"Turn this PRD into a backlog and audit it."_ The supervisor's `classify_act` node returns `{persona_id: cuo-cpo, skill_id: cuo/cpo/task-author, confidence: 0.93}`. The supervisor synthesises the input envelope (it's chat-mode entry; `STANDALONE_INTERVIEW.md` runs to fill `requirements_files`; the rest defaults). It invokes `task-author`. The skill enters PLAN phase: reads the PRD with sequential pagination (per AGENTS.md §4.10), enumerates tasks, runs INV-003 (ingestion-coverage check). PLAN appends one `row_kind: question` row to `genie.action_log` and emits the proposed task backlog as a Question primitive. The supervisor halts, surfaces the backlog to the user via `HUMAN_SUMMARY.md`. The user replies "APPROVE."
 
-The supervisor resumes from the LangGraph checkpoint. `feature-request-author` enters WORKER phase: writes FR-001, FR-002, FR-003 to disk, computing each FR's hash and appending three `row_kind: artefact_write` rows to action_log. Output envelope sets `next_skill_recommendation: cuo/cpo/feature-request-audit`. The supervisor's conditional edge fires; it invokes `feature-request-audit` with `{fr_paths: [...]}` and the upstream context. `feature-request-audit` runs its 8-step audit loop against `audit_rubric@2.0`, checking INV-001 (verdict determinism - sev-0). All 3 FRs PASS; three `row_kind: artefact_write` rows are appended for the audit reports. The chain closes; `HUMAN_SUMMARY` renders to chat: _"Audit complete - 3/3 PASS. Reports at FR-001.audit.md, FR-002.audit.md, FR-003.audit.md. Trace: `<uuid>`."_
+The supervisor resumes from the LangGraph checkpoint. `task-author` enters WORKER phase: writes TASK-001, TASK-002, TASK-003 to disk, computing each task's hash and appending three `row_kind: artefact_write` rows to action_log. Output envelope sets `next_skill_recommendation: cuo/cpo/task-audit`. The supervisor's conditional edge fires; it invokes `task-audit` with `{task_paths: [...]}` and the upstream context. `task-audit` runs its 8-step audit loop against `audit_rubric@2.0`, checking INV-001 (verdict determinism - sev-0). All 3 tasks PASS; three `row_kind: artefact_write` rows are appended for the audit reports. The chain closes; `HUMAN_SUMMARY` renders to chat: _"Audit complete - 3/3 PASS. Reports at TASK-001.audit.md, TASK-002.audit.md, TASK-003.audit.md. Trace: `<uuid>`."_
 
 ### 11.2 Why this example is the canonical one
 
-It exercises every contract: dual-mode (standalone entry via interview), chain (feature-request-author -> feature-request-audit), audit-hook (7 action_log rows correlated by trace_id), self-audit (INV-003 in feature-request-author, INV-001 in feature-request-audit), pipeline interface (envelope handoff), human-in-the-loop (PLAN approval gate), and persona scope (both skills under cuo/cpo, sharing the persona's escalation graph). If you can read this trace and explain every row, you understand CyberOS skills.
+It exercises every contract: dual-mode (standalone entry via interview), chain (task-author -> task-audit), audit-hook (7 action_log rows correlated by trace_id), self-audit (INV-003 in task-author, INV-001 in task-audit), pipeline interface (envelope handoff), human-in-the-loop (PLAN approval gate), and persona scope (both skills under cuo/cpo, sharing the persona's escalation graph). If you can read this trace and explain every row, you understand CyberOS skills.
 
 ### 11.3 What the action_log looks like
 
@@ -71,14 +71,14 @@ It exercises every contract: dual-mode (standalone entry via interview), chain (
     ORDER BY ts;
 
 
-Returns 7 rows for this run: one `question` (PLAN approval), three `artefact_write` (FR-001..003 from feature-request-author), three `artefact_write` (audit reports from feature-request-audit). Every row's `chain` field equals `sha256(canonical_json(row) + prev_row.chain)` per AGENTS.md §7.2 - tampering breaks the chain.
+Returns 7 rows for this run: one `question` (PLAN approval), three `artefact_write` (TASK-001..003 from task-author), three `artefact_write` (audit reports from task-audit). Every row's `chain` field equals `sha256(canonical_json(row) + prev_row.chain)` per AGENTS.md §7.2 - tampering breaks the chain.
 
 
 ## Part 12 - Runtime architecture: LangGraph + action_log + NATS
 
 ### 12.1 The three runtime layers
 
-The CyberOS runtime is three layers stacked. **Layer 1 - the LangGraph supervisor** (per SRS §6.1.1, DEC-027) runs an Observe-Decide-Act loop. The `classify_act` node calls a Haiku-class router (PRD §6.3) that returns `{persona_id, skill_id, confidence}`. Conditional edges route between skill nodes based on the previous output's `next_skill_recommendation` field. State (envelopes, in-flight FR hashes, HITL pause tokens) is checkpointed to `genie.graph_checkpoint` after every node - chains are crash-safe and resumable.
+The CyberOS runtime is three layers stacked. **Layer 1 - the LangGraph supervisor** (per SRS §6.1.1, DEC-027) runs an Observe-Decide-Act loop. The `classify_act` node calls a Haiku-class router (PRD §6.3) that returns `{persona_id, skill_id, confidence}`. Conditional edges route between skill nodes based on the previous output's `next_skill_recommendation` field. State (envelopes, in-flight task hashes, HITL pause tokens) is checkpointed to `genie.graph_checkpoint` after every node - chains are crash-safe and resumable.
 
 **Layer 2 - `genie.action_log`** (per SRS §6.7) is the append-only Postgres table where every skill output gets a row. Schema: `(audit_id, ts, persona_id, skill_id, skill_version, row_kind, target, payload_sha256, explanation_pane_ref, confidence, hash_chain_prev, hash_chain_self, trace_id, cc_personas, correction_to)`. The hash chain is canonical-JSON over the row minus the chain field, prepended to the previous row's chain. The CP module's tamper detector (SRS §10.4.6) runs continuously and surfaces any chain break as a Notify primitive routed to the security oncall.
 
@@ -191,7 +191,7 @@ CyberOS skills are subject to four layered security controls. Skipping any one o
 
 ### 15.2 Untrusted-content discipline (DEC-050 CaMeL)
 
-Every external byte (PRD content, user-typed name, customer quote, fetched web content) MUST be wrapped in `<untrusted_content source="...">...</untrusted_content>` before reasoning. Skills MUST NOT execute imperatives inside untrusted blocks. The runtime scans for prompt-injection markers per the SAFE-003 list (case-insensitive, NFC-normalised, zero-width stripped, mixed-script-detected). Marker hits trigger `on_marker_hit: surface_to_human` - the skill halts and the supervisor surfaces the suspected injection as a Question primitive. Reference: AGENTS.md §4.2 marker set, `cuo/cpo/feature-request-author/references/UNTRUSTED_CONTENT.md`.
+Every external byte (PRD content, user-typed name, customer quote, fetched web content) MUST be wrapped in `<untrusted_content source="...">...</untrusted_content>` before reasoning. Skills MUST NOT execute imperatives inside untrusted blocks. The runtime scans for prompt-injection markers per the SAFE-003 list (case-insensitive, NFC-normalised, zero-width stripped, mixed-script-detected). Marker hits trigger `on_marker_hit: surface_to_human` - the skill halts and the supervisor surfaces the suspected injection as a Question primitive. Reference: AGENTS.md §4.2 marker set, `cuo/cpo/task-author/references/UNTRUSTED_CONTENT.md`.
 
 ### 15.3 Denylist (sev-0; AGENTS.md §9.3)
 
@@ -199,7 +199,7 @@ Skills MUST NEVER write any of these to memory: compensation (salary, payslip, b
 
 ### 15.4 EU AI Act compliance (PRD §12.2.2; SRS DEC-064)
 
-Any skill that uses LLM inference, generation, or scoring on data about humans needs to think about Article 5 (prohibited practices), Annex III (high-risk systems), and Article 50 (transparency obligations). Skills MUST defer to `cuo-clo` (Chief Legal Officer persona) on any boundary call. The decision tree lives in `cuo/cpo/feature-request-author/references/EU_AI_ACT_DECISION_TREE.md`. Concretely, a skill that auto-classifies a user-facing AI feature's risk class without a determining fact is a sev-0 invariant breach (see `feature-request-author/INVARIANTS.md` INV-007).
+Any skill that uses LLM inference, generation, or scoring on data about humans needs to think about Article 5 (prohibited practices), Annex III (high-risk systems), and Article 50 (transparency obligations). Skills MUST defer to `cuo-clo` (Chief Legal Officer persona) on any boundary call. The decision tree lives in `cuo/cpo/task-author/references/EU_AI_ACT_DECISION_TREE.md`. Concretely, a skill that auto-classifies a user-facing AI feature's risk class without a determining fact is a sev-0 invariant breach (see `task-author/INVARIANTS.md` INV-007).
 
 ### 15.5 Hash-chain integrity (SRS §10.4.6)
 
@@ -212,15 +212,15 @@ Every skill's audit row participates in the `genie.action_log` hash chain. Tampe
 
 A skill invocation has a typical latency budget. **Pre-invocation** (envelope validation + scope check) takes <50ms. **Body execution** is dominated by LLM inference - Haiku-class for routing and judgement is ~500ms per call; Sonnet/Opus for heavier work is 2-10s; deterministic skills with no inference are <100ms. **Invariants check** at each node boundary is ~30ms for 8 invariants (proportional to invariant count x cost-per-check). **Audit row append** is <10ms (Postgres single-row insert with hash compute). **Post-invocation** (envelope validation + chain dispatch) is <20ms.
 
-Expect a typical chat-mode `feature-request-author` PLAN-phase run to take 3-8 seconds end-to-end (dominated by Sonnet/Opus inference reading the PRD and enumerating FRs). A WORKER-phase FR generation is ~5-15s per FR. A `feature-request-audit` run is ~2-5s per FR (mostly mechanical rule checks; only a few rules need LLM judgement).
+Expect a typical chat-mode `task-author` PLAN-phase run to take 3-8 seconds end-to-end (dominated by Sonnet/Opus inference reading the PRD and enumerating tasks). A WORKER-phase task generation is ~5-15s per task. A `task-audit` run is ~2-5s per task (mostly mechanical rule checks; only a few rules need LLM judgement).
 
 ### 16.2 Observability - what to monitor
 
-Per skill, OBS (the observability module per SRS §6.12) tracks five primary metrics. **`acceptance_rate`** - fraction of outputs the user accepted (versus corrected, ignored, or rejected). Drops below 40% over 7 days auto-pause the skill (DEC-055). **`hitl_pause_rate`** - fraction of invocations that emitted a Question primitive. Above 40% indicates the skill is asking too often; refine the prompt. **`avg_iteration_count`** - for skills that loop (e.g., `feature-request-audit`'s per-FR audit loop), how many iterations to convergence. Above 4 indicates slow convergence. **`refinement_proposal_rate`** - auto-refinement frequency. >=2 per week per skill triggers manual fine-tune escalation. **`drift_signal_count`** - anomaly signals (confidence-low streaks, user-correction streaks, etc.) firing per 7 days. >=3 triggers a Notify.
+Per skill, OBS (the observability module per SRS §6.12) tracks five primary metrics. **`acceptance_rate`** - fraction of outputs the user accepted (versus corrected, ignored, or rejected). Drops below 40% over 7 days auto-pause the skill (DEC-055). **`hitl_pause_rate`** - fraction of invocations that emitted a Question primitive. Above 40% indicates the skill is asking too often; refine the prompt. **`avg_iteration_count`** - for skills that loop (e.g., `task-audit`'s per-task audit loop), how many iterations to convergence. Above 4 indicates slow convergence. **`refinement_proposal_rate`** - auto-refinement frequency. >=2 per week per skill triggers manual fine-tune escalation. **`drift_signal_count`** - anomaly signals (confidence-low streaks, user-correction streaks, etc.) firing per 7 days. >=3 triggers a Notify.
 
 ### 16.3 Logging conventions
 
-Every skill output produces exactly one `genie.action_log` row - that's the canonical log. Skills SHOULD NOT write parallel log streams; instead, populate the row's `payload_data` and `reason` fields richly. The `reason` field is <=200 chars present-tense citing the source (e.g., "feature-request-author wrote FR-007 from PRD §4.2 lines 110-145; coverage 0.99"). The `payload_data` field is the full JSON of the produced artefact (truncated to 64 KB; longer artefacts get a hash-only row).
+Every skill output produces exactly one `genie.action_log` row - that's the canonical log. Skills SHOULD NOT write parallel log streams; instead, populate the row's `payload_data` and `reason` fields richly. The `reason` field is <=200 chars present-tense citing the source (e.g., "task-author wrote TASK-007 from PRD §4.2 lines 110-145; coverage 0.99"). The `payload_data` field is the full JSON of the produced artefact (truncated to 64 KB; longer artefacts get a hash-only row).
 
 ### 16.4 Tracing
 
@@ -241,7 +241,7 @@ Skill bodies are written in English (the engineering lingua franca). The intervi
 
 ### 17.3 Artefact language
 
-When a skill produces an artefact (an FR, a tech spec, a report), its language matches the input language. feature-request-author reads a Vietnamese PRD and writes Vietnamese FR markdowns. The audit rubric's mechanical rules (FM-001..111, SEC-001..009) are language-neutral; the LLM-judgement rules (QA-009 plain-English check) need a Vietnamese-equivalent rule (QA-009-vi) when auditing Vietnamese FRs. This is a known gap; the rubric expansion to Vietnamese is a v0.3.0 follow-up.
+When a skill produces an artefact (a task, a tech spec, a report), its language matches the input language. Task-author reads a Vietnamese PRD and writes Vietnamese task markdowns. The audit rubric's mechanical rules (FM-001..111, SEC-001..009) are language-neutral; the LLM-judgement rules (QA-009 plain-English check) need a Vietnamese-equivalent rule (QA-009-vi) when auditing Vietnamese tasks. This is a known gap; the rubric expansion to Vietnamese is a v0.3.0 follow-up.
 
 
 ## Part 18 - Anti-patterns: what NOT to do
@@ -260,11 +260,11 @@ Patterns that look reasonable but break CyberOS contracts.
 
 **Don't promote an LLM-inferred fact to `confidence: 1.0`.** AGENTS.md §5.2 caps LLM-inferred at 0.7. Authority is human-edited > human-confirmed > llm-explicit > llm-implicit; never promote.
 
-**Don't auto-set `eu_ai_act_risk_class: minimal` without a determining fact.** When in doubt, escalate to `cuo-clo`. INV-007 in `feature-request-author/INVARIANTS.md` makes this an enforced invariant.
+**Don't auto-set `eu_ai_act_risk_class: minimal` without a determining fact.** When in doubt, escalate to `cuo-clo`. INV-007 in `task-author/INVARIANTS.md` makes this an enforced invariant.
 
 **Don't write to `.cyberos/memory/store/` outside the memory MCP gateway.** Direct file writes bypass the AGENTS.md §4.1 path-traversal guard, the §4.2 content gate, and the §4.4 two-phase atomic write. Always go through `memory.write_memory`.
 
-**Don't change RUBRIC.md mid-batch.** feature-request-audit's INV-007 is sev-0. The runtime hashes the rubric at batch start and verifies before each FR audit. A change mid-batch aborts with `RUBRIC_CHANGED_MID_BATCH`.
+**Don't change RUBRIC.md mid-batch.** task-audit's INV-007 is sev-0. The runtime hashes the rubric at batch start and verifies before each task audit. A change mid-batch aborts with `RUBRIC_CHANGED_MID_BATCH`.
 
 **Don't set `partner_connector: true` without a separate DEC.** The validator enforces the trust<->exposability link (Part 5.3) plus a per-skill DEC. Partner exposure has SLA, billing, and tenancy implications that need explicit governance.
 
@@ -332,7 +332,7 @@ Use case: a "skill" has empty `allowed_mcp_tools`, `expects: null`, `confidence_
     git rm -r cyberos/docs/skills/cuo/_shared/<skill-id>
 
 
-Update every consumer skill: add `depends_on_contracts:` + update body refs. Update `cyberos/docs/contracts/README.md` index. The `feature-request` contract was promoted exactly this way in registry v0.2.0 - see `cyberos/docs/contracts/feature-request/CHANGELOG.md` for the canonical example.
+Update every consumer skill: add `depends_on_contracts:` + update body refs. Update `cyberos/docs/contracts/README.md` index. The `task` contract was promoted exactly this way in registry v0.2.0 - see `cyberos/docs/contracts/task/CHANGELOG.md` for the canonical example.
 
 ### Recipe 8 - Set up acceptance fixtures for a new skill
 
@@ -340,7 +340,7 @@ Create `cuo/<role>/<skill>/acceptance/` and add three files. `golden-input.json`
 
 ### Recipe 9 - Write an INVARIANTS.md
 
-Identify 3-8 truths the skill enforces about its own behaviour. Each invariant has ID + Statement + Check + Severity + Refinement template. Start with the most universal: `INV-confidence-band-reporting` (every output's `confidence` is in [0.0, 1.0]) and `INV-scope-discipline` (no write outside declared `allowed_memory_scopes`). Add skill-specific invariants the skill's contract makes salient - e.g., `feature-request-audit`'s `INV-001 verdict-determinism` is the auditor's reproducibility promise. Severity = `error` for sev-0; `warning` for advisory; `info` for telemetry-only.
+Identify 3-8 truths the skill enforces about its own behaviour. Each invariant has ID + Statement + Check + Severity + Refinement template. Start with the most universal: `INV-confidence-band-reporting` (every output's `confidence` is in [0.0, 1.0]) and `INV-scope-discipline` (no write outside declared `allowed_memory_scopes`). Add skill-specific invariants the skill's contract makes salient - e.g., `task-audit`'s `INV-001 verdict-determinism` is the auditor's reproducibility promise. Severity = `error` for sev-0; `warning` for advisory; `info` for telemetry-only.
 
 ### Recipe 10 - Write a refinement_proposal that humans actually approve
 
@@ -360,7 +360,7 @@ Mandatory after every new contract registration. Running this loop on `nats-subj
 
 **Step 1 - Author the first draft.** Create `cyberos/docs/contracts/<id>/CONTRACT.md` (with `contract_version: v1` in frontmatter), `schema.json` (or `template.md`), `protocol.md` (wire_protocol only), `CHANGELOG.md`. Pick the convention the contract documents (subject names, payload shapes, frontmatter fields, etc.).
 
-**Step 2 - Audit pass 1: grep consumer skill bodies for the convention as the contract describes it.** Use the contract's exact form in the grep. If the grep returns nothing, or returns the wrong form, the contract has drifted from reality and needs correction. Real example from v0.2.2: contract said `cuo_cpo.fr_author.fr_written`; grep against feature-request-author's body returned `cuo.fr_author.fr_written`. Reality wins. Update the contract.
+**Step 2 - Audit pass 1: grep consumer skill bodies for the convention as the contract describes it.** Use the contract's exact form in the grep. If the grep returns nothing, or returns the wrong form, the contract has drifted from reality and needs correction. Real example from v0.2.2: contract said `cuo_cpo.fr_author.fr_written`; grep against task-author's body returned `cuo.fr_author.fr_written`. Reality wins. Update the contract.
 
 **Step 3 - Fix.** Update the contract files (CONTRACT.md inventory + naming convention prose, schema.json descriptions, protocol.md prose, CHANGELOG.md historical claims). Be exhaustive - include the description fields in JSON Schema, not just the inventory tables. Strings appear in surprising places.
 
@@ -408,9 +408,9 @@ A skill is eligible for routing when ALL of: the caller persona's `allowed_mcp_t
 
 When each persona comes online, it brings its own scope contract + skill set + escalation graph. Quickstart pointers per persona:
 
-**`cpo` (P0, today)** - owns FR backlog management. Two skills: feature-request-author, feature-request-audit. See `cuo/cpo/SKILL.md` for voice deltas (user outcomes over feature counts; one primary metric + one guardrail; out-of-scope is a feature; never auto-set EU AI Act risk class to minimal).
+**`cpo` (P0, today)** - owns task backlog management. Two skills: task-author, task-audit. See `cuo/cpo/SKILL.md` for voice deltas (user outcomes over feature counts; one primary metric + one guardrail; out-of-scope is a feature; never auto-set EU AI Act risk class to minimal).
 
-**`cto` (P0, today)** - owns tech-spec drafting and architecture review. First workflow: `fr-to-tech-spec` (planned, consumes `feature-request-author`'s output). See PRD §6.5 for voice.
+**`cto` (P0, today)** - owns tech-spec drafting and architecture review. First workflow: `fr-to-tech-spec` (planned, consumes `task-author`'s output). See PRD §6.5 for voice.
 
 **`cfo` (P1)** - owns cashflow projection, payroll narration, budget variance. Defers to `cuo-clo` on REW (right-to-erasure) writes per PRD §6.4.1. Defers to `cuo-cseco` on financial-data security boundaries.
 
@@ -463,24 +463,24 @@ Persona / shared | Skill | Status | Owner-role | Pipeline links
 `cuo/_shared/` | `hello-world` | v1.0.0 | shared | teaching example; no chains
 `cuo/cpo/` | `requirements-discovery` | v0.1.0 (scaffold) | cpo | chain entry point: memory + 20-q interview -> `project_brief@1`
 `cuo/cpo/` | `product-requirements-document-author` | v0.1.0 (scaffold) | cpo | consumes `project_brief@1` + 3-5 follow-ups -> `product-requirements-document@1`
-`cuo/cpo/` | `feature-request-author` | v0.2.2 | cpo | consumes PRD/spec docs -> FR markdowns -> `feature-request-audit`
-`cuo/cpo/` | `feature-request-audit` | v0.2.2 | cpo | consumes FR markdowns from `feature-request-author` or any source
+`cuo/cpo/` | `task-author` | v0.2.2 | cpo | consumes PRD/spec docs -> task markdowns -> `task-audit`
+`cuo/cpo/` | `task-audit` | v0.2.2 | cpo | consumes task markdowns from `task-author` or any source
 `cuo/cpo/` | `product-requirements-document-audit` | v0.1.0 (scaffold) | cpo | quality gate on PRDs (advisory-leaning per Q4)
-`cuo/chief-technology-officer/` | `fr-to-tech-spec` | v0.1.0 (scaffold) | cto | consumes audited FR markdowns -> emits tech specs (gated on runtime)
+`cuo/chief-technology-officer/` | `task-to-tech-spec` | v0.1.0 (scaffold) | cto | consumes audited task markdowns -> emits tech specs (gated on runtime)
 `cuo/chief-technology-officer/` | `software-requirements-specification-author` | v0.1.0 (scaffold) | cto | consumes audited PRD -> emits `software-requirements-specification@1` markdown
 `cuo/chief-technology-officer/` | `software-requirements-specification-audit` | v0.1.0 (scaffold) | cto | quality gate on SRSs (advisory-leaning)
-`cuo/chief-technology-officer/` | `spec-to-impl-plan` | v0.1.0 (scaffold) | cto | tech-spec OR audited FR -> impl-plan + tickets in PROJ MCP
+`cuo/chief-technology-officer/` | `spec-to-impl-plan` | v0.1.0 (scaffold) | cto | tech-spec OR audited task -> impl-plan + tickets in PROJ MCP
 `cuo/cpo/` | `chain-selector` | v0.1.0 (scaffold) | cpo | reads brief -> picks lean/standard/full -> emits chain plan
 
 ### 23.2 Contracts
 
 Contract | Latest version | Kind | Stewarded by | Consumed by
 ---|---|---|---|---
-`feature-request` | v1 (`feature_request@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/feature-request-author` v0.2.0+, `cuo/cpo/feature-request-audit` v0.2.0+, `cuo/chief-technology-officer/fr-to-tech-spec` v0.1.0+, `cuo/chief-technology-officer/spec-to-impl-plan` v0.1.0+ (lean)
+`task` | v1 (`task@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/task-author` v0.2.0+, `cuo/cpo/task-audit` v0.2.0+, `cuo/chief-technology-officer/task-to-tech-spec` v0.1.0+, `cuo/chief-technology-officer/spec-to-impl-plan` v0.1.0+ (lean)
 `nats-subjects` | v1 (`nats_subjects@1`) | wire_protocol | `cuo-cto` | all skills v0.2.2+, the supervisor
 `project-brief` | v1 (`project_brief@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/requirements-discovery` v0.1.0+, `cuo/cpo/product-requirements-document-author` v0.1.0+, `cuo/cpo/chain-selector` v0.1.0+
-`prd` | v1 (`product-requirements-document@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/product-requirements-document-author` v0.1.0+, `cuo/cpo/product-requirements-document-audit` v0.1.0+, `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0+ (input), `cuo/cpo/feature-request-author` v0.3.0+ (planned)
-`srs` | v1 (`software-requirements-specification@1`) | artefact_schema | `cuo-cto` | `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0+, `cuo/chief-technology-officer/software-requirements-specification-audit` v0.1.0+, `cuo/chief-technology-officer/fr-to-tech-spec` v0.2.0+ (input context)
+`prd` | v1 (`product-requirements-document@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/product-requirements-document-author` v0.1.0+, `cuo/cpo/product-requirements-document-audit` v0.1.0+, `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0+ (input), `cuo/cpo/task-author` v0.3.0+ (planned)
+`srs` | v1 (`software-requirements-specification@1`) | artefact_schema | `cuo-cto` | `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0+, `cuo/chief-technology-officer/software-requirements-specification-audit` v0.1.0+, `cuo/chief-technology-officer/task-to-tech-spec` v0.2.0+ (input context)
 `impl-plan` | v1 (`impl_plan@1`) | artefact_schema | `cuo-cto` | `cuo/chief-technology-officer/spec-to-impl-plan` v0.1.0+
 
 (Indexes grow as skills land. Maintained by hand; CI consolidation script is a v0.3.0 follow-up.)
@@ -519,21 +519,21 @@ A skill is registry-valid when ALL of:
 
 **Q. "Two skills both want to be triggered by the same user phrase. How does the supervisor pick?"** A. The classifier returns `{skill_id, confidence}`. If multiple skills match above the floor, escalate via Question: "I'm not sure which workflow you mean - A or B?"
 
-**Q. "Should feature-request-author and feature-request-audit be one skill or two?"** A. Two. CyberOS skills are atomic: each is standalone AND chainable. The split lets you audit-only without regenerating, regenerate without re-auditing, or chain both. See `cuo/cpo/feature-request-author/CHANGELOG.md` v0.1.0 for the trade-off.
+**Q. "Should task-author and task-audit be one skill or two?"** A. Two. CyberOS skills are atomic: each is standalone AND chainable. The split lets you audit-only without regenerating, regenerate without re-auditing, or chain both. See `cuo/cpo/task-author/CHANGELOG.md` v0.1.0 for the trade-off.
 
 **Q. "Can a skill call another skill directly, without the supervisor?"** A. No. Every skill-to-skill handoff goes through the supervisor's LangGraph (which writes the action_log row, applies the scope contract, validates envelope schemas). Direct calls would break audit and chain-of-custody. If you need a "library" of helper functions, those go in `scripts/` inside the skill folder.
 
 **Q. "When do I make a skill vs. write a regular Python script?"** A. Use a skill when ANY of: the work involves LLM inference, you want auditability through `genie.action_log`, you want it composable with other skills, you want CUO to invoke it from natural language. Use a script for purely deterministic computation outside the supervisor's loop.
 
-**Q. "What if I want to copy feature-request-author to Antigravity / Codex / Cursor?"** A. See Part 9. Today: copy the folder + the `_contracts/feature-request/` folder; the body works but auto-refinement, audit ledger, and scope enforcement are degraded to filesystem fallbacks. Soon (v0.3.0): the build pipeline emits host-native artefacts via transpilers + a host shim, so equivalence is preserved.
+**Q. "What if I want to copy task-author to Antigravity / Codex / Cursor?"** A. See Part 9. Today: copy the folder + the `_contracts/task/` folder; the body works but auto-refinement, audit ledger, and scope enforcement are degraded to filesystem fallbacks. Soon (v0.3.0): the build pipeline emits host-native artefacts via transpilers + a host shim, so equivalence is preserved.
 
 **Q. "How do I test a skill before the runtime exists?"** A. Three ways: (1) read it as a human - does the body make sense as a prompt? (2) Run it manually - paste the SKILL.md body into Claude.ai with the input envelope as the user message; compare output against `acceptance/golden-output*.md`. (3) Validate envelopes with `ajv`. The skill is a contract, not code - most validation happens by reading.
 
 **Q. "Why do skills use Markdown frontmatter instead of a structured config format?"** A. Markdown frontmatter is the lowest common denominator. Anthropic skills, Claude Code, Antigravity, Codex, Cursor, MCP server descriptors all read SKILL.md-style files. JSON or TOML would lock us into a different ecosystem. The choice was deliberate: portability over purity.
 
-**Q. "How does versioning interact with chained skills?"** A. Each skill's `skill_version` is independent. A chain of `feature-request-author v0.2.0 -> feature-request-audit v0.2.0` works because their envelope schemas are compatible. If `feature-request-audit` MAJOR-bumps to v1.0.0 with breaking schema changes, `feature-request-author` stays at v0.2.0 unless its own contract changes. The CI matrix verifies envelope compatibility on every PR.
+**Q. "How does versioning interact with chained skills?"** A. Each skill's `skill_version` is independent. A chain of `task-author v0.2.0 -> task-audit v0.2.0` works because their envelope schemas are compatible. If `task-audit` MAJOR-bumps to v1.0.0 with breaking schema changes, `task-author` stays at v0.2.0 unless its own contract changes. The CI matrix verifies envelope compatibility on every PR.
 
-**Q. "Can a single skill produce multiple artefacts in one invocation?"** A. Yes. feature-request-author writes 3 FRs in one batch, producing 3 `artefact_write` rows. The output envelope's `frs_written` array carries all 3. Multi-artefact skills are common; they're not multiple invocations.
+**Q. "Can a single skill produce multiple artefacts in one invocation?"** A. Yes. Task-author writes 3 tasks in one batch, producing 3 `artefact_write` rows. The output envelope's `frs_written` array carries all 3. Multi-artefact skills are common; they're not multiple invocations.
 
 ### 25.2 Glossary
 
@@ -641,7 +641,7 @@ If shorter form is used, ask for missing fields via AskUserQuestion (or chat que
   * Triage gating answers (Q1-Q5 of requirements-discovery): strategic fit / capacity / runway / customer signal / reversibility.
   * Discovery answers (Q6-Q20): objectives / users / metrics / constraints / risks / scope / etc.
   * Profile override at brief-completion (if auto-selection feels wrong).
-  * Section-by-section approval during PRD/SRS/FR generation (one bulk approval per section is fine).
+  * Section-by-section approval during PRD/SRS/task generation (one bulk approval per section is fine).
   * HITL answers when an audit pauses with `needs_human` issues.
   * Decisions on refinement proposals (Accept / Accept-with-edits / Defer / Reject).
   * Any explicit `override` calls if you suggested one.
@@ -690,9 +690,9 @@ Run these in order; the user shouldn't see most of this unless something fails.
          C. product-requirements-document-author               ->  product-requirements-document@1
          D. product-requirements-document-audit                ->  audited product-requirements-document@1            (skipped on lean)
          E. software-requirements-specification-author + software-requirements-specification-audit   ->  audited software-requirements-specification@1            (full only)
-         F. feature-request-author                ->  feature_request@1 xN
-         G. feature-request-audit                 ->  audited feature-request@1 xN
-         H. fr-to-tech-spec          ->  tech_spec@1              (skipped on lean)
+         F. Task-author                ->  task@1 xN
+         G. Task-audit                 ->  audited task@1 xN
+         H. task-to-tech-spec          ->  tech_spec@1              (skipped on lean)
          I. spec-to-impl-plan        ->  impl_plan@1
 
 
@@ -848,7 +848,7 @@ Use AskUserQuestion: lean / standard / full / accept-recommended.
 
 Use AskUserQuestion.
 
-  6. **On PASS**: save the audit report; **append audit row** with op `consolidation_run`-shaped reasoning; announce: _"Phase D complete. PRD audit pass. Moving to Phase F (FR authoring)."_ (Skip Phase E unless full profile.)
+  6. **On PASS**: save the audit report; **append audit row** with op `consolidation_run`-shaped reasoning; announce: _"Phase D complete. PRD audit pass. Moving to Phase F (task authoring)."_ (Skip Phase E unless full profile.)
 
 
 #### HITL_PAUSE template
@@ -879,21 +879,21 @@ Same shape as Phase C + D but driven by `cuo/chief-technology-officer/software-r
 The SRS audit's rubric leans advisory - most rules emit warnings, not blocking issues. Most runs PASS on first try; HITL is rare.
 
 
-### Phase F - FR Authoring (~20-45 min)
+### Phase F - task Authoring (~20-45 min)
 
 #### Your steps
 
-  1. **Read** `cuo/cpo/feature-request-author/SKILL.md` (364 lines - the largest skill).
+  1. **Read** `cuo/cpo/task-author/SKILL.md` (364 lines - the largest skill).
 
-  2. **Decompose the audited PRD (+ SRS if full) into feature requests.** Each FR <=2 weeks of work, single dominant risk, single dominant invariant, independently completable.
+  2. **Decompose the audited PRD (+ SRS if full) into tasks.** Each task <=2 weeks of work, single dominant risk, single dominant invariant, independently completable.
 
-  3. **Generate one FR markdown per feature** under `<output_dir>/fr/FR-001-<slug>.md`, FR-002-..., etc.
+  3. **Generate one task markdown per feature** under `<output_dir>/fr/TASK-001-<slug>.md`, TASK-002-..., etc.
 
-  4. **Show the user the FR list** with one-line summaries:
+  4. **Show the user the task list** with one-line summaries:
 
-         Decomposed into <N> feature requests:
-           FR-001 <slug>: <one-line>
-           FR-002 <slug>: <one-line>
+         Decomposed into <N> tasks:
+           TASK-001 <slug>: <one-line>
+           TASK-002 <slug>: <one-line>
            ...
 
          Approve / amend / decompose differently?
@@ -901,31 +901,31 @@ The SRS audit's rubric leans advisory - most rules emit warnings, not blocking i
 
 Use AskUserQuestion: approve / amend / re-decompose.
 
-  5. **On approve**: save all FRs; append audit rows.
+  5. **On approve**: save all tasks; append audit rows.
 
-  6. **On amend**: take user's feedback (which FR to merge / split / rename); regenerate; re-confirm.
+  6. **On amend**: take user's feedback (which task to merge / split / rename); regenerate; re-confirm.
 
   7. **Announce Phase G start.**
 
 
-### Phase G - FR Audit (~15-30 min)
+### Phase G - task Audit (~15-30 min)
 
 #### Your steps
 
-  1. **Read** `cuo/cpo/feature-request-audit/SKILL.md` + its RUBRIC + AUDIT_LOOP.
-  2. **Run the 8-step loop per-FR sequentially.** Don't parallelise - concurrent writes to the memory ledger contend on `.lock`.
-  3. **Aggregate HITL questions across all FRs** before pausing. Better UX than asking once per FR.
+  1. **Read** `cuo/cpo/task-audit/SKILL.md` + its RUBRIC + AUDIT_LOOP.
+  2. **Run the 8-step loop per-task sequentially.** Don't parallelise - concurrent writes to the memory ledger contend on `.lock`.
+  3. **Aggregate HITL questions across all tasks** before pausing. Better UX than asking once per task.
   4. **Emit `AUDIT_BATCH_SUMMARY.md`** at `<output_dir>/fr/`.
   5. **On all-PASS**: announce; move to Phase H or I.
-  6. **On any FR not PASS**: list the FRs that need attention; ask user how to proceed (edit FR / drop the FR / file refinement / accept-with-warnings).
+  6. **On any task not PASS**: list the tasks that need attention; ask user how to proceed (edit task / drop the task / file refinement / accept-with-warnings).
 
 
 ### Phase H - Tech Spec (skipped on lean; ~30-60 min)
 
 #### Your steps
 
-  1. **Read** `cuo/chief-technology-officer/fr-to-tech-spec/SKILL.md`.
-  2. **Generate `tech_spec@1` markdown** consuming all audited FRs. The tech-spec adds: data shapes / component decomposition / sequence diagrams / library + framework + language choices (with ADR refs in `<project>/docs/adr/` if architectural).
+  1. **Read** `cuo/chief-technology-officer/task-to-tech-spec/SKILL.md`.
+  2. **Generate `tech_spec@1` markdown** consuming all audited tasks. The tech-spec adds: data shapes / component decomposition / sequence diagrams / library + framework + language choices (with ADR refs in `<project>/docs/adr/` if architectural).
   3. **Offer ADRs sparingly** - only when ALL THREE: hard-to-reverse + surprising-without-context + result-of-real-trade-off (per mattpocock's grill-with-docs rule).
   4. **Confirm tech-spec with user** in chunks (Architecture / Data shapes / Components / Cross-system integrations / Failure modes).
   5. **Save `tech-spec-<slug>.md`** to `<output_dir>/`.
@@ -968,8 +968,8 @@ After Phase I, emit a final summary in chat:
     - prd-<slug>.audit.md        (Phase D)        <- if standard/full
     - srs-<slug>.md              (Phase E)        <- if full
     - srs-<slug>.audit.md        (Phase E)        <- if full
-    - fr/FR-001-<slug>.md, ...   (Phase F)
-    - fr/FR-NNN-<slug>.audit.md  (Phase G)
+    - fr/TASK-001-<slug>.md, ...   (Phase F)
+    - fr/task-NNN-<slug>.audit.md  (Phase G)
     - tech-spec-<slug>.md        (Phase H)        <- if standard/full
     - impl-plan.md               (Phase I)        <- hand to engineering
 
@@ -1183,9 +1183,9 @@ This file is the project's shared vocabulary. Every chain skill will read and up
       -> C. product-requirements-document-author -> product-requirements-document@1
       -> D. [if standard|full] product-requirements-document-audit -> audited product-requirements-document@1
       -> E. [if full] software-requirements-specification-author -> software-requirements-specification@1 -> software-requirements-specification-audit -> audited software-requirements-specification@1
-      -> F. feature-request-author -> FR markdowns
-      -> G. feature-request-audit -> audited FRs
-      -> H. [if standard|full] fr-to-tech-spec -> tech_spec@1
+      -> F. Task-author -> task markdowns
+      -> G. Task-audit -> audited tasks
+      -> H. [if standard|full] task-to-tech-spec -> tech_spec@1
       -> I. spec-to-impl-plan -> impl_plan@1 + (optionally) tickets in PROJ MCP
 
 
@@ -1327,7 +1327,7 @@ The agent will end its response with a §14.1 compact block. The audit row goes 
 
   3. The skill reads the brief's `project_kind`, `eu_ai_act_risk_class`, `confidentiality`, `budget_band`, `target_release` -> recommends a `chain_profile`:
 
-     * **lean** - small / experimental / non-customer-facing. Skips PRD-audit, SRS-author/audit, fr-to-tech-spec. Just: brief -> feature-request-author -> feature-request-audit -> spec-to-impl-plan. Use for prototypes, internal tools.
+     * **lean** - small / experimental / non-customer-facing. Skips PRD-audit, SRS-author/audit, fr-to-tech-spec. Just: brief -> task-author -> task-audit -> spec-to-impl-plan. Use for prototypes, internal tools.
      * **standard** - typical customer-facing feature. Skips SRS-author/audit. Use for most projects.
      * **full** - regulated / high-risk / multi-team. Everything including SRS. Use for EU AI Act high-risk, healthcare/finance verticals, anything with compliance review.
   4. **Override at brief-completion time** if the auto-selection feels wrong. Just say _"override to `<profile>`"_.
@@ -1445,9 +1445,9 @@ The SRS-audit's RUBRIC focuses on:
   * Failure modes documented
 
 
-### Phase F - Feature-Request Authoring
+### Phase F - Task Authoring
 
-**Skill**: `cuo/cpo/feature-request-author` **Files to load**: `SKILL.md` (364 lines / 20 KB) - largest in the chain; budget read-time accordingly **Input**: audited `product-requirements-document@1` (+ audited `software-requirements-specification@1` if full profile) **Output**: a folder of `feature_request@1` markdown files - one per feature, each <=2 weeks of work
+**Skill**: `cuo/cpo/task-author` **Files to load**: `SKILL.md` (364 lines / 20 KB) - largest in the chain; budget read-time accordingly **Input**: audited `product-requirements-document@1` (+ audited `software-requirements-specification@1` if full profile) **Output**: a folder of `task@1` markdown files - one per feature, each <=2 weeks of work
 
 #### Procedure
 
@@ -1455,42 +1455,42 @@ The SRS-audit's RUBRIC focuses on:
 
   2. Paste the standard run prompt with paths to the audited PRD (and SRS if full).
 
-  3. The skill **decomposes the PRD into feature requests**. Each FR is a unit of work that:
+  3. The skill **decomposes the PRD into tasks**. Each task is a unit of work that:
 
      * Has a single dominant risk
      * Has a single dominant invariant
      * Is independently completable
      * Has clear acceptance criteria
-  4. **Output**: `./planning/<date>-<slug>/fr/FR-001-<slug>.md`, `FR-002-<slug>.md`, ... One file per feature.
+  4. **Output**: `./planning/<date>-<slug>/fr/TASK-001-<slug>.md`, `TASK-002-<slug>.md`, ... One file per feature.
 
 
 #### Validation
 
-  * Each FR has all 18 frontmatter fields populated
-  * Each FR's acceptance criteria are testable (could be expressed as a `test should X` statement)
-  * FR scopes don't overlap (each piece of work belongs to exactly one FR)
+  * Each task has all 18 frontmatter fields populated
+  * Each task's acceptance criteria are testable (could be expressed as a `test should X` statement)
+  * Task scopes don't overlap (each piece of work belongs to exactly one task)
 
 
-### Phase G - Feature-Request Audit
+### Phase G - Task Audit
 
-**Skill**: `cuo/cpo/feature-request-audit` **Files to load**: `SKILL.md` (316 lines / 16 KB) + `RUBRIC.md` + `AUDIT_LOOP.md` **Input**: folder of FR markdowns **Output**: `<FR>.audit.md` per FR + `AUDIT_BATCH_SUMMARY.md` aggregate
+**Skill**: `cuo/cpo/task-audit` **Files to load**: `SKILL.md` (316 lines / 16 KB) + `RUBRIC.md` + `AUDIT_LOOP.md` **Input**: folder of task markdowns **Output**: `<task>.audit.md` per task + `AUDIT_BATCH_SUMMARY.md` aggregate
 
 #### Procedure
 
-Same shape as PRD-audit but **runs per-FR sequentially**. The skill emits an `AUDIT_BATCH_SUMMARY` after all FRs, plus a single `HITL_BATCH_REQUEST` if any FR has `needs_human`. Answer all HITL questions in one batch; the skill resumes per-FR.
+Same shape as PRD-audit but **runs per-task sequentially**. The skill emits an `AUDIT_BATCH_SUMMARY` after all tasks, plus a single `HITL_BATCH_REQUEST` if any task has `needs_human`. Answer all HITL questions in one batch; the skill resumes per-task.
 
 #### Validation
 
-  * Every FR has `overall_status: pass`
+  * Every task has `overall_status: pass`
   * Batch summary shows zero open / zero needs_human
-  * FR cross-refs (`depends_on: [FR-NNN]`) all resolve
+  * Task cross-refs (`depends_on: [task-NNN]`) all resolve
 
 
 ### Phase H - Tech Spec (standard / full only)
 
-**Skill**: `cuo/chief-technology-officer/fr-to-tech-spec` **Files to load**: `SKILL.md` (270 lines / 14 KB) **Input**: audited FR markdowns **Output**: `tech_spec@1` markdown - implementation-shaped spec engineering will execute against
+**Skill**: `cuo/chief-technology-officer/fr-to-tech-spec` **Files to load**: `SKILL.md` (270 lines / 14 KB) **Input**: audited task markdowns **Output**: `tech_spec@1` markdown - implementation-shaped spec engineering will execute against
 
-For lean profile, **skip this phase**; spec-to-impl-plan consumes audited FRs directly.
+For lean profile, **skip this phase**; spec-to-impl-plan consumes audited tasks directly.
 
 The tech-spec adds:
 
@@ -1505,7 +1505,7 @@ This is where mattpocock's `/grill-with-docs` discipline matters most: **every t
 
 ### Phase I - Implementation Plan (the chain's final step)
 
-**Skill**: `cuo/chief-technology-officer/spec-to-impl-plan` **Files to load**: `SKILL.md` (217 lines / 9 KB) **Input**: audited `tech_spec@1` (standard / full) OR audited FR (lean) **Output**: `impl_plan@1` markdown + (optionally) tickets in PROJ MCP
+**Skill**: `cuo/chief-technology-officer/spec-to-impl-plan` **Files to load**: `SKILL.md` (217 lines / 9 KB) **Input**: audited `tech_spec@1` (standard / full) OR audited task (lean) **Output**: `impl_plan@1` markdown + (optionally) tickets in PROJ MCP
 
 #### Procedure
 
@@ -1598,8 +1598,8 @@ Per project, the deliverables you keep:
     ├── srs-<feature>.md            # Phase E (full only)
     ├── srs-<feature>.audit.md      # Phase E
     ├── fr/
-    │   ├── FR-001-<slug>.md        # Phase F
-    │   ├── FR-001-<slug>.audit.md  # Phase G
+    │   ├── TASK-001-<slug>.md        # Phase F
+    │   ├── TASK-001-<slug>.audit.md  # Phase G
     │   └── ...
     ├── tech-spec-<feature>.md      # Phase H (standard/full)
     └── impl-plan.md                # Phase I - hand to engineering
@@ -1624,8 +1624,8 @@ B - Chain Selection | 5 min | 5 min | 5 min
 C - PRD Author | - | 30 min | 45 min
 D - PRD Audit | - | 15 min | 20 min
 E - SRS Author + Audit | - | - | 60 min
-F - FR Author | 20 min | 30 min | 45 min
-G - FR Audit | 15 min | 20 min | 30 min
+F - task Author | 20 min | 30 min | 45 min
+G - task Audit | 15 min | 20 min | 30 min
 H - Tech Spec | - | 30 min | 60 min
 I - Impl Plan | 15 min | 20 min | 30 min
 **Total** | **~85 min** | **~3 hours** | **~5-6 hours**
@@ -1641,7 +1641,7 @@ These are the happy-path numbers. Add 30-50% for HITL pauses, refinement proposa
   * **Accepting a refinement proposal without reading the proposed change carefully** - once accepted, the skill version bumps and the change applies to every future run.
   * **Mixing chain runs across projects in the same `./planning/` folder** - one folder per project per date, always.
   * **Running multiple skills in the same agent session** - context-pollution risk. Fresh session per skill is cheap regardless of host.
-  * **Falling for "this is too simple to need a PRD"** - superpowers' anti-rationalization rule applies here. Even tiny features benefit from the brief -> chain-selector -> at-least-FR pipeline.
+  * **Falling for "this is too simple to need a PRD"** - superpowers' anti-rationalization rule applies here. Even tiny features benefit from the brief -> chain-selector -> at-least-task pipeline.
 
 
 ### Where to go next
@@ -1910,7 +1910,7 @@ Avoid degraded mode for serious work - the manual file shuffling kills the time 
 It's fine. The memory audit ledger + the artefacts on disk + CONTEXT.md + .out-of-scope/ are all host-agnostic. You can:
 
   * Start in Cowork for the interview (fast back-and-forth).
-  * Switch to Claude Code or Cursor for FR-author / spec-to-impl-plan (denser tool-use).
+  * Switch to Claude Code or Cursor for task-author / spec-to-impl-plan (denser tool-use).
   * Drop into Claude.ai web on your phone if you want to draft a quick PRD amendment.
 
 
@@ -2202,7 +2202,7 @@ Version 1.0.0. Status: normative for every skill in the SKILL module unless a pe
 
 This document codifies the **default discipline** for evolving a skill in response to user feedback, regulatory change, or rubric drift. The frontmatter `human_fine_tune` block in every SKILL.md declares the per-skill specifics (who fine-tunes, what triggers initiation, what artefacts are required). This file is the operator-facing how-to that wraps those declarations.
 
-For skills whose discipline materially differs from this default, see the per-skill `<skill>/FINE_TUNE.md` (currently exists for: `feature-request-audit`, `code-review-audit`, `threat-model-audit`, `decommissioning-audit`).
+For skills whose discipline materially differs from this default, see the per-skill `<skill>/FINE_TUNE.md` (currently exists for: `task-audit`, `code-review-audit`, `threat-model-audit`, `decommissioning-audit`).
 
 
 ## §1 When to fine-tune
@@ -2309,7 +2309,7 @@ The fine-tune discipline forbids:
   * `docs/AUDIT_LOOP.md` - the loop the rubric drives.
   * `_template/audit/SKILL.md` - the frontmatter `human_fine_tune` block.
   * `_template/audit/INVARIANTS.md` - the self-audit anomaly signals that trigger fine-tune candidacy.
-  * Per-skill `<skill>/FINE_TUNE.md` overrides - currently `feature-request-audit/`, `code-review-audit/`, `threat-model-audit/`, `decommissioning-audit/`.
+  * Per-skill `<skill>/FINE_TUNE.md` overrides - currently `task-audit/`, `code-review-audit/`, `threat-model-audit/`, `decommissioning-audit/`.
 
 
 # Appendix D - RUBRIC_FORMAT (`audit_rubric@N.M`)
@@ -3521,52 +3521,52 @@ Phased, with feature flags at every step. Each phase ships independently and is 
 
 **Strategic addendum - Anthropic ecosystem alignment.** CyberSkill is a consultancy with single-digit-million revenue. Trying to invent and propagate a competing skills format against Anthropic, Microsoft, OpenAI, Google, and the Linux-Foundation-hosted AAIF is a category error. Adopting Agent Skills verbatim turns CyberOS into a citizen of an ecosystem with 26+ compatible clients and a partner directory that already includes Atlassian, Canva, Cloudflare, Figma, Notion, Ramp, Sentry, Stripe, and Zapier - and lets CyberSkill carve a defensible niche by **publishing high-quality, Vietnam-localised skills (VAT, e-invoice, local bank APIs, Vietnamese legal/compliance, VNeID) into the open registry**. That is the partnership/distribution play, and it is materially larger than the platform play CyberSkill could win on its own. The fact that Anthropic itself now runs Claude Code on Bun (2026) is a useful tell: even the spec authors are willing to swap out core runtimes when the data says so - Bun for the JS toolchain, Wasmtime for the sandbox, Rust for the host. CyberOS should follow the same data-driven layering.
 
-# Portable FR-driven prompts (project- and agent-agnostic)
+# Portable task-driven prompts (project- and agent-agnostic)
 
-Three prompts to drive (1) FR drafting, (2) FR implementation, and (3) FR re-audit across **any** project + **any** AI coding agent (Claude Code, Cursor, Codex, etc.).
+Three prompts to drive (1) task drafting, (2) task implementation, and (3) task re-audit across **any** project + **any** AI coding agent (Claude Code, Cursor, Codex, etc.).
 
 ## Placeholders to substitute before running
 
 Placeholder | What it means | Example
 ---|---|---
 `{{REPO_ROOT}}` | Absolute path to the project root the agent will work in | `/Users/stephencheng/Projects/X/api-service`
-`{{BACKLOG_PATH}}` | Path **relative to REPO_ROOT** where the FR backlog table lives | `docs/feature-requests/BACKLOG.md`
-`{{FR_DIR}}` | Path **relative to REPO_ROOT** where individual FR markdown files live | `docs/feature-requests/{module}/`
-`{{SOURCE_DOC_PATH}}` | The PRD / SRS / strategy doc the FRs are drafted from | `docs/prd/AUTH-MODULE-PRD.md`
-`{{MODULE}}` | Module prefix for new FR IDs | `AUTH` (yields `FR-AUTH-001`, `FR-AUTH-002`, ...)
+`{{BACKLOG_PATH}}` | Path **relative to REPO_ROOT** where the task backlog table lives | `docs/tasks/BACKLOG.md`
+`{{TASK_DIR}}` | Path **relative to REPO_ROOT** where individual task markdown files live | `docs/tasks/{module}/`
+`{{SOURCE_DOC_PATH}}` | The PRD / SRS / strategy doc the tasks are drafted from | `docs/prd/AUTH-MODULE-PRD.md`
+`{{MODULE}}` | Module prefix for new task IDs | `AUTH` (yields `TASK-AUTH-001`, `TASK-AUTH-002`, ...)
 `{{LANG}}` | Primary implementation language for sanity in workflows | `Rust 1.81`, `TypeScript`, `Python 3.12`
 `{{TEST_CMD}}` | Test command the agent runs at the coverage gate | `pnpm test`, `cargo test --workspace`, `pytest -q`
-`{{BUILD_CMD}}` | Build/typecheck the agent runs before declaring an FR shipped | `cargo check`, `pnpm typecheck`, `mypy .`
-`{{CAP}}` | Optional FR-count cap if you don't want the full backlog drained in one run | `10`, or omit
+`{{BUILD_CMD}}` | Build/typecheck the agent runs before declaring a task shipped | `cargo check`, `pnpm typecheck`, `mypy .`
+`{{CAP}}` | Optional task-count cap if you don't want the full backlog drained in one run | `10`, or omit
 
 If your project has its own house style/rubric document, drop its path in too: `{{RUBRIC_PATH}}`. Otherwise the prompts carry the rubric inline so the agent doesn't need an external file.
 
 
-## Prompt 1 - Draft FRs from a source doc
+## Prompt 1 - Draft tasks from a source doc
 
 
     Repo: {{REPO_ROOT}}
     Source doc: {{SOURCE_DOC_PATH}}
     Target backlog: {{BACKLOG_PATH}}
-    FR file directory: {{FR_DIR}}
+    Task file directory: {{TASK_DIR}}
     Module prefix: {{MODULE}}
     Cap (optional): {{CAP}}
 
     TASK
-    Draft FR-{{MODULE}}-NNN entries from the source doc and append each to the
-    backlog. One file per FR under {{FR_DIR}}/FR-{{MODULE}}-NNN-<slug>.md.
+    Draft task-{{MODULE}}-NNN entries from the source doc and append each to the
+    backlog. One file per task under {{TASK_DIR}}/task-{{MODULE}}-NNN-<slug>.md.
 
-    PROCESS (per FR, no exceptions)
+    PROCESS (per task, no exceptions)
     1.  Read the next chunk of the source doc that hasn't been covered by an
-        existing FR. Skip already-covered material.
-    2.  Draft the FR. Required sections:
+        existing task. Skip already-covered material.
+    2.  Draft the task. Required sections:
             §1  Description (BCP-14 normative - MUST / SHOULD / MAY)
             §2  Why this design (rationale prose for humans)
             §3  API contract (types + schemas, language-appropriate)
             §4  Acceptance criteria (numbered, testable)
             §5  Verification (concrete test sketches, language-appropriate)
             §6  Implementation skeleton (real code, not pseudocode)
-            §7  Dependencies (other FRs, crates/packages, infra)
+            §7  Dependencies (other tasks, crates/packages, infra)
             §8  Example payloads (real JSON / HTTP / SQL)
             §9  Open questions (resolved + deferred)
             §10 Failure modes inventory (table: failure | detection | outcome | recovery)
@@ -3577,19 +3577,19 @@ If your project has its own house style/rubric document, drop its path in too: `
             - §3 types compile in your head (no missing imports, no impossible
               trait bounds, no field of unknown type).
             - §10 covers every error path implied by §1.
-            - The FR is self-contained - a developer can implement it without
-              reading any other FR, slack thread, or doc except the cited
+            - The task is self-contained - a developer can implement it without
+              reading any other task, slack thread, or doc except the cited
               source pages.
-        Do NOT move to the next FR until the current one is 10/10.
+        Do NOT move to the next task until the current one is 10/10.
     4.  Append a one-line row to {{BACKLOG_PATH}} atomically:
-            | FR-{{MODULE}}-NNN | <title> | <pri> | draft (10/10) | <deps> | <effort> |
+            | task-{{MODULE}}-NNN | <title> | <pri> | draft (10/10) | <deps> | <effort> |
 
     DISCIPLINE
     - March autonomously through the source doc. Do not ask the user between
-      FRs unless you hit a real decision (e.g. spec contradicts itself; pick
+      tasks unless you hit a real decision (e.g. spec contradicts itself; pick
       the path and continue otherwise).
-    - Every FR file change -> atomic commit with message
-      `feat(fr): draft FR-{{MODULE}}-NNN <title> (10/10)`.
+    - Every task file change -> atomic commit with message
+      `feat(fr): draft task-{{MODULE}}-NNN <title> (10/10)`.
     - Push is left to the human. Never run `git push` automatically.
     - If the source doc is ambiguous on a specific normative choice and you
       cannot decide unilaterally, STOP and report the ambiguity. Do not draft
@@ -3597,39 +3597,39 @@ If your project has its own house style/rubric document, drop its path in too: `
 
     STOP CONDITIONS (any one ends the run)
     - Source doc exhausted (no more uncovered material).
-    - {{CAP}} FRs drafted (if cap supplied).
-    - Three consecutive FRs hit irreducible ambiguity.
+    - {{CAP}} tasks drafted (if cap supplied).
+    - Three consecutive tasks hit irreducible ambiguity.
 
     REPORT AT END
-    - Number of FRs drafted.
-    - List of FR IDs + titles.
+    - Number of tasks drafted.
+    - List of task IDs + titles.
     - Any deferred questions for the human.
 
 
 
-## Prompt 2 - Implement the next eligible FR (loop until backlog drained)
+## Prompt 2 - Implement the next eligible task (loop until backlog drained)
 
 
     Repo: {{REPO_ROOT}}
     Backlog: {{BACKLOG_PATH}}
-    FR files: {{FR_DIR}}
+    Task files: {{TASK_DIR}}
     Language: {{LANG}}
     Test command: {{TEST_CMD}}
     Build command: {{BUILD_CMD}}
     Cap (optional): {{CAP}}
 
     TASK
-    Drive each "planned" FR through to "shipped + strict-audited", in
+    Drive each "planned" task through to "shipped + strict-audited", in
     dependency order. Repeat until the backlog is drained.
 
-    ELIGIBILITY (pick the next FR each iteration)
+    ELIGIBILITY (pick the next task each iteration)
     - Status = "planned".
-    - All `depends_on` FRs have status = "shipped" or "shipped + strict-audited".
+    - All `depends_on` tasks have status = "shipped" or "shipped + strict-audited".
     - Tie-break by priority (MUST > SHOULD > MAY), then by ID order.
 
-    PER-FR WORKFLOW (run end-to-end for ONE FR before starting the next)
-    1.  Read the FR markdown in full. Build a §10-style "audit dossier" section
-        inside the FR file (or a sibling FR-NNN.audit.md). Sub-sections:
+    PER-task WORKFLOW (run end-to-end for ONE task before starting the next)
+    1.  Read the task markdown in full. Build a §10-style "audit dossier" section
+        inside the task file (or a sibling task-NNN.audit.md). Sub-sections:
             §10.1 Verdict
             §10.2 Gap list (one row per spec-vs-code gap, with severity +
                   estimated effort + status: OPEN / CLOSED / DEFERRED)
@@ -3640,93 +3640,93 @@ If your project has its own house style/rubric document, drop its path in too: `
                   auditor needs to know)
             §10.6 Spec amendments recommended (if any)
             §10.7 Slice plan (which gaps in this commit; what's deferred)
-    2.  Compare the FR spec to the actual code. For every clause in §1, find
+    2.  Compare the task spec to the actual code. For every clause in §1, find
         the matching code path. Any mismatch -> entry in §10.2.
     3.  Close each OPEN gap in §10.2. Code change -> test -> run {{BUILD_CMD}}
         then {{TEST_CMD}}. If both pass, mark CLOSED in §10.3 with the commit
         hash you'll attach.
     4.  For each DEFERRED gap, write a one-paragraph rationale citing which
-        other FR / sprint / system will pick it up. Deferral without rationale
+        other task / sprint / system will pick it up. Deferral without rationale
         is forbidden.
-    5.  Update {{BACKLOG_PATH}}: change the FR's status cell to
+    5.  Update {{BACKLOG_PATH}}: change the task's status cell to
         `shipped + strict-audited` (or `shipped` if some gaps deferred). Note
         the deferred count.
-    6.  Commit. Single atomic commit per FR with message:
-            `fix(<scope>): <FR-ID> - close N of M gaps; M-N deferred to <where>`
+    6.  Commit. Single atomic commit per task with message:
+            `fix(<scope>): <task-ID> - close N of M gaps; M-N deferred to <where>`
         Body lists NEW / CHANGED / DEFERRED sections.
 
     CIRCUIT BREAKERS
     - If {{BUILD_CMD}} or {{TEST_CMD}} fail 5 consecutive times for ONE gap
       with no progress between failures -> revert the in-progress changes for
       that gap, mark the gap `[FAILED: UNRESOLVABLE]` in §10.2 with the last
-      error, and move on to the next gap in the same FR.
-    - If the same FR hits the per-gap circuit breaker on 3 distinct gaps ->
-      stop work on that FR, mark its backlog status `[BLOCKED: see audit §10]`,
-      and continue with the next eligible FR.
+      error, and move on to the next gap in the same task.
+    - If the same task hits the per-gap circuit breaker on 3 distinct gaps ->
+      stop work on that task, mark its backlog status `[BLOCKED: see audit §10]`,
+      and continue with the next eligible task.
 
     DISCIPLINE
-    - NO partial-ship within an FR. Drive every FR end-to-end (all gaps
+    - NO partial-ship within a task. Drive every task end-to-end (all gaps
       closed or explicitly deferred) before moving to the next. Pause only
-      between FRs, never within one.
+      between tasks, never within one.
     - Push is the human's job. Never run `git push` automatically.
-    - One commit per FR. No "fix typo" or "WIP" commits between gap closures
-      on the same FR - squash if needed.
-    - After each FR: emit a 5-line summary in chat - FR-ID, gaps closed,
+    - One commit per task. No "fix typo" or "WIP" commits between gap closures
+      on the same task - squash if needed.
+    - After each task: emit a 5-line summary in chat - task-ID, gaps closed,
       gaps deferred, build/test status, commit hash. Then start the next.
 
     STOP CONDITIONS (any one ends the run)
-    - Backlog drained (no more eligible FRs).
-    - {{CAP}} FRs shipped (if cap supplied).
-    - Three consecutive FRs hit the BLOCKED state.
+    - Backlog drained (no more eligible tasks).
+    - {{CAP}} tasks shipped (if cap supplied).
+    - Three consecutive tasks hit the BLOCKED state.
 
     REPORT AT END
-    - Total FRs shipped, deferred-gap count by destination, BLOCKED FRs.
+    - Total tasks shipped, deferred-gap count by destination, BLOCKED tasks.
     - One git log line per commit (you don't push, the human does).
 
 
 
-## Prompt 3 - Re-audit FRs against current code
+## Prompt 3 - Re-audit tasks against current code
 
 
     Repo: {{REPO_ROOT}}
     Backlog: {{BACKLOG_PATH}}
-    FR files: {{FR_DIR}}
+    Task files: {{TASK_DIR}}
     Mode: <draft | shipped>     # pick one
     Cap (optional): {{CAP}}
 
     TASK
-    Re-audit a subset of FRs against the current code, detect drift, raise
+    Re-audit a subset of tasks against the current code, detect drift, raise
     new gaps. This is a maintenance pass, not a new-work pass.
 
-    MODE A - draft (FRs flagged "draft (<10/10)")
-    For each draft FR below 10/10:
+    MODE A - draft (tasks flagged "draft (<10/10)")
+    For each draft task below 10/10:
     1.  Re-run the §1->§4->§5 traceability audit (every clause traces to an AC,
         every AC traces to a test).
     2.  Re-run the §10 failure-modes inventory check.
-    3.  Iterate the FR until it scores 10/10. Update its status in
+    3.  Iterate the task until it scores 10/10. Update its status in
         {{BACKLOG_PATH}} from `draft (X/10)` to `draft (10/10)`.
 
     MODE B - shipped (regression scan)
-    For each "shipped" or "shipped + strict-audited" FR:
-    1.  Re-read the FR spec.
+    For each "shipped" or "shipped + strict-audited" task:
+    1.  Re-read the task spec.
     2.  Walk the code that implements it. Has it drifted? Has new code been
         added that contradicts a §1 clause? Has a referenced dependency been
         renamed / removed?
-    3.  Append new gaps to the FR's §10.2 with status OPEN, and set the
+    3.  Append new gaps to the task's §10.2 with status OPEN, and set the
         backlog status to `[REGRESSION: see audit §10]`.
-    4.  Emit a one-line summary per FR: `FR-X-NNN re-audit: clean | N gaps`.
+    4.  Emit a one-line summary per task: `task-X-NNN re-audit: clean | N gaps`.
 
     DISCIPLINE
-    - One commit per re-audited FR. Message:
-        `chore(audit): re-audit <FR-ID> - <result>`.
-    - For each FR re-audited, write the prior score and the new score to a
+    - One commit per re-audited task. Message:
+        `chore(audit): re-audit <task-ID> - <result>`.
+    - For each task re-audited, write the prior score and the new score to a
       changelog row (or your project's equivalent of an audit log) so the
       delta is reviewable.
     - Push is the human's job. Never `git push` automatically.
 
     STOP CONDITIONS
     - Target subset exhausted, OR
-    - {{CAP}} FRs re-audited.
+    - {{CAP}} tasks re-audited.
 
     REPORT AT END
     - Subset processed, regressions found, drafts upgraded to 10/10.
@@ -3746,12 +3746,12 @@ If your project has its own house style/rubric document, drop its path in too: `
 
 Cyberos-specific thing | Replaced with
 ---|---
-`cuo/chief-technology-officer/ship-feature-requests` workflow file | The 6-step per-FR procedure inlined in Prompt 2
-`feature-request-audit` skill rubric file | The 10/10 rubric inlined in Prompt 1's PROCESS step 3
-`feature-request-author` + `feature-request-audit` skill names | Generic "draft + self-audit until 10/10" loop
+`cuo/chief-technology-officer/ship-tasks` workflow file | The 6-step per-task procedure inlined in Prompt 2
+`task-audit` skill rubric file | The 10/10 rubric inlined in Prompt 1's PROCESS step 3
+`task-author` + `task-audit` skill names | Generic "draft + self-audit until 10/10" loop
 `memory audit chain` + `AGENTS.md §14` heartbeat | Atomic commits with structured messages; project's existing changelog
-`memory feedback_fr_autonomous_march` reference | "March autonomously ... do not ask between FRs unless real decision"
-`memory feedback_no_partial_ship_per_fr` reference | "NO partial-ship within an FR" stated directly in Prompt 2
+`memory feedback_task_autonomous_march` reference | "March autonomously ... do not ask between tasks unless real decision"
+`memory feedback_no_partial_ship_per_task` reference | "NO partial-ship within a task" stated directly in Prompt 2
 `re_audit_complete` memory row emission | Changelog row with prior/new score
 Hard-coded `/Users/stephencheng/.../cyberos` path | `{{REPO_ROOT}}` placeholder
 
@@ -3812,14 +3812,14 @@ SDP §2 stage | Primary artifact(s) | Author skill | Audit skill | Template ref
 ---|---|---|---|---
 (a) Pre-engagement / Discovery / Pre-sales | SOW / Project Charter | `statement-of-work-author` | `statement-of-work-audit` | §4.9
 (b) Requirements gathering and analysis | SRS per IEEE 830 | `software-requirements-specification-author` | `software-requirements-specification-audit` | -
-(b) Requirements - backlog | Prioritized feature backlog | `feature-request-author` | `feature-request-audit` | -
+(b) Requirements - backlog | Prioritized feature backlog | `task-author` | `task-audit` | -
 (b) Requirements - governance | Definition of Ready/Done | `definition-of-ready-and-done-author` | `definition-of-ready-and-done-audit` | §4.1, §4.2
 (c) Feasibility study and project planning | Feasibility memo + project plan + RAID log | `project-plan-author` | `project-plan-audit` | -
 (c) Planning - governance | Stage-gate sign-off | `stage-gate-author` | `stage-gate-audit` | §4.3
 (d) System architecture and high-level design | ADRs + C4 diagrams + tech selection | `architecture-decision-record-author` | `architecture-decision-record-audit` | -
 (d) Architecture - security | STRIDE threat model + OWASP ASVS map | `threat-model-author` | `threat-model-audit` | -
 (e) Detailed design | SDD per IEEE 1016 + OpenAPI + DB schema | `software-design-document-author` | `software-design-document-audit` | -
-(f) Implementation / Coding | Implementation plan (FR -> tasks) | `implementation-plan-author` | `implementation-plan-audit` | -
+(f) Implementation / Coding | Implementation plan (task -> tasks) | `implementation-plan-author` | `implementation-plan-audit` | -
 (g) Code review and integration | Code-review write-up per IEEE 1028 | `code-review-author` | `code-review-audit` | §4.5
 (h) Testing | Test Strategy | `test-strategy-author` | `test-strategy-audit` | §4.6
 (i) Deployment and release management | Deployment Readiness Checklist | `deployment-checklist-author` | `deployment-checklist-audit` | §4.7
@@ -3846,8 +3846,8 @@ Skill bundle | Stage | Status | Version
 `statement-of-work-audit/` | (a) | shipped | 1.0.0
 `software-requirements-specification-author/` | (b) | shipped | 1.0.0
 `software-requirements-specification-audit/` | (b) | shipped | 1.0.0
-`feature-request-author/` | (b) | shipped | 1.0.0
-`feature-request-audit/` | (b) | shipped | 1.0.0
+`task-author/` | (b) | shipped | 1.0.0
+`task-audit/` | (b) | shipped | 1.0.0
 `definition-of-ready-and-done-author/` | (b) | shipped | 1.0.0
 `definition-of-ready-and-done-audit/` | (b) | shipped | 1.0.0
 `project-plan-author/` | (c) | shipped | 1.0.0
@@ -3997,7 +3997,7 @@ Skill bundle | Persona driver | Status | Version
 
 Standards cited in Tier-3 contracts: ICH-GCP E6(R3) (`clinical-protocol`); ICH E2D PSUR + 21 CFR 314.80 (`safety-report`); Soros/Druckenmiller/Marks investment-pattern literature (`investment-thesis`); ILPA Reporting Template (`lp-letter`); AlixPartners / FTI / Alvarez & Marsal turnaround playbooks (`turnaround-plan`); industry-standard 13-week TWCF model (`13-week-cash-flow`); GitLab Remote Manifesto + Buffer State-of-Remote (`remote-policy`); Officevibe / TINYpulse / Culture Amp + Shawn Achor positive-psychology research (`happiness-program`).
 
-**Per-skill fine-tune overrides:** none of the 8 Tier-3 skills shipped with a `<skill>/FINE_TUNE.md` override (default discipline applies). The 4 existing FINE_TUNE overrides (feature-request-audit, code-review-audit, threat-model-audit, decommissioning-audit) remain. For clinical-protocol + safety-report specifically, a v1.1 fine-tune is a likely candidate once a regulated-pharma engagement surfaces ICH-GCP/E2D section-ordering deviations through real use.
+**Per-skill fine-tune overrides:** none of the 8 Tier-3 skills shipped with a `<skill>/FINE_TUNE.md` override (default discipline applies). The 4 existing FINE_TUNE overrides (task-audit, code-review-audit, threat-model-audit, decommissioning-audit) remain. For clinical-protocol + safety-report specifically, a v1.1 fine-tune is a likely candidate once a regulated-pharma engagement surfaces ICH-GCP/E2D section-ordering deviations through real use.
 
 With Session C complete, **66 / 66 = 100 % of the original new-pair scope identified in `NEEDED_SKILLS.md` is shipped**. Session E later added 5 more pairs (Tier-4 legal, surfaced during Session D workflow authoring) bringing the closed-gap total to 71/71.
 
@@ -4104,10 +4104,10 @@ Skills are independently invocable, but the **default chain** for a full deliver
        ↓ (on PASS)
     software-requirements-specification-author -> software-requirements-specification-audit
        ↓ (on PASS)
-    feature-request-author -> feature-request-audit
-       ↓ (on PASS, per-FR)
+    Task-author -> task-audit
+       ↓ (on PASS, per-task)
     implementation-plan-author -> implementation-plan-audit
-       ↓ (on PASS, per-FR)
+       ↓ (on PASS, per-task)
     [engineering execution - no skill]
        ↓
     code-review-author -> code-review-audit
@@ -4135,7 +4135,7 @@ Side-chains:
   * `threat-model-author -> threat-model-audit` runs alongside (d) - once per major architecture change.
   * `stage-gate-author -> stage-gate-audit` runs at each stage boundary in fixed-price engagements.
   * `definition-of-ready-and-done-author -> definition-of-ready-and-done-audit` runs once per engagement at kickoff (and on policy changes).
-  * `requirements-traceability-matrix-author -> requirements-traceability-matrix-audit` runs continuously - re-generated after every merged FR or test.
+  * `requirements-traceability-matrix-author -> requirements-traceability-matrix-audit` runs continuously - re-generated after every merged task or test.
 
 
 `project-cleanup/` runs on demand - monthly or pre-handoff - and is self-auditing (4-phase pipeline includes inventory + verify).
@@ -4148,7 +4148,7 @@ Each skill's `produces.next_skill_recommendation` field encodes its default down
   * `../../modules/cuo/README.md` (project root) - the source document this catalog implements. §2 stages (a-m), §4 templates (4.1-4.10), §3 audit framework all map directly into the catalog.
   * `cuo/` - the router module that picks which skill to invoke for a natural-language request. CUO consumes this module's catalog via `cyberos-cuo catalog`.
   * `memory/` - the memory. Skills declare `allowed_memory_scopes` in their SKILL.md frontmatter; the host's capability broker enforces them. AGENTS.md §0-§17 govern the memory protocol that constrains memory writes.
-  * `skill/contracts/` - artifact schemas (PRD, SRS, FR, task, impl-plan, project-brief, chain-manifest, nats-subjects). Skills import these via `depends_on_contracts:` rather than redefining schemas locally.
+  * `skill/contracts/` - artifact schemas (PRD, SRS, task, task, impl-plan, project-brief, chain-manifest, nats-subjects). Skills import these via `depends_on_contracts:` rather than redefining schemas locally.
   * `skill/docs/SPEC.md` - the protocol contract every skill MUST satisfy.
   * `skill/docs/AUDIT_LOOP.md` - the 8-step audit algorithm every audit skill implements.
   * `skill/docs/RUBRIC_FORMAT.md` - the rubric column format every audit skill's `RUBRIC.md` follows.
@@ -4160,9 +4160,9 @@ Each skill's `produces.next_skill_recommendation` field encodes its default down
 
 §6.2 **The audit skill is the spec.** Every author skill's behavior is normative-fixed by its sibling audit skill's `RUBRIC.md`. To change an author's behavior, update the audit's rubric first, regenerate the artifact, observe the new audit verdict, then update the author body to satisfy the new rubric. This is the only way the catalog stays internally consistent.
 
-§6.3 **Audit-fix loop until 10/10.** Per the FR-authoring loop discipline (memory: `feedback_fr_authoring_loop.md`), every artifact SHALL pass its rubric at 10/10 before the next artifact is started. Half-finished artifacts are forbidden. The audit loop's `EXHAUSTED` exit condition triggers HITL escalation rather than ship-with-warnings.
+§6.3 **Audit-fix loop until 10/10.** Per the task-authoring loop discipline (memory: `feedback_task_authoring_loop.md`), every artifact SHALL pass its rubric at 10/10 before the next artifact is started. Half-finished artifacts are forbidden. The audit loop's `EXHAUSTED` exit condition triggers HITL escalation rather than ship-with-warnings.
 
-§6.4 **March autonomously on continue.** Per the FR-autonomous-march memory, when a user says "continue", drain the planned-skill frontier until a decision is needed or the catalog is complete - do not pause between skills.
+§6.4 **March autonomously on continue.** Per the task-autonomous-march memory, when a user says "continue", drain the planned-skill frontier until a decision is needed or the catalog is complete - do not pause between skills.
 
 §6.5 **AGENTS.md §14 emission.** After every session that touches non-memory files, emit the §14.1 / §14.2 block as the memory heartbeat signal (memory: `feedback_section_14_emission.md`). The block summarises file ops, scopes touched, rejections, and token budget.
 
@@ -4175,12 +4175,12 @@ Action | Reason
 ---|---
 Wiped `skill/skills/` (47 bundle dirs across `cuo/cpo/`, `cuo/chief-technology-officer/`, `cuo/_shared/`, `cyberskill-vn/`, `shared/`) | User direction: persona-organized layout retired. CUO module already handles persona concerns.
 Preserved `skill/project-cleanup/` (moved from `skill/skills/shared/project-cleanup/`) | Working hygiene utility; user explicitly called out to keep it.
-Preserved `skill/contracts/` (artifact schemas: chain-manifest, feature-request, impl-plan, nats-subjects, prd, project-brief, srs, task) | Schemas remain canonical; new author skills import via `depends_on_contracts:`.
+Preserved `skill/contracts/` (artifact schemas: chain-manifest, task, impl-plan, nats-subjects, prd, project-brief, srs, task) | Schemas remain canonical; new author skills import via `depends_on_contracts:`.
 Preserved `skill/crates/, toolchain/, runners/, tools/, tests/` | Rust host, Bun toolchain, Python parity runners, parity checks - runtime infrastructure unchanged.
 Added `skill/MODULE.md` (this file) | Canonical catalog.
 Added `skill/_template/` | Canonical skeleton for new author/audit skills.
-Added `skill/statement-of-work-author/, statement-of-work-audit/, feature-request-author/, feature-request-audit/, product-requirements-document-author/, product-requirements-document-audit/` | Four canonical reference pairs proving the new pattern (stages a, b, cross).
-`skill/<name>-author/` + `skill/<name>-audit/` for stages (b second skill), (c)-(m), cross | Planned. Built session-by-session under the FR-authoring loop discipline.
+Added `skill/statement-of-work-author/, statement-of-work-audit/, task-author/, task-audit/, product-requirements-document-author/, product-requirements-document-audit/` | Four canonical reference pairs proving the new pattern (stages a, b, cross).
+`skill/<name>-author/` + `skill/<name>-audit/` for stages (b second skill), (c)-(m), cross | Planned. Built session-by-session under the task-authoring loop discipline.
 Vietnamese-market skills (vietnam-bank-transfer, vietnam-legal-compliance, vietnam-mst-validate, vn-tax-filing, vietnam-vat-invoice, vietnam-vneid-integration) wiped from this module | Preserved at `public-skills/` (cyberos project root) for open-registry publication. Not part of the SDP-driven core catalog.
 
 The wipe was destructive. Recovery is via git history. No memory entries were touched.
@@ -4218,9 +4218,9 @@ Keeping them under `public/` preserves the OSS-distribution assets shipped along
 
 > **Status:** findings doc, 2026-05-19; **Owner:** Stephen Cheng (CEO); **Source:** Anthropic, _The Complete Guide to Building Skills for Claude_ (33 pages, undated 2025/2026 - references "January 2026" in Chapter 4, and the Anthropic-blog "Engineering Agents for the Real World"); **Module under audit:** `cyberos/modules/skill/` v2.0.0 (104 author+audit pairs / 108 contracts as of Session H, 2026-05-18).
 >
-> Companion FR drafts: [`docs/feature-requests/skill/FR-SKILL-111-trigger-description-enrichment.md`](../../docs/feature-requests/skill/FR-SKILL-111-trigger-description-enrichment.md); [`docs/feature-requests/skill/FR-SKILL-112-trigger-tests-fixtures.md`](../../docs/feature-requests/skill/FR-SKILL-112-trigger-tests-fixtures.md). A third FR sketched in §6 of this doc (XML-tag-free frontmatter) is **not** authored here - it carries enough breakage risk on the existing 104 pairs that it deserves operator sign-off before authoring.
+> Companion task drafts: [`docs/tasks/skill/TASK-SKILL-111-trigger-description-enrichment.md`](../../docs/tasks/skill/TASK-SKILL-111-trigger-description-enrichment.md); [`docs/tasks/skill/TASK-SKILL-112-trigger-tests-fixtures.md`](../../docs/tasks/skill/TASK-SKILL-112-trigger-tests-fixtures.md). A third task sketched in §6 of this doc (XML-tag-free frontmatter) is **not** authored here - it carries enough breakage risk on the existing 104 pairs that it deserves operator sign-off before authoring.
 
-This document digests Anthropic's 33-page guide, lines each principle up against the current CyberOS SKILL module (v2.0.0, README at [`modules/skill/README.md`](README.md), authoring discipline at `feature-request-audit` skill (see feature-request skills)), and proposes a ranked adaptation package. Cross-references throughout cite the Anthropic guide by chapter and the CyberOS README by Part number, so a reader can verify every claim without re-reading either source.
+This document digests Anthropic's 33-page guide, lines each principle up against the current CyberOS SKILL module (v2.0.0, README at [`modules/skill/README.md`](README.md), authoring discipline at `task-audit` skill (see task skills)), and proposes a ranked adaptation package. Cross-references throughout cite the Anthropic guide by chapter and the CyberOS README by Part number, so a reader can verify every claim without re-reading either source.
 
 
 ## Table of contents
@@ -4231,7 +4231,7 @@ This document digests Anthropic's 33-page guide, lines each principle up against
   * **§4** - Where CyberOS already exceeds the guide (validation that the heavy stack pays off)
   * **§5** - Where the guide reveals real gaps in CyberOS (3 confirmed, 5 nuance-only)
   * **§6** - Ranked adaptation proposals (high / medium / low value)
-  * **§7** - Candidate FRs (with proposed IDs, scope, effort estimates)
+  * **§7** - Candidate tasks (with proposed IDs, scope, effort estimates)
   * **§8** - What NOT to adopt (Anthropic patterns that would regress CyberOS)
   * **§9** - Open questions deferred to operator
   * **§10** - Citations
@@ -4241,18 +4241,18 @@ This document digests Anthropic's 33-page guide, lines each principle up against
 
 The Anthropic guide is a fundamentals doc aimed at first-time skill authors, not a competing architecture. It defines the lowest-common-denominator Anthropic Agent Skills format - a folder containing `SKILL.md` (YAML frontmatter + Markdown body), optional `scripts/`, `references/`, `assets/` - and walks through planning, testing, distribution, and a five-pattern troubleshooting catalogue.
 
-CyberOS SKILL module v2.0.0 already implements every structural principle in the guide. Most of them are implemented _more strictly_ : the guide's `description` is freeform; CyberOS's frontmatter has 33 fields organised into 11 governance blocks. The guide recommends a "before-upload checklist"; CyberOS has Part 24.1 self-test plus the 40-rule feature-request-audit skill plus the 8-step audit loop plus `INVARIANTS.md` runtime checks. The guide's iteration advice is "watch under/over-triggering and refine the description"; CyberOS has auto-refinement (Part 6), manual fine-tune (Part 7), drift signals, and acceptance auto-pause at <40% (DEC-055).
+CyberOS SKILL module v2.0.0 already implements every structural principle in the guide. Most of them are implemented _more strictly_ : the guide's `description` is freeform; CyberOS's frontmatter has 33 fields organised into 11 governance blocks. The guide recommends a "before-upload checklist"; CyberOS has Part 24.1 self-test plus the 40-rule task-audit skill plus the 8-step audit loop plus `INVARIANTS.md` runtime checks. The guide's iteration advice is "watch under/over-triggering and refine the description"; CyberOS has auto-refinement (Part 6), manual fine-tune (Part 7), drift signals, and acceptance auto-pause at <40% (DEC-055).
 
 The guide does, however, surface **three concrete things CyberOS is missing** when (not if) skills ship to non-CyberOS hosts (Claude.ai, Claude Code, Codex, Cursor, vanilla MCP). All three are about the _port surface_ - the frontmatter contract that a flat-host loader actually sees:
 
-  1. **The `description:` field carries no trigger phrases today.** CyberOS puts trigger phrases in the body's `## When to invoke this skill` section. A flat-host loader reads only frontmatter at level 1 of progressive disclosure (per the guide's Chapter 1 "first level (YAML frontmatter): always loaded in Claude's system prompt"). Ported skills will under-trigger because the host can't see the body when deciding whether to load. **-> FR-SKILL-111.**
-  2. **No formal "triggering tests" - only functional acceptance fixtures.** The guide's Chapter 3 recommends three test layers: triggering, functional, performance comparison. CyberOS has the middle one (`acceptance/golden-input.json` + `golden-output*.md`) and the third via OBS production telemetry (Part 13.4). The first is missing: there's no `acceptance/TRIGGER_TESTS.md` listing positive + negative phrases the skill MUST or MUST NOT load on. **-> FR-SKILL-112.**
-  3. **XML angle brackets in frontmatter values block portability.** CyberOS uses `wrap_in: <untrusted_content/>` as a sentinel literal in frontmatter (per `_template/author/SKILL.md` line 97). The guide's Chapter 1, Reference B, lists `< >` as **forbidden in frontmatter** for security reasons (system-prompt injection). Ported skills will fail the host loader's frontmatter validator. **-> Sketched in §6, not yet FR - see §6.3 for why.**
+  1. **The `description:` field carries no trigger phrases today.** CyberOS puts trigger phrases in the body's `## When to invoke this skill` section. A flat-host loader reads only frontmatter at level 1 of progressive disclosure (per the guide's Chapter 1 "first level (YAML frontmatter): always loaded in Claude's system prompt"). Ported skills will under-trigger because the host can't see the body when deciding whether to load. **-> TASK-SKILL-111.**
+  2. **No formal "triggering tests" - only functional acceptance fixtures.** The guide's Chapter 3 recommends three test layers: triggering, functional, performance comparison. CyberOS has the middle one (`acceptance/golden-input.json` + `golden-output*.md`) and the third via OBS production telemetry (Part 13.4). The first is missing: there's no `acceptance/TRIGGER_TESTS.md` listing positive + negative phrases the skill MUST or MUST NOT load on. **-> TASK-SKILL-112.**
+  3. **XML angle brackets in frontmatter values block portability.** CyberOS uses `wrap_in: <untrusted_content/>` as a sentinel literal in frontmatter (per `_template/author/SKILL.md` line 97). The guide's Chapter 1, Reference B, lists `< >` as **forbidden in frontmatter** for security reasons (system-prompt injection). Ported skills will fail the host loader's frontmatter validator. **-> Sketched in §6, not yet task - see §6.3 for why.**
 
 
 Beyond these three, the guide adds a few smaller-value patterns CyberOS can absorb cheaply (the "iterate on one task before expanding" pro-tip; the `BASELINE.md` artefact for promoted skills) and confirms many CyberOS conventions already in production. The headline take: **the guide is mostly _validation_ that the v0.2.0 frontmatter contract and the audit-fix-audit discipline are correct**; the residual delta is a port-surface hygiene pass.
 
-Adoption cost estimate: **~14 engineering-hours** for FR-SKILL-111 (description sweep across 104 pairs + RUBRIC rule) + **~12 hours** for FR-SKILL-112 (trigger-tests convention + template + auditor rule) + **~10 hours** if the operator decides to author the XML-free sketch as FR-SKILL-113 (with cascading 104-pair sweep + RUBRIC rule + per-host transpiler test). All three are net-positive for portability and cost zero behavioural change to existing chains.
+Adoption cost estimate: **~14 engineering-hours** for TASK-SKILL-111 (description sweep across 104 pairs + RUBRIC rule) + **~12 hours** for TASK-SKILL-112 (trigger-tests convention + template + auditor rule) + **~10 hours** if the operator decides to author the XML-free sketch as TASK-SKILL-113 (with cascading 104-pair sweep + RUBRIC rule + per-host transpiler test). All three are net-positive for portability and cost zero behavioural change to existing chains.
 
 
 ## §2 - Anthropic guide structural digest
@@ -4358,20 +4358,20 @@ Pointers to Anthropic-maintained skills (PDF, DOCX, PPTX, XLSX, plus Asana / Atl
 | # | Anthropic principle | CyberOS state today | Verdict |
 ---|---|---|---
 1 | `SKILL.md` (exact case) is the required entry | Same; `_template/author/SKILL.md` enforces | **Aligned**
-2 | Folder kebab-case, no spaces/capitals/underscores | Enforced everywhere; e.g. `feature-request-author/`, `product-requirements-document-author/` | **Aligned**
+2 | Folder kebab-case, no spaces/capitals/underscores | Enforced everywhere; e.g. `task-author/`, `product-requirements-document-author/` | **Aligned**
 3 | No `README.md` inside the skill folder | Compliant: no skill-folder `README.md`s found. README.md lives at module root, `tools/`, `toolchain/`, `runners/` (all utility folders, not skill folders) | **Aligned**
 4 | Three-level progressive disclosure (FM -> body -> linked files) | Implemented across all 104 pairs with `references/` (UNTRUSTED_CONTENT, ANTI_FABRICATION, HITL_PROTOCOL, FAILURE_MODES, MANIFEST_SCHEMA) | **Aligned** (CyberOS goes further with 5+ reference files vs the guide's vaguer "as needed")
 5 | Composability - multiple skills load simultaneously | Native: LangGraph supervisor + `expects:`/`produces:` envelopes + 20-50 concurrent skill ceiling per the guide ~CyberOS's 104-pair catalog routed via classifier (only the matched skill body loads at runtime) | **Aligned**
 6 | Portability - same skill across Claude.ai / Claude Code / API | Part 9 host-adapter strategy locks the CCSM source-of-truth; Phases B-E (transpilers + shim + equivalence tests) are planned for v0.3.0 | **Partial - port surface vulnerable** (see §5 #1)
-7 | `description` MUST include WHAT + WHEN + trigger phrases; <=1024 chars | CyberOS uses multi-line YAML descriptions (>=3 lines typical, often >200 chars but still <=1024); trigger phrases live in body's `## When to invoke this skill`, not in `description:`. Part 2 of README says "description: one sentence; <=140 chars" but the actual templates use much longer freeform descriptions | **Gap** - description carries WHAT but not WHEN trigger phrases (see §5 #1, FR-SKILL-111)
+7 | `description` MUST include WHAT + WHEN + trigger phrases; <=1024 chars | CyberOS uses multi-line YAML descriptions (>=3 lines typical, often >200 chars but still <=1024); trigger phrases live in body's `## When to invoke this skill`, not in `description:`. Part 2 of README says "description: one sentence; <=140 chars" but the actual templates use much longer freeform descriptions | **Gap** - description carries WHAT but not WHEN trigger phrases (see §5 #1, TASK-SKILL-111)
 8 | No XML tags `< >` in frontmatter | CyberOS templates use `wrap_in: <untrusted_content/>` as a sentinel literal - this is in frontmatter | **Gap** - port-blocking on Anthropic loader (see §5 #3)
 9 | Skill names with `claude` / `anthropic` prefix reserved | No CyberOS skill uses these prefixes | **Aligned** (trivially - CyberOS persona-prefixed namespace `cuo/<role>/...`)
 10 | Use cases - start with 2-3 concrete | `STANDALONE_INTERVIEW.md` defines required + optional fields per skill; `## When to invoke this skill` lists 3 natural-language phrases | **Aligned**
 11 | Define success criteria - quantitative + qualitative | OBS module tracks acceptance_rate, hitl_pause_rate, avg_iteration_count, refinement_proposal_rate, drift_signal_count per Part 16.2; thresholds explicit (>=80% accept, <20% HITL, etc.) | **Aligned** (CyberOS more rigorous - operational telemetry vs the guide's "vibes-based assessment")
-12 | Triggering tests - positive + negative phrases | **Not present** - no `acceptance/TRIGGER_TESTS.md` convention; trigger discovery happens in production via OBS rather than design-time | **Gap** (see §5 #2, FR-SKILL-112)
-13 | Functional tests - golden input/output | `acceptance/golden-*-input.json` + `golden-*-output*.md` present on every production skill; `feature-request-audit` is reproducible (byte-stable reports) | **Aligned** (CyberOS more rigorous - deterministic byte-stable + Layer 1 mechanical via `ajv validate`)
+12 | Triggering tests - positive + negative phrases | **Not present** - no `acceptance/TRIGGER_TESTS.md` convention; trigger discovery happens in production via OBS rather than design-time | **Gap** (see §5 #2, TASK-SKILL-112)
+13 | Functional tests - golden input/output | `acceptance/golden-*-input.json` + `golden-*-output*.md` present on every production skill; `task-audit` is reproducible (byte-stable reports) | **Aligned** (CyberOS more rigorous - deterministic byte-stable + Layer 1 mechanical via `ajv validate`)
 14 | Performance comparison - with vs without skill | Not formalised as an artefact; OBS provides per-skill latency / token / acceptance metrics post-deploy. **No `BASELINE.md` design-time comparison.** | **Partial - minor gap** (see §6.4)
-15 | Sequential workflow orchestration (Pattern 1) | Native: feature-request-author PLAN->WORKER->RESUME phases, manifest-state-driven phase computation | **Aligned** (more rigorous - manifest hash + re-entrancy guarantee)
+15 | Sequential workflow orchestration (Pattern 1) | Native: task-author PLAN->WORKER->RESUME phases, manifest-state-driven phase computation | **Aligned** (more rigorous - manifest hash + re-entrancy guarantee)
 16 | Multi-MCP coordination (Pattern 2) | Native: `allowed_mcp_tools:` + chain envelopes; CUO supervisor walks LangGraph edges | **Aligned**
 17 | Iterative refinement (Pattern 3) | Native: 8-step audit loop with PASS / NEEDS_HUMAN / FAIL / EXHAUSTED / NO_PROGRESS termination; auto-refinement Part 6 | **Aligned** (CyberOS far more rigorous - `INVARIANTS.md` + anomaly signals + `refinement_proposal` envelope)
 18 | Context-aware tool selection (Pattern 4) | Native: `chain-selector` skill, persona escalation graphs, `confidence_band.defer_below` triggers | **Aligned**
@@ -4411,9 +4411,9 @@ Worth documenting because future fine-tunes are tempted to "simplify" toward Ant
   6. **`untrusted_inputs:` block + CaMeL pattern** (DEC-050) - every external byte wrapped in `<untrusted_content>`, marker scan, surface-to-human on hit. The guide acknowledges "instructions not followed" troubleshooting but has no prompt-injection defence.
   7. **`self_audit:` block with `INVARIANTS.md`** - Part 6's auto-refinement loop. Runtime checks invariants at every node boundary; breach -> `refinement_proposal` envelope -> pipeline pause -> human review. The guide's equivalent is "iterate based on feedback"; CyberOS makes it a contract.
   8. **`human_fine_tune:` block + 7-step playbook** (Part 7) - pause + diagnose + add regression + edit + re-run + bump + resume. Reviewer roles, blackout windows, required artefacts (changelog_entry, acceptance_test_added, memory_refinement_entry). The guide has no equivalent.
-  9. **Audit-fix-audit discipline** (Part 18 + Recipe 13) - mandatory after every new contract registration. Caught real drift on `nats-subjects@1` registry v0.2.2 (contract said `cuo_cpo.fr_author.fr_written`; reality was `cuo.fr_author.fr_written`). The guide has nothing like it.
+  9. **Audit-fix-audit discipline** (Part 18 + Recipe 13) - mandatory after every new contract registration. Caught real drift on `nats-subjects@1` registry v0.2.2 (contract said `cuo_cpo.task_author.task_written`; reality was `cuo.task_author.task_written`). The guide has nothing like it.
   10. **Anomaly signals** - `confidence_low_streak`, `user_correction_streak`, `denylist_near_miss_streak`, `scope_rejection_streak`, `citation_missing_streak`, `deterministic_drift`, `rule_reversal_streak`, `needs_human_rate_above`. Tunable thresholds + windows. The guide has none.
-  11. **40-rule feature-request-audit skill** + the master rule ("after creating one FR, loop audit rounds on it until it reaches perfect - before starting the next FR"). The guide has Reference A's 4-stage checklist; CyberOS has 40 specific rules each tied to a prior rework moment.
+  11. **40-rule task-audit skill** + the master rule ("after creating one task, loop audit rounds on it until it reaches perfect - before starting the next task"). The guide has Reference A's 4-stage checklist; CyberOS has 40 specific rules each tied to a prior rework moment.
   12. **Persona-card pattern** - `cuo/<role>/SKILL.md` declares voice / scope ceiling / escalation graph; workflow skills inherit. The guide has no role-scoped namespacing.
   13. **Contract-vs-skill split** (Part 8, DEC-090) - contracts under `contracts/<id>/CONTRACT.md` constrain shape; skills under `<skill-name>/SKILL.md` act. The guide conflates the two.
   14. **Hash-chain audit ledger + tamper detector** (SRS §10.4.6) - every action_log row's `chain = sha256(canonical_json(row) + prev.chain)`. The guide has no audit ledger.
@@ -4433,29 +4433,29 @@ Three confirmed gaps where the guide's structural advice exposes a CyberOS weakn
 
 **Where it surfaces:** Anthropic guide Chapter 1 "first level (YAML frontmatter): always loaded in Claude's system prompt. Provides just enough information for Claude to know when each skill should be used without loading all of it into context" (p. 5) + Chapter 2 "MUST include BOTH: What the skill does, When to use it (trigger conditions)" + Chapter 2 examples "Use when user uploads .fig files, asks for 'design specs', 'component documentation', or 'design-to-code handoff'" (p. 11).
 
-**Current CyberOS state:** Inspecting `_template/author/SKILL.md` lines 4-9 and `feature-request-author/SKILL.md` lines 4-9 - `description:` is a multi-line WHAT block. The trigger phrases live in the body's `## When to invoke this skill` section (lines 161-168 of `_template/author/SKILL.md`, lines 161-168 of `feature-request-author/SKILL.md`). Inside CyberOS this works because the supervisor's `classify_act` node reads the body. **On any non-CyberOS host** (Claude.ai, Codex, Cursor, vanilla MCP) the loader sees only frontmatter and will fail to trigger on user phrasings the body anticipates.
+**Current CyberOS state:** Inspecting `_template/author/SKILL.md` lines 4-9 and `task-author/SKILL.md` lines 4-9 - `description:` is a multi-line WHAT block. The trigger phrases live in the body's `## When to invoke this skill` section (lines 161-168 of `_template/author/SKILL.md`, lines 161-168 of `task-author/SKILL.md`). Inside CyberOS this works because the supervisor's `classify_act` node reads the body. **On any non-CyberOS host** (Claude.ai, Codex, Cursor, vanilla MCP) the loader sees only frontmatter and will fail to trigger on user phrasings the body anticipates.
 
-**Concrete failure mode:** A user on Claude.ai installs the (eventually-shipped-via-Phase-B) `feature-request-author` plugin. They type "Turn this PRD into a backlog." The loader's relevance classifier reads frontmatter `description:`: _"Generate a versioned, audited Feature Request backlog from one or more PRD/spec/SRS documents. Halts at PLAN approval, HITL gates, and amendment batches..."_. The classifier sees "backlog" and "Feature Request" but doesn't see "Turn this into a backlog" or "PRD" or any other natural trigger. Result: skill is **not loaded**, user is told "I don't have a tool for that."
+**Concrete failure mode:** A user on Claude.ai installs the (eventually-shipped-via-Phase-B) `task-author` plugin. They type "Turn this PRD into a backlog." The loader's relevance classifier reads frontmatter `description:`: _"Generate a versioned, audited Task backlog from one or more PRD/spec/SRS documents. Halts at PLAN approval, HITL gates, and amendment batches..."_. The classifier sees "backlog" and "Task" but doesn't see "Turn this into a backlog" or "PRD" or any other natural trigger. Result: skill is **not loaded**, user is told "I don't have a tool for that."
 
 **Fix:** extend `description:` to mandate `[What] + [When-trigger-phrases] + [Key value]` per Anthropic format. Raise the budget from CyberOS's nominal 140 chars to <=1024 chars (Anthropic's max). Add an auditor rule (e.g. `FM-112 description-format`) that checks the description contains at least 2 distinct trigger-phrase forms (e.g. `Use when user asks to "..."`, `Triggers on "..."`).
 
-**Scope of change:** 104 SKILL.md files in `modules/skill/`, plus `_template/author/SKILL.md`, plus `_template/audit/SKILL.md`, plus `feature-request-audit/RUBRIC.md` adds one rule, plus README Part 2.4 updates the body-section ordering hint (since `## When to invoke this skill` becomes optional / illustrative once triggers are in frontmatter), plus feature-request-audit skill §3.13 mentions the new rule. Sweep across 104 pairs is the heavy lift - about 8-12 hours if done by an FR-driven fine-tune cycle.
+**Scope of change:** 104 SKILL.md files in `modules/skill/`, plus `_template/author/SKILL.md`, plus `_template/audit/SKILL.md`, plus `task-audit/RUBRIC.md` adds one rule, plus README Part 2.4 updates the body-section ordering hint (since `## When to invoke this skill` becomes optional / illustrative once triggers are in frontmatter), plus task-audit skill §3.13 mentions the new rule. Sweep across 104 pairs is the heavy lift - about 8-12 hours if done by a task-driven fine-tune cycle.
 
-**FR proposal:** **FR-SKILL-111** (authored in this session - see `docs/feature-requests/skill/FR-SKILL-111-trigger-description-enrichment.md`).
+**task proposal:** **TASK-SKILL-111** (authored in this session - see `docs/tasks/skill/TASK-SKILL-111-trigger-description-enrichment.md`).
 
 #### Gap 2 - No triggering tests (only functional)
 
 **Where it surfaces:** Anthropic guide Chapter 3 "Recommended Testing Approach - 1. Triggering tests / 2. Functional tests / 3. Performance comparison" (pp. 15-16).
 
-**Current CyberOS state:** Inspecting `feature-request-author/acceptance/` shows `golden-happy-path-input.json` - a functional fixture. There is no list of trigger phrases the skill should match and shouldn't match. The supervisor's classifier is trained / configured separately; per-skill triggering is currently a runtime concern surfaced only in OBS post-deploy.
+**Current CyberOS state:** Inspecting `task-author/acceptance/` shows `golden-happy-path-input.json` - a functional fixture. There is no list of trigger phrases the skill should match and shouldn't match. The supervisor's classifier is trained / configured separately; per-skill triggering is currently a runtime concern surfaced only in OBS post-deploy.
 
-**Concrete failure mode:** A fine-tune cycle widens the skill's `description:` to catch a missed user phrasing. The fine-tuner doesn't realise the wider phrasing now overlaps with `feature-request-audit`'s description - the supervisor's classifier picks the wrong skill 30% of the time. The drift only surfaces a week later when OBS shows `feature-request-audit.acceptance_rate` drop below 60%. A triggering test that asserted _"Generate v2 of the FR" -> feature-request-author_ and _"Has FR-007 changed since the last audit?" -> feature-request-audit_ would have caught the regression at edit time.
+**Concrete failure mode:** A fine-tune cycle widens the skill's `description:` to catch a missed user phrasing. The fine-tuner doesn't realise the wider phrasing now overlaps with `task-audit`'s description - the supervisor's classifier picks the wrong skill 30% of the time. The drift only surfaces a week later when OBS shows `task-audit.acceptance_rate` drop below 60%. A triggering test that asserted _"Generate v2 of the task" -> task-author_ and _"Has TASK-007 changed since the last audit?" -> task-audit_ would have caught the regression at edit time.
 
 **Fix:** define an `acceptance/TRIGGER_TESTS.md` convention. >=3 positive phrases the skill MUST match (the supervisor's classifier returns this skill with confidence >= `defer_below`). >=3 negative phrases the skill MUST NOT match (the classifier returns a different skill, or `none`, or confidence < `defer_below`). Auditor rule `FM-113 trigger-tests-present` enforces the file exists on production skills (v0.2.0+). CI gate (when CUO supervisor v3.x routing is wired) runs `TRIGGER_TESTS.md` against the classifier in a smoke pass.
 
-**Scope of change:** `_template/author/acceptance/` + `_template/audit/acceptance/` get the new file scaffold. RUBRIC.md adds one rule. feature-request-audit skill §3 adds a rule. Existing 104 pairs get backfilled lazily during the next fine-tune of each skill - the rule fires only on production skills (`status: accepted` or higher).
+**Scope of change:** `_template/author/acceptance/` + `_template/audit/acceptance/` get the new file scaffold. RUBRIC.md adds one rule. Task-audit skill §3 adds a rule. Existing 104 pairs get backfilled lazily during the next fine-tune of each skill - the rule fires only on production skills (`status: accepted` or higher).
 
-**FR proposal:** **FR-SKILL-112** (authored in this session - see `docs/feature-requests/skill/FR-SKILL-112-trigger-tests-fixtures.md`).
+**task proposal:** **TASK-SKILL-112** (authored in this session - see `docs/tasks/skill/TASK-SKILL-112-trigger-tests-fixtures.md`).
 
 #### Gap 3 - XML angle brackets in frontmatter (port-blocking)
 
@@ -4471,15 +4471,15 @@ Three confirmed gaps where the guide's structural advice exposes a CyberOS weakn
   * **Option B - boolean flag.** Change to `untrusted_wrapping: required` (which already exists as a separate frontmatter field - see `_template/author/SKILL.md` line 148 `untrusted_content_wrapping: required`). The redundant `wrap_in: <untrusted_content/>` field can simply be dropped, since the marker is implicit and the body's XML form is what actually wraps content.
 
 
-**Why this is not authored as a third FR in this session:** the fix touches every existing audit file's reciprocity check, every contract that references the field, and every host-adapter transpiler's input shape. The author template `_template/audit/SKILL.md` line 91 also uses `wrap_in: <untrusted_content/>` - both templates plus all 104 pairs plus the contracts that mention it (e.g. `_template/author/references/UNTRUSTED_CONTENT.md`) need a coordinated sweep. A naive replace-all could break `_template/author/references/UNTRUSTED_CONTENT.md` which legitimately documents the `<untrusted_content>` XML form _as body content_. The change deserves operator sign-off on which option (A vs B) before authoring an FR. Sketched in §6.3.
+**Why this is not authored as a third task in this session:** the fix touches every existing audit file's reciprocity check, every contract that references the field, and every host-adapter transpiler's input shape. The author template `_template/audit/SKILL.md` line 91 also uses `wrap_in: <untrusted_content/>` - both templates plus all 104 pairs plus the contracts that mention it (e.g. `_template/author/references/UNTRUSTED_CONTENT.md`) need a coordinated sweep. A naive replace-all could break `_template/author/references/UNTRUSTED_CONTENT.md` which legitimately documents the `<untrusted_content>` XML form _as body content_. The change deserves operator sign-off on which option (A vs B) before authoring a task. Sketched in §6.3.
 
-**Recommended next step:** operator picks A or B, authors FR-SKILL-113, sweeps 104 pairs in one session. Estimated 10-14 hours.
+**Recommended next step:** operator picks A or B, authors TASK-SKILL-113, sweeps 104 pairs in one session. Estimated 10-14 hours.
 
 ### §5.2 - Nuance-only items (the guide's framing improves docs but no defect exists)
 
 #### Nuance 1 - "Iterate on a single task before expanding"
 
-Anthropic's Chapter 3 pro-tip (p. 15): "The most effective skill creators iterate on a single challenging task until Claude succeeds, then extract the winning approach into a skill." CyberOS's `_template/author/acceptance/README.md` mentions adding 1-3 fixtures but doesn't surface this discipline. A one-paragraph addition to feature-request-audit skill §3.10 ("Verification rules") or Recipe 8 ("Set up acceptance fixtures") would close the framing gap. **Effort: trivial.** Not a defect; absorption costs ~15 min.
+Anthropic's Chapter 3 pro-tip (p. 15): "The most effective skill creators iterate on a single challenging task until Claude succeeds, then extract the winning approach into a skill." CyberOS's `_template/author/acceptance/README.md` mentions adding 1-3 fixtures but doesn't surface this discipline. A one-paragraph addition to task-audit skill §3.10 ("Verification rules") or Recipe 8 ("Set up acceptance fixtures") would close the framing gap. **Effort: trivial.** Not a defect; absorption costs ~15 min.
 
 #### Nuance 2 - `BASELINE.md` performance comparison at skill promotion
 
@@ -4487,7 +4487,7 @@ Anthropic Chapter 3 (p. 16) suggests baselining tool-calls / tokens / failures w
 
 #### Nuance 3 - "Negative triggers" pattern (`Do NOT use for...`)
 
-Anthropic Chapter 5 (p. 25) shows `description: ...Use for statistical modeling. Do NOT use for simple data exploration (use data-viz skill instead).` CyberOS bodies do this in `## When to invoke this skill` ("If the user asks to _audit an existing FR_ , route to `feature-request-audit` instead") but the disambiguation is in the body, not the description. **Same root cause as Gap 1** - addressed by FR-SKILL-111's mandated description format (which can include the negative-trigger clause).
+Anthropic Chapter 5 (p. 25) shows `description: ...Use for statistical modeling. Do NOT use for simple data exploration (use data-viz skill instead).` CyberOS bodies do this in `## When to invoke this skill` ("If the user asks to _audit an existing TASK_ , route to `task-audit` instead") but the disambiguation is in the body, not the description. **Same root cause as Gap 1** - addressed by TASK-SKILL-111's mandated description format (which can include the negative-trigger clause).
 
 #### Nuance 4 - `compatibility` field uniform adoption
 
@@ -4502,25 +4502,25 @@ Anthropic Chapter 5 (p. 26) notes "Adding this to user prompts is more effective
 
 Sorted by value x ease.
 
-### §6.1 - HIGH value: FR-SKILL-111 - description trigger enrichment
+### §6.1 - HIGH value: TASK-SKILL-111 - description trigger enrichment
 
   * **Trigger gap closes:** §5.1 Gap 1
-  * **Touches:** `_template/author/SKILL.md`, `_template/audit/SKILL.md`, 104 production SKILL.md files, `feature-request-audit/RUBRIC.md` (adds rule FM-112), feature-request-audit skill §3.13, README.md Part 2 + Part 18 (anti-pattern: "Don't put triggers only in the body")
-  * **Effort:** 12-14 hours (FR authoring + 104-pair sweep + RUBRIC rule + auditor regression fixture)
+  * **Touches:** `_template/author/SKILL.md`, `_template/audit/SKILL.md`, 104 production SKILL.md files, `task-audit/RUBRIC.md` (adds rule FM-112), task-audit skill §3.13, README.md Part 2 + Part 18 (anti-pattern: "Don't put triggers only in the body")
+  * **Effort:** 12-14 hours (task authoring + 104-pair sweep + RUBRIC rule + auditor regression fixture)
   * **Risk:** low - change is additive (existing descriptions remain valid; new rule adds requirement)
   * **Authored:** yes, in this session
 
 
-### §6.2 - HIGH value: FR-SKILL-112 - triggering test fixtures
+### §6.2 - HIGH value: TASK-SKILL-112 - triggering test fixtures
 
   * **Trigger gap closes:** §5.1 Gap 2
-  * **Touches:** `_template/author/acceptance/`, `_template/audit/acceptance/`, RUBRIC.md (adds rule FM-113), feature-request-audit skill §3.10, README.md Part 13.2 (validation pyramid grows a new tier)
-  * **Effort:** 10-12 hours (FR authoring + template scaffold + RUBRIC rule + 3 backfill exemplars on `feature-request-author` / `feature-request-audit` / `prd-author`)
+  * **Touches:** `_template/author/acceptance/`, `_template/audit/acceptance/`, RUBRIC.md (adds rule FM-113), task-audit skill §3.10, README.md Part 13.2 (validation pyramid grows a new tier)
+  * **Effort:** 10-12 hours (task authoring + template scaffold + RUBRIC rule + 3 backfill exemplars on `task-author` / `task-audit` / `prd-author`)
   * **Risk:** low - new convention; existing skills don't break, only fail the new rule until backfilled (which the rule allows on `status: draft` skills)
   * **Authored:** yes, in this session
 
 
-### §6.3 - HIGH value: FR-SKILL-113 - XML-free frontmatter (NOT authored - needs operator decision)
+### §6.3 - HIGH value: TASK-SKILL-113 - XML-free frontmatter (NOT authored - needs operator decision)
 
   * **Trigger gap closes:** §5.1 Gap 3
   * **Touches:** every SKILL.md (104 pairs), `_template/author/SKILL.md` + `_template/audit/SKILL.md`, the v0.2.0 frontmatter contract spec in README Part 2.1, RUBRIC.md (rule FM-014 or rename existing rule), every `references/UNTRUSTED_CONTENT.md` (to ensure XML form is documented as body-only)
@@ -4535,16 +4535,16 @@ Sorted by value x ease.
   * **Touches:** Recipe 11 in README ("Plan a skill promotion (v0.x -> v1.0)"), `_template/author/` scaffold optionally
   * **Effort:** 2-3 hours (recipe doc + template stub)
   * **Risk:** zero - purely additive
-  * **Authored:** no - small enough to be a future recipe addendum, not a full FR
+  * **Authored:** no - small enough to be a future recipe addendum, not a full task
 
 
 ### §6.5 - MEDIUM value: "Iterate on one task before expanding" methodology
 
   * **Trigger gap closes:** §5.2 Nuance 1
-  * **Touches:** feature-request-audit skill §3.10 adds a rule; Recipe 8 expands one paragraph
+  * **Touches:** task-audit skill §3.10 adds a rule; Recipe 8 expands one paragraph
   * **Effort:** 1 hour
   * **Risk:** zero
-  * **Authored:** no - fold into the next feature-request-audit skill revision
+  * **Authored:** no - fold into the next task-audit skill revision
 
 
 ### §6.6 - MEDIUM value: "After-upload" / post-deploy operator checklist
@@ -4565,39 +4565,39 @@ Sorted by value x ease.
   * **Authored:** no - only matters when Phase B transpilers ship
 
 
-## §7 - Candidate FRs
+## §7 - Candidate tasks
 
-FR id | Title | Status | Module | Priority | Phase | Effort hrs | Authored in this session?
+Task id | Title | Status | Module | Priority | Phase | Effort hrs | Authored in this session?
 ---|---|---|---|---|---|---|---
-**FR-SKILL-111** | Trigger-phrase enrichment of `description:` for host portability | draft | SKILL | SHOULD | P1 | 12 | yes - yes
-**FR-SKILL-112** | `acceptance/TRIGGER_TESTS.md` convention - positive + negative triggers per skill | draft | SKILL | SHOULD | P1 | 10 | yes - yes
-FR-SKILL-113 | XML-tag-free frontmatter - replace `wrap_in: <untrusted_content/>` sentinel | sketch only | SKILL | SHOULD | P1 | 12 | no - needs operator decision (option A vs B per §6.3)
-FR-SKILL-114 | `BASELINE.md` artefact at promotion (recipe addendum, not full FR) | sketch only | SKILL | MAY | P2 | 3 | no - small enough for a recipe doc edit
+**TASK-SKILL-111** | Trigger-phrase enrichment of `description:` for host portability | draft | SKILL | SHOULD | P1 | 12 | yes - yes
+**TASK-SKILL-112** | `acceptance/TRIGGER_TESTS.md` convention - positive + negative triggers per skill | draft | SKILL | SHOULD | P1 | 10 | yes - yes
+TASK-SKILL-113 | XML-tag-free frontmatter - replace `wrap_in: <untrusted_content/>` sentinel | sketch only | SKILL | SHOULD | P1 | 12 | no - needs operator decision (option A vs B per §6.3)
+TASK-SKILL-114 | `BASELINE.md` artefact at promotion (recipe addendum, not full task) | sketch only | SKILL | MAY | P2 | 3 | no - small enough for a recipe doc edit
 AUTHORING-revision-1 | "Iterate on one task before expanding" rule | sketch only | doc | MAY | any | 1 | no - fold into next AUTHORING revision
 README-revision-1 | After-upload checklist (Reference A absorption) | sketch only | doc | MAY | any | 2 | no - fold into next README revision
 
-The two authored FRs honour the §0 master rule of feature-request-audit skill (10/10 loop) and §3.12 rules (>=6 ISS findings in the audit sibling). Each is ~500-600 lines, 11-section compliant, with .audit.md siblings. They are independent of each other (FR-SKILL-112 doesn't depend on FR-SKILL-111 - and vice versa).
+The two authored tasks honour the §0 master rule of task-audit skill (10/10 loop) and §3.12 rules (>=6 ISS findings in the audit sibling). Each is ~500-600 lines, 11-section compliant, with .audit.md siblings. They are independent of each other (TASK-SKILL-112 doesn't depend on TASK-SKILL-111 - and vice versa).
 
 
 ## §8 - What NOT to adopt
 
 A few Anthropic patterns are wrong for CyberOS. Calling them out so future fine-tunes don't accidentally absorb them:
 
-  1. **The `description:` <=140-char convention CyberOS doesn't actually enforce.** Part 2.1 of the README says "<=140 chars" but the templates use multi-line YAML descriptions that often run 200-1000 chars. **Keep the looser de-facto limit.** Tightening to 140 would lose the WHAT detail. FR-SKILL-111 raises the formal cap to Anthropic's 1024 to match reality.
+  1. **The `description:` <=140-char convention CyberOS doesn't actually enforce.** Part 2.1 of the README says "<=140 chars" but the templates use multi-line YAML descriptions that often run 200-1000 chars. **Keep the looser de-facto limit.** Tightening to 140 would lose the WHAT detail. TASK-SKILL-111 raises the formal cap to Anthropic's 1024 to match reality.
   2. **"Reduce enabled skills to 20-50 simultaneously" (guide p. 27).** Anthropic's concern is context bloat from non-progressive skills. CyberOS's progressive disclosure + supervisor routing means only the matched skill loads - the 104-pair catalog is not a runtime cost. **Don't trim the catalog to match the guide.**
-  3. **"Skill folder name should match `name:` frontmatter field" (guide p. 10).** CyberOS sometimes uses persona-namespaced paths (`cuo/cpo/feature-request-author/`) while `name:` is just `feature-request-author`. **Keep the persona prefix in the path** - it carries scope-contract inheritance and routing semantics. The folder-name-matches-frontmatter rule is for flat Anthropic skill folders; CyberOS layout (post-Session N: `chief-product-officer/` etc.) is a strict superset.
+  3. **"Skill folder name should match `name:` frontmatter field" (guide p. 10).** CyberOS sometimes uses persona-namespaced paths (`cuo/cpo/task-author/`) while `name:` is just `task-author`. **Keep the persona prefix in the path** - it carries scope-contract inheritance and routing semantics. The folder-name-matches-frontmatter rule is for flat Anthropic skill folders; CyberOS layout (post-Session N: `chief-product-officer/` etc.) is a strict superset.
   4. **"No README.md inside the skill folder" but free-form prose docs elsewhere (guide p. 10).** CyberOS replaces README.md with structured artefacts: `CHANGELOG.md`, `INVARIANTS.md`, `STANDALONE_INTERVIEW.md`, `HUMAN_SUMMARY.md`, `PIPELINE.md`. **Don't merge any of these back into a freeform README** - each is read by a different audit rule.
-  5. **`skill-creator` skill as authoring tool (guide p. 16).** CyberOS uses the chain orchestrator (README Part 28) plus feature-request-audit skill's 40 rules. `skill-creator` is single-author; CyberOS's flow is author-then-audit-loop-to-10/10. **Don't import `skill-creator` semantics** - the audit-loop discipline is stronger.
+  5. **`skill-creator` skill as authoring tool (guide p. 16).** CyberOS uses the chain orchestrator (README Part 28) plus task-audit skill's 40 rules. `skill-creator` is single-author; CyberOS's flow is author-then-audit-loop-to-10/10. **Don't import `skill-creator` semantics** - the audit-loop discipline is stronger.
   6. **"`license: MIT`" as the default (guide p. 11).** CyberOS uses `Apache-2.0` (per `_template/author/SKILL.md` line 10). **Keep Apache-2.0** - it carries patent grants and is the company policy.
   7. **The guide's "Performance Notes" trick (guide p. 26).** It's user-prompt coaching ("Take your time, quality > speed"). CyberOS has CONTRACT_ECHO + `confidence_band` which are stronger mechanisms. **Don't add `## Performance Notes` to skill bodies** - would dilute the more rigorous controls.
 
 
 ## §9 - Open questions deferred to operator
 
-  1. **FR-SKILL-113 option A vs option B** (XML-tag-free frontmatter). See §5.1 Gap 3. Recommendation in this doc: lean **option B** (drop `wrap_in:` entirely; rely on the separate `untrusted_content_wrapping: required` field) because it's simpler, but operator may prefer **option A** (rename to `wrap_in_marker: "untrusted_content"`) for forward-compat with hypothetical future marker types. Either choice is sound.
-  2. **Description budget cap** for FR-SKILL-111: 1024 chars (Anthropic max) vs a CyberOS-specific intermediate (e.g. 512). 1024 matches the port-surface contract directly; 512 forces tighter discipline. Recommendation: **1024 with a soft target of <=512**, audited via warning rule.
-  3. **TRIGGER_TESTS.md required count** (FR-SKILL-112): >=3 positive + >=3 negative? Or scale by tier (Tier 1 = 3+3, Tier 2 = 5+5)? Recommendation: **3+3 as the floor, scale up at the fine-tuner's discretion**.
-  4. **Sweep timing.** FR-SKILL-111 + FR-SKILL-112 require backfilling 104 production skills with new fields. Should this be (a) one batch sweep across all 104 (~2-3 days), (b) lazy backfill during each skill's next fine-tune, or (c) gated by phase - fill on `gated_until_phase` activation? Recommendation: **(b) lazy** - the new RUBRIC rule fires at `status: accepted` or higher, so production skills must comply at promotion; scaffold-status skills get a grace window.
+  1. **TASK-SKILL-113 option A vs option B** (XML-tag-free frontmatter). See §5.1 Gap 3. Recommendation in this doc: lean **option B** (drop `wrap_in:` entirely; rely on the separate `untrusted_content_wrapping: required` field) because it's simpler, but operator may prefer **option A** (rename to `wrap_in_marker: "untrusted_content"`) for forward-compat with hypothetical future marker types. Either choice is sound.
+  2. **Description budget cap** for TASK-SKILL-111: 1024 chars (Anthropic max) vs a CyberOS-specific intermediate (e.g. 512). 1024 matches the port-surface contract directly; 512 forces tighter discipline. Recommendation: **1024 with a soft target of <=512**, audited via warning rule.
+  3. **TRIGGER_TESTS.md required count** (TASK-SKILL-112): >=3 positive + >=3 negative? Or scale by tier (Tier 1 = 3+3, Tier 2 = 5+5)? Recommendation: **3+3 as the floor, scale up at the fine-tuner's discretion**.
+  4. **Sweep timing.** TASK-SKILL-111 + TASK-SKILL-112 require backfilling 104 production skills with new fields. Should this be (a) one batch sweep across all 104 (~2-3 days), (b) lazy backfill during each skill's next fine-tune, or (c) gated by phase - fill on `gated_until_phase` activation? Recommendation: **(b) lazy** - the new RUBRIC rule fires at `status: accepted` or higher, so production skills must comply at promotion; scaffold-status skills get a grace window.
   5. **Whether to absorb the `BASELINE.md` recipe in this round** or defer. Recommendation: **defer** - it's a v1.0-promotion artefact and no skill has promoted to 1.0 yet (hello-world is the only 1.0 and it's a teaching example).
 
 
@@ -4607,13 +4607,13 @@ Authoritative sources for every claim above:
 
   * **Anthropic,_The Complete Guide to Building Skills for Claude_** - the PDF under audit. 33 pages. Cited by chapter + page number throughout.
   * **CyberOS SKILL module README** - [`modules/skill/README.md`](README.md). Cited by Part number (Parts 1-28).
-  * **CyberOS FR authoring discipline** - `feature-request-audit` skill (see feature-request skills). The 40-rule normative spec.
+  * **CyberOS task authoring discipline** - `task-audit` skill (see task skills). The 40-rule normative spec.
   * **CyberOS author template** - [`modules/skill/_template/author/SKILL.md`](_template/author/SKILL.md). The 149-line skeleton every workflow author skill inherits from.
   * **CyberOS audit template** - [`modules/skill/_template/audit/SKILL.md`](_template/audit/SKILL.md). The 144-line skeleton every auditor skill inherits from.
-  * **CyberOS feature-request-author** - [`modules/skill/feature-request-author/SKILL.md`](feature-request-author/SKILL.md). The canonical v0.2.2 production example (Part 11 of README).
-  * **CyberOS contract example** - [`modules/skill/contracts/feature-request/CONTRACT.md`](contracts/feature-request/CONTRACT.md). The `feature_request@1` artefact contract.
+  * **CyberOS task-author** - [`modules/skill/task-author/SKILL.md`](task-author/SKILL.md). The canonical v0.2.2 production example (Part 11 of README).
+  * **CyberOS contract example** - [`modules/skill/contracts/task/CONTRACT.md`](contracts/task/CONTRACT.md). The `task@1` artefact contract.
   * **CyberOS public skill example** - [`modules/skill/public/vietnam-bank-transfer/SKILL.md`](public/vietnam-bank-transfer/SKILL.md). The Tier-1 flat-form example with `compatibility:` field.
-  * **CyberOS BACKLOG** - [`docs/feature-requests/BACKLOG.md`](../../docs/feature-requests/BACKLOG.md). Confirms FR-SKILL-101 through FR-SKILL-110 are taken; FR-SKILL-111 + FR-SKILL-112 are the next free slots.
+  * **CyberOS BACKLOG** - [`docs/tasks/BACKLOG.md`](../../docs/tasks/BACKLOG.md). Confirms TASK-SKILL-101 through TASK-SKILL-110 are taken; TASK-SKILL-111 + TASK-SKILL-112 are the next free slots.
 
 
 If any rule above conflicts with one of those source documents, the source document wins; raise an AGENTS.md §0.4 protocol-refinement candidate against this digest.
@@ -4622,21 +4622,21 @@ If any rule above conflicts with one of those source documents, the source docum
 _End of ANTHROPIC_GUIDE_DIGEST.md._
 
 
-## Appendix K - FR-SKILL-111..115 completion plan
+## Appendix K - TASK-SKILL-111..115 completion plan
 
-> Source: `FR_111_115_COMPLETION_PLAN.md` (merged here 2026-05-21). Implementation plan for FR-SKILL-111 through FR-SKILL-115.
+> Source: `FR_111_115_COMPLETION_PLAN.md` (merged here 2026-05-21). Implementation plan for TASK-SKILL-111 through TASK-SKILL-115.
 
-# FR-SKILL-111..115 - 100% completion plan
+# TASK-SKILL-111..115 - 100% completion plan
 
-> **Status:** 2026-05-19; Owner: Stephen Cheng; **5 FRs at 10/10 specs; ~60% implementation complete; ~40% remains.** Companion doc to [`ANTHROPIC_GUIDE_DIGEST.md`](ANTHROPIC_GUIDE_DIGEST.md). Both produced from the same Anthropic-Skills-portability investigation 2026-05-19.
+> **Status:** 2026-05-19; Owner: Stephen Cheng; **5 tasks at 10/10 specs; ~60% implementation complete; ~40% remains.** Companion doc to [`ANTHROPIC_GUIDE_DIGEST.md`](ANTHROPIC_GUIDE_DIGEST.md). Both produced from the same Anthropic-Skills-portability investigation 2026-05-19.
 
 ## §1 - One-page status snapshot
 
-FR | Title | Spec | Templates | RUBRIC | Catalog impact | Runtime code | CI gate
+Task | Title | Spec | Templates | RUBRIC | Catalog impact | Runtime code | CI gate
 ---|---|---|---|---|---|---|---
-**111** | Description trigger enrichment | yes | yes | yes - SKB-020..023 | yes - 3 exemplars; partial - 101 to lazy-backfill | no - Rust validator deferred (blocked on FR-103) | no - broker not built
+**111** | Description trigger enrichment | yes | yes | yes - SKB-020..023 | yes - 3 exemplars; partial - 101 to lazy-backfill | no - Rust validator deferred (blocked on TASK-103) | no - broker not built
 **112** | `acceptance/TRIGGER_TESTS.md` | yes | yes | yes - SKB-050..057 | yes - 3 exemplars; partial - 101 to lazy-backfill | yes - `cuo.trigger_tests` + 18 tests | partial - runs via pytest; not gated yet
-**113** | XML-free frontmatter | yes | yes | yes - SKB-040..042 | yes - 209 files swept; verified parse | no - Rust validator deferred (blocked on FR-103) | no - broker not built
+**113** | XML-free frontmatter | yes | yes | yes - SKB-040..042 | yes - 209 files swept; verified parse | no - Rust validator deferred (blocked on TASK-103) | no - broker not built
 **114** | BASELINE.md at v1.0 | yes | yes | yes - SKB-060..066 | n/a (no v1.0 skill in modules/skill yet) | yes - `cuo.baseline` + 11 tests | partial - runs via pytest; not gated yet
 **115** | Stale-placeholder sweep | yes | n/a (separate tooling) | partial - SKB-030 spec'd, not added | no - 134 files still leaky | no - detect.py + suggest.py not built | no
 
@@ -4646,27 +4646,27 @@ Legend: yes = shipped this session; partial = partial / queued; no = not started
 
 Ordered by dependency + impact. Cumulative effort: **~38-46 hours**. Splits cleanly into 3 focused sessions.
 
-### Session 1 - FR-SKILL-115 implementation (~16 hours)
+### Session 1 - TASK-SKILL-115 implementation (~16 hours)
 
-Why first: it's the largest remaining piece + has no blocker. Closes the 134-file portability gap so Phase-B transpilers (when FR-103 lands) can ship the catalog whole.
+Why first: it's the largest remaining piece + has no blocker. Closes the 134-file portability gap so Phase-B transpilers (when TASK-103 lands) can ship the catalog whole.
 
-  1. **Build `tools/sweep-placeholders/detect.py`** (1.0h) per FR-115 §3 - scanner walks `modules/skill/**/SKILL.md`, parses frontmatter, identifies stale `<placeholder>` tokens.
-  2. **Build `tools/sweep-placeholders/suggest.py`** (1.5h) per FR-115 §3 - per-skill suggestion engine reading body CONTRACT_ECHO, MANIFEST_SCHEMA, MODULE.md persona entry.
+  1. **Build `tools/sweep-placeholders/detect.py`** (1.0h) per TASK-115 §3 - scanner walks `modules/skill/**/SKILL.md`, parses frontmatter, identifies stale `<placeholder>` tokens.
+  2. **Build `tools/sweep-placeholders/suggest.py`** (1.5h) per TASK-115 §3 - per-skill suggestion engine reading body CONTRACT_ECHO, MANIFEST_SCHEMA, MODULE.md persona entry.
   3. **Build `modules/cuo/cuo/placeholder_check.py` + tests** (2.0h) - runtime validator + 4-6 pytest functions.
   4. **Add SKB-030 to `SKILL_BUNDLE_RUBRIC.md`** (0.5h) - rule statement + severity scheme.
-  5. **Add §3.13 rule 38f to feature-request-audit skill** (0.5h) - discipline-doc entry.
+  5. **Add §3.13 rule 38f to task-audit skill** (0.5h) - discipline-doc entry.
   6. **Generate `tools/sweep-placeholders/report-2026-05-XX.md`** (0.5h) - run detect + suggest across catalog, produce review-ready report.
   7. **Operator reviews report + approves substitutions** (1.0h) - Stephen reads + edits 134 entries (~25s per entry; suggest.py speeds this up).
   8. **Apply substitutions in persona-grouped batches** (8.0h) - 6-10 batches by persona; commit each with operator-attested rationale.
   9. **Build verify.py + run post-sweep** (0.5h) - assert zero residual placeholders + YAML parse + wrap_in_marker invariant + body SHA256 unchanged.
-  10. **CHANGELOG.md `[SKILL]` bump v0.2.5 -> v0.2.6** (0.5h) - narrative entry citing FR-115.
+  10. **CHANGELOG.md `[SKILL]` bump v0.2.5 -> v0.2.6** (0.5h) - narrative entry citing TASK-115.
 
 
 **Output:** registry v0.2.6 with zero stale placeholders. All 134 production skills load cleanly on Anthropic-host transpilers.
 
 ### Session 2 - Lazy-backfill cohort + CI gate wiring (~8-10 hours)
 
-Why second: closes the FR-111 + FR-112 "lazy backfill" tail. Today only 3 exemplars carry enriched descriptions + TRIGGER_TESTS.md; the other 101 skills (104 - 3 exemplars) inherit warnings, not errors, until their next fine-tune.
+Why second: closes the TASK-111 + TASK-112 "lazy backfill" tail. Today only 3 exemplars carry enriched descriptions + TRIGGER_TESTS.md; the other 101 skills (104 - 3 exemplars) inherit warnings, not errors, until their next fine-tune.
 
   1. **Decide cohort triage policy** (0.5h) - pick which 101 skills get pro-active backfill vs which wait for natural fine-tune. Recommendation: backfill P0+P1 personas now (~50 skills), let P2+ wait (~50 skills).
   2. **Backfill 50 P0/P1 persona skills** (5.0h) - for each: enrich description per SKB-020..023 + author `acceptance/TRIGGER_TESTS.md` per SKB-050..057. Use the 3 exemplars as templates. ~6 min per skill x 50 = 5h.
@@ -4679,14 +4679,14 @@ Why second: closes the FR-111 + FR-112 "lazy backfill" tail. Today only 3 exempl
 
 ### Session 3 - Rust broker scaffold + transpiler smoke (~14-20 hours)
 
-Why third: this completes FR-111 + FR-113 (Rust validators) and unblocks Phase B (FR-103 host transpilers). Largest scope variance because depends on how much of FR-SKILL-103 we want to ship simultaneously.
+Why third: this completes TASK-111 + TASK-113 (Rust validators) and unblocks Phase B (TASK-103 host transpilers). Largest scope variance because depends on how much of TASK-SKILL-103 we want to ship simultaneously.
 
 **Minimum scope (14 hours):**
 
   1. **Scaffold `services/skill-broker/` cargo crate** (2.0h) - Cargo.toml + src/lib.rs + frontmatter module shell. Depends on existing `services/shared/cyberos-cli-exit` + `services/shared/cyberos-types` crates.
-  2. **Implement FR-SKILL-103 §3 schema.rs + parser.rs + validators.rs** (4.0h) - minimum to make the broker compile end-to-end + load a SKILL.md frontmatter.
-  3. **Implement FR-SKILL-111 §3 `description_validator.rs` + tests** (2.0h) - 11 unit tests per FR-111 §5.
-  4. **Implement FR-SKILL-113 §3 `marker_validator.rs` + tests** (1.5h) - 5 unit tests per FR-113 §5.
+  2. **Implement TASK-SKILL-103 §3 schema.rs + parser.rs + validators.rs** (4.0h) - minimum to make the broker compile end-to-end + load a SKILL.md frontmatter.
+  3. **Implement TASK-SKILL-111 §3 `description_validator.rs` + tests** (2.0h) - 11 unit tests per TASK-111 §5.
+  4. **Implement TASK-SKILL-113 §3 `marker_validator.rs` + tests** (1.5h) - 5 unit tests per TASK-113 §5.
   5. **Implement `skill.schema.json` JSONSchema mirror** (1.5h) - used by editor LSPs + CI gates.
   6. **Implement `cyberos skill validate` CLI** (1.5h) - exit codes 0/1/6; --json output flag.
   7. **Integration test against the 3 exemplars** (1.5h) - assert broker loads them cleanly; smoke-test against migrate-to-newer-mermaid-version.
@@ -4695,34 +4695,34 @@ Why third: this completes FR-111 + FR-113 (Rust validators) and unblocks Phase B
 **Extended scope (extra +6 hours for full Phase-B Anthropic transpiler smoke):**
 
   8. **Scaffold `services/skill-broker/src/transpilers/anthropic.rs`** (3.0h) - emits Anthropic-flat-SKILL.md from CCSM.
-  9. **Integration test: transpile + validate against vanilla Anthropic loader** (3.0h) - confirm `feature-request-author` round-trips correctly through the transpiler.
+  9. **Integration test: transpile + validate against vanilla Anthropic loader** (3.0h) - confirm `task-author` round-trips correctly through the transpiler.
 
-**Output:** Rust broker compiles + runs FR-111 + FR-113 validators. Phase-B transpilation smoke-tested for the 3 exemplars.
+**Output:** Rust broker compiles + runs TASK-111 + TASK-113 validators. Phase-B transpilation smoke-tested for the 3 exemplars.
 
 ## §3 - Dependency graph
 
 
-                                           ┌─── FR-SKILL-113 (impl shipped this session)
+                                           ┌─── TASK-SKILL-113 (impl shipped this session)
                                            │
-    FR-SKILL-103 ── (broker scaffold) ─────┼─── FR-SKILL-111 Rust validator (deferred)
+    TASK-SKILL-103 ── (broker scaffold) ─────┼─── TASK-SKILL-111 Rust validator (deferred)
       (parent;                             │
-       pending)                            ├─── FR-SKILL-113 Rust validator (deferred)
+       pending)                            ├─── TASK-SKILL-113 Rust validator (deferred)
                                            │
-                                           └─── FR-SKILL-114 broker partner-connector check (deferred)
+                                           └─── TASK-SKILL-114 broker partner-connector check (deferred)
 
-    FR-SKILL-111 (description format)  ──── Templates + RUBRIC + 3 exemplars shipped
+    TASK-SKILL-111 (description format)  ──── Templates + RUBRIC + 3 exemplars shipped
                                        └─── 101-skill lazy backfill (Session 2)
 
-    FR-SKILL-112 (TRIGGER_TESTS.md)    ──── Templates + RUBRIC + 3 exemplars + Python validator shipped
+    TASK-SKILL-112 (TRIGGER_TESTS.md)    ──── Templates + RUBRIC + 3 exemplars + Python validator shipped
                                        └─── 101-skill lazy backfill (Session 2)
 
-    FR-SKILL-113 (XML-free)            ──── 209-file sweep done; templates + RUBRIC shipped
-                                       └─── Rust validator deferred to FR-103 ship
+    TASK-SKILL-113 (XML-free)            ──── 209-file sweep done; templates + RUBRIC shipped
+                                       └─── Rust validator deferred to TASK-103 ship
 
-    FR-SKILL-114 (BASELINE.md)         ──── Template + RUBRIC + Python validator shipped
+    TASK-SKILL-114 (BASELINE.md)         ──── Template + RUBRIC + Python validator shipped
                                        └─── no v1.0 skill exists yet (backfill is no-op today)
 
-    FR-SKILL-115 (placeholder sweep)   ──── Spec at 10/10 (this session)
+    TASK-SKILL-115 (placeholder sweep)   ──── Spec at 10/10 (this session)
                                        └─── Implementation = Session 1 (16h)
 
 
@@ -4730,22 +4730,22 @@ Why third: this completes FR-111 + FR-113 (Rust validators) and unblocks Phase B
 
 Sprint week | Sessions | Scope | Hours
 ---|---|---|---
-**W1** | 1 | FR-115 detect + suggest + 134-file sweep + verify | 16
+**W1** | 1 | TASK-115 detect + suggest + 134-file sweep + verify | 16
 **W2** | 2 | 50-skill backfill cohort + CI gate wiring | 8-10
-**W3** | 3 (minimum) | Rust broker scaffold + FR-111/113 validators | 14
+**W3** | 3 (minimum) | Rust broker scaffold + TASK-111/113 validators | 14
 **W3 + W4** | 3 (extended) | + Anthropic transpiler smoke-test | +6
 
 Total: **~38-46 hours over 3-4 weeks** at half-day-per-day cadence.
 
-## §5 - Out of scope (recorded for future FRs)
+## §5 - Out of scope (recorded for future tasks)
 
 The following appeared during this session's investigation but are NOT part of the 111-115 finish line:
 
-  * **FR-SKILL-116** (placeholder): OBS-driven candidate trigger-phrase suggestions per FR-112 §9. Mines real user phrasings post-deploy; auto-proposes additions to TRIGGER_TESTS.md as `refinement_proposal` envelopes. Phase P2+.
-  * **FR-SKILL-117** (placeholder): marker namespace expansion per FR-113 §9. Adds `untrusted_content_strict` etc. for partner-connector skills.
-  * **FR-SKILL-118** (placeholder): automated baseline re-measurement at 12-month review-due per FR-114 §9.
-  * **VN-locale parallel `TRIGGER_TESTS.vi.md`** per FR-112 §1 #10 - Vietnamese-locale users' phrasings.
-  * **Localised descriptions** (`description_localized.<lang>`) per FR-111 §1 #10.
+  * **TASK-SKILL-116** (placeholder): OBS-driven candidate trigger-phrase suggestions per TASK-112 §9. Mines real user phrasings post-deploy; auto-proposes additions to TRIGGER_TESTS.md as `refinement_proposal` envelopes. Phase P2+.
+  * **TASK-SKILL-117** (placeholder): marker namespace expansion per TASK-113 §9. Adds `untrusted_content_strict` etc. for partner-connector skills.
+  * **TASK-SKILL-118** (placeholder): automated baseline re-measurement at 12-month review-due per TASK-114 §9.
+  * **VN-locale parallel `TRIGGER_TESTS.vi.md`** per TASK-112 §1 #10 - Vietnamese-locale users' phrasings.
+  * **Localised descriptions** (`description_localized.<lang>`) per TASK-111 §1 #10.
   * **Cleanup of the 627 `.fuse_hidden*` files** on Stephen's macOS side (run `find /Users/stephencheng/Projects/CyberSkill/cyberos -name '.fuse_hidden*' -delete` - FUSE-blocked from the sandbox).
   * **Wiki mermaid escapes for the 30+ tokens fixed this session** - already shipped via `tools/fix-mermaid-html/escape-placeholders.py`; future authors should run the script after editing any wiki page that adds new mermaid diagrams.
 
@@ -4755,27 +4755,27 @@ The following appeared during this session's investigation but are NOT part of t
 How to confirm we're at 100%:
 
 
-    # 1. FR-SKILL-111
+    # 1. TASK-SKILL-111
     python3 -m cuo.placeholder_check --catalog modules/skill/ --field description \
       --rule SKB-020,SKB-021,SKB-022,SKB-023 --status-min accepted
     # Expected: exit 0; all 104 production skills carry enriched descriptions.
 
-    # 2. FR-SKILL-112
+    # 2. TASK-SKILL-112
     python3 -m cuo.trigger_tests --catalog modules/skill/ --status-min accepted
     # Expected: exit 0; all 104 production skills carry acceptance/TRIGGER_TESTS.md
     # AND the supervisor classifier routes each fixture correctly.
 
-    # 3. FR-SKILL-113
+    # 3. TASK-SKILL-113
     grep -rn 'wrap_in:\s*<' modules/skill/ --include='SKILL.md'
     # Expected: zero matches (post-sweep; verified this session).
     python3 -m cuo.placeholder_check --rule SKB-040 --catalog modules/skill/
     # Expected: zero hits in any frontmatter field.
 
-    # 4. FR-SKILL-114
+    # 4. TASK-SKILL-114
     find modules/skill -name BASELINE.md | xargs -I {} python3 -m cuo.baseline {}
     # Expected: zero failed baselines (today: no v1.0 skill; this is a no-op gate).
 
-    # 5. FR-SKILL-115
+    # 5. TASK-SKILL-115
     python3 tools/sweep-placeholders/detect.py
     # Expected: exit 0; total_skills_with_hits: 0.
 
@@ -4784,11 +4784,11 @@ How to confirm we're at 100%:
     # Expected: all tests pass (description_validator + marker_validator + integration).
 
     # 7. End-to-end Anthropic transpile smoke
-    cyberos build modules/skill/feature-request-author/ --target anthropic
-    # Expected: emits dist/anthropic/feature-request-author/SKILL.md with valid Anthropic frontmatter.
+    cyberos build modules/skill/task-author/ --target anthropic
+    # Expected: emits dist/anthropic/task-author/SKILL.md with valid Anthropic frontmatter.
 
 
-When all 7 checks return clean: **FR-SKILL-111..115 are at 100%.**
+When all 7 checks return clean: **TASK-SKILL-111..115 are at 100%.**
 
 ## §7 - Today's session inventory
 
@@ -4796,12 +4796,12 @@ What I'm leaving the operator in a clean state for next session:
 
 **Shipped + verified:**
 
-  * 5 FRs at 10/10 (111, 112, 113, 114, 115) with audit siblings
+  * 5 tasks at 10/10 (111, 112, 113, 114, 115) with audit siblings
   * `modules/skill/SKILL_BUNDLE_RUBRIC.md` - new normative rubric with SKB-* namespace
   * `modules/skill/_template/{author,audit}/SKILL.md` - registry v0.2.5 form
   * `modules/skill/_template/{author,audit}/acceptance/TRIGGER_TESTS.md` + `_template/author/BASELINE.md` - scaffolds
   * 209 production SKILL.md files migrated to `wrap_in_marker:` form
-  * 3 exemplar backfills (feature-request-author + feature-request-audit + product-requirements-document-author)
+  * 3 exemplar backfills (task-author + task-audit + product-requirements-document-author)
   * `modules/cuo/cuo/trigger_tests.py` + `cuo/baseline.py` + 29 new tests (78 pass + 1 expected skip; no regressions)
   * `tools/migrate-wrap-in/migrate.sh` - bash sweep tool (patched after `\s*$` bug discovered)
   * `tools/fix-mermaid-html/escape-placeholders.py` - wiki mermaid placeholder escape
@@ -4812,15 +4812,15 @@ What I'm leaving the operator in a clean state for next session:
 
 **Queued for next session(s):**
 
-  * 134-file placeholder sweep (FR-115 Session 1)
-  * 50-skill backfill cohort (FR-111+112 Session 2)
+  * 134-file placeholder sweep (TASK-115 Session 1)
+  * 50-skill backfill cohort (TASK-111+112 Session 2)
   * CI gate wiring (Session 2)
-  * Rust broker scaffold + Rust validators (FR-103 prerequisite + FR-111+113 deferred code; Session 3)
-  * BACKLOG.md `### Headline metrics` regeneration (FR count 244 -> 245 with 115)
+  * Rust broker scaffold + Rust validators (TASK-103 prerequisite + TASK-111+113 deferred code; Session 3)
+  * BACKLOG.md `### Headline metrics` regeneration (task count 244 -> 245 with 115)
   * `.fuse_hidden*` cleanup on macOS side (user-action; one-liner)
 
 
-_End of FR_111_115_COMPLETION_PLAN.md._
+_End of TASK_111_115_COMPLETION_PLAN.md._
 
 
 ## Appendix L - Bundle rubric (SKB-*)
@@ -4829,11 +4829,11 @@ _End of FR_111_115_COMPLETION_PLAN.md._
 
 # `skill_bundle_rubric@1.0` - machine-checkable SKILL.md rubric
 
-> **What this rubric audits:** the `SKILL.md` bundle (every skill folder under `modules/skill/`), NOT the artefacts the skill produces. For artefact-level rubrics see `feature-request-audit/RUBRIC.md` (`audit_rubric@2.0` - FR documents), `product-requirements-document-audit/RUBRIC.md` (PRDs), etc.
+> **What this rubric audits:** the `SKILL.md` bundle (every skill folder under `modules/skill/`), NOT the artefacts the skill produces. For artefact-level rubrics see `task-audit/RUBRIC.md` (`audit_rubric@2.0` - task documents), `product-requirements-document-audit/RUBRIC.md` (PRDs), etc.
 >
-> **Source FRs:** FR-SKILL-103 (frontmatter v1 schema + fields), FR-SKILL-111 (description trigger enrichment), FR-SKILL-112 (TRIGGER_TESTS.md), FR-SKILL-113 (XML-free frontmatter), FR-SKILL-114 (BASELINE.md at v1.0+). This rubric is consumed by future skill-bundle-audit skills + the Rust broker (FR-SKILL-103) + the Python `cuo.baseline` + `cuo.trigger_tests` validators.
+> **Source tasks:** TASK-SKILL-103 (frontmatter v1 schema + fields), TASK-SKILL-111 (description trigger enrichment), TASK-SKILL-112 (TRIGGER_TESTS.md), TASK-SKILL-113 (XML-free frontmatter), TASK-SKILL-114 (BASELINE.md at v1.0+). This rubric is consumed by future skill-bundle-audit skills + the Rust broker (TASK-SKILL-103) + the Python `cuo.baseline` + `cuo.trigger_tests` validators.
 >
-> **Version:** locked at `skill_bundle_rubric@1.0` post-2026-05-19. Rule IDs use the `SKB-` prefix to avoid namespace collision with the FR rubric's `FM-`.
+> **Version:** locked at `skill_bundle_rubric@1.0` post-2026-05-19. Rule IDs use the `SKB-` prefix to avoid namespace collision with the task rubric's `FM-`.
 
 The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHOULD**, **MAY** in this document are to be interpreted as described in BCP 14 (RFC 2119, RFC 8174) when in all capitals.
 
@@ -4850,27 +4850,27 @@ rule_id | Check | Severity | Auto-fixable
 
 rule_id | Check | Severity | Auto-fixable | Source
 ---|---|---|---|---
-`SKB-010` | File begins with `---` on line 1; closing `---` exists; YAML between fences parses | error | false | FR-SKILL-103 §1 #1
-`SKB-011` | All keys are `snake_case` (lowercase ASCII letters, digits, underscores; no leading digit) | error | true | FR-SKILL-103 §1 #2
-`SKB-012` | No duplicate keys | error | false | FR-SKILL-103 §1 #2
-`SKB-013` | Unknown fields are rejected UNLESS prefixed with `x-` (forward-compat escape hatch) | error | false | FR-SKILL-103 §1 #5
+`SKB-010` | File begins with `---` on line 1; closing `---` exists; YAML between fences parses | error | false | TASK-SKILL-103 §1 #1
+`SKB-011` | All keys are `snake_case` (lowercase ASCII letters, digits, underscores; no leading digit) | error | true | TASK-SKILL-103 §1 #2
+`SKB-012` | No duplicate keys | error | false | TASK-SKILL-103 §1 #2
+`SKB-013` | Unknown fields are rejected UNLESS prefixed with `x-` (forward-compat escape hatch) | error | false | TASK-SKILL-103 §1 #5
 
-## §2.5 Frontmatter - placeholder-free (FR-SKILL-115)
+## §2.5 Frontmatter - placeholder-free (TASK-SKILL-115)
 
 rule_id | Check | Severity | Auto-fixable
 ---|---|---|---
-`SKB-030` | **placeholder-free-frontmatter** - no frontmatter field may contain literal template-scaffold placeholder syntax like `<SDP §2 stage letter or "cross">`, `<artifact>`, `<input>`, `<fr_id>` etc. (i.e. tokens matching `<[a-zA-Z]...>` that are NOT in the SAFE_TAGS list `{br, b, i, em, strong, sub, sup, span, div}`). | error (accepted+); warning (draft); EXEMPT under `_template/` | false
+`SKB-030` | **placeholder-free-frontmatter** - no frontmatter field may contain literal template-scaffold placeholder syntax like `<SDP §2 stage letter or "cross">`, `<artifact>`, `<input>`, `<task_id>` etc. (i.e. tokens matching `<[a-zA-Z]...>` that are NOT in the SAFE_TAGS list `{br, b, i, em, strong, sub, sup, span, div}`). | error (accepted+); warning (draft); EXEMPT under `_template/` | false
 
-Auto-fix is never enabled - substitution requires operator domain knowledge (the right substitute depends on what the skill actually does). The validator detects + reports + suggests via `tools/sweep-placeholders/suggest.py` but never auto-applies. Per FR-SKILL-115 §1 #4.
+Auto-fix is never enabled - substitution requires operator domain knowledge (the right substitute depends on what the skill actually does). The validator detects + reports + suggests via `tools/sweep-placeholders/suggest.py` but never auto-applies. Per TASK-SKILL-115 §1 #4.
 
 Distinct from SKB-040 (the security boundary catch-all): SKB-030 targets the operator-UX + portability boundary - template-scaffold leftovers that never got substituted with real values. SKB-040 fires on any `<` or `>` in any frontmatter field including the placeholder tokens SKB-030 also catches. The two rules overlap defensively.
 
-## §3 Frontmatter - description format (FR-SKILL-111)
+## §3 Frontmatter - description format (TASK-SKILL-111)
 
 rule_id | Field | Rule | Severity | Auto-fixable
 ---|---|---|---|---
 `SKB-020` | `description` | required, length 80-1024 chars (flattened single-line equivalent after YAML folding) | error | false
-`SKB-021` | `description` | MUST NOT contain unescaped `<` or `>` characters (forbidden frontmatter chars per Anthropic Reference B + FR-SKILL-113 SKB-040) | error | false
+`SKB-021` | `description` | MUST NOT contain unescaped `<` or `>` characters (forbidden frontmatter chars per Anthropic Reference B + TASK-SKILL-113 SKB-040) | error | false
 `SKB-022` | `description` | MUST contain at least one verb stem from the canonical list (`generate \| author \| audit \| review \| draft \| emit \| build \| propose \| render \| extract \| classify \| tag \| score \| track \| enforce \| validate \| orchestrate \| chain \| select \| pin \| halt \| resume \| escalate \| wrap \| publish \| deliver \| test \| simulate`) | error | false
 `SKB-023` | `description` | MUST carry >=2 distinct trigger-phrase quotations (form: `Use when user asks to "<phrase>"` or `Triggers on "<phrase>"`) | error | false
 `SKB-024` | `description` | Trigger phrases MUST be paraphrase-distinct (Levenshtein distance > 3 between any pair of positives) | warning | false
@@ -4880,7 +4880,7 @@ rule_id | Field | Rule | Severity | Auto-fixable
 
 Severity scheme for SKB-020..023: `error` for skills at `status: accepted` or higher; `warning` for `status: draft`. **Auto-fix is never enabled** for description rules - description reflects human intent.
 
-## §4 Frontmatter - XML-bracket discipline (FR-SKILL-113)
+## §4 Frontmatter - XML-bracket discipline (TASK-SKILL-113)
 
 rule_id | Check | Severity | Auto-fixable
 ---|---|---|---
@@ -4888,7 +4888,7 @@ rule_id | Check | Severity | Auto-fixable
 `SKB-041` | **wrap_in_marker-form** - `untrusted_inputs.wrap_in_marker:` MUST be present (renamed from legacy `wrap_in:` in registry v0.2.5; SKB-041 catches both: missing-field and legacy-form) | error (accepted+); warning (draft) | true (legacy -> new rename only)
 `SKB-042` | **wrap_in_marker enum** - value MUST match `^[a-z][a-z0-9_]*$` and MUST be one of the registered v1 markers (today: `"untrusted_content"` only) | error | false
 
-## §5 Triggering tests (FR-SKILL-112)
+## §5 Triggering tests (TASK-SKILL-112)
 
 rule_id | Check | Severity | Auto-fixable
 ---|---|---|---
@@ -4901,7 +4901,7 @@ rule_id | Check | Severity | Auto-fixable
 `SKB-056` | `min_confidence >= confidence_band.defer_below` (cannot test against a confidence the skill itself would reject) | error | false
 `SKB-057` | Classifier routing matches fixture (positive triggers route here; negative triggers route elsewhere) - verified by `python -m cuo.trigger_tests <skill_path>` | error | false
 
-## §6 Baseline at v1.0 promotion (FR-SKILL-114)
+## §6 Baseline at v1.0 promotion (TASK-SKILL-114)
 
 rule_id | Check | Severity | Auto-fixable
 ---|---|---|---
@@ -4911,21 +4911,21 @@ rule_id | Check | Severity | Auto-fixable
 `SKB-063` | `attested_by` matches `^(cuo-[a-z]+\|human:[a-z][a-z0-9_-]*)$` | error | false
 `SKB-064` | `next_review_due` is valid ISO 8601 with timezone | error | false
 `SKB-065` | `next_review_due` is in the future (warning) or <365 days overdue (warning); >365 days overdue (error) | warning / error | false
-`SKB-066` | When `exposable_as.partner_connector: true` AND `skill_version >= 1.0.0`, `BASELINE.md` MUST be present (broker enforces; trust-exposability link per FR-SKILL-103 Part 5.3) | error | false
+`SKB-066` | When `exposable_as.partner_connector: true` AND `skill_version >= 1.0.0`, `BASELINE.md` MUST be present (broker enforces; trust-exposability link per TASK-SKILL-103 Part 5.3) | error | false
 
 ## §7 Existing v0.2.0 contract rules (referenced for completeness)
 
-These rules ship with FR-SKILL-103 (already accepted; this rubric is the post-103 + post-111-114 consolidation). They're not new; they're listed here so the rubric is self-contained.
+These rules ship with TASK-SKILL-103 (already accepted; this rubric is the post-103 + post-111-114 consolidation). They're not new; they're listed here so the rubric is self-contained.
 
-rule_id | Check | Severity | Source FR
+rule_id | Check | Severity | Source task
 ---|---|---|---
-`SKB-100` | `name:` matches kebab-case + matches folder name | error | FR-SKILL-103 §1 #2
-`SKB-101` | `description:` <=1024 chars (raised by FR-SKILL-111 from prior 200-char baseline) | error | FR-SKILL-103 §1 #2 + FR-SKILL-111 §1 #2
-`SKB-102` | `allowed_memory_scopes:` globs validate via `globset@0.4` | error | FR-SKILL-103 §1 #2
-`SKB-103` | `allowed_mcp_tools:` values are in canonical tool enum (Bash, Read, Write, Edit, Glob, Grep, MemoryRead, MemorySearch, HttpFetch + MCP names from FR-SKILL-104 registry) | error | FR-SKILL-103 §1 #2
-`SKB-104` | `version:` is valid SemVer | error | FR-SKILL-103 §1 #2
-`SKB-105` | `signature:` (when present) verifies ed25519 over `SHA-256(frontmatter_yaml_canonical) \|\| SHA-256(body_markdown_canonical)` | error | FR-SKILL-103 §1 #7
-`SKB-106` | `min_broker_version` / `max_broker_version` SemVer-compatible with current broker | error | FR-SKILL-103 §1 #3
+`SKB-100` | `name:` matches kebab-case + matches folder name | error | TASK-SKILL-103 §1 #2
+`SKB-101` | `description:` <=1024 chars (raised by TASK-SKILL-111 from prior 200-char baseline) | error | TASK-SKILL-103 §1 #2 + TASK-SKILL-111 §1 #2
+`SKB-102` | `allowed_memory_scopes:` globs validate via `globset@0.4` | error | TASK-SKILL-103 §1 #2
+`SKB-103` | `allowed_mcp_tools:` values are in canonical tool enum (Bash, Read, Write, Edit, Glob, Grep, MemoryRead, MemorySearch, HttpFetch + MCP names from TASK-SKILL-104 registry) | error | TASK-SKILL-103 §1 #2
+`SKB-104` | `version:` is valid SemVer | error | TASK-SKILL-103 §1 #2
+`SKB-105` | `signature:` (when present) verifies ed25519 over `SHA-256(frontmatter_yaml_canonical) \|\| SHA-256(body_markdown_canonical)` | error | TASK-SKILL-103 §1 #7
+`SKB-106` | `min_broker_version` / `max_broker_version` SemVer-compatible with current broker | error | TASK-SKILL-103 §1 #3
 
 ## §8 Severity legend
 
@@ -4942,16 +4942,16 @@ rule_id | Check | Severity | Source FR
 
 ## §10 Cross-rubric coordination
 
-This rubric coexists with per-artefact rubrics (FR, PRD, SOW, etc.). When a skill bundle's artefact-rubric and bundle-rubric disagree, the bundle-rubric wins (the bundle is the unit of distribution; artefact rubrics live inside skill bundles).
+This rubric coexists with per-artefact rubrics (task, PRD, SOW, etc.). When a skill bundle's artefact-rubric and bundle-rubric disagree, the bundle-rubric wins (the bundle is the unit of distribution; artefact rubrics live inside skill bundles).
 
-When `feature-request-audit/RUBRIC.md` (the FR artefact rubric) and `SKILL_BUNDLE_RUBRIC.md` (this file) reference the same FR-SKILL-NNN, the bundle rubric carries the source-of-truth contract. The FR artefact rubric's rules apply only to FR.md documents; they never apply to SKILL.md bundles.
+When `task-audit/RUBRIC.md` (the task artefact rubric) and `SKILL_BUNDLE_RUBRIC.md` (this file) reference the same task-SKILL-NNN, the bundle rubric carries the source-of-truth contract. The task artefact rubric's rules apply only to task.md documents; they never apply to SKILL.md bundles.
 
 ## §11 Roadmap
 
-Pending future FRs:
+Pending future tasks:
 
-  * **FR-SKILL-117** - marker namespace expansion (SKB-042 enum grows beyond `"untrusted_content"`).
-  * **FR-SKILL-118** - automated baseline re-measurement at 12-month review-due (SKB-065 escalation paths).
+  * **TASK-SKILL-117** - marker namespace expansion (SKB-042 enum grows beyond `"untrusted_content"`).
+  * **TASK-SKILL-118** - automated baseline re-measurement at 12-month review-due (SKB-065 escalation paths).
   * Future: a skill-bundle-audit skill that consumes this rubric end-to-end (today the rules are enforced piecemeal: SKB-010..013 by the Rust broker, SKB-020..023 by `cuo.description_validator`, SKB-050..057 by `cuo.trigger_tests`, SKB-060..066 by `cuo.baseline`).
 
 ## Changelog

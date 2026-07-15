@@ -1,8 +1,8 @@
--- FR-EMAIL-001 §3.3 — bounce_log table.
+-- TASK-EMAIL-001 §3.3 — bounce_log table.
 --
 -- Bounces are recorded as pure inserts. Hard/soft/transient classification
 -- per RFC 3463 SMTP enhanced status codes. The reputation alarm consumes
--- this table via the OTel exporter (FR-EMAIL-001 §1 #17).
+-- this table via the OTel exporter (TASK-EMAIL-001 §1 #17).
 
 BEGIN;
 

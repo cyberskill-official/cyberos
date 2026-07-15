@@ -1,4 +1,4 @@
-//! FR-MCP-002 — module server health lifecycle (DEC-2350 cadence, DEC-2351 enum).
+//! TASK-MCP-002 — module server health lifecycle (DEC-2350 cadence, DEC-2351 enum).
 //!
 //! A module registers at startup and then sends a heartbeat every `HEARTBEAT_INTERVAL_SECS`.
 //! After `UNHEALTHY_AFTER_SECS` without a heartbeat (3 missed 10s beats) the gateway treats

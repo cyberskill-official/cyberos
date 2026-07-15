@@ -1,6 +1,6 @@
 """
 cyberos.core.dream.detectors — the four built-in dream detectors
-(FR-MEMORY-115 §1 #3).
+(TASK-MEMORY-115 §1 #3).
 
 Each detector is a pure async function ``run(store, since, scope, …)``
 returning a list of :class:`DreamProposal`. No writes. The runner
@@ -9,7 +9,7 @@ orchestrates them; the applier replays the proposals into the chain.
 Slice-3 ships heuristic implementations that don't require LLM calls —
 they work entirely from on-disk frontmatter + body content. Slice-4 can
 swap in LLM-driven detectors via the ``Invoker`` pattern that
-FR-MEMORY-114 introduced.
+TASK-MEMORY-114 introduced.
 
 The four detectors mirror the Anthropic talk's design exactly:
 
@@ -179,7 +179,7 @@ async def run_patterns(
 ) -> list[DreamProposal]:
     """Find recurring task/outcome combinations across episode.logged rows.
 
-    Aggregates ``episode.logged`` aux audit rows (FR-MEMORY-112) by task
+    Aggregates ``episode.logged`` aux audit rows (TASK-MEMORY-112) by task
     fingerprint. When the same task fingerprint appears ``min_recurrence``+
     times within the window, emit a ``new`` proposal pointing at a
     ``memories/refinements/<slug>.md`` that summarises the pattern.

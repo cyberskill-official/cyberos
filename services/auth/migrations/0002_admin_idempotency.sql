@@ -1,4 +1,4 @@
--- FR-AUTH-001 — Idempotency for /v1/admin/* endpoints.
+-- TASK-AUTH-001 — Idempotency for /v1/admin/* endpoints.
 --
 -- Idempotency-Key is required on every admin POST. We persist the first
 -- response keyed by (route, tenant_id, idempotency_key) for 24h so

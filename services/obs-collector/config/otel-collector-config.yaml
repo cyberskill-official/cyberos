@@ -1,6 +1,6 @@
 # services/obs-collector/config/otel-collector-config.yaml
 #
-# FR-OBS-001 §3 — Canonical otelcol-contrib configuration for the LGTM stack.
+# TASK-OBS-001 §3 — Canonical otelcol-contrib configuration for the LGTM stack.
 # Validated by `cyberos-obs validate-config` at deploy time (CI gate).
 
 receivers:
@@ -36,7 +36,7 @@ processors:
   batch:
     timeout: 10s
     send_batch_size: 1024
-  # FR-OBS-006 - tail-based sampling on the traces pipeline. Source-of-truth + rationale in
+  # TASK-OBS-006 - tail-based sampling on the traces pipeline. Source-of-truth + rationale in
   # tail_sampling.yaml; the flagged-tenants list is seeded from flagged_tenants.yaml.
   tail_sampling:
     decision_wait: 30s
@@ -102,8 +102,8 @@ service:
       exporters: [prometheusremotewrite]
     traces:
       receivers: [otlp]
-      # FR-OBS-006 - tail_sampling runs after pii_scrub (scrub first) and before batch; traces pipeline
-      # only (§1 #10). pii_scrub stays present so the FR-OBS-001 validator passes.
+      # TASK-OBS-006 - tail_sampling runs after pii_scrub (scrub first) and before batch; traces pipeline
+      # only (§1 #10). pii_scrub stays present so the TASK-OBS-001 validator passes.
       processors: [resource, attributes/pii_scrub, tail_sampling, batch]
       exporters: [otlp/tempo]
   telemetry:

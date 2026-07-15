@@ -1,8 +1,8 @@
-//! FR-MCP-004 authorization endpoint (GET /authorize -> 302): issues a one-time, 30-second PKCE-bound
+//! TASK-MCP-004 authorization endpoint (GET /authorize -> 302): issues a one-time, 30-second PKCE-bound
 //! authorization code (clauses #2, #10, #13, #14, #28, #29).
 //!
 //! Subject identity comes from an auth-service bearer JWT (the non-interactive realization of "existing
-//! AUTH session", clause #28): the client first authenticates to FR-AUTH, then presents that JWT here.
+//! AUTH session", clause #28): the client first authenticates to TASK-AUTH, then presents that JWT here.
 //! Errors that occur after the client and redirect_uri are validated are returned to the redirect_uri
 //! as `error=...&state=...` (OAuth 2.1 §4.1.2.1); errors before that (unknown client, redirect
 //! mismatch) are returned directly, never by redirecting to an unvalidated URI.

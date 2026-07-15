@@ -1,4 +1,4 @@
-//! FR-AI-021 — `cyberos-ai failover` subcommand.
+//! TASK-AI-021 — `cyberos-ai failover` subcommand.
 
 use sha2::{Digest, Sha256};
 

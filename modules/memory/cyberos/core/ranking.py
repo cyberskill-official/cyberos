@@ -1,9 +1,9 @@
 """
 cyberos.core.ranking — Park-et-al combined-score recall ranking
-(FR-MEMORY-113 §1 #1, #7, #10).
+(TASK-MEMORY-113 §1 #1, #7, #10).
 
 Pure-function module (no I/O, no ``datetime.now()`` inside ``score_hits()``)
-so two callers — live recall paths and FR-MEMORY-115's batch dream pipeline
+so two callers — live recall paths and TASK-MEMORY-115's batch dream pipeline
 — can share the same scoring engine deterministically.
 
 The combined score is the Park-et-al ("Generative Agents", 2023) form::
@@ -12,11 +12,11 @@ The combined score is the Park-et-al ("Generative Agents", 2023) form::
 
 Defaults: ``w_r=0.4, w_i=0.3, w_t=0.3``. Weights MUST sum to 1.0 ±1e-6
 (constructor-enforced + walker-enforced via ``manifest-recall-weights-
-sum-to-one`` invariant once FR-MEMORY-113 wires the manifest validation).
+sum-to-one`` invariant once TASK-MEMORY-113 wires the manifest validation).
 
 Absent ``importance`` on a hit's frontmatter is treated as 0.5 (the
 neutral midpoint, per DEC-181 / DEC-192). Absent ``last_seen_at`` →
-recency=1.0 (treat as fresh, per FR-MEMORY-113 §1 #6).
+recency=1.0 (treat as fresh, per TASK-MEMORY-113 §1 #6).
 """
 
 from __future__ import annotations
@@ -69,9 +69,9 @@ class RecallWeights:
 class ScoredHit:
     """A single ranked hit with the four scalars annotated.
 
-    Downstream CLIs / REST endpoints / FR-MEMORY-115 dream all rely on
+    Downstream CLIs / REST endpoints / TASK-MEMORY-115 dream all rely on
     these annotations to explain why a hit ranked where it did
-    (FR-MEMORY-113 §1 #8).
+    (TASK-MEMORY-113 §1 #8).
     """
 
     path: str

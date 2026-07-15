@@ -1,4 +1,4 @@
-"""FR-CHAT-008/009 — Lumi mention and retro-capture parser."""
+"""TASK-CHAT-008/009 — Lumi mention and retro-capture parser."""
 
 from __future__ import annotations
 

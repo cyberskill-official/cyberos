@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reference CyberOS module MCP server (FR-MCP-002 federation example).
+"""Reference CyberOS module MCP server (TASK-MCP-002 federation example).
 
 This is the smallest honest example of how a CyberOS module joins the mcp-gateway:
 
@@ -233,7 +233,7 @@ def _post_module_control(gateway: str, path: str, timeout: float = 5.0) -> int:
 
 
 def heartbeat_loop(gateway: str, stop: threading.Event) -> None:
-    """Send a heartbeat every interval until stopped (FR-MCP-002 DEC-2350)."""
+    """Send a heartbeat every interval until stopped (TASK-MCP-002 DEC-2350)."""
     while not stop.wait(HEARTBEAT_INTERVAL_SECS):
         try:
             _post_module_control(gateway, "/v1/mcp/heartbeat")

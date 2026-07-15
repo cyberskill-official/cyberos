@@ -14,7 +14,7 @@
 
 ### Driver
 
-User's request after registry v0.2.3: "the first inputs should be the memory info itself, because i'll create new project and begin interact with it: so memory + human inputs => PRD/SRS/other specs.... => cuo/cpo/feature-request-author". The chain currently jumps directly from "PRD/spec docs" to feature-request-author — there's no upstream skill that consumes memory + human dialogue and produces structured intake. v0.2.4 fills this gap. `project-brief@1` is the artefact that sits between "user has an idea" and "we have a PRD".
+User's request after registry v0.2.3: "the first inputs should be the memory info itself, because i'll create new project and begin interact with it: so memory + human inputs => PRD/SRS/other specs.... => cuo/cpo/task-author". The chain currently jumps directly from "PRD/spec docs" to task-author — there's no upstream skill that consumes memory + human dialogue and produces structured intake. v0.2.4 fills this gap. `project-brief@1` is the artefact that sits between "user has an idea" and "we have a PRD".
 
 ### Layout decision
 

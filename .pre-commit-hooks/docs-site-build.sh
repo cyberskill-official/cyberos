@@ -7,7 +7,7 @@ set -euo pipefail
 root="$(git rev-parse --show-toplevel)"
 
 if ! git diff --cached --name-only | grep -Eq \
-  '^(docs/|modules/[^/]+/docs/|services/[^/]+/docs/|tools/docs-site/|CHANGELOG\.md|modules/[^/]+/CHANGELOG\.md|services/[^/]+/CHANGELOG\.md|docs/feature-requests/|docs/non-functional-requirements/)'; then
+  '^(docs/|modules/[^/]+/docs/|services/[^/]+/docs/|tools/docs-site/|CHANGELOG\.md|modules/[^/]+/CHANGELOG\.md|services/[^/]+/CHANGELOG\.md|docs/tasks/|docs/non-functional-requirements/)'; then
   exit 0
 fi
 

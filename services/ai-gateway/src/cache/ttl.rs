@@ -1,9 +1,9 @@
-//! FR-AI-017 §3 — TTL table per alias-class with jitter.
+//! TASK-AI-017 §3 — TTL table per alias-class with jitter.
 
 use std::time::Duration;
 
 /// §1 #4: TTL per alias-class. Single source of truth.
-/// New aliases added to FR-AI-006 MUST extend this map; missing-alias → no-cache + WARN.
+/// New aliases added to TASK-AI-006 MUST extend this map; missing-alias → no-cache + WARN.
 pub fn ttl_for_alias(alias: &str) -> Option<Duration> {
     match alias_class(alias) {
         "chat.fast" => Some(Duration::from_secs(3600)),

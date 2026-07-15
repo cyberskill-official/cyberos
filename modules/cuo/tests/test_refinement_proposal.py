@@ -1,4 +1,4 @@
-"""Test suite for FR-CUO-201 — refinement proposal emitter + stripe dedup.
+"""Test suite for TASK-CUO-201 — refinement proposal emitter + stripe dedup.
 
 10 ACs covered.
 """
@@ -39,12 +39,12 @@ def _row(op: str, **extra) -> dict:
 
 def test_first_occurrence_writes_proposal(tmp_path: Path) -> None:
     rows = [
-        _row("memory.fr_routed_back", skill="feature-request-audit",
+        _row("memory.task_routed_back", skill="task-audit",
              outcome="ROUTED_BACK", rework_reason="trace-001 failure",
              row_id="r1"),
     ]
     result = emit_or_halt(
-        skill_name="feature-request-audit",
+        skill_name="task-audit",
         signal_id="acceptance_rate_below",
         evidence_rows=rows,
         proposals_root=tmp_path,
@@ -67,17 +67,17 @@ def test_first_occurrence_writes_proposal(tmp_path: Path) -> None:
 
 def test_repeat_stripe_halts_no_new_file(tmp_path: Path) -> None:
     rows = [
-        _row("memory.fr_routed_back",
-             skill="feature-request-audit",
+        _row("memory.task_routed_back",
+             skill="task-audit",
              outcome="ROUTED_BACK",
              rework_reason="trace-001 failure", row_id="r1"),
     ]
-    first = emit_or_halt("feature-request-audit", "acceptance_rate_below",
+    first = emit_or_halt("task-audit", "acceptance_rate_below",
                          rows, tmp_path)
     assert isinstance(first, Emitted)
 
     # Second call with SAME projection produces same stripe
-    second = emit_or_halt("feature-request-audit", "acceptance_rate_below",
+    second = emit_or_halt("task-audit", "acceptance_rate_below",
                           rows, tmp_path)
     assert isinstance(second, StripeRepeatHalt)
     assert second.stripe_id == first.stripe_id
@@ -94,7 +94,7 @@ def test_repeat_stripe_halts_no_new_file(tmp_path: Path) -> None:
 
 
 def test_applied_proposal_reopens_stripe(tmp_path: Path) -> None:
-    rows = [_row("memory.fr_routed_back", skill="x", outcome="ROUTED_BACK",
+    rows = [_row("memory.task_routed_back", skill="x", outcome="ROUTED_BACK",
                   rework_reason="r", row_id="r1")]
     first = emit_or_halt("x", "acceptance_rate_below", rows, tmp_path)
     assert isinstance(first, Emitted)
@@ -126,16 +126,16 @@ def test_applied_proposal_reopens_stripe(tmp_path: Path) -> None:
 
 def test_stripe_determinism() -> None:
     rows = [
-        _row("memory.fr_routed_back", skill="x", outcome="ROUTED_BACK",
+        _row("memory.task_routed_back", skill="x", outcome="ROUTED_BACK",
              rework_reason="boom", row_id="r1"),
-        _row("memory.fr_routed_back", skill="x", outcome="ROUTED_BACK",
+        _row("memory.task_routed_back", skill="x", outcome="ROUTED_BACK",
              rework_reason="bang", row_id="r2"),
     ]
     s1 = compute_stripe("x", "acceptance_rate_below", rows)
     s2 = compute_stripe("x", "acceptance_rate_below", rows)
     assert str(s1) == str(s2)
     # Different evidence → different stripe
-    rows2 = [_row("memory.fr_routed_back", skill="x", outcome="ROUTED_BACK",
+    rows2 = [_row("memory.task_routed_back", skill="x", outcome="ROUTED_BACK",
                    rework_reason="totally-different", row_id="r3")]
     s3 = compute_stripe("x", "acceptance_rate_below", rows2)
     assert str(s3) != str(s1)
@@ -147,13 +147,13 @@ def test_stripe_determinism() -> None:
 
 
 def test_proposal_body_shape(tmp_path: Path) -> None:
-    rows = [_row("memory.fr_routed_back", skill="x", outcome="ROUTED_BACK",
+    rows = [_row("memory.task_routed_back", skill="x", outcome="ROUTED_BACK",
                   rework_reason="r", row_id="r1")]
     result = emit_or_halt("x", "acceptance_rate_below", rows, tmp_path,
                            suggested_change="Add TRACE-006 rule to catch this.")
     assert isinstance(result, Emitted)
     body = result.proposal_path.read_text(encoding="utf-8")
-    # 5 mandatory body sections (FR §1 #5)
+    # 5 mandatory body sections (task §1 #5)
     for section in ("## Stripe", "## Triggering signal", "## Evidence rows",
                     "## Suggested change", "## Risk class"):
         assert section in body
@@ -171,7 +171,7 @@ def test_proposal_body_shape(tmp_path: Path) -> None:
 
 
 def test_list_show_apply_reject(tmp_path: Path) -> None:
-    rows = [_row("memory.fr_routed_back", skill="x", outcome="ROUTED_BACK",
+    rows = [_row("memory.task_routed_back", skill="x", outcome="ROUTED_BACK",
                   rework_reason="r", row_id="r1")]
     result = emit_or_halt("x", "acceptance_rate_below", rows, tmp_path)
     assert isinstance(result, Emitted)
@@ -226,7 +226,7 @@ def test_drain_honours_hitl_halt(tmp_path: Path) -> None:
     just verifies that a StripeRepeatHalt result carries enough info for the
     drain command to write a DRAIN_HALT.md.
     """
-    rows = [_row("memory.fr_routed_back", skill="x", outcome="ROUTED_BACK",
+    rows = [_row("memory.task_routed_back", skill="x", outcome="ROUTED_BACK",
                   row_id="r1")]
     first = emit_or_halt("x", "needs_human_rate_above", rows, tmp_path)
     assert isinstance(first, Emitted)
@@ -239,7 +239,7 @@ def test_drain_honours_hitl_halt(tmp_path: Path) -> None:
 
 
 def test_approve_lifecycle(tmp_path: Path) -> None:
-    """approve_proposal moves pending → applied. Used by FR-CUO-202."""
+    """approve_proposal moves pending → applied. Used by TASK-CUO-202."""
     rows = [_row("x", row_id="r1")]
     first = emit_or_halt("a", "needs_human_rate_above", rows, tmp_path)
     assert isinstance(first, Emitted)

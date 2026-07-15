@@ -18,7 +18,7 @@ type View = "dashboard" | "chat" | "moderation" | "module";
 function parsePath(path: string): { view: View; module?: string } {
   if (path === "/" || path === "/chat" || path.startsWith("/chat/")) return { view: "chat" };
   if (path === "/dashboard") return { view: "dashboard" };
-  // FR-CHAT-269. The route exists for everyone; the PAGE renders null and the SERVER 403s for a
+  // TASK-CHAT-269. The route exists for everyone; the PAGE renders null and the SERVER 403s for a
   // non-admin, so a guessed URL leaks nothing.
   if (path === "/moderation") return { view: "moderation" };
   const seg = path.split("/")[1]?.toLowerCase() ?? "";
@@ -94,7 +94,7 @@ export function App() {
             {t("top.backToChat")}
           </button>
         )}
-        {/* FR-CHAT-269 §1 #18 — absent, not disabled. A visible-but-403 route teaches everyone in the
+        {/* TASK-CHAT-269 §1 #18 — absent, not disabled. A visible-but-403 route teaches everyone in the
             workspace that a moderation surface exists and that they are not trusted with it. */}
         {isModerator(token) && view !== "moderation" && (
           <button className="btn-ghost" onClick={() => nav("/moderation")}>

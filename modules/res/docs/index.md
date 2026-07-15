@@ -1,7 +1,7 @@
 ---
 title: RES - Capacity-vs-forecast, hiring forecast, allocation engine
 source: website/docs/modules/res/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 RES is CyberOS's **resource-planning surface** for a services org. It composes four data streams - HR's Member roster + contracts, PROJ's project timelines + estimates, TIME's actual hours logged, LEARN's per-Member skill mastery - into one read-canonical view: an Allocation matrix indexed by (Member, week). On top of that matrix sits four AI-assisted lenses: capacity-vs-forecast (where are we over- or under-booked?), allocation Gantt (drag-drop reshuffle with conflict feedback), hiring forecast (when do we need to add headcount of which level / skill?), and skills-gap heatmap (which skills are demanded vs supplied for the next 6 months?). The CSO/COO-skill emits Notify cards into Genie when an allocation crosses 110% (over-allocation) or drops below 60% (under-allocation for > 2 weeks). Vietnamese Labor Code 2019 Art. 107 overtime caps are enforced at the allocation-write boundary - a plan that would breach the cap is refused, not warned.
@@ -14,8 +14,8 @@ RES is CyberOS's **resource-planning surface** for a services org. It composes f
 | Data sources | 4 modules: HR, PROJ, TIME, LEARN |
 | Default capacity | 40h / week, configurable per Member |
 | OT cap (VN) | 200h/yr standard; up to 300h with consent + MoLISA notification |
-| Over-alloc flag | > 110% (FR pending) |
-| Under-alloc flag | < 60% (FR pending) |
+| Over-alloc flag | > 110% (task pending) |
+| Under-alloc flag | < 60% (task pending) |
 | Depends on | HR, PROJ, TIME, LEARN + AUTH, memory, OKR (P3), OBS |
 | Est. LoC | ~8,500 (Rust + TS Gantt SPA) |
 
@@ -136,7 +136,7 @@ Component| Path (planned)| Responsibility
 `skills_gap.rs`| services/res/src/skills_gap.rs| Bipartite-matching: demand-side (PROJ skills x hours) vs supply-side (LEARN mastery x Member capacity). Output: gap heatmap by skill x week.
 `overtime_guard.rs`| services/res/src/overtime_guard.rs| Hard predicate on every allocation write. Rejects writes that would push a Member past the Labor Code 2019 Art. 107 OT cap. Reads HR Member.country to apply the correct cap.
 `gantt_ws.rs`| services/res/src/gantt_ws.rs| WebSocket fan-out for collaborative Gantt drag-drop. Yjs Y-doc per (project, quarter).
-`conflict.rs`| services/res/src/conflict.rs| Detect over-allocation (> 110% per (FR pending)) and under-allocation (< 60% sustained > 2 weeks). Emits ConflictRecord rows.
+`conflict.rs`| services/res/src/conflict.rs| Detect over-allocation (> 110% per (task pending)) and under-allocation (< 60% sustained > 2 weeks). Emits ConflictRecord rows.
 `gql_subgraph.rs`| services/res/src/gql_subgraph.rs| Apollo federation subgraph. Types: Allocation, Capacity, ForecastedNeed, SkillGap, HiringPlan, ConflictRecord.
 `agent_bridge.rs`| services/res/src/agent_bridge.rs| RPC surface for COO-skill / CHRO-skill - returns ranked recommendations with deterministic ordering for replay.
 `audit_bridge.rs`| services/res/src/audit_bridge.rs| Write every allocation / conflict / reallocation event to the memory canonical writer.
@@ -388,9 +388,9 @@ Rejected| OT-cap breach OR skill-mismatch (severity=block)| memory `allocation.r
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
@@ -439,7 +439,7 @@ Vietnam Labor Code 2019| Art. 107 - overtime caps (200 hours/year standard, up t
 Vietnam Labor Code 2019| Art. 105 - daily / weekly working hours| Capacity model defaults to 40h / week x 8h / day; allocations cannot exceed daily cap.
 Vietnam Labor Code 2019| Art. 111 - weekly rest| Capacity respects weekly rest day; allocations cannot land on rest days.
 Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Per-Member allocation timeline exportable via `cyberos-res dsar-export`.
-EU AI Act (Reg. 2024/1689)| Annex III §4 - Employment-related AI| Hiring-forecast LP is a decision-support tool, not auto-act; (FR pending) mandates human-in-the-loop.
+EU AI Act (Reg. 2024/1689)| Annex III §4 - Employment-related AI| Hiring-forecast LP is a decision-support tool, not auto-act; (task pending) mandates human-in-the-loop.
 EU AI Act| Art. 14 - Human oversight| COO-skill suggestions are Notify cards; mutation requires explicit COO action.
 EU AI Act| Art. 22 - No automated decision-making| Reallocation never auto-applied; explicit approval predicate.
 GDPR (EU 2016/679)| Art. 22 - Automated decision-making| Same as EU AI Act; explicit human approval before any allocation write.
@@ -459,7 +459,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 `R-RES-005`| EU AI Act Annex III interpretation drift (hiring tool reclassified high-risk)| Medium| High| CLO| Conservative classification today (high-risk); annual legal review post-AI-Act enforcement-act publication.
 `R-RES-006`| Cross-tenant allocation leak via predicate-elision in GraphQL| Low| Catastrophic| CSO| RLS at Postgres + scope-required directive on every field; test gate on cross-tenant.
 `R-RES-007`| LP solver returns infeasible plan when demand > supply over horizon| Medium| Low| CTO| Infeasibility detected and surfaced as Notify card "demand unbookable through 2026-Q4"; never silent.
-`R-RES-008`| Member privacy: peer allocation visibility leak| Low| Medium| CSO| (FR pending) enforced - Member can only read own row; cross-Member read requires res.read_all scope.
+`R-RES-008`| Member privacy: peer allocation visibility leak| Low| Medium| CSO| (task pending) enforced - Member can only read own row; cross-Member read requires res.read_all scope.
 `R-RES-009`| Sabbatical / parental leave miscount inflates capacity| Medium| Medium| CHRO| HR sabbatical event drives capacity event; integration test on each HR schema change.
 `R-RES-010`| RES forecast becomes single point of CEO-decision dependency - bad forecast drives bad hiring or layoffs| Medium| High| CEO| RES forecasts are inputs, not decisions; CEO + COO + CFO triangulate against pipeline + cash runway; monthly backtest published.
 `R-RES-011`| Member-preference flags ignored when high-priority Engagement demands| Medium| Low| CHRO| Member preferences are soft constraints; override requires AM + Member acknowledgment; preference violations audited quarterly.
@@ -631,7 +631,7 @@ External client visibility (PORTAL surface)| planned - P4+
 
 ## References
 
-- **FR catalogue** - RES module FRs 001..005.
+- **task catalogue** - RES module tasks 001..005.
 - **NFR inheritance** - Performance / availability / usability NFRs that RES inherits.
 - **Module spec** - RES - Revenue sharing & resource planning subjects, allocation primitive, OT-cap policy.
 - **Vietnam Labor Code 2019 (Law 45/2019/QH14)** - Art. 105 (working hours), Art. 107 (overtime caps), Art. 111 (weekly rest).
@@ -649,7 +649,7 @@ External client visibility (PORTAL surface)| planned - P4+
 - **Bigger picture (above):** 3 strategic roles + integration-model diagram + 10-row auto-vs-human matrix.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - RES allocation decisions become memory audit rows; capacity-vs-forecast is integrator, not source.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - RES at P3-mid (P3, after the upstream modules ship).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 
 ## Changelog
 

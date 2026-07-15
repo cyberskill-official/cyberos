@@ -1,4 +1,4 @@
-//! FR-EMAIL-001 §1 #5 — per-tenant DKIM key registry.
+//! TASK-EMAIL-001 §1 #5 — per-tenant DKIM key registry.
 //!
 //! Slice 1 generates RSA-2048 keys. The KMS-encrypted private blob is
 //! stored in `dkim_keys.private_key_kms_encrypted_blob`; the plaintext
@@ -80,7 +80,7 @@ pub fn generate_rsa_2048_pem_pair() -> EmailResult<(String, Vec<u8>)> {
     Ok((public_pem, private_pem_plaintext.into_bytes()))
 }
 
-/// FR-EMAIL-001 §4 #7 — provision a per-tenant DKIM key. The unique partial
+/// TASK-EMAIL-001 §4 #7 — provision a per-tenant DKIM key. The unique partial
 /// index `uniq_active_dkim_key` enforces at most one ACTIVE key per
 /// (tenant, selector); rotation transitions the prior row to `rotated`
 /// before inserting the new one.
@@ -112,7 +112,7 @@ pub async fn provision_key(
         KeyAlgorithm::Rsa2048 => generate_rsa_2048_pem_pair()?,
         KeyAlgorithm::Ed25519 => {
             return Err(EmailError::DkimKeyGen(
-                "ed25519 deferred to FR-EMAIL-004 / slice 2".into(),
+                "ed25519 deferred to TASK-EMAIL-004 / slice 2".into(),
             ))
         }
     };
@@ -152,7 +152,7 @@ pub async fn provision_key(
     })
 }
 
-/// FR-EMAIL-001 §4 #8 — rotate the active key. Atomic: the prior active row
+/// TASK-EMAIL-001 §4 #8 — rotate the active key. Atomic: the prior active row
 /// transitions to `rotated` in the same tx as the new `active` insert.
 pub async fn rotate_key(
     db: &PgPool,

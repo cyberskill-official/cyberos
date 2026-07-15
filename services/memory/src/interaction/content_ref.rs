@@ -1,4 +1,4 @@
-//! FR-MEMORY-121 §1 #4 — `content_ref`: a closed union that references content by pointer or hash, never
+//! TASK-MEMORY-121 §1 #4 — `content_ref`: a closed union that references content by pointer or hash, never
 //! by raw body. This is the privacy spine (DEC-2701): the audit chain is retained for years, so message
 //! bodies, document/IP text, email bodies, and file contents are referenced here — never inlined.
 //!

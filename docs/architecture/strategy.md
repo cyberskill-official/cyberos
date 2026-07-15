@@ -1,7 +1,7 @@
 ---
 title: Strategy
 source: website/docs/architecture/strategy.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 ## Where CyberOS sits today
@@ -11,7 +11,7 @@ Three modules shipped, twenty more in plan. The architectural foundation is real
 - **Memory module** - local-first, audit-chained, cryptographically verifiable personal memory store. 245 tests green.
 - **Skill module** - Anthropic Agent Skills open-standard compliant. 20 SKILL.md bundles indexed, 6 Vietnamese-market skills shipped, Rust + Wasmtime + Bun toolchain. All 7 audit phases done.
 - **CUO module** - rule-based router. 15/15 routing fixtures + 15/15 pytest tests. Phase 1 (rule-based) shipped; Phases 2-4 (LLM, multi-skill chains, persona switching) designed.
-- **Documentation site** - 31 pages, 226 Mermaid diagrams, 341 FRs, 100 NFRs, 199 glossary terms, 42 risks. Multi-page Path C.
+- **Documentation site** - 31 pages, 226 Mermaid diagrams, 341 tasks, 100 NFRs, 199 glossary terms, 42 risks. Multi-page Path C.
 - **Remaining 19 modules (scaffolded, not built)** - AUTH, AI Gateway, MCP Gateway, OBS, CHAT, EMAIL, PROJ, TIME, CRM, KB, HR, REW, LEARN, INV, ESOP, RES, OKR, DOC, PORTAL, TEN.
 
 ## World-class ecosystem landscape
@@ -156,7 +156,7 @@ Three actionable next steps, in order.
 ### Session 1 - Push the docs site to public-ready
 
 1. Wire site-wide search (evaluate Lunr.js or Pagefind)
-2. Add per-FR anchors in fr-catalog (cross-link tightening)
+2. Add per-task anchors in task-catalog (cross-link tightening)
 3. Add a decision log + RSS-able changelog page
 4. Polish remaining Tailwind utility colors to match the Umber/Ochre tokens
 5. Deploy to `cyberskill.world/docs` (Cloudflare Pages or GitHub Pages)

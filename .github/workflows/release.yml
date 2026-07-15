@@ -17,7 +17,7 @@ name: release
 # simply ignored. (Tagging an earlier commit "works", but that commit has the OLD VERSION, so the stamper
 # would mislabel every installer - worse than not building.)
 #
-# The [skip ci] itself is load-bearing (FR-IMP-068 §1 #7: it keeps payload-gate.yml off the bump commit,
+# The [skip ci] itself is load-bearing (TASK-IMP-068 §1 #7: it keeps payload-gate.yml off the bump commit,
 # which version.yml compensates for by proving the payload builds at the new version), so it is not simply
 # removable. Push the tag for provenance, then dispatch this workflow against it.
 #
@@ -38,7 +38,7 @@ permissions:
   contents: write # create the GitHub Release + upload assets
 
 jobs:
-  # FR-IMP-069: publish the versioned cyberos-init payload + Claude plugin as release assets.
+  # TASK-IMP-069: publish the versioned cyberos-init payload + Claude plugin as release assets.
   # The stable names (cyberos-payload.tar.gz, cyberos.plugin) make releases/latest/download/
   # a canonical URL for bootstrap.sh, rollout.sh --from-release, and manual installs.
   payload:
@@ -55,7 +55,7 @@ jobs:
         run: test "v$(cat VERSION)" = "$TAG"
       - name: Build the payload
         run: bash tools/cyberos-init/build.sh "$RUNNER_TEMP/payload"
-      - name: Verify every stamp equals VERSION (FR-IMP-068)
+      - name: Verify every stamp equals VERSION (TASK-IMP-068)
         run: bash tools/cyberos-init/check-version-sync.sh "$RUNNER_TEMP/payload"
       - name: Produce deterministic release assets
         run: bash tools/cyberos-init/release-assets.sh "$RUNNER_TEMP/payload" "$RUNNER_TEMP/assets"
@@ -239,7 +239,7 @@ jobs:
       # platform VERSION and versionCode from the monotonic BUILD_NUMBER floor. Those are two different
       # numbers on purpose: VERSION can move in any direction a product decision requires (it was rolled
       # back to 0.1.0 for the pre-1.0 run-up), while a versionCode can only ever go UP, forever.
-      # BUILD_NUMBER alone was not enough (FR-IMP-078): it only moves when version.yml bumps VERSION, so
+      # BUILD_NUMBER alone was not enough (TASK-IMP-078): it only moves when version.yml bumps VERSION, so
       # while Release-As pinned 1.0.0 a re-tag rebuilt the SAME versionCode and Play refused the second
       # upload (observed: 10706). --store-monotonic lifts the effective code to
       # max(BUILD_NUMBER, minutes-since-epoch), so every run ships strictly higher, however often the
@@ -252,13 +252,13 @@ jobs:
           npm ci
           npm run build
           npx cap sync android
-      # FR-IMP-073 §6 Option B: the Capacitor Android shell once shipped Capacitor's default
+      # TASK-IMP-073 §6 Option B: the Capacitor Android shell once shipped Capacitor's default
       # template icon because nothing ever asserted the launcher assets match the brand source
       # (apps/desktop/src-tauri/icons/android - the Tauri-generated, brand-approved set). This
-      # guard turns the two silent regressions in FR-IMP-073 §10 (a `npx cap add` re-scaffold
+      # guard turns the two silent regressions in TASK-IMP-073 §10 (a `npx cap add` re-scaffold
       # resetting the icons; a desktop rebrand that forgets the mobile copies) into a loud,
       # per-file CI failure. Runs AFTER cap sync so it also catches anything sync rewrites.
-      - name: Assert Android launcher icons match the desktop brand source (FR-IMP-073)
+      - name: Assert Android launcher icons match the desktop brand source (TASK-IMP-073)
         run: |
           fail=0
           for p in mipmap-mdpi/ic_launcher.png mipmap-mdpi/ic_launcher_foreground.png mipmap-mdpi/ic_launcher_round.png \
@@ -369,7 +369,7 @@ jobs:
           fi
 
       # Same stamper as Android: MARKETING_VERSION from the root VERSION, CURRENT_PROJECT_VERSION from
-      # the monotonic build-number floor. --store-monotonic (FR-IMP-078) matters here exactly as on
+      # the monotonic build-number floor. --store-monotonic (TASK-IMP-078) matters here exactly as on
       # Android: ASC consumed build 10706 for 1.0.0 on the first green upload, so a re-tag re-offering
       # the committed BUILD_NUMBER would be rejected. minutes-since-epoch keeps every upload strictly
       # higher.
@@ -383,13 +383,13 @@ jobs:
           npm run build
           npx cap sync ios
 
-      # FR-IMP-073 §6 Option B (iOS leg), amended by FR-IMP-077: the iOS marketing icon is a
+      # TASK-IMP-073 §6 Option B (iOS leg), amended by TASK-IMP-077: the iOS marketing icon is a
       # DERIVED asset - the Tauri brand source carries an alpha channel (fine for desktop),
       # but App Store Connect hard-rejects any alpha on the 1024x1024 icon (error 90717,
       # observed on the v1.0.0 run). The repo copy is the source flattened onto the brand
       # background (#fff, the adaptive-icon background). So the guard asserts the SUBMISSION
       # invariants instead of byte-identity: file present, 1024x1024, and NO alpha channel.
-      - name: Assert iOS app icon is present, 1024x1024, and alpha-free (FR-IMP-073/077)
+      - name: Assert iOS app icon is present, 1024x1024, and alpha-free (TASK-IMP-073/077)
         run: |
           b="apps/web/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png"
           [ -f "$b" ] || { echo "::error::icon guard: Capacitor iOS icon missing: $b"; exit 1; }
@@ -423,7 +423,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: fastlane beta
 
-  # FR-DOCS-003: the published docs site (incl. the roadmap page) refreshes on every release
+  # TASK-DOCS-003: the published docs site (incl. the roadmap page) refreshes on every release
   # tag too - same build, same target as deploy.yml's docs job.
   docs:
     runs-on: ubuntu-latest
@@ -436,7 +436,7 @@ jobs:
           node-version: 24
       - name: Build the site from the markdown sources
         run: bash tools/docs-site/build.sh
-      # FR-IMP-079: shared shipper - this job and deploy.yml's docs job used to inline the same
+      # TASK-IMP-079: shared shipper - this job and deploy.yml's docs job used to inline the same
       # snippet with a SHARED docs.new staging dir; a branch push + tag push seconds apart ran both
       # concurrently and the loser died at mv. ship.sh stages per-run and swaps under a remote flock.
       - name: Ship to the VPS (/srv/console/docs)

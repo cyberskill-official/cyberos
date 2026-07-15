@@ -1,5 +1,5 @@
 //! Read side of the shared hash-chained audit log (l1_audit_log), tenant-scoped, for the console's
-//! Memory & Audit browser (FR-APP-005). It reads from the chat audit pool (the memory DB that holds the
+//! Memory & Audit browser (TASK-APP-005). It reads from the chat audit pool (the memory DB that holds the
 //! chain). The long-term home for this read is the memory module; it lives here for now because chat
 //! already verifies the CyberOS token and holds the audit pool. Read-only.
 

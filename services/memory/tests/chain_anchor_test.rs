@@ -1,4 +1,4 @@
-//! Layer-2 chain-anchor verification — FR-MEMORY-101 §1 #4.
+//! Layer-2 chain-anchor verification — TASK-MEMORY-101 §1 #4.
 //!
 //! These run without Postgres (pure-Rust hashing). Postgres-backed tests
 //! live behind a `--features postgres-it` cargo feature and run in CI

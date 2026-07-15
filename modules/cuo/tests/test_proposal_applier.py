@@ -1,4 +1,4 @@
-"""Test suite for FR-CUO-202 — auto-bump applier."""
+"""Test suite for TASK-CUO-202 — auto-bump applier."""
 
 from __future__ import annotations
 

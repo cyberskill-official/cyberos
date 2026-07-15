@@ -4,13 +4,13 @@
   "title": "observability-injection-author input envelope",
   "type": "object",
   "required": [
-    "fr_path",
+    "task_path",
     "touched_files",
     "output_dir"
   ],
   "additionalProperties": false,
   "properties": {
-    "fr_path": {
+    "task_path": {
       "type": "string"
     },
     "touched_files": {

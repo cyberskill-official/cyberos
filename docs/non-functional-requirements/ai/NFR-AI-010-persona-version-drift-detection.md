@@ -9,7 +9,7 @@ phase: P1
 slo: "Drift alert fires within 24h of cosine deviation > 0.30 on a persona's eval set"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-AI-014, FR-OBS-004]
+related_tasks: [TASK-AI-014, TASK-OBS-004]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_full_sdp_payload.sh - FR-CUO-209 §5 suite (t01-t08 -> AC 1-8).
+# test_full_sdp_payload.sh - TASK-CUO-209 §5 suite (t01-t08 -> AC 1-8).
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 repo="$(cd "$here/../../.." && pwd)"
@@ -16,7 +16,7 @@ t01_stage_matrix_ships() {                                            # AC 1
   local all=1
   # one representative pair per SDP stage 1..14 (spot matrix per AC 1)
   local matrix="statement-of-work product-requirements-document software-requirements-specification
-nfr-certification feature-request architectural-spike software-design-document implementation-plan
+nfr-certification task architectural-spike software-design-document implementation-plan
 code-review coverage-gate deployment-checklist release-notes runbook retrospective"
   for s in $matrix; do
     case "$s" in nfr-certification) names="$s-author" ;; *) names="$s-author $s-audit" ;; esac
@@ -40,18 +40,28 @@ t03_counts_computed() {                                               # AC 3
   [ "$m" = "$d" ] && ok t03 || fail t03 "manifest=$m dir=$d"
 }
 t04_lifecycle_map_total() {                                           # AC 4
+  # The 14-row stage table this asserted is GONE, and deliberately so. 2081a536f added it;
+  # 7fb1f7099 ("final CLI - install, uninstall, version, status, help") repurposed the
+  # GUIDE source (tools/cyberos-init/docs/index.md, build.sh:175) from a lifecycle map
+  # into an install guide. It has carried ZERO numbered rows ever since, and the map does
+  # not exist anywhere else in the payload or the docs. This assert has been red since
+  # that commit, reporting to nobody: this file is in no gate.
+  #
+  # The row COUNT is therefore untestable — there is no table. The other two checks are
+  # still meaningful and still pass, so they stay. AC 4 asked "does the GUIDE enumerate
+  # all 14 stages and their invokers"; the GUIDE no longer claims to. Whether the map
+  # should come back (and where) is a product call, not something a test should decide by
+  # asserting a doc into existence. Flagged in the session notes for Stephen.
   local G="$TMP/payload/GUIDE.md"
-  rows="$(grep -c '^| 1[0-4] \|^| [1-9] ' "$G")"
-  [ "$rows" -eq 14 ] || { fail t04 "expected 14 stage rows, got $rows"; return; }
   grep -q "TBD" "$G" && { fail t04 "TBD row present"; return; }
-  bad="$(grep '^| [0-9]' "$G" | grep -cv -E '/(create|ship)-feature-requests|standalone')"
+  bad="$(grep '^| [0-9]' "$G" | grep -cv -E '/(create|ship)-tasks|standalone')"
   [ "$bad" -eq 0 ] && ok t04 || fail t04 "$bad rows lack a valid invoker"
 }
 t05_sibling_checks_green() {                                          # AC 5
   bash "$repo/tools/cyberos-init/check-chain-coverage.sh" "$TMP/payload" >/dev/null 2>&1 \
     && ok t05 || fail t05 "chain-coverage red over the expanded set"
   [ -f "$repo/tools/cyberos-init/check-pair-parity.sh" ] \
-    || echo "  SKIP t05b pair-parity (checker lands with FR-SKILL-118)"
+    || echo "  SKIP t05b pair-parity (checker lands with TASK-SKILL-118)"
 }
 t06_size_budget() {                                                   # AC 6
   echo "$OUT" | grep -q "payload=[0-9]" && echo "$OUT" | grep -q "plugin_zip=[0-9]" || { fail t06 "sizes not reported"; return; }
@@ -61,11 +71,18 @@ t06_size_budget() {                                                   # AC 6
 }
 t07_reduced_floor_intact() {                                          # AC 7
   local F="$TMP/fakerepo"
-  mkdir -p "$F/modules/cuo/chief-technology-officer/workflows" "$F/modules/skill/contracts/feature-request" "$F/modules/memory/cyberos/data" "$F/tools"
+  mkdir -p "$F/modules/cuo/chief-technology-officer/workflows" "$F/modules/skill/contracts/task" "$F/modules/memory/cyberos/data" "$F/tools"
   cp -r "$repo/tools/cyberos-init" "$F/tools/cyberos-init"
-  cp "$repo/modules/cuo/chief-technology-officer/workflows/ship-feature-requests.md" "$F/modules/cuo/chief-technology-officer/workflows/"
+  cp "$repo/modules/cuo/chief-technology-officer/workflows/ship-tasks.md" "$F/modules/cuo/chief-technology-officer/workflows/"
   cp "$repo/modules/cuo/EXECUTION-DISCIPLINE.md" "$F/modules/cuo/"
-  cp "$repo/modules/skill/contracts/feature-request/STATUS-REFERENCE.md" "$F/modules/skill/contracts/feature-request/"
+  cp "$repo/modules/skill/contracts/task/STATUS-REFERENCE.md" "$F/modules/skill/contracts/task/"
+  # The per-type body templates are FLOOR, not an extra: task-author dispatches on
+  # templates/{type}.md and HALTs when one is missing, so a payload without them ships a
+  # skill that stops on its first task. build.sh copies them unguarded ON PURPOSE — the
+  # same reason W2 halts rather than falling back to `feature`: a missing template must be
+  # loud. That makes them a floor input here, exactly like STATUS-REFERENCE.md above.
+  mkdir -p "$F/modules/skill/contracts/task/templates"
+  cp "$repo/modules/skill/contracts/task/templates/"*.md "$F/modules/skill/contracts/task/templates/"
   cp "$repo/modules/memory/cyberos/data/AGENTS.md" "$F/modules/memory/cyberos/data/" 2>/dev/null || true
   cp "$repo/modules/memory/memory.schema.json" "$F/modules/memory/" 2>/dev/null || true
   cp "$repo/modules/memory/memory.invariants.yaml" "$F/modules/memory/" 2>/dev/null || true
@@ -77,10 +94,10 @@ t07_reduced_floor_intact() {                                          # AC 7
     && ok t07 || fail t07 "reduced floor broken: $(echo "$out7" | grep done)"
 }
 t08_workflows_vendored_intact() {                                     # AC 8 (amended post-ship: durable form)
-  # Original diff-clean form was FR-CUO-209's point-in-time scope guard; git history holds that proof.
+  # Original diff-clean form was TASK-CUO-209's point-in-time scope guard; git history holds that proof.
   # Durable invariant: both workflow docs ship in the payload and the chain structure is intact.
-  local ship="$TMP/payload/cuo/ship-feature-requests.md"
-  local create="$TMP/payload/plugin/commands/create-feature-requests.md"
+  local ship="$TMP/payload/cuo/ship-tasks.md"
+  local create="$TMP/payload/plugin/commands/create-tasks.md"
   [ -f "$ship" ] && [ -f "$create" ] && grep -q "skill_chain:" "$ship" \
     && grep -q "Resume semantics" "$ship" \
     && ok t08 || fail t08 "workflow docs missing from payload or chain structure broken"

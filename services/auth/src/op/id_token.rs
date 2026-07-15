@@ -1,11 +1,11 @@
-//! FR-AUTH-110 §1 #10 + DEC-2486 - the OIDC id_token.
+//! TASK-AUTH-110 §1 #10 + DEC-2486 - the OIDC id_token.
 //!
 //! The id_token is what an RP (Mattermost, portal) reads to learn who logged in.
 //! It is a distinct shape from the platform access-token [`crate::jwt::Claims`]:
 //! `aud` is the RP `client_id`, and it carries the OIDC profile claims plus
 //! `tenant_id` + `roles` so the RP can place the user without a second call.
 //!
-//! Signing reuses the FR-AUTH-004 RS256 path against `auth_signing_keys`
+//! Signing reuses the TASK-AUTH-004 RS256 path against `auth_signing_keys`
 //! (DEC-2481, one JWKS for the platform). [`build_id_token_claims`] is pure and
 //! unit-tested here; [`sign_id_token`] is the thin RS256 wrapper. The active key
 //! is loaded at the call site (slice 1b) so this module stays database-free.
@@ -70,7 +70,7 @@ pub fn build_id_token_claims(
     }
 }
 
-/// Sign the id_token with the active FR-AUTH-004 RSA private key (PEM) under
+/// Sign the id_token with the active TASK-AUTH-004 RSA private key (PEM) under
 /// `kid`. The `kid` MUST be a key published in `/.well-known/jwks.json` so the RP
 /// can verify. Same RS256 path as [`crate::jwt::JwtService`] minting.
 pub fn sign_id_token(

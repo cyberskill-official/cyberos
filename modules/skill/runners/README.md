@@ -12,11 +12,11 @@ Concrete Python runners that execute the 11 chain skills under [`../skills/cuo/`
 | File | Purpose |
 | --- | --- |
 | [`base.py`](base.py) | `BaseSkillRunner` framework: cache, telemetry, streaming output, iteration loop. All runners subclass this. |
-| [`fr_with_tasks.py`](fr_with_tasks.py) | Reference implementation — runner for `cuo/cpo/fr-with-tasks` (the most-used skill). |
+| [`task_with_subtasks.py`](task_with_subtasks.py) | Reference implementation — runner for `cuo/cpo/task-with-subtasks` (the most-used skill). |
 
 ## How to add a new runner
 
-1. Copy `fr_with_tasks.py` to `<skill_id>.py` (e.g. `fr_audit.py`).
+1. Copy `task_with_subtasks.py` to `<skill_id>.py` (e.g. `task_audit.py`).
 2. Override:
    - `skill_id` — matches the SKILL.md location under `docs/skills/`.
    - `output_filename_pattern` — what the emitted artefact is called.
@@ -29,7 +29,7 @@ Concrete Python runners that execute the 11 chain skills under [`../skills/cuo/`
 
 Directly:
 ```shell
-python3 runtime/skill_runners/fr_with_tasks.py <output_dir> --pitch "..." [--spec-file path] [--max-iterations 3]
+python3 runtime/skill_runners/task_with_subtasks.py <output_dir> --pitch "..." [--spec-file path] [--max-iterations 3]
 ```
 
 Through the chain:

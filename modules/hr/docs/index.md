@@ -1,7 +1,7 @@
 ---
 title: HR - Member lifecycle, onboarding orchestrator, performance signal aggregator
 source: website/docs/modules/hr/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 HR is the **Member lifecycle plane** - the place where a person becomes an actor in the system and the place where they exit cleanly. The data shape is conventional (profile, contract, leave, document) but the discipline is Vietnamese-labour-law-first: every contract honours Decree 145/2020 working-hour caps, every leave type is tagged with its statutory basis (annual, sick, maternity, paternity, sabbatical, unpaid, bereavement), and every CCCD photo lives in a separate KMS keyspace with sev-1 access logging. The onboarding checklist is the multi-module orchestrator: HR fires events to AUTH (account create), CRM (Member record), TIME (timesheet enrolment), CHAT (default workspaces), REW (initial pay band lookup - read-only, REW owns the number), and ESOP (founding-grant if applicable).
@@ -90,7 +90,7 @@ Axis| Question| Answer
 **5M - Methods**| Method choices?| Append-only contract table with `effective_to` + `superseded_by` for amendments (anti-retroactive). Leave-balance state machine: `requested -> approved -> consumed` or `requested -> rejected`. Accrual computed lazily at quarter boundaries (not real-time) to keep audit deterministic.
 **5M - Machines**| Deployment?| Fargate task in SG-1 (P1). Multi-AZ Postgres RDS. S3 for contract PDFs with retention lock = 10 years (matches VN SI/PIT statutory minimum).
 **5M - Manpower**| Who maintains?| 0.25 FTE today (covered by HR/Ops Lead). By P3: full HR/Ops Lead + 1 engineer.
-**5M - Measurement**| How measured?| (FR pending)..008. KPIs: onboarding-checklist completion time, leave-request approval p95, CCCD-access audit-row coverage = 100%, contract-renewal lead time.
+**5M - Measurement**| How measured?| (task pending)..008. KPIs: onboarding-checklist completion time, leave-request approval p95, CCCD-access audit-row coverage = 100%, contract-renewal lead time.
 
 ## Architecture
 
@@ -148,7 +148,7 @@ Component| Path (planned)| Responsibility
 `cccd.rs`| services/hr/src/cccd.rs| CCCD (Vietnamese citizen ID) photo handler - separate KMS keyspace, sev-1 access audit, never embedded in API responses.
 `org_chart.rs`| services/hr/src/org_chart.rs| Auto-rendered org chart from `manager_id` self-references. Returns adjacency list + Mermaid string for SPA.
 `review_hook.rs`| services/hr/src/review_hook.rs| Performance-review hook to LEARN. HR initiates a review cycle; LEARN owns the peer-review workflow; outcome summary lands back as a non-comp HR field.
-`audit_bridge.rs`| services/hr/src/audit_bridge.rs| Writes every lifecycle transition to memory. CCCD reads are sev-1 (FR pending).
+`audit_bridge.rs`| services/hr/src/audit_bridge.rs| Writes every lifecycle transition to memory. CCCD reads are sev-1 (task pending).
 `migrations/`| services/hr/migrations/| sqlx migrations. RLS by `tenant_id`. Separate column-level KMS for CCCD vs contracts vs comp-shadow fields.
 
 ## Data model
@@ -315,17 +315,17 @@ old row retained for 10-year statutory minimum.
 
 ```mermaid
 sequenceDiagram autonumber participant HR as HR/Ops Lead participant H as HR review_hook.rs participant L as 📈 LEARN participant J as Peer judges (3-5) participant CHR as CHRO (or CEO) participant B as 🧠 memory HR->>H: open review cycle for Q2-2026 H->>L: POST /learn/review-cycles {period, member_ids} L->>L: open per-Member peer review (Hội đồng Chuyên môn) L->>J: invite (5 judges per case) J-->>L: submit scores (individual rows; not ingested into memory) L->>L: compute aggregate (median; no per-judge exposure) L->>CHR: present aggregate + recommendation CHR-->>L: confirm outcome L-->>H: review_outcome {summary, recommendation} H->>H: store review_outcome row (no per-judge data) H->>B: audit "hr.review.closed" reason=<recommendation> Note over L,H: individual peer scores NEVER cross the HR boundary;  
-(FR pending) enforced at LEARN export gate.
+(task pending) enforced at LEARN export gate.
 ```
 
 ### Flow 5 - Termination + offboarding orchestrator
 
 ```mermaid
-sequenceDiagram autonumber participant CEO as CEO (co-sign) participant HR as HR/Ops Lead participant OFF as HR offboarding.rs participant A as 🔐 AUTH participant R as 💎 REW (final pay) participant E as 📊 ESOP (GL/BL) participant ASSET as Asset return checklist participant B as 🧠 memory HR->>OFF: POST /admin/members/<id>/terminate {kind=resignation|dismissal} OFF->>CEO: request co-sign (mandatory for Bad Leaver) CEO-->>OFF: approve par revocations OFF->>A: revoke all sessions + API keys ((FR pending) 5s SLO) OFF->>R: compute final pay (BHXH + PIT + accrued leave cash-out) OFF->>E: branch GL vs BL; vest pause; put-rights freeze if BL OFF->>ASSET: open asset-return tasks (laptop, badge, …) end OFF->>OFF: member.status = "terminated", end_date = today OFF->>B: audit "hr.member.terminated" reason={kind} Note over OFF,B: contract NOT deleted — superseded with effective_to=today;  
+sequenceDiagram autonumber participant CEO as CEO (co-sign) participant HR as HR/Ops Lead participant OFF as HR offboarding.rs participant A as 🔐 AUTH participant R as 💎 REW (final pay) participant E as 📊 ESOP (GL/BL) participant ASSET as Asset return checklist participant B as 🧠 memory HR->>OFF: POST /admin/members/<id>/terminate {kind=resignation|dismissal} OFF->>CEO: request co-sign (mandatory for Bad Leaver) CEO-->>OFF: approve par revocations OFF->>A: revoke all sessions + API keys ((task pending) 5s SLO) OFF->>R: compute final pay (BHXH + PIT + accrued leave cash-out) OFF->>E: branch GL vs BL; vest pause; put-rights freeze if BL OFF->>ASSET: open asset-return tasks (laptop, badge, …) end OFF->>OFF: member.status = "terminated", end_date = today OFF->>B: audit "hr.member.terminated" reason={kind} Note over OFF,B: contract NOT deleted — superseded with effective_to=today;  
 10-year statutory retention applies.
 ```
 
-Bad Leaver is a CFO + CEO co-sign decision (FR pending). The offboarding orchestrator never decides GL vs BL unilaterally; it surfaces a recommendation and waits for the human gate.
+Bad Leaver is a CFO + CEO co-sign decision (task pending). The offboarding orchestrator never decides GL vs BL unilaterally; it surfaces a recommendation and waits for the human gate.
 
 ## Member lifecycle
 
@@ -349,9 +349,9 @@ Vietnamese Labour Code Art. 113 + Decree 152/2020 Art. 26. CyberSkill-specific s
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
@@ -403,12 +403,12 @@ Regulation / standard| Article / clause| HR feature that satisfies it
 ---|---|---
 Vietnam Labour Code (2019)| Art. 113 - Annual leave| Leave accrual schedule keyed to service years; quarterly accrual job.
 Vietnam Labour Code| Art. 139 - Maternity leave| Leave kind `maternity` with default 6 months + twins +30/child.
-Decree 145/2020/NĐ-CP| Art. 60 - Overtime cap| (FR pending) enforces the 200 hours/year overtime cap (up to 300 with employee consent and MoLISA notification) per Member; check at TIME submission.
+Decree 145/2020/NĐ-CP| Art. 60 - Overtime cap| (task pending) enforces the 200 hours/year overtime cap (up to 300 with employee consent and MoLISA notification) per Member; check at TIME submission.
 Decree 152/2020/NĐ-CP| Art. 26 - Sick leave allowance| BHXH sick allowance days tiered by service period.
 Decree 152/2020/NĐ-CP| Art. 5 - SI contribution rates| BHXH 8%/17.5%, BHYT 1.5%/3%, BHTN 1%/1% as versioned parameters; comp owned by REW.
 Decree 13/2023/NĐ-CP| Art. 17 - Personal data processing log| Every Member read / write writes an HR audit row to memory.
 Decree 53/2022/NĐ-CP| Art. 26 - Data localisation| P3: VN tenants pin `data_residency = "vn-hanoi-1"`; HR Postgres replica in-country.
-Law 91/2025/QH15 (PDPL)| Art. 14 - DSAR| (FR pending) - `cyberos-hr dsar-export` bundles Member-scoped data within 30 days.
+Law 91/2025/QH15 (PDPL)| Art. 14 - DSAR| (task pending) - `cyberos-hr dsar-export` bundles Member-scoped data within 30 days.
 Law 91/2025/QH15 (PDPL)| Art. 7 - Sensitive personal data| CCCD photo classified `restricted`; separate KMS key; sev-1 audit on read.
 GDPR (EU 2016/679)| Art. 32 - Security of processing| Column-level KMS, S3 object-lock, row-level security, DPO-scoped access.
 ISO/IEC 27001:2022| A.5.13 - Labelling of information| Every Member field carries a classification tag.
@@ -427,9 +427,9 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 `R-HR-003`| Onboarding orchestrator partial failure leaves Member half-provisioned| Medium| Medium| CTO| Idempotency keys; retry-until-success queue; alert if a task pending > 24h.
 `R-HR-004`| Leave-balance race condition (two simultaneous approvals)| Medium| Low| CTO| Optimistic locking on `leave_balance.version`; conflict triggers re-read + retry.
 `R-HR-005`| Contract deleted instead of superseded| Low| High| HR/Ops Lead| DB role lacks DELETE on contract table; admin REST only exposes amend + supersede.
-`R-HR-006`| Decree 145/2020 overtime cap bypassed| Low| High| HR/Ops Lead| (FR pending) cap enforced at TIME submission; HR exposes cap-status MCP read for CUO.
+`R-HR-006`| Decree 145/2020 overtime cap bypassed| Low| High| HR/Ops Lead| (task pending) cap enforced at TIME submission; HR exposes cap-status MCP read for CUO.
 `R-HR-007`| Bad-Leaver branch chosen without human gate| Low| Catastrophic| CEO| Offboarding orchestrator requires CFO + CEO co-sign; cannot proceed without both signatures recorded.
-`R-HR-008`| Per-judge review scores leak to HR via summary field| Low| Medium| HR/Ops Lead| (FR pending) enforced at LEARN export gate; HR review_outcome schema rejects fields beyond {summary, recommendation}.
+`R-HR-008`| Per-judge review scores leak to HR via summary field| Low| Medium| HR/Ops Lead| (task pending) enforced at LEARN export gate; HR review_outcome schema rejects fields beyond {summary, recommendation}.
 `R-HR-009`| Sabbatical eligibility tick miscounted across leave gaps| Medium| Low| HR/Ops Lead| Continuous-service definition: gap < 30 days counted; longer breaks reset the tick chain. Property test on the accrual.
 `R-HR-010`| 10-year retention violated by S3 lifecycle policy bug| Low| High| CTO| S3 object-lock governance mode; lifecycle rule rejected by IAM if reduces retention; quarterly inventory audit.
 `R-HR-011`| HR aggregated performance signal used as sole basis for comp decision| Medium| High| CHRO| HR signals are _inputs_; REW comp recommendation requires Member manager review + CHRO + CFO sign-off; never auto-applied.
@@ -631,10 +631,10 @@ Multi-tenant data-residency (vn-hanoi-1)| planned - P3
 
 ## References
 
-- **FR catalogue** - HR module FRs ((FR pending) through (FR pending)).
+- **task catalogue** - HR module tasks ((task pending) through (task pending)).
 - **Architecture spec** - HR architecture posture + lifecycle orchestrators.
 - **NFR catalogue** - Security NFRs binding on HR (CCCD classification, KMS separation).
-- **FR mapping** - Formal (FR pending) through (FR pending) with verification methods.
+- **task mapping** - Formal (task pending) through (task pending) with verification methods.
 - **Total Rewards & Career Path Appendix** - Sabbatical eligibility (every 5 continuous years).
 - **Vietnam Labour Code (2019)** - Art. 112 (public holidays), 113 (annual leave), 115 (other leave), 139 (maternity).
 - **Decree 145/2020/NĐ-CP** - Implementing the Labour Code; Art. 60 overtime cap.
@@ -644,7 +644,7 @@ Multi-tenant data-residency (vn-hanoi-1)| planned - P3
 - **Cross-module page links:** [auth.html](../auth/index.html), [rew.html](../rew/index.html), [esop.html](../esop/index.html), [learn.html](../learn/index.html), [time.html](../time/index.html), [proj.html](../proj/index.html), [memory.html](../memory/index.html)
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - HR lifecycle events become memory audit rows; CCCD photo never enters memory.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - HR at P1-mid (P1, alongside PROJ).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **Decree 53/2022/NĐ-CP** - Cybersecurity Law implementation; data localisation.
 - **Law 91/2025/QH15 (PDPL)** - Personal Data Protection Law; Art. 7 sensitive data, Art. 14 DSAR.
 - **Decree 38/2020/NĐ-CP** - Foreign labour management.

@@ -1,4 +1,4 @@
-//! Push notifications (FR-CHAT-101 slice 4). On a new message, the members who are NOT currently connected
+//! Push notifications (TASK-CHAT-101 slice 4). On a new message, the members who are NOT currently connected
 //! and who have a registered device are the push targets. Slice 4 emits the intent (logged); the actual
 //! APNS/FCM delivery is a deploy-time integration that plugs in here. Best-effort, runs off the hot path.
 

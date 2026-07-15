@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of upstream calls route to a provider region matching the tenant residency policy"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-AI-016]
+related_tasks: [TASK-AI-016]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -40,7 +40,7 @@ Data residency is a hard contractual claim for EU tenants (GDPR Art. 44+) and an
 
 - Any `match=false` event → sev-0; halt all routing globally until root cause identified; emergency CSO + CTO call.
 - 503 rate > 5% for a tenant_region for 10 minutes → sev-2; capacity team adds a provider in that region.
-- Tenant requests residency change → must be processed via TEN module migration flow, not by JWT mutation (FR-TEN-001 contract).
+- Tenant requests residency change → must be processed via TEN module migration flow, not by JWT mutation (TASK-TEN-001 contract).
 
 ---
 

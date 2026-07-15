@@ -1,23 +1,23 @@
-//! FR-AUTH-004 §1 #13 — slice-1 audit-fix G-008.
+//! TASK-AUTH-004 §1 #13 — slice-1 audit-fix G-008.
 //!
 //! Maps a subject's coarse-grained role membership to the fine-grained
 //! `scope_grants` claim in the issued JWT. Centralising the mapping here
 //! ensures consistency: adding a new role automatically updates its grants
 //! without per-gate code changes.
 //!
-//! ### Slice-1 mappings (per FR-AUTH-004 §1 #13)
+//! ### Slice-1 mappings (per TASK-AUTH-004 §1 #13)
 //!
 //! | Role           | Granted scopes                                       |
 //! |----------------|------------------------------------------------------|
 //! | `tenant-admin` | `chat:*`, `kb:*`, `proj:*`, `ai:read`, `ai:invoke`   |
 //! | `tenant-member`| `chat:read`, `chat:write`, `kb:read`, `ai:invoke`    |
-//! | `root-admin`   | `*` (root-tenant only; FR-AUTH-001 enforces tenancy)  |
+//! | `root-admin`   | `*` (root-tenant only; TASK-AUTH-001 enforces tenancy)  |
 //!
 //! Unknown roles are silently skipped — `subjects.roles` is validated at
-//! create time (FR-AUTH-002 §1 #?), so an unknown role here means either
+//! create time (TASK-AUTH-002 §1 #?), so an unknown role here means either
 //! (a) a typo that slipped past create-time validation (caught by the
 //! `scope_map::tests::unknown_role_silently_skipped` test), or (b) a role
-//! defined in FR-AUTH-101 RBAC that hasn't been added to this map yet
+//! defined in TASK-AUTH-101 RBAC that hasn't been added to this map yet
 //! (caught at PR review when the role is rolled out).
 
 use std::collections::BTreeSet;

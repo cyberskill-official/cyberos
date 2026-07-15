@@ -1,4 +1,4 @@
-//! Shared memory audit-chain emit for the obs services (FR-OBS-007 §1 #6, FR-OBS-008 §1 #10).
+//! Shared memory audit-chain emit for the obs services (TASK-OBS-007 §1 #6, TASK-OBS-008 §1 #10).
 //!
 //! obs-router and obs-compliance-view both need to append an audit row to the memory module's
 //! `l1_audit_log`. Like auth's `memory_bridge`, they write directly into that table (auth, memory, and
@@ -27,12 +27,12 @@ pub fn chain_anchor(prev_hash_hex: Option<&str>, body: &str) -> String {
 
 /// The `op` values the `l1_audit_log` `l1_op_enum` CHECK accepts (migration 0003). The chain stores a
 /// mutation-vs-read distinction here; `emit_genesis` only ever produced `'put'`, but read-only producers
-/// (FR-MEMORY-121 interaction-events) need `'view'`. Keep this in sync with the migration's CHECK.
+/// (TASK-MEMORY-121 interaction-events) need `'view'`. Keep this in sync with the migration's CHECK.
 const ALLOWED_OPS: [&str; 4] = ["put", "move", "delete", "view"];
 
 /// Best-effort insert of a genesis audit row into `l1_audit_log` (`op = 'put'`, `prev_hash_hex = NULL`).
 /// Returns the new `seq`. The caller decides what to do on error - the obs callers log and swallow so the
-/// alert route or the view response still completes (the FR's best-effort contract).
+/// alert route or the view response still completes (the task's best-effort contract).
 ///
 /// This is now a thin `'put'` shim over [`emit_genesis_with_op`]; every existing caller (auth, chat, eval,
 /// obs-router, obs-compliance-view, mcp-gateway) keeps its exact 5-argument signature and `'put'` behaviour.
@@ -47,7 +47,7 @@ pub async fn emit_genesis(
 }
 
 /// Best-effort insert of a genesis audit row into `l1_audit_log` with an explicit `op`
-/// (`prev_hash_hex = NULL`). Returns the new `seq`. Added for FR-MEMORY-121 §1 #6 so read-only
+/// (`prev_hash_hex = NULL`). Returns the new `seq`. Added for TASK-MEMORY-121 §1 #6 so read-only
 /// interaction-events chain as `'view'` rather than `'put'`; `emit_genesis` is the `'put'` shim over it,
 /// so no existing caller changes.
 ///
@@ -117,7 +117,7 @@ mod tests {
 
     #[test]
     fn allowed_ops_match_the_l1_op_enum_check() {
-        // The set must stay in lockstep with migration 0003's CHECK (op IN (...)). FR-MEMORY-121 relies on
+        // The set must stay in lockstep with migration 0003's CHECK (op IN (...)). TASK-MEMORY-121 relies on
         // 'view' being accepted so read-only interaction-events chain as view, not put.
         assert!(ALLOWED_OPS.contains(&"put"));
         assert!(ALLOWED_OPS.contains(&"view"));

@@ -5,7 +5,7 @@ for each: does it strengthen a real CyberOS module enough to earn a Stage-1 abso
 which one and how. Written 2026-06-24. Nothing here is absorbed yet; this is the shortlist that decides
 what gets a deeper verdict note.
 
-Read against the module roster and the honest frontier in `docs/feature-requests/remaining-build-plan.md`.
+Read against the module roster and the honest frontier in `docs/tasks/remaining-build-plan.md`.
 The CyberSkill-authored items (CYBEROS_STRATEGY.md, CyberOS-docs/, the cyberos-*.md notes,
 cyberos-memory-workbench-archive/, cyberskill-vn-skills/, the agentic-memory mhtml and the
 dreaming-agents mp4) are our own prior work, not outside sources, so they are out of scope here - the
@@ -16,7 +16,7 @@ memory archive already has a path forward via `cyberos import` (see CONSUMED-FRO
 | Source | Stack | What it is | Strengthens | Why it is worth a verdict note |
 |---|---|---|---|---|
 | code-review-graph | python, MCP | Builds a Tree-sitter structural map of a codebase, tracks changes incrementally, and serves precise context to an agent over MCP so it reads only what changed | cuo (the code-review step) + mcp | Directly attacks a real cuo cost: re-reading the whole tree per review. And it is already an MCP server, so it federates through the gateway exactly like the obs triage tool just landed - a second real federated tool, not a demo one. |
-| hermes-agent | python | Self-improving agent with a built-in learning loop: creates skills from experience, improves them during use, persists knowledge, recalls across sessions, runs scheduled automations | cuo (FR-CUO-204 dream loop) + skill | The closest existing implementation of the self-evolution the dream loop is built for. Mine it for the propose/refine/persist patterns; it is a whole framework, so the move is pattern-borrowing, not vendoring wholesale. |
+| hermes-agent | python | Self-improving agent with a built-in learning loop: creates skills from experience, improves them during use, persists knowledge, recalls across sessions, runs scheduled automations | cuo (TASK-CUO-204 dream loop) + skill | The closest existing implementation of the self-evolution the dream loop is built for. Mine it for the propose/refine/persist patterns; it is a whole framework, so the move is pattern-borrowing, not vendoring wholesale. |
 | claude-mem | node | A Claude memory system (capture, recall, compaction) | memory | Overlaps the memory module head-on. The verdict note decides whether its approach beats ours on any axis (compaction, recall ranking) or is duplicative. Honest chance the answer is "we already do this better" - which is a valid Stage-0 outcome. |
 
 ## Tier 2 - methodology and skill corpora (reference, likely not vendored)
@@ -45,4 +45,4 @@ second, as a pattern source for the dream loop. claude-mem is worth a verdict mo
 it beats the memory module on anything; expect a short note either way.
 
 Next action per pick: a Stage-0 verdict note at `docs/absorptions/<source>-absorption.md` - read in
-full, state overlap/gaps/license, and make the worth-it call before any FR mapping or vendoring.
+full, state overlap/gaps/license, and make the worth-it call before any task mapping or vendoring.

@@ -9,7 +9,7 @@ phase: P0
 slo: "HIBP API call wrapped in 2s hard timeout; timeout never blocks signup; audit row emitted on every timeout"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-AUTH-107]
+related_tasks: [TASK-AUTH-107]
 ---
 
 ## §1 — Statement (BCP-14 normative)

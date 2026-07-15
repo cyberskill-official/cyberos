@@ -1,4 +1,4 @@
--- FR-AI-002 — Add reconcile columns to cost_ledger_hold.
+-- TASK-AI-002 — Add reconcile columns to cost_ledger_hold.
 -- Additive migration; does not modify existing rows.
 
 ALTER TABLE cost_ledger_hold

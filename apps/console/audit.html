@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CyberOS Memory & Audit</title>
 <!--
-  FR-APP-005 - CyberOS Memory & Audit browser (audit-chain slice).
+  TASK-APP-005 - CyberOS Memory & Audit browser (audit-chain slice).
 
   A self-contained operator page that lists the signed-in tenant's most recent rows from the hash-chained
   audit log (l1_audit_log). Every auth and chat action appends one chained row; this surfaces them. It
   consumes only the existing read endpoint (GET /v1/chat/audit) and adds no backend. Identity is the CyberOS
-  access token (FR-AUTH-110); when opened from the dashboard it auto-connects from the stored token.
+  access token (TASK-AUTH-110); when opened from the dashboard it auto-connects from the stored token.
 
   Run: serve this folder and start chat with CHAT_DEV_CORS=1 (the audit read is hosted on the chat service,
   which holds the audit pool). In production Caddy serves the page and proxies the service under one origin.

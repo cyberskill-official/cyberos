@@ -1,4 +1,4 @@
-//! FR-AI-021 — `cyberos-ai memory` subcommand.
+//! TASK-AI-021 — `cyberos-ai memory` subcommand.
 
 use sha2::{Digest, Sha256};
 

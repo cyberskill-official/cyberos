@@ -1,4 +1,4 @@
-//! FR-MEMORY-123 §5 / AC #4, #5, #6 — rolling summaries: a summary covers an event range; a new event
+//! TASK-MEMORY-123 §5 / AC #4, #5, #6 — rolling summaries: a summary covers an event range; a new event
 //! supersedes the prior version; summaries-first then drill. Requires Postgres + pgvector; `#[ignore]`.
 
 #[path = "brain_common.rs"]

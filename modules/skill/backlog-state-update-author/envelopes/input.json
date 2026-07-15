@@ -5,7 +5,7 @@
   "type": "object",
   "required": [
     "mutation_kind",
-    "fr_id",
+    "task_id",
     "backlog_path",
     "payload"
   ],
@@ -14,7 +14,7 @@
     "mutation_kind": {
       "type": "string"
     },
-    "fr_id": {
+    "task_id": {
       "type": "string"
     },
     "backlog_path": {

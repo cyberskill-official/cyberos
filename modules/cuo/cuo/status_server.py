@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""CUO status server (FR-APP-006) - a small read-only HTTP surface for the console's CUO Workflows &
+"""CUO status server (TASK-APP-006) - a small read-only HTTP surface for the console's CUO Workflows &
 GENIE tile. It exposes two things the CUO module already computes, with no LLM call and no mutation:
 
-  - the dream-loop evolution envelope (FR-CUO-204): enabled / mode / idle window / allowlist / denylist;
-  - a summary of the FR backlog (docs/feature-requests/BACKLOG.md): totals by status and by module.
+  - the dream-loop evolution envelope (TASK-CUO-204): enabled / mode / idle window / allowlist / denylist;
+  - a summary of the task backlog (docs/tasks/BACKLOG.md): totals by status and by module.
 
 Run from modules/cuo so the `cuo` package imports:
 
@@ -26,13 +26,13 @@ from cuo.core.evolution_envelope import EvolutionEnvelope
 
 
 def _root() -> Path:
-    """Resolve the repo root (holds docs/feature-requests and modules/cuo)."""
+    """Resolve the repo root (holds docs/tasks and modules/cuo)."""
     env = os.environ.get("CYBEROS_ROOT")
     if env:
         return Path(env)
     here = Path.cwd()
     for cand in [here, *here.parents]:
-        if (cand / "docs" / "feature-requests" / "BACKLOG.md").exists():
+        if (cand / "docs" / "tasks" / "BACKLOG.md").exists():
             return cand
     return here
 
@@ -49,7 +49,7 @@ def _status(root: Path) -> dict:
         "denylist": env.denylist,
         "allowlist": env.allowlist,
     }
-    backlog_path = root / "docs" / "feature-requests" / "BACKLOG.md"
+    backlog_path = root / "docs" / "tasks" / "BACKLOG.md"
     rows = parse_backlog(backlog_path) if backlog_path.exists() else []
     by_status = Counter(r.status for r in rows)
     by_module = Counter(r.module for r in rows)

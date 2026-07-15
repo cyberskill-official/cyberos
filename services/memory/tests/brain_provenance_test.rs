@@ -1,4 +1,4 @@
-//! FR-MEMORY-123 §5 / AC #12, #13, #14 — provenance on every hit; chain_anchor mismatch drops the hit;
+//! TASK-MEMORY-123 §5 / AC #12, #13, #14 — provenance on every hit; chain_anchor mismatch drops the hit;
 //! the audit chain is read-only over an ingest + summarise + tier cycle. Requires Postgres + pgvector;
 //! `#[ignore]`.
 

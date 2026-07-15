@@ -1,4 +1,4 @@
-//! FR-EVAL-002 - rubric tenant-isolation (RLS) integration test (§1 #1, §4 #1).
+//! TASK-EVAL-002 - rubric tenant-isolation (RLS) integration test (§1 #1, §4 #1).
 //!
 //! Proves the per-tenant row-level security on the rubric tables: a rubric published in tenant A is
 //! invisible to a caller in tenant B. Mirrors the tenant-isolation assertion in `endpoints_test.rs` and the

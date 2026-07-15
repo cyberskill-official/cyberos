@@ -1,4 +1,4 @@
-"""FR-CHAT-003 — per-tenant deployment plan validation."""
+"""TASK-CHAT-003 — per-tenant deployment plan validation."""
 
 from __future__ import annotations
 

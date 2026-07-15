@@ -2,12 +2,12 @@
 # tools/docs-site/build.sh — regenerate website data from source files.
 #
 # Usage:
-#   tools/docs-site/build.sh          # full build (FR + NFR catalogs + changelog)
-#   tools/docs-site/build.sh --fr     # FR catalog only
+#   tools/docs-site/build.sh          # full build (task + NFR catalogs + changelog)
+#   tools/docs-site/build.sh --fr     # task catalog only
 #   tools/docs-site/build.sh --nfr    # NFR catalog only
 #   tools/docs-site/build.sh --changelog  # changelog only
 #
-# The build is deterministic — same input ⇒ byte-identical output (FR-DOCS-001 §1 #3).
+# The build is deterministic — same input ⇒ byte-identical output (TASK-DOCS-001 §1 #3).
 
 set -euo pipefail
 
@@ -18,7 +18,7 @@ MODE="${1:-full}"
 cd "$REPO_ROOT"
 
 # ── Site skeleton: the WHOLE site is generated into gitignored dist/website ──
-# (FR-DOCS-002: nothing generated is committed). Chrome = the shared css/js/nav
+# (TASK-DOCS-002: nothing generated is committed). Chrome = the shared css/js/nav
 # + the home page, maintained at tools/docs-site/{chrome,index.html}.
 # A full build starts from a CLEAN tree: without this, pages whose source was
 # removed or relocated would linger from earlier builds, breaking determinism
@@ -29,11 +29,11 @@ mkdir -p dist/website/reference dist/website/modules dist/website/architecture
 cp -R "$SCRIPT_DIR/chrome/." dist/website/assets/
 cp "$SCRIPT_DIR/index.html" dist/website/index.html
 
-# ── FR catalog ──────────────────────────────────────────────────────────────
+# ── task catalog ──────────────────────────────────────────────────────────────
 if [[ "$MODE" == "full" || "$MODE" == "--fr" ]]; then
-  echo "→ FR catalog"
+  echo "→ task catalog"
   node tools/docs-site/data-extract.mjs
-  node tools/docs-site/render-fr-catalog.mjs
+  node tools/docs-site/render-task-catalog.mjs
 fi
 
 # ── NFR catalog ─────────────────────────────────────────────────────────────
@@ -53,10 +53,10 @@ fi
 
 echo "✓ build complete"
 
-# ── Doctrine pages from the markdown single source of truth (FR-DOCS-002) ───
+# ── Doctrine pages from the markdown single source of truth (TASK-DOCS-002) ───
 if [[ "$MODE" == "full" || "$MODE" == "--docs" ]]; then
   echo "→ Docs pages (markdown SSoT)"
-  node tools/docs-site/render-fr-pages.mjs   # FR-DOCS-005: per-FR CDS pages
-  node tools/docs-site/render-status-hub.mjs   # FR-DOCS-006: status hub (supersedes roadmap; after fr-pages for links)
+  node tools/docs-site/render-task-pages.mjs   # TASK-DOCS-005: per-task CDS pages
+  node tools/docs-site/render-status-hub.mjs   # TASK-DOCS-006: status hub (supersedes roadmap; after task-pages for links)
   node tools/docs-site/render-docs.mjs
 fi

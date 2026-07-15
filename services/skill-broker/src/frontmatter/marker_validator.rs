@@ -1,7 +1,7 @@
-//! `wrap_in_marker` validator per FR-SKILL-113 §3 (SKB-040..042).
+//! `wrap_in_marker` validator per TASK-SKILL-113 §3 (SKB-040..042).
 //!
 //! Serde + enum deserialization handles most of this — but we keep an
-//! explicit validator for future-marker forward-compat (when FR-SKILL-117
+//! explicit validator for future-marker forward-compat (when TASK-SKILL-117
 //! adds new MarkerName variants, this is where range-checks live).
 
 use super::schema::{MarkerName, UntrustedInputs};

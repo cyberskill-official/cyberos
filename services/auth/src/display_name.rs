@@ -1,4 +1,4 @@
-//! FR-AUTH-111 — where a person's display name comes from, for every SSO path.
+//! TASK-AUTH-111 — where a person's display name comes from, for every SSO path.
 //!
 //! Today `oidc.rs` and `saml.rs` both bind the person's EMAIL into `subjects.display_name`. Everyone
 //! provisioned through Google therefore renders as `van-anh.vu@cyberskill.world` wherever a name belongs:
@@ -7,7 +7,7 @@
 //! contradicts the privacy policy we have already published — which tells people we take their name from
 //! their Google account. We do receive it. We then drop it on the floor.
 //!
-//! This module exists so the fix has exactly ONE implementation. FR-AUTH-111 §1 #6 requires the same
+//! This module exists so the fix has exactly ONE implementation. TASK-AUTH-111 §1 #6 requires the same
 //! resolution chain and the same no-clobber rule in both `oidc.rs` and `saml.rs`; two copies of a rule are
 //! two rules, and they drift. Both call sites import from here.
 //!
@@ -85,7 +85,7 @@ pub fn resolve(p: &Profile, email: Option<&str>) -> (&'static str, String) {
 
 /// §1 #4 + #5 — repair a display name that was never really set, and never touch one that was.
 ///
-/// **Why this is a standalone UPDATE and not a `CASE` inside the JIT upsert**, which is what FR-AUTH-111 §3
+/// **Why this is a standalone UPDATE and not a `CASE` inside the JIT upsert**, which is what TASK-AUTH-111 §3
 /// sketches: because the upsert is unreachable for exactly the people who need repairing. Both
 /// `oidc::resolve_subject` and `saml::resolve_subject` short-circuit on the existing-link fast path and
 /// `return Ok(sid)` before any `INSERT` runs. Every colleague who has already signed in through Google — that

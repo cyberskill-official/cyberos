@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Compute the FR topological build order from depends_on frontmatter.
+"""Compute the task topological build order from depends_on frontmatter.
 
-Kahn-layered: layer 0 = FRs whose dependencies are all already placed (or external),
+Kahn-layered: layer 0 = tasks whose dependencies are all already placed (or external),
 each later layer depends only on earlier ones. Detects cycles and missing dependencies,
 rolls up per module, and checks the deploy roadmap order against the real DAG.
 
@@ -16,17 +16,17 @@ import re
 import sys
 from pathlib import Path
 
-FR_ROOT = Path("docs/feature-requests")
+TASK_ROOT = Path("docs/tasks")
 ROADMAP = ["MEMORY", "SKILL", "CUO", "AUTH", "CHAT", "PROJ"]
 
 
 def load():
     mod, deps, status = {}, {}, {}
-    for p in FR_ROOT.rglob("FR-*.md"):
+    for p in TASK_ROOT.rglob("TASK-*.md"):
         if p.name.endswith(".audit.md"):
             continue
         t = p.read_text(encoding="utf-8")[:4000]
-        mid = re.search(r"^id:\s*(FR-[A-Z]+-\d+)", t, re.M)
+        mid = re.search(r"^id:\s*(TASK-[A-Z]+-\d+)", t, re.M)
         if not mid:
             continue
         fid = mid.group(1)
@@ -35,7 +35,7 @@ def load():
         st = re.search(r"^status:\s*(\S+)", t, re.M)
         status[fid] = st.group(1) if st else "?"
         dep = re.search(r"^depends_on:\s*\[([^\]]*)\]", t, re.M)
-        deps[fid] = re.findall(r"FR-[A-Z]+-\d+", dep.group(1)) if dep else []
+        deps[fid] = re.findall(r"TASK-[A-Z]+-\d+", dep.group(1)) if dep else []
     return mod, deps, status
 
 
@@ -72,7 +72,7 @@ def main() -> int:
         }, indent=2))
         return 0
 
-    print(f"FRs: {len(mod)} | topological layers: {len(layers)} | cyclic: {len(cyclic)}")
+    print(f"tasks: {len(mod)} | topological layers: {len(layers)} | cyclic: {len(cyclic)}")
     print()
     for i, lay in enumerate(layers):
         by_mod = {}
@@ -80,17 +80,17 @@ def main() -> int:
             by_mod.setdefault(mod[f], 0)
             by_mod[mod[f]] += 1
         roll = " ".join(f"{m}:{n}" for m, n in sorted(by_mod.items(), key=lambda x: -x[1]))
-        print(f"  layer {i:2d}: {len(lay):3d} FRs   {roll}")
+        print(f"  layer {i:2d}: {len(lay):3d} tasks   {roll}")
     if cyclic:
-        print(f"\nCYCLE among {len(cyclic)} FRs (could not be layered): {cyclic[:10]}{' ...' if len(cyclic)>10 else ''}")
+        print(f"\nCYCLE among {len(cyclic)} tasks (could not be layered): {cyclic[:10]}{' ...' if len(cyclic)>10 else ''}")
 
-    print("\nroadmap-module layer span (min..max build layer of each module's FRs):")
+    print("\nroadmap-module layer span (min..max build layer of each module's tasks):")
     for m in ROADMAP:
         ls = [layer_of[f] for f in mod if mod[f] == m and f in layer_of]
         if ls:
-            print(f"  {m:7s} layers {min(ls)}..{max(ls)}  ({len(ls)} FRs)")
+            print(f"  {m:7s} layers {min(ls)}..{max(ls)}  ({len(ls)} tasks)")
 
-    print("\nroadmap-order violations (FR depends on an FR built in a later roadmap wave):")
+    print("\nroadmap-order violations (task depends on a task built in a later roadmap wave):")
     rank = {m: i for i, m in enumerate(ROADMAP)}
     v = 0
     for f in sorted(mod):
@@ -105,7 +105,7 @@ def main() -> int:
 
     miss_in_roadmap = {f: v for f, v in missing.items() if mod.get(f) in rank}
     if miss_in_roadmap:
-        print(f"\nroadmap FRs with missing (unknown) dependencies: {len(miss_in_roadmap)}")
+        print(f"\nroadmap tasks with missing (unknown) dependencies: {len(miss_in_roadmap)}")
         for f, v in list(miss_in_roadmap.items())[:8]:
             print(f"  {f} -> {v}")
     return 0

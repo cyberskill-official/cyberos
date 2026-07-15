@@ -1,4 +1,4 @@
-"""FR-CUO-206 acceptance tests - ship-manifest@1 (one test per AC)."""
+"""TASK-CUO-206 acceptance tests - ship-manifest@1 (one test per AC)."""
 import hashlib
 import json
 import os
@@ -12,17 +12,17 @@ sys.path.insert(0, os.path.join(ROOT, "modules", "cuo"))
 from cuo import ship_manifest as sm  # noqa: E402
 
 WORKFLOW_DOC = os.path.join(ROOT, "modules", "cuo", "chief-technology-officer",
-                            "workflows", "ship-feature-requests.md")
+                            "workflows", "ship-tasks.md")
 CONTRACT_DOC = os.path.join(ROOT, "modules", "skill", "contracts",
-                            "feature-request", "SHIP-MANIFEST.md")
-FR_DOC = os.path.join(ROOT, "docs", "feature-requests", "cuo",
-                      "FR-CUO-206-ship-run-state-manifest.md")
+                            "task", "SHIP-MANIFEST.md")
+TASK_DOC = os.path.join(ROOT, "docs", "tasks", "cuo",
+                      "TASK-CUO-206-ship-run-state-manifest.md")
 
 
 def _manifest(steps=None, wf="2.4.0", frsha="a" * 64):
     return {
-        "manifest_version": "ship-manifest@1", "fr_id": "FR-TEN-208",
-        "fr_sha256": frsha, "workflow_version": wf,
+        "manifest_version": "ship-manifest@1", "task_id": "TASK-TEN-208",
+        "task_sha256": frsha, "workflow_version": wf,
         "started_at": "2026-07-12T10:00:00+07:00",
         "updated_at": "2026-07-12T11:42:10+07:00",
         "current_step": 11, "routed_back_count": 0,
@@ -55,20 +55,20 @@ class TestShipManifest(unittest.TestCase):
 
     def test_schema_fields_and_example_validate(self):  # AC 1
         contract = open(CONTRACT_DOC).read()
-        for field in ("manifest_version", "fr_id", "fr_sha256", "workflow_version",
+        for field in ("manifest_version", "task_id", "task_sha256", "workflow_version",
                       "started_at", "updated_at", "current_step", "routed_back_count",
                       "steps", "hitl", "artefact_sha256", "skipped-conditional",
                       "review_approval", "final_acceptance"):
             self.assertIn(field, contract, f"SHIP-MANIFEST.md missing field {field}")
         self.assertEqual(sm.validate(_manifest()), [])
         bad = _manifest()
-        del bad["fr_sha256"]
-        self.assertTrue(any("fr_sha256" in e for e in sm.validate(bad)))
+        del bad["task_sha256"]
+        self.assertTrue(any("task_sha256" in e for e in sm.validate(bad)))
         bad2 = _manifest(steps=[{"index": 99, "skill": "x", "status": "wat"}])
         self.assertEqual(len(sm.validate(bad2)), 2)  # bad status + bad index
         # every root error branch fires exactly once
         wrong = _manifest()
-        wrong.update({"manifest_version": "ship-manifest@0", "fr_sha256": "zz",
+        wrong.update({"manifest_version": "ship-manifest@0", "task_sha256": "zz",
                       "current_step": 0, "routed_back_count": -1})
         wrong["hitl"] = {"gate": "vibes"}
         self.assertEqual(len(sm.validate(wrong)), 5)
@@ -78,9 +78,9 @@ class TestShipManifest(unittest.TestCase):
         self.assertIn("after EVERY completed, failed, or conditionally-skipped", doc)
         self.assertIn(".tmp.<nonce>", doc)
         with tempfile.TemporaryDirectory() as d:
-            p = os.path.join(d, "FR-X.ship.json")
+            p = os.path.join(d, "TASK-X.ship.json")
             sm.write_atomic(_manifest(), p)
-            self.assertEqual(json.load(open(p))["fr_id"], "FR-TEN-208")
+            self.assertEqual(json.load(open(p))["task_id"], "TASK-TEN-208")
             self.assertEqual([f for f in os.listdir(d) if ".tmp." in f], [])
             # failure path: replace blows up -> tmp file is still cleaned
             real = os.replace
@@ -113,36 +113,39 @@ class TestShipManifest(unittest.TestCase):
                          ("resume", 1, 1))
 
     def test_queue_selection_total_order(self):  # AC 5
-        frs = [
-            {"id": "FR-A-002", "status": "ready_to_implement", "priority": "SHOULD",
+        tasks = [
+            {"id": "TASK-A-002", "status": "ready_to_implement", "priority": "SHOULD",
              "created": "2026-07-01", "depends_on": []},
-            {"id": "FR-A-003", "status": "ready_to_implement", "priority": "MUST",
-             "created": "2026-07-02", "depends_on": ["FR-A-009"]},  # unmet dep
-            {"id": "FR-B-001", "status": "ready_to_implement", "priority": "MUST",
-             "created": "2026-07-02", "depends_on": ["FR-A-001"]},
-            {"id": "FR-A-004", "status": "ready_to_implement", "priority": "MUST",
-             "created": "2026-07-02", "depends_on": []},  # ties FR-B-001 -> id asc wins
-            {"id": "FR-A-001", "status": "done", "priority": "MUST",
+            {"id": "TASK-A-003", "status": "ready_to_implement", "priority": "MUST",
+             "created": "2026-07-02", "depends_on": ["TASK-A-009"]},  # unmet dep
+            {"id": "TASK-B-001", "status": "ready_to_implement", "priority": "MUST",
+             "created": "2026-07-02", "depends_on": ["TASK-A-001"]},
+            {"id": "TASK-A-004", "status": "ready_to_implement", "priority": "MUST",
+             "created": "2026-07-02", "depends_on": []},  # ties TASK-B-001 -> id asc wins
+            {"id": "TASK-A-001", "status": "done", "priority": "MUST",
              "created": "2026-06-01", "depends_on": []},
-            {"id": "FR-A-005", "status": "draft", "priority": "MUST",
+            {"id": "TASK-A-005", "status": "draft", "priority": "MUST",
              "created": "2026-06-01", "depends_on": []},
         ]
-        r1 = sm.select_next(frs)
-        self.assertEqual(r1["picked"], "FR-A-004")
+        r1 = sm.select_next(tasks)
+        self.assertEqual(r1["picked"], "TASK-A-004")
         self.assertEqual(r1["reason"],
-                         "queue: picked FR-A-004 (priority=MUST, created=2026-07-02) "
-                         "over 2 other eligible FRs")
-        self.assertEqual(sm.select_next(list(reversed(frs))), r1)  # deterministic
-        self.assertIsNone(sm.select_next([f for f in frs if f["status"] == "draft"])["picked"])
+                         "queue: picked TASK-A-004 (priority=MUST, created=2026-07-02) "
+                         "over 2 other eligible tasks")
+        self.assertEqual(sm.select_next(list(reversed(tasks))), r1)  # deterministic
+        self.assertIsNone(sm.select_next([f for f in tasks if f["status"] == "draft"])["picked"])
 
     def test_gitignore_scaffold(self):  # AC 6
-        gi = os.path.join(ROOT, "docs", "feature-requests", ".workflow", ".gitignore")
+        gi = os.path.join(ROOT, "docs", "tasks", ".workflow", ".gitignore")
         self.assertEqual(open(gi).read().strip(), "*.ship.json")
-        init_sh = open(os.path.join(ROOT, "tools", "cyberos-init", "init.sh")).read()
+        # PRE-EXISTING failure, unrelated to the fr->task rename: init.sh was
+        # deleted in bb0f2392e ("1.0.0 CLI surface") and replaced by install.sh.
+        # The test kept opening the dead path and has been red ever since.
+        init_sh = open(os.path.join(ROOT, "tools", "cyberos-init", "install.sh")).read()
         self.assertIn(".workflow/.gitignore", init_sh)
         self.assertIn("*.ship.json", init_sh)
         out = subprocess.run(["git", "check-ignore",
-                              "docs/feature-requests/.workflow/FR-X.ship.json"],
+                              "docs/tasks/.workflow/TASK-X.ship.json"],
                              cwd=ROOT, capture_output=True)
         self.assertEqual(out.returncode, 0, "manifest path is not gitignored")
 

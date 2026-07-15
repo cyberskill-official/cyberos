@@ -1,4 +1,4 @@
-//! FR-AUTH-106 slice-3 — per-tenant policy fetch + CIDR allowlist matching +
+//! TASK-AUTH-106 slice-3 — per-tenant policy fetch + CIDR allowlist matching +
 //! sticky-challenge suppression cache.
 //!
 //! Three pieces:

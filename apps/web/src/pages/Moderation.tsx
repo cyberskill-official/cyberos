@@ -6,7 +6,7 @@ import { isModerator } from "../lib/roles";
 import { ReportCard } from "../components/ReportCard";
 import type { QueueEntry, ReportDetail } from "../components/ReportCard";
 
-// FR-CHAT-269 — the workspace moderation queue.
+// TASK-CHAT-269 — the workspace moderation queue.
 //
 // This page is reachable only for an administrator (App.tsx renders neither the route nor the nav entry
 // otherwise, §1 #18), but that is a UX decision, not a security one: all three endpoints re-check the role
@@ -128,7 +128,7 @@ export function Moderation({ onBack }: { onBack: () => void }) {
               </div>
 
               <h2 className="mod-h2">{t("mod.evidence")}</h2>
-              {/* The immutable snapshot from FR-CHAT-267 §1 #4. Rendered as TEXT. */}
+              {/* The immutable snapshot from TASK-CHAT-267 §1 #4. Rendered as TEXT. */}
               <blockquote className="mod-snapshot" data-testid="snapshot">
                 {selected.snapshot_body || selected.snapshot_filename || ""}
               </blockquote>
@@ -147,7 +147,7 @@ export function Moderation({ onBack }: { onBack: () => void }) {
               <h2 className="mod-h2">{t("mod.context")}</h2>
               {selected.context.length === 0 ? (
                 // §1 #9 — say WHY there is no context, plainly. A silent empty panel invites someone to
-                // "fix" it by fetching the DM thread, which is the one thing this FR exists to prevent.
+                // "fix" it by fetching the DM thread, which is the one thing this task exists to prevent.
                 <p className="muted">
                   {selected.target_kind === "message" && selected.channel_id
                     ? t("mod.noContextDm")

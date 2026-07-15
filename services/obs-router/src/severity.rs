@@ -1,4 +1,4 @@
-//! Alert severity (FR-OBS-007). Parsed from the Alertmanager `severity` label. Sev-1 is special: it
+//! Alert severity (TASK-OBS-007). Parsed from the Alertmanager `severity` label. Sev-1 is special: it
 //! always pages both CHAT and PagerDuty, never trusting triage (§1 #5, DEC-171).
 
 /// Alert severity, sev-1 (most severe) through sev-4 (least). Ordered so `Sev1 < Sev2 < ... < Sev4`.

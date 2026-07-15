@@ -1,7 +1,7 @@
-//! The consent / acknowledgment gate (FR-EVAL-001 clause 3, 17). This is the precondition that makes
+//! The consent / acknowledgment gate (TASK-EVAL-001 clause 3, 17). This is the precondition that makes
 //! wide day-1 capture lawful: capture is *armed* the moment a person logs into the OS, but a subject is
 //! *gated* (capture + evaluation BLOCKED) until their acknowledgment of the tenant's CURRENT monitoring
-//! notice version is on file. FR-MEMORY-121/122 capture emitters and FR-EVAL-003 evaluation call
+//! notice version is on file. TASK-MEMORY-121/122 capture emitters and TASK-EVAL-003 evaluation call
 //! [`is_capture_allowed`] before recording or evaluating a subject and skip a gated subject.
 //!
 //! QUIET OPERATING MODE: the acknowledgment is normally the signed employment-document clause recorded by
@@ -120,7 +120,7 @@ pub async fn record_capture_gated(
     .await;
 }
 
-/// The hot-path predicate FR-MEMORY-121/122 + FR-EVAL-003 call before capturing / evaluating: `true` iff
+/// The hot-path predicate TASK-MEMORY-121/122 + TASK-EVAL-003 call before capturing / evaluating: `true` iff
 /// the subject has acknowledged the tenant's CURRENT published notice version (i.e. is NOT gated).
 pub async fn is_capture_allowed(
     pool: &Pool,

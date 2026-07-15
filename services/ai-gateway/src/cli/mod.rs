@@ -1,4 +1,4 @@
-//! FR-AI-021 — `cyberos-ai` operator CLI structure.
+//! TASK-AI-021 — `cyberos-ai` operator CLI structure.
 //!
 //! Subcommands: usage, models, policy, failover, invoice, breaker, expiry, memory, completions.
 
@@ -56,13 +56,13 @@ pub enum Command {
     Expiry(ExpiryArgs),
     /// Memory audit row operations.
     Memory(MemoryArgs),
-    /// Flag a tenant for 100% trace sampling (FR-OBS-006).
+    /// Flag a tenant for 100% trace sampling (TASK-OBS-006).
     FlagTenant(FlagTenantArgs),
     /// Generate shell completions.
     Completions(CompletionsArgs),
 }
 
-/// `flag-tenant <tenant_id> --confirm [--remove]` (FR-OBS-006 §1 #3).
+/// `flag-tenant <tenant_id> --confirm [--remove]` (TASK-OBS-006 §1 #3).
 #[derive(Debug, clap::Args)]
 pub struct FlagTenantArgs {
     /// The tenant id to flag (or unflag with --remove).
@@ -252,7 +252,7 @@ pub enum Shell {
     Fish,
 }
 
-/// FR-AI-021 §1 #7 — CLI error type with exit code mapping.
+/// TASK-AI-021 §1 #7 — CLI error type with exit code mapping.
 #[derive(Debug, thiserror::Error)]
 pub enum CliError {
     #[error("auth_failed: {reason}")]

@@ -1,9 +1,9 @@
-# CyberOS CHAT - OIDC SSO via the FR-AUTH-110 provider
+# CyberOS CHAT - OIDC SSO via the TASK-AUTH-110 provider
 
-This wires the Mattermost fork to the CyberOS OIDC provider (FR-AUTH-110) using
-Mattermost's own native connector, replacing the closed FR-CHAT-002 AuthBridge
+This wires the Mattermost fork to the CyberOS OIDC provider (TASK-AUTH-110) using
+Mattermost's own native connector, replacing the closed TASK-CHAT-002 AuthBridge
 plugin. There is no plugin and no new Go: SSO is server configuration plus a
-relying-party registration in the provider. See `FR-CHAT-013`.
+relying-party registration in the provider. See `TASK-CHAT-013`.
 
 The provider side (authorize, token, userinfo, the revoke kick) is already
 proven end to end - see `docs/deploy/auth-oidc-provider-roundtrip.md`. What
@@ -124,17 +124,17 @@ one.
 
 ## The kick, honestly scoped
 
-A CyberOS revoke (FR-AUTH-005) blocks the next sign-in immediately, because the
+A CyberOS revoke (TASK-AUTH-005) blocks the next sign-in immediately, because the
 provider's authorize refuses. It does not by itself end an already-open
 Mattermost session - Mattermost holds its own session after login. Instant
-session kill is the FR-AUTH-110 back-channel-logout follow-up (its slice 2) or
-SCIM (FR-PORTAL-004); the Mattermost session TTL bounds the window until then.
+session kill is the TASK-AUTH-110 back-channel-logout follow-up (its slice 2) or
+SCIM (TASK-PORTAL-004); the Mattermost session TTL bounds the window until then.
 
 ## Notes
 
-- Native connector only, never a plugin: FR-CHAT-002 is closed because a
+- Native connector only, never a plugin: TASK-CHAT-002 is closed because a
   Mattermost plugin cannot replace `/api/v4/users/login`.
-- The FR-CHAT-002 build patches `010-disable-builtin-auth` and
+- The TASK-CHAT-002 build patches `010-disable-builtin-auth` and
   `011-load-authbridge-plugin` are out of the active series (archived under
   `../patches/superseded/`); builtin sign-up is turned off via config.
 - The secret is one-time from the provider registry, env-only, never committed.

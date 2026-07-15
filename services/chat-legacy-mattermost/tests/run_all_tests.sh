@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FR-CHAT-001 §5 — run all bash-level tests for the CHAT service.
+# TASK-CHAT-001 §5 — run all bash-level tests for the CHAT service.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
@@ -30,7 +30,7 @@ done
 
 echo ""
 echo "============================================================"
-echo "FR-CHAT-001 test summary"
+echo "TASK-CHAT-001 test summary"
 echo "============================================================"
 echo "  Passed: $PASS"
 echo "  Failed: $FAIL"
@@ -41,4 +41,4 @@ if [[ $FAIL -gt 0 ]]; then
     exit 1
 fi
 echo ""
-echo "✓ All FR-CHAT-001 tests pass."
+echo "✓ All TASK-CHAT-001 tests pass."

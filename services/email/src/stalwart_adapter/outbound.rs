@@ -1,8 +1,8 @@
-//! FR-EMAIL-001 §3.6 — outbound adapter.
+//! TASK-EMAIL-001 §3.6 — outbound adapter.
 //!
 //! Slice 1 records the outbound message metadata; the actual SMTP submit
 //! is performed by Stalwart's outbound queue when the JWT bridge plugin
-//! (FR-EMAIL-002) lands. This module exposes the shape so callers can
+//! (TASK-EMAIL-002) lands. This module exposes the shape so callers can
 //! prepare the metadata + emit the memory audit row.
 
 use crate::audit::email_events;

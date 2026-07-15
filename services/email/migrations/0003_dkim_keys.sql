@@ -1,4 +1,4 @@
--- FR-EMAIL-001 §3.4 — per-tenant DKIM keystore + rotation history.
+-- TASK-EMAIL-001 §3.4 — per-tenant DKIM keystore + rotation history.
 --
 -- Per DEC-304 each tenant has its own DKIM signing key. Slice 1 emits
 -- RSA-2048; Ed25519 (RFC 8463) deferred to slice 2. The private key is

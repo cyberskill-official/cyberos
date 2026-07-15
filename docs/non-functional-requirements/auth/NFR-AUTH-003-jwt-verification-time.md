@@ -9,7 +9,7 @@ phase: P0
 slo: "Single-key verify p99 < 1ms; multi-key (during 7-day rotation) p99 < 5ms"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-AUTH-004, FR-AUTH-007]
+related_tasks: [TASK-AUTH-004, TASK-AUTH-007]
 ---
 
 ## §1 — Statement (BCP-14 normative)

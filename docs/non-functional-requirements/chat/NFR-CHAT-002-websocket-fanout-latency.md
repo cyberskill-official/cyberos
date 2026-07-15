@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 < 200ms from DB persist ack to message delivered to every connected WebSocket subscriber on the channel"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-CHAT-001]
+related_tasks: [TASK-CHAT-001]
 ---
 
 ## §1 — Statement (BCP-14 normative)

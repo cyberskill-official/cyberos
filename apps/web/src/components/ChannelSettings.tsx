@@ -52,10 +52,10 @@ export function ChannelSettings({
   const [visibility, setVisibility] = useState(channel.visibility || "private");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  // FR-CHAT-267 §1 #10 — the SECOND entry point: report a person, from the member list. Same dialog as the
+  // TASK-CHAT-267 §1 #10 — the SECOND entry point: report a person, from the member list. Same dialog as the
   // message action bar. Reporting a person needs no shared channel on the server (§1 #3, the DM path), but
   // the member list is where you have a person in front of you, so it is where the affordance belongs.
-  // FR-CHAT-268 — the caller's OWN block list, and only ever their own. There is no surface anywhere that
+  // TASK-CHAT-268 — the caller's OWN block list, and only ever their own. There is no surface anywhere that
   // lets the blocked person discover the block (§1 #2).
   const [blocked, setBlocked] = useState<Set<string>>(new Set());
   useEffect(() => {
@@ -309,7 +309,7 @@ export function ChannelSettings({
                 ) : (
                   <span className="cs-role-tag">{t("role." + m.role)}</span>
                 )}
-                {/* FR-CHAT-268 §1 #15 — Block / Unblock, confirmed. Not an owner power: blocking changes what
+                {/* TASK-CHAT-268 §1 #15 — Block / Unblock, confirmed. Not an owner power: blocking changes what
                     YOU see, and every member holds it over every other member. */}
                 {!self && (
                   <button

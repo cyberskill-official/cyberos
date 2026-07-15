@@ -1,4 +1,4 @@
-//! Shared test harness for the FR-MEMORY-123 BRAIN integration tests.
+//! Shared test harness for the TASK-MEMORY-123 BRAIN integration tests.
 //!
 //! Mirrors the memory integration-test convention (tests/interaction_event_test.rs): the tests require a
 //! live Postgres WITH pgvector, with the memory migrations applied, so each test is `#[ignore]` and gates on
@@ -42,7 +42,7 @@ pub struct BrainTestEnv {
 }
 
 impl BrainTestEnv {
-    /// Connect, apply the brain migrations idempotently, and seed the FR-EVAL-001 access grants so the
+    /// Connect, apply the brain migrations idempotently, and seed the TASK-EVAL-001 access grants so the
     /// default caller (alice, self) and a founder can be constructed. A fresh random tenant per test.
     pub async fn new() -> Self {
         let url = std::env::var("DATABASE_URL")
@@ -328,7 +328,7 @@ async fn apply_lenient(pool: &PgPool, sql: &str) {
     }
 }
 
-/// The FR-EVAL-001 `access_grant` table DDL (a self-contained copy of the eval governance migration's grant
+/// The TASK-EVAL-001 `access_grant` table DDL (a self-contained copy of the eval governance migration's grant
 /// table + its lookup index), applied leniently so the brain tests do not depend on the eval crate's
 /// migration files being present in this DB. Matches services/eval/migrations/0001_governance.sql exactly.
 const ACCESS_GRANT_DDL: &str = r#"

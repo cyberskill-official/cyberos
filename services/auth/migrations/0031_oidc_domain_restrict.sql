@@ -1,4 +1,4 @@
--- FR-AUTH-104 P0 - restrict an IdP to verified email domains (Google Workspace).
+-- TASK-AUTH-104 P0 - restrict an IdP to verified email domains (Google Workspace).
 --
 -- When allowed_domains is non-empty, the OIDC callback rejects any login whose
 -- verified email domain is not in the list (e.g. only @cyberskill.world). An

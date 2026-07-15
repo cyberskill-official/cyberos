@@ -1,4 +1,4 @@
--- FR-AUTH-106 slice-3 — per-tenant impossible-travel policy + CIDR allowlist.
+-- TASK-AUTH-106 slice-3 — per-tenant impossible-travel policy + CIDR allowlist.
 --
 -- Three tables:
 --   travel_policy           — one row per tenant, default-row inserted lazily.
@@ -69,7 +69,7 @@ CREATE TABLE travel_cidr_allowlist (
     added_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     added_by        UUID REFERENCES subjects(id),
 
-    -- FR-AUTH-106 §1 #X — minimum-prefix tightness: only allow CIDRs at or
+    -- TASK-AUTH-106 §1 #X — minimum-prefix tightness: only allow CIDRs at or
     -- tighter than /9 for IPv4 and /17 for IPv6. Prevents a misconfigured
     -- "allow the whole internet" entry.
     CONSTRAINT travel_cidr_prefix_tight CHECK (

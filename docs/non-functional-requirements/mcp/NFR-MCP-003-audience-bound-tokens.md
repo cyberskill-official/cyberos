@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of MCP-bound tokens carry aud=mcp:<server-id>; cross-audience use rejected"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-MCP-004, FR-MCP-005]
+related_tasks: [TASK-MCP-004, TASK-MCP-005]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -18,7 +18,7 @@ related_frs: [FR-MCP-004, FR-MCP-005]
 2. The MCP server **MUST** reject any token whose `aud` does not match its own server-id with HTTP 401 + `WWW-Authenticate: Bearer error="invalid_token"`.
 3. Tokens **MUST NOT** be usable across MCP servers (no shared audience). A token for `mcp:cyberos-projects` is invalid at `mcp:cyberos-okr`.
 4. The token issuer (AUTH service) **MUST** require an explicit `audience` parameter on the `/v1/auth/token` request — there is no implicit default.
-5. The MCP server **MUST** publish its required `aud` value in its protected-resource metadata document (per FR-MCP-005).
+5. The MCP server **MUST** publish its required `aud` value in its protected-resource metadata document (per TASK-MCP-005).
 
 ## §2 — Why this constraint
 

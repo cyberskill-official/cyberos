@@ -1,7 +1,7 @@
-//! FR-AUTH-005 §1 #10 + G-010 — active-jti session tracking.
+//! TASK-AUTH-005 §1 #10 + G-010 — active-jti session tracking.
 //!
-//! Each successful JWT issue (FR-AUTH-004 password-grant or refresh-grant)
-//! MUST insert a row here so the revoke path (FR-AUTH-005 §1 #3 + G-003) can
+//! Each successful JWT issue (TASK-AUTH-004 password-grant or refresh-grant)
+//! MUST insert a row here so the revoke path (TASK-AUTH-005 §1 #3 + G-003) can
 //! enumerate the subject's active jtis and push them into the in-memory
 //! deny-list (G-011). Without this table, revocation is best-effort
 //! (`subjects.status = 'revoked'` blocks NEW logins but lets EXISTING JWTs
@@ -10,7 +10,7 @@
 //! The table lives in the shared auth Postgres database; RLS pins each
 //! row to its `tenant_id` so tenant-admin cannot enumerate other tenants'
 //! active jtis. The `cyberos_ops` BYPASSRLS role is used only by the
-//! reaper job (future FR), never by request-path code.
+//! reaper job (future task), never by request-path code.
 
 use chrono::{DateTime, Utc};
 use sqlx::{Postgres, Transaction};
@@ -55,7 +55,7 @@ pub struct ActiveSession {
 
 /// Enumerate the subject's currently-active jtis (expires_at > NOW()).
 /// The revoke handler walks the returned list and pushes each jti into
-/// the in-memory deny-list (per FR-AUTH-005 §1 #3).
+/// the in-memory deny-list (per TASK-AUTH-005 §1 #3).
 pub async fn list_active_for_subject<'c>(
     tx: &mut Transaction<'c, Postgres>,
     subject_id: Uuid,

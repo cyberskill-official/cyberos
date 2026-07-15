@@ -1,8 +1,8 @@
-//! JWT verification for the proxy (FR-OBS-002 §1 #1).
+//! JWT verification for the proxy (TASK-OBS-002 §1 #1).
 //!
 //! Tokens come from the auth service (auth/src/jwt.rs): RS256, verified against the JWKS published at
 //! `/.well-known/jwks.json`, with a per-key `kid` in the token header. `tenant_id` is a string claim
-//! and the nil-UUID tenant (tenant 0) marks a root-admin caller (FR §1 #11). The proxy keeps a minimal
+//! and the nil-UUID tenant (tenant 0) marks a root-admin caller (task §1 #11). The proxy keeps a minimal
 //! local `Claims` and does not depend on the cyberos-auth crate. Tests build the verifier from a
 //! symmetric key (HS256); production builds it from the fetched JWKS.
 
@@ -26,7 +26,7 @@ pub struct Claims {
 }
 
 impl Claims {
-    /// Root-admin queries cross-tenant by design (FR §1 #11); detected by the nil-UUID tenant.
+    /// Root-admin queries cross-tenant by design (task §1 #11); detected by the nil-UUID tenant.
     pub fn is_root_admin(&self) -> bool {
         self.tenant_id == NIL_TENANT
     }
@@ -55,7 +55,7 @@ impl Authenticator {
     }
 
     /// Build a verifier from the auth JWKS document (production; RS256). The binary fetches the JWKS
-    /// from `/.well-known/jwks.json` at boot (and refreshes per FR §1 #12) and passes the JSON here.
+    /// from `/.well-known/jwks.json` at boot (and refreshes per task §1 #12) and passes the JSON here.
     pub fn from_jwks(jwks_json: &str) -> Result<Self, ProxyError> {
         let set: jsonwebtoken::jwk::JwkSet = serde_json::from_str(jwks_json)
             .map_err(|e| ProxyError::AuthFailed(format!("jwks parse failed: {e}")))?;

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# release-assets.sh - produce the GitHub Release asset set from a built payload. FR-IMP-069.
+# release-assets.sh - produce the GitHub Release asset set from a built payload. TASK-IMP-069.
 # usage: release-assets.sh <payload-dir> <out-dir>
 # exit 0  wrote 5 files (versioned + stable tarball, versioned + stable plugin, SHA256SUMS)
 # exit 10 version disagreement (payload VERSION vs root VERSION vs $GITHUB_REF_NAME) - writes nothing

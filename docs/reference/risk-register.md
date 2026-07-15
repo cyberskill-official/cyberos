@@ -1,7 +1,7 @@
 ---
 title: Risk register
 source: website/docs/reference/risk-register.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 # Risk register

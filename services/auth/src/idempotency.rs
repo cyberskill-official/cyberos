@@ -1,7 +1,7 @@
 //! Idempotency-Key handling for admin POST endpoints.
 //!
 //! For now this is just the schema; a more complete impl lands with
-//! FR-AUTH-005 (admin REST surface).
+//! TASK-AUTH-005 (admin REST surface).
 
 use serde_json::Value;
 use sqlx::PgPool;

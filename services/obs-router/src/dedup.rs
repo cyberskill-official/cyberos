@@ -1,4 +1,4 @@
-//! Fingerprint deduplication (FR-OBS-007 §1 #12). Alerts with the same fingerprint arriving within the
+//! Fingerprint deduplication (TASK-OBS-007 §1 #12). Alerts with the same fingerprint arriving within the
 //! 5-minute window collapse to a single CHAT post carrying a "fired N times" counter. The window is
 //! evaluated against a caller-supplied monotonic millisecond clock, so the logic is deterministic and
 //! testable; the axum shell passes a real monotonic time.

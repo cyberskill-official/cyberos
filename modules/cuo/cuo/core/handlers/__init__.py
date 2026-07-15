@@ -12,7 +12,7 @@ Patterns (enum):
     sequential_approval — chain A halts for approver B; resumes on approval audit
     persona_pair        — interleaved chains with shared artefact ownership
 
-Spec: FR-CUO-106 (docs/feature-requests/cuo/).
+Spec: TASK-CUO-106 (docs/tasks/cuo/).
 """
 
 from cuo.core.handlers.base import Handler, HandlerResult

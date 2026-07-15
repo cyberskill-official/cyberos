@@ -41,7 +41,7 @@ emitted_source_freshness_tier: 10
   "plan": [
     {
       "step": 1,
-      "skill_id": "cuo/cpo/fr-with-tasks",
+      "skill_id": "cuo/cpo/task-with-subtasks",
       "status": "pending | placeholder | in_progress | done | skipped | hitl_paused | exhausted | failed",
       "started_at": "<ISO|null>",
       "completed_at": "<ISO|null>",

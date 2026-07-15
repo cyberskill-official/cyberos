@@ -18,6 +18,6 @@ Artefact: `debug-trace@1`. This document binds the skill into the ship chain; th
 
 ## HALT points
 
-- 5 consecutive failed cycles -> circuit breaker: revert touched paths, route FR back to ready_to_implement, do NOT continue.
+- 5 consecutive failed cycles -> circuit breaker: revert touched paths, route task back to ready_to_implement, do NOT continue.
 
-*Added by FR-SKILL-118 (contract parity). Phases and step prose: SKILL.md is normative.*
+*Added by TASK-SKILL-118 (contract parity). Phases and step prose: SKILL.md is normative.*

@@ -1,4 +1,4 @@
-//! Standalone offline manifest verifier (FR-OBS-009 §1 #7, DEC-183). Auditors run this with the
+//! Standalone offline manifest verifier (TASK-OBS-009 §1 #7, DEC-183). Auditors run this with the
 //! published public key and the exported files, with no CyberOS access:
 //!
 //!   verify_manifest --manifest <manifest.json> --rows <rows.json> --pubkey <hex32>

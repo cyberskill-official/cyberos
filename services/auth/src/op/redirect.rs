@@ -1,4 +1,4 @@
-//! FR-AUTH-110 §1 #12 + DEC-2491 - exact redirect_uri matching.
+//! TASK-AUTH-110 §1 #12 + DEC-2491 - exact redirect_uri matching.
 //!
 //! A presented `redirect_uri` must be byte-exact against one of the RP's
 //! registered URIs. No wildcard, no path-prefix, no query-param laxness - loose

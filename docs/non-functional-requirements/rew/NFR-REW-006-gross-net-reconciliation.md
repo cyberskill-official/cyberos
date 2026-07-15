@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of payslips satisfy gross - (PIT + SI + other deductions) = net within ±1 VND"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-REW-005, FR-REW-006]
+related_tasks: [TASK-REW-005, TASK-REW-006]
 ---
 
 ## §1 — Statement (BCP-14 normative)

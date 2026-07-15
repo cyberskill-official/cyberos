@@ -16,7 +16,7 @@ ship, or move a gate.
 
 What happens in Stage 0 is evaluation, not integration: read the source, and write a one-page verdict
 note - what it provides, which module it could strengthen, the overlap and gaps, the license, and a
-clear worth-it / not-worth-it call with the reason. No FR mapping, no vendoring, no code yet. Most
+clear worth-it / not-worth-it call with the reason. No task mapping, no vendoring, no code yet. Most
 candidates should stop here.
 
 To hand me a source: drop it in `playground/` (or give a path or URL) and say which module you have in
@@ -28,11 +28,11 @@ that is fine - the verdict note proposes one.
 Only a candidate with a positive verdict graduates. Then, and only then:
 
 1. Write `docs/absorptions/<name>-absorption.md` - the integration plan: exact overlap with the target
-   module, the seam, the license + provenance line, and the FRs each change lands against (authored to
+   module, the seam, the license + provenance line, and the tasks each change lands against (authored to
    10/10 first if new). This file is tracked.
 2. Decide the seam. Tooling or a verification harness vendors into `tools/<name>/` with its own gate,
    the way CAF did. Library or behaviour folds into the module's crate or package behind its existing
-   public surface. A doc or spec becomes FR content or a knowledge note, never loose prose.
+   public surface. A doc or spec becomes task content or a knowledge note, never loose prose.
 3. Ship it through the same chain as any change: implement, review, test, then the module's awh gate
    (rerun its golden set vs the sealed baseline, max-regression 0.0) and the caf gate (rebuild, lint,
    test, audit). A module flips back to done only on awh GREEN and caf CLEAN. New behaviour adds

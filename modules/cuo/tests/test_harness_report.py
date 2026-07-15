@@ -1,4 +1,4 @@
-"""Test suite for FR-CUO-200 — harness read-only report.
+"""Test suite for TASK-CUO-200 — harness read-only report.
 
 7 ACs covered. Each test function corresponds to one AC.
 """
@@ -38,11 +38,11 @@ def skill_root(tmp_path: Path) -> Path:
     sr.mkdir()
 
     # Skill A — declares user_correction_streak: 2 and acceptance_rate_below: 0.6
-    a = sr / "feature-request-audit"
+    a = sr / "task-audit"
     a.mkdir()
     (a / "SKILL.md").write_text(textwrap.dedent("""\
         ---
-        name: feature-request-audit
+        name: task-audit
         description: stub
         license: Apache-2.0
         metadata:
@@ -115,7 +115,7 @@ def test_report_emits_markdown(skill_root: Path, tmp_path: Path) -> None:
     assert "# Harness report" in body
     assert "## Skills with tripped signals" in body
     assert "## Workflows with elevated rework" in body
-    assert "## Per-FR routed-back history" in body
+    assert "## Per-task routed-back history" in body
     assert "## Summary" in body
     assert len(body) > 200
 
@@ -132,17 +132,17 @@ def test_signal_thresholds_trip_correctly(skill_root: Path) -> None:
     # Seed 11 fr_routed_back rows for the skill — all terminals are non-done.
     for i in range(11):
         rows.append(_row(
-            "memory.fr_routed_back", now_ns - i * 1_000_000_000,
-            skill="feature-request-audit",
-            fr_id=f"FR-X-{i:03d}",
+            "memory.task_routed_back", now_ns - i * 1_000_000_000,
+            skill="task-audit",
+            task_id=f"TASK-X-{i:03d}",
             outcome="ROUTED_BACK",
             row_id=f"rb-{i}",
         ))
     # Plus 1 done row → done_rate = 1/12 = 8.3%, below 0.6 → trips
     rows.append(_row(
-        "memory.fr_completed", now_ns,
-        skill="feature-request-audit",
-        fr_id="FR-X-999",
+        "memory.task_completed", now_ns,
+        skill="task-audit",
+        task_id="TASK-X-999",
         outcome="done",
         row_id="rc-1",
     ))
@@ -156,7 +156,7 @@ def test_signal_thresholds_trip_correctly(skill_root: Path) -> None:
     acceptance_breaches = [
         b for b in report.breaches
         if b.signal_id == "acceptance_rate_below"
-        and b.skill_name == "feature-request-audit"
+        and b.skill_name == "task-audit"
     ]
     assert len(acceptance_breaches) == 1
     breach = acceptance_breaches[0]
@@ -177,11 +177,11 @@ def test_workflow_rework_rate(skill_root: Path) -> None:
     # Workflow A: 1 completed + 4 routed_back → rework_rate 80%
     for i in range(4):
         rows.append(_row("workflow_complete", now_ns - i * 1_000_000,
-                         workflow_id="cto/ship-feature-requests",
+                         workflow_id="cto/ship-tasks",
                          outcome="ROUTED_BACK",
                          row_id=f"wfa-rb-{i}"))
     rows.append(_row("workflow_complete", now_ns,
-                     workflow_id="cto/ship-feature-requests",
+                     workflow_id="cto/ship-tasks",
                      outcome="COMPLETED",
                      row_id="wfa-ok-1"))
     # Workflow B: 3 completed + 1 routed_back → rework_rate 25%
@@ -204,8 +204,8 @@ def test_workflow_rework_rate(skill_root: Path) -> None:
     assert len(report.workflow_metrics) >= 2
     # First entry has the highest rework rate
     assert report.workflow_metrics[0].rework_rate >= report.workflow_metrics[1].rework_rate
-    # Verify it sorted to put cto/ship-feature-requests first
-    assert report.workflow_metrics[0].workflow_id == "cto/ship-feature-requests"
+    # Verify it sorted to put cto/ship-tasks first
+    assert report.workflow_metrics[0].workflow_id == "cto/ship-tasks"
 
 
 # ----------------------------------------------------------------------------
@@ -225,7 +225,7 @@ def test_watch_mode_atomic_write(skill_root: Path, tmp_path: Path) -> None:
     # Second emission overwrites atomically (no .tmp leftover)
     now_ns = int(time.time() * 1_000_000_000)
     rows = [_row("workflow_complete", now_ns,
-                 workflow_id="cto/ship-feature-requests",
+                 workflow_id="cto/ship-tasks",
                  outcome="COMPLETED", row_id="x-1")]
     report2 = compute_report(audit_dir=None, skill_root=skill_root,
                              window=timedelta(days=7), rows_override=rows)
@@ -293,7 +293,7 @@ def test_empty_chain_clean_exit(skill_root: Path, tmp_path: Path) -> None:
     # All 4 sections present
     assert "## Skills with tripped signals" in body
     assert "## Workflows with elevated rework" in body
-    assert "## Per-FR routed-back history" in body
+    assert "## Per-task routed-back history" in body
     assert "## Summary" in body
     # All empty
     assert "*(no signals tripped in this window)*" in body
@@ -322,7 +322,7 @@ def test_parse_window_durations() -> None:
 
 
 def test_parse_skill_signals(skill_root: Path) -> None:
-    skill_md = skill_root / "feature-request-audit" / "SKILL.md"
+    skill_md = skill_root / "task-audit" / "SKILL.md"
     signals = parse_skill_signals(skill_md)
     assert "user_correction_streak" in signals
     assert signals["user_correction_streak"]["threshold"] == 2

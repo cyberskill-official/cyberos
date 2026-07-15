@@ -1,7 +1,7 @@
 """CyberOS CHAT service helpers.
 
 The Mattermost fork stays as the deployable chat server. This package holds
-CyberOS-specific control-plane logic for FR-CHAT-003..012: tenant deployment
+CyberOS-specific control-plane logic for TASK-CHAT-003..012: tenant deployment
 plans, Vietnamese search normalization, logical-replication memory capture,
 imports, Lumi routing, privacy-preserving push, and DSAR export.
 """

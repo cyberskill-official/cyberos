@@ -1,7 +1,7 @@
 ---
 title: TEN - Tenant lifecycle, billing, isolation control plane
 source: website/docs/modules/ten/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 TEN is CyberOS's **tenant lifecycle + billing + isolation control plane**. It is the module without which CyberOS cannot exist as a paying-customer SaaS. The architecture is conventional: a Rust service for tenant CRUD + plan management + usage metering; Stripe for international card billing + invoicing; Vietnamese PSP integration (VnPay, Momo, ZaloPay) for VND domestic transactions; a tenant-admin SPA for seat management, audit-log review, residency / retention overrides; a signed-bundle exporter for portability + GDPR Art. 20. What is distinctive is the isolation invariant: TEN owns the per-tenant resource manifest (Postgres schema layout, NATS subject namespace, S3 bucket prefix, AI-gateway token quotas) and the verification harness that proves cross-tenant zero-leakage on every release. ARR / NDR / churn metrics roll up to a CFO dashboard. The 90-day offboarding grace is mandatory - even a hostile termination has 30 days of read-only access for export plus 60 days of dead-letter recoverability before irreversible wipe.
@@ -482,9 +482,9 @@ Closed| Day 91| Per-tenant rows wiped across modules; S3 prefix wiped; NATS ACL 
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
@@ -534,7 +534,7 @@ Vietnam Decree 53/2022| Art. 26 - Data localisation for VN tenants| Residency ch
 Vietnam Circular 18/2018/TT-NHNN| Payment intermediary rules| VnPay / Momo / ZaloPay are SBV-licenced PSPs.
 Vietnam Decree 13/2023| Personal data processing| Per-tenant retention policy + 90d offboarding grace.
 Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Signed-bundle export covers all tenant data.
-GDPR (EU 2016/679)| Art. 20 - Right to portability| Signed-bundle export covers (FR pending).
+GDPR (EU 2016/679)| Art. 20 - Right to portability| Signed-bundle export covers (task pending).
 GDPR| Art. 17 - Right to erasure| Offboarding wipe with audit attestation.
 GDPR| Art. 28 - Processor obligations| DPA per tenant; sub-processor list on Trust Center.
 
@@ -752,7 +752,7 @@ Usage metering (4 axes)| planned - P4
 Provisioning saga with compensation| planned - P4
 Three-layer isolation enforcement| planned - P4
 Isolation verification harness (100k probes)| planned - P4
-Signed export bundle (FR pending)| planned - P4
+Signed export bundle (task pending)| planned - P4
 90-day offboarding grace + wipe attestation| planned - P4
 ARR / NDR / churn dashboard| planned - P4
 SOC 2 Type II audit| planned - P4+
@@ -780,7 +780,7 @@ ISO 27017 cloud-services audit| planned - P4+
 - **EU AI Act** - Art. 26 deployer obligations (tenant-level).
 - **Stripe Billing API** - subscription + invoice + webhook docs.
 - **VnPay / Momo / ZaloPay merchant docs** - Vietnamese PSP integration (P4).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **Architecture context:** [infrastructure.html#ten](../../architecture/infrastructure.html#ten).
 
 ## Changelog

@@ -1,4 +1,4 @@
-//! FR-AI-014 §5 — Integration tests for persona parsing, hashing, and handle parsing.
+//! TASK-AI-014 §5 — Integration tests for persona parsing, hashing, and handle parsing.
 
 use cyberos_ai_gateway::persona::*;
 

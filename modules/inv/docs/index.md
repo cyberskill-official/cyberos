@@ -1,7 +1,7 @@
 ---
 title: INV - Billable rollup invoicing, hóa đơn emission, dunning automation
 source: website/docs/modules/inv/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 INV is the **AR plane**. Invoices begin life as a draft auto-populated from TIME entries against an engagement's billable rules; a human reviews + sends; the customer pays through one of four payment rails (Stripe, Wise, domestic VND PSP, manual bank transfer); the receipt matches back to the invoice (cash application); the GL takes the revenue. The Vietnamese-context specifics - Decree 123 e-invoice schema, Circular 78 GDT format, Mẫu 01/GTGT, MST validation, VietQR collection - are wrapped in three reusable CyberSkill skills (`vietnam-vat-invoice`, `vietnam-mst-validate`, `vietnam-bank-transfer`) so the same primitives serve INV here and any external SaaS that adopts the cyberskill-vn collection.
@@ -83,7 +83,7 @@ Axis| Question| Answer
 **5W - Why**| Why a separate module?| Because AR-ledger drift and tax-compliance surprise are existential to small companies. INV is the one source of truth for "what did we bill, what did they pay, who owes what".
 **1H - How**| How does it work?| Postgres for invoice + payment + reminder rows. Stripe / Wise webhooks -> cash_application engine matches receipts to invoices by metadata + amount. VietQR generated via `vietnam-bank-transfer` skill; bank confirms via screen-scrape OR open-banking API (Napas247 P3). Vietnamese e-invoice via `vietnam-vat-invoice` skill -> POST to GDT.
 **2C - Cost**| Cost budget?| P2: ~$40/month (RDS + Fargate + Stripe/Wise pass-through fees). 50-tenant: ~$150/month. Per-invoice cost: ~$0.02 + payment processor fee.
-**2C - Constraints**| Constraints?| (a) Vietnam Decree 123 + Circular 78 - e-invoice format. (b) Currency rounding policy (VND has no decimals; round to nearest 1,000 for display). (c) Per-engagement billable rules drive line items (FR pending). (d) Approved invoices are append-only (FR pending); corrections via credit note.
+**2C - Constraints**| Constraints?| (a) Vietnam Decree 123 + Circular 78 - e-invoice format. (b) Currency rounding policy (VND has no decimals; round to nearest 1,000 for display). (c) Per-engagement billable rules drive line items (task pending). (d) Approved invoices are append-only (task pending); corrections via credit note.
 **5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, stripe-rust, wise sdk, typst / tectonic for PDF, async-graphql, cyberskill-vn skills, AWS S3 (immutable archive).
 **5M - Methods**| Method choices?| Idempotent webhooks (Stripe idempotency-key + DB UNIQUE on external_event_id). VND rate snapshot daily from SBV REST endpoint. Multi-rail collection abstracted behind `PaymentRail` trait. Append-only invoice rows; credit-note for corrections.
 **5M - Machines**| Deployment?| Fargate in SG-1. Multi-AZ Postgres RDS. S3 immutable bucket for PDFs.
@@ -334,9 +334,9 @@ Bucket| Days past due| Default action
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
@@ -613,7 +613,7 @@ Open-banking integration (Napas247 real-time)| planned - P3
 - **TIME rollup contract:** [TIME §0](../time/index.html#bigger-picture) - per-cycle billable rollup that INV consumes.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - invoice sent + paid events become memory audit rows; revenue recognition traceable to chain hash.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - INV at P2-start (P2, after TIME).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **Decree 123/2020/NĐ-CP** - Vietnamese e-invoice mandate.
 - **Circular 78/2021/TT-BTC** - GDT XML schema for e-invoices.
 - **Decree 119/2018/NĐ-CP** - E-invoice retention (10 years).

@@ -9,7 +9,7 @@ phase: P0
 slo: "classify_proposal: 100% deterministic across runs; 0% mutation of any file; test-gate failure → 100% queue (never auto-apply)"
 owner: CTO
 created: 2026-05-19
-related_frs: [FR-CUO-202]
+related_tasks: [TASK-CUO-202]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -26,7 +26,7 @@ The classifier sits on the path between "operator approves a proposal" and "skil
 
 ## §3 — Measurement
 
-Determinism (already covered by FR-CUO-202 tests): not a separate benchmark — `test_classify_is_read_only` + `test_bump_levels` together prove classification stability. A future stress test could classify N=10⁴ proposal bodies and assert bucket counts match between two independent runs.
+Determinism (already covered by TASK-CUO-202 tests): not a separate benchmark — `test_classify_is_read_only` + `test_bump_levels` together prove classification stability. A future stress test could classify N=10⁴ proposal bodies and assert bucket counts match between two independent runs.
 
 Read-only: `test_classify_is_read_only` compares SKILL.md + proposal file bytes before and after `classify_proposal()` — bytewise identity required.
 
@@ -52,4 +52,4 @@ Inspection: `BUCKET_BUMP` and `BUCKET_DEFAULT_AUTO` are module-level constants. 
 
 ## §6 — Notes
 
-The pre-apply test gate is currently a presence-proxy: if `acceptance/TRIGGER_TESTS.md` exists, the gate counts as "OK". A future minor bump (probably under FR-CUO-202 follow-up) extends this to actually parse + execute the fixtures via the existing `cuo.trigger_tests` Python module — at that point this NFR's §1 #3 verification becomes load-bearing rather than aspirational.
+The pre-apply test gate is currently a presence-proxy: if `acceptance/TRIGGER_TESTS.md` exists, the gate counts as "OK". A future minor bump (probably under TASK-CUO-202 follow-up) extends this to actually parse + execute the fixtures via the existing `cuo.trigger_tests` Python module — at that point this NFR's §1 #3 verification becomes load-bearing rather than aspirational.

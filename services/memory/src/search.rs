@@ -1,10 +1,10 @@
-//! FR-MEMORY-108 — `POST /v1/memory/search` with hybrid lexical + vector recall.
+//! TASK-MEMORY-108 — `POST /v1/memory/search` with hybrid lexical + vector recall.
 //!
 //! Two retrievers fused via Reciprocal Rank Fusion (RRF):
 //!   * **Lexical** — Postgres `to_tsvector('simple', body) @@ websearch_to_tsquery($q)`
 //!     ranked by `ts_rank_cd`. Always available; no external dependency.
 //!   * **Vector** — `embedding <=> $query_vec ORDER BY ... LIMIT k` against
-//!     the pgvector column populated by FR-AI-019. Runs only if the
+//!     the pgvector column populated by TASK-AI-019. Runs only if the
 //!     embedding client is configured AND the query embeds successfully;
 //!     a flaky sidecar degrades to lexical-only without erroring.
 //!

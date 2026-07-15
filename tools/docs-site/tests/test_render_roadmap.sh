@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# test_render_roadmap.sh - FR-DOCS-003 suite, repointed at the status hub per FR-DOCS-006 §1 #4
-# and re-anchored on the single-page hub of FR-IMP-074. Assertions preserved: board counts,
+# test_render_roadmap.sh - TASK-DOCS-003 suite, repointed at the status hub per TASK-DOCS-006 §1 #4
+# and re-anchored on the single-page hub of TASK-IMP-074. Assertions preserved: board counts,
 # release order, determinism, honest failures, token-clean, plus the supersession contract.
 # The roadmap CONTENT is the board lens now; #roadmap still lands there.
 set -uo pipefail
@@ -13,15 +13,15 @@ fail() { FAIL=$((FAIL+1)); echo "  FAIL $1: $2"; }
 
 mkfix() {
   d="$1"
-  mkdir -p "$d/docs/feature-requests/aa/FR-AA-001-first" "$d/docs/feature-requests/aa/FR-AA-002-second" \
-           "$d/docs/feature-requests/bb/FR-BB-001-third" "$d/.git/refs/heads" \
+  mkdir -p "$d/docs/tasks/aa/TASK-AA-001-first" "$d/docs/tasks/aa/TASK-AA-002-second" \
+           "$d/docs/tasks/bb/TASK-BB-001-third" "$d/.git/refs/heads" \
            "$d/modules/templates/html" "$d/modules/templates/cds"
   cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" "$d/modules/templates/html/"
   cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" "$d/modules/templates/cds/"
   echo "ref: refs/heads/main" > "$d/.git/HEAD"; echo "abcdef1234567890" > "$d/.git/refs/heads/main"
-  printf -- '---\nid: FR-AA-001\ntitle: First\nmodule: aa\npriority: MUST\nstatus: done\nclass: product\n---\nbody\n' > "$d/docs/feature-requests/aa/FR-AA-001-first/spec.md"
-  printf -- '---\nid: FR-AA-002\ntitle: Second\nmodule: aa\npriority: SHOULD\nstatus: draft\nclass: improvement\n---\nbody\n' > "$d/docs/feature-requests/aa/FR-AA-002-second/spec.md"
-  printf -- '---\nid: FR-BB-001\ntitle: Third\nmodule: bb\npriority: MUST\nstatus: implementing\nclass: product\n---\nbody\n' > "$d/docs/feature-requests/bb/FR-BB-001-third/spec.md"
+  printf -- '---\nid: TASK-AA-001\ntitle: First\nmodule: aa\npriority: MUST\nstatus: done\nclass: product\n---\nbody\n' > "$d/docs/tasks/aa/TASK-AA-001-first/spec.md"
+  printf -- '---\nid: TASK-AA-002\ntitle: Second\nmodule: aa\npriority: SHOULD\nstatus: draft\nclass: improvement\n---\nbody\n' > "$d/docs/tasks/aa/TASK-AA-002-second/spec.md"
+  printf -- '---\nid: TASK-BB-001\ntitle: Third\nmodule: bb\npriority: MUST\nstatus: implementing\nclass: product\n---\nbody\n' > "$d/docs/tasks/bb/TASK-BB-001-third/spec.md"
   printf '# CL\n\n## [2.0.0] - 2026-07-01\n\n- newest entry\n\n## [1.0.0] - 2026-01-01\n\n- old entry\n' > "$d/CHANGELOG.md"
   echo "2.0.0" > "$d/VERSION"
 }
@@ -61,10 +61,10 @@ t05_deterministic() {
 }
 t06_honest_failures() {
   mkfix "$TMP/b"
-  mkdir -p "$TMP/b/docs/feature-requests/aa/FR-AA-009-broken"
-  printf -- '---\nid: FR-AA-009\nno closing fence\n' > "$TMP/b/docs/feature-requests/aa/FR-AA-009-broken/spec.md"
+  mkdir -p "$TMP/b/docs/tasks/aa/TASK-AA-009-broken"
+  printf -- '---\nid: TASK-AA-009\nno closing fence\n' > "$TMP/b/docs/tasks/aa/TASK-AA-009-broken/spec.md"
   out="$(node "$R" "$TMP/b" "$TMP/b/out" 2>&1)"; rc=$?
-  [ "$rc" -ne 0 ] && grep -q "FR-AA-009" <<<"$out" || { fail t06 "broken fm rc=$rc"; return; }
+  [ "$rc" -ne 0 ] && grep -q "TASK-AA-009" <<<"$out" || { fail t06 "broken fm rc=$rc"; return; }
   mkfix "$TMP/c"; printf '# empty\n' > "$TMP/c/CHANGELOG.md"
   out="$(node "$R" "$TMP/c" "$TMP/c/out" 2>&1)"; rc=$?
   [ "$rc" -ne 0 ] && grep -q "zero version sections" <<<"$out" && ok t06 || fail t06 "empty changelog rc=$rc"

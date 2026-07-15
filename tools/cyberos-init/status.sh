@@ -28,7 +28,7 @@ if [ ! -f "$page" ]; then
 fi
 
 if [ ! -f "$page" ]; then
-  echo "cyberos status: no docs/status/index.html yet (install + add FRs, or open after first install migrate)" >&2
+  echo "cyberos status: no docs/status/index.html yet (install + add tasks, or open after first install migrate)" >&2
   echo "  expected: $page" >&2
   exit 1
 fi

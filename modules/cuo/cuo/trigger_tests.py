@@ -1,4 +1,4 @@
-"""Trigger-test runner for FR-SKILL-112.
+"""Trigger-test runner for TASK-SKILL-112.
 
 Loads `<skill-folder>/acceptance/TRIGGER_TESTS.md` fixtures and asserts the
 CUO supervisor's classifier routes positive triggers to the named skill and
@@ -9,7 +9,7 @@ not at the skill level. To bridge to SKILL.md-level trigger tests, we read the
 routed workflow's `skill_chain` and check whether the expected skill is the
 first invoked skill (the "entry skill" of that workflow).
 
-Per FR-SKILL-112 §1 #7. Used by CI gates + skill-bundle auditors.
+Per TASK-SKILL-112 §1 #7. Used by CI gates + skill-bundle auditors.
 """
 
 from __future__ import annotations
@@ -178,7 +178,7 @@ def check_paraphrase_distinct(phrases: list[str]) -> list[tuple[str, str, int]]:
 # ─── Confidence relationship validator ──────────────────────────────────────────
 
 def validate_confidence_relationship(min_confidence: float, defer_below: float) -> bool:
-    """FR-SKILL-112 §1 #15: fixture min_confidence MUST be ≥ skill's defer_below."""
+    """TASK-SKILL-112 §1 #15: fixture min_confidence MUST be ≥ skill's defer_below."""
     return min_confidence >= defer_below
 
 
@@ -191,17 +191,32 @@ def classify(phrase: str) -> SkillRoutingResult:
     """
     try:
         from cuo.core.router import route as _route
+        from cuo.core.catalog import discover_personas
     except ImportError:
         return SkillRoutingResult(skill_id=None, workflow_slug=None, confidence=0.0)
 
-    decision = _route(phrase)
+    # BUG (fixed 2026-07-14): this called `_route(phrase)`, but route() takes
+    # (query, personas). Every call raised TypeError, so the adapter to the LIVE
+    # classifier has never once run — the trigger tests monkeypatch `classify`, so
+    # the breakage was invisible. Trigger-test coverage of the real router was 0%
+    # while reporting 29 passing tests.
+    cuo_root = Path(__file__).resolve().parents[1]   # .../modules/cuo/cuo/trigger_tests.py -> modules/cuo
+    personas = discover_personas(cuo_root)
+    decision = _route(phrase, personas)
     if decision is None or decision.confidence < 0.1:
         return SkillRoutingResult(skill_id=None, workflow_slug=None, confidence=0.0)
 
     # Resolve the entry skill from the routed workflow's skill_chain.
+    #
+    # BUG (fixed 2026-07-14): this called `discover_workflows(cuo_root)`, but the
+    # signature is `discover_workflows(persona: PersonaEntry)`. It raised
+    # AttributeError, which the bare `except` below swallowed, so classify() returned
+    # skill_id=None for EVERY phrase. Third independent break in this one function —
+    # and every one of them was invisible because the trigger tests monkeypatch
+    # `classify` rather than exercising it.
     try:
         from cuo.core.catalog import discover_workflows
-        workflows = discover_workflows()
+        workflows = [wf for persona in personas for wf in discover_workflows(persona)]
         for wf in workflows:
             if wf.persona == decision.persona_slug and wf.slug == decision.workflow_slug:
                 if wf.skill_chain:

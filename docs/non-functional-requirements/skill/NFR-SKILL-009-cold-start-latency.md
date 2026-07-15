@@ -9,7 +9,7 @@ phase: P1
 slo: "p95 < 2s, p99 < 5s for first-invocation of a skill not in cache"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-SKILL-102, FR-SKILL-104]
+related_tasks: [TASK-SKILL-102, TASK-SKILL-104]
 ---
 
 ## §1 — Statement (BCP-14 normative)

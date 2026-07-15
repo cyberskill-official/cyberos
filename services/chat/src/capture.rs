@@ -1,6 +1,6 @@
-//! FR-MEMORY-122 §1 #4 — CHAT's capture surface (the per-module `capture.rs`, DEC-2714).
+//! TASK-MEMORY-122 §1 #4 — CHAT's capture surface (the per-module `capture.rs`, DEC-2714).
 //!
-//! Thin typed helpers that translate CHAT's domain events into FR-MEMORY-121 interaction-events and record
+//! Thin typed helpers that translate CHAT's domain events into TASK-MEMORY-121 interaction-events and record
 //! them through the shared [`cyberos_capture::Capturer`] over the chat->brain audit pool (the pool opened
 //! from `CHAT_AUDIT_DATABASE_URL`; DEC-2713 turns that link ON). Message bodies are NEVER inlined: created
 //! and edited events carry `content_ref: pointer{store:"chat_messages", id}`; a deleted message carries
@@ -12,7 +12,7 @@
 //!     and/or no audit pool is configured) it returns immediately and does nothing. The message still sent,
 //!     the channel still created — capture is invisible.
 //!   * When a capturer is present, the helper builds the event and calls `capture_metered`, which routes
-//!     through FR-MEMORY-121 `emit()` (consent-gated: a sender who has not acknowledged the notice yields a
+//!     through TASK-MEMORY-121 `emit()` (consent-gated: a sender who has not acknowledged the notice yields a
 //!     `Skipped` outcome and zero rows) and swallows any error. A capture failure NEVER fails or delays the
 //!     send. Call sites further spawn the emit so it cannot delay the HTTP response (see messages.rs).
 
@@ -35,7 +35,7 @@ fn channel_target(channel_id: Uuid, channel_kind: &str) -> TargetRef {
 }
 
 /// The source channel CHAT tags its events with. The chat clients do not yet pass an explicit channel hint
-/// on every call, so this is `Web` for now (the P0 product is the web console; FR-MEMORY-122 §1 #13 lets a
+/// on every call, so this is `Web` for now (the P0 product is the web console; TASK-MEMORY-122 §1 #13 lets a
 /// client refine it later). Kept as one helper so the choice is in one place.
 pub fn default_source() -> SourceChannel {
     SourceChannel::Web

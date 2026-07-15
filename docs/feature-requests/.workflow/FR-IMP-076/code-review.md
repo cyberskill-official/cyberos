@@ -1,3 +1,0 @@
-# FR-IMP-076 — review packet. Status: reviewing, HALTED at HITL gate 1.
-All 5 clauses live-verified this session: payload trio built+executed (help/changelog/update all ran; update.sh delegated to init.sh --check and printed the three-value report); build.sh ships + chmods trio, channels += root-cli, mcp-connector; --http endpoint curl-proven (healthz 200, tools/list 4 tools, notification 202, GET 405); stdio untouched (conditional branch only); runbook with Claude/Grok hookup + TLS/auth checklist.
-Implementer notes: auth deliberately delegated to the reverse proxy (ISS-001); Grok transport compatibility honestly deferred to hookup (ISS-002). Verdict: "FR-IMP-076 review: approved" / "rejected - <reason>".

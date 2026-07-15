@@ -9,7 +9,7 @@ phase: P1
 slo: "100% of in-flight HR cases preserve their original policy version"
 owner: CHRO
 created: 2026-05-18
-related_frs: [FR-HR-005]
+related_tasks: [TASK-HR-005]
 ---
 
 ## §1 — Statement (BCP-14 normative)

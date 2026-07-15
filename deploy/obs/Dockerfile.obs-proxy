@@ -1,4 +1,4 @@
-# Build the obs-proxy binary from the services Cargo workspace (FR-OBS-002).
+# Build the obs-proxy binary from the services Cargo workspace (TASK-OBS-002).
 # Build context is the services/ directory (see docker-compose.yml), so the whole workspace is present
 # and the member crate resolves. reqwest uses rustls, so no OpenSSL / pkg-config is needed at build.
 FROM rust:1-slim AS build

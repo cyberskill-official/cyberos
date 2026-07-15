@@ -9,14 +9,14 @@ phase: P0
 slo: "100% of closed cycles carry a CEO-signed retro before close"
 owner: CEO
 created: 2026-05-18
-related_frs: [FR-OKR-007]
+related_tasks: [TASK-OKR-007]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
 1. A cycle **MUST NOT** advance to `closed` without a CEO-signed retro.
 2. The retro **MUST** include: outcomes per objective, lessons learned, action items for next cycle, links to evidence.
-3. Auto-generated retro draft (`FR-OKR-007`) **MUST** be editable; CEO can revise before sign.
+3. Auto-generated retro draft (`TASK-OKR-007`) **MUST** be editable; CEO can revise before sign.
 4. Once signed, the retro is immutable; corrections require an addendum.
 5. Retro signatures **MUST** be persisted with `{signer_id, signed_at, retro_hash}`.
 

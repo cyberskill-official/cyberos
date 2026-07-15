@@ -1,4 +1,4 @@
--- FR-CHAT-101 slice 4: read receipts (chat_read_markers) and device registration (chat_devices) for push.
+-- TASK-CHAT-101 slice 4: read receipts (chat_read_markers) and device registration (chat_devices) for push.
 
 CREATE TABLE IF NOT EXISTS chat_read_markers (
     channel_id            UUID NOT NULL REFERENCES chat_channels(id) ON DELETE CASCADE,

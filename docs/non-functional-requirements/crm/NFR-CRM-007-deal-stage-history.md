@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of deal-stage transitions create audit rows; history immutable"
 owner: CSO-Sales
 created: 2026-05-18
-related_frs: [FR-CRM-001]
+related_tasks: [TASK-CRM-001]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -118,7 +118,7 @@ const C = {
   "dash.mod.memory.name": { en: "Memory & Audit", vi: "Bộ nhớ & Audit" },
   "dash.mod.memory.desc": { en: "The tenant's hash-chained audit log.", vi: "Nhật ký audit chuỗi băm của tenant." },
   "dash.mod.cuo.name": { en: "Workflows & GENIE", vi: "Quy trình & GENIE" },
-  "dash.mod.cuo.desc": { en: "Dream-loop envelope and FR backlog.", vi: "Vòng lặp dream-loop và backlog FR." },
+  "dash.mod.cuo.desc": { en: "Dream-loop envelope and task backlog.", vi: "Vòng lặp dream-loop và backlog task." },
 
   // sidebar
   "sidebar.editProfile": { en: "Edit your profile", vi: "Chỉnh sửa hồ sơ của bạn" },
@@ -285,7 +285,7 @@ const C = {
   "role.owner": { en: "Owner", vi: "Chủ kênh" },
   "role.admin": { en: "Admin", vi: "Quản trị" },
   "role.member": { en: "Member", vi: "Thành viên" },
-  // report (FR-CHAT-267). Every string the report dialog renders ships in both locales: a Vietnamese-speaking
+  // report (TASK-CHAT-267). Every string the report dialog renders ships in both locales: a Vietnamese-speaking
   // employee reporting harassment in English is a failure of the product, not of the employee (§1 #12).
   "report.title": { en: "Report", vi: "Báo cáo" },
   "report.subtitleMessage": {
@@ -327,7 +327,7 @@ const C = {
   "report.action": { en: "Report", vi: "Báo cáo" },
   "report.reportPerson": { en: "Report this person", vi: "Báo cáo người này" },
 
-  // moderation (FR-CHAT-269)
+  // moderation (TASK-CHAT-269)
   "mod.title": { en: "Moderation", vi: "Kiểm duyệt" },
   "mod.empty": { en: "Nothing to review.", vi: "Không có gì cần xem xét." },
   "mod.reportCount": { en: "{n} report(s)", vi: "{n} báo cáo" },
@@ -342,7 +342,7 @@ const C = {
   "mod.context": { en: "Context", vi: "Bối cảnh" },
   "mod.noContext": { en: "No surrounding context.", vi: "Không có bối cảnh xung quanh." },
   // Say WHY, plainly. A silent empty panel invites someone to "fix" it by fetching the DM thread — the one
-  // thing this FR exists to prevent (§1 #9).
+  // thing this task exists to prevent (§1 #9).
   "mod.noContextDm": {
     en: "Only the reported message is shown. Direct messages are not disclosed, and a private channel you are not in is not shown.",
     vi: "Chỉ hiển thị tin nhắn bị báo cáo. Tin nhắn riêng không được tiết lộ, và kênh riêng tư bạn không tham gia sẽ không hiện ra.",
@@ -360,7 +360,7 @@ const C = {
   "mod.severity": { en: "Severity", vi: "Mức độ" },
   "top.moderation": { en: "Moderation", vi: "Kiểm duyệt" },
 
-  // blocking (FR-CHAT-268)
+  // blocking (TASK-CHAT-268)
   "blocked.hidden": {
     en: "Message from {name}, who you blocked.",
     vi: "Tin nhắn từ {name}, người bạn đã chặn.",
@@ -452,7 +452,7 @@ const C = {
 // Every key the catalog actually defines. Exported so a surface can prove, at COMPILE time, that each string
 // it renders exists — see REPORT_DIALOG_KEYS in components/ReportDialog.tsx, which is declared
 // `satisfies readonly CatalogKey[]`. Because an Entry is `{ en; vi }`, a key that type-checks necessarily
-// carries BOTH locales: FR-CHAT-267 §1 #12 is then enforced by `tsc --noEmit`, not by a convention someone
+// carries BOTH locales: TASK-CHAT-267 §1 #12 is then enforced by `tsc --noEmit`, not by a convention someone
 // has to remember. A missing key is a build failure, not a string that silently renders as its own name.
 export type CatalogKey = keyof typeof C;
 

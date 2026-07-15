@@ -1,6 +1,6 @@
-//! FR-AUTH-108 — Lumi tenant-identity JWT issuance + verify + revoke.
+//! TASK-AUTH-108 — Lumi tenant-identity JWT issuance + verify + revoke.
 //!
-//! Lumi is the cloud-hosted org memory. Personal-memory sync (FR-MEMORY-103)
+//! Lumi is the cloud-hosted org memory. Personal-memory sync (TASK-MEMORY-103)
 //! needs a JWT identifying which Lumi workspace this memory's shareable
 //! memories can push to. This module mints those tokens, logs every
 //! issuance, and provides a revoke endpoint for the operator.
@@ -101,7 +101,7 @@ pub async fn issue(
         .issue(
             TenantId(tenant_id),
             SubjectId(body.subject_id),
-            "", // FR-AUTH-004 §1 #2 — Lumi tokens are agent-scoped, no email
+            "", // TASK-AUTH-004 §1 #2 — Lumi tokens are agent-scoped, no email
             &kind,
             scopes.clone(),
             vec![], // roles intentionally empty — Lumi token isn't a session JWT

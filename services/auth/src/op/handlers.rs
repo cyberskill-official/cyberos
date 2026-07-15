@@ -1,4 +1,4 @@
-//! FR-AUTH-110 slice 1b-endpoints (part A) - the OIDC-provider HTTP surface that
+//! TASK-AUTH-110 slice 1b-endpoints (part A) - the OIDC-provider HTTP surface that
 //! does not need the authorize/token round-trip: discovery + userinfo (public),
 //! and the admin RP-registry CRUD. The authorize + token handlers (the round
 //! trip, with cookie reading, redirects, PKCE, and minting) are the final
@@ -602,8 +602,8 @@ async fn load_subject_identity(
     }
 }
 
-/// FR-AUTH-110 broker: no usable SSO session, so send the user through the
-/// tenant's Google IdP (FR-AUTH-104) and resume this authorize on return. The
+/// TASK-AUTH-110 broker: no usable SSO session, so send the user through the
+/// tenant's Google IdP (TASK-AUTH-104) and resume this authorize on return. The
 /// callback mints the SSO session, sets the cookie, and 302s back here.
 async fn broker_to_google(
     state: &AppState,

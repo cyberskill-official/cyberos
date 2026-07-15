@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of child objectives have a resolvable parent; 0 orphan trees"
 owner: CEO
 created: 2026-05-18
-related_frs: [FR-OKR-001]
+related_tasks: [TASK-OKR-001]
 ---
 
 ## §1 — Statement (BCP-14 normative)

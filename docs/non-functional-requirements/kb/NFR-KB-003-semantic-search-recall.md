@@ -9,12 +9,12 @@ phase: P1
 slo: "Recall@10 ≥ 90% on the platform's labeled query/document corpus"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-KB-005, FR-KB-006]
+related_tasks: [TASK-KB-005, TASK-KB-006]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. KB semantic search (`FR-KB-005` bge-m3 + `FR-KB-006` rerank) **MUST** achieve recall@10 ≥ 90% on the platform's labeled evaluation corpus (1000+ query/doc pairs).
+1. KB semantic search (`TASK-KB-005` bge-m3 + `TASK-KB-006` rerank) **MUST** achieve recall@10 ≥ 90% on the platform's labeled evaluation corpus (1000+ query/doc pairs).
 2. Latency budget: p95 < 800ms end-to-end for `query → vector lookup → rerank → top-10 results`.
 3. The eval corpus **MUST** be refreshed quarterly with new query patterns observed in production.
 4. Significant regression (recall drop > 5pp) on a new index/model rollout **MUST** block the rollout.

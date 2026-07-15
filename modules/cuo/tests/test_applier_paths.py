@@ -1,6 +1,6 @@
 """Tests for applier path resolution — verifies output_dir-based file discovery.
 
-Ensures that appliers find FR files and resolve artifact paths by walking up
+Ensures that appliers find task files and resolve artifact paths by walking up
 from the output directory (where step JSON files live), not just from
 _cyberos_root which may point to a different project.
 """
@@ -12,27 +12,27 @@ from pathlib import Path
 
 import pytest
 
-from cuo.core.applier import _find_fr_file, _find_repo_root, _resolve_artifact_path
+from cuo.core.applier import _find_task_file, _find_repo_root, _resolve_artifact_path
 
 
 @pytest.fixture()
 def mock_project(tmp_path: Path):
-    """Create a minimal project directory tree with an FR file.
+    """Create a minimal project directory tree with a task file.
 
     Structure:
         project/
         ├── docs/
-        │   └── feature-requests/
+        │   └── tasks/
         │       └── auth/
-        │           └── FR-TEST-001-test-feature.md
+        │           └── TASK-TEST-001-test-feature.md
         └── outputs/
             └── step03_architecture-decision-record-author.json
     """
     project = tmp_path / "my-project"
-    fr_dir = project / "docs" / "feature-requests" / "auth"
-    fr_dir.mkdir(parents=True)
-    fr_file = fr_dir / "FR-TEST-001-test-feature.md"
-    fr_file.write_text("# FR-TEST-001\n\nA test feature request.\n")
+    task_dir = project / "docs" / "tasks" / "auth"
+    task_dir.mkdir(parents=True)
+    task_file = task_dir / "TASK-TEST-001-test-feature.md"
+    task_file.write_text("# TASK-TEST-001\n\nA test task.\n")
 
     output_dir = project / "outputs"
     output_dir.mkdir()
@@ -41,66 +41,66 @@ def mock_project(tmp_path: Path):
 
     return {
         "project": project,
-        "fr_file": fr_file,
+        "task_file": task_file,
         "output_dir": output_dir,
         "output_file": output_file,
     }
 
 
 class TestFindFrFile:
-    """_find_fr_file should discover FR files via output_dir walk-up."""
+    """_find_fr_file should discover task files via output_dir walk-up."""
 
-    def test_finds_fr_from_output_dir(self, mock_project):
-        """When output_dir is inside the project, walk-up finds the FR."""
-        result = _find_fr_file(
-            "FR-TEST-001",
+    def test_finds_task_from_output_dir(self, mock_project):
+        """When output_dir is inside the project, walk-up finds the task."""
+        result = _find_task_file(
+            "TASK-TEST-001",
             repo_root=None,
             output_dir=mock_project["output_dir"],
         )
         assert result is not None
-        assert result == mock_project["fr_file"]
+        assert result == mock_project["task_file"]
 
-    def test_finds_fr_from_nested_output_dir(self, tmp_path):
+    def test_finds_task_from_nested_output_dir(self, tmp_path):
         """Even deeply nested output dirs should walk up to find docs/."""
         project = tmp_path / "deep-project"
-        fr_dir = project / "docs" / "feature-requests" / "auth"
-        fr_dir.mkdir(parents=True)
-        fr_file = fr_dir / "FR-DEEP-001-deep-feature.md"
-        fr_file.write_text("# FR-DEEP-001\n")
+        task_dir = project / "docs" / "tasks" / "auth"
+        task_dir.mkdir(parents=True)
+        task_file = task_dir / "TASK-DEEP-001-deep-feature.md"
+        task_file.write_text("# TASK-DEEP-001\n")
 
         # Output dir is 3 levels deep under project
         deep_output = project / "runs" / "2026-05-23" / "attempt-1"
         deep_output.mkdir(parents=True)
         (deep_output / "step01.json").write_text("{}")
 
-        result = _find_fr_file("FR-DEEP-001", output_dir=deep_output)
+        result = _find_task_file("TASK-DEEP-001", output_dir=deep_output)
         assert result is not None
-        assert result == fr_file
+        assert result == task_file
 
     def test_repo_root_used_when_output_dir_missing_docs(self, mock_project):
         """When output_dir has no docs/ ancestor, falls back to repo_root."""
         # Create a separate cyberos-like root with its own docs/
         other_root = mock_project["project"].parent / "cyberos"
-        (other_root / "docs" / "feature-requests").mkdir(parents=True)
+        (other_root / "docs" / "tasks").mkdir(parents=True)
 
-        # The FR is in mock_project, not in other_root
-        result = _find_fr_file(
-            "FR-TEST-001",
+        # The task is in mock_project, not in other_root
+        result = _find_task_file(
+            "TASK-TEST-001",
             repo_root=other_root,
             output_dir=mock_project["output_dir"],
         )
         # Should find via output_dir walk-up, NOT from other_root
         assert result is not None
-        assert result == mock_project["fr_file"]
+        assert result == mock_project["task_file"]
 
-    def test_returns_none_when_fr_not_found(self, tmp_path):
-        """Returns None when the FR doesn't exist in any search root."""
+    def test_returns_none_when_task_not_found(self, tmp_path):
+        """Returns None when the task doesn't exist in any search root."""
         empty_project = tmp_path / "empty"
-        (empty_project / "docs" / "feature-requests").mkdir(parents=True)
+        (empty_project / "docs" / "tasks").mkdir(parents=True)
         output_dir = empty_project / "outputs"
         output_dir.mkdir()
 
-        result = _find_fr_file("FR-NONEXISTENT-999", output_dir=output_dir)
+        result = _find_task_file("TASK-NONEXISTENT-999", output_dir=output_dir)
         assert result is None
 
 
@@ -124,24 +124,24 @@ class TestFindRepoRoot:
 
 
 class TestResolveArtifactPath:
-    """_resolve_artifact_path should place artifacts next to FR files."""
+    """_resolve_artifact_path should place artifacts next to task files."""
 
-    def test_sibling_path_when_fr_found(self, mock_project):
-        """When the FR file is found, artifact goes next to it."""
+    def test_sibling_path_when_task_found(self, mock_project):
+        """When the task file is found, artifact goes next to it."""
         result = _resolve_artifact_path(
             output={},
-            fr_id="FR-TEST-001",
+            task_id="TASK-TEST-001",
             hand_off={},
             filename_prefix="impl-plan",
-            default_dir="docs/feature-requests",
+            default_dir="docs/tasks",
             output_dir=mock_project["output_dir"],
         )
         assert result is not None
-        assert result.parent == mock_project["fr_file"].parent
-        assert result.name == "impl-plan-FR-TEST-001.md"
+        assert result.parent == mock_project["task_file"].parent
+        assert result.name == "impl-plan-TASK-TEST-001.md"
 
     def test_fallback_to_default_dir(self, tmp_path):
-        """When FR is not found, falls back to <repo_root>/<default_dir>/."""
+        """When task is not found, falls back to <repo_root>/<default_dir>/."""
         project = tmp_path / "fallback-project"
         (project / "docs").mkdir(parents=True)
         output_dir = project / "outputs"
@@ -149,12 +149,12 @@ class TestResolveArtifactPath:
 
         result = _resolve_artifact_path(
             output={},
-            fr_id="FR-MISSING-999",
+            task_id="TASK-MISSING-999",
             hand_off={},
             filename_prefix="code-review",
-            default_dir="docs/feature-requests",
+            default_dir="docs/tasks",
             output_dir=output_dir,
         )
         assert result is not None
-        assert result.parent == project / "docs" / "feature-requests"
+        assert result.parent == project / "docs" / "tasks"
         assert "code-review" in result.name

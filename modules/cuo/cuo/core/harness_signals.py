@@ -1,4 +1,4 @@
-"""harness_signals — per-signal evaluation functions for FR-CUO-200.
+"""harness_signals — per-signal evaluation functions for TASK-CUO-200.
 
 Every SKILL.md declares a `self_audit.anomaly_signals` block + a
 `human_fine_tune.signals_to_initiate` list. This module evaluates each
@@ -30,7 +30,7 @@ Signal taxonomy (per SKILL.md frontmatter schema):
   - drift_signal_count_above    — total count of "drift" signals (across all
                                   types) exceeds N
 
-Added 2026-05-19 for FR-CUO-200.
+Added 2026-05-19 for TASK-CUO-200.
 """
 
 from __future__ import annotations
@@ -177,7 +177,7 @@ def deterministic_drift(rows: list[dict], threshold: dict) -> tuple[bool, float,
 
 
 def acceptance_rate_below(rows: list[dict], threshold: dict) -> tuple[bool, float, list[dict]]:
-    """Fraction of FR runs that reached `done` divided by total terminal runs
+    """Fraction of task runs that reached `done` divided by total terminal runs
     falls below threshold. Inverse-direction signal: trip when value is below.
     """
     t = _to_threshold(threshold, "threshold")
@@ -185,7 +185,7 @@ def acceptance_rate_below(rows: list[dict], threshold: dict) -> tuple[bool, floa
         r for r in rows
         if (r.get("extra") or {}).get("outcome") in (
             "done", "ROUTED_BACK", "HITL_HALT", "FAILED",
-        ) or r.get("op") in ("memory.fr_routed_back",)
+        ) or r.get("op") in ("memory.task_routed_back",)
     ]
     if not terminal:
         return (False, 0.0, [])

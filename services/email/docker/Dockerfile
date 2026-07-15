@@ -1,4 +1,4 @@
-# FR-EMAIL-001 §1 #1 + DEC-300 — Stalwart container image.
+# TASK-EMAIL-001 §1 #1 + DEC-300 — Stalwart container image.
 #
 # The CyberOS gateway/adapter (Rust binary `cyberos-email`) runs as a
 # separate container — see services/email/Cargo.toml. This Dockerfile

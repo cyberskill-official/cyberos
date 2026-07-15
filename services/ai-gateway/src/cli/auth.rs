@@ -1,4 +1,4 @@
-//! FR-AI-021 §1 #6 — Operator token authentication and role gating.
+//! TASK-AI-021 §1 #6 — Operator token authentication and role gating.
 
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use serde::Deserialize;

@@ -1,4 +1,4 @@
--- FR-CHAT-101 slice 1: native chat core - channels, members, messages, with per-tenant RLS.
+-- TASK-CHAT-101 slice 1: native chat core - channels, members, messages, with per-tenant RLS.
 -- Requires pgcrypto (gen_random_uuid). The deploy/dev bootstrap enables it per database.
 
 CREATE TABLE IF NOT EXISTS chat_channels (

@@ -1,9 +1,9 @@
-//! FR-MCP-004 authorization-server discovery (RFC 8414, clause #20).
+//! TASK-MCP-004 authorization-server discovery (RFC 8414, clause #20).
 //!
 //! `GET /.well-known/oauth-authorization-server` returns this document so MCP clients can discover the
 //! gateway's endpoints, supported grant types, and PKCE method without hard-coding them. It is
-//! distinct from FR-MCP-005 Protected Resource Metadata. `jwks_uri` points at the key set the access
-//! tokens are verified against - the FR-AUTH-004 JWKS - so it is passed in rather than assumed.
+//! distinct from TASK-MCP-005 Protected Resource Metadata. `jwks_uri` points at the key set the access
+//! tokens are verified against - the TASK-AUTH-004 JWKS - so it is passed in rather than assumed.
 
 use serde_json::{json, Value};
 
@@ -11,7 +11,7 @@ use serde_json::{json, Value};
 ///
 /// `issuer` is the gateway's canonical base URL; the endpoint URLs are derived from it. `jwks_uri` is
 /// where the signing keys' public halves are published (the auth service's `/.well-known/jwks.json`).
-/// `scopes_supported` comes from the FR-MCP-001 `tools/list` registry (DEC-813).
+/// `scopes_supported` comes from the TASK-MCP-001 `tools/list` registry (DEC-813).
 pub fn authorization_server_metadata(
     issuer: &str,
     jwks_uri: &str,

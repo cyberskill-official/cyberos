@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FR-OBS-006 - tail-sampling validation. The structural checks run anywhere; the live-trace checks need
+# TASK-OBS-006 - tail-sampling validation. The structural checks run anywhere; the live-trace checks need
 # the collector + Tempo up.
 set -euo pipefail
 
@@ -16,7 +16,7 @@ else
   exit 1
 fi
 
-# 2. the config still validates against the FR-OBS-001 contract (pii_scrub stays present, etc.).
+# 2. the config still validates against the TASK-OBS-001 contract (pii_scrub stays present, etc.).
 if (cd "$ROOT/services" && cargo run -q -p cyberos-obs-collector --bin cyberos-obs -- validate-config \
       obs-collector/config/otel-collector-config.yaml >/dev/null 2>&1); then
   echo "OK   collector config validates with tail_sampling added"

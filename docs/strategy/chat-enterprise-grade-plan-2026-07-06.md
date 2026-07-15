@@ -58,7 +58,7 @@ gated behind MOBILE_RELEASE and signing secrets. Nothing installable today.
 Deploy: single-origin p0 compose (auth 7700, chat 7720, Caddy TLS), Supabase Postgres, attachment volume,
 no Prometheus/Loki/OTel/Sentry, no external synthetic probes.
 
-FR state: FR-CHAT-101 done (native skeleton). Drafts: 102 Slack import, 103 Zalo import, 104 real push,
+Task state: TASK-CHAT-101 done (native skeleton). Drafts: 102 Slack import, 103 Zalo import, 104 real push,
 105 DSAR export, 106 @lumi assistant.
 
 Strengths to protect: single-binary simplicity, per-tenant RLS everywhere, hash-chained audit, consent-gated
@@ -255,9 +255,9 @@ after go-live; P3 = later bet. Effort: S under a day, M days, L a week+ (one eng
 
 ### E. Delivery and notifications
 
-- C38 [P0/L] Real push relay (FR-CHAT-104): small worker consuming push intents; FCM HTTP v1 for
+- C38 [P0/L] Real push relay (TASK-CHAT-104): small worker consuming push intents; FCM HTTP v1 for
   Android/web, APNs token-based for iOS/macOS. Payload stays privacy-preserving (title + sender, no body,
-  per the FR). Device tokens already registered via devices.rs.
+  per the task). Device tokens already registered via devices.rs.
 - C39 [P1/S] Web push for the PWA: standard VAPID web push, and adopt the declarative web push JSON shape
   (shipped in iOS/iPadOS 18.4 and macOS 15.5) so Apple-platform PWA pushes work without service-worker
   execution and fall back cleanly elsewhere.
@@ -321,7 +321,7 @@ after go-live; P3 = later bet. Effort: S under a day, M days, L a week+ (one eng
 - C62 [P0/S] Map chat data to PDPL categories with counsel: basic vs sensitive personal data in messages,
   consent records for capture (exists) and for processing employee comms (BRAIN plan overlap); produce the
   DPIA-style processing dossier the law expects. (Legal review required; this report is not legal advice.)
-- C63 [P1/M] DSAR export (FR-CHAT-105): per-subject export of authored messages + attachments + audit
+- C63 [P1/M] DSAR export (TASK-CHAT-105): per-subject export of authored messages + attachments + audit
   slice, admin-triggered, rendered to a signed archive; deletion/anonymization workflow honoring the
   hash-chained audit (tombstone content, keep chain integrity).
 - C64 [P1/S] Cross-border transfer assessment: chat data currently sits in Supabase (region per project) -
@@ -463,7 +463,7 @@ after go-live; P3 = later bet. Effort: S under a day, M days, L a week+ (one eng
   non-streaming today).
 - C122 [P2/M] Semantic search alongside VN FTS: embed messages via the embed service into pgvector,
   hybrid rank, opt-in per tenant (capture-consent aware).
-- C123 [P1/M] @lumi assistant (FR-CHAT-106): mention triggers CUO routing with channel context, replies
+- C123 [P1/M] @lumi assistant (TASK-CHAT-106): mention triggers CUO routing with channel context, replies
   in-thread, capture-consent respected; this is the differentiator no Slack clone has.
 - C124 [P2/S] Message templates/snippets for support and sales replies (per-user + per-tenant shared).
 
@@ -498,8 +498,8 @@ after go-live; P3 = later bet. Effort: S under a day, M days, L a week+ (one eng
 - C137 [P2/M] Chat as MCP tools on the existing MCP gateway (post_message, search, summarize_channel,
   create_channel) so any agent in the CyberOS ecosystem can act in chat under tenant policy - unique
   CyberOS advantage, cheap to expose.
-- C138 [P2/L] Imports: Slack export importer first (FR-CHAT-102, idempotent checkpointed), Zalo bundle
-  second (FR-CHAT-103) - decisive for migrating the company's history in and making chat the only tool.
+- C138 [P2/L] Imports: Slack export importer first (TASK-CHAT-102, idempotent checkpointed), Zalo bundle
+  second (TASK-CHAT-103) - decisive for migrating the company's history in and making chat the only tool.
 
 ### Q. Ops, release, and rollout
 

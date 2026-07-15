@@ -1,7 +1,7 @@
 ---
 title: MCP Gateway - External-client federation, capability broker, tool-discovery surface
 source: website/docs/modules/mcp/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 MCP Gateway is the **tool federation layer** that turns CyberOS's 24 modules into a single, coherent MCP server. Each module publishes a per-module server (named `cyberos.memory`, `cyberos.skill`, `cyberos.crm`, ...) that exposes its verbs as tools (`memory.update_memory`, `skill.execute_skill`, `crm.update_account`, ...); the gateway aggregates these into a federated surface that Claude / Codex / Cursor / Cline / any 2025-11-25-spec client sees as one server. OAuth 2.1 + PKCE (RFC 7636) gates every tool call; the audience claim pins the call to a specific module; the RBAC predicate from AUTH enforces who can do what; the persona-version stamp captures which agent authored the call. Tool annotations (destructive / readOnly / idempotent / openWorld) drive human-confirm gating. The Tasks primitive handles long-running work; Elicitation reverses control mid-execution to ask the user a question.
@@ -125,12 +125,12 @@ This table is the working summary.
 | **5W - Why** | Why a gateway? | Because N agent clients x N modules = N^2 OAuth registrations otherwise. Federation collapses to N+1. |
 | **1H - How** | How does it work? | Agent does OAuth 2.1 PKCE -> gateway issues an audience-bound token -> agent calls `tools/list` -> gateway aggregates from federated servers -> agent calls a tool -> gateway validates audience + scope + annotation -> forwards the call over HTTPS to the module's registered MCP endpoint -> streams the response back -> audit row written. |
 | **2C - Cost** | Cost? | Negligible - Fargate task ~$30/month at P0. The gateway adds ~3 ms per tool call; the audit write is the main cost. |
-| **2C - Constraints** | Constraints? | (a) MCP 2025-11-25 spec compliance. (b) PKCE-only (no implicit grant). (c) Destructive tools MUST require human-confirm. (d) Persona-version MUST be stamped in audit (FR pending). (e) Tool names MUST follow SEP-986 verbNoun.dotted. |
+| **2C - Constraints** | Constraints? | (a) MCP 2025-11-25 spec compliance. (b) PKCE-only (no implicit grant). (c) Destructive tools MUST require human-confirm. (d) Persona-version MUST be stamped in audit (task pending). (e) Tool names MUST follow SEP-986 verbNoun.dotted. |
 | **5M - Materials** | Stack? | Rust, axum + jsonrpsee (the MCP JSON-RPC 2.0 surface), reqwest (forwards tools/call to each module's registered MCP endpoint), sqlx + PostgreSQL, jsonwebtoken + argon2 + chacha20poly1305 (OAuth 2.1 tokens + payload sealing), OpenTelemetry, serde_json. |
 | **5M - Methods** | Method choices? | Streamable HTTP transport (chunked transfer). SSE for server-to-client events. Tasks primitive over a polling endpoint. Elicitation as an inline request/response interrupt. Tool registry as a DB-backed catalogue + in-memory cache. |
 | **5M - Machines** | Deployment? | Fargate (2 CPU, 4 GB); behind an ALB with WAF. Per-module backends are also Fargate, addressed by Cloud Map service-discovery. |
 | **5M - Manpower** | Who maintains? | 0.3 FTE CTO + 0.2 FTE CSO at P0. Each module owner extends the tool catalogue for their module. |
-| **5M - Measurement** | How measured? | N(FR pending) (read tool p95 <= 500 ms) + N(FR pending) (write tool p95 <= 1 s). Spec compliance via the MCP conformance test suite. Audit completeness at 100%. |
+| **5M - Measurement** | How measured? | N(task pending) (read tool p95 <= 500 ms) + N(task pending) (write tool p95 <= 1 s). Spec compliance via the MCP conformance test suite. Audit completeness at 100%. |
 
 ## External-client federation - 24 modules behind one surface
 
@@ -366,14 +366,14 @@ graph TB
 | `federation.rs` | services/mcp-gateway/src/federation.rs | Routes a tool call (`cyberos.memory.update_memory`) to the right backend server via JSON-RPC over HTTP (reqwest). Caches resolved endpoints in-memory. |
 | `annotations.rs` | services/mcp-gateway/src/annotations.rs | Parses tool annotations from the backend manifest. Enforces destructive -> human-confirm; readOnly -> fast-path RBAC; idempotent -> safe-retry; openWorld -> strict scope check. |
 | `gate.rs` | services/mcp-gateway/src/gate.rs | Composite gate - verifies the audience claim, calls AUTH RBAC.Check, validates the idempotency-key, applies the rate-limit token bucket. |
-| `tasks.rs` | services/mcp-gateway/src/tasks.rs | Tasks primitive (FR pending) - long-running tool invocations get a task_id; clients poll for status / result; results streamed via SSE. |
-| `elicitation.rs` | services/mcp-gateway/src/elicitation.rs | Elicitation (FR pending) - mid-execution, a backend can request user input; the gateway proxies that back to the agent client with a content-safety filter. |
-| `tool_registry.rs` | services/mcp-gateway/src/tool_registry.rs | Postgres-backed registry. Each backend registers its tools with annotations; collisions rejected at register time (FR pending). |
+| `tasks.rs` | services/mcp-gateway/src/tasks.rs | Tasks primitive (task pending) - long-running tool invocations get a task_id; clients poll for status / result; results streamed via SSE. |
+| `elicitation.rs` | services/mcp-gateway/src/elicitation.rs | Elicitation (task pending) - mid-execution, a backend can request user input; the gateway proxies that back to the agent client with a content-safety filter. |
+| `tool_registry.rs` | services/mcp-gateway/src/tool_registry.rs | Postgres-backed registry. Each backend registers its tools with annotations; collisions rejected at register time (task pending). |
 | `rate_limit.rs` | services/mcp-gateway/src/rate_limit.rs | Per-tool + per-tenant token-bucket rate limit; circuit-breaker on backend errors. |
-| `idempotency.rs` | services/mcp-gateway/src/idempotency.rs | Replay safety via the Idempotency-Key header (FR pending). |
+| `idempotency.rs` | services/mcp-gateway/src/idempotency.rs | Replay safety via the Idempotency-Key header (task pending). |
 | `audit.rs` | services/mcp-gateway/src/audit.rs | Emits one `mcp.invocation` row per call: agent, tool, args_hash, RBAC decision, latency, outcome, persona-version. |
 | `streamable_http.rs` | services/mcp-gateway/src/streamable_http.rs | RFC 9112 chunked-transfer HTTP transport per MCP 2025-11-25. |
-| `conformance.rs` | services/mcp-gateway/tests/conformance.rs | MCP conformance test suite runner. Gating CI test (FR pending). |
+| `conformance.rs` | services/mcp-gateway/tests/conformance.rs | MCP conformance test suite runner. Gating CI test (task pending). |
 
 ## Data model
 
@@ -500,7 +500,7 @@ The gateway speaks MCP 2025-11-25 to agents and forwards `tools/call` to backend
 | JSON-RPC | `tasks/get` | Poll long-running task status. |
 | JSON-RPC | `tasks/cancel` | Cancel a running task. |
 | JSON-RPC | `elicitation/respond` | Reply to a server-initiated elicitation. |
-| JSON-RPC | `sampling/createMessage` | Server-initiated LLM sampling (rate-limited, FR pending). |
+| JSON-RPC | `sampling/createMessage` | Server-initiated LLM sampling (rate-limited, task pending). |
 | JSON-RPC | `logging/setLevel` | Server log-level config. |
 | JSON-RPC | `roots/list` | List filesystem roots. |
 | JSON-RPC | `notifications/initialized` | Capability acknowledgement. |
@@ -528,7 +528,7 @@ Registration - `POST /v1/mcp/register`:
 }
 ```
 
-The `endpoint` must be an `http://` or `https://` URL; any other scheme is rejected at registration. A module keeps its registration live with `POST /v1/mcp/heartbeat` (`{"module": "memory"}`) and withdraws with `POST /v1/mcp/deregister`. The dev slice gates the control plane behind `MCP_DEV_REGISTRATION=1`; production requires authenticated registration (FR-MCP-004).
+The `endpoint` must be an `http://` or `https://` URL; any other scheme is rejected at registration. A module keeps its registration live with `POST /v1/mcp/heartbeat` (`{"module": "memory"}`) and withdraws with `POST /v1/mcp/deregister`. The dev slice gates the control plane behind `MCP_DEV_REGISTRATION=1`; production requires authenticated registration (TASK-MCP-004).
 
 Forwarding - the gateway POSTs a JSON-RPC 2.0 `tools/call` to the module's registered `endpoint`:
 
@@ -647,7 +647,7 @@ sequenceDiagram
   end
 ```
 
-(FR pending): destructive tool calls without confirmation are rejected. The elicitation UI is rendered by the agent client (Claude Desktop, Cursor) - the gateway is content-agnostic.
+(task pending): destructive tool calls without confirmation are rejected. The elicitation UI is rendered by the agent client (Claude Desktop, Cursor) - the gateway is content-agnostic.
 
 ### Flow 4 - long-running task via the Tasks primitive
 
@@ -675,7 +675,7 @@ sequenceDiagram
   G-->>A: {status "completed", result {...}}
 ```
 
-(FR pending): Tasks primitive for long-running tool invocations. The agent can release the call and resume the conversation; polling fetches updates.
+(task pending): Tasks primitive for long-running tool invocations. The agent can release the call and resume the conversation; polling fetches updates.
 
 ### Flow 5 - mid-execution elicitation
 
@@ -700,7 +700,7 @@ sequenceDiagram
   G-->>A: result
 ```
 
-(FR pending): elicitation proxied with a content-safety filter - prevents a compromised backend from injecting prompts that exfiltrate via the user.
+(task pending): elicitation proxied with a content-safety filter - prevents a compromised backend from injecting prompts that exfiltrate via the user.
 
 ## Tool-call lifecycle
 
@@ -736,9 +736,9 @@ stateDiagram-v2
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
@@ -746,19 +746,19 @@ Performance + security NFRs that flow through MCP Gateway. Cross-referenced at [
 
 | NFR ID | Concern | Target | Measurement |
 |---|---|---|---|
-| `N(FR pending)` | MCP read tool p95 | <= 500 ms | k6 load test |
-| `N(FR pending)` | MCP write tool p95 | <= 1 s | k6 load test |
-| `N(FR pending)` | Gateway overhead per call | <= 5 ms p95 | internal bench |
-| `N(FR pending)` | tools/list discovery | <= 100 ms p95 (cache hit) | internal bench |
-| `N(FR pending)` | Gateway availability (28-day) | >= 99.95% | SLO monitor |
-| `N(FR pending)` | MCP spec conformance | 100% of the conformance suite | CI gate |
-| `N(FR pending)` | Audit completeness | 100% (no dropped invocations) | chaos test + memory walk |
-| `N(FR pending)` | Destructive without confirm | = 0 events | CI regression + runtime check |
-| `N(FR pending)` | Tool name violations | = 0 (rejected at register) | registry validator |
-| `N(FR pending)` | Idempotency-key collision rate | = 0 false positives | property-based test |
-| `N(FR pending)` | Task status update latency | <= 2 s after backend update | bench/tasks |
-| `N(FR pending)` | Per-tool rate-limit enforcement | 100% (no overflow) | load test |
-| `N(FR pending)` | OAuth 2.1 conformance | OAuth 2.1 + RFC 9728 PRM | conformance suite |
+| `N(task pending)` | MCP read tool p95 | <= 500 ms | k6 load test |
+| `N(task pending)` | MCP write tool p95 | <= 1 s | k6 load test |
+| `N(task pending)` | Gateway overhead per call | <= 5 ms p95 | internal bench |
+| `N(task pending)` | tools/list discovery | <= 100 ms p95 (cache hit) | internal bench |
+| `N(task pending)` | Gateway availability (28-day) | >= 99.95% | SLO monitor |
+| `N(task pending)` | MCP spec conformance | 100% of the conformance suite | CI gate |
+| `N(task pending)` | Audit completeness | 100% (no dropped invocations) | chaos test + memory walk |
+| `N(task pending)` | Destructive without confirm | = 0 events | CI regression + runtime check |
+| `N(task pending)` | Tool name violations | = 0 (rejected at register) | registry validator |
+| `N(task pending)` | Idempotency-key collision rate | = 0 false positives | property-based test |
+| `N(task pending)` | Task status update latency | <= 2 s after backend update | bench/tasks |
+| `N(task pending)` | Per-tool rate-limit enforcement | 100% (no overflow) | load test |
+| `N(task pending)` | OAuth 2.1 conformance | OAuth 2.1 + RFC 9728 PRM | conformance suite |
 
 ## Dependencies
 
@@ -812,7 +812,7 @@ graph LR
 |---|---|---|
 | EU AI Act | Art. 12 - Logging | One `mcp.invocation` row per tool call. |
 | EU AI Act | Art. 14 - Human oversight | Destructive tools require human-confirm via elicitation. |
-| EU AI Act | Art. 26 - Deployer obligations | Persona-version stamping (FR pending). |
+| EU AI Act | Art. 26 - Deployer obligations | Persona-version stamping (task pending). |
 | Vietnam PDPL | Art. 14 - DSAR | Per-subject mcp.invocation export. |
 | GDPR | Art. 25 - Privacy by design | Audience-bound tokens; confused-deputy mitigation. |
 | GDPR | Art. 32 - Security of processing | OAuth 2.1 PKCE only; HTTPS to backends. |
@@ -828,7 +828,7 @@ graph LR
 | ID | Risk | Likelihood | Impact | Owner | Mitigation |
 |---|---|---|---|---|---|
 | `R-MCP-001` | Spec drift - agent client expects newer features than the gateway provides | Medium | Medium | CTO | Quarterly spec sync; CI gates on the conformance suite; capability negotiation surfaces gaps. |
-| `R-MCP-002` | Tool-name squatting - a module registers a tool name belonging to another | Low | High | CTO | Server_id is part of the registry key; cross-module names rejected at register (FR pending). |
+| `R-MCP-002` | Tool-name squatting - a module registers a tool name belonging to another | Low | High | CTO | Server_id is part of the registry key; cross-module names rejected at register (task pending). |
 | `R-MCP-003` | Confused-deputy attack - a token from one audience used against another module | Medium | High | CSO | Audience claim mandatory - the gateway verifies each access token's audience is exactly this resource server; a token minted for another audience is refused and the replay attempt audited. |
 | `R-MCP-004` | Destructive tool annotation bypass via a newly-added tool | Medium | High | CSO | Registration requires CTO + CSO approval; the default annotation is destructive=true. |
 | `R-MCP-005` | Tasks primitive leak - task_id reused across tenants | Low | High | CTO | task_id is UUIDv7 + tenant_id in the lookup; cross-tenant query property-tested. |
@@ -836,7 +836,7 @@ graph LR
 | `R-MCP-007` | Backend slow -> caller times out -> orphaned audit row | Medium | Low | CTO | Per-tool timeout enforced; audit row written on cancellation; a reconciliation job catches orphans. |
 | `R-MCP-008` | OAuth registration scaling - every agent client must register | Low | Low | CTO | Dynamic Client Registration (DCR) per RFC 7591; the tenant admin approves before activation. |
 | `R-MCP-009` | Tool catalogue cache staleness after a backend deploy | Medium | Low | CTO | 60 s TTL + register-time invalidation; deploys trigger a cache reset. |
-| `R-MCP-010` | Sampling-with-Tools amplification (LLM-driven loop) | Medium | Medium | CSO | (FR pending): per-session sampling rate limit; circuit-breaker on recursion depth. |
+| `R-MCP-010` | Sampling-with-Tools amplification (LLM-driven loop) | Medium | Medium | CSO | (task pending): per-session sampling rate limit; circuit-breaker on recursion depth. |
 | `R-MCP-011` | **External agent token theft (Member's laptop compromised -> Claude Code token grants full CyberOS access)** | Medium | Critical | CSO | Short-lived tokens (1 h default); refresh-token rotation; device-binding via DPoP (P2+); destructive-op confirmation gating even with a valid token; emergency revoke endpoint pages the CSO instantly. |
 | `R-MCP-012` | Prompt injection in a tool description (agent reads the description, follows attacker instruction) | Medium | High | CSO | Tool descriptions are protocol-trusted by the gateway, untrusted by agents; CyberOS modules go through CSO review before publishing tool descriptions; agent-side system prompts treat tool descriptions as data, not instructions. |
 | `R-MCP-013` | Elicitation fatigue - too many destructive confirms -> the user starts rubber-stamping | High | Medium | CPO | Bundle destructive ops where safe (batch delete with one confirm); show the explicit consequence in the elicitation prompt; rate-limit elicitations per session; never auto-decay to "approve all". |
@@ -1016,7 +1016,7 @@ $ cyberos-mcp servers register \
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - MCP Gateway placed at P0 slice 3 in the P0 sequence (after AI Gateway + AUTH stub).
 - **Research review:** `archive/2026-05-14/RESEARCH_REVIEW.md` (archived; see `cyberos/CHANGELOG.md`) - MCP Gateway rated "Strong" (9/10); the reviewer flagged the elicitation-fatigue risk (R-MCP-013) and the older-protocol sunset as the two operational concerns.
 - **Memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - MCP tool invocations are one of four canonical capture surfaces for the local memory (every tool call -> audit row); §6 - Lumi exposes cross-tenant MCP federation at P3+ for org-tenant agents.
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md) - MCP Gateway FRs land via the `feature-request-author` Agent Skill.
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md) - MCP Gateway tasks land via the `task-author` Agent Skill.
 - **MCP Specification 2025-11-25** - `modelcontextprotocol.io/specification/2025-11-25`.
 - **SEP-986** - verbNoun.dotted tool naming convention.
 - **RFC 6749 / draft-ietf-oauth-v2-1** - OAuth 2.1.

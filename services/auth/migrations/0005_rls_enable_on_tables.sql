@@ -1,4 +1,4 @@
--- FR-AUTH-003 — Row-Level Security policies (USING + WITH CHECK).
+-- TASK-AUTH-003 — Row-Level Security policies (USING + WITH CHECK).
 --
 -- AUTHORING_DISCIPLINE §3.4 rule 13: RLS MUST have BOTH `USING` and
 -- `WITH CHECK`. `USING` alone protects reads; `WITH CHECK` is required

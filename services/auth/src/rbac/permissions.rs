@@ -1,4 +1,4 @@
-//! Closed Resource × Action enums backing the FR-AUTH-101 permission matrix.
+//! Closed Resource × Action enums backing the TASK-AUTH-101 permission matrix.
 //!
 //! Per DEC-122 + AUTHORING §3.4: these enums are CLOSED. Adding a 41st
 //! resource or a 6th action is an ADR-gated change.

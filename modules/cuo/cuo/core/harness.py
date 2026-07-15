@@ -1,6 +1,6 @@
 """harness — read-only daily report aggregating self_audit signals per skill.
 
-FR-CUO-200 Wave 1 of the continuous-improvement harness.
+TASK-CUO-200 Wave 1 of the continuous-improvement harness.
 
 Walks the memory audit chain, parses each SKILL.md's `self_audit.anomaly_signals`
 + `human_fine_tune.signals_to_initiate` blocks from frontmatter, evaluates
@@ -8,7 +8,7 @@ each declared signal against the windowed audit rows, and emits a markdown
 report at `docs/harness/harness-report-<YYYY-MM-DD>.md`.
 
 The harness is **read-only**. It MUST NOT mutate any skill, RUBRIC, contract,
-or workflow file. Wave 2 (FR-CUO-201) introduces proposal authoring; this FR
+or workflow file. Wave 2 (TASK-CUO-201) introduces proposal authoring; this task
 only provides visibility.
 
 Key invariants:
@@ -330,9 +330,9 @@ def compute_report(
                 wm.hitl_halt += 1
             elif outcome == "FAILED":
                 wm.failed += 1
-        if op == "memory.fr_routed_back":
-            fr_id = extra.get("fr_id") or "(unknown)"
-            routed_back[fr_id] = routed_back.get(fr_id, 0) + 1
+        if op == "memory.task_routed_back":
+            task_id = extra.get("task_id") or "(unknown)"
+            routed_back[task_id] = routed_back.get(task_id, 0) + 1
 
     return HarnessReport(
         window=window,
@@ -414,15 +414,15 @@ def format_markdown(report: HarnessReport) -> str:
         parts.append("*(no workflow runs in this window)*")
     parts.append("")
 
-    # §3. Per-FR routed-back history
-    parts.append("## Per-FR routed-back history")
+    # §3. Per-task routed-back history
+    parts.append("## Per-task routed-back history")
     parts.append("")
     if report.routed_back_history:
-        parts.append("| FR | routed_back_count |")
+        parts.append("| Task | routed_back_count |")
         parts.append("|---|---:|")
-        for fr_id, count in sorted(report.routed_back_history.items(),
+        for task_id, count in sorted(report.routed_back_history.items(),
                                     key=lambda kv: -kv[1]):
-            parts.append(f"| `{fr_id}` | {count} |")
+            parts.append(f"| `{task_id}` | {count} |")
     else:
         parts.append("*(no rework events in this window)*")
     parts.append("")

@@ -1,10 +1,10 @@
-//! FR-EVAL-002 §1 #9 - the GENIE/Lumi DRAFT path (DEC-2602). NOT IMPLEMENTED IN THIS SLICE.
+//! TASK-EVAL-002 §1 #9 - the GENIE/Lumi DRAFT path (DEC-2602). NOT IMPLEMENTED IN THIS SLICE.
 //!
-//! TODO(FR-EVAL-002 GENIE slice): wire Lumi (the FR-EVAL-001-governed analysis path) to read the three
+//! TODO(TASK-EVAL-002 GENIE slice): wire Lumi (the TASK-EVAL-001-governed analysis path) to read the three
 //! signed documents and PROPOSE `rubric_item` rows into `state='draft'`. This is intentionally deferred
-//! because it requires the AI gateway (services/ai-gateway, FR-AI-022) and the FR-EVAL-001 document-access
+//! because it requires the AI gateway (services/ai-gateway, TASK-AI-022) and the TASK-EVAL-001 document-access
 //! basis, neither of which this slice depends on. Keeping the seam here, with no model call compiled in,
-//! keeps the module structure aligned with the FR while honouring "disabled-by-default, human-only" for now.
+//! keeps the module structure aligned with the task while honouring "disabled-by-default, human-only" for now.
 //!
 //! When implemented, this path MUST hold to the §1 #9 contract:
 //!   * it MAY create items in `state='draft'` ONLY - it has NO path to approve or publish (that is the human

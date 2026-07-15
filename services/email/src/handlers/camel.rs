@@ -1,4 +1,4 @@
-//! HTTP-facing orchestration for FR-EMAIL-005.
+//! HTTP-facing orchestration for TASK-EMAIL-005.
 
 use crate::camel::{
     execute_persisted, list_audit_log, upsert_trust_list_entry, CamelAuditLogRow, CamelDecision,

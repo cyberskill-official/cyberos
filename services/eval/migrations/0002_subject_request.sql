@@ -1,11 +1,11 @@
--- FR-EVAL-001 slice 2: data-subject request store (clause 10b).
+-- TASK-EVAL-001 slice 2: data-subject request store (clause 10b).
 --
 -- The one new table slice 2 needs: a queue for the data-subject rights requests a subject can file
 -- about their OWN record via POST /v1/eval/me/requests. A request is RECORDED and QUEUED for a human;
 -- it is NEVER auto-applied (clause 11 - keep a human in the loop for anything consequential). The
 -- runtime role may read + insert; the resolution columns (status / resolved_*) are written by the admin
 -- role, exactly like access_grant.revoked_at in 0001. Same per-tenant RLS GUC (app.current_tenant_id,
--- FR-AUTH-003) and the same append-only REVOKE idiom as 0001_governance.sql.
+-- TASK-AUTH-003) and the same append-only REVOKE idiom as 0001_governance.sql.
 --
 -- QUIET OPERATING MODE: the employee self-view is off by default and a subject only ever sees / files
 -- about their OWN subject_id; the handler enforces self-access deny-by-default, and RLS confines every
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS subject_request (
 CREATE INDEX IF NOT EXISTS subject_request_subject_idx
     ON subject_request (tenant_id, subject_id);
 
--- 14. Row-level security: every request row is scoped to its tenant via the FR-AUTH-003 GUC
+-- 14. Row-level security: every request row is scoped to its tenant via the TASK-AUTH-003 GUC
 --     app.current_tenant_id (set per transaction). The nil tenant bypasses for admin paths. Same idiom
 --     as 0001_governance.sql / services/chat/migrations/0001_chat_core.sql.
 DO $$

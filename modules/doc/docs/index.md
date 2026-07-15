@@ -1,7 +1,7 @@
 ---
 title: DOC - Document repository, e-sign workflow, contract lifecycle
 source: website/docs/modules/doc/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 DOC is CyberOS's **e-signature workflow + immutable archival** service. The cryptographic signing act is delegated to an eIDAS-conformant QTSP (qualified trust-service provider) per jurisdiction; DOC owns everything else: document upload + SHA-256 integrity hashing, template definition + auto-fill from CRM data, multi-party workflow (signer order, parallel vs sequential), identity verification (WebAuthn for CyberOS-resident users; VNeID for Vietnamese citizens; SMS-OTP fallback), per-document hash-chained audit log, and S3 Object-Lock archival with residency-pinning. Three certificate chains are supported: **eIDAS QTSP** (qualified electronic signature, QES) for the EU; **Adobe AATL** for US/non-EU enterprise; **Vietnamese CA chain** (VnPay, MK Group, Viettel-CA) for VN per Decree 130/2018. Migration paths from DocuSign, Adobe Sign, and HelloSign preserve original audit trails without re-signing. The default retention is 10 years; longer per applicable law (e.g. employment contracts under VN labour law).
@@ -369,9 +369,9 @@ Cancelled| AM revoke OR signer reject| Audit row `session.cancelled` with reason
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
@@ -443,7 +443,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 `R-DOC-003`| QTSP partner outage during signing campaign| Medium| Medium| CTO| Multi-partner per jurisdiction; broker.rs failover; 60s RTO chaos-tested.
 `R-DOC-004`| VNeID API breaking change| Medium| High| CTO| Adapter pattern in vneid.rs; integration tests on every release; VN CA fallback for non-biometric path.
 `R-DOC-005`| S3 Object-Lock misconfiguration allows premature deletion| Low| Catastrophic| CSO| Compliance mode (not Governance); CI test verifies retention-until; account-root cannot override.
-`R-DOC-006`| Legal-hold lift granted to non-CLO| Low| High| CSO| (FR pending) scope=doc.legal_hold limited to CLO + DPO; quarterly access review.
+`R-DOC-006`| Legal-hold lift granted to non-CLO| Low| High| CSO| (task pending) scope=doc.legal_hold limited to CLO + DPO; quarterly access review.
 `R-DOC-007`| Cert chain expires; PAdES-LT cannot validate decades later| Medium| High| CTO| PAdES-B-LT includes LTV outer timestamp; periodic re-stamping job at year 9 (1y before retention end).
 `R-DOC-008`| Cross-tenant document leak via shared S3 bucket| Low| Catastrophic| CSO| Per-tenant bucket prefix; IAM scoped per tenant; pre-signed-URL audience-bound.
 `R-DOC-009`| Migration import accepts forged DocuSign trail| Low| High| CLO| Imports flagged trust=external; cert chain validated against AATL root; CLO approves import batches.
@@ -625,9 +625,9 @@ Quarterly external eIDAS audit| planned - P4+
 
 ## References
 
-- **FR catalogue** - DOC - Document signing. FRs 001..005.
+- **task catalogue** - DOC - Document signing. tasks 001..005.
 - **Module spec** - Document management with e-signatures.
-- **Formal FR mapping** - (FR pending)..006 with verification methods.
+- **Formal task mapping** - (task pending)..006 with verification methods.
 - **eIDAS Regulation (EU 910/2014)** - qualified e-signatures and trust services.
 - **ETSI EN 319 142-1** - PAdES baseline profile.
 - **ETSI TS 119 312** - PAdES long-term validation profiles.
@@ -649,7 +649,7 @@ Quarterly external eIDAS audit| planned - P4+
 - **Bigger picture (above):** 3 strategic roles + partner-routed signing diagram + 10-row auto-vs-human matrix.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - every contract event (sign, expire, renew) becomes a memory audit row.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - DOC at P4-early (P4) due to QTSP partner integration timeline.
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 
 ## Changelog
 

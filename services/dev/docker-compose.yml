@@ -1,6 +1,6 @@
 # CyberOS — Local dev infrastructure
 # Starts Postgres 16 + pgvector + Redis on standard ports.
-# Used by FR-MEMORY-101 (Layer-2 ingest) and FR-AUTH-001..003 (tenant/subject/RLS).
+# Used by TASK-MEMORY-101 (Layer-2 ingest) and TASK-AUTH-001..003 (tenant/subject/RLS).
 #
 # Quick start (from this directory):
 #   docker compose up -d           # Boot Postgres + Redis

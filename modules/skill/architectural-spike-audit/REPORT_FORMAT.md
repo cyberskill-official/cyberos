@@ -1,6 +1,6 @@
 # architectural-spike-audit - report format
 
-Header: spike_id | fr_id | verdict (pass|fail|needs_human) | score N/10 | iteration k/3.
+Header: spike_id | task_id | verdict (pass|fail|needs_human) | score N/10 | iteration k/3.
 
 Findings table (fail/needs_human only):
 | rule | location | finding | resolves by |

@@ -1,4 +1,4 @@
-//! FR-AUTH-005 — revoke + unrevoke integration tests.
+//! TASK-AUTH-005 — revoke + unrevoke integration tests.
 //!
 //! Covers ECM-008/009/010/011/012/014 from §10.7.
 //! Postgres-gated via `#[ignore]`; CI runs `cargo test -- --ignored`.
@@ -38,7 +38,7 @@ async fn build_app() -> axum::Router {
         sticky_suppress: cyberos_auth::travel_policy::StickySuppress::new(),
         rate_limit: std::sync::Arc::new(cyberos_auth::rate_limit::RateLimiter::new()),
         deny_list: cyberos_auth::deny_list::DenyList::new(),
-        // FR-MEMORY-122: capture is off in tests unless a test installs a Capturer; None = no-op emitters.
+        // TASK-MEMORY-122: capture is off in tests unless a test installs a Capturer; None = no-op emitters.
         capturer: None,
     })
 }

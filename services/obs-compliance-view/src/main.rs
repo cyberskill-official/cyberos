@@ -1,4 +1,4 @@
-//! `obs-compliance-view` HTTP service (FR-OBS-008 I/O shell). Serves the four read-only compliance views
+//! `obs-compliance-view` HTTP service (TASK-OBS-008 I/O shell). Serves the four read-only compliance views
 //! over the memory audit chain. Every request: authenticates the auditor JWT (external_auditor role),
 //! enforces tenant scope, validates the time window, queries the kind-filtered audit rows, summarises
 //! them, runs the defence-in-depth PII scan, signs the canonical response with the Ed25519 chain-proof,

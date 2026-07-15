@@ -1,4 +1,4 @@
-"""Tests for the CUO obs.triage-alert HTTP endpoint (FR-OBS-007 §1 #2).
+"""Tests for the CUO obs.triage-alert HTTP endpoint (TASK-OBS-007 §1 #2).
 
 These exercise the pure request handler with a fake invoker, so no LLM and no network are needed. They
 pin the request/response contract obs-router's `cuo_triage.rs` depends on, and the safe-degradation

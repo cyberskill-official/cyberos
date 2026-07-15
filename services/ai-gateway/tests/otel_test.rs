@@ -1,4 +1,4 @@
-//! FR-AI-022 §5 — OTel module tests.
+//! TASK-AI-022 §5 — OTel module tests.
 
 use cyberos_ai_gateway::otel::attributes;
 

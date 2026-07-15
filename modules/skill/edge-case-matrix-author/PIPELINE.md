@@ -18,6 +18,6 @@ Artefact: `edge-case-matrix@1`. This document binds the skill into the ship chai
 
 ## HALT points
 
-- FR declares MUST priority but fewer than 8 total rows derivable -> HALT rather than pad with vacuous rows.
+- Task declares MUST priority but fewer than 8 total rows derivable -> HALT rather than pad with vacuous rows.
 
-*Added by FR-SKILL-118 (contract parity). Phases and step prose: SKILL.md is normative.*
+*Added by TASK-SKILL-118 (contract parity). Phases and step prose: SKILL.md is normative.*

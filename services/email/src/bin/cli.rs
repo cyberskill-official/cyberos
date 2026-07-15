@@ -1,6 +1,6 @@
 //! `cyberos-email-cli` — slice-1 user provisioning + DKIM rotation entry point.
 //!
-//! Per FR-EMAIL-001 §1 #16:
+//! Per TASK-EMAIL-001 §1 #16:
 //!   cyberos-email-cli provision \
 //!     --tenant-id <uuid> --local-part <name> --display-name <text>
 //!
@@ -103,7 +103,7 @@ async fn run(cli: Cli) -> Result<(), cyberos_email::EmailError> {
             // for now we surface a placeholder line so operators can spot it.
             println!("  → DKIM active key ensured");
             println!(
-                "  → memory audit row email.user_provisioned: pending (wired in FR-EMAIL-002)"
+                "  → memory audit row email.user_provisioned: pending (wired in TASK-EMAIL-002)"
             );
             Ok(())
         }

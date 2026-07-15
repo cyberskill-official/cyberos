@@ -1,6 +1,6 @@
 # obs-router
 
-The alert router for CyberOS (FR-OBS-007). It receives Alertmanager webhooks, triages each firing alert
+The alert router for CyberOS (TASK-OBS-007). It receives Alertmanager webhooks, triages each firing alert
 through CUO, and routes the result to CHAT or PagerDuty. A sev-1 always pages; everything else is paged
 or posted based on the triage confidence.
 

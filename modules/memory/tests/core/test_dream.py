@@ -1,7 +1,7 @@
-"""Tests for FR-MEMORY-115 — `cyberos dream` out-of-band reflection.
+"""Tests for TASK-MEMORY-115 — `cyberos dream` out-of-band reflection.
 
 Covers acceptance criteria from
-`docs/feature-requests/memory/FR-MEMORY-115-cyberos-dream/spec.md`:
+`docs/tasks/memory/TASK-MEMORY-115-cyberos-dream/spec.md`:
 
 * AC #1  — dream emits dream.start + dream.complete rows
 * AC #2  — diff file persisted under dreams/<ts>/

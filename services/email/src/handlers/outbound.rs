@@ -1,4 +1,4 @@
-//! HTTP-facing orchestration for FR-EMAIL-009.
+//! HTTP-facing orchestration for TASK-EMAIL-009.
 
 use crate::delivery_auth::DkimOutcome;
 use crate::outbound::{

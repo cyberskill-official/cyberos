@@ -1,11 +1,11 @@
 //! Tauri commands exposed to the Svelte frontend via `invoke()`.
 //!
 //! These are first-slice stubs:
-//!   - `search_memory`    — POSTs to the local Rust memory service (FR-MEMORY-108),
+//!   - `search_memory`    — POSTs to the local Rust memory service (TASK-MEMORY-108),
 //!                         which is assumed to be listening on 127.0.0.1:7901.
 //!   - `write_quick_note` — writes a markdown file under
 //!                         `~/.cyberos/memory/store/{tenant}/captures/` with frontmatter.
-//!                         Today the tenant resolves to "default"; FR-MEMORY-105+ wires
+//!                         Today the tenant resolves to "default"; TASK-MEMORY-105+ wires
 //!                         real multi-tenant resolution.
 //!   - `get_sync_state`   — reads `~/.cyberos/memory/store/{tenant}/sync/last-status.json`
 //!                         (matches `modules/memory/cyberos/core/memory_sync.py::LAST_STATUS_REL`).
@@ -153,7 +153,7 @@ pub async fn get_sync_state() -> Result<SyncState, String> {
 // ────────────────────────────────────────────────────────────────────────────
 
 /// `~/.cyberos/memory/store/{tenant}/`. For the first slice, tenant is hard-coded to
-/// `default`; multi-tenant resolution arrives with FR-MEMORY-105+.
+/// `default`; multi-tenant resolution arrives with TASK-MEMORY-105+.
 fn memory_dir() -> PathBuf {
     let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
     home.join(".cyberos/memory/store").join("default")

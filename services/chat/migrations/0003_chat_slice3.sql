@@ -1,4 +1,4 @@
--- FR-CHAT-101 slice 3: Vietnamese-friendly message search + DB-backed file attachments.
+-- TASK-CHAT-101 slice 3: Vietnamese-friendly message search + DB-backed file attachments.
 
 -- Accent- and case-insensitive search. chat_norm(t) = lower(unaccent(t)); the 2-arg unaccent('unaccent', t)
 -- form is IMMUTABLE so it can index. A GIN trigram index makes substring search fast.

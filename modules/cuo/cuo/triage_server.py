@@ -1,4 +1,4 @@
-"""CUO HTTP triage endpoint — serves `obs.triage-alert@1` to obs-router (FR-OBS-007 §1 #2).
+"""CUO HTTP triage endpoint — serves `obs.triage-alert@1` to obs-router (TASK-OBS-007 §1 #2).
 
 obs-router's `cuo_triage.rs` POSTs one alert per fired Alertmanager alert and expects a triage verdict
 back within 5 seconds. CUO has no long-running HTTP server otherwise — skills are invoked in-process via

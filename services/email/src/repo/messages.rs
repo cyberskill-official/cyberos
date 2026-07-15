@@ -1,4 +1,4 @@
-//! FR-EMAIL-001 §1 #7 + §1 #8 — message + thread metadata writers.
+//! TASK-EMAIL-001 §1 #7 + §1 #8 — message + thread metadata writers.
 
 use crate::errors::EmailResult;
 use crate::types::{EmailMessage, EmailThread, MessageDirection, MessageStatus};
@@ -105,7 +105,7 @@ pub struct NewMessage<'a> {
     pub bimi_present: Option<bool>,
 }
 
-/// FR-EMAIL-001 §1 #19 list handler — cursored list by (tenant, received_at).
+/// TASK-EMAIL-001 §1 #19 list handler — cursored list by (tenant, received_at).
 pub async fn list_messages(
     db: &PgPool,
     tenant_id: Uuid,

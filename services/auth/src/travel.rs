@@ -1,4 +1,4 @@
-//! FR-AUTH-106 — Impossible-travel detection + adaptive MFA challenge.
+//! TASK-AUTH-106 — Impossible-travel detection + adaptive MFA challenge.
 //!
 //! Called from every successful login flow (password / OIDC / SAML / Passkey)
 //! BEFORE the access token is returned. The function:
@@ -46,7 +46,7 @@ pub enum TravelOutcome {
         prev_login_id: Uuid,
         delta_seconds: i64,
     },
-    /// FR-AUTH-106 slice-3 — policy says `block`. Caller must refuse the
+    /// TASK-AUTH-106 slice-3 — policy says `block`. Caller must refuse the
     /// login entirely (return 403 to the client; no token issued).
     Block {
         login_id: Uuid,
@@ -55,7 +55,7 @@ pub enum TravelOutcome {
     },
 }
 
-/// FR-AUTH-106 slice-3 — bundle of per-call dependencies. Wrapped in a
+/// TASK-AUTH-106 slice-3 — bundle of per-call dependencies. Wrapped in a
 /// struct so future additions (PolicyAudit emitter, OBS hook) don't keep
 /// growing the parameter list past `too_many_arguments`.
 pub struct AssessDeps<'a> {
@@ -65,7 +65,7 @@ pub struct AssessDeps<'a> {
     pub sticky_suppress: &'a Arc<StickySuppress>,
 }
 
-/// FR-AUTH-106 slice-3 — slice-3 entry point that consults per-tenant policy
+/// TASK-AUTH-106 slice-3 — slice-3 entry point that consults per-tenant policy
 /// + CIDR allowlist + anonymous-IP + sticky-suppression before falling
 /// through to the slice-2 detector. Returns:
 ///   * `Clear` — caller proceeds normally.
@@ -425,7 +425,7 @@ pub async fn record_mfa_passed(pool: &PgPool, login_id: Uuid) -> Result<(), sqlx
         .map(|_| ())
 }
 
-/// FR-AUTH-106 slice-3 — full slice-3 MFA-pass: marks the audit row passed
+/// TASK-AUTH-106 slice-3 — full slice-3 MFA-pass: marks the audit row passed
 /// AND records the (subject, /24) → sticky-suppress entry so the next
 /// login from the same /24 within the policy window doesn't re-challenge.
 pub async fn record_mfa_passed_with_sticky(

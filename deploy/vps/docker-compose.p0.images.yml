@@ -56,7 +56,7 @@ services:
       CHAT_AUTH_JWKS_URL: http://auth:7700/.well-known/jwks.json
       # DEC-2713 — the chat->brain audit link (Supabase audit DB). Empty in plain P0; set to turn the link on.
       CHAT_AUDIT_DATABASE_URL: ${CHAT_AUDIT_DATABASE_URL:-}
-      # FR-MEMORY-122 master switch (default OFF). Even with the link set, capture emits interaction-events
+      # TASK-MEMORY-122 master switch (default OFF). Even with the link set, capture emits interaction-events
       # only when this is true AND the subject has acknowledged the notice. Default-off = no behaviour change.
       CAPTURE_ENABLED: ${CAPTURE_ENABLED:-false}
       # Chat translate + future AI features call the gateway over the internal network. Unset = clean 502
@@ -79,7 +79,7 @@ services:
       retries: 10
     networks: [cyberos]
 
-  # BRAIN/EVAL governance service (FR-EVAL-001). Independent - nothing depends on it, so a failed build or
+  # BRAIN/EVAL governance service (TASK-EVAL-001). Independent - nothing depends on it, so a failed build or
   # boot does not affect auth/chat/caddy; the status page probes it via Caddy /status/eval and shows it
   # down until it is healthy. Reads EVAL_DATABASE_URL (Supabase, set in .env.p0); apply
   # services/eval/migrations/0001_governance.sql before it does real work (healthz only needs a connection).
@@ -98,7 +98,7 @@ services:
       retries: 10
     networks: [cyberos]
 
-  # MEMORY / BRAIN (FR-MEMORY-123) - the recall + ingestion API over l1_audit_log + pgvector. Best-effort and
+  # MEMORY / BRAIN (TASK-MEMORY-123) - the recall + ingestion API over l1_audit_log + pgvector. Best-effort and
   # OFF by default, exactly like eval: it is deploy-gated behind DEPLOY_MEMORY=1 (deploy.sh stops it otherwise)
   # because it opens its own Supabase pooler connections, and nothing in the core stack depends on it. Reads
   # MEMORY_DATABASE_URL (Supabase) and embeds via the bge-m3 sidecar at embed:7900. Apply
@@ -120,7 +120,7 @@ services:
       retries: 10
     networks: [cyberos]
 
-  # AI group (FR-MEMORY-123 / DEC-2723) - best-effort like eval: nothing in the core stack depends on any
+  # AI group (TASK-MEMORY-123 / DEC-2723) - best-effort like eval: nothing in the core stack depends on any
   # of these, so a failed pull or boot never touches auth/chat/caddy. The gateway is INTERNAL ONLY (no
   # Caddy /v1 route; chat reaches it over the compose network); only its /healthz is probed via /status/ai.
   ai-gateway:
@@ -146,7 +146,7 @@ services:
       retries: 10
     networks: [cyberos]
 
-  # bge-m3 embeddings (FR-AI-019). Weights download once into embed-hf-cache at first boot (warmup thread;
+  # bge-m3 embeddings (TASK-AI-019). Weights download once into embed-hf-cache at first boot (warmup thread;
   # /healthz reports warm: cold|warming|ready|failed). The memory cap keeps a runaway load inside this
   # container - the kernel OOM-kills embed alone and Docker restarts it, auth/chat untouched. memswap gives
   # fp32 bge-m3 room to lean on the VPS swapfile on the 4 GB box.

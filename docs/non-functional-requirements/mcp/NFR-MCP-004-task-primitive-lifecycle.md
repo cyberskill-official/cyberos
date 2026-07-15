@@ -9,7 +9,7 @@ phase: P1
 slo: "100% of task state transitions follow the spec FSM; 0 backward transitions"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-MCP-007]
+related_tasks: [TASK-MCP-007]
 ---
 
 ## §1 — Statement (BCP-14 normative)

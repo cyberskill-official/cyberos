@@ -4,7 +4,7 @@
 //!   - axum router with health + per-message status + list handlers.
 //!   - sqlx pool initialised from DATABASE_URL.
 //!   - Stalwart inbound webhook endpoint stub (real Stalwart wiring lands
-//!     in FR-EMAIL-002).
+//!     in TASK-EMAIL-002).
 //!
 //! Run:
 //!   DATABASE_URL=postgres://... cyberos-email

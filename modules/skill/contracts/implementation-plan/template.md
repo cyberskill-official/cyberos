@@ -4,7 +4,7 @@ title: <Implementation plan name>
 author: @<author-handle>
 created_at: <ISO 8601 with timezone>
 last_updated_at: <ISO 8601 with timezone>
-tech_spec_ref: ../tech-specs/TS-NNN-FR-MMM-<slug>.md
+tech_spec_ref: ../tech-specs/TS-NNN-task-MMM-<slug>.md
 target_release: 2026-Q3
 proj_backend: linear            # linear | jira | github | none
 tickets_created: false

@@ -1,4 +1,4 @@
-"""FR-AI-012 §5 — Positive fixture tests for VN PII recognizers."""
+"""TASK-AI-012 §5 — Positive fixture tests for VN PII recognizers."""
 
 import pytest
 import re

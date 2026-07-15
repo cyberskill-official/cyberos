@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 time-to-first-byte (TTFB) < 2s for streaming /v1/chat/completions, cache-miss path"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-AI-010, FR-AI-008]
+related_tasks: [TASK-AI-010, TASK-AI-008]
 ---
 
 ## §1 — Statement (BCP-14 normative)

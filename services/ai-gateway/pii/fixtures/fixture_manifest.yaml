@@ -1,4 +1,4 @@
-# FR-AI-013 — Fixture manifest.
+# TASK-AI-013 — Fixture manifest.
 # Pins recognizer versions and sample counts for the recall gate.
 
 fixture_version: "2026Q2.0"

@@ -1,7 +1,7 @@
 # CyberOS local-development tenant policy for org:cyberskill.
 #
 # Routes chat.smart / chat.fast to a local model through the LM Studio / OpenAI-compatible provider
-# (FR-AI-105) - no API key. The gateway reads the endpoint from LMSTUDIO_ENDPOINT (default
+# (TASK-AI-105) - no API key. The gateway reads the endpoint from LMSTUDIO_ENDPOINT (default
 # http://localhost:1234). Edit the model id below to match whatever you have loaded in LM Studio (its
 # "API Model Identifier"); for Ollama, change kind to `ollama` and use an Ollama model id.
 #

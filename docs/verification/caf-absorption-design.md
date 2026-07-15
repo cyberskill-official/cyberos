@@ -4,7 +4,7 @@
 
 Absorb CyberSkill/code-audit-framework (CAF) and code-audit-field-data into CyberOS the way awh was
 absorbed, so CyberOS can not only rerun tests independently (awh) but also audit code independently
-(CAF). End state: every FR, and every project, goes implement (CUO) -> tests-pass gate (awh) ->
+(CAF). End state: every task, and every project, goes implement (CUO) -> tests-pass gate (awh) ->
 code-audit gate (CAF) -> local pass -> live pass. The 8-project trigger is deferred per the owner;
 this document is the design only.
 
@@ -44,9 +44,9 @@ the proof: the V2 rewrite silently changed the Supabase field contract, 404'd /a
 build vs the dashboard's expectations. awh's test rerun would not flag any of those; CAF's target-health
 gate and audit protocol would.
 
-## Where caf-gate slots into ship-feature-requests
+## Where caf-gate slots into ship-tasks
 
-The workflow today: step 27 feature-request-audit (post-impl closure), step 28 awh-gate (out-of-band
+The workflow today: step 27 task-audit (post-impl closure), step 28 awh-gate (out-of-band
 test rerun, GREEN required), then the testing->done flip. Insert caf-gate as a new step and make the
 done-flip conditional on BOTH gates. As implemented, caf-gate is step 29 and the done-flip steps
 renumber to 30/31 - the cuo runtime formats step ids as integers (`step{n:02d}`), so a fractional
@@ -110,7 +110,7 @@ Done (2026-06-20, branch auto/awh-absorb, uncommitted):
 3. `audit-profile.yaml` for all 8 gated modules (ai, auth, proj, email, skill, chat, cuo, memory),
    RUN_COMMANDS mirroring the awh-green suites (Rust crates hop `cd ../../services`; cuo/memory run
    pytest in place; memory adds the cargo crate).
-4. Wired into `ship-feature-requests.md` v2.1.0: `caf_gate_report` output, step 28.5 (caf-gate),
+4. Wired into `ship-tasks.md` v2.1.0: `caf_gate_report` output, step 28.5 (caf-gate),
    step-29 done-flip now requires `awh GREEN AND caf CLEAN`, §10 outcome table + cross-refs updated.
 5. `tools/caf/RETIREMENT.md` written.
 
@@ -127,4 +127,4 @@ Remaining (owner-run on a build machine, or a later pass):
    (the LLM half - needs an executor: ANTHROPIC_API_KEY, a self-hosted model, or the Cowork host LLM
    via `--invoker brief`). Until then the gate runs the target-health-only floor, which already catches
    the CCAF/kymondongiap class.
-3. Commit on auto/awh-absorb; run the RETIREMENT.md procedure once a real FR has passed the caf-gate.
+3. Commit on auto/awh-absorb; run the RETIREMENT.md procedure once a real task has passed the caf-gate.

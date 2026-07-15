@@ -1,7 +1,7 @@
-//! FR-OBS-004 - LangSmith AI-trace export.
+//! TASK-OBS-004 - LangSmith AI-trace export.
 //!
 //! Every LLM call can be mirrored to a self-hosted LangSmith for prompt-quality and tool-call analysis,
-//! correlated to the operational trace via a shared `trace_id` (FR-OBS-005 / FR-AI-022). The export is:
+//! correlated to the operational trace via a shared `trace_id` (TASK-OBS-005 / TASK-AI-022). The export is:
 //!   - opt-in per tenant (`ai_policy.langsmith_export`, default false) - even redacted prompts carry
 //!     tenant-business semantics, so it is off until the tenant consents (§1 #3);
 //!   - redacted-only - the export signature takes `RedactedPrompt` / `RedactedResponse` newtypes, so a
@@ -52,7 +52,7 @@ pub struct Payload {
 }
 
 const MAX_PAYLOAD_BYTES: usize = 100 * 1024;
-const TRUNCATION_MARKER: &str = "...[truncated by FR-OBS-004]";
+const TRUNCATION_MARKER: &str = "...[truncated by TASK-OBS-004]";
 
 /// Build the export payload, truncating an over-100 KB redacted prompt or response on a char boundary
 /// with a marker (§1 #12). The `trace_id` is taken from the metadata so the two always agree.

@@ -1,4 +1,4 @@
-//! FR-AUTH-106 — integration test for GeoIP resolution.
+//! TASK-AUTH-106 — integration test for GeoIP resolution.
 //!
 //! These tests exercise the **real** MaxMind path. They skip cleanly when
 //! `AUTH_GEOIP_DB` is unset, so the suite stays green on dev laptops that

@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of step failures with declared compensations execute the rollback in reverse order"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-CUO-105]
+related_tasks: [TASK-CUO-105]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of DSAR exports include all related messages; reconciliation = 0 missing rows"
 owner: CPO-Privacy
 created: 2026-05-18
-related_frs: [FR-EMAIL-011]
+related_tasks: [TASK-EMAIL-011]
 ---
 
 ## §1 — Statement (BCP-14 normative)

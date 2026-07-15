@@ -1,4 +1,4 @@
-//! FR-AI-020 §5 — Unit tests for rerank types and validation.
+//! TASK-AI-020 §5 — Unit tests for rerank types and validation.
 
 use cyberos_ai_gateway::rerank::*;
 

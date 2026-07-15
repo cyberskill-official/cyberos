@@ -1,4 +1,4 @@
-//! FR-AI-022 §1 #1 — OTel SDK initialisation with OTLP gRPC exporter.
+//! TASK-AI-022 §1 #1 — OTel SDK initialisation with OTLP gRPC exporter.
 
 use opentelemetry::{global, KeyValue};
 use opentelemetry_otlp::WithExportConfig;

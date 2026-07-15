@@ -1,4 +1,4 @@
-//! FR-AUTH-110 §1 #7 - PKCE S256 verification (RFC 7636).
+//! TASK-AUTH-110 §1 #7 - PKCE S256 verification (RFC 7636).
 //!
 //! The authorize endpoint stores the RP's `code_challenge`; the token endpoint
 //! presents a `code_verifier`. We recompute the S256 challenge from the verifier

@@ -2,8 +2,8 @@
 # caf_gate.sh - the CyberOS code-audit gate (absorbed from CyberSkill/code-audit-framework).
 #
 # The code-audit analog of scripts/awh_ai_gate.sh. Runs a module's deterministic CAF floor and
-# fails closed, so ship-feature-requests step 28.5 (and the pre-commit hook) can require it
-# ALONGSIDE the awh test-rerun gate before an FR flips testing -> done.
+# fails closed, so ship-tasks step 28.5 (and the pre-commit hook) can require it
+# ALONGSIDE the awh test-rerun gate before a task flips testing -> done.
 #
 # Two deterministic checks (no LLM, no API key):
 #   1. TARGET HEALTH  - tools/caf/core/evals/verify-target.sh modules/<m>
@@ -21,7 +21,7 @@
 #                       tools/caf/core/evals/run-audit.sh).
 #
 # Usage:  bash scripts/caf_gate.sh <module>        # e.g. bash scripts/caf_gate.sh ai
-# Exit:   0 = CLEAN (gate passes); 1 = RED (gate fails - route the FR back); 2 = usage/setup error.
+# Exit:   0 = CLEAN (gate passes); 1 = RED (gate fails - route the task back); 2 = usage/setup error.
 set -uo pipefail
 
 M="${1:-}"

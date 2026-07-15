@@ -1,18 +1,18 @@
-"""cyberos.writer - the FR-AI-003 audit-bridge Writer CLI.
+"""cyberos.writer - the TASK-AI-003 audit-bridge Writer CLI.
 
-The AI Gateway's `memory_writer.rs` (FR-AI-003) spawns `python3 -m cyberos.writer put`, pipes one line of
+The AI Gateway's `memory_writer.rs` (TASK-AI-003) spawns `python3 -m cyberos.writer put`, pipes one line of
 canonical JSON `{path, body, meta}` on stdin, and reads back one line of `{seq, ts_ns, chain, prev_chain}`
 on stdout. The gateway then recomputes the chain as `SHA-256(payload_bytes || prev_chain)` and rejects the
-row if it does not match (FR-AI-003 §1 #5). So the chain MUST be computed exactly that way, over the exact
+row if it does not match (TASK-AI-003 §1 #5). So the chain MUST be computed exactly that way, over the exact
 payload bytes that arrived on stdin, with `prev_chain` taken from this ledger's head.
 
 This module is deliberately stdlib-only and self-contained: it does not import `cyberos.core.writer` (the
-group-commit binlog), because that ledger hashes the decomposed `AuditRecord`, whereas FR-AI-003 hashes
+group-commit binlog), because that ledger hashes the decomposed `AuditRecord`, whereas TASK-AI-003 hashes
 the wire payload - two different chain definitions. Keeping the AI-audit chain separate makes the bridge
 functional and verifiable now; unifying it with the memory module's main L1 ledger (one chain model for
 both) is a follow-up architecture decision tracked in docs/KNOWN-ISSUES.md.
 
-Exit codes (FR-AI-003 subprocess handshake): 0 success, 1 schema rejection, 2 lock contention, 3 path
+Exit codes (TASK-AI-003 subprocess handshake): 0 success, 1 schema rejection, 2 lock contention, 3 path
 traversal. On a non-zero exit, stderr carries `{"code": "<id>", "detail": "<text>"}`.
 """
 
@@ -48,7 +48,7 @@ def _err(code: str, detail: str, exit_code: int) -> int:
 
 
 def _validate_path(path: str) -> str | None:
-    """Return a rejection reason if `path` is unsafe, else None (FR-AI-003 §1 #7 / AC #7)."""
+    """Return a rejection reason if `path` is unsafe, else None (TASK-AI-003 §1 #7 / AC #7)."""
     if not path:
         return "empty path"
     if path.startswith("/"):
@@ -147,7 +147,7 @@ def _cmd_put(payload_bytes: bytes) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="cyberos.writer", description="FR-AI-003 audit-bridge Writer")
+    parser = argparse.ArgumentParser(prog="cyberos.writer", description="TASK-AI-003 audit-bridge Writer")
     parser.add_argument("--version", action="version", version=f"cyberos.writer {__version__}")
     sub = parser.add_subparsers(dest="cmd")
     sub.add_parser("put", help="append one audit row; reads {path,body,meta} JSON on stdin")

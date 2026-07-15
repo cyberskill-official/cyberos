@@ -1,4 +1,4 @@
-//! FR-AI-014 — Source-hash verification for persona tamper detection.
+//! TASK-AI-014 — Source-hash verification for persona tamper detection.
 
 use sha2::{Digest, Sha256};
 
@@ -6,7 +6,7 @@ use super::types::{Persona, PersonaError};
 
 /// Verify that the persona's body hash matches its cached `source_hash`.
 ///
-/// This is the tamper-detection boundary check (FR-AI-001 §1 #7). On mismatch,
+/// This is the tamper-detection boundary check (TASK-AI-001 §1 #7). On mismatch,
 /// returns `PersonaError::Tampered`.
 pub fn verify_persona(persona: &Persona) -> Result<(), PersonaError> {
     let actual = sha256(persona.body.as_bytes());

@@ -92,7 +92,7 @@ const PATHS: Record<string, ReactNode> = {
       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     </>
   ),
-  // FR-CHAT-267 — the report affordance. A flag, not an exclamation: reporting is a neutral act of handing
+  // TASK-CHAT-267 — the report affordance. A flag, not an exclamation: reporting is a neutral act of handing
   // something to an administrator, and the icon should not shame the person doing it.
   flag: (
     <>

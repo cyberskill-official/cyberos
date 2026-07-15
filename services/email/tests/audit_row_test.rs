@@ -1,4 +1,4 @@
-//! FR-EMAIL-001 §4 #5 + §4 #13 + §4 #25 — memory audit row builders.
+//! TASK-EMAIL-001 §4 #5 + §4 #13 + §4 #25 — memory audit row builders.
 
 use chrono::Utc;
 use cyberos_email::audit::email_events::{

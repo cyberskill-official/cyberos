@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# check-latest.sh - resolve the latest PUBLISHED CyberOS version (FR-IMP-070). Never breaks a
+# check-latest.sh - resolve the latest PUBLISHED CyberOS version (TASK-IMP-070). Never breaks a
 # caller: always exit 0, always exactly one line:
 #   latest=<X.Y.Z|unknown> source=<endpoint|offline>
 # env: CYBEROS_RELEASE_ENDPOINT  https URL or local file path; bare X.Y.Z or GitHub

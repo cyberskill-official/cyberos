@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of authorization-code requests carry valid PKCE challenge; implicit grant disabled"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-MCP-004]
+related_tasks: [TASK-MCP-004]
 ---
 
 ## §1 — Statement (BCP-14 normative)

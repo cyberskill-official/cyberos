@@ -1,4 +1,4 @@
-//! FR-MCP-001 §1 #8 + DEC-272 — Closed JSON-RPC error code map.
+//! TASK-MCP-001 §1 #8 + DEC-272 — Closed JSON-RPC error code map.
 
 use serde_json::{json, Value};
 
@@ -26,9 +26,9 @@ pub mod codes {
     pub const TOOL_NOT_FOUND: i32 = -32003;
     /// Owning module returned 5xx or timed out.
     pub const MODULE_UNREACHABLE: i32 = -32004;
-    /// Destructive tool requires Elicitation flow (FR-MCP-006).
+    /// Destructive tool requires Elicitation flow (TASK-MCP-006).
     pub const ELICITATION_REQUIRED: i32 = -32005;
-    /// Owning module's server is unhealthy/deregistered (FR-MCP-002 DEC-2351): the tool is
+    /// Owning module's server is unhealthy/deregistered (TASK-MCP-002 DEC-2351): the tool is
     /// known but its module missed its heartbeats, so the call is refused before dispatch.
     pub const SKILL_UNAVAILABLE: i32 = -32006;
 }
@@ -51,7 +51,7 @@ pub fn err_with(code: i32, message: &str, data: Value) -> RpcError {
     }
 }
 
-/// Build the protocol-version-mismatch error per FR-MCP-001 §1 #5 last paragraph.
+/// Build the protocol-version-mismatch error per TASK-MCP-001 §1 #5 last paragraph.
 pub fn protocol_mismatch(client_version: &str, supported: &[&str]) -> RpcError {
     err_with(
         codes::INVALID_REQUEST,
@@ -63,7 +63,7 @@ pub fn protocol_mismatch(client_version: &str, supported: &[&str]) -> RpcError {
     )
 }
 
-/// Build the unauthorized error per FR-MCP-001 §1 #11.
+/// Build the unauthorized error per TASK-MCP-001 §1 #11.
 pub fn unauthorized(reason: &str, required_scopes: &[&str]) -> RpcError {
     err_with(
         codes::UNAUTHORIZED,
@@ -75,7 +75,7 @@ pub fn unauthorized(reason: &str, required_scopes: &[&str]) -> RpcError {
     )
 }
 
-/// Build the rate-limited error per FR-MCP-001 §1 #12.
+/// Build the rate-limited error per TASK-MCP-001 §1 #12.
 pub fn rate_limited(retry_after_ms: u32) -> RpcError {
     err_with(
         codes::RATE_LIMITED,

@@ -1,4 +1,4 @@
-//! FR-AUTH-004 — integration tests for `POST /v1/auth/token` covering the
+//! TASK-AUTH-004 — integration tests for `POST /v1/auth/token` covering the
 //! audit-fix-loop deliverables: dual rate-limit (G-001), audit-row emission
 //! (G-002), constant-time email lookup (G-003 + G-010), email claim (G-013),
 //! and scope_map intersection (G-008).
@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 #[test]
 fn rate_limiter_dual_path_smoke() {
-    // FR-AUTH-004 §1 #5 — G-001: dual rate-limit catches BOTH single-IP
+    // TASK-AUTH-004 §1 #5 — G-001: dual rate-limit catches BOTH single-IP
     // brute force AND distributed credential stuffing. This smoke test
     // doesn't need Postgres; it exercises the RateLimiter directly to
     // pin the dual-path behaviour.

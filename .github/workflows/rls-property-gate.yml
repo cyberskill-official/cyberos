@@ -1,6 +1,6 @@
 name: rls-property-gate
 
-# FR-AUTH-003 §1 #6 — PR-time CI gate that runs the registry-completeness
+# TASK-AUTH-003 §1 #6 — PR-time CI gate that runs the registry-completeness
 # test + RLS property test against a real docker-compose Postgres on every
 # migration PR. Catches:
 #   * Operator added a tenant-scoped table without updating TENANT_SCOPED_TABLES

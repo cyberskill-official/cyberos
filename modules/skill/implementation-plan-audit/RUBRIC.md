@@ -19,7 +19,7 @@
 | ------- | ----- | ---- | -------- | ------------ |
 | `FM-101` | `title` | required, string | error | skeleton |
 | `FM-102` | `plan_version` | required, SemVer | error | true |
-| `FM-103` | `linked_fr` | required, resolves to an FR that passed feature-request-audit at 10/10 | error | false |
+| `FM-103` | `linked_task` | required, resolves to a task that passed task-audit at 10/10 | error | false |
 | `FM-104` | `linked_sdd` | recommended; if present, resolves to an SDD that passed software-design-document-audit | warning | false |
 | `FM-105` | `target_sprint` | required, string (sprint identifier per project convention) | error | false |
 | `FM-106` | `target_proj_backend` | required, one of: linear, jira, github_projects, monday, asana, none | error | false |
@@ -58,7 +58,7 @@
 | ------- | ------------ | --------- | -------- |
 | `QA-CITE-001` | Claim without `source_ref` | non-boilerplate paragraph lacks `source_ref` | error |
 | `QA-AUTH-001` | Paragraph without `authority` marker | non-boilerplate paragraph lacks `authority:` | error |
-| `QA-TASK-001` | Task without acceptance link | A row in §2 lacks `acceptance_link:` referencing a specific FR section or SDD interface | error |
+| `QA-TASK-001` | Task without acceptance link | A row in §2 lacks `acceptance_link:` referencing a specific task section or SDD interface | error |
 | `QA-TASK-002` | Task without owner | error |
 | `QA-TASK-003` | Task estimate is null or zero | error |
 | `QA-TASK-004` | Cyclic blocked_by | warning → needs_human |
@@ -86,15 +86,15 @@
 | ------- | ----- | -------- |
 | `XCHAIN-001` | `provenance.source_path` matches author manifest | warning |
 | `XCHAIN-002` | `provenance.source_hash` matches at write time | error |
-| `XCHAIN-003` | `linked_fr` resolves to an FR that passed feature-request-audit at 10/10 (else block plan) | error |
+| `XCHAIN-003` | `linked_task` resolves to a task that passed task-audit at 10/10 (else block plan) | error |
 | `XCHAIN-004` | `linked_sdd` (if present) resolves to an SDD that passed software-design-document-audit at 10/10 | warning |
-| `XCHAIN-005` | Every `acceptance_link` in §2 tasks resolves to a specific FR section or SDD interface | warning |
+| `XCHAIN-005` | Every `acceptance_link` in §2 tasks resolves to a specific task section or SDD interface | warning |
 
 ## §8  Staleness
 
 | rule_id | Trigger | Action | Severity |
 | ------- | ------- | ------ | -------- |
-| `STALE-001` | Source FR / SDD hash differs | Reset open + needs_human to open | warning → needs_human |
+| `STALE-001` | Source task / SDD hash differs | Reset open + needs_human to open | warning → needs_human |
 | `STALE-002` | `target_sprint` has passed and plan status not yet `shipped` or `wontfix` | Surface as overdue | warning |
 
 ---

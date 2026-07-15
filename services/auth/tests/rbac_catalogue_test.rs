@@ -1,4 +1,4 @@
-//! FR-AUTH-101 catalogue invariants — pure-Rust tests (no Postgres).
+//! TASK-AUTH-101 catalogue invariants — pure-Rust tests (no Postgres).
 //!
 //! These run in CI's lint-and-test job. The DB-backed tests for the
 //! matrix loader + endpoints live in `rbac_endpoint_test.rs` (Postgres-required).

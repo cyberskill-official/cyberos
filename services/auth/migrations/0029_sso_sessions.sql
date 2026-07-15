@@ -1,4 +1,4 @@
--- FR-AUTH-110 §1 #3 + DEC-2489 - AUTH SSO browser session.
+-- TASK-AUTH-110 §1 #3 + DEC-2489 - AUTH SSO browser session.
 --
 -- The "log in once, every first-party app trusts it" linchpin. The browser holds
 -- a __Host-cyberos_sso cookie carrying this row's id; this table is the source of

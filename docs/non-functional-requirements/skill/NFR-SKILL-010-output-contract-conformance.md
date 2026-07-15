@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of skill outputs validate against their declared output contract"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-SKILL-103, FR-SKILL-101]
+related_tasks: [TASK-SKILL-103, TASK-SKILL-101]
 ---
 
 ## §1 — Statement (BCP-14 normative)

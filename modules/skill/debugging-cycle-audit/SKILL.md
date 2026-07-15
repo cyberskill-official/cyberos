@@ -15,11 +15,11 @@ allowed_memory_scopes:
   read:
     - project:*
   write:
-    - project:fr/{fr_id}/debug-trace.audit
+    - project:task/{task_id}/debug-trace.audit
 
 audit:
   row_kind: debug_cycle_audited
-  required_fields: [fr_id, score, issues_open, issues_resolved]
+  required_fields: [task_id, score, issues_open, issues_resolved]
 
 inputs:
   - { name: debug_trace, format: debug-trace@1, required: true }
@@ -52,6 +52,6 @@ records both outcomes.
 
 *End of debugging-cycle-audit SKILL.md.*
 
-## Contract files (FR-SKILL-118)
+## Contract files (TASK-SKILL-118)
 
 This pair is at full contract parity: `RUBRIC.md` (versioned rules + prose->rule map), `AUDIT_LOOP.md` (canonical-loop binding), `REPORT_FORMAT.md`, `envelopes/` (I/O schemas), `acceptance/README.md`. SKILL.md remains the normative prose; the files encode it.

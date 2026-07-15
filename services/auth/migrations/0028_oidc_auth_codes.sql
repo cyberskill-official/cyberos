@@ -1,4 +1,4 @@
--- FR-AUTH-110 §1 #2 + #16 - single-use, 60s-TTL, PKCE-bound authorization codes.
+-- TASK-AUTH-110 §1 #2 + #16 - single-use, 60s-TTL, PKCE-bound authorization codes.
 --
 -- The PK is sha256(code), never the code itself (DB-dump safety). Single-use is
 -- enforced NOT by an append-only UPDATE on this table but by a sibling

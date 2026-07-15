@@ -1,4 +1,4 @@
-# Mac App Store submission — answer sheet + sandbox audit (FR-APP-003)
+# Mac App Store submission — answer sheet + sandbox audit (TASK-APP-003)
 
 Companion to `docs/deploy/RELEASE.md` (Developer ID channel) and `docs/deploy/play-store-submission.md` (Android pattern this file mirrors). The Mac App Store build is a second, independent Tauri target: sandboxed, signed with the `3rd Party Mac Developer *` certificate pair, packaged as `.pkg`, submitted via `release-mas.yml` behind the repo variable `MAS_RELEASE=true` (off by default — the workflow is inert until every "hard blocker" row below is resolved).
 
@@ -31,13 +31,13 @@ Every `#[tauri::command]` handler and every direct filesystem / network / proces
 1. **Sandbox:** `download_and_install` writes into the installed `.app` bundle — outside the sandbox container, no entitlement exists for it.
 2. **Policy:** Mac App Store apps must receive updates through the App Store; a self-updater is grounds for rejection regardless of sandbox mechanics.
 
-That compile-time exclusion is a small Rust change and is **out of scope for FR-APP-003 by its own §11 boundary** ("any capability found to be sandbox-incompatible is a follow-up FR"). Consequence, recorded honestly: **`MAS_RELEASE=true` must not be flipped until the follow-up FR lands.** It is listed as a hard blocker below alongside Stephen's account prerequisites. Today the updater is a *quiet no-op only when* `plugins.updater` config is absent — but the base `tauri.conf.json` DOES configure it (pubkey + GitHub endpoint), so the MAS bundle would actively self-update without the exclusion. Do not rationalize this away with a config-overlay trick; unverified deep-merge null-out semantics are not a submission-safety mechanism.
+That compile-time exclusion is a small Rust change and is **out of scope for TASK-APP-003 by its own §11 boundary** ("any capability found to be sandbox-incompatible is a follow-up task"). Consequence, recorded honestly: **`MAS_RELEASE=true` must not be flipped until the follow-up task lands.** It is listed as a hard blocker below alongside Stephen's account prerequisites. Today the updater is a *quiet no-op only when* `plugins.updater` config is absent — but the base `tauri.conf.json` DOES configure it (pubkey + GitHub endpoint), so the MAS bundle would actively self-update without the exclusion. Do not rationalize this away with a config-overlay trick; unverified deep-merge null-out semantics are not a submission-safety mechanism.
 
 ## Hard blockers on `MAS_RELEASE=true` (in dependency order)
 
 | # | Blocker | Owner | Status |
 |---|---|---|---|
-| 1 | `mas` cargo feature excluding the self-updater from the MAS build | engineering | **resolved by FR-IMP-075** (registration + launch check cfg-gated out; release-mas.yml builds `--features mas`). Verify on first real toolchain run: `cargo check && cargo check --features mas`. Residual, non-blocking: the target-scoped dependency still compiles in as dead code — optional-dep shrink is a later follow-up only if App Review ever flags it |
+| 1 | `mas` cargo feature excluding the self-updater from the MAS build | engineering | **resolved by TASK-IMP-075** (registration + launch check cfg-gated out; release-mas.yml builds `--features mas`). Verify on first real toolchain run: `cargo check && cargo check --features mas`. Residual, non-blocking: the target-scoped dependency still compiles in as dead code — optional-dep shrink is a later follow-up only if App Review ever flags it |
 | 2 | Apple Developer Program enrollment active | Stephen | pending-human |
 | 3 | macOS platform added to the CyberOS App Store Connect app record (bundle-id decision: reuse `os.cyberskill.world.desktop` or mint a MAS-specific id — ASC account decision) | Stephen | pending-human |
 | 4 | `3rd Party Mac Developer Application` + `3rd Party Mac Developer Installer` certs issued; secrets `MAS_APP_CERT_P12_BASE64`, `MAS_INSTALLER_CERT_P12_BASE64`, `MAS_CERT_PASSWORD`, `MAS_KEYCHAIN_PASSWORD`, `MAS_APP_SIGNING_IDENTITY`, `MAS_INSTALLER_SIGNING_IDENTITY` set | Stephen | pending-human |
@@ -63,6 +63,6 @@ Every ASC macOS submission field needing a human decision. `status` is `human-co
 ## Operational notes
 
 - Trigger: `release-mas.yml` is `workflow_dispatch` (manual, Stephen-run) — deliberately NOT tag-coupled while the channel is being stood up, so a normal `vX.Y.Z` release can never accidentally attempt an ASC submission.
-- The Developer ID channel (RELEASE.md) is unchanged and remains the primary macOS distribution; MAS is additive discoverability (FR-APP-003 `risk_if_skipped`).
+- The Developer ID channel (RELEASE.md) is unchanged and remains the primary macOS distribution; MAS is additive discoverability (TASK-APP-003 `risk_if_skipped`).
 - Version comes from the base `tauri.conf.json` (stamped by `scripts/stamp-release-version.mjs`); `tauri.mas.conf.json` deliberately declares **no** `version`/`productName` keys so the overlay can never drift from the stamper (spec §10).
-- AC #5 (`codesign --verify`, `spctl -a -t install`) can only run on macOS with real certs — recorded as expected-pending in the FR's review packet; first verified run happens on Stephen's Mac or the first `MAS_RELEASE=true` CI run after blockers clear.
+- AC #5 (`codesign --verify`, `spctl -a -t install`) can only run on macOS with real certs — recorded as expected-pending in the task's review packet; first verified run happens on Stephen's Mac or the first `MAS_RELEASE=true` CI run after blockers clear.

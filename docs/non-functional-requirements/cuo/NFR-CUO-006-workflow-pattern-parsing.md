@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of workflow frontmatter parses; failed parses produce {file,line,reason} error"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-CUO-101, FR-CUO-106]
+related_tasks: [TASK-CUO-101, TASK-CUO-106]
 ---
 
 ## §1 — Statement (BCP-14 normative)

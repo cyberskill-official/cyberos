@@ -1,4 +1,4 @@
-//! FR-PROJ-002 — memory-anchored decision rows for issue state changes.
+//! TASK-PROJ-002 — memory-anchored decision rows for issue state changes.
 
 use crate::errors::{IssueError, IssueResult};
 use crate::repo;

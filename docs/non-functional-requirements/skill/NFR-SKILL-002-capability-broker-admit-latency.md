@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 < 25ms for capability admit (token check + policy lookup + decision)"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-SKILL-104, FR-SKILL-101]
+related_tasks: [TASK-SKILL-104, TASK-SKILL-101]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -18,7 +18,7 @@ related_frs: [FR-SKILL-104, FR-SKILL-101]
 2. The hot path **MUST NOT** emit a database call — policy decisions are served from an in-memory `Arc<RwLock<PolicyMatrix>>` refreshed every 30s by a background task.
 3. On policy cache miss (capability or tenant not yet loaded) the broker **MUST** fall back to a DB lookup but the resulting record **MUST** be cached in-process for the configured TTL.
 4. Decision results (admit/deny + reason code) **MUST** be emitted to the audit log asynchronously — the admit response itself **MUST NOT** wait for log durability.
-5. Audit log loss **MUST NOT** exceed 1 row per 1M decisions (best-effort durability tier; full memory sync via FR-SKILL-101 batches separately).
+5. Audit log loss **MUST NOT** exceed 1 row per 1M decisions (best-effort durability tier; full memory sync via TASK-SKILL-101 batches separately).
 
 ## §2 — Why this constraint
 

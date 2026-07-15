@@ -9,13 +9,13 @@ phase: P0
 slo: "100% of KRs use the closed enum types; 100% of numeric KRs are computable from declared source"
 owner: CEO
 created: 2026-05-18
-related_frs: [FR-OKR-001, FR-OKR-002]
+related_tasks: [TASK-OKR-001, TASK-OKR-002]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
 1. KR types **MUST** be a closed enum: `numeric`, `binary`, `milestone-progress`, `custom-sql`. Ad-hoc types are rejected at create time.
-2. Numeric KRs **MUST** declare a `progress_source` (`FR-OKR-003`) that resolves to a numeric value; non-computable sources are rejected.
+2. Numeric KRs **MUST** declare a `progress_source` (`TASK-OKR-003`) that resolves to a numeric value; non-computable sources are rejected.
 3. Every KR **MUST** have a unique slug + reference exactly one parent objective.
 4. Objective–KR relationship **MUST NOT** be many-to-many; each KR belongs to one objective.
 5. Schema migrations **MUST** preserve prior values; KR-type changes require explicit migration plan.

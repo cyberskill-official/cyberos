@@ -61,7 +61,7 @@ The actual tickets live in PROJ MCP. The impl-plan markdown is the project's per
 | Trigger | Required section |
 | --- | --- |
 | `tickets_created: true` | `## Ticket Index` — auto-generated mapping from impl-plan ticket # → PROJ ticket ID + URL |
-| `chain_profile: lean` (no upstream tech-spec) | `## Architecture Note` — brief para explaining the architectural assumptions baked into the ticket breakdown (since lean skips software-requirements-specification-author + fr-to-tech-spec) |
+| `chain_profile: lean` (no upstream tech-spec) | `## Architecture Note` — brief para explaining the architectural assumptions baked into the ticket breakdown (since lean skips software-requirements-specification-author + task-to-tech-spec) |
 
 ## Citations
 

@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of l2_memory rows have been through PII detection at recall ≥ 99% before commit"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-MEMORY-111, FR-AI-012, FR-AI-013]
+related_tasks: [TASK-MEMORY-111, TASK-AI-012, TASK-AI-013]
 ---
 
 ## §1 — Statement (BCP-14 normative)

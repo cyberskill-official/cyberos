@@ -1,4 +1,4 @@
--- FR-AUTH-104 — OIDC SSO per-tenant identity-provider config + login history.
+-- TASK-AUTH-104 — OIDC SSO per-tenant identity-provider config + login history.
 --
 -- One tenant can have multiple IdPs (e.g. Google + Microsoft + Okta) keyed by
 -- a tenant-supplied `name`. The discovery URL is required; client credentials

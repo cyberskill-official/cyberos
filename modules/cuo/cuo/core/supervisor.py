@@ -18,7 +18,7 @@ per-instance / multi-output / sequential-approval / persona-pair workflows.
 
 Phase 5 (added 2026-05-19 — STATUS-WAVE): condition-aware step evaluation +
 failure-routing rework branch + observability spans. This is what makes
-`chief-technology-officer/ship-feature-requests` v2.0.0 fully usable:
+`chief-technology-officer/ship-tasks` v2.0.0 fully usable:
 
   * Conditional steps (`condition: "mode == \"implement\""`, `condition:
     "step 3 ran"`, etc.) are honoured — steps whose condition evaluates
@@ -30,13 +30,13 @@ failure-routing rework branch + observability spans. This is what makes
     step whose `transition` literal starts with "any-stage" OR contains
     "ready_to_implement"). If found, it's invoked with a synthesized
     rework outcome, applying the BACKLOG.md status flip and emitting
-    memory.fr_routed_back. The chain outcome becomes ROUTED_BACK.
+    memory.task_routed_back. The chain outcome becomes ROUTED_BACK.
 
   * Observability spans — every step invocation emits a structured log
     line `{event: skill.invoke, span_id, step, skill, status, duration_ms}`
-    via the `cyberos.cuo.spans` logger. A run-level `fr_routed_back_count`
+    via the `cyberos.cuo.spans` logger. A run-level `task_routed_back_count`
     is maintained in-process; production OTel exporters tracked under
-    FR-OBS-001..003.
+    TASK-OBS-001..003.
 """
 
 from __future__ import annotations
@@ -61,9 +61,9 @@ from cuo.core.validator import ValidationResult, validate_chain
 # attach a JSON handler + OTel exporter; the default is stderr text.
 _SPANS_LOGGER = logging.getLogger("cyberos.cuo.spans")
 
-# In-process counter for rework-routed FRs. Surfaced in ChainResult.notes
+# In-process counter for rework-routed tasks. Surfaced in ChainResult.notes
 # and emitted as a memory.fr_routed_back aux row by emit_chain_result.
-_REWORK_COUNTER: dict[str, int] = {"fr_routed_back": 0}
+_REWORK_COUNTER: dict[str, int] = {"task_routed_back": 0}
 
 
 @dataclass
@@ -205,25 +205,25 @@ class ChainResult:
         )
 
 
-def _resolve_fr(hand_off: dict) -> None:
+def _resolve_task(hand_off: dict) -> None:
     """Populate next_fr_id, next_fr, and fr_file_path in the hand_off.
 
-    Looks up the FR file in docs/feature-requests/{module}/FR-{ID}-*.md
+    Looks up the task file in docs/tasks/{module}/TASK-{ID}-*.md
     relative to the cyberos root or CWD. Reads the file content into
-    `next_fr` so skills can access the FR spec directly.
+    `next_task` so skills can access the task spec directly.
     """
-    fr_id = hand_off.get("fr_id")
-    if not fr_id:
+    task_id = hand_off.get("task_id")
+    if not task_id:
         return
 
     # Ensure next_fr_id is always set
-    hand_off.setdefault("next_fr_id", fr_id)
+    hand_off.setdefault("next_task_id", task_id)
 
     # Already resolved
-    if "next_fr" in hand_off:
+    if "next_task" in hand_off:
         return
 
-    # Find the FR file — search in docs/feature-requests/{module}/
+    # Find the task file — search in docs/tasks/{module}/
     module = hand_off.get("module", "")
     cyberos_root = hand_off.get("_cyberos_root", "")
     search_roots = []
@@ -234,39 +234,39 @@ def _resolve_fr(hand_off: dict) -> None:
     for root in search_roots:
         # Try module-specific directory first
         if module:
-            fr_dir = root / "docs" / "feature-requests" / module
-            if fr_dir.is_dir():
-                fr_path = _find_fr_file(fr_dir, fr_id)
-                if fr_path:
-                    _load_fr_file(hand_off, fr_path)
+            task_dir = root / "docs" / "tasks" / module
+            if task_dir.is_dir():
+                task_path = _find_task_file(task_dir, task_id)
+                if task_path:
+                    _load_task_file(hand_off, task_path)
                     return
         # Try all module directories
-        base = root / "docs" / "feature-requests"
+        base = root / "docs" / "tasks"
         if base.is_dir():
             for subdir in sorted(base.iterdir()):
                 if subdir.is_dir():
-                    fr_path = _find_fr_file(subdir, fr_id)
-                    if fr_path:
-                        _load_fr_file(hand_off, fr_path)
+                    task_path = _find_task_file(subdir, task_id)
+                    if task_path:
+                        _load_task_file(hand_off, task_path)
                         return
 
 
-def _find_fr_file(directory: Path, fr_id: str) -> Path | None:
-    """Find the FR markdown file matching fr_id in a directory."""
-    # Match files like FR-AUTH-001-google-oauth-authjs-v5.md (not .audit.md)
-    pattern = re.compile(re.escape(fr_id) + r"[-\.].*\.md$")
+def _find_task_file(directory: Path, task_id: str) -> Path | None:
+    """Find the task markdown file matching task_id in a directory."""
+    # Match files like TASK-AUTH-001-google-oauth-authjs-v5.md (not .audit.md)
+    pattern = re.compile(re.escape(task_id) + r"[-\.].*\.md$")
     for f in directory.iterdir():
         if f.is_file() and pattern.match(f.name) and ".audit." not in f.name:
             return f
     return None
 
 
-def _load_fr_file(hand_off: dict, fr_path: Path) -> None:
-    """Read FR file content into hand_off."""
+def _load_task_file(hand_off: dict, task_path: Path) -> None:
+    """Read task file content into hand_off."""
     try:
-        content = fr_path.read_text(encoding="utf-8")
-        hand_off["next_fr"] = content
-        hand_off["fr_file_path"] = str(fr_path)
+        content = task_path.read_text(encoding="utf-8")
+        hand_off["next_task"] = content
+        hand_off["task_file_path"] = str(task_path)
     except (OSError, UnicodeDecodeError):
         pass
 
@@ -280,7 +280,7 @@ def execute_chain(
     inputs: dict | None = None,
     invoker: Invoker | None = None,
     stop_on_failure: bool = True,
-    fr_id: str | None = None,
+    task_id: str | None = None,
     backlog_path: Path | None = None,
 ) -> ChainResult:
     """Execute (not just plan) the skill chain for a workflow.
@@ -350,8 +350,8 @@ def execute_chain(
     # not the CUO installation root. Used by appliers for artifact output paths.
     if backlog_path is not None:
         hand_off["_project_root"] = str(backlog_path.parent.parent.parent)
-    # Resolve FR file content so skills can access it directly.
-    _resolve_fr(hand_off)
+    # Resolve task file content so skills can access it directly.
+    _resolve_task(hand_off)
     step_results: list[StepResult] = []
     outcome = "COMPLETED"
 
@@ -368,8 +368,8 @@ def execute_chain(
 
     # Load any existing step outputs from the output directory to recognize
     # half-way/in-construction developed deliverables.
-    _prefix = f"{fr_id}_" if fr_id else ""
-    # Scan both prefixed (FR-ID_step*) and unprefixed (step*) patterns so
+    _prefix = f"{task_id}_" if task_id else ""
+    # Scan both prefixed (TASK-ID_step*) and unprefixed (step*) patterns so
     # that brief-mode output files (no prefix) and normal invoker output
     # files (with prefix) are both detected during resume.
     _scan_patterns = [f"{_prefix}step*_*.json"]
@@ -400,23 +400,23 @@ def execute_chain(
             except Exception:
                 pass
 
-    # Determine starting step based on the FR's current status and rework flag.
+    # Determine starting step based on the task's current status and rework flag.
     rework = hand_off.get("rework", False)
     start_step = 1
     current_status = "ready_to_implement"
     if not rework:
-        fr_id = hand_off.get("fr_id")
-        if fr_id:
+        task_id = hand_off.get("task_id")
+        if task_id:
             cyberos_root = skill_root.parent.parent
             if backlog_path is None:
-                backlog_path = cyberos_root / "docs" / "feature-requests" / "BACKLOG.md"
+                backlog_path = cyberos_root / "docs" / "tasks" / "BACKLOG.md"
             if backlog_path.is_file():
                 try:
                     from cuo.core.backlog_reader import parse_backlog
                     rows = parse_backlog(backlog_path)
-                    fr_row = next((r for r in rows if r.fr_id == fr_id), None)
-                    if fr_row:
-                        current_status = fr_row.status
+                    task_row = next((r for r in rows if r.task_id == task_id), None)
+                    if task_row:
+                        current_status = task_row.status
                 except Exception:
                     pass
         if current_status in ("ready_to_implement", "implementing"):
@@ -438,10 +438,10 @@ def execute_chain(
         if step_num < start_step:
             skipped = StepResult(
                 step=step_num, skill=skill_name, status="SKIPPED",
-                notes=[f"Bypassed: FR status is {current_status!r} (starting from step {start_step})"],
+                notes=[f"Bypassed: task status is {current_status!r} (starting from step {start_step})"],
             )
             step_results.append(skipped)
-            sys.stderr.write(f"  [SKILL] step {step_num:02d} {skill_name} − skipped (FR already {current_status})\n")
+            sys.stderr.write(f"  [SKILL] step {step_num:02d} {skill_name} − skipped (task already {current_status})\n")
             sys.stderr.flush()
             continue
 
@@ -650,7 +650,7 @@ def execute_chain(
                 "event": "rework.branch", "span_id": run_span_id,
                 "step_span_id": rework_span_id,
                 "rework_reason": rework_inputs.get("rework_reason"),
-                "fr_id": rework_inputs.get("fr_id"),
+                "task_id": rework_inputs.get("task_id"),
             },
         )
         rework_result = invoker.invoke(
@@ -669,7 +669,7 @@ def execute_chain(
                 # sees `transition_kind: rework` even when the mock invoker
                 # returns generic mock output.
                 if isinstance(rework_result.output, dict):
-                    rework_result.output.setdefault("fr_id", rework_inputs.get("fr_id"))
+                    rework_result.output.setdefault("task_id", rework_inputs.get("task_id"))
                     rework_result.output.setdefault("new_status", "ready_to_implement")
                     rework_result.output.setdefault("transition_kind", "rework")
                     rework_result.output.setdefault("rework_reason",
@@ -680,7 +680,7 @@ def execute_chain(
                 )
             except ImportError:
                 pass
-            _REWORK_COUNTER["fr_routed_back"] += 1
+            _REWORK_COUNTER["task_routed_back"] += 1
             outcome = "ROUTED_BACK"
 
     if outcome == "COMPLETED" and any(s.status == "FAILED" for s in step_results):
@@ -693,7 +693,7 @@ def execute_chain(
             "workflow_id": wf.workflow_id, "outcome": outcome,
             "steps_run": sum(1 for s in step_results if s.status != "SKIPPED"),
             "steps_skipped": sum(1 for s in step_results if s.status == "SKIPPED"),
-            "fr_routed_back_count": _REWORK_COUNTER["fr_routed_back"],
+            "task_routed_back_count": _REWORK_COUNTER["task_routed_back"],
         },
     )
 
@@ -714,7 +714,7 @@ def brief_chain(
     output_dir: Path,
     *,
     inputs: dict | None = None,
-    fr_id: str | None = None,
+    task_id: str | None = None,
     project_root: Path | None = None,
     backlog_path: Path | None = None,
 ) -> str:
@@ -724,7 +724,7 @@ def brief_chain(
     for the host LLM to consume and follow.
 
     Runs the same planning phase as `execute_chain()` — finding the workflow,
-    validating the chain, resolving FR — but instead of the step loop,
+    validating the chain, resolving task — but instead of the step loop,
     delegates to BriefGenerator to produce the brief.
 
     Args:
@@ -733,7 +733,7 @@ def brief_chain(
         skill_root: path to `skill/` for validation + SKILL.md reading.
         output_dir: directory where step outputs would be written.
         inputs: optional dict of initial workflow inputs.
-        fr_id: specific FR to generate the brief for.
+        task_id: specific task to generate the brief for.
         project_root: the user's project root (for context detection).
 
     Returns:
@@ -753,15 +753,15 @@ def brief_chain(
             f"Planned: {validation.planned_skills}\n"
         )
 
-    if fr_id is None:
-        return "# ERROR: fr_id is required for brief generation"
+    if task_id is None:
+        return "# ERROR: task_id is required for brief generation"
 
     generator = BriefGenerator(
         persona=persona,
         workflow=wf,
         skill_root=skill_root,
         output_dir=output_dir,
-        fr_id=fr_id,
+        task_id=task_id,
         inputs=inputs,
         project_root=project_root,
         backlog_path=backlog_path,
@@ -777,7 +777,7 @@ def brief_chain(
 def _eval_condition(expr: str, hand_off: dict, step_results: list[StepResult]) -> bool:
     """Evaluate a workflow-step `condition:` expression against the hand-off map.
 
-    Supported forms (from ship-feature-requests + sibling workflows):
+    Supported forms (from ship-tasks + sibling workflows):
       * `"step N ran"` → True iff step N completed with status in {OK, MOCKED}
       * `'mode == "implement"'` → standard Python comparison against hand_off['mode']
       * `"<field>.<subfield> > <value>"` → simple comparison; resolves dotted
@@ -849,12 +849,12 @@ def _build_rework_inputs_from_failure(
     """Synthesize the rework call's input bundle from forward-path failure.
 
     Returns a dict carrying:
-      * `fr_id` — the FR being shipped (from hand_off; falls back to "unknown").
+      * `task_id` — the task being shipped (from hand_off; falls back to "unknown").
       * `transition_kind: "rework"` — signals the applier to flip status
         to ready_to_implement and increment routed_back_count.
       * `new_status: "ready_to_implement"` — the target lifecycle state.
       * `rework_reason` — string built from the failing step(s) for the
-        memory.fr_routed_back aux row payload.
+        memory.task_routed_back aux row payload.
       * `outcome` — the last failed StepResult's output, so the LLM/applier
         knows which artefact caused the rework.
       * `synthesized_rework: True` — distinguishes from natural-flow rework
@@ -869,7 +869,7 @@ def _build_rework_inputs_from_failure(
     )
 
     return {
-        "fr_id": hand_off.get("fr_id", "unknown"),
+        "task_id": hand_off.get("task_id", "unknown"),
         "transition_kind": "rework",
         "new_status": "ready_to_implement",
         "rework_reason": rework_reason,
@@ -879,17 +879,17 @@ def _build_rework_inputs_from_failure(
 
 
 def get_rework_counter() -> int:
-    """Return the in-process count of rework-routed FRs since process start.
+    """Return the in-process count of rework-routed tasks since process start.
 
     Surfaced via `cyberos-cuo execute --explain` and emitted as a
-    memory.fr_routed_back_count aux row by emit_chain_result.
+    memory.task_routed_back_count aux row by emit_chain_result.
     """
-    return _REWORK_COUNTER["fr_routed_back"]
+    return _REWORK_COUNTER["task_routed_back"]
 
 
 def reset_rework_counter() -> None:
     """Reset the in-process rework counter — test-only helper."""
-    _REWORK_COUNTER["fr_routed_back"] = 0
+    _REWORK_COUNTER["task_routed_back"] = 0
 
 
 def _resolve_step_inputs(inputs_from, hand_off: dict) -> dict:

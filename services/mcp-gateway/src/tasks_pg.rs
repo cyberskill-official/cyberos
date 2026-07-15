@@ -1,4 +1,4 @@
-//! FR-MCP-007 tasks persistence: the DB-slice store-of-record behind [`crate::tasks`].
+//! TASK-MCP-007 tasks persistence: the DB-slice store-of-record behind [`crate::tasks`].
 //!
 //! Same shape as [`crate::elicitation_pg`]: when the gateway has a database and an authenticated caller,
 //! the router reads/cancels tasks here instead of the in-memory [`TaskStore`](crate::tasks::TaskStore),

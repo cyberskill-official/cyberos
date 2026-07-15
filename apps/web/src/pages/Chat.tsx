@@ -37,7 +37,7 @@ const FALLBACK_MAX_ATTACH_FILES = 10;
 
 export function Chat() {
   const { token, email } = useAuth();
-  // FR-CHAT-267. `reportTarget` is the open dialog's subject; `reportSent` drives the confirmation
+  // TASK-CHAT-267. `reportTarget` is the open dialog's subject; `reportSent` drives the confirmation
   // toast. Nothing about the report itself is held: there is no reporter-visible report state (§1 #14).
   const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
   const [reportSent, setReportSent] = useState(false);
