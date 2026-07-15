@@ -262,7 +262,9 @@ async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapEr
         tx.commit().await?;
         println!("✓ subject_roles entry for root-admin");
     } else {
-        println!("• subject_roles table absent — apply migration 0007 to enable TASK-AUTH-101 RBAC");
+        println!(
+            "• subject_roles table absent — apply migration 0007 to enable TASK-AUTH-101 RBAC"
+        );
     }
 
     Ok(BootstrapSummary {
