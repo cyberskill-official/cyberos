@@ -311,7 +311,12 @@ bash "$here/check-pair-parity.sh" "$out/cuo/skills" || exit $?   # TASK-SKILL-11
 
 # TASK-CUO-209: report sizes on every build; the plugin zip carries a hard 2 MB budget.
 payload_bytes=$(du -sk "$out" | awk '{print $1*1024}')   # KB granularity, portable (GNU + BSD du)
-plugin_bytes=$(wc -c < "$out/cyberos.plugin")
+# tr -d ' ': BSD `wc -c` PADS its output to a fixed width, GNU does not. Unstripped, macOS
+# emitted `plugin_zip=       1103748` and the size line stopped matching `plugin_zip=[0-9]`
+# — so the budget report was malformed on the platform this repo is developed on. The
+# payload_bytes line above already says "portable (GNU + BSD du)"; the thought stopped one
+# line short.
+plugin_bytes=$(wc -c < "$out/cyberos.plugin" | tr -d ' ')
 [ "$plugin_bytes" -le 2097152 ] || { echo "cyberos-init: ERROR: cyberos.plugin ${plugin_bytes}B exceeds the 2 MB budget" >&2; exit 2; }
 
 echo "cyberos-init: done. profile=$profile skills=$vendored_skills caf=$caf_vendored payload=${payload_bytes} plugin_zip=${plugin_bytes}"

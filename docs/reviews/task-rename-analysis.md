@@ -725,5 +725,87 @@ everything.** The audit that was supposed to catch this used a malformed regex a
 clean — the §14.6 failure one level up: a check trusted without testing that it *could* fail.
 
 `scripts/dev/*.sh` already use BSD `sed -i ''`. The repo knew it ran on macOS; the test
-files were simply never executed to find out. Still open: `tools/cyberos-init/tests/` (8
-files, not globbed) contains two more bash-4 `declare -A` users.
+files were simply never executed to find out.
+
+### 14.11 The init audit: what 23 re-inits would have hit (2026-07-15)
+
+Stephen is re-initing 23 projects from a wiped `.cyberos`, which makes `install.sh` the
+highest-stakes surface in the repo. Four defects, three of them mine:
+
+**`task-author` would have HALTed on the first task in every project.** It dispatches on
+`templates/{type}.md` and halts when one is missing — deliberately. The type discriminator
+added those templates under `contracts/task/templates/` and wired the dispatch, but never
+added them to the payload: `build.sh` copied `contracts/task/STATUS-REFERENCE.md` and
+nothing else from that directory. Found by running `find .cyberos -name feature.md` on a
+real clean install — it returned nothing. Reading `build.sh` would not have shown it.
+
+**The onboarding command was broken.** `install.sh:651` — the first line of the "Next:"
+block every new repo prints — said `cp .cyberos/cuo/templates/TASK-TEMPLATE.md`, while the
+file was `FR-TEMPLATE.md`. And the template itself still shipped `class: product` /
+`priority: SHOULD`, retired 2026-07-14, so a task authored from it failed FM-108 (`type`
+required, error) on creation. `contracts/task/templates/feature.md` was the same; since
+`improvement.md` and `chore.md` are pointers to it, 3 of the 4 types inherited it.
+
+**`t09` passed through all of it.** It asserts `install.sh` contains
+`TASK-001-<slug>/spec.md` — true. It never checked that the template that line names
+exists. The assert checked the sentence, not the world.
+
+The common cause: **a template is never executed.** No test imports it, no gate parses it,
+no build step touches it — so the rubric and the templates were authored in the same change
+and never checked against each other. `bug.md` is correct only because it happened to be
+written afterwards. `scripts/tests/test_template_schema.sh` now checks every template
+against FM-108 and asserts the payload carries all four types.
+
+**`install.sh` destroyed foreign pre-commit hooks on re-init.** Ownership was decided by
+`head -5 "$hk" | grep -q cyberos-status-hook` — "is our marker near the top?" instead of
+"is this our file?". The two differ when the foreign hook is shorter than 5 lines: install
+#1 appends our marked block, the marker lands at line 4, install #2 sees it inside `head
+-5`, claims the file, and `cat >` overwrites it. Reproduced:
+
+| foreign hook | marker vs `head -5` | after re-init |
+|---|---|---|
+| 3 lines | inside | **destroyed** |
+| 10 lines | outside | survives |
+
+Silent data loss whose trigger is the *length of someone else's file*. It matters now
+because `rm -rf .cyberos` does not touch `.git/hooks/`, so every re-init re-enters that
+branch against a hook the previous install already appended to. Ownership is now exact:
+our managed header on line 2, with the `>>>` appended form excluded.
+
+The appended block also used `grep -Eq ... <<<"$staged"` — a bash herestring — while being
+appended to hooks whose shebang is `#!/bin/sh`. Under dash that is a syntax error, so the
+hook aborted and the foreign exit code was lost. It looked fine on macOS, where `/bin/sh`
+is bash in sh-mode. Now POSIX `case`, verified with `dash -n`.
+
+### 14.12 Un-orphaning the last test directory
+
+`tools/cyberos-init/tests/` — 8 files, in no gate. Three were red on Linux before macOS
+was even considered, each a stale assert against a doc or tool that moved:
+
+- `test_check_version_sync.sh` t01 pinned "across 6 artifacts"; `dd9070e33` added a 7th and
+  updated the comparator's own header comment but not the assert. Count no longer pinned —
+  AC 1 is "a fresh build is in sync", not "there are exactly six artifacts".
+- `test_full_sdp_payload.sh` t04 asserted 14 stage rows in `GUIDE.md`; `7fb1f7099`
+  repurposed the GUIDE source from a lifecycle map into an install guide. Zero numbered
+  rows since. **Open question for Stephen: should the 14-stage map come back, and where?**
+  A test should not assert a doc into existence, so the row count is dropped and the
+  still-meaningful checks (no `TBD`, valid invokers) stay.
+- `test_check_version_sync.sh` t07 broke on **my** additions: the `hook_fixture` copies the
+  real `.githooks/pre-commit` but stubs only what it called the day it was written. I added
+  two gates to that hook (the vocab gate, unconditional; `run_all.sh`, triggered by
+  `^modules/skill/` — exactly what t07 stages) and never re-stubbed. Then my first stubs
+  wrote to `calls.log`, which t07 uses to detect whether the *status-sync engine* fired —
+  a real assert failing on a fixture artefact. Stubs are now silent.
+
+And `build.sh`'s new unguarded `cp` of the templates broke t07 of `test_full_sdp_payload`,
+which builds from a deliberately skill-less repo. Kept unguarded — the templates are floor
+(a payload without them ships a skill that halts), so the fixture provides them, exactly
+like `STATUS-REFERENCE.md`.
+
+Every gated test is now macOS-safe: 3 GNU `sed -i` and 1 bash-4 `declare -A` converted.
+`run_all.sh` globs all three test directories — 15 suites, 15 green. Every `test_*.sh` in
+the repo is now reachable from a gate except `playground/`.
+
+**The pattern across §14.7–§14.12**: I kept adding gates while the tests covering those
+gates were unreachable, so the feedback that would have caught me was switched off. The
+first act of un-orphaning them surfaced two of my own breakages within minutes.

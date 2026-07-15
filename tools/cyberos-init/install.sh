@@ -7,14 +7,26 @@
 # Remove: uninstall.sh. Open status page: status.sh.
 set -euo pipefail
 
-src="$(cd "$(dirname "$0")" && pwd)"                   # the payload dir this script lives in
+# -P / pwd -P: PHYSICAL paths, symlinks resolved.
+#
+# `root` below is `git rev-parse --show-toplevel`, which always returns a physical path.
+# `src` used a logical `cd && pwd`. On macOS /tmp is a symlink to /private/tmp, so src came
+# back /tmp/x/.cyberos-init while root came back /private/tmp/x — and the self-cleanup at
+# the foot of this file is a STRING COMPARE, `[ "$src" = "$root/.cyberos-init" ]`. It never
+# matched, so .cyberos-init was never removed after a bootstrap install on a Mac. Invisible
+# on Linux, where /tmp is a real directory and logical == physical.
+#
+# Comparing paths from two resolvers is comparing two different questions.
+src="$(cd -P "$(dirname "$0")" && pwd -P)"             # the payload dir this script lives in
 avail_ver="$( [ -f "$src/VERSION" ] && tr -d ' \n\r' < "$src/VERSION" || echo unknown )"
 
 
 # Internal page regen lives at lib/status-page.sh (hooks + run-gates). Not user-facing.
 # Full task migrate runs automatically during install (unless CYBEROS_NO_MIGRATE=1).
 
-target="${1:-$(pwd)}"; target="$(cd "$target" && pwd)"
+# -P here too: when git is absent `root` falls back to `$target`, so target must already be
+# physical or the self-cleanup compare inherits the same /tmp vs /private/tmp mismatch.
+target="${1:-$(pwd)}"; target="$(cd -P "$target" && pwd -P)"
 root="$(cd "$target" && git rev-parse --show-toplevel 2>/dev/null || echo "$target")"
 CY="$root/.cyberos"
 
@@ -519,8 +531,37 @@ if [ "${CYBEROS_NO_HOOK:-0}" != "1" ]; then
   else
     hk="$root/.git/hooks/pre-commit"
     mkdir -p "$root/.git/hooks"
-    if [ ! -f "$hk" ] || head -5 "$hk" 2>/dev/null | grep -q "cyberos-status-hook"; then
-      # absent, or a hook WE own outright (marker in the header): (re)write the standalone form
+
+    # Do we own this file OUTRIGHT? Exact, not positional.
+    #
+    # This was `head -5 "$hk" | grep -q cyberos-status-hook` — a heuristic that asked
+    # "is our marker near the top?" instead of "is this our file?". The two differ for a
+    # foreign hook SHORTER than 5 lines: install #1 appends our marked block, the marker
+    # lands at line 4, install #2 reads it inside head -5, concludes it owns the file, and
+    # `cat >` DESTROYS the user's hook. Reproduced:
+    #
+    #   foreign hook 3 lines  -> marker inside head -5  -> foreign body DESTROYED on re-init
+    #   foreign hook 10 lines -> marker outside head -5 -> foreign body survives
+    #
+    # Silent data loss whose trigger is the LENGTH of someone else's file. It matters now
+    # because `rm -rf .cyberos && install` does not touch .git/hooks/, so every re-init
+    # re-enters this branch against a hook the previous install already appended to.
+    #
+    # Our standalone form always carries the managed header on line 2. The appended form
+    # is marked `>>>` and belongs to whoever owns the lines above it. Line 2 + the `>>>`
+    # exclusion separates them exactly, at any file length.
+    _cyberos_owns_hook() {
+      [ -f "$1" ] || return 1
+      local l2; l2="$(sed -n '2p' "$1" 2>/dev/null)"
+      case "$l2" in
+        *'>>>'*)                    return 1 ;;   # the APPENDED form — the file is theirs
+        '# cyberos-status-hook'*)   return 0 ;;   # our managed standalone header
+        *)                          return 1 ;;
+      esac
+    }
+
+    if [ ! -f "$hk" ] || _cyberos_owns_hook "$hk"; then
+      # absent, or a hook WE own outright (managed header on line 2): (re)write the standalone form
       cat > "$hk" <<'HOOK'
 #!/usr/bin/env bash
 # cyberos-status-hook v2 (managed by cyberos install)
@@ -562,9 +603,26 @@ HOOK
         cat >> "$hk" <<'HOOK'
 
 # >>> cyberos-status-hook v2 (appended by cyberos init; edits above survive re-init) >>>
+# POSIX sh ONLY. This block is appended to a hook we did not write, whose shebang is very
+# often `#!/bin/sh`. It used `grep -Eq ... <<<"$staged"` — a bash herestring, a SYNTAX
+# ERROR under dash — so wherever /bin/sh is dash the hook aborted and the foreign hook's
+# exit code was lost. It looked correct on macOS, where /bin/sh is bash in sh-mode and
+# herestrings work. (The standalone form above declares `#!/usr/bin/env bash` and may
+# keep its bash-isms. This one may not: the shebang is the user's, not ours.)
+#
+# `case` and not `printf | grep -q`: the pipe is exactly what the standalone form's own
+# comment warns about — grep -q exits early, the writer takes SIGPIPE, and under a foreign
+# hook's `set -o pipefail` that becomes a spurious failure. A case loop has no pipe and no
+# herestring, so it holds under dash, bash, and whatever options the user's hook set.
 _cyberos_rc=$?
-staged="$(git diff --cached --name-only || true)"
-if grep -Eq '^(docs/tasks/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
+_cyberos_staged="$(git diff --cached --name-only || true)"
+_cyberos_hit=0
+for _cyberos_f in $_cyberos_staged; do
+  case "$_cyberos_f" in
+    docs/tasks/*|CHANGELOG.md|VERSION) _cyberos_hit=1; break ;;
+  esac
+done
+if [ "$_cyberos_hit" = 1 ]; then
   if [ -f .cyberos/lib/status-page.sh ] && command -v node >/dev/null 2>&1; then
     if bash .cyberos/lib/status-page.sh .; then
       git add docs/status 2>/dev/null || true
@@ -587,9 +645,26 @@ HOOK
       cat >> "$hk" <<'HOOK'
 
 # >>> cyberos-status-hook v2 (appended by cyberos init; edits above survive re-init) >>>
+# POSIX sh ONLY. This block is appended to a hook we did not write, whose shebang is very
+# often `#!/bin/sh`. It used `grep -Eq ... <<<"$staged"` — a bash herestring, a SYNTAX
+# ERROR under dash — so wherever /bin/sh is dash the hook aborted and the foreign hook's
+# exit code was lost. It looked correct on macOS, where /bin/sh is bash in sh-mode and
+# herestrings work. (The standalone form above declares `#!/usr/bin/env bash` and may
+# keep its bash-isms. This one may not: the shebang is the user's, not ours.)
+#
+# `case` and not `printf | grep -q`: the pipe is exactly what the standalone form's own
+# comment warns about — grep -q exits early, the writer takes SIGPIPE, and under a foreign
+# hook's `set -o pipefail` that becomes a spurious failure. A case loop has no pipe and no
+# herestring, so it holds under dash, bash, and whatever options the user's hook set.
 _cyberos_rc=$?
-staged="$(git diff --cached --name-only || true)"
-if grep -Eq '^(docs/tasks/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
+_cyberos_staged="$(git diff --cached --name-only || true)"
+_cyberos_hit=0
+for _cyberos_f in $_cyberos_staged; do
+  case "$_cyberos_f" in
+    docs/tasks/*|CHANGELOG.md|VERSION) _cyberos_hit=1; break ;;
+  esac
+done
+if [ "$_cyberos_hit" = 1 ]; then
   if [ -f .cyberos/lib/status-page.sh ] && command -v node >/dev/null 2>&1; then
     if bash .cyberos/lib/status-page.sh .; then
       git add docs/status 2>/dev/null || true

@@ -39,12 +39,19 @@ else TO=""; fi
 # an orphan is not. Add a path here only if a file genuinely cannot run on its own.
 SKIP=""
 
-pass=0; fail=0; failed=""
-for t in scripts/tests/test_*.sh tools/docs-site/tests/test_*.sh; do
+pass=0; fail=0; skip=0; failed=""
+for t in scripts/tests/test_*.sh tools/docs-site/tests/test_*.sh tools/cyberos-init/tests/test_*.sh; do
   [ -e "$t" ] || continue
   b="$(basename "$t")"
   case " $SKIP " in *" $b "*) echo "  skip $b"; continue ;; esac
   if $TO bash "$t" >/tmp/run_all.$$.log 2>&1; then
+    # A suite may exit 0 having skipped itself on a platform requirement it cannot meet
+    # (test_release_assets.sh needs GNU tar; BSD tar has no --sort/--owner/--mtime). Report
+    # that as SKIP, not ok: a skip counted as a pass is how a gate quietly stops gating.
+    if grep -q '^  SKIP ' /tmp/run_all.$$.log 2>/dev/null; then
+      skip=$((skip+1)); printf '  \033[33mskip\033[0m %s — %s\n' "$b" "$(sed -n 's/^  SKIP [^—]*— //p' /tmp/run_all.$$.log | head -1)"
+      rm -f /tmp/run_all.$$.log; continue
+    fi
     pass=$((pass+1)); printf '  \033[32mok\033[0m   %s\n' "$b"
   else
     fail=$((fail+1)); failed="$failed $b"
@@ -55,5 +62,5 @@ for t in scripts/tests/test_*.sh tools/docs-site/tests/test_*.sh; do
 done
 
 echo "----"
-echo "suites: pass=$pass fail=$fail"
+echo "suites: pass=$pass fail=$fail skip=$skip"
 [ "$fail" -eq 0 ] || { echo "failed:$failed"; exit 1; }

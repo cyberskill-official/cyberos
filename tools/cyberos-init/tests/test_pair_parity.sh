@@ -16,11 +16,26 @@ t01_all_pairs_parity_clean() {                                         # AC 1
 }
 t02_prose_gate_rule_ids() {                                            # AC 2
   local bad=""
-  declare -A want=( [repo-context-map]=RCM- [edge-case-matrix]=ECM- [mock-contract-test]=MCT- \
-                    [observability-injection]=OBS- [backlog-state-update]=BSU- [coverage-gate]=COV- )
+  # bash 3.2 SAFE. This was `declare -A want=(...)`, bash 4 only — a syntax error on macOS
+  # (which ships bash 3.2, frozen 2007), so this whole suite aborted on the machine this
+  # repo is developed on. It never reported that, because until 2026-07-15 nothing ran it.
+  # Same root cause as check-chain-coverage.sh being a silent no-op on macOS.
+  _want_prefix() {
+    case "$1" in
+      repo-context-map)        echo "RCM-" ;;
+      edge-case-matrix)        echo "ECM-" ;;
+      mock-contract-test)      echo "MCT-" ;;
+      observability-injection) echo "OBS-" ;;
+      backlog-state-update)    echo "BSU-" ;;
+      coverage-gate)           echo "COV-" ;;
+      *)                       echo "" ;;
+    esac
+  }
   for n in $SIX; do
     r="$SKILLS/$n-audit/RUBRIC.md"
-    grep -q "prose source" "$r" && grep -q "${want[$n]}" "$r" || bad="$bad $n"
+    w="$(_want_prefix "$n")"
+    [ -n "$w" ] || { bad="$bad $n(no-prefix-mapped)"; continue; }
+    grep -q "prose source" "$r" && grep -q "$w" "$r" || bad="$bad $n"
   done
   # spot gates from task §1 #3 present as rules
   grep -q "TOTAL_ROWS_MIN" "$SKILLS/edge-case-matrix-audit/RUBRIC.md" \

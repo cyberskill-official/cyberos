@@ -12,6 +12,23 @@ ok()   { PASS=$((PASS+1)); echo "  ok   $1"; }
 fail() { FAIL=$((FAIL+1)); echo "  FAIL $1: $2"; }
 gnu_tar() { tar --version 2>/dev/null | grep -q "GNU tar"; }
 
+# SKIP the whole suite without GNU tar, BEFORE the setup that needs it.
+#
+# t01 already guarded itself with `gnu_tar || SKIP`, but the setup below calls release-
+# assets.sh unguarded at file scope — and that tool hard-errors ("GNU tar required for
+# deterministic assets (run on ubuntu/CI)") and exits 2 on BSD tar. So on macOS the file
+# died at line ~17 and the guard on line 21 was never reached. A guard downstream of the
+# thing that kills you is decoration.
+#
+# This suite is genuinely CI-only: determinism here MEANS GNU tar's --sort/--owner/--mtime,
+# which BSD tar has no equivalent for. That is not a portability bug to fix, it is a real
+# platform requirement — so exit 0 (skip), never fail. A suite that cannot run on the
+# developer's machine must not block their commits; CI on ubuntu is where it has teeth.
+if ! gnu_tar; then
+  echo "  SKIP test_release_assets.sh — needs GNU tar (BSD/macOS host); runs on ubuntu/CI"
+  exit 0
+fi
+
 echo "building scratch payload + assets..."
 bash "$repo/tools/cyberos-init/build.sh" "$TMP/payload" >/dev/null 2>&1 || { echo FATAL build; exit 1; }
 bash "$RA" "$TMP/payload" "$TMP/assets" >/dev/null || { echo FATAL assets; exit 1; }

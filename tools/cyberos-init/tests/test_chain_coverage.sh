@@ -29,7 +29,7 @@ t02_parses_chain_not_list() {                                        # AC 2
     && ok t02 || fail t02 "rc=$rc out=$out"
   # edge row 2: zero references -> exit 2, never a vacuous pass
   P="$TMP/t02b"; rm -rf "$P"; cp -r "$TMP/payload" "$P"
-  sed -i 's/skill:/skil_:/g' "$P/cuo/ship-tasks.md"
+  sed -i.bak 's/skill:/skil_:/g' "$P/cuo/ship-tasks.md" && rm -f "$P/cuo/ship-tasks.md.bak"   # -i.bak: BSD/macOS sed reads a bare -i's next arg as the backup suffix
   find "$P/plugin/commands" -name '*.md' -delete
   bash "$CHECK" "$P" >/dev/null 2>&1; rc=$?
   [ "$rc" -eq 2 ] || fail "t02b" "rc=$rc, want 2 on zero extraction"
