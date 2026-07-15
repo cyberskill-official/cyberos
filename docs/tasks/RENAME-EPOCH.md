@@ -530,3 +530,60 @@ FR-<NNN>-T-<MM>     ->   TASK-<NNN>-S-<MM>     (subtask; -T- would read as 'task
 | `FR-TIME-007` | `TASK-TIME-007` | time |
 | `FR-TIME-008` | `TASK-TIME-008` | time |
 | `FR-TIME-009` | `TASK-TIME-009` | time |
+
+---
+
+# Second wave — init to install
+
+Date: 2026-07-16.
+
+The first wave renamed the *atom* (feature-request to task). This wave finishes the
+*verb*. `init.sh` had already become `install.sh`, `version.sh` and
+`lib/status-page.sh`, but the name `init` survived exactly where a content codemod
+does not look: a directory, a binary, an npm package name, and every doc that told a
+user what to type.
+
+## Rule
+
+```
+tools/cyberos-init/          ->  tools/cyberos-install/
+cli/bin/cyberos-init.mjs     ->  cli/bin/cyberos-install.mjs
+npm name: cyberos-init       ->  cyberos-install
+npx cyberos-init             ->  npx cyberos-install
+log prefix "cyberos-init:"   ->  "cyberos-install:"
+
+init.sh <repo>               ->  install.sh <repo>
+init.sh --check <repo>       ->  version.sh <repo>
+init.sh --page               ->  lib/status-page.sh
+```
+
+Mapped by shape, not blanket: `--check` and `--page` are separate commands now, so a
+flat `init.sh -> install.sh` would have minted two more broken pointers.
+
+## Why now
+
+`cyberos-init` was the npm package name and the `npx` command — externally visible
+surface. It was never published (registry 404; no publish workflow) and there are no
+external consumers pre-1.0. Renaming it before the first release costs nothing.
+Renaming it after is a breaking change for every consumer.
+
+## Archived evidence was rewritten (D3 again)
+
+430 sites across 124 files; 45 of those files are archived task specs, `.workflow`
+evidence, review docs, and the changelog. Unlike an `FR-` id, these are **path**
+references — a path that no longer resolves is simply broken, so tracking the move
+is the accurate act rather than a falsification. Read any `tools/cyberos-install/...`
+path in an artefact dated before 2026-07-16 as `tools/cyberos-init/...`.
+
+## What the gate learned
+
+This wave survived the first one because `.pre-commit-hooks/no-legacy-fr-vocabulary.sh`
+could not see it. Two defects, both fixed:
+
+- `--diff-filter=ACM` omits `R`. A pure `git mv` reports R100, so a rename-only commit
+  was invisible to the gate — the one operation this epoch most needed policed
+  (git mv != re.sub) was the one it was blind to.
+- The gate grepped each staged file's body and never its path, so
+  `plugin/skills/ship-feature-requests/SKILL.md` passed clean: renamed contents, stale
+  directory. The build shipped it beside an empty `plugin/skills/ship-tasks/`, and the
+  flagship skill could not load in any channel.

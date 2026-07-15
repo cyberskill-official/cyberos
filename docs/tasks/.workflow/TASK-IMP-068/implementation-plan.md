@@ -16,4 +16,4 @@ Slices (each maps to §1 clauses and matrix rows):
 6. version.yml inline proof step between apply and push (§1 #7).
 7. RELEASE.md enforcement wording (§1 #5).
 
-Pattern conformance: exit codes + stderr errors + `cyberos-init:` log prefix per context map. No new dependencies (node, unzip, zip already required by build.sh).
+Pattern conformance: exit codes + stderr errors + `cyberos-install:` log prefix per context map. No new dependencies (node, unzip, zip already required by build.sh).

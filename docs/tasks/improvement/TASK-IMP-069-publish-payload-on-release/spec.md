@@ -23,23 +23,23 @@ depends_on: [TASK-IMP-068]
 blocks: [TASK-IMP-070]
 source_pages:
   - .github/workflows/release.yml
-  - tools/cyberos-init/README.md
-  - tools/cyberos-init/bootstrap.sh
-  - tools/cyberos-init/rollout.sh
+  - tools/cyberos-install/README.md
+  - tools/cyberos-install/bootstrap.sh
+  - tools/cyberos-install/rollout.sh
   - docs/deploy/RELEASE.md
 source_decisions:
   - "2026-07-12 operator decision: publish channel = GitHub Releases (payload tarball + cyberos.plugin per tag). npm package and hosted bootstrap remain future follow-ups on top of this channel."
-  - "Scope boundary: TASK-PLUGIN-008 (plugins.cyberskill.world OCI marketplace) and TASK-SKILL-201 (.skill OCI registry) are separate product-distribution systems and are NOT superseded; this task covers only the cyberos-init payload channel."
+  - "Scope boundary: TASK-PLUGIN-008 (plugins.cyberskill.world OCI marketplace) and TASK-SKILL-201 (.skill OCI registry) are separate product-distribution systems and are NOT superseded; this task covers only the cyberos-install payload channel."
 language: bash + GitHub Actions YAML
-service: .github/workflows/ + tools/cyberos-init/
+service: .github/workflows/ + tools/cyberos-install/
 new_files:
-  - tools/cyberos-init/release-assets.sh
-  - tools/cyberos-init/tests/test_release_assets.sh
+  - tools/cyberos-install/release-assets.sh
+  - tools/cyberos-install/tests/test_release_assets.sh
 modified_files:
   - .github/workflows/release.yml
-  - tools/cyberos-init/bootstrap.sh
-  - tools/cyberos-init/rollout.sh
-  - tools/cyberos-init/README.md
+  - tools/cyberos-install/bootstrap.sh
+  - tools/cyberos-install/rollout.sh
+  - tools/cyberos-install/README.md
   - docs/deploy/RELEASE.md
 ---
 
@@ -51,13 +51,13 @@ Today the payload exists only as a gitignored local build; every consumer (Claud
 
 Normative clauses:
 
-1. A script `tools/cyberos-init/release-assets.sh <payload-dir> <out-dir>` MUST produce, from a built payload: `cyberos-payload-<ver>.tar.gz` (deterministic: sorted paths, numeric owner 0:0, fixed mtime `2000-01-01T00:00:00Z`, gzip -n), `cyberos-<ver>.plugin` (byte-copy of `cyberos.plugin`), stable-name aliases `cyberos-payload.tar.gz` and `cyberos.plugin` (byte-identical copies, so `releases/latest/download/<stable-name>` always resolves), and `SHA256SUMS` covering all four. `<ver>` MUST be read from `<payload-dir>/VERSION`.
+1. A script `tools/cyberos-install/release-assets.sh <payload-dir> <out-dir>` MUST produce, from a built payload: `cyberos-payload-<ver>.tar.gz` (deterministic: sorted paths, numeric owner 0:0, fixed mtime `2000-01-01T00:00:00Z`, gzip -n), `cyberos-<ver>.plugin` (byte-copy of `cyberos.plugin`), stable-name aliases `cyberos-payload.tar.gz` and `cyberos.plugin` (byte-identical copies, so `releases/latest/download/<stable-name>` always resolves), and `SHA256SUMS` covering all four. `<ver>` MUST be read from `<payload-dir>/VERSION`.
 2. `release-assets.sh` MUST exit 10 without producing output when `<payload>/VERSION`, root `VERSION`, and the intended tag do not all agree. The intended tag is `$TAG` when set (the release workflow sets it from `inputs.tag || ref_name`, covering workflow_dispatch where `GITHUB_REF_NAME` is the branch), else `$GITHUB_REF_NAME` when set; neither set (local run) skips the tag leg. (Amended post-ship 2026-07-12: release #35 failed on dispatch because the script read only GITHUB_REF_NAME.)
 3. `.github/workflows/release.yml` MUST gain a `payload` job that, for every `v*` tag: checks out, runs `build.sh` into a temp dir, runs `check-version-sync.sh` (TASK-IMP-068) against it, runs `release-assets.sh`, and uploads the four files + `SHA256SUMS` to that tag's GitHub Release. Default `GITHUB_TOKEN` with `contents: write` MUST suffice; no new secrets.
 4. The `payload` job MUST fail when the pushed tag does not equal `v$(cat VERSION)` at that commit.
 5. `bootstrap.sh` MUST support fetching the payload from a URL: `CYBEROS_PAYLOAD_URL` overrides; default = the repo's `releases/latest/download/cyberos-payload.tar.gz`. It MUST download `SHA256SUMS` from the same location, verify the tarball's checksum before unpacking, and then run `init.sh` from the unpacked payload. Verification failure MUST abort before any file lands in the target repo.
 6. `rollout.sh` MUST accept, in place of a local payload dir, `--from-release [tag]`: download + verify once into a temp dir (per #5's mechanics), then proceed unchanged for every listed repo.
-7. `tools/cyberos-init/README.md` and `docs/deploy/RELEASE.md` MUST document the release-install paths for each channel: Claude Code (`/plugin marketplace add` on the unpacked payload), Claude desktop/Cowork (download `cyberos.plugin` from the release), curl bootstrap one-liner, and fleet `rollout.sh --from-release`. The "available once you host a tarball" placeholder MUST be replaced by the real URLs.
+7. `tools/cyberos-install/README.md` and `docs/deploy/RELEASE.md` MUST document the release-install paths for each channel: Claude Code (`/plugin marketplace add` on the unpacked payload), Claude desktop/Cowork (download `cyberos.plugin` from the release), curl bootstrap one-liner, and fleet `rollout.sh --from-release`. The "available once you host a tarball" placeholder MUST be replaced by the real URLs.
 
 ## §2 - Why this design
 
@@ -87,9 +87,9 @@ release.yml addition (shape):
     steps:
       - uses: actions/checkout@v4
       - run: test "v$(cat VERSION)" = "$GITHUB_REF_NAME"
-      - run: bash tools/cyberos-init/build.sh "$RUNNER_TEMP/payload"
-      - run: bash tools/cyberos-init/check-version-sync.sh "$RUNNER_TEMP/payload"
-      - run: bash tools/cyberos-init/release-assets.sh "$RUNNER_TEMP/payload" "$RUNNER_TEMP/assets"
+      - run: bash tools/cyberos-install/build.sh "$RUNNER_TEMP/payload"
+      - run: bash tools/cyberos-install/check-version-sync.sh "$RUNNER_TEMP/payload"
+      - run: bash tools/cyberos-install/release-assets.sh "$RUNNER_TEMP/payload" "$RUNNER_TEMP/assets"
       - run: gh release upload "$GITHUB_REF_NAME" "$RUNNER_TEMP"/assets/* --clobber
         env: { GH_TOKEN: "${{ github.token }}" }
 ```
@@ -109,9 +109,9 @@ release.yml addition (shape):
 ## §5 - Verification
 
 ```bash
-# tools/cyberos-init/tests/test_release_assets.sh
+# tools/cyberos-install/tests/test_release_assets.sh
 # Fixtures: scratch payload built by build.sh into $TMP; file:// URLs exercise the
-# download paths without network. Run: bash tools/cyberos-init/tests/test_release_assets.sh
+# download paths without network. Run: bash tools/cyberos-install/tests/test_release_assets.sh
 
 t01_deterministic_tarball()      # AC 1
 t02_five_files_two_name_forms()  # AC 2

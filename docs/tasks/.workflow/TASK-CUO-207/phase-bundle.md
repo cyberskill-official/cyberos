@@ -37,7 +37,7 @@ loud fail PASS (t08). Secret scan: none. Injection: config values eval'd - docum
 gates.env. Backcompat: gates.env alone (no config.yaml) behaves exactly as before + provenance lines.
 
 ## coverage gate (steps 21-29)
-test_gate_autodetect.sh 8/8 (one per AC). Full regression: 7/7 cyberos-init suites, ship_manifest 8/8
+test_gate_autodetect.sh 8/8 (one per AC). Full regression: 7/7 cyberos-install suites, ship_manifest 8/8
 upstream. ECM rows covered per matrix above. tests_failed=0; bash-only task (no python coverage basis).
 
 ## HITL record

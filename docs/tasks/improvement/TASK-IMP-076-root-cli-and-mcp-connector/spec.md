@@ -22,21 +22,21 @@ related_tasks: [TASK-IMP-074, TASK-CUO-206]
 depends_on: []
 blocks: []
 source_pages:
-  - "tools/cyberos-init/ (init.sh exists with --check three-value report per TASK-IMP-070; update/changelog/help existed only as plugin commands - commands/*.md)"
-  - "tools/cyberos-init/mcp/cyberos-mcp.mjs (184 lines, zero-dep stdio JSON-RPC; handle() dispatch is transport-agnostic - reused verbatim for http)"
+  - "tools/cyberos-install/ (init.sh exists with --check three-value report per TASK-IMP-070; update/changelog/help existed only as plugin commands - commands/*.md)"
+  - "tools/cyberos-install/mcp/cyberos-mcp.mjs (184 lines, zero-dep stdio JSON-RPC; handle() dispatch is transport-agnostic - reused verbatim for http)"
   - "Stephen's screenshots 2026-07-13: Grok 'Custom Connector' (Name + MCP server URL, /sse placeholder) and Claude 'Add custom connector' (Name + Remote MCP server URL + optional OAuth client id/secret)"
 source_decisions:
   - "2026-07-13 Stephen: init, update, changelog, help should have root CLI .sh versions to trigger directly; expand distribution channels with an MCP connector to integrate with agents (Grok + Claude UIs attached)."
 language: bash (root CLI), node/mjs (http transport), markdown (connector runbook)
-service: tools/cyberos-init
+service: tools/cyberos-install
 new_files:
-  - tools/cyberos-init/update.sh
-  - tools/cyberos-init/changelog.sh
-  - tools/cyberos-init/help.sh
+  - tools/cyberos-install/update.sh
+  - tools/cyberos-install/changelog.sh
+  - tools/cyberos-install/help.sh
   - docs/deploy/mcp-connector.md
 modified_files:
-  - tools/cyberos-init/build.sh
-  - tools/cyberos-init/mcp/cyberos-mcp.mjs
+  - tools/cyberos-install/build.sh
+  - tools/cyberos-install/mcp/cyberos-mcp.mjs
 allowed_tools: [bash, node http core module - zero new dependencies]
 disallowed_tools:
   - Exposing the http transport publicly without the auth/TLS checklist (docs/deploy/mcp-connector.md) - the tools execute repo workflows

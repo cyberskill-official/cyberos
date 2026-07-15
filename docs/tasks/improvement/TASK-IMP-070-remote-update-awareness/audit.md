@@ -13,7 +13,7 @@ template: engineering-spec@1
 
 ## §1 - Verdict summary
 
-Audited for verdict-table totality, degradation honesty, and doc-contract precision (two command docs are normative deliverables here). The draft's verdict table had an undefined cell (installed > latest) and an untested resolver failure path; both closed. Traceability closes over t01-t08 in tools/cyberos-init/tests/test_check_latest.sh.
+Audited for verdict-table totality, degradation honesty, and doc-contract precision (two command docs are normative deliverables here). The draft's verdict table had an undefined cell (installed > latest) and an untested resolver failure path; both closed. Traceability closes over t01-t08 in tools/cyberos-install/tests/test_check_latest.sh.
 
 ## §2 - Findings (all resolved)
 

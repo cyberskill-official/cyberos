@@ -35,7 +35,7 @@ symmetric one-line swaps across 387 files; frontmatter untouched except descript
 citation substrings, which are the §1 #1 class itself).
 
 ## coverage gate (steps 21-29)
-test_check_doc_anchors.sh 6/6; 7/7 cyberos-init suites; ship_manifest 8/8; live tree: anchors OK
+test_check_doc_anchors.sh 6/6; 7/7 cyberos-install suites; ship_manifest 8/8; live tree: anchors OK
 341 references, exit 0. tests_failed=0.
 
 ## regression note (recorded, refinement queued)

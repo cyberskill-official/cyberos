@@ -141,7 +141,7 @@ class TestShipManifest(unittest.TestCase):
         # PRE-EXISTING failure, unrelated to the fr->task rename: init.sh was
         # deleted in bb0f2392e ("1.0.0 CLI surface") and replaced by install.sh.
         # The test kept opening the dead path and has been red ever since.
-        init_sh = open(os.path.join(ROOT, "tools", "cyberos-init", "install.sh")).read()
+        init_sh = open(os.path.join(ROOT, "tools", "cyberos-install", "install.sh")).read()
         self.assertIn(".workflow/.gitignore", init_sh)
         self.assertIn("*.ship.json", init_sh)
         out = subprocess.run(["git", "check-ignore",

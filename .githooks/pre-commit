@@ -6,7 +6,7 @@
 set -euo pipefail
 
 root="$(git rev-parse --show-toplevel)"
-trigger='^(modules/cuo/|modules/skill/|modules/memory/memory\.(schema\.json|invariants\.yaml)|AGENTS\.md|tools/cyberos-init/|tools/caf/|scripts/caf_gate\.sh|VERSION)'
+trigger='^(modules/cuo/|modules/skill/|modules/memory/memory\.(schema\.json|invariants\.yaml)|AGENTS\.md|tools/cyberos-install/|tools/caf/|scripts/caf_gate\.sh|VERSION)'
 
 # The staged list is read ONCE, into a variable, and every trigger below tests it with a
 # herestring. NEVER `git diff --cached --name-only | grep -Eq ...`: under `set -o pipefail`,
@@ -19,7 +19,7 @@ matches() { grep -Eq "$1" <<<"$staged"; }
 
 if matches "$trigger"; then
   bash "$root/.pre-commit-hooks/cyberos-payload-build.sh"
-  bash "$root/tools/cyberos-init/check-version-sync.sh" "$root/dist/cyberos"
+  bash "$root/tools/cyberos-install/check-version-sync.sh" "$root/dist/cyberos"
 fi
 
 # TASK-DOCS-007: any staged change to task specs, backlog inputs, templates, or the site tooling
@@ -52,7 +52,7 @@ if matches "$status_trigger"; then
   # that commit, which is exactly why it sat there full of stale FR-*.js chunks.
   # A guard that skips when its own tool is missing is indistinguishable from success.
   status_page="$root/.cyberos/lib/status-page.sh"
-  [ -f "$status_page" ] || status_page="$root/tools/cyberos-init/lib/status-page.sh"  # self-hosting fallback
+  [ -f "$status_page" ] || status_page="$root/tools/cyberos-install/lib/status-page.sh"  # self-hosting fallback
   if [ -f "$status_page" ] && command -v node >/dev/null 2>&1; then
     if bash "$status_page" "$root" >/dev/null 2>&1; then
       git add "$root/docs/status/" 2>/dev/null || true
@@ -77,7 +77,7 @@ bash "$root/.pre-commit-hooks/no-legacy-fr-vocabulary.sh"
 # hook, not local_verify.sh, not any of the 24 CI workflows — and three of the six had been
 # red for months without reporting it. Gated here rather than by name so a new test file
 # under scripts/tests/ or tools/docs-site/tests/ is covered the moment it exists.
-if grep -qE '^(scripts/|tools/docs-site/|modules/templates/|modules/skill/|modules/cuo/|tools/cyberos-init/)' <<<"$staged"; then
+if grep -qE '^(scripts/|tools/docs-site/|modules/templates/|modules/skill/|modules/cuo/|tools/cyberos-install/)' <<<"$staged"; then
   bash "$root/scripts/tests/run_all.sh" || {
     echo "cyberos: shell test suites failed - fix before committing (run: bash scripts/tests/run_all.sh)" >&2
     exit 1

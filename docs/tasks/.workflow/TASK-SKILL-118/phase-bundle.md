@@ -43,7 +43,7 @@ Secret scan: none. Injection: checker quotes all paths, no eval. Backwards compa
 BSU @2 transition window intact.
 
 ## coverage gate (steps 21-29)
-test_pair_parity.sh 6/6 (one per AC). Full regression: 6/6 cyberos-init suites (incl. new suite),
+test_pair_parity.sh 6/6 (one per AC). Full regression: 6/6 cyberos-install suites (incl. new suite),
 ship_manifest 8/8, full-profile build green with parity gate live (52 skills, plugin 1.09MB < 2MB).
 ECM rows each name their covering check inline above. tests_failed=0; files_below_90pct n/a (bash+docs task,
 no python touched); ecm_rows_uncovered=[].

@@ -36,5 +36,5 @@ live nav.html); #7 token-clean PASS (t08). Injection: esc() on all interpolation
 existing page displaced.
 
 ## coverage gate (steps 21-29)
-test_render_roadmap.sh 8/8 (one per AC); full regression 8/8 suites (7 cyberos-init + doc-anchors);
+test_render_roadmap.sh 8/8 (one per AC); full regression 8/8 suites (7 cyberos-install + doc-anchors);
 live build green: roadmap 486 tasks / 18 releases / VERSION 0.1.0, page in nav, site build byte-stable.

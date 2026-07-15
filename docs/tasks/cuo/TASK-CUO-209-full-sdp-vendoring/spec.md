@@ -23,18 +23,18 @@ depends_on: [TASK-SKILL-116, TASK-SKILL-117]
 blocks: []
 source_pages:
   - modules/cuo/docs/appendices.md
-  - tools/cyberos-init/build.sh
-  - tools/cyberos-init/init.sh
+  - tools/cyberos-install/build.sh
+  - tools/cyberos-install/init.sh
 source_decisions:
   - "2026-07-12 operator decision (plan approval): vendor the full SDP set BY DEFAULT - not an opt-in profile. The plugin today covers stages 5-10 of the 14-stage SDP; the upstream (SOW, PRD, SRS, NFR, SDD, threat-model) and downstream (deploy, release, runbook, retro/postmortem/decommission) pairs exist in modules/skill but never ship."
   - "Reduced profile semantics unchanged: doc-driven floor remains for payloads built without skill bodies."
 language: bash + markdown
-service: tools/cyberos-init/
+service: tools/cyberos-install/
 new_files:
-  - tools/cyberos-init/tests/test_full_sdp_payload.sh
+  - tools/cyberos-install/tests/test_full_sdp_payload.sh
 modified_files:
-  - tools/cyberos-init/build.sh
-  - tools/cyberos-init/README.md
+  - tools/cyberos-install/build.sh
+  - tools/cyberos-install/README.md
 ---
 
 # TASK-CUO-209: Full-SDP vendoring by default
@@ -75,7 +75,7 @@ nfr-certification-author            # SDP 4 (allowlisted unpaired)
 "
 ```
 
-Build report line: `cyberos-init: done. profile=full skills=<computed> payload=<bytes> plugin_zip=<bytes>`.
+Build report line: `cyberos-install: done. profile=full skills=<computed> payload=<bytes> plugin_zip=<bytes>`.
 
 ## §4 - Acceptance criteria
 
@@ -91,7 +91,7 @@ Build report line: `cyberos-init: done. profile=full skills=<computed> payload=<
 ## §5 - Verification
 
 ```bash
-# tools/cyberos-init/tests/test_full_sdp_payload.sh
+# tools/cyberos-install/tests/test_full_sdp_payload.sh
 t01_stage_matrix_ships()         # AC 1
 t02_set_is_reviewable_data()     # AC 2
 t03_counts_computed()            # AC 3
@@ -113,7 +113,7 @@ Depends on TASK-SKILL-116 (chain/pair checker + allowlist mechanics; also the si
 ## §8 - Example payloads
 
 ```
-cyberos-init: done. profile=full skills=52 payload=2731008 plugin_zip=897412
+cyberos-install: done. profile=full skills=52 payload=2731008 plugin_zip=897412
 ```
 
 ## §9 - Open questions

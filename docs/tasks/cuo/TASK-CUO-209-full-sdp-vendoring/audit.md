@@ -13,7 +13,7 @@ template: engineering-spec@1
 
 ## §1 - Verdict summary
 
-Audited for expansion safety: 20 -> ~52 vendored skills with the two workflows explicitly frozen. The decisive controls are the reviewable set-as-data block, the computed counts, the size budget, and the sibling checkers running over the expanded set. The NFR-four pairing question was resolved upstream in TASK-SKILL-116's allowlist semantics. Traceability closes over t01-t08 in tools/cyberos-init/tests/test_full_sdp_payload.sh.
+Audited for expansion safety: 20 -> ~52 vendored skills with the two workflows explicitly frozen. The decisive controls are the reviewable set-as-data block, the computed counts, the size budget, and the sibling checkers running over the expanded set. The NFR-four pairing question was resolved upstream in TASK-SKILL-116's allowlist semantics. Traceability closes over t01-t08 in tools/cyberos-install/tests/test_full_sdp_payload.sh.
 
 ## §2 - Findings (all resolved)
 
@@ -43,7 +43,7 @@ All six findings addressed as cited. Dependencies on TASK-SKILL-116/117 are decl
 
 ## §10 - Post-implementation gates (2026-07-12, ship run)
 
-- §10.4 coverage: PASS - t01-t08 green on rerun; all five cyberos-init suites green (42 cases).
+- §10.4 coverage: PASS - t01-t08 green on rerun; all five cyberos-install suites green (42 cases).
   Live: profile=full skills=52 payload=8499200 plugin_zip=1029894 (49% of budget); chain OK.
 - awh/caf: N/A (declared); floor = bash -n + suites + live build with both hook checks.
 - HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit

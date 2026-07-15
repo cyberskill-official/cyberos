@@ -32,13 +32,13 @@ cd ~/Projects/CyberSkill/code-audit-field-data
 git tag -a absorbed-into-cyberos -m "Vendored into CyberOS tools/caf/field-data on 2026-06-20" && git push --tags
 git bundle create ~/Projects/_archive/code-audit-field-data-absorbed.bundle --all
 
-# 2. (optional) Once the bundles are stored and the CyberOS gate has run green on a real FR,
+# 2. (optional) Once the bundles are stored and the CyberOS gate has run green on a real task,
 #    archive or remove the standalone working copies.
 #    git remote archive / repo settings -> Archive, or:
 #    rm -rf ~/Projects/CyberSkill/code-audit-framework ~/Projects/CyberSkill/code-audit-field-data
 ```
 
-Do not delete until preconditions 1-4 hold and at least one real FR has passed the caf-gate end to end
+Do not delete until preconditions 1-4 hold and at least one real task has passed the caf-gate end to end
 on a build machine. The vendored `tools/caf/` plus `field-data/` is then the single source of truth.
 
 ## Vendor provenance

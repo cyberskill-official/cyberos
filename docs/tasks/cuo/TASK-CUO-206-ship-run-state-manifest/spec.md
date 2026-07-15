@@ -38,7 +38,7 @@ new_files:
 modified_files:
   - modules/cuo/chief-technology-officer/workflows/ship-tasks.md
   - modules/cuo/EXECUTION-DISCIPLINE.md
-  - tools/cyberos-init/plugin/skills/ship-tasks/SKILL.md
+  - tools/cyberos-install/plugin/skills/ship-tasks/SKILL.md
 ---
 
 # TASK-CUO-206: Ship run-state manifest

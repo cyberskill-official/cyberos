@@ -49,7 +49,7 @@ All six findings addressed as cited. The checker makes this the LAST manual anch
 - Recorded deviation: AC 1 grep clean over live contracts; historical archives exempted with reasons
   (rewriting absorbed history falsifies it); the checker (CI-run, exit 0) is the durable form.
 - Review: human verdict at gate 1 APPROVE + pre-authorize done (Stephen Cheng, in-chat).
-- Testing: test_check_doc_anchors.sh 6/6, 7/7 cyberos-init suites at rest, live tree 341 references
+- Testing: test_check_doc_anchors.sh 6/6, 7/7 cyberos-install suites at rest, live tree 341 references
   zero dead. Gate 2 recorded per pre-authorization.
 - Field finding queued: pair-parity t04 fires on mid-flight citation swaps (point-in-time-guard
   class, third instance) - refinement candidate for the next batch.

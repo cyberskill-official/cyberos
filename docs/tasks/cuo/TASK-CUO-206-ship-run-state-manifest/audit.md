@@ -49,7 +49,7 @@ All six findings addressed as cited. The task upgrades ship from restartable to 
   APPROVE + pre-authorize done (Stephen Cheng, in-chat).
 - §10.3 Testing: 8/8 AC tests, 100.0% statement coverage on modules/cuo/cuo/ship_manifest.py
   (raised from 77.3% by covering validate error branches + write_atomic failure cleanup),
-  5/5 cyberos-init suites, git check-ignore proof. Gate 2 recorded per pre-authorization.
+  5/5 cyberos-install suites, git check-ignore proof. Gate 2 recorded per pre-authorization.
 - §10.4 Field finding folded back: TASK-CUO-209 t08 temporal-scope guard amended to durable
   workflows_vendored_intact (TASK-CUO-209 §1 #8, AC 8, audit §11).
 

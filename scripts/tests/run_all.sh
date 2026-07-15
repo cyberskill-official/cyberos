@@ -5,7 +5,7 @@
 # gate at all - not .githooks/pre-commit, not scripts/local_verify.sh, not any of the 24 CI
 # workflows. Three had been red for months and reported it to nobody:
 #
-#   test_task_layout.sh      t09 asserted against tools/cyberos-init/init.sh, deleted at
+#   test_task_layout.sh      t09 asserted against tools/cyberos-install/init.sh, deleted at
 #                            bb0f2392e. `grep` on a missing file returns 1, short-circuits
 #                            the && chain into fail. Red since that commit.
 #   test_templates_module.sh t02 pinned status-hub@1; ac33beb54 shipped status-hub@2.
@@ -40,7 +40,7 @@ else TO=""; fi
 SKIP=""
 
 pass=0; fail=0; skip=0; failed=""
-for t in scripts/tests/test_*.sh tools/docs-site/tests/test_*.sh tools/cyberos-init/tests/test_*.sh; do
+for t in scripts/tests/test_*.sh tools/docs-site/tests/test_*.sh tools/cyberos-install/tests/test_*.sh; do
   [ -e "$t" ] || continue
   b="$(basename "$t")"
   case " $SKIP " in *" $b "*) echo "  skip $b"; continue ;; esac

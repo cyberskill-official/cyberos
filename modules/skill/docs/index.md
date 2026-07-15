@@ -14,7 +14,7 @@ skill packages what an agent can do into versioned, auditable capabilities. A sk
 
 ## How skills reach other repos
 
-`cyberos-init` vendors the author/audit skills into every initialised project under `.cyberos/cuo/skills/`, and the Claude plugin (payload marketplace) exposes `/init`, `/update`, `/changelog`, `/help`, and the `ship-tasks` skill. The same skill bodies drive the workflow everywhere - there is no repo-specific fork.
+`cyberos-install` vendors the author/audit skills into every initialised project under `.cyberos/cuo/skills/`, and the Claude plugin (payload marketplace) exposes `/init`, `/update`, `/changelog`, `/help`, and the `ship-tasks` skill. The same skill bodies drive the workflow everywhere - there is no repo-specific fork.
 
 ## Changelog
 

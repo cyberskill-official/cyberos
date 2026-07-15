@@ -13,7 +13,7 @@ template: engineering-spec@1
 
 ## §1 - Verdict summary
 
-Spec-correctness audit against the engineering-spec@1 rule set (structure, BCP-14 clause quality, §1->§4->§5 traceability, failure-mode honesty). Draft was structurally complete but carried two real design holes (sealed-bundle blind spot, [skip ci] bump blindness) and one dead mechanism (pre-commit framework hook). All resolved by revision; TRACE-001/002/003 close: every §1 clause is cited by >= 1 AC, every AC by >= 1 named test in tools/cyberos-init/tests/test_check_version_sync.sh (listed in new_files).
+Spec-correctness audit against the engineering-spec@1 rule set (structure, BCP-14 clause quality, §1->§4->§5 traceability, failure-mode honesty). Draft was structurally complete but carried two real design holes (sealed-bundle blind spot, [skip ci] bump blindness) and one dead mechanism (pre-commit framework hook). All resolved by revision; TRACE-001/002/003 close: every §1 clause is cited by >= 1 AC, every AC by >= 1 named test in tools/cyberos-install/tests/test_check_version_sync.sh (listed in new_files).
 
 ## §2 - Findings (all resolved)
 

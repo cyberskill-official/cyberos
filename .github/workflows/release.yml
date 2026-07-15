@@ -38,7 +38,7 @@ permissions:
   contents: write # create the GitHub Release + upload assets
 
 jobs:
-  # TASK-IMP-069: publish the versioned cyberos-init payload + Claude plugin as release assets.
+  # TASK-IMP-069: publish the versioned cyberos-install payload + Claude plugin as release assets.
   # The stable names (cyberos-payload.tar.gz, cyberos.plugin) make releases/latest/download/
   # a canonical URL for bootstrap.sh, rollout.sh --from-release, and manual installs.
   payload:
@@ -54,15 +54,15 @@ jobs:
       - name: Tag must equal v$(cat VERSION)
         run: test "v$(cat VERSION)" = "$TAG"
       - name: Build the payload
-        run: bash tools/cyberos-init/build.sh "$RUNNER_TEMP/payload"
+        run: bash tools/cyberos-install/build.sh "$RUNNER_TEMP/payload"
       - name: Verify every stamp equals VERSION (TASK-IMP-068)
-        run: bash tools/cyberos-init/check-version-sync.sh "$RUNNER_TEMP/payload"
+        run: bash tools/cyberos-install/check-version-sync.sh "$RUNNER_TEMP/payload"
       - name: Produce deterministic release assets
-        run: bash tools/cyberos-init/release-assets.sh "$RUNNER_TEMP/payload" "$RUNNER_TEMP/assets"
+        run: bash tools/cyberos-install/release-assets.sh "$RUNNER_TEMP/payload" "$RUNNER_TEMP/assets"
       - name: Render release notes (asset guide + CHANGELOG section)
         run: |
           ver="${TAG#v}"
-          bash tools/cyberos-init/render-release-notes.sh "$ver" "$RUNNER_TEMP/RELEASE_NOTES.md"
+          bash tools/cyberos-install/render-release-notes.sh "$ver" "$RUNNER_TEMP/RELEASE_NOTES.md"
           # Keep a short title; body is the human guide (filenames alone confuse users).
           echo "CyberOS v${ver}" > "$RUNNER_TEMP/RELEASE_TITLE.txt"
       - name: Upload to the release (create-or-upload, idempotent)

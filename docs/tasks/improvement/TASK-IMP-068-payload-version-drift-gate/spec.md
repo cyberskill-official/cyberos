@@ -22,7 +22,7 @@ related_tasks: [TASK-IMP-069, TASK-IMP-070, TASK-APP-001, TASK-SKILL-116]
 depends_on: []
 blocks: [TASK-IMP-069]
 source_pages:
-  - tools/cyberos-init/build.sh
+  - tools/cyberos-install/build.sh
   - .github/workflows/version.yml
   - .pre-commit-hooks/cyberos-payload-build.sh
   - docs/deploy/RELEASE.md
@@ -30,14 +30,14 @@ source_decisions:
   - "2026-07-12 operator decision: the distributed Claude plugin version and CyberOS VERSION must always move together on release/deploy. Observed drift: VERSION 1.7.0 vs payload/plugin 1.2.0 (built 2026-07-11, fb8fb61)."
   - "2026-07-12 operator decision: dist/ stays gitignored; consistency is proven by rebuilding in CI, not by committing build output."
 language: bash + GitHub Actions YAML
-service: tools/cyberos-init/ + .github/workflows/ + .githooks/
+service: tools/cyberos-install/ + .github/workflows/ + .githooks/
 new_files:
-  - tools/cyberos-init/check-version-sync.sh
-  - tools/cyberos-init/tests/test_check_version_sync.sh
+  - tools/cyberos-install/check-version-sync.sh
+  - tools/cyberos-install/tests/test_check_version_sync.sh
   - .github/workflows/payload-gate.yml
   - .githooks/pre-commit
 modified_files:
-  - tools/cyberos-init/build.sh
+  - tools/cyberos-install/build.sh
   - .pre-commit-hooks/cyberos-payload-build.sh
   - .github/workflows/version.yml
   - docs/deploy/RELEASE.md
@@ -47,14 +47,14 @@ modified_files:
 
 ## §1 - Description
 
-The root `VERSION` file is the single platform version, auto-bumped in CI by `version.yml`. The distributable payload (`dist/cyberos`) is stamped from `VERSION` by `tools/cyberos-init/build.sh`, but only when a human runs the build. Nothing compares the two, so the payload and every installed plugin silently lag (observed: 1.2.0 vs 1.7.0). This task adds the missing comparison and makes it enforceable in CI and locally.
+The root `VERSION` file is the single platform version, auto-bumped in CI by `version.yml`. The distributable payload (`dist/cyberos`) is stamped from `VERSION` by `tools/cyberos-install/build.sh`, but only when a human runs the build. Nothing compares the two, so the payload and every installed plugin silently lag (observed: 1.2.0 vs 1.7.0). This task adds the missing comparison and makes it enforceable in CI and locally.
 
 Normative clauses:
 
-1. A script `tools/cyberos-init/check-version-sync.sh <payload-dir>` MUST compare root `VERSION` against every stamped artifact in the payload: `<payload>/VERSION`, `<payload>/plugin/.claude-plugin/plugin.json` `.version`, `<payload>/.claude-plugin/marketplace.json` `metadata.version`, `<payload>/mcp/package.json` `.version`, `<payload>/manifest.yaml` `cyberos_version`, and the `plugin.json` sealed inside `<payload>/cyberos.plugin` (read via `unzip -p`, no extraction to disk). It MUST exit 0 when all six match, exit 10 on any mismatch printing one line per drifted artifact in the form `DRIFT <relative-path>: <found> != <expected>`, and exit 2 when root `VERSION` is missing or not `X.Y.Z` semver.
-2. A workflow `.github/workflows/payload-gate.yml` MUST run on push and pull_request to `main` when any of `tools/cyberos-init/**`, `modules/skill/**`, `modules/cuo/**`, or `VERSION` changes. It MUST build the payload into a temporary directory with `build.sh <tmpdir>` and run `check-version-sync.sh <tmpdir>`; a non-zero exit from either MUST fail the workflow.
+1. A script `tools/cyberos-install/check-version-sync.sh <payload-dir>` MUST compare root `VERSION` against every stamped artifact in the payload: `<payload>/VERSION`, `<payload>/plugin/.claude-plugin/plugin.json` `.version`, `<payload>/.claude-plugin/marketplace.json` `metadata.version`, `<payload>/mcp/package.json` `.version`, `<payload>/manifest.yaml` `cyberos_version`, and the `plugin.json` sealed inside `<payload>/cyberos.plugin` (read via `unzip -p`, no extraction to disk). It MUST exit 0 when all six match, exit 10 on any mismatch printing one line per drifted artifact in the form `DRIFT <relative-path>: <found> != <expected>`, and exit 2 when root `VERSION` is missing or not `X.Y.Z` semver.
+2. A workflow `.github/workflows/payload-gate.yml` MUST run on push and pull_request to `main` when any of `tools/cyberos-install/**`, `modules/skill/**`, `modules/cuo/**`, or `VERSION` changes. It MUST build the payload into a temporary directory with `build.sh <tmpdir>` and run `check-version-sync.sh <tmpdir>`; a non-zero exit from either MUST fail the workflow.
 3. `build.sh` MUST exit non-zero with an explicit error when root `VERSION` is missing or not `X.Y.Z` semver. The current silent fallback (`|| echo 0.0.0`) MUST be removed; a payload stamped `0.0.0` MUST be impossible to produce.
-4. A `.githooks/pre-commit` hook MUST be added (the repo's `core.hooksPath` is `.githooks`, so hooks placed only in the pre-commit framework never fire for contributors who skipped `pre-commit install`). When staged paths match the existing trigger list in `.pre-commit-hooks/cyberos-payload-build.sh` (`modules/cuo/ | modules/skill/ | tools/cyberos-init/ | VERSION`), the hook MUST invoke that script to refresh `dist/cyberos` and then run `check-version-sync.sh dist/cyberos`. Rebuild or check failure MUST abort the commit; a clean run MUST NOT block it. Non-matching commits MUST be a no-op.
+4. A `.githooks/pre-commit` hook MUST be added (the repo's `core.hooksPath` is `.githooks`, so hooks placed only in the pre-commit framework never fire for contributors who skipped `pre-commit install`). When staged paths match the existing trigger list in `.pre-commit-hooks/cyberos-payload-build.sh` (`modules/cuo/ | modules/skill/ | tools/cyberos-install/ | VERSION`), the hook MUST invoke that script to refresh `dist/cyberos` and then run `check-version-sync.sh dist/cyberos`. Rebuild or check failure MUST abort the commit; a clean run MUST NOT block it. Non-matching commits MUST be a no-op.
 5. `docs/deploy/RELEASE.md` MUST describe the invariant as enforced (CI gate + wired hook), replacing the current aspirational claim that the pre-commit hook keeps the payload matched.
 6. The CI gate MUST NOT require network access beyond checkout and MUST complete its build+check steps in under 3 minutes (the build is file copies plus sed).
 7. Because the bot's bump commit carries `[skip ci]` (so `payload-gate.yml` never sees it), `version.yml` MUST run the build+check inline in its own job, immediately after `cyberos-version.mjs --apply` and before pushing - the bump and the proof that a payload builds clean at the new version land together.
@@ -81,15 +81,15 @@ Artifact readers: `VERSION` = trimmed file; JSON fields via `node -p` (node is a
 ```yaml
 name: payload-gate
 on:
-  push: { branches: [main], paths: [tools/cyberos-init/**, modules/skill/**, modules/cuo/**, VERSION] }
-  pull_request: { paths: [tools/cyberos-init/**, modules/skill/**, modules/cuo/**, VERSION] }
+  push: { branches: [main], paths: [tools/cyberos-install/**, modules/skill/**, modules/cuo/**, VERSION] }
+  pull_request: { paths: [tools/cyberos-install/**, modules/skill/**, modules/cuo/**, VERSION] }
 jobs:
   build-and-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: bash tools/cyberos-init/build.sh "$RUNNER_TEMP/payload"
-      - run: bash tools/cyberos-init/check-version-sync.sh "$RUNNER_TEMP/payload"
+      - run: bash tools/cyberos-install/build.sh "$RUNNER_TEMP/payload"
+      - run: bash tools/cyberos-install/check-version-sync.sh "$RUNNER_TEMP/payload"
 ```
 
 ### .githooks/pre-commit
@@ -102,7 +102,7 @@ Delegates to `.pre-commit-hooks/cyberos-payload-build.sh` (trigger-list match) t
 2. **Each artifact is individually guarded** (§1 #1) - tampering any one of the six stamps (payload VERSION, plugin.json, marketplace.json, mcp/package.json, manifest.yaml, sealed plugin.json) makes the check exit 10 and name exactly that artifact.
 3. **The sealed bundle is checked without extraction** (§1 #1) - re-zipping `cyberos.plugin` with a stale inner plugin.json while all on-disk files match still exits 10.
 4. **Invalid VERSION cannot stamp** (§1 #3) - with `VERSION` containing `banana`, `build.sh` exits non-zero and writes no payload; with `VERSION` deleted, same.
-5. **No 0.0.0 escape hatch remains** (§1 #3) - `grep -n "0\.0\.0" tools/cyberos-init/build.sh` shows only the placeholder-substitution seds, no fallback echo.
+5. **No 0.0.0 escape hatch remains** (§1 #3) - `grep -n "0\.0\.0" tools/cyberos-install/build.sh` shows only the placeholder-substitution seds, no fallback echo.
 6. **CI gate is wired** (§1 #2, #6) - `payload-gate.yml` exists with the four path filters on both push and pull_request, parses as valid YAML, and its steps are exactly build-into-temp + check.
 7. **Hook fires on trigger paths** (§1 #4) - in a fixture repo with `core.hooksPath=.githooks`, committing a change under `modules/skill/` runs the rebuild and check; committing a change under `docs/` runs neither.
 8. **Hook failure blocks the commit** (§1 #4) - with `build.sh` forced to fail, the commit aborts with the build error visible.
@@ -112,9 +112,9 @@ Delegates to `.pre-commit-hooks/cyberos-payload-build.sh` (trigger-list match) t
 ## §5 - Verification
 
 ```bash
-# tools/cyberos-init/tests/test_check_version_sync.sh
+# tools/cyberos-install/tests/test_check_version_sync.sh
 # Harness: builds a scratch payload into $TMP/payload from a scratch VERSION file,
-# then mutates artifacts one at a time. Run: bash tools/cyberos-init/tests/test_check_version_sync.sh
+# then mutates artifacts one at a time. Run: bash tools/cyberos-install/tests/test_check_version_sync.sh
 
 t01_fresh_build_syncs()          # AC 1
 t02_each_artifact_guarded()      # AC 2  (loop over the 6 artifacts, expect exit 10 + the right DRIFT line)
@@ -141,7 +141,7 @@ None upstream. Blocks TASK-IMP-069 (the release publisher reuses `check-version-
 ## §8 - Example payloads
 
 ```
-$ bash tools/cyberos-init/check-version-sync.sh dist/cyberos
+$ bash tools/cyberos-install/check-version-sync.sh dist/cyberos
 DRIFT dist/cyberos/VERSION: 1.2.0 != 1.7.0
 DRIFT dist/cyberos/plugin/.claude-plugin/plugin.json: 1.2.0 != 1.7.0
 DRIFT dist/cyberos/cyberos.plugin!.claude-plugin/plugin.json: 1.2.0 != 1.7.0

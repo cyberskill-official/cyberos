@@ -11,14 +11,14 @@ verdicts: all pass - human verdict pending at HITL gate 1
 # Ship artefact bundle - TASK-CUO-209
 
 ## Context map / plan (condensed - single-tool task)
-Domain: tools/cyberos-init only (build.sh set block, sizes; GUIDE source docs/index.md; README;
+Domain: tools/cyberos-install only (build.sh set block, sizes; GUIDE source docs/index.md; README;
 allowlist; test). files_outside_immediate_domain: 0 -> no ADR. Edge rows folded into the suite:
 52-skill matrix (t01), data-not-string regression trap (t02), computed counts full vs reduced
 (t03 + t07), 14-row map totality + invoker enum (t04), sibling checks (t05), 2 MB budget (t06),
 reduced floor (t07), frozen workflows (t08).
 
 ## Coverage
-Suite t01-t08 green; ALL five cyberos-init suites green as regression (10+7+9+8+8 = 42 cases).
+Suite t01-t08 green; ALL five cyberos-install suites green as regression (10+7+9+8+8 = 42 cases).
 Live build: profile=full skills=52 payload=8499200 plugin_zip=1029894 (49% of the 2 MB budget);
 chain OK: 24 referenced, 52 vendored, 6 allowlisted.
 

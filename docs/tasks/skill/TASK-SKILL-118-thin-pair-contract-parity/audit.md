@@ -13,7 +13,7 @@ template: engineering-spec@1
 
 ## §1 - Verdict summary
 
-Audited with special attention to scope integrity (six pairs, additive-only) and to the honesty of an abbreviated new_files list against a 72-file real matrix. The decisive property - rubrics ENCODE existing prose gates rather than inventing policy - is enforced by the prose->rule mapping requirement. Traceability closes over t01-t06 in tools/cyberos-init/tests/test_pair_parity.sh.
+Audited with special attention to scope integrity (six pairs, additive-only) and to the honesty of an abbreviated new_files list against a 72-file real matrix. The decisive property - rubrics ENCODE existing prose gates rather than inventing policy - is enforced by the prose->rule mapping requirement. Traceability closes over t01-t06 in tools/cyberos-install/tests/test_pair_parity.sh.
 
 ## §2 - Findings (all resolved)
 
@@ -49,7 +49,7 @@ All six findings addressed as cited. Sequencing note (land before TASK-CUO-205's
 - Recorded deviation (newest wins): BSU rubric versioned @2.0 - TASK-CUO-205 landed first; its §7
   migration path followed. ISS-003's override hook present in every rubric header.
 - Review: human verdict at gate 1 APPROVE + pre-authorize done (Stephen Cheng, in-chat).
-- Testing: t01-t06 6/6, all 6 cyberos-init suites, full-profile build green with parity gate live
+- Testing: t01-t06 6/6, all 6 cyberos-install suites, full-profile build green with parity gate live
   (52 skills, plugin 1.09 MB < 2 MB). Gate 2 recorded per pre-authorization.
 - Field findings folded back: t04B repo-VERSION dependence fixed (TASK-IMP-070 audit note); first
   manifest-tracked ship run (TASK-CUO-206 dogfood) - manifest created, stepped, finalized-deleted at done.

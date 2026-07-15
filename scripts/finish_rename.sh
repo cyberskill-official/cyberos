@@ -50,15 +50,15 @@ say "2/6  Payload + agent symlinks  (MUST run before the status regen)"
 # held the pre-rename `fr-migrate.sh`. build.sh refreshes dist/cyberos; install.sh
 # lays it into .cyberos/. Both must happen before anything sources the vendored kit.
 # install.sh must run FROM the assembled payload, not from the source tree:
-#     tools/cyberos-init/install.sh .   ->  "not an assembled payload (no cuo/)"
+#     tools/cyberos-install/install.sh .   ->  "not an assembled payload (no cuo/)"
 #     dist/cyberos/install.sh .         ->  correct
-# build.sh assembles tools/cyberos-init/ -> dist/cyberos/; install.sh then lays that
+# build.sh assembles tools/cyberos-install/ -> dist/cyberos/; install.sh then lays that
 # out under the target repo's .cyberos/. Running the source copy skips the assembly
 # and the vendored kit stays stale — which is what left .cyberos/lib/ holding the
 # pre-rename fr-migrate.sh and broke the status regen below.
-run "bash tools/cyberos-init/build.sh"
+run "bash tools/cyberos-install/build.sh"
 run "bash dist/cyberos/install.sh ."           # refreshes .cyberos/ from dist/cyberos
-run "bash tools/cyberos-init/check-chain-coverage.sh dist/cyberos"
+run "bash tools/cyberos-install/check-chain-coverage.sh dist/cyberos"
 
 # ─────────────────────────────────────────────────────────────────────────────
 say "3/6  Regenerate docs/status (507 stale TASK-*.js chunks)"
@@ -67,7 +67,7 @@ say "3/6  Regenerate docs/status (507 stale TASK-*.js chunks)"
 # 404s on every task.
 if command -v node >/dev/null 2>&1; then
   rm -f .git/index.lock 2>/dev/null   # the previous run left one; harmless if absent
-  run "bash tools/cyberos-init/lib/status-page.sh ."
+  run "bash tools/cyberos-install/lib/status-page.sh ."
   run "git add docs/status/"
 else
   bad "node not found — skipping status regen"

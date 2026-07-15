@@ -22,20 +22,20 @@ related_tasks: [TASK-CUO-208, TASK-SKILL-118, TASK-IMP-070]
 depends_on: []
 blocks: [TASK-CUO-208]
 source_pages:
-  - tools/cyberos-init/init.sh
-  - tools/cyberos-init/gates/run-gates.sh
-  - tools/cyberos-init/README.md
+  - tools/cyberos-install/init.sh
+  - tools/cyberos-install/gates/run-gates.sh
+  - tools/cyberos-install/README.md
 source_decisions:
   - "2026-07-12 operator goal: the two workflows will be used heavily across other projects after /init; today's gate autodetect covers Rust/Node/Python only, and there is no per-repo way to override gate commands, coverage threshold, or defaults without editing vendored files."
   - "Unknown stacks keep degrading to the reduced-profile floor - portability means detecting more, never guessing."
 language: bash + yaml
-service: tools/cyberos-init/
+service: tools/cyberos-install/
 new_files:
-  - tools/cyberos-init/tests/test_gate_autodetect.sh
+  - tools/cyberos-install/tests/test_gate_autodetect.sh
 modified_files:
-  - tools/cyberos-init/init.sh
-  - tools/cyberos-init/gates/run-gates.sh
-  - tools/cyberos-init/README.md
+  - tools/cyberos-install/init.sh
+  - tools/cyberos-install/gates/run-gates.sh
+  - tools/cyberos-install/README.md
 ---
 
 # TASK-CUO-207: Gate autodetect portability + per-repo config
@@ -88,7 +88,7 @@ Provenance output: `gate test: go test ./... (source: autodetect:go)` | `gate li
 ## §5 - Verification
 
 ```bash
-# tools/cyberos-init/tests/test_gate_autodetect.sh
+# tools/cyberos-install/tests/test_gate_autodetect.sh
 t01_stack_matrix()               # AC 1  (8 fixture repos, expected command sets)
 t02_multistack_union()           # AC 2
 t03_marker_gating()              # AC 3

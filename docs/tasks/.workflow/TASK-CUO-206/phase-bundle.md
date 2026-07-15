@@ -5,7 +5,7 @@ Patterns followed: contract docs live at modules/skill/contracts/task/ (STATUS-R
 MANIFEST_SCHEMA precedent); python helpers as pure functions in modules/cuo/cuo/ (package with tests
 in modules/cuo/tests/, plain unittest, no deps); two-phase atomic writes per AGENTS.md §4.1; init.sh
 scaffolding block at the `mkdir -p "$CY"` cluster. Blast radius: 4 new files, 4 modified; modules cuo
-+ skill + tools/cyberos-init; no cross-module edges beyond documented contract references.
++ skill + tools/cyberos-install; no cross-module edges beyond documented contract references.
 Placement check: cuo is correct (workflow run-state is CTO-workflow machinery, not skill contracts
 alone - the contract doc rightly lands in skill/contracts like its siblings).
 
@@ -52,7 +52,7 @@ bump to 2.4.0 makes any stray one needs_human by design.
 Suite: modules/cuo/tests/test_ship_manifest.py - 8/8 pass (one per AC). Statement coverage on the
 touched python file (ast-statement basis, import traced): 100.0% (75/75), gate >= 90% PASS.
 tests_failed=0; files_below_90pct=[]; ecm_rows_uncovered=[] (each ECM row names its covering test in
-the matrix above). Full regression: all 5 tools/cyberos-init suites PASS; pre-commit payload rebuild +
+the matrix above). Full regression: all 5 tools/cyberos-install suites PASS; pre-commit payload rebuild +
 sync OK 1.9.1 across 6 artifacts; git check-ignore confirms *.ship.json untracked.
 Strengthened during gate: validate() error branches (5) + write_atomic failure-cleanup path added to
 the AC1/AC2 tests after the first coverage read showed them unhit (77.3% -> 100%).

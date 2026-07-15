@@ -48,7 +48,7 @@ All six findings addressed as cited. Depends on TASK-CUO-207's config key, decla
   FM-004 untouched per §11), command-doc resolution chain, TC-01..05 fixtures, trigger P5/N5 in
   native list format; commit 9b3f668. Phase artefacts: docs/tasks/.workflow/TASK-CUO-208/.
 - Review: human verdict at gate 1 APPROVE + pre-authorize done (Stephen Cheng, in-chat).
-- Testing: acceptance-driven per §5 - TC case table + trigger additions; 7/7 cyberos-init suites
+- Testing: acceptance-driven per §5 - TC case table + trigger additions; 7/7 cyberos-install suites
   green post-change (payload rebuild carries edited docs; parity + additive checks pass).
   Gate 2 recorded per pre-authorization.
 

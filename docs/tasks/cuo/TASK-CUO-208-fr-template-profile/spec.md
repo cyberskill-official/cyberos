@@ -22,21 +22,21 @@ related_tasks: [TASK-CUO-205, TASK-CUO-207]
 depends_on: [TASK-CUO-207]
 blocks: []
 source_pages:
-  - tools/cyberos-init/plugin/commands/create-tasks.md
+  - tools/cyberos-install/plugin/commands/create-tasks.md
   - modules/skill/task-author/SKILL.md
   - modules/skill/task-audit/RUBRIC.md
 source_decisions:
   - "2026-07-12 investigation: the repo runs two task templates - engineering-spec@1 (cyberos-native §1..§11; ~470 files incl. every improvement-class task) and task@1 (generic; 6 files). The plugin command says task@1 while the author skill's §12 authors engineering-spec@1; audit_rubric@2.0's FM/SEC/COND families target task@1 while TRACE targets the §-sections. External repos inherit this ambiguity on day one."
   - "Resolution: template becomes an explicit per-repo profile (config key from TASK-CUO-207), defaulting to engineering-spec@1; both templates stay first-class."
 language: markdown (skill contracts + command doc)
-service: modules/skill/ + tools/cyberos-init/plugin/
+service: modules/skill/ + tools/cyberos-install/plugin/
 new_files:
   - modules/skill/task-author/references/TEMPLATE_PROFILES.md
 modified_files:
   - modules/skill/task-author/SKILL.md
   - modules/skill/task-audit/SKILL.md
   - modules/skill/task-audit/RUBRIC.md
-  - tools/cyberos-init/plugin/commands/create-tasks.md
+  - tools/cyberos-install/plugin/commands/create-tasks.md
 ---
 
 # TASK-CUO-208: task template profile

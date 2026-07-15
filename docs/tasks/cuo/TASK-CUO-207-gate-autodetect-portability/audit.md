@@ -13,7 +13,7 @@ template: engineering-spec@1
 
 ## §1 - Verdict summary
 
-Audited for detection honesty (never invent a command), override granularity, and update-safety of the scaffolded config. The per-key resolution model and the provenance line survived scrutiny; JVM coverage detection was correctly descoped rather than overpromised. Traceability closes over t01-t08 in tools/cyberos-init/tests/test_gate_autodetect.sh.
+Audited for detection honesty (never invent a command), override granularity, and update-safety of the scaffolded config. The per-key resolution model and the provenance line survived scrutiny; JVM coverage detection was correctly descoped rather than overpromised. Traceability closes over t01-t08 in tools/cyberos-install/tests/test_gate_autodetect.sh.
 
 ## §2 - Findings (all resolved)
 
@@ -47,7 +47,7 @@ All six findings addressed as cited. Blocks TASK-CUO-208 as declared; threshold 
   config.yaml, dependency-free yaml-subset reader, threshold flow to the coverage-gate contract, loud
   malformed-fail; commit d29532b. Phase artefacts: docs/tasks/.workflow/TASK-CUO-207/.
 - Review: human verdict at gate 1 APPROVE + pre-authorize done (Stephen Cheng, in-chat).
-- Testing: test_gate_autodetect.sh 8/8 (one per AC), 7/7 cyberos-init suites. Gate 2 recorded per
+- Testing: test_gate_autodetect.sh 8/8 (one per AC), 7/7 cyberos-install suites. Gate 2 recorded per
   pre-authorization. Manifest-tracked run (second production use of ship-manifest@1) - hitl.requested_at
   recorded at gate, approval taken in-chat per §1 #8 of TASK-CUO-206 (requested_at is never approval).
 

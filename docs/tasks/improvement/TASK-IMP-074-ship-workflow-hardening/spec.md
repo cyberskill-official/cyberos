@@ -23,21 +23,21 @@ depends_on: []
 blocks: []
 source_pages:
   - ".githooks/pre-commit (41 lines; regenerates dist/website on docs changes but NEVER calls migrate-frs.sh --page nor stages docs/status/ - the root cause of the stale status page)"
-  - "tools/cyberos-init/migrate-frs.sh line 13 (its own comment claims the pre-commit hook uses --page; the wiring does not exist - aspiration, not fact)"
+  - "tools/cyberos-install/migrate-frs.sh line 13 (its own comment claims the pre-commit hook uses --page; the wiring does not exist - aspiration, not fact)"
   - ".cyberos/cuo/gates/run-gates.sh lines 82-88 (the only current docs/status regeneration point, best-effort, output left unstaged)"
   - "modules/cuo/chief-technology-officer/workflows/ship-tasks.md (workflow_version 2.4.0; one-task-at-a-time queue; no batch selection, no unlock rescan)"
-  - "tools/cyberos-init/build.sh manifest.yaml block (no rules fingerprint - channels cannot detect rule drift when VERSION is unchanged)"
+  - "tools/cyberos-install/build.sh manifest.yaml block (no rules fingerprint - channels cannot detect rule drift when VERSION is unchanged)"
   - ".github/workflows/deploy.yml paths (docs job triggers exclude modules/cuo/** and modules/skill/** rule sources)"
 source_decisions:
   - "2026-07-13 Stephen: strengthen /ship-tasks with (1) status html page auto-update on changes, (2) batch shipping of parallel-safe tasks with auto batch detection + auto unlock detection, (3) workflow rules always synced to distributed channels (standalone .cyberos, AI plugins/connectors/MCPs) with auto hooks on build/release/deploy."
 language: bash (hooks, build), YAML (CI), markdown (workflow spec)
-service: modules/cuo + tools/cyberos-init + .githooks
+service: modules/cuo + tools/cyberos-install + .githooks
 new_files: []
 modified_files:
   - .githooks/pre-commit
   - modules/cuo/chief-technology-officer/workflows/ship-tasks.md
-  - tools/cyberos-init/build.sh
-  - tools/cyberos-init/check-version-sync.sh
+  - tools/cyberos-install/build.sh
+  - tools/cyberos-install/check-version-sync.sh
   - .github/workflows/deploy.yml
 allowed_tools:
   - bash/sed/sha256sum (hook + deterministic rules fingerprint)
@@ -70,7 +70,7 @@ risk_if_skipped: "Status page silently lies about task state after every create/
 **Group C — rules-to-channels distribution sync**
 
 8. The payload's `manifest.yaml` **MUST** carry a deterministic `rules_sha` — a content fingerprint over the rule trees the payload distributes (`cuo/`, `plugin/`, `mcp/`, `cli/`, `memory/`) — so every channel (standalone/self-hosted `.cyberos`, Claude plugin, MCP server, npx CLI) can detect rule drift even when VERSION is unchanged. `check-version-sync.sh` **MUST** fail if `rules_sha` is missing/empty.
-9. The auto-hook chain **MUST** cover build, release, and deploy: (build) the existing pre-commit payload rebuild on `modules/**`/`tools/cyberos-init/**` changes + payload-gate on push; (release) the existing release.yml payload job publishing stamped payload assets per tag; (deploy) deploy.yml's docs job **MUST** additionally trigger on `modules/cuo/**` and `modules/skill/**` so rule changes refresh the published site without waiting for a release. The chain is documented in the workflow spec so it is discoverable, not tribal.
+9. The auto-hook chain **MUST** cover build, release, and deploy: (build) the existing pre-commit payload rebuild on `modules/**`/`tools/cyberos-install/**` changes + payload-gate on push; (release) the existing release.yml payload job publishing stamped payload assets per tag; (deploy) deploy.yml's docs job **MUST** additionally trigger on `modules/cuo/**` and `modules/skill/**` so rule changes refresh the published site without waiting for a release. The chain is documented in the workflow spec so it is discoverable, not tribal.
 10. `cyberos update` / `init.sh --check` remain the pull side: they already compare payload versions; `rules_sha` gives them (and any plugin/MCP consumer) a finer-grained drift signal to compare against. Extending their comparison logic is explicitly a follow-up once this fingerprint exists in the wild.
 
 *Length note: this task consciously invokes the sanctioned pure-infra profile — every clause is hook/CI/doc wiring over already-existing machinery, with the §5 checks runnable in-session; the fuller 300-line bar buys nothing here that §5 does not already prove.*
@@ -81,7 +81,7 @@ The status-page fix reuses the exact regeneration path run-gates.sh already trus
 
 ## §3 — API contract
 
-- pre-commit block: trigger regex `^(docs/tasks/|CHANGELOG\.md$|VERSION$)`; call `"$root/.cyberos/migrate-frs.sh" --page "$root"` (fallback `tools/cyberos-init/migrate-frs.sh` for this self-hosting repo); then `git add docs/status/`.
+- pre-commit block: trigger regex `^(docs/tasks/|CHANGELOG\.md$|VERSION$)`; call `"$root/.cyberos/migrate-frs.sh" --page "$root"` (fallback `tools/cyberos-install/migrate-frs.sh` for this self-hosting repo); then `git add docs/status/`.
 - manifest.yaml gains: `rules_sha: <64-hex>` computed as `sha256(sorted per-file sha256 list over cuo/ plugin/ mcp/ cli/ memory/ in $out)` — deterministic across runs/platforms.
 - ship-tasks.md: `workflow_version: 2.5.0`; new §11a (batch selection + unlock rescan), §1 note on status sync, new "Distribution sync" subsection under Cross-references.
 - deploy.yml docs paths += `modules/cuo/**`, `modules/skill/**`.
@@ -99,10 +99,10 @@ The status-page fix reuses the exact regeneration path run-gates.sh already trus
 
 ```bash
 bash -n .githooks/pre-commit
-bash tools/cyberos-init/build.sh /tmp/p1 >/dev/null && bash tools/cyberos-init/build.sh /tmp/p2 >/dev/null
+bash tools/cyberos-install/build.sh /tmp/p1 >/dev/null && bash tools/cyberos-install/build.sh /tmp/p2 >/dev/null
 grep "^rules_sha:" /tmp/p1/manifest.yaml /tmp/p2/manifest.yaml   # identical, non-empty
-bash tools/cyberos-init/check-version-sync.sh /tmp/p1            # PASS incl. rules_sha assert
-sed -i 's/^rules_sha:.*/rules_sha: ""/' /tmp/p1/manifest.yaml && ! bash tools/cyberos-init/check-version-sync.sh /tmp/p1   # negative
+bash tools/cyberos-install/check-version-sync.sh /tmp/p1            # PASS incl. rules_sha assert
+sed -i 's/^rules_sha:.*/rules_sha: ""/' /tmp/p1/manifest.yaml && ! bash tools/cyberos-install/check-version-sync.sh /tmp/p1   # negative
 grep -n "workflow_version: 2.5.0" modules/cuo/chief-technology-officer/workflows/ship-tasks.md
 python3 -c "import yaml; yaml.safe_load(open('.github/workflows/deploy.yml'))"
 ```
