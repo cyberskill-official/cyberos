@@ -8,7 +8,7 @@ type: improvement
 created_at: 2026-07-14T00:00:00+07:00
 priority: p2
 department: engineering
-author: @unassigned
+author: "@unassigned"
 template: task@1
 module: memory
 status: draft

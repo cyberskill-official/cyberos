@@ -1,22 +1,30 @@
 /* status-app.js - client for status-hub@2.
-   One corpus, three lenses (board / table / releases) + an FR detail drawer.
-   No dependencies and no network calls except the on-demand per-FR spec chunk
+   One corpus, three lenses (board / table / releases) + a task detail drawer.
+   No dependencies and no network calls except the on-demand per-task spec chunk
    (data/fr/<ID>.js - a classic script, so it works over file:// too).
    The page stays readable without this file: <noscript> carries a static table
-   of every FR plus the full release list. */
+   of every task plus the full release list. */
 (function () {
   "use strict";
 
   var el = document.getElementById("cs-data");
   if (!el) return;
   var D = JSON.parse(el.textContent);
-  var FRS = D.frs;
+  // Data key renamed by the fr->task wave: data-extract.mjs now emits `tasks:`.
+  // NOTE: the `frs` CSS CLASS below (class="frs") is deliberately NOT renamed —
+  // status.css already has a `.tasks` rule meaning something else, so renaming
+  // the class would collide. Data key: renamed. CSS class: frozen.
+  var FRS = D.tasks;
   var BY = {};
   FRS.forEach(function (f) { BY[f.i] = f; });
 
   var ACTIVE = { ready_to_implement: 1, implementing: 1, ready_to_review: 1,
                  reviewing: 1, ready_to_test: 1, testing: 1 };
-  var DONE = { done: 1, closed: 1 };
+  // cannot_reproduce / duplicate are TERMINAL (added 2026-07-14 with `type: bug`).
+  // Omit them here and they bucket as "todo" — the board would show closed bugs as
+  // outstanding work forever, which is exactly the kind of quiet lie a status page
+  // must not tell.
+  var DONE = { done: 1, closed: 1, cannot_reproduce: 1, duplicate: 1 };
   function bucket(s) {
     return DONE[s] ? "done" : ACTIVE[s] ? "active" : s === "on_hold" ? "hold" : "todo";
   }
@@ -85,11 +93,11 @@
     if (!f) return "";
     return '<button class="chip ' + bucket(f.s) + (ghost ? " ghost" : "") +
       '" data-fr="' + esc(f.i) + '" title="' + esc(f.i + " — " + f.t + " [" + f.s + "]") +
-      '">' + esc(f.i.replace(/^FR-/, "")) + "</button>";
+      '">' + esc(f.i.replace(/^TASK-/, "")) + "</button>";
   }
   function chipId(id, ghost) {
     return BY[id] ? chip(BY[id], ghost)
-      : '<span class="chip ghost" title="not in this corpus">' + esc(id.replace(/^FR-/, "")) + "</span>";
+      : '<span class="chip ghost" title="not in this corpus">' + esc(id.replace(/^TASK-/, "")) + "</span>";
   }
   function segs(rows) {
     var d = 0, a = 0, h = 0;
@@ -115,14 +123,14 @@
     else keys.sort(function (a, b) {
       return bag[b].length - bag[a].length || String(a).localeCompare(String(b));
     });
-    if (!keys.length) return '<p class="empty">No feature request matches these filters.</p>';
+    if (!keys.length) return '<p class="empty">No task matches these filters.</p>';
     return '<div class="grid">' + keys.map(function (k) {
       var rs = bag[k];
       var d = rs.filter(function (f) { return bucket(f.s) === "done"; }).length;
       var a = rs.filter(function (f) { return bucket(f.s) === "active"; }).length;
       return '<section class="card' + (a ? " hot" : "") + '">' +
         '<div class="card-h"><h3><span class="k">' + esc(k) + '</span> ' +
-        '<span class="muted">· ' + rs.length + " FRs</span></h3>" +
+        '<span class="muted">· ' + rs.length + " tasks</span></h3>" +
         '<span class="pct">' + pct(d, rs.length) + "% done</span></div>" +
         segs(rs) + '<div class="frs">' +
         rs.map(function (f) { return chip(f); }).join("") + "</div></section>";
@@ -144,7 +152,7 @@
       else { x = x == null ? "" : x; y = y == null ? "" : y; }
       return (x > y ? 1 : x < y ? -1 : 0) * dir || String(a.i).localeCompare(String(b.i));
     });
-    if (!sorted.length) return '<p class="empty">No feature request matches these filters.</p>';
+    if (!sorted.length) return '<p class="empty">No task matches these filters.</p>';
     var head = COLS.map(function (c) {
       var s = S.sort === c.k ? (S.dir > 0 ? "ascending" : "descending") : "none";
       return '<th data-sort="' + c.k + '" aria-sort="' + s + '" scope="col">' + c.h + "</th>";
@@ -178,7 +186,7 @@
     if (moving.length) {
       var shipped = moving.filter(function (f) { return bucket(f.s) === "done"; }).length;
       out.push('<article class="rel now"><span class="tick">★</span><div>' +
-        '<div class="rel-h"><b>unreleased</b><span class="muted">' + moving.length + " FRs</span></div>" +
+        '<div class="rel-h"><b>unreleased</b><span class="muted">' + moving.length + " tasks</span></div>" +
         '<p class="relnote">No release accounts for these yet — ' +
         (moving.length - shipped) + " in flight (<code>ready_to_implement</code> → <code>testing</code>)" +
         (shipped ? ", " + shipped + " already <code>done</code> but not cut into a release" : "") +
@@ -199,9 +207,9 @@
         '"><span class="tick">' + (i === 0 ? "★" : "✓") + "</span><div>" +
         '<div class="rel-h"><b>' + esc(r.vl) + "</b>" +
         (r.d ? '<span class="muted">' + esc(r.d) + "</span>" : "") +
-        '<span class="muted">' + (cited.length + dated.length) + " FRs</span></div>" +
+        '<span class="muted">' + (cited.length + dated.length) + " tasks</span></div>" +
         (chips ? '<div class="frs">' + chips + "</div>"
-               : '<p class="relnote">No FR id cited in this entry.</p>') +
+               : '<p class="relnote">No task id cited in this entry.</p>') +
         (dated.length ? '<p class="relnote">Dashed chips were bound by <code>shipped:</code> date, ' +
           "not cited in the entry text.</p>" : "") +
         (r.intro.length || secs
@@ -220,12 +228,12 @@
   var lastFocus = null;
 
   // the markdown is only reachable when it ships next to the page (docs/status/ does; the
-  // website build does not - there the rendered FR page is the way in)
+  // website build does not - there the rendered task page is the way in)
   function specHref(f) { return D.frBase ? D.frBase + f.dm + "/" + f.k + "/spec.md" : ""; }
   function srcLink(f, label) {
     var h = specHref(f);
     return h ? '<a href="' + esc(h) + '">' + label + "</a>"
-      : (f.pg ? '<a href="' + esc(f.pg) + '">the FR page</a>' : "");
+      : (f.pg ? '<a href="' + esc(f.pg) + '">the task page</a>' : "");
   }
   function row(dt, dd) { return dd ? "<div><dt>" + esc(dt) + "</dt><dd>" + dd + "</dd></div>" : ""; }
 
@@ -267,14 +275,14 @@
                     : '<p class="muted">' + esc(none) + "</p>") + "</div>";
     }
     var srcs = [];
-    if (f.pg) srcs.push('<a href="' + esc(f.pg) + '">Rendered FR page</a>');
+    if (f.pg) srcs.push('<a href="' + esc(f.pg) + '">Rendered task page</a>');
     if (specHref(f)) srcs.push('<a href="' + esc(specHref(f)) + '"><code>spec.md</code> — the record of truth</a>');
     if (!srcs.length) srcs.push('<span class="muted">Markdown is the record of truth: <code>' +
-      esc("docs/feature-requests/" + f.dm + "/" + f.k + "/spec.md") + "</code></span>");
+      esc("docs/tasks/" + f.dm + "/" + f.k + "/spec.md") + "</code></span>");
     return '<div class="rel-links">' +
-      blk("Depends on", f.d, "Nothing blocks this FR.") +
-      blk("Blocks", f.b, "This FR blocks nothing.") +
-      blk("Related", f.rl, "No related FRs recorded.") + "</div>" +
+      blk("Depends on", f.d, "Nothing blocks this task.") +
+      blk("Blocks", f.b, "This task blocks nothing.") +
+      blk("Related", f.rl, "No related tasks recorded.") + "</div>" +
       '<div class="sect"><h3>Sources</h3><p>' + srcs.join(" · ") + "</p></div>";
   }
 
@@ -346,7 +354,7 @@
   function paint() {
     var rows = view();
     countEl.textContent = rows.length === FRS.length
-      ? FRS.length + " feature requests"
+      ? FRS.length + " tasks"
       : "showing " + rows.length + " of " + FRS.length;
     lensEl.innerHTML = S.lens === "table" ? table(rows)
       : S.lens === "timeline" ? timeline(rows) : board(rows);

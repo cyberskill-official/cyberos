@@ -250,7 +250,23 @@ See `cyberos/skill/docs/AUDIT_LOOP.md` for the canonical 8-step algorithm. Summa
 1. **Locate** `artefact_path` and compute `audit_path` per `audit_path_pattern`.
 2. **Hash** the artefact (UTF-8 NFC).
 3. **Load or initialise** the audit report.
-4. **Run rubric** (`RUBRIC.md`) — every rule.
+3a. **Read `type`** from the artefact's frontmatter (FM-108) and **compose the rule set**:
+
+    ```
+    contracts/task/rubrics/common.md   +   contracts/task/rubrics/{type}.md
+    ```
+
+    `rubrics/common.md` §1 is the universal set (`FM-*`, `SEC-*`, `SAFE-*`, `QA-*`, `COND-*`, `TRACE-*`, `FM-112`). The per-type file adds to it. **An absent `rubrics/{type}.md` means "common only" and is not an error** — `feature`, `improvement` and `chore` have no extra family today.
+
+    `type: bug` additionally loads `rubrics/bug.md`, which:
+    - adds `BUG-001..005` (reproduction, expected-vs-observed, root-cause-is-a-mechanism, blast radius, prevention)
+    - adds `BUG-010..014` (`severity` distinct from `priority`, `regression_test` resolves, `first_bad_commit` resolves, `incident` required at sev1)
+    - hands `REGRESSION-001..004` to `coverage-gate-audit` for the `testing → done` transition
+    - **relaxes** the edge-case-matrix floor (`total_rows >= 8` does not apply; the matrix is scoped to the cause's neighbourhood)
+
+    If `type` is missing, FM-108 fires and the audit fails before any type-scoped rule runs. If `type` is present but `templates/{type}.md` does not exist, HALT — the artefact was authored against a skeleton that is not in the contract.
+
+4. **Run rubric** — every rule in the composed set (§3a), per `RUBRIC.md`.
 5. **Attempt fixes** — auto-fixable rules apply minimal textual changes; inferable skeletons get TODO markers; HITL-only rules halt with a Question.
 6. **Re-audit** — recompute hash, re-parse, re-run.
 7. **Termination check** — PASS / HITL_PAUSE / EXHAUSTED / NO_PROGRESS.

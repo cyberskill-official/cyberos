@@ -7,7 +7,7 @@ client_visible: false
 type: feature
 created_at: 2026-06-19T00:00:00+07:00
 department: engineering
-author: @stephencheng
+author: "@stephencheng"
 template: task@1
 renumbered_from: TASK-MEMORY-121
 renumbered_note: "Renumbered 121 -> 124 on 2026-06-29 so TASK-MEMORY-121/122/123 could carry the BRAIN capture trio (interaction-event schema / capture emitters / ingestion) per docs/strategy/cyberos-brain-evaluation-plan.md. The row-kind string `memory.awh_gate_result` is unchanged; only the task id moved."

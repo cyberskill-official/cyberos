@@ -65,8 +65,10 @@ produces:
   human_summary_ref: ./HUMAN_SUMMARY.md
 
 # ── Contract dependencies ────────────────────────────────────────────
+# `id: fr` was a rename leftover the codemod could not see: a bare `fr`, not an
+# `FR-` id or a `feature-request` string, so no rule matched it.
 depends_on_contracts:
-  - id:        fr
+  - id:        task
     version:   v1
     purpose:   generation_skeleton
     pin_path:  cyberos/skill/contracts/task/
@@ -259,7 +261,33 @@ Append one `genie.action_log` row of kind `question`.
 Pick the next artefact by topological order (`depends_on` resolved → leftmost priority → smallest ID). Stop when `batch_size_completed == batch_size_requested` OR backlog is exhausted. Per artefact:
 
 - **W1 CLAIM** — set `artefacts[X].status = DRAFTING`. Write manifest.
-- **W2 GENERATE** — render the artefact by adapting the template loaded from `cyberos/skill/contracts/task/template.md` (declared via `depends_on_contracts:`) to this artefact's source_refs, applying anti-fabrication rules (`references/ANTI_FABRICATION.md`).
+- **W1a CLASSIFY TYPE** — decide `type` BEFORE loading a template, because the template *is* the type. Ask the operator when the source is ambiguous; never guess silently.
+
+  | signal in the source | `type` |
+  |---|---|
+  | describes behaviour the system does not have yet | `feature` |
+  | describes behaviour the system has, done wrong — a repro exists, or an error/trace is quoted | `bug` |
+  | hardening, refactor, audit remediation, dependency bump — no user-visible behaviour change | `improvement` |
+  | mechanical/operational toil (regenerate, rotate, migrate) | `chore` |
+
+  A `bug` that turns out to need net-new behaviour is **re-typed, not renumbered** — the id is stable, `type` is a field. Record the retype and its reason in the audit row; the rubric that applies changes with it.
+
+- **W2 GENERATE** — dispatch on `type` (FM-108) to load the body skeleton. **Never hardcode a template path** — a new `type` must cost one file, not a code change:
+
+  ```
+  cyberos/skill/contracts/task/templates/{type}.md
+  ```
+
+  | `type` | template | extra rule family |
+  |---|---|---|
+  | `feature` | `templates/feature.md` | — (the common families are the whole gate) |
+  | `bug` | `templates/bug.md` | `BUG-*` + `REGRESSION-*` (`rubrics/bug.md`) |
+  | `improvement` | `templates/feature.md` | — (same shape; `type` carries the distinction) |
+  | `chore` | `templates/feature.md` | — |
+
+  If `templates/{type}.md` does not exist, HALT and surface it. Do not silently fall back to the feature skeleton: a bug rendered as a feature has no reproduction, no root cause and no regression test, and it will sail through a gate that never knew to ask.
+
+  Render by adapting the loaded template to this artefact's source_refs, applying anti-fabrication rules (`references/ANTI_FABRICATION.md`).
 - **W3 WRITE** — `write_file(artefact.file_path, body)`. Compute `artefact_hash`. Append one `artefact_write` row to `genie.action_log`.
 - **W4 EMIT EVENT** — publish a NATS subject `fr_author.fr_written` carrying `(artefact_id, artefact_path, artefact_hash)`.
 - **W5 ROUTE** — depending on whether the chained audit is wired:

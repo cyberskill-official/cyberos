@@ -55,6 +55,15 @@ DENY_PREFIXES = (
     # task contains tasks"). Any document whose subject IS the rename must be
     # excluded from the rename. Same reasoning as the audit artefacts.
     "docs/reviews/task-rename-analysis.md",
+    # Same principle, found when --verify failed on 509 hits in 2 files:
+    #   RENAME-EPOCH.md              IS the FR-* -> TASK-* mapping. All 507 old ids
+    #                                live there on purpose; that is the entire file.
+    #   no-legacy-fr-vocabulary.sh   the gate's own error examples ("FR-AUTH-111 ->
+    #                                TASK-AUTH-111") and its regex.
+    # A file whose SUBJECT is the retired vocabulary cannot be scrubbed of it without
+    # destroying the file. Verify would otherwise fail forever on its own artefacts.
+    "docs/tasks/RENAME-EPOCH.md",
+    ".pre-commit-hooks/no-legacy-fr-vocabulary.sh",
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -230,7 +239,14 @@ RULES: list[tuple[str, str, str]] = [
     # so nothing caught it until the test suite ran.
     #
     # An identifier rename is all-or-nothing. Rename the whole symbol.
-    ("ident:frs-var",                r"\bfrs\b",                       "tasks"),
+    # `(?<![."'])...(?![."'])` keeps this off the CSS CLASS `frs`, which is a
+    # different thing wearing the same three letters:
+    #     status-app.js   '<div class="frs">'        <- markup, must not change
+    #     status.css      .frs { display: flex; }    <- and `.tasks` ALREADY exists
+    #                                                   there meaning something else,
+    #                                                   so renaming it would collide
+    # The Python identifier this rule is for is never quoted or dot-prefixed.
+    ("ident:frs-var",                r"(?<![.\"'])\bfrs\b(?![.\"'])",  "tasks"),
 
     # ── Pass 6: remaining identifiers, then prose. ───────────────────────────
     #
@@ -285,6 +301,34 @@ RULES: list[tuple[str, str, str]] = [
 # Gate every prose rule on the file extension.
 # ─────────────────────────────────────────────────────────────────────────────
 PROSE_ONLY_SUFFIXES = (".md", ".txt", ".html", ".mdc", ".rst")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# The MIRROR of the prose problem, and the third time this lesson showed up.
+#
+# `ident:frs-var` renames the Python identifier `frs` -> `tasks`. Correct in code.
+# In prose it fires on things that are not identifiers at all:
+#
+#     "manifest_path": "./frs/manifest.json"      an envelope example path
+#     via the existing `migrate-frs.sh --page`    a historical filename
+#     documented in `implement-backlog-frs`       a retired skill name
+#     website/build/data/{nfrs,risks,frs}.json    a data filename
+#
+# Rewriting those produces nonsense and makes `--verify` fail forever on content
+# that is correct. A gate that can never pass is a gate people learn to ignore —
+# which is the exact failure mode this session kept finding elsewhere (`declare -A`
+# silently passing on bash 3.2, 29 trigger tests green against a monkeypatched fake).
+#
+# So: identifier rules run ONLY on code, prose rules run ONLY on prose, and the ones
+# that are safe everywhere (ids, paths, artefact names) run on both.
+# ─────────────────────────────────────────────────────────────────────────────
+CODE_ONLY_RULES = frozenset({
+    "ident:frs-var",
+    "ident:fr-id", "ident:fr-row", "ident:FrRow",
+    "ident:FR_ROW_RE", "ident:FR_ID_RE",
+    "ident:apply-fr-audit-fn",
+})
+CODE_SUFFIXES = (".py", ".rs", ".mjs", ".js", ".ts", ".tsx", ".sh", ".yaml", ".yml",
+                 ".json", ".toml")
 
 PROSE_RULES: list[tuple[str, str, str]] = [
     ("prose:FRs",                    r"\bFRs\b",                       "tasks"),
@@ -490,7 +534,7 @@ def report_sealed(root: Path) -> None:
             print(f"  absent: {rel}")
             continue
         src = p.read_text(encoding="utf-8")
-        new, hits = rewrite(src)
+        new, hits = rewrite(src, rel)
         if not hits:
             print(f"  clean:  {rel}")
             continue
@@ -518,17 +562,57 @@ def report_sealed(root: Path) -> None:
   rewrite both and note it, or leave `source` as a frozen provenance tag.""")
 
 
-def rewrite(text: str) -> tuple[str, Counter]:
+def _is_comment(line: str) -> bool:
+    """A comment / blockquote line — exempt from rewriting (see rewrite())."""
+    s = line.lstrip()
+    return s.startswith(("#", "//", "*", ">", "<!--", '"""'))
+
+
+def rewrite(text: str, rel: str = "") -> tuple[str, Counter]:
+    """Rewrite one file's text. `rel` gates the code-only rules (see CODE_ONLY_RULES).
+
+    `rel=""` means "no file context" — code-only rules are skipped, because guessing
+    wrong on prose is the expensive direction: it corrupts a path or a historical
+    filename, and nobody notices until something tries to resolve it.
+    """
+    original = text
+    is_code = rel.endswith(CODE_SUFFIXES)
     hits: Counter = Counter()
-    for name, pat, rep in COMPILED:
-        text, n = pat.subn(rep, text)
-        if n:
-            hits[name] += n
+
+    # A COMMENT that explains the retired vocabulary must keep it, or it stops
+    # explaining anything. Same exemption the pre-commit hook carries, and the last
+    # three files --verify flagged were all this shape:
+    #   .githooks/pre-commit  "# ...why it sat there full of stale FR-*.js chunks"
+    #   task-author/SKILL.md  "# `FR-` id or a `feature-request` string, so no rule
+    #                          matched it"
+    #   status-app.js         "// NOTE: the `frs` CSS CLASS below is NOT renamed"
+    # Rewriting those turns a true sentence into a false one. Rewrite line by line
+    # and leave comment lines alone.
+    lines = text.split("\n")
+    for i, ln in enumerate(lines):
+        if _is_comment(ln):
+            continue
+        for name, pat, rep in COMPILED:
+            if name in CODE_ONLY_RULES and not is_code:
+                continue
+            ln, n = pat.subn(rep, ln)
+            if n:
+                hits[name] += n
+        lines[i] = ln
+    text = "\n".join(lines)
     # Restore frozen provenance literals the rules above may have swept up.
     for wrong, right in FROZEN_LITERALS.items():
         if wrong in text:
             text = text.replace(wrong, right)
             hits["frozen:restored"] += 1
+
+    # A rule that fired and was then fully undone by the frozen-literal restore is
+    # not a change. Reporting it as one made `--verify` fail on claude_code_hook.py
+    # forever: `id:fr-module-num-lower` rewrote fr-memory-109 -> task-memory-109,
+    # FROZEN_LITERALS put it straight back, net text identical — and the hit counter
+    # still claimed an edit. A verify that flags a file it does not modify is lying.
+    if text == original:
+        return text, Counter()
     return text, hits
 
 
@@ -612,10 +696,17 @@ def main() -> int:
         except (UnicodeDecodeError, FileNotFoundError, IsADirectoryError):
             continue
 
-        new, hits = rewrite(src)
+        new, hits = rewrite(src, rel)
 
         if args.residue or args.verify:
-            probe = src if args.verify else new
+            # Comment lines are exempt here for the same reason rewrite() skips them:
+            # a comment explaining the retired vocabulary has to contain it. Without
+            # this, --verify can never reach exit 0 on its own documentation, and a
+            # gate that can never pass is one people learn to route around — the exact
+            # failure this session kept finding (bash 3.2 `declare -A` silently
+            # passing; 29 trigger tests green against a monkeypatched fake).
+            probe = "\n".join(l for l in (src if args.verify else new).split("\n")
+                              if not _is_comment(l))
             for rname, rpat in RESIDUE_PATTERNS:
                 n = len(rpat.findall(probe))
                 if n:
@@ -756,7 +847,7 @@ def emit_brain_ops(root: Path) -> int:
         body = p.read_text(encoding="utf-8", errors="replace")
         new_rel = fr_id.sub(lambda m: f"TASK-{m.group(1).upper()}-{m.group(2)}"
                             if m.group(0)[0].isupper() else f"task-{m.group(1)}-{m.group(2)}", rel)
-        new_body, _ = rewrite(body)
+        new_body, _ = rewrite(body, rel)
         if new_rel != rel:
             print(json.dumps({"op": "move", "src": rel, "dst": new_rel}))
             ops += 1

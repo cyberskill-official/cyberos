@@ -7,7 +7,7 @@ client_visible: false
 type: improvement
 created_at: 2026-07-08T00:00:00+07:00
 department: engineering
-author: @stephencheng
+author: "@stephencheng"
 template: task@1
 module: chat
 priority: p0

@@ -75,9 +75,16 @@ def git_author(path: Path) -> str | None:
 
 
 def handle_from_owner(owner: str) -> str:
-    # "Stephen Cheng (CTO)" -> "@stephencheng"
+    """"Stephen Cheng (CTO)" -> '"@stephencheng"' — QUOTED.
+
+    `@` is a YAML reserved indicator: an unquoted scalar may not start with it. The
+    first run of this script emitted `author: @stephencheng` on 500 specs, which is
+    invalid YAML that most parsers accept anyway. `install.sh`'s repair_task_yaml
+    caught it and quoted all 500 — a gate doing exactly its job, on my bug.
+    """
     base = re.sub(r"\(.*?\)", "", owner).strip()
-    return "@" + re.sub(r"[^A-Za-z0-9_.-]", "", base.lower().replace(" ", ""))[:38]
+    handle = "@" + re.sub(r"[^A-Za-z0-9_.-]", "", base.lower().replace(" ", ""))[:38]
+    return f'"{handle}"'
 
 
 def parse_fm(text: str) -> tuple[str, list[str], str] | None:

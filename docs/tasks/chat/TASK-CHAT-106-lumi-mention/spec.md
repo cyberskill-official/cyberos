@@ -8,7 +8,7 @@ type: feature
 created_at: 2026-07-02T00:00:00+07:00
 priority: p2
 department: engineering
-author: @stephencheng
+author: "@stephencheng"
 template: task@1
 module: chat
 status: draft
