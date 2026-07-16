@@ -29,7 +29,8 @@ t01_deck_true() {                                                      # AC 1 - 
   node "$R" "$TMP/a" "$TMP/a/out" >/dev/null 2>&1
   h="$TMP/a/out/reference/status.html"
   grep -q 'Overall progress · 2 tasks · 2 modules' "$h" \
-    && grep -q 'VERSION <span class="code">2.0.0</span>' "$h" && grep -q 'abcdef123456' "$h" \
+    && grep -q 'VERSION <span class="code">2.0.0</span>' "$h" \
+    && grep -Eq 'built from <span class="code">fp-[0-9a-f]{12}</span>' "$h" \
     && grep -Eq 'data-bucket="done"[^>]*><b>1</b>' "$h" \
     && grep -q 'seg-done" style="width:50.0%"' "$h" \
     && ok t01 || fail t01 "deck counts / stamp wrong"

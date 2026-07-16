@@ -7,6 +7,10 @@
 #        frontmatter), module-level flat tasks migrate, references rewrite, verify line is clean.
 #   t04  payload self-cleanup: <repo>/.cyberos-install removes itself on success; kept with
 #        CYBEROS_KEEP_PAYLOAD=1; non-canonical in-repo copies are never removed.
+#   t05_hookspath_*  (TASK-IMP-083) step 6b lands the pre-commit hook where core.hooksPath
+#        points (git runs hooks from there, not .git/hooks); no-hooksPath repos stay
+#        byte/word-identical; uninstall resolves the same dir and owns-outright only on
+#        the exact line-2 header (the old head-5 heuristic deleted short foreign hooks).
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../../.." && pwd)"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
@@ -147,12 +151,149 @@ t06_hook_append_foreign() {
   [ "$all" -eq 1 ] && ok t06
 }
 
+# ---------------------------------------------------------------------------
+# t05_hookspath_* - TASK-IMP-083: install/uninstall follow core.hooksPath.
+# Hook-focused installs skip everything the hook path under test does not need
+# (migrate/memory/MCP) to keep the suite fast; t05_hookspath_standalone leaves
+# the page UNRENDERED on purpose so the commit proves the hook itself fired.
+# ---------------------------------------------------------------------------
+_t05_install() { CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 CYBEROS_NO_MCP=1 bash "$TMP/payload/install.sh" "$1" 2>&1; }
+T05_STANDALONE_OUT=""   # captured by t05_hookspath_standalone; asserted again by t05_summary_names_path
+
+t05_hookspath_standalone() {
+  local all=1 d="$TMP/hp-alone"; mkrepo "$d"
+  git -C "$d" config core.hooksPath .githooks
+  T05_STANDALONE_OUT="$(_t05_install "$d")"
+  { [ -f "$d/.githooks/pre-commit" ] && [ -x "$d/.githooks/pre-commit" ]; } \
+    || { fail t05_hookspath_standalone "hook missing or not executable at .githooks/pre-commit"; all=0; }
+  [ "$(sed -n '2p' "$d/.githooks/pre-commit" 2>/dev/null)" = "# cyberos-status-hook v2 (managed by cyberos install)" ] \
+    || { fail t05_hookspath_standalone "standalone v2 header not on line 2"; all=0; }
+  [ ! -e "$d/.git/hooks/pre-commit" ] \
+    || { fail t05_hookspath_standalone "install also wrote .git/hooks/pre-commit (inert litter)"; all=0; }
+  if command -v node >/dev/null 2>&1; then
+    # the hook must FIRE from the configured dir: a backlog-touching commit regenerates
+    # docs/status/ and stages it into the same commit (install above rendered no page).
+    ( cd "$d" && git config user.email t05@test && git config user.name t05 \
+      && mkdir -p docs/tasks/m && printf 'x\n' > docs/tasks/m/x.md \
+      && git add docs/tasks/m/x.md && git commit -q -m t05 ) >/dev/null 2>&1 \
+      || { fail t05_hookspath_standalone "backlog commit failed under the installed hook"; all=0; }
+    ( cd "$d" && git ls-tree -r --name-only HEAD 2>/dev/null | grep -q '^docs/status/' ) \
+      || { fail t05_hookspath_standalone "hook did not fire from .githooks/ (no docs/status in commit)"; all=0; }
+  fi
+  [ "$all" -eq 1 ] && ok t05_hookspath_standalone
+}
+
+t05_hookspath_foreign_append() {
+  local all=1 d="$TMP/hp-foreign"; mkrepo "$d"
+  git -C "$d" config core.hooksPath .githooks
+  mkdir -p "$d/.githooks"
+  # 3 lines, falls through with status 7 (so the appended block itself must re-raise it).
+  printf '#!/bin/sh\necho foreign-hp\n(exit 7)\n' > "$d/.githooks/pre-commit"
+  chmod +x "$d/.githooks/pre-commit"
+  _t05_install "$d" >/dev/null
+  [ "$(head -1 "$d/.githooks/pre-commit")" = '#!/bin/sh' ] \
+    || { fail t05_hookspath_foreign_append "foreign first line not byte-preserved"; all=0; }
+  grep -qx 'echo foreign-hp' "$d/.githooks/pre-commit" \
+    || { fail t05_hookspath_foreign_append "foreign body lost"; all=0; }
+  { [ "$(grep -c '>>> cyberos-status-hook' "$d/.githooks/pre-commit")" = 1 ] \
+    && [ "$(grep -c '<<< cyberos-status-hook' "$d/.githooks/pre-commit")" = 1 ]; } \
+    || { fail t05_hookspath_foreign_append "block markers not present exactly once"; all=0; }
+  _t05_install "$d" >/dev/null                       # re-entry: state machine must not duplicate
+  [ "$(grep -c '>>> cyberos-status-hook' "$d/.githooks/pre-commit")" = 1 ] \
+    || { fail t05_hookspath_foreign_append "block duplicated on re-install"; all=0; }
+  # nothing staged -> the appended block captures $? from the foreign body and re-raises 7
+  ( cd "$d" && sh .githooks/pre-commit >/dev/null 2>&1 ); [ "$?" = 7 ] \
+    || { fail t05_hookspath_foreign_append "foreign exit 7 not preserved"; all=0; }
+  [ "$all" -eq 1 ] && ok t05_hookspath_foreign_append
+}
+
+t05_no_hookspath_regression() {
+  local all=1 d="$TMP/hp-none"; mkrepo "$d"
+  local out; out="$(_t05_install "$d")"
+  [ -x "$d/.git/hooks/pre-commit" ] \
+    || { fail t05_no_hookspath_regression "hook not at .git/hooks/pre-commit"; all=0; }
+  [ "$(sed -n '2p' "$d/.git/hooks/pre-commit" 2>/dev/null)" = "# cyberos-status-hook v2 (managed by cyberos install)" ] \
+    || { fail t05_no_hookspath_regression "standalone v2 header not on line 2"; all=0; }
+  # today's auto-sync summary line, fixed-string exact: any inserted " at <path>" breaks this
+  grep -qF "auto-sync -> pre-commit hook v2 installed (blocks if docs/status regen fails; auto-stages status page); run-gates.sh also regenerates the page after every gates run" <<<"$out" \
+    || { fail t05_no_hookspath_regression "auto-sync summary line drifted from today's wording"; all=0; }
+  grep -qi 'hookspath' <<<"$out" \
+    && { fail t05_no_hookspath_regression "hooksPath wording leaked into no-hooksPath output"; all=0; }
+  grep -qF " at .githooks/pre-commit" <<<"$out" \
+    && { fail t05_no_hookspath_regression "path suffix leaked into no-hooksPath summary"; all=0; }
+  [ "$all" -eq 1 ] && ok t05_no_hookspath_regression
+}
+
+t05_hookspath_uninstall() {
+  local all=1 d="$TMP/hp-unin"; mkrepo "$d"
+  git -C "$d" config core.hooksPath .githooks
+  _t05_install "$d" >/dev/null
+  [ -f "$d/.githooks/pre-commit" ] || { fail t05_hookspath_uninstall "precondition: install left no hook"; all=0; }
+  bash "$d/.cyberos/uninstall.sh" "$d" >/dev/null 2>&1 \
+    || { fail t05_hookspath_uninstall "uninstall exited nonzero"; all=0; }
+  [ ! -e "$d/.githooks/pre-commit" ] || { fail t05_hookspath_uninstall "managed hook not removed from .githooks/"; all=0; }
+  [ ! -e "$d/.git/hooks/pre-commit" ] || { fail t05_hookspath_uninstall ".git/hooks/pre-commit touched"; all=0; }
+  [ "$all" -eq 1 ] && ok t05_hookspath_uninstall
+}
+
+t05_short_foreign_uninstall_preserved() {
+  # THE head-5 regression: a foreign hook SHORTER than five lines + our appended block puts
+  # the `>>>` marker inside `head -5`; uninstall's old `head -5 | grep -q` ownership
+  # heuristic classified the file as ours and rm -f'd the user's hook whole. The exact
+  # line-2 test must strip only the marked block and keep the foreign bytes.
+  local all=1 d="$TMP/hp-short"; mkrepo "$d"
+  git -C "$d" config core.hooksPath .githooks
+  mkdir -p "$d/.githooks"
+  printf '#!/bin/sh\necho keep-me\n(exit 7)\n' > "$d/.githooks/pre-commit"
+  chmod +x "$d/.githooks/pre-commit"
+  _t05_install "$d" >/dev/null                       # appends the marked block
+  grep -q '>>> cyberos-status-hook' "$d/.githooks/pre-commit" \
+    || { fail t05_short_foreign_uninstall_preserved "precondition: block not appended"; all=0; }
+  # construction check: the marker DOES sit inside head -5, i.e. the OLD heuristic would
+  # match (and delete the file). Keeps this scenario honest if the seed hook ever grows.
+  head -5 "$d/.githooks/pre-commit" | grep -q 'cyberos-status-hook' \
+    || { fail t05_short_foreign_uninstall_preserved "construction broken: marker outside head -5, old bug not exercised"; all=0; }
+  bash "$d/.cyberos/uninstall.sh" "$d" >/dev/null 2>&1
+  [ -f "$d/.githooks/pre-commit" ] \
+    || { fail t05_short_foreign_uninstall_preserved "foreign hook DELETED whole (head-5 heuristic regression)"; return; }
+  printf '#!/bin/sh\necho keep-me\n(exit 7)\n' > "$TMP/hp-short.want"
+  head -3 "$d/.githooks/pre-commit" | cmp -s - "$TMP/hp-short.want" \
+    || { fail t05_short_foreign_uninstall_preserved "foreign body not byte-preserved"; all=0; }
+  grep -q 'cyberos-status-hook' "$d/.githooks/pre-commit" \
+    && { fail t05_short_foreign_uninstall_preserved "cyberos block remnants left behind"; all=0; }
+  ( cd "$d" && sh .githooks/pre-commit >/dev/null 2>&1 ); [ "$?" = 7 ] \
+    || { fail t05_short_foreign_uninstall_preserved "stripped hook lost its exit-7 semantics"; all=0; }
+  [ "$all" -eq 1 ] && ok t05_short_foreign_uninstall_preserved
+}
+
+t05_summary_names_path() {
+  # asserts on t05_hookspath_standalone's captured install output (same scenario, one install)
+  grep -qF " at .githooks/pre-commit" <<<"$T05_STANDALONE_OUT" \
+    && ok t05_summary_names_path \
+    || fail t05_summary_names_path "summary does not name .githooks/pre-commit"
+}
+
+t05_non_git_skip() {
+  local d="$TMP/hp-nogit"; mkdir -p "$d"             # deliberately NO git init
+  local out; out="$(_t05_install "$d")"
+  grep -qF "skipped (not a git checkout)" <<<"$out" \
+    && ok t05_non_git_skip \
+    || fail t05_non_git_skip "non-git summary line missing"
+}
+
 t01_gitignore_managed_block
 t02_changelog_once
 t03_root_task_migration
 t04_payload_self_cleanup
 t05_supersede_old_docs
 t06_hook_append_foreign
+t05_hookspath_standalone
+t05_hookspath_foreign_append
+t05_no_hookspath_regression
+t05_hookspath_uninstall
+t05_short_foreign_uninstall_preserved
+t05_summary_names_path
+t05_non_git_skip
 
 echo "install-hygiene: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

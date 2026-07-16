@@ -540,8 +540,28 @@ if [ "${CYBEROS_NO_HOOK:-0}" != "1" ]; then
   if [ ! -d "$root/.git" ]; then
     HOOK_SET="skipped (not a git checkout)"
   else
-    hk="$root/.git/hooks/pre-commit"
-    mkdir -p "$root/.git/hooks"
+    # Resolve the EFFECTIVE hooks directory (TASK-IMP-083). git executes hooks from
+    # core.hooksPath when that config is set - a relative value anchors at the repo root,
+    # an absolute one is used as is - and falls back to .git/hooks only when it is unset.
+    # Writing .git/hooks/pre-commit unconditionally on a hooksPath repo (the cyberos repo
+    # itself is one) installs a hook git never runs: install prints success and status
+    # sync silently dies - the exact "indistinguishable from success" class documented
+    # elsewhere in this file. Empty output (unset OR set to "") takes the default branch,
+    # and $hook_at stays empty there, so on no-hooksPath repos every written byte and
+    # every summary word below expands exactly as before this resolver existed.
+    hooks_path="$(git -C "$root" config core.hooksPath 2>/dev/null || true)"
+    hook_at=""
+    if [ -z "$hooks_path" ]; then
+      hooks_dir="$root/.git/hooks"
+    else
+      case "$hooks_path" in
+        /*) hooks_dir="$hooks_path" ;;
+        *)  hooks_dir="$root/${hooks_path%/}" ;;
+      esac
+      hook_at=" at ${hooks_path%/}/pre-commit"
+    fi
+    hk="$hooks_dir/pre-commit"
+    mkdir -p "$hooks_dir"
 
     # Do we own this file OUTRIGHT? Exact, not positional.
     #
@@ -601,9 +621,9 @@ if grep -Eq '^(docs/tasks/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
 fi
 exit 0
 HOOK
-      HOOK_SET="pre-commit hook v2 installed (blocks if docs/status regen fails; auto-stages status page)"
+      HOOK_SET="pre-commit hook v2 installed${hook_at} (blocks if docs/status regen fails; auto-stages status page)"
     elif grep -q "cyberos-status-hook v2" "$hk" 2>/dev/null; then
-      HOOK_SET="kept your pre-commit hook (cyberos status-sync v2 already present)"
+      HOOK_SET="kept your pre-commit hook${hook_at} (cyberos status-sync v2 already present)"
     elif grep -q "cyberos-status-hook" "$hk" 2>/dev/null; then
       # Upgrade v1 append block → v2
       if grep -q ">>> cyberos-status-hook v1" "$hk" 2>/dev/null; then
@@ -647,9 +667,9 @@ fi
 exit $_cyberos_rc
 # <<< cyberos-status-hook <<<
 HOOK
-        HOOK_SET="upgraded appended status-sync block to v2 (blocking regen)"
+        HOOK_SET="upgraded appended status-sync block to v2${hook_at} (blocking regen)"
       else
-        HOOK_SET="kept your pre-commit hook (cyberos status-sync v2 already appended)"
+        HOOK_SET="kept your pre-commit hook${hook_at} (cyberos status-sync v2 already appended)"
       fi
     else
       # a FOREIGN hook exists: append a marked block that preserves the foreign exit code
@@ -689,7 +709,7 @@ fi
 exit $_cyberos_rc
 # <<< cyberos-status-hook <<<
 HOOK
-      HOOK_SET="appended status-sync v2 to your existing pre-commit hook"
+      HOOK_SET="appended status-sync v2 to your existing pre-commit hook${hook_at}"
     fi
     chmod +x "$hk"
   fi

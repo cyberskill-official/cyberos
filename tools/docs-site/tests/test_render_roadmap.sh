@@ -33,7 +33,7 @@ t01_builds_from_three_inputs() {
 }
 t02_board_counts_and_release_order() {
   h="$TMP/a/out/reference/status.html"
-  grep -q 'VERSION' "$h" && grep -q 'abcdef123456' "$h" \
+  grep -q 'VERSION' "$h" && grep -Eq 'built from <span class="code">fp-[0-9a-f]{12}</span>' "$h" \
     && grep -q '"s":"done"' "$h" && grep -q '"s":"implementing"' "$h" \
     && grep -Eq 'data-bucket="done"[^>]*><b>1</b>' "$h" && grep -Eq 'data-bucket="active"[^>]*><b>1</b>' "$h" \
     && grep -q '"vl":"v2.0.0"' "$h" && grep -q '"vl":"v1.0.0"' "$h" \

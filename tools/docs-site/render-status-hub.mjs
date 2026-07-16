@@ -4,7 +4,7 @@
 // three tabs: they are three lenses (board / table / releases) over one filtered corpus,
 // with a task detail drawer that carries the full spec.
 // Inputs (exactly three, unchanged): task frontmatter, CHANGELOG.md version sections, VERSION.
-// Node stdlib only; deterministic stamp (VERSION + commit, no wall clock); honest failures.
+// Node stdlib only; deterministic stamp (corpus fingerprint - no git, no wall clock); honest failures.
 // Emits: reference/status.html, reference/data/task/<ID>.js (per-task spec chunks, lazy-loaded),
 //        reference/assets/{status.css,status.js,favicon.svg} when CYBEROS_PAGE_ASSETS=1,
 //        reference/roadmap.html (redirect stub - bookmarks stay alive).
@@ -14,6 +14,7 @@
 //        CYBEROS_HUB_LENIENT 1 = warn instead of failing on bad frontmatter / missing inputs
 //        CYBEROS_STATUS_SPECS 0 = skip the per-task spec chunks (drawer links out instead)
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderMarkdown } from './md.mjs';
@@ -35,19 +36,6 @@ const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
 const die = msg => { throw new Error(`status-hub: ${msg}`); };
 const bucketOf = st => (st === 'done' || st === 'closed') ? 'done'
   : ACTIVE.includes(st) ? 'active' : st === 'on_hold' ? 'hold' : 'todo';
-
-function gitCommit(root) {
-  try {
-    const head = readFileSync(join(root, '.git', 'HEAD'), 'utf-8').trim();
-    if (!head.startsWith('ref:')) return head.slice(0, 12);
-    const ref = head.slice(4).trim();
-    const refFile = join(root, '.git', ref);
-    if (existsSync(refFile)) return readFileSync(refFile, 'utf-8').trim().slice(0, 12);
-    const packed = readFileSync(join(root, '.git', 'packed-refs'), 'utf-8');
-    for (const l of packed.split('\n')) if (l.endsWith(' ' + ref)) return l.slice(0, 12);
-  } catch { /* not a git checkout - the stamp says so */ }
-  return 'unknown';
-}
 
 // ---- frontmatter: scalars, inline lists, block lists, block scalars -------------------
 function scalar(v) {
@@ -127,6 +115,7 @@ if (!existsSync(TASK_ROOT)) die(`no docs/tasks under ${ROOT}`);
 
 const tasks = [];
 const invalid = [];
+const specFiles = [];                  // { rel, abs } - every discovered spec.md; the stamp hashes these
 const specs = new Map();               // id -> rendered spec HTML (chunked out below)
 const safeId = id => /^[A-Za-z0-9._-]+$/.test(id);
 
@@ -136,6 +125,7 @@ for (const mod of readdirSync(TASK_ROOT, { withFileTypes: true }).sort((a, b) =>
     if (!d.isDirectory() || !d.name.startsWith('TASK-')) continue;
     const p = join(TASK_ROOT, mod.name, d.name, 'spec.md');
     if (!existsSync(p)) continue;
+    specFiles.push({ rel: `docs/tasks/${mod.name}/${d.name}/spec.md`, abs: p });
     let parsed;
     try { parsed = frontmatter(readFileSync(p, 'utf-8'), p); }
     catch (e) {
@@ -301,10 +291,23 @@ const bound = [...new Set(releases.flatMap(r => [...r.cited, ...r.dated]))].sort
 const VERSION = existsSync(join(ROOT, 'VERSION'))
   ? readFileSync(join(ROOT, 'VERSION'), 'utf-8').trim()
   : (LENIENT ? 'unversioned' : die('VERSION missing'));
-// CYBEROS_COMMIT pins the provenance stamp. A page staged by the pre-commit hook necessarily
-// carries the PARENT commit's sha (the new one does not exist yet), so a later re-render would
-// differ from it by the stamp alone. Pinning lets a freshness check compare CONTENT.
-const COMMIT = process.env.CYBEROS_COMMIT || gitCommit(ROOT);
+// The default stamp is a fingerprint of the render inputs, not a git sha: 'fp-' + the first
+// 12 hex of sha256 over every task spec's raw bytes in bytewise-sorted repo-relative path
+// order, then CHANGELOG.md, then VERSION, when present. A HEAD default self-chased: the page
+// staged by the pre-commit hook carried the PARENT sha (the new commit did not exist yet),
+// so every re-render differed by the stamp alone, and committing THAT armed the next diff.
+// The page's own bytes are never an input, so render -> commit -> render is byte-stable,
+// git checkout or not. CYBEROS_COMMIT still pins an explicit stamp when set and non-empty.
+function corpusFingerprint() {
+  const h = createHash('sha256');
+  const files = [...specFiles].sort((a, b) => Buffer.compare(Buffer.from(a.rel), Buffer.from(b.rel)));
+  for (const f of files) h.update(readFileSync(f.abs));   // per-file update - no concat buffer
+  if (existsSync(clPath)) h.update(readFileSync(clPath));
+  const vPath = join(ROOT, 'VERSION');
+  if (existsSync(vPath)) h.update(readFileSync(vPath));
+  return 'fp-' + h.digest('hex').slice(0, 12);
+}
+const COMMIT = process.env.CYBEROS_COMMIT || corpusFingerprint();
 
 const count = b => tasks.filter(f => bucketOf(f.s) === b).length;
 const doneN = count('done'), activeN = count('active'), holdN = count('hold'), todoN = count('todo');
