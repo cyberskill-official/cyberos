@@ -49,6 +49,23 @@ cp -R "$here/templates/." "$out/cuo/templates/"
 # Gated by scripts/tests/test_template_schema.sh t07.
 cp "$repo/modules/skill/contracts/task/templates/"*.md "$out/cuo/templates/"
 
+# Per-type RULE families (rubrics) — the same incident class as the templates above,
+# found on the 2026-07-16 sachviet consumer-repo audit: the vendored task-audit
+# RUBRIC.md dispatches `type: bug` to the BUG-*/REGRESSION-* family and FM-114 cites
+# `contracts/task/rubrics/bug.md`, but the payload shipped no rubrics/ at all — so a
+# consumer repo could author a bug it could never audit. They flatten into cuo/rubrics/
+# next to cuo/templates/, matching the STATUS-REFERENCE flattening convention.
+#
+# Gated by tools/install/tests/test_rubrics_vendored.sh (real-repo builds MUST carry them);
+# best-effort here like the skill bodies, so a minimal/doc-driven source tree still builds —
+# but loudly, because a silent skip is exactly how the templates went missing.
+if ls "$repo/modules/skill/contracts/task/rubrics/"*.md >/dev/null 2>&1; then
+  mkdir -p "$out/cuo/rubrics"
+  cp "$repo/modules/skill/contracts/task/rubrics/"*.md "$out/cuo/rubrics/"
+else
+  echo "cyberos: WARN no modules/skill/contracts/task/rubrics/ in source - payload ships without per-type rule families (task-audit cannot enforce BUG-*/REGRESSION-*)" >&2
+fi
+
 # The vendored skill set - one name per line with its SDP stage, in lifecycle order
 # (TASK-CUO-209: reviewable data, not a drifting string; TASK-SKILL-116's chain-coverage
 # check runs at the end of this build and fails on any under-coverage).
