@@ -137,17 +137,22 @@ class TestShipManifest(unittest.TestCase):
 
     def test_gitignore_scaffold(self):  # AC 6
         gi = os.path.join(ROOT, "docs", "tasks", ".workflow", ".gitignore")
-        self.assertEqual(open(gi).read().strip(), "*.ship.json")
+        # Seed is two patterns since TASK-IMP-090: ship manifests (TASK-CUO-206) and
+        # task-author run manifests are both untracked session state.
+        self.assertEqual(open(gi).read().split(),
+                         ["*.ship.json", "*.manifest.json"])
         # The path is assembled from fragments, so a codemod that rewrites the literal
         # "tools/cyberos-install" cannot see it — this line survived the dir rename and
         # went red. Same blind spot as the rest of this epoch, one layer down.
         install_sh = open(os.path.join(ROOT, "tools", "install", "install.sh")).read()
         self.assertIn(".workflow/.gitignore", install_sh)
         self.assertIn("*.ship.json", install_sh)
-        out = subprocess.run(["git", "check-ignore",
-                              "docs/tasks/.workflow/TASK-X.ship.json"],
-                             cwd=ROOT, capture_output=True)
-        self.assertEqual(out.returncode, 0, "manifest path is not gitignored")
+        self.assertIn("*.manifest.json", install_sh)  # TASK-IMP-090 seed pattern
+        for probe in ("docs/tasks/.workflow/TASK-X.ship.json",
+                      "docs/tasks/.workflow/task-author.x.manifest.json"):
+            out = subprocess.run(["git", "check-ignore", probe],
+                                 cwd=ROOT, capture_output=True)
+            self.assertEqual(out.returncode, 0, f"{probe} is not gitignored")
 
     def test_done_deletes_routeback_keeps(self):  # AC 7
         m = _manifest()

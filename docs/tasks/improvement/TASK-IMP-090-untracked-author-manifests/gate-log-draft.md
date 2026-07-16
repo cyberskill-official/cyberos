@@ -25,3 +25,15 @@ E4 - index cleanup (AC 3):
 E5 - approval record (AC 4): docs/tasks/_audits/IMPROVEMENT-BATCHES-2026-07-16.md
   121 lines; 27 member-id mentions covering TASK-IMP-082..092 with PLAN approvals,
   HITL verdicts, evidence commits, and the 086 corrective-incident pointer.
+
+## PR-review addendum (2026-07-17, CI awh gate)
+
+The awh gate (out-of-band rerun of the cuo golden suite against its sealed baseline) failed
+closed on this PR: `modules/cuo/tests/test_ship_manifest.py::test_gitignore_scaffold`
+(TASK-CUO-206 AC 6) pinned the `.workflow/.gitignore` seed to exactly `*.ship.json` - the
+seed this task deliberately extended. Fix: the test now asserts the two-pattern seed
+(`*.ship.json`, `*.manifest.json`), asserts both patterns in install.sh, and probes
+`git check-ignore` for a `task-author.x.manifest.json` path too (citing TASK-IMP-090).
+Rerun: test_ship_manifest.py 8/8; full cuo suite 260 passed, 2 skipped (env-dependent,
+run in CI). This was exactly the gate doing its job: an acceptance test guarding a seed
+one batch changed, caught by the sealed rerun rather than by anyone's memory.

@@ -17,3 +17,10 @@ E3 - source lines:
   install.sh:195  is_platform_repo && cfg_tmpl_line="# task_template: engineering-spec@1"
 
 E4 - payload carries the change: dist/cyberos/install.sh -> 2 matches for `task_template: task@1`
+
+## PR-review addendum (2026-07-17, reviewer note)
+
+The PR review bot noted the config.yaml scaffold header still said "Everything below is
+commented out = inert" while step 3b now writes one live line on consumer installs. Header
+prose reworded to match reality (commented lines inert; live lines in effect, task_template
+scaffolded live per TASK-IMP-088). Payload rebuilt; sync OK; hygiene 17/17.

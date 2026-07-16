@@ -22,7 +22,7 @@ Touched files and their coverage:
 | File | Covered by | Coverage |
 |---|---|---|
 | tools/install/docs-tools/backlog-mutate.mjs (retally) | t10 (flip + insert arms), t11 (footprint), t01-t09 regressions | flip and insert paths; bare-header path via t06 |
-| modules/cuo/.../ship-tasks.md (2.6.3 doctrine) | t12 (source + scratch payload) | both passages + version |
+| modules/cuo/chief-technology-officer/workflows/ship-tasks.md (2.6.3 doctrine) | t12 (source + scratch payload) | both passages + version |
 | tools/install/tests/test_workflow_helpers.sh | is the coverage | n/a |
 
 TRACE-004 closure:

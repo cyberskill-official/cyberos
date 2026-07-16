@@ -23,3 +23,11 @@ E4 - retally dogfooded on this batch's own rows (the tool under review maintaine
 
 E5 - payload rebuild + sync: build.sh ok (skills=52, parity OK 25 author dirs);
   check-version-sync.sh -> "sync OK 1.0.0 across 7 artifacts"
+
+## PR-review addendum (2026-07-17, CI payload gate)
+
+`scripts/check_doc_anchors.sh` (TASK-SKILL-119) flagged DEAD: code-review.md:4 wrote the
+workflow path elided as `modules/cuo/.../ship-tasks.md`. Fixed to the full path here and in
+coverage-gate.md's table. Checker rerun: `anchors OK: 444 references resolved`, exit 0
+(remaining WARNs are tolerated historical refs). Lesson folded into practice: artefact docs
+write real paths - the anchor checker treats prose paths as references, which is the point.

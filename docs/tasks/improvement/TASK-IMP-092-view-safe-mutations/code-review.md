@@ -1,7 +1,7 @@
 # TASK-IMP-092 code review
 
 Reviewer: parent ship-tasks agent (batch 3). Diff: `tools/install/docs-tools/backlog-mutate.mjs`
-(retally), `tools/install/tests/test_workflow_helpers.sh` (t10-t12), `modules/cuo/.../ship-tasks.md`
+(retally), `tools/install/tests/test_workflow_helpers.sh` (t10-t12), `modules/cuo/chief-technology-officer/workflows/ship-tasks.md`
 (two doctrine passages, 2.6.2 -> 2.6.3).
 
 ## Clause -> proof

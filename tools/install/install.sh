@@ -194,9 +194,10 @@ if [ ! -f "$cfg_file" ]; then
   cfg_tmpl_line="task_template: task@1"
   is_platform_repo && cfg_tmpl_line="# task_template: engineering-spec@1"
   cat > "$cfg_file" <<EOF
-# .cyberos/config.yaml - per-repo CyberOS overrides (TASK-CUO-207). Everything below is
-# commented out = inert; uncomment a line to override ONLY that key. Detected defaults
-# are shown as comments so this file documents what runs today.
+# .cyberos/config.yaml - per-repo CyberOS overrides (TASK-CUO-207). Commented lines are
+# inert; uncomment one to override ONLY that key. Detected defaults are shown as comments
+# so this file documents what runs today. Live (uncommented) lines are in effect as
+# written - on consumer installs, task_template is scaffolded live (TASK-IMP-088).
 # gates:
 #   build: "$BUILD_CMD"$([ -n "$SRC_BUILD" ] && printf '%s' "        # autodetected: $SRC_BUILD")
 #   lint: "$LINT_CMD"$([ -n "$SRC_LINT" ] && printf '%s' "         # autodetected: $SRC_LINT")
