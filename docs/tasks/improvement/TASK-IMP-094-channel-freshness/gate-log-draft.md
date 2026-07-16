@@ -54,3 +54,29 @@ F5 (behavioral nuance, documented in place): a shared-skills entry that landed a
 (counterpart filtered off at first install) stays a copy on later installs - deliberate
 create-if-absent idempotence; the block now carries the comment stating it and the
 re-vendor path for anyone wanting the symlink form. Hygiene 19/19 after both.
+
+## PR-review addendum 2 (2026-07-17, Devin Review)
+
+**F-own (defect, fixed).** Uninstall removed any `.agents/skills/<cmd>/` directory carrying a
+SKILL.md, treating "looks like a skill" as "is ours". The symlink arm proves ownership by
+readlink target; a copy-fallback had no equivalent proof, and an installer copy is
+byte-indistinguishable from an operator's own directory. So an operator who wrote their own
+`.agents/skills/task-audit/` would have had it `rm -rf`'d - exactly what spec §1.3 promises
+never to happen ("removes managed paths without touching operator files"). The bot filed it as
+a tolerance rather than a bug; it is a defect, because the guarantee is in the spec.
+
+Fix: installer copies now carry a `.cyberos-owned` marker file (the copy's equivalent of the
+symlink's readlink target), written at copy time with a note explaining that deleting it adopts
+the directory. Uninstall removes ONLY marked directories; an unmarked skill dir is KEPT and
+named on stdout ("kept .agents/skills/<cmd> (unmarked skill dir ...)") so a pre-marker leftover
+is visible rather than silently deleted or silently retained.
+
+Regression arm `t_shared_skills_copy_ownership` (test_channels.sh): a real install with
+CYBEROS_COPY_SKILLS=1 must produce the marker; an operator's own unmarked dir (SKILL.md +
+NOTES.md) must survive uninstall with both files intact and the "kept" line printed; the marked
+copy must still be removed. channels 25/25.
+
+**F-ignore (info, no change).** The managed gitignore lists `.agents/skills/{...}` even when
+CYBEROS_AGENTS excludes the agents family - the paths are ignored but never created. Harmless
+(ignoring a non-existent path is a no-op) and consistent with how every other per-agent skill
+path in that same loop is treated. Recorded.

@@ -531,6 +531,15 @@ if want_agent agents; then
     else
       rm -f "$_sdest" 2>/dev/null || true            # never leave a dangling link behind
       cp -R "$CY/plugin/skills/$_sc" "$_sdest"
+      # PR-review fix (Devin, 2026-07-17): mark the copy as OURS. The symlink arm proves
+      # ownership by readlink target; a copy had no such proof, so uninstall's "dir with a
+      # SKILL.md" heuristic would rm -rf an operator's own .agents/skills/<cmd>/ that happens
+      # to carry one - exactly what spec §1.3 promises never to touch. A marker file is the
+      # copy's readlink: uninstall removes only what carries it.
+      printf '%s\n' "cyberos install marker (TASK-IMP-094) - this directory is an installer" \
+        "copy-fallback of .cyberos/plugin/skills/$_sc. uninstall.sh removes ONLY directories" \
+        "carrying this file. Delete it to adopt the directory as your own; uninstall will" \
+        "then leave it alone." > "$_sdest/.cyberos-owned"
     fi
     SKILL_DIRS="$SKILL_DIRS .agents/skills/$_sc"
   done

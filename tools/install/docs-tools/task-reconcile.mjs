@@ -203,9 +203,19 @@ function rung2(root, t, status, id) {
   // artefact bundle). The id is what the caller resolved the folder with, so use it.
   const wfDir = join(root, "docs", "tasks", ".workflow", id);
   const homes = [t.dir, wfDir].filter(existsSync);
+  // PR-review fix (Devin, 2026-07-17): read only FILES. A directory whose name matches the
+  // bundle pattern (plausible under .workflow/<id>/) made readFileSync throw EISDIR, which
+  // escaped rung2 and aborted the whole run with exit 1 - a measuring tool must degrade to a
+  // rung verdict, never take the process down. The name still counts toward the bundle text.
   const bundleText = homes.flatMap(h => readdirSync(h)
     .filter(f => /bundle|packet|artefacts|coverage-and-review/i.test(f))
-    .map(f => `${f}\n${readFileSync(join(h, f), "utf8")}`)).join("\n");
+    .map(f => {
+      const fp = join(h, f);
+      try {
+        if (!statSync(fp).isFile()) return f;         // a dir: its NAME still names the artefact
+        return `${f}\n${readFileSync(fp, "utf8")}`;
+      } catch { return f; }                            // unreadable: the name is what we have
+    })).join("\n");
   const want = ARTEFACTS_FOR[status] || [];
   const missing = want.filter(a => {
     if (homes.some(h => existsSync(join(h, a)))) return false;

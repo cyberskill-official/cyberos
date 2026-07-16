@@ -60,3 +60,25 @@ the rev-parse-based non-git probe. Recorded; no change.
 
 Reruns: test_task_reconcile 6/6, test_workflow_helpers 14/14, 25/25 repo-wide, build ok,
 sync OK 1.0.0.
+
+## PR-review addendum 2 (2026-07-17, Devin Review)
+
+**F-eisdir (defect, fixed).** rung2 built its bundle text by `readFileSync`-ing every entry
+whose NAME matched the bundle pattern. A directory matching that pattern (plausible under a
+`.workflow/<id>/` home) threw EISDIR, which escaped rung2, hit main's top-level catch, and took
+the process down with exit 1. A measuring instrument must degrade to a rung verdict; dying on a
+directory listing is the one thing it may never do. rung2 now stats first: a directory (or any
+unreadable entry) contributes its NAME to the bundle text and nothing else. Arm added to t03
+(a `artefacts-bundle.d/` directory committed into the home; the run must still emit
+reconcile-report@1 at exit 0). Suite 6/6.
+
+**F-precision (info, affirmed).** `Number(process.hrtime.bigint())` loses sub-microsecond
+precision past ~104 days of uptime; the error is many orders of magnitude below a 10 s TTL, so
+the second-scale comparisons are unaffected. The bot traced acquire/reap/throw ordering and the
+release-in-finally (which never fires when acquireLease throws, so a foreign lease is never
+clobbered) and found the logic self-consistent. Recorded, no change.
+
+**F-parity (info, affirmed).** The bot verified byte-for-byte equivalence between
+`normativeHalf()` in task-reconcile.mjs and the independent Python `body_sha` in the suite -
+the cross-implementation agreement that makes TASK-IMP-102's binding load-bearing. That the two
+were written independently and agree is the point of the arm; confirmation welcome.

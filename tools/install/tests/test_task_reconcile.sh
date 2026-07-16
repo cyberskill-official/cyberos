@@ -112,9 +112,18 @@ t03_adopt_candidate() {
     > "$d/docs/tasks/.workflow/TASK-DEMO-001/phase-bundle.md"
   ( cd "$d" && git add -A && git commit -qm "bundle in the .workflow home" )
   case "$(rec_of "$TR" TASK-DEMO-001 "$d" --run-tests)" in
-    resume_at_phase*) ok t03_adopt_candidate ;;
-    *) fail t03_adopt_candidate "the .workflow bundle home was not accepted" ;;
+    resume_at_phase*) ;;
+    *) fail t03_adopt_candidate "the .workflow bundle home was not accepted"; return ;;
   esac
+  # a DIRECTORY named like a bundle must not abort the run (PR-review, Devin 2026-07-17):
+  # readFileSync on it threw EISDIR, which escaped rung2 and took the process down with
+  # exit 1 - a measuring tool degrades to a rung verdict, it never dies on a listing.
+  mkdir -p "$d/docs/tasks/.workflow/TASK-DEMO-001/artefacts-bundle.d"
+  ( cd "$d" && git add -A && git commit -qm "a directory shaped like a bundle" )
+  local out rc; out="$(node "$TR" TASK-DEMO-001 --repo "$d" --json 2>&1)"; rc=$?
+  { [ "$rc" -eq 0 ] && grep -q '"artefact": "reconcile-report@1"' <<<"$out"; } \
+    || { fail t03_adopt_candidate "a bundle-named directory aborted the run (rc=$rc): $(head -2 <<<"$out")"; return; }
+  ok t03_adopt_candidate
 }
 
 # ── t04: read-only + spec drift + not_applicable ─────────────────────────────

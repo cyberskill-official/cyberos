@@ -235,9 +235,34 @@ if bash "$root/tools/install/build.sh" "$CH_TMP/payload" >/dev/null 2>&1; then
                   || bad "t_shared_skills_resolve:$err"
   }
 
+  # ── ownership of a COPY-fallback entry (PR-review, Devin 2026-07-17) ──────────
+  # The symlink arm proves ownership by readlink target. A copy is byte-indistinguishable
+  # from an operator's own directory, so uninstall's old "dir with a SKILL.md" heuristic
+  # would rm -rf work it never created - precisely what TASK-IMP-094 §1.3 promises never to
+  # touch. Installer copies now carry .cyberos-owned; anything unmarked is kept and named.
+  t_shared_skills_copy_ownership() {
+    local o="$CH_TMP/own"; mkdir -p "$o"; (cd "$o" && git init -q . 2>/dev/null || true)
+    CYBEROS_COPY_SKILLS=1 _ch_install "$o"
+    [ -f "$o/.agents/skills/ship-tasks/.cyberos-owned" ] \
+      || { bad "t_shared_skills_copy_ownership: installer copy carries no ownership marker"; return; }
+    rm -rf "$o/.agents/skills/task-audit"; mkdir -p "$o/.agents/skills/task-audit"
+    printf -- '---\nname: task-audit\n---\n# my own skill, not the installer\x27s\n' > "$o/.agents/skills/task-audit/SKILL.md"
+    echo "operator work" > "$o/.agents/skills/task-audit/NOTES.md"
+    bash "$o/.cyberos/uninstall.sh" "$o" >"$CH_TMP/uninst.log" 2>&1 || true
+    if [ ! -f "$o/.agents/skills/task-audit/SKILL.md" ] || [ ! -f "$o/.agents/skills/task-audit/NOTES.md" ]; then
+      bad "t_shared_skills_copy_ownership: uninstall DELETED an operator's own skill dir"; return
+    fi
+    grep -q "kept .agents/skills/task-audit" "$CH_TMP/uninst.log" \
+      || { bad "t_shared_skills_copy_ownership: uninstall did not name the unmarked dir it kept"; return; }
+    [ -e "$o/.agents/skills/ship-tasks" ] \
+      && { bad "t_shared_skills_copy_ownership: the marked installer copy was not removed"; return; }
+    ok "t_shared_skills_copy_ownership: marked copies removed, operator dirs kept and named"
+  }
+
   t_shared_skills_and_devin_rules
   t_channel_idempotence
   t_shared_skills_resolve
+  t_shared_skills_copy_ownership
 else
   bad "agent-surface: scratch payload build failed (build.sh) - t_shared_skills_and_devin_rules / t_channel_idempotence / t_shared_skills_resolve not run"
 fi

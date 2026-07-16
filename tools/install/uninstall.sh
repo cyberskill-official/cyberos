@@ -85,7 +85,9 @@ fi
 # 2b. shared .agents/skills entries + the /create-tasks pair's .claude/skills counterparts
 # (TASK-IMP-094). Removed only when OURS by construction: a symlink whose target is the
 # vendored machine (directly, or chained via .claude/skills/<cmd>), or the installer's
-# copy-fallback (a dir carrying SKILL.md under the exact command name). Anything else under
+# copy-fallback (a dir carrying our .cyberos-owned marker). A dir with only a SKILL.md is
+# NOT proof of ownership - the installer's copy is byte-indistinguishable from an operator's,
+# so the marker is the copy's equivalent of the symlink's readlink target. Anything else under
 # .agents/skills/ is operator work and stays; dirs are pruned only when emptied. The tracked
 # rules pointers (.devin/rules/, .windsurf/rules/, .windsurfrules) are agent surface and are
 # kept, same as CLAUDE.md and the other pointer files.
@@ -96,8 +98,14 @@ for _sc in ship-tasks task-author task-audit; do
       *".claude/skills/$_sc"|*".cyberos/plugin/skills/$_sc")
         rm -f "$_p"; echo "  removed .agents/skills/$_sc (managed entry)";;
     esac
-  elif [ -d "$_p" ] && [ -f "$_p/SKILL.md" ]; then
+  elif [ -d "$_p" ] && [ -f "$_p/.cyberos-owned" ]; then
     rm -rf "$_p"; echo "  removed .agents/skills/$_sc (installer copy)"
+  elif [ -d "$_p" ] && [ -f "$_p/SKILL.md" ]; then
+    # A skill dir we did NOT mark: either an operator's own, or a copy from an install that
+    # predates the marker (TASK-IMP-094 PR-review fix). Ambiguous ownership is not a licence
+    # to rm -rf - say what we see and leave it. Spec §1.3: never touch operator files.
+    echo "  kept .agents/skills/$_sc (unmarked skill dir - not an installer copy we can prove;"
+    echo "       remove it by hand if it is a leftover from a pre-marker install)"
   fi
   # the pair under .claude/skills is machine-pointing and new with TASK-IMP-094;
   # .claude/skills/ship-tasks keeps today's leave-in-place behavior (section 6).
