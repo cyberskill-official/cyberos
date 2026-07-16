@@ -242,7 +242,7 @@ Totals: 336 draft, 4 ready_to_implement, 13 implementing, 2 reviewing, 173 done,
 - [draft] TASK-HR-008-performance-signals - HR performance signal aggregator — read-only consumer of PROJ + TIME + LEARN signals for periodic performance snapshots
 - [draft] TASK-HR-009-termination-workflow - HR termination workflow — Good-Leaver / Bad-Leaver branch with CFO+CEO co-sign + ESOP forfeiture + access revocation cascade
 
-## improvement  (67 draft, 3 testing, 32 done)
+## improvement  (67 draft, 35 done)
 
 - [draft] TASK-IMP-001-dependency-audit-in-ci-cargo-audit-cargo-deny - Dependency audit in CI (cargo-audit + cargo-deny)
 - [draft] TASK-IMP-002-refuse-dev-cors-in-production-boot - Refuse dev CORS in production boot
@@ -343,9 +343,9 @@ Totals: 336 draft, 4 ready_to_implement, 13 implementing, 2 reviewing, 173 done,
 - [done] TASK-IMP-097-sandbox-runbook-note - GUIDE gains the sandboxed-agent runbook section
 - [done] TASK-IMP-098-coverage-scope-helper - coverage-scope helper maps a task diff to per-file coverage
 - [done] TASK-IMP-099-queue-selection-p0-p3 - Queue selection prose ranks p0-p3, MoSCoW wording retired
-- [testing] TASK-IMP-100-task-reconcile-evidence-ladder - task-reconcile, evidence ladder and report for drifted task states
-- [testing] TASK-IMP-101-reconcile-entry-and-deps-gating - ship-tasks reconcile entry phase and depends_on evidence gating
-- [testing] TASK-IMP-102-audit-binding-normative-half - Audits bind the normative half, not bytes the workflow rewrites
+- [done] TASK-IMP-100-task-reconcile-evidence-ladder - task-reconcile, evidence ladder and report for drifted task states
+- [done] TASK-IMP-101-reconcile-entry-and-deps-gating - ship-tasks reconcile entry phase and depends_on evidence gating
+- [done] TASK-IMP-102-audit-binding-normative-half - Audits bind the normative half, not bytes the workflow rewrites
 
 ## inv  (10 draft, 1 ready_to_implement)
 
