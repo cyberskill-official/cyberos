@@ -168,7 +168,7 @@ Totals: 336 draft, 4 ready_to_implement, 15 implementing, 158 done, 1 on_hold, 1
 - [draft] TASK-HR-008-performance-signals - HR performance signal aggregator — read-only consumer of PROJ + TIME + LEARN signals for periodic performance snapshots
 - [draft] TASK-HR-009-termination-workflow - HR termination workflow — Good-Leaver / Bad-Leaver branch with CFO+CEO co-sign + ESOP forfeiture + access revocation cascade
 
-## improvement  (67 draft, 3 implementing, 17 done)
+## improvement  (67 draft, 3 reviewing, 17 done)
 
 - [draft] TASK-IMP-001-dependency-audit-in-ci-cargo-audit-cargo-deny - Dependency audit in CI (cargo-audit + cargo-deny)
 - [draft] TASK-IMP-002-refuse-dev-cors-in-production-boot - Refuse dev CORS in production boot
@@ -237,9 +237,9 @@ Totals: 336 draft, 4 ready_to_implement, 15 implementing, 158 done, 1 on_hold, 1
 - [draft] TASK-IMP-065-track-b-mobile-shells-and-store-release-pipeline - Track B: mobile shells and store release pipeline
 - [draft] TASK-IMP-066-track-c-brain-activation-rollout-deploy-notice-a - Track C: brain activation rollout (deploy, notice, ack, capture)
 - [draft] TASK-IMP-067-go-live-readiness-gate-safety-nets-before-fully - Go-live readiness gate (safety nets before fully on)
-- [implementing] TASK-IMP-085-workflow-helpers - Doc-driven workflow helpers, ship-manifest and backlog-mutate CLIs
-- [implementing] TASK-IMP-086-backlog-index-backfill - Backfill the improvement backlog index rows 068-081 to frontmatter truth
-- [implementing] TASK-IMP-087-release-checklist - Release-readiness checklist for 1.0.0 at docs/release/
+- [reviewing] TASK-IMP-085-workflow-helpers - Doc-driven workflow helpers, ship-manifest and backlog-mutate CLIs
+- [reviewing] TASK-IMP-086-backlog-index-backfill - Backfill the improvement backlog index rows 068-081 to frontmatter truth
+- [reviewing] TASK-IMP-087-release-checklist - Release-readiness checklist for 1.0.0 at docs/release/
 
 ## inv  (10 draft, 1 ready_to_implement)
 
