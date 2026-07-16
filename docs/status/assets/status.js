@@ -10,7 +10,6 @@
   var el = document.getElementById("cs-data");
   if (!el) return;
   var D = JSON.parse(el.textContent);
-  // Data key renamed by the fr->task wave: data-extract.mjs now emits `tasks:`.
   // status.css already has a `.tasks` rule meaning something else, so renaming
   // the class would collide. Data key: renamed. CSS class: frozen.
   var TASKS = D.tasks;
@@ -415,9 +414,6 @@
       return;
     }
 
-    // The codemod renamed the DECLARATION (var fr -> var task, [data-fr] -> [data-task])
-    // and left the USAGE reading `fr` / `.dataset.fr`. `fr` was then an undefined variable
-    // and `dataset.fr` an attribute nothing emits (rows carry data-task, line 161), so this
     // branch never fired: clicking a task row on the status page did nothing, in every repo
     // that vendored this file. Renamed the declaration, left the target — again.
     var task = t.closest("[data-task]");

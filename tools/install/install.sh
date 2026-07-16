@@ -500,7 +500,7 @@ gi_block() {
 # Strip any prior managed block, then trim the trailing blank run and append the fresh block.
 #
 # The begin marker is matched by SHAPE (/^# >>> cyberos .*>>>$/), never by exact text. An
-# exact match cannot survive its own wording changing: renaming `cyberos init` ->
+# exact match cannot survive its own wording changing: renaming `cyberos install` ->
 # `cyberos install` inside the marker made every already-installed block unstrippable, so
 # install appended a SECOND block beside the first and left the original's comment lines
 # orphaned. That shipped to 21 of 23 repos. A marker that identifies a block must not depend

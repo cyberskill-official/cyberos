@@ -16,7 +16,7 @@ One managed block in `.gitignore` (between `# >>> cyberos ... >>>` and `# <<< cy
 
 | Artifact                                                                                            | Fate        | Why                                                          |
 | --------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------ |
-| `.cyberos/` (machine, gates.env, config.yaml, BRAIN store, render intermediates, migration kit)    | gitignored  | regenerable via init; BRAIN is local tenant data              |
+| `.cyberos/` (machine, gates.env, config.yaml, BRAIN store, render intermediates, migration kit)    | gitignored  | regenerable via install; BRAIN is local tenant data              |
 | `docs/status/` (index.html + assets/ - the generated Roadmap / Backlog / Changelog page)           | tracked     | the repo's published status view; replaces standalone docs    |
 | `.git/hooks/pre-commit` (cyberos-status-hook, when no foreign hook exists)                          | local       | auto-regenerates docs/status/ when its inputs are committed   |
 | skill symlinks (`.claude/skills/ship-tasks`, ...)                                        | gitignored  | they point INTO the ignored `.cyberos/`                     |

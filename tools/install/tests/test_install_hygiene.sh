@@ -21,8 +21,12 @@ mkrepo() { mkdir -p "$1"; (cd "$1" && git init -q . 2>/dev/null || true); }
 
 t01_gitignore_managed_block() {
   local d="$TMP/gi"; mkrepo "$d"
-  # operator rules + a pre-existing managed block whose marker text differs from today's --
-  # the shape-match must still find and replace it (this is the 21-repo duplicate-block bug).
+  # operator rules + a pre-existing managed block carrying the OLD marker wording. The
+  # shape-match must still find and replace it -- this is the 21-repo duplicate-block bug.
+  #
+  # DO NOT rewrite the `init` strings below, or the `legacy=` needle, to current wording.
+  # They ARE the thing under test: a check that detects stale text has to spell that text.
+  # A sweep renamed them once and the test silently stopped testing anything.
   cat > "$d/.gitignore" <<'GI'
 node_modules/
 *.log
