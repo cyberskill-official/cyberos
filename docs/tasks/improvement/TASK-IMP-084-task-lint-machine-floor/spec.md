@@ -4,7 +4,7 @@ title: task-lint, a deterministic machine floor under the task-audit rubric
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: implementing
 priority: p1
 author: "@stephencheng"
 department: engineering
