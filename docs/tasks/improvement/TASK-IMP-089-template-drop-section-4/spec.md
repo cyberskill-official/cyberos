@@ -4,7 +4,7 @@ title: task@1 template drops the duplicate out-of-scope section 4
 template: task@1
 type: improvement
 module: improvement
-status: implementing
+status: reviewing
 priority: p2
 author: "@stephencheng"
 department: engineering

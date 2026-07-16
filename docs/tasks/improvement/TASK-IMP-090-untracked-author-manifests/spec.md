@@ -4,7 +4,7 @@ title: task-author manifests default to untracked .workflow session state
 template: task@1
 type: improvement
 module: improvement
-status: implementing
+status: reviewing
 priority: p2
 author: "@stephencheng"
 department: engineering
