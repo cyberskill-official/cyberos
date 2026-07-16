@@ -39,3 +39,11 @@ next_action:     ship
 ## §gate-log
 
 Populated during implementation (ship-tasks testing phase).
+
+## §10.7 post-acceptance correction (2026-07-16)
+
+Acceptance evidence asserted a state no commit contained (see gate-log CORRECTIVE
+ADDENDUM). Deliverable ruling: §1 #1.1 is the contract - every folder gets a listed row;
+the counted-not-listed pattern is the regenerator's defect (IMP-17), not a convention that
+supersedes the task. Fixed forward in 092c9887 with committed-object verification. The
+done status stands on the corrected evidence.

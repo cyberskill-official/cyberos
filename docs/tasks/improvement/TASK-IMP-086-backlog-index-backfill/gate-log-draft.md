@@ -255,3 +255,25 @@ and is out of scope per the spec ("Other module sections' drift").
 
 Human gates (spec §5): review acceptance and final acceptance are recorded human
 verdicts; nothing here sets a status.
+
+## CORRECTIVE ADDENDUM (2026-07-16, post-acceptance verification)
+
+The E2/E5/E6 evidence above was truthful for the view it was measured in and FALSE for
+every committed object: no commit on batch/2-workflow-helpers carried the 14 rows, and the
+batch-1 rows 082-084 were lost from committed state during the same window. Root cause:
+concurrent writes to docs/tasks/BACKLOG.md through Cowork's two filesystem views (this
+task's agent wrote host-side; the parent's phase flips and commits ran sandbox-side); each
+writer's reads were self-consistent while updates crossed views and were lost. The header
+never screamed because the pre-existing corpus header already counted the unindexed done
+tasks, and backlog-mutate's incremental count adjust inherited that baseline (34 vs true 20).
+
+Flagged by the PR review bot (devin-ai-integration) against the pushed branch. Repair, as
+commit 092c9887: single-writer re-insert of all 17 rows via backlog-mutate.mjs, full header
+retally from actual rows, then verification against the COMMITTED GIT OBJECT (not any
+working view): `git show 092c9887:docs/tasks/BACKLOG.md` = 87 rows in the improvement
+section, 0 duplicate stem tokens, header `(67 draft, 20 done)`, all 17 restored [done]
+rows present, working tree clean against HEAD.
+
+Rule adopted from this incident (filed as IMP-18 in IMPROVEMENT_HANDOFF.md): shared files
+get ONE writer through ONE view, and acceptance evidence for content deliverables MUST be
+measured on the committed object, never on a working view.
