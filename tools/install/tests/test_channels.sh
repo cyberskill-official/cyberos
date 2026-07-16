@@ -89,9 +89,23 @@ if [ -f "$cli" ]; then
        "$root/tools/install/build.sh" \
     && ok "npx-cli: package.json carries repository.url matching the GitHub repo" \
     || bad "npx-cli: repository.url missing/wrong -- OIDC publish rejects it as an auth failure"
-  grep -qE 'node-version: *"24"' "$rel" \
-    && ok "npx-cli: npm job runs Node 24 (OIDC needs >= 22.14)" \
-    || bad "npx-cli: npm job node-version is too old for OIDC"
+  # Parse the npm job's Node version and COMPARE it. Do not match a spelling: the first cut of
+  # this check asserted the literal `node-version: "24"` and went red the moment the pin got more
+  # precise ("24.18.0") -- a gate failing a correct change, which is how gates get ignored.
+  # Scoped to the npm job: another job being on 24 says nothing about the one that publishes.
+  npm_node="$(awk '
+    /^  npm:/          { inj = 1; next }
+    inj && /^  [a-z]/  { inj = 0 }
+    inj && match($0, /node-version: *"[0-9][0-9.]*"/) {
+      s = substr($0, RSTART, RLENGTH); gsub(/[^0-9.]/, "", s); print s; exit
+    }' "$rel")"
+  if [ -z "$npm_node" ]; then
+    bad "npx-cli: npm job declares no node-version -- OIDC needs >= 22.14"
+  elif awk -v v="$npm_node" 'BEGIN { split(v, p, "."); exit !(p[1]+0 > 22 || (p[1]+0 == 22 && p[2]+0 >= 14)) }'; then
+    ok "npx-cli: npm job Node $npm_node clears the OIDC floor (>= 22.14)"
+  else
+    bad "npx-cli: npm job Node $npm_node is below the OIDC floor of 22.14"
+  fi
   grep -q 'id-token: write' "$rel" \
     && ok "npx-cli: npm job has id-token: write" \
     || bad "npx-cli: npm job lacks id-token: write -- publish fails with ENEEDAUTH"
