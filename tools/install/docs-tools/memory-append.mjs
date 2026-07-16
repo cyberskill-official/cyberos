@@ -203,10 +203,27 @@ function acquireLease(store) {
     }
     const nowN = Number(process.hrtime.bigint());
     const expN = Number(lease.expiry_ns);
-    if (Number.isFinite(expN) && expN > nowN) {
-      throw new Refusal(3, `store is locked (lease pid=${lease.pid ?? "?"} host=${lease.host ?? "?"}, ~${((expN - nowN) / 1e9).toFixed(1)}s left on the §4.2 TTL) - failing fast, nothing written`);
+    // PR-review hardening (Devin, 2026-07-17): expiry_ns is MONOTONIC time, which resets
+    // at boot - a .lock left by a pre-reboot writer can carry an expiry arbitrarily far
+    // beyond the fresh clock and would wedge appends forever. Two stale-detectors run
+    // BEFORE the expiry comparison:
+    //   (a) implausible horizon: a live lease can never expire more than one TTL ahead;
+    //       anything further is from another boot epoch -> stale.
+    //   (b) pid liveness on the SAME host: if the holder's pid is gone, the lease is an
+    //       orphan regardless of its clock arithmetic (kill(pid, 0) probe; EPERM counts
+    //       as alive, ESRCH as gone). Foreign-host leases keep TTL-only semantics.
+    const horizonExceeded = Number.isFinite(expN) && (expN - nowN) > Number(LEASE_TTL_NS);
+    let pidGone = false;
+    if (lease.host === hostname() && Number.isInteger(lease.pid) && lease.pid > 0) {
+      try { process.kill(lease.pid, 0); } catch (e) { pidGone = (e.code === "ESRCH"); }
     }
-    process.stderr.write(`memory-append: note: reaping stale lease (pid=${lease.pid ?? "?"} host=${lease.host ?? "?"}) - §4.2 expiry passed\n`);
+    if (horizonExceeded || pidGone) {
+      process.stderr.write(`memory-append: note: reaping stale lease (pid=${lease.pid ?? "?"} host=${lease.host ?? "?"}) - ${pidGone ? "holder pid is gone (§4.2 orphan)" : "expiry beyond one TTL horizon (boot-epoch skew)"}\n`);
+    } else if (Number.isFinite(expN) && expN > nowN) {
+      throw new Refusal(3, `store is locked (lease pid=${lease.pid ?? "?"} host=${lease.host ?? "?"}, ~${((expN - nowN) / 1e9).toFixed(1)}s left on the §4.2 TTL) - failing fast, nothing written`);
+    } else {
+      process.stderr.write(`memory-append: note: reaping stale lease (pid=${lease.pid ?? "?"} host=${lease.host ?? "?"}) - §4.2 expiry passed\n`);
+    }
   }
   const now = process.hrtime.bigint();
   const lease = {

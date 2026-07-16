@@ -45,3 +45,12 @@ E5 - uninstall strip (AC 3), live scratch run:
   post-state: .agents/skills/ pruned (dir gone), .devin/rules/cyberos.md KEPT (tracked
   pointer surface), zero '>>> cyberos' blocks left in .gitignore, .claude/skills/ship-tasks
   untouched per today's documented section-6 behavior.
+
+## PR-review addendum (2026-07-17, Devin Review x2)
+
+F4 (doc staleness, fixed): the managed-gitignore policy comment's TRACKED enumeration now
+names the new pointer files (.devin/rules/cyberos.md, .windsurf/rules/cyberos.md).
+F5 (behavioral nuance, documented in place): a shared-skills entry that landed as a COPY
+(counterpart filtered off at first install) stays a copy on later installs - deliberate
+create-if-absent idempotence; the block now carries the comment stating it and the
+re-vendor path for anyone wanting the symlink form. Hygiene 19/19 after both.

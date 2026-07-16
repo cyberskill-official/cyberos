@@ -126,8 +126,11 @@ t02_verify_and_tamper() {
   { [ "$rc" -eq 4 ] && grep -q "first bad ordinal 2" "$TMP/err"; } \
     || { fail t02 "chain-flip verify rc=$rc err=$(cat "$TMP/err")"; return; }
   cp "$TMP/t02/binlog.bak" "$s/audit/current.binlog"
-  # held lock -> second invocation fails fast, nothing written
-  printf '{"pid":99999,"host":"other","monotonic_ns":1,"expiry_ns":9000000000000000000,"version":1}' > "$s/.lock"
+  # held lock -> second invocation fails fast, nothing written. The lease must be
+  # REALISTIC (live foreign holder, expiry inside one TTL of the current monotonic
+  # clock): the PR-review reboot guard reaps anything whose expiry sits beyond one
+  # TTL horizon, so the old 9e18 fixture now belongs to the boot-skew arm below.
+  node -e 'const now=process.hrtime.bigint(); process.stdout.write(JSON.stringify({pid:99999,host:"other",monotonic_ns:Number(now),expiry_ns:Number(now+8000000000n),version:1}))' > "$s/.lock"
   local before; before="$(sha256sum "$s/audit/current.binlog" "$s/HEAD" | sha256sum)"
   ma append "$s" workflow_complete "$d/p3.json"; rc=$?
   { [ "$rc" -eq 3 ] && grep -q "locked" "$TMP/err" && grep -q "failing fast" "$TMP/err"; } \
@@ -135,12 +138,26 @@ t02_verify_and_tamper() {
   [ "$(sha256sum "$s/audit/current.binlog" "$s/HEAD" | sha256sum)" = "$before" ] \
     || { fail t02 "held-lock append mutated the store"; return; }
   grep -q '"pid":99999' "$s/.lock" || { fail t02 "held lease was clobbered by the refused append"; return; }
+  # boot-epoch skew (PR-review, Devin 2026-07-17): a pre-reboot .lock carries a monotonic
+  # expiry far beyond the fresh clock - without the horizon guard this wedges appends
+  # forever; with it, the lease is reaped as stale and the append proceeds.
+  printf '{"pid":99999,"host":"other","monotonic_ns":1,"expiry_ns":9000000000000000000,"version":1}' > "$s/.lock"
+  ma append "$s" workflow_complete "$d/p3.json"; rc=$?
+  { [ "$rc" -eq 0 ] && grep -q "boot-epoch skew" "$TMP/err"; } \
+    || { fail t02 "boot-skew lease append rc=$rc err=$(cat "$TMP/err")"; return; }
+  # orphan lease (same host, holder pid dead, expiry still valid) -> reaped via the
+  # kill(pid,0) liveness probe, append proceeds.
+  dead_pid="$(bash -c 'echo $BASHPID')"   # that shell has exited; its pid is free/dead
+  node -e "const now=process.hrtime.bigint(); const os=require('os'); process.stdout.write(JSON.stringify({pid:${dead_pid},host:os.hostname(),monotonic_ns:Number(now),expiry_ns:Number(now+8000000000n),version:1}))" > "$s/.lock"
+  ma append "$s" workflow_complete "$d/p3.json"; rc=$?
+  { [ "$rc" -eq 0 ] && grep -q "holder pid is gone" "$TMP/err"; } \
+    || { fail t02 "orphan-lease append rc=$rc err=$(cat "$TMP/err")"; return; }
   # expired lease is reaped loudly and the append proceeds
   printf '{"pid":99999,"host":"other","monotonic_ns":1,"expiry_ns":1,"version":1}' > "$s/.lock"
   ma append "$s" workflow_complete "$d/p3.json"; rc=$?
   { [ "$rc" -eq 0 ] && grep -q "reaping stale lease" "$TMP/err"; } \
     || { fail t02 "expired-lease append rc=$rc err=$(cat "$TMP/err")"; return; }
-  [ "$(head_val "$s")" = "3" ] || { fail t02 "HEAD after reap-append is $(head_val "$s")"; return; }
+  [ "$(head_val "$s")" = "5" ] || { fail t02 "HEAD after the three reap-appends is $(head_val "$s")"; return; }
   ma verify "$s" || { fail t02 "final verify failed: $(cat "$TMP/err")"; return; }
   ok t02
 }

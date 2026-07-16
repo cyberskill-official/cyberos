@@ -62,7 +62,7 @@
 //
 // Node stdlib only (docs-tools convention); git is invoked read-only via child_process.
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join, resolve, relative, isAbsolute, basename, dirname } from "node:path";
 
@@ -318,6 +318,10 @@ function main(argv) {
     if (opts.out) {
       const outRel = relUnderRoot(root, opts.out);
       if (outRel === null) throw new UsageError(`--out '${opts.out}' resolves outside the repo root - refused (spec §3)`);
+      // PR-review fix (Devin, 2026-07-17): a missing parent dir surfaced as an uncaught
+      // ENOENT stack trace instead of the tool's clean exit-coded behavior. The dir is
+      // created recursively - it stays inside the root because outRel is already validated.
+      mkdirSync(dirname(resolve(root, outRel)), { recursive: true });
       writeFileSync(resolve(root, outRel), skeleton);
       process.stderr.write(`coverage-scope: wrote ${outRel}\n`);
     } else {

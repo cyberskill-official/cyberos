@@ -148,6 +148,10 @@ t02_skeleton_from_fixture() {
   [ -s "$TMP/out" ] && { fail t02 "--out arm leaked the skeleton to stdout"; return; }
   cmp -s "$d/gate-skeleton.md" "$TMP/t02/want-json.md" || { fail t02 "--out bytes differ from stdout bytes"; return; }
   grep -q "wrote gate-skeleton.md" "$TMP/err" || { fail t02 "--out confirmation missing from stderr"; return; }
+  # arm 3b (PR-review, Devin 2026-07-17): --out into a NOT-YET-EXISTING nested dir used to
+  # die with an uncaught ENOENT stack trace; the parent is now created (inside the root).
+  cs TASK-W-001 --repo "$d" --out reports/sub/gate-skeleton.md || { fail t02 "nested --out arm rc!=0: $(cat "$TMP/err")"; return; }
+  cmp -s "$d/reports/sub/gate-skeleton.md" "$TMP/t02/want-json.md" || { fail t02 "nested --out bytes differ"; return; }
   # determinism: a second run is byte-identical
   cs TASK-W-001 --repo "$d" && cmp -s "$TMP/out" "$TMP/t02/want-json.md" \
     || { fail t02 "rerun not byte-identical"; return; }

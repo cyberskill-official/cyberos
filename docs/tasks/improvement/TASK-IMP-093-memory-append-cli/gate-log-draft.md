@@ -29,3 +29,18 @@ suite): an independent python walk of a tool-written store (struct '>IIQQ' frame
 json sorted-keys compact recompute, raw-byte prev_chain concat) reported every chain
 link OK and HEAD == tip seq; the crc32c implementation matches the Castagnoli test
 vector (crc32c("123456789") == 0xE3069283).
+
+## PR-review addendum (2026-07-17, Devin Review x2)
+
+F1 (defect, fixed): the §4.2 lease compared a stored MONOTONIC expiry against a fresh
+monotonic read - valid within one boot, but a .lock left behind across a host reboot
+carries an expiry far beyond the reset clock and would wedge appends until cleared by
+hand. acquireLease now runs two stale-detectors before the expiry comparison: an
+implausible-horizon guard (expiry more than one TTL ahead = another boot epoch) and a
+same-host pid-liveness probe (kill(pid,0); ESRCH = orphan). t02 gained both arms (the old
+9e18 held-lock fixture was itself boot-skew-shaped and became the skew arm; the held-lock
+fixture is now a realistic live foreign lease inside one TTL). Suite 4/4.
+
+F2 (info, no change): the chain-field blanking's reliance on sorted-key canonical form +
+JSON quote escaping was reviewed and affirmed sound ("a malicious/exotic payload cannot
+forge an earlier match; append/verify are self-consistent"). Recorded, nothing to fix.

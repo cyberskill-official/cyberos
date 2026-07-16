@@ -51,3 +51,12 @@ note emitted as specced; `app/web/src/utils/money.ts | 100 | ok` and
 files); `files_below_90pct: []` matches both recorded verdicts. Docs/test files in the range
 surfaced as visible no-coverage-data rows, never dropped. The consumer repo was left
 byte-untouched (worktree removed; `git status` clean).
+
+## PR-review addendum (2026-07-17, Devin Review)
+
+F3 (inconsistency, fixed): `--out` into a not-yet-existing nested directory surfaced as an
+uncaught ENOENT stack trace instead of the tool's clean exit-coded behavior. The parent
+directory is now created recursively before the write - it cannot escape the repo root
+because outRel is validated first. t02 gained the nested --out arm (placed after the
+original arm's stderr assertion; first placement clobbered $TMP/err and the suite caught
+it). Suite 4/4.

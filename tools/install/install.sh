@@ -518,6 +518,11 @@ if want_agent agents; then
   for _sc in $SHARED_CMDS; do
     [ -d "$CY/plugin/skills/$_sc" ] || continue
     _sdest="$root/.agents/skills/$_sc"
+    # Create-if-absent is deliberate idempotence: an entry that landed as a COPY (its
+    # .claude/skills counterpart was filtered off at first install) stays a copy on later
+    # installs even after the counterpart appears - no churn of existing trees. Re-vendor
+    # from scratch (uninstall + install) if the symlink form is wanted. (PR-review note,
+    # Devin 2026-07-17: behavioral nuance, not a defect.)
     { [ -e "$_sdest" ] || [ -L "$_sdest" ]; } && continue
     mkdir -p "$root/.agents/skills"
     if [ "${CYBEROS_COPY_SKILLS:-0}" != "1" ] && [ -e "$root/.claude/skills/$_sc" ] \
@@ -546,6 +551,7 @@ fi
 # Policy (what install writes, tracked vs ignored):
 #   TRACKED  - the agent surface (AGENTS.md, CLAUDE.md, GEMINI.md, .cursorrules, .cursor/rules/,
 #              .grok/GROK.md, .github/copilot-instructions.md, .agents/rules/, .windsurfrules,
+#              .devin/rules/cyberos.md, .windsurf/rules/cyberos.md (TASK-IMP-094 pointers),
 #              .mcp.json, .cursor/mcp.json), docs/tasks/** (BACKLOG + specs/audits),
 #              CHANGELOG.md, docs/status.html (the generated status page - the repo's published
 #              Roadmap/Backlog/Changelog view), and skill COPIES (CYBEROS_COPY_SKILLS=1).
