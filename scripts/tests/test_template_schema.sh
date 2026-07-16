@@ -26,6 +26,7 @@ cd "$repo"
 PASS=0; FAIL=0
 ok()   { PASS=$((PASS+1)); printf '  \033[32mok\033[0m   %s\n' "$1"; }
 fail() { FAIL=$((FAIL+1)); printf '  \033[31mFAIL\033[0m %s: %s\n' "$1" "$2"; }
+TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT   # t08 fixture + scratch payload build
 
 TPL="$repo/modules/skill/contracts/task/templates"
 RUBRIC="$repo/modules/skill/task-audit/RUBRIC.md"
@@ -118,7 +119,67 @@ t07_payload_ships_the_templates() {
   [ -z "$bad" ] && ok t07 || fail t07 "payload ships no template for:$bad (task-author HALTs on every installed repo)"
 }
 
+
+# --- TASK-IMP-089: one out-of-scope home -----------------------------------------------
+# Until 2026-07-16 this template mandated TWO out-of-scope homes: the PRD half's
+# `## Scope > ### Out of scope / Non-Goals` (the rubric's home, SEC-006 — carried by the
+# per-type templates and every authored spec) and an engineering-half
+# `## 4. Out of scope / non-goals`. Two homes for one statement invite divergence: all
+# nine specs shipped that run needed a pointer line reconciling them. Per the recorded
+# IMP-07 decision the duplicate is gone and Protected invariants renumbered 5 -> 4.
+# TASK-TEMPLATE.md is the engineering half only — it carries no `## Scope` — so the
+# truthful shape is: NO out-of-scope H2 at all, invariants at `## 4.`, nothing left at
+# `## 5.`. The H3 PRD home is deliberately out of this oracle's reach (`^## ` cannot
+# match `###`).
+INIT_TPL="$repo/tools/install/templates/TASK-TEMPLATE.md"
+
+# Shape oracle shared by all three t08 arms, so the live template, the reintroduction
+# fixture and the vendored payload copy are judged by ONE set of rules. Echoes reason
+# tokens; empty output = conforming.
+shape_why() {
+  local f="$1" why=""
+  # numbered (any number — a duplicate at `## 6.` is still a duplicate) or unnumbered H2
+  grep -qiE '^## +([0-9]+\. *)?out of scope' "$f" && why="$why duplicate-out-of-scope-H2"
+  [ "$(grep -cE '^## 4\. Protected invariants this task must not weaken$' "$f")" = 1 ] || why="$why invariants-not-at-##4"
+  grep -qE '^## 5\.' "$f" && why="$why stray-##5-heading"
+  printf '%s' "$why"
+}
+
+t08_single_out_of_scope_home() {
+  [ -f "$INIT_TPL" ] || { fail t08_single_out_of_scope_home "missing — install.sh quickstart cps it into every new repo"; return; }
+  local why; why="$(shape_why "$INIT_TPL")"
+  # "renumbered, content unchanged": the invariants BODY must have survived the renumber
+  grep -q 'must never be made green by weakening' "$INIT_TPL" || why="$why invariants-body-missing"
+  [ -z "$why" ] && ok t08_single_out_of_scope_home || fail t08_single_out_of_scope_home "template regrew the duplicate shape:$why"
+}
+
+t08_duplicate_reintroduction_fails() {
+  # The oracle must go red on the OLD shape, or t08 green means nothing. Re-add the
+  # retired section 4 above the invariants and demand shape_why names exactly that —
+  # a decayed regex failing for some other reason must not count as detection.
+  local fx="$TMP/TASK-TEMPLATE.reintroduced.md"
+  awk '/^## 4\. Protected invariants/ { print "## 4. Out of scope / non-goals"; print ""; print "- ..."; print "" } { print }' "$INIT_TPL" > "$fx"
+  case "$(shape_why "$fx")" in
+    *duplicate-out-of-scope-H2*) ok t08_duplicate_reintroduction_fails ;;
+    *) fail t08_duplicate_reintroduction_fails "oracle missed the reintroduced section 4" ;;
+  esac
+}
+
+t08_payload_carries_shape() {
+  # The template reaches consumers only through the payload. Build to SCRATCH (never
+  # dist/ — rebuilding that is the batch parent's step) and assert the vendored copy is
+  # byte-identical to source and conforming. Name the exact path, per t07's lesson.
+  local p="$TMP/payload"
+  bash "$repo/tools/install/build.sh" "$p" >/dev/null 2>&1 || { fail t08_payload_carries_shape "scratch build.sh failed"; return; }
+  local v="$p/cuo/templates/TASK-TEMPLATE.md"
+  [ -f "$v" ] || { fail t08_payload_carries_shape "payload carries no cuo/templates/TASK-TEMPLATE.md"; return; }
+  local why; why="$(shape_why "$v")"
+  cmp -s "$INIT_TPL" "$v" || why="$why payload-copy-diverges-from-source"
+  [ -z "$why" ] && ok t08_payload_carries_shape || fail t08_payload_carries_shape "vendored template wrong:$why"
+}
+
 t01_rubric_present; t02_skeletons_carry_type; t03_no_retired_fields; t04_pointers_resolve
 t05_every_fm108_type_has_a_template; t06_init_template_current; t07_payload_ships_the_templates
+t08_single_out_of_scope_home; t08_duplicate_reintroduction_fails; t08_payload_carries_shape
 echo "----"; echo "pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

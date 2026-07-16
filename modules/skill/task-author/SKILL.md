@@ -181,7 +181,7 @@ skill_version:                   1.0.0
 prompt_revision:                 task_author@1.0.0
 template_version:                task@1   (loaded from cyberos/skill/contracts/task/template.md)
 output_dir:                      <from caller>
-manifest_path:                   <from caller; default: <output_dir>/manifest.json>
+manifest_path:                   <from caller; default: docs/tasks/.workflow/task-author.<slug>.manifest.json>
 naming_pattern:                  task-{NNN}-{slug}.md
 batch_size:                      <from caller; default 3, soft-cap 5, hard-cap 10>
 hitl_categories:                 [<list per skill — e.g. customer_quotes, success_metric_targets, scope_decomposition>]

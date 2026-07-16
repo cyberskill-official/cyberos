@@ -55,11 +55,7 @@ Null / empty inputs; extreme bounds; malformed payloads; concurrency / races;
 security-class (auth bypass, tenant escape, injection). Each security-class row needs a
 test or an ADR.
 
-## 4. Out of scope / non-goals
-
-- ...
-
-## 5. Protected invariants this task must not weaken
+## 4. Protected invariants this task must not weaken
 
 List anything a gate must never be made green by weakening (auth model, tenant
 isolation, audit integrity, consent, etc.). Weakening one is a fork: park and record.
