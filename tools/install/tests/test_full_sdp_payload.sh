@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# test_full_sdp_payload.sh - TASK-CUO-209 §5 suite (t01-t08 -> AC 1-8).
+# test_full_sdp_payload.sh - TASK-CUO-209 §5 suite (t01-t08 -> AC 1-8)
+# + t09 sandbox-runbook GUIDE gate (TASK-IMP-097 AC 1).
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 repo="$(cd "$here/../../.." && pwd)"
@@ -103,7 +104,25 @@ t08_workflows_vendored_intact() {                                     # AC 8 (am
     && ok t08 || fail t08 "workflow docs missing from payload or chain structure broken"
 }
 
+t09_sandbox_runbook_guide() {                                          # TASK-IMP-097 AC 1
+  # The built GUIDE carries the sandboxed-agent runbook: the section heading, the
+  # local-clone build/test pattern (landed back as a local ref move, never a remote
+  # push), and the manual hook-replay rule (--no-verify only with recorded evidence).
+  local G="$TMP/payload/GUIDE.md"
+  grep -q '^## Running CyberOS under sandboxed agents' "$G" \
+    || { fail t09 "GUIDE lacks the sandboxed-agents section heading"; return; }
+  grep -q 'clone the mounted repo to a local working copy' "$G" \
+    || { fail t09 "GUIDE lacks the local-clone pattern line"; return; }
+  grep -q 'local ref move, not a remote push' "$G" \
+    || { fail t09 "GUIDE lacks the no-push (local ref move) clause"; return; }
+  grep -q 'replay each hook obligation manually' "$G" \
+    || { fail t09 "GUIDE lacks the hook-replay line"; return; }
+  grep -q -- '--no-verify' "$G" \
+    || { fail t09 "GUIDE lacks the --no-verify + recorded-evidence rule"; return; }
+  ok t09
+}
+
 t01_stage_matrix_ships; t02_set_is_reviewable_data; t03_counts_computed; t04_lifecycle_map_total
-t05_sibling_checks_green; t06_size_budget; t07_reduced_floor_intact; t08_workflows_vendored_intact
+t05_sibling_checks_green; t06_size_budget; t07_reduced_floor_intact; t08_workflows_vendored_intact; t09_sandbox_runbook_guide
 echo "----"; echo "pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

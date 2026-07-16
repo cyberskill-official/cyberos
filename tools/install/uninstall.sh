@@ -82,6 +82,34 @@ if [ -f "$gi" ] && grep -q 'cyberos' "$gi" 2>/dev/null; then
   fi
 fi
 
+# 2b. shared .agents/skills entries + the /create-tasks pair's .claude/skills counterparts
+# (TASK-IMP-094). Removed only when OURS by construction: a symlink whose target is the
+# vendored machine (directly, or chained via .claude/skills/<cmd>), or the installer's
+# copy-fallback (a dir carrying SKILL.md under the exact command name). Anything else under
+# .agents/skills/ is operator work and stays; dirs are pruned only when emptied. The tracked
+# rules pointers (.devin/rules/, .windsurf/rules/, .windsurfrules) are agent surface and are
+# kept, same as CLAUDE.md and the other pointer files.
+for _sc in ship-tasks task-author task-audit; do
+  _p="$root/.agents/skills/$_sc"
+  if [ -L "$_p" ]; then
+    case "$(readlink "$_p" 2>/dev/null)" in
+      *".claude/skills/$_sc"|*".cyberos/plugin/skills/$_sc")
+        rm -f "$_p"; echo "  removed .agents/skills/$_sc (managed entry)";;
+    esac
+  elif [ -d "$_p" ] && [ -f "$_p/SKILL.md" ]; then
+    rm -rf "$_p"; echo "  removed .agents/skills/$_sc (installer copy)"
+  fi
+  # the pair under .claude/skills is machine-pointing and new with TASK-IMP-094;
+  # .claude/skills/ship-tasks keeps today's leave-in-place behavior (section 6).
+  if [ "$_sc" != "ship-tasks" ] && [ -L "$root/.claude/skills/$_sc" ]; then
+    case "$(readlink "$root/.claude/skills/$_sc" 2>/dev/null)" in
+      *".cyberos/plugin/skills/$_sc") rm -f "$root/.claude/skills/$_sc"; echo "  removed .claude/skills/$_sc (managed entry)";;
+    esac
+  fi
+done
+rmdir "$root/.agents/skills" 2>/dev/null || true
+rmdir "$root/.agents" 2>/dev/null || true
+
 # 3. BRAIN store
 brain="$CY/memory/store"
 if [ "${CYBEROS_UNINSTALL_KEEP_BRAIN:-1}" = "1" ] && [ -d "$brain" ]; then

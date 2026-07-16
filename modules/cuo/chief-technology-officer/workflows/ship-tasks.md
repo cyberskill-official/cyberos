@@ -1,6 +1,6 @@
 ---
 workflow_id: chief-technology-officer/ship-tasks
-workflow_version: 2.6.3
+workflow_version: 2.6.4
 purpose: Drive each eligible task in `docs/tasks/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the task back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
 persona: chief-technology-officer
 cadence: per-task (loops continuously over BACKLOG.md)
@@ -255,6 +255,7 @@ One-task-at-a-time is no longer the only sanctioned mode. The default is now BAT
   - Cap the round at the point where reviewing N diffs stops being possible. Sub-agents are cheap; a human reading 12 unrelated diffs at one gate is not. When the batch exceeds a reviewable round, ship it as consecutive rounds on the same branch.
   - A sub-agent that hits a §2 halt returns it; the parent collects halts and surfaces them together rather than stopping the whole round on the first one.
   - Shared files are owned by ONE writer through ONE filesystem view per run — cone-independence includes view-independence (v2.6.3, TASK-IMP-092). Two agents writing one file through different filesystem views produce lost updates even when their writes are time-serialized: each view's reads stay self-consistent while the other view's writes vanish, so every read looks right and the committed truth is wrong. Route every write to a shared file (BACKLOG.md above all) through its one owner on its one view. (Learned 2026-07-16, TASK-IMP-086 incident: the member agent wrote the backlog through one view while the parent's phase flips ran through another — no commit ever carried both.)
+  - Constrained environments: when the run itself is sandboxed (per-command time caps, background processes dying with the call, synced-mount filesystems), follow the environment runbook — “Running CyberOS under sandboxed agents” in the payload GUIDE (source: `tools/install/docs/index.md`); the rules above stay normative there.
 - **One branch per BATCH, not per task (v2.6.0).** The batch is the unit of review and the unit of merge, so it is the unit of branching. Name it `batch/<n>-<short-theme>` (e.g. `batch/3-auth-hardening`). Every member commits to that branch, per phase, with its own conventional commit — per-task commits stay, per-task branches go. Rationale: N branches for N tasks that were selected *because they are independent* produces N PRs that touch disjoint files and merge in any order — pure ceremony. Cone-overlapping tasks were never in the batch to begin with.
   - The next batch branches from the previous batch's merge, not from its tip, unless the operator says otherwise. Unlock rescan means batch N+1's eligibility usually depends on batch N being `done`.
   - A task routed back to `ready_to_implement` mid-batch leaves the batch; it re-enters selection later and MUST NOT hold its batch's branch open.
@@ -308,7 +309,7 @@ to `ready_to_implement`, keep it with `routed_back_count += 1` - the next run re
 staleness rule but retains count and history.
 
 **Queue selection (no task id given).** Among tasks at `ready_to_implement` whose `depends_on` are all `done`:
-order by priority (MUST before SHOULD before COULD), then `created` ascending, then id ascending. Echo the
+order by priority: `p0` before `p1` before `p2` before `p3` (legacy MoSCoW values map per FM-105), then `created` ascending, then id ascending. Echo the
 selection before step 1: `queue: picked <id> (priority=<p>, created=<d>) over <n> other eligible tasks`.
 Reference implementation: `modules/cuo/cuo/ship_manifest.py` (doc-driven agents apply this section directly).
 The vendored executable of this section is `tools/install/docs-tools/ship-manifest.mjs`

@@ -1,0 +1,25 @@
+---
+artefact: edge-case-matrix@1
+task_id: TASK-IMP-099
+total_rows: 10
+created: 2026-07-17
+verdict: pass (edge-case-matrix-audit: every category >=1 row, covered-by names real test functions or recorded probes, SECURITY row states the integrity surface, DEGRADATION rows carry detection+recovery)
+---
+# Edge-case matrix - TASK-IMP-099
+
+Test functions live in tools/install/tests/test_workflow_helpers.sh unless stated.
+
+| # | category | trigger | expected behavior | covered by |
+|---|---|---|---|---|
+| 1 | null/empty | the queue-selection line is deleted or reworded away in a future edit | t13's positive greps fail (source and payload arms separately), naming the file that lost the rule | t13_queue_rule_p0_p3 (p0-p3 grep per copy) |
+| 2 | null/empty | the FM-105 parenthetical is dropped while the p0-p3 rule survives (reader with a legacy corpus loses the why) | t13's second positive grep fails independently of the first | t13_queue_rule_p0_p3 (parenthetical grep) |
+| 3 | bounds | version bumped without moving the pins, or a pin moved without the bump | t09/t12/t13 disagree loudly - the exact-pin discipline makes every normative edit a deliberate two-sided change; this task moved 2.6.3 -> 2.6.4 on both sides in one change, disclosed | t09_doctrine_wiring + t12_doctrine_view_rules_vendored + t13 (payload version pin) |
+| 4 | bounds | the same exact pin exists in a scenario the spec did not name (t09, discovered at line 456 pre-change) | moving only t12's pin ships a red suite; both pins move together and the extra move is disclosed in code-review.md - the undeclared pin is treated as the same deliberate-bump discipline, not silently loosened | discovery recorded in context-map.md + code-review.md disclosure; suite tail 13/13 in gate-log-draft.md E1 |
+| 5 | malformed | a bare MoSCoW ordering rule is reintroduced anywhere in the doc ("MUST before SHOULD", "should before could", mixed case) | t13's negative grep targets the rule SHAPE - a MoSCoW value on BOTH sides of "before", case-insensitive - and fails naming up to three offending lines with line numbers | t13_queue_rule_p0_p3 (negative grep) + recorded probe: the retired line 311 wording is CAUGHT by the pattern (gate-log-draft.md E3) |
+| 6 | malformed | false positive risk: legit prose pairing a MoSCoW-ish word with "before" on one side only (skill_chain step 27 "MUST be passed ... BEFORE this workflow"; §11a "A batch SHOULD be shipped"; the parenthetical "legacy MoSCoW values map per FM-105") | never trips - the pattern requires MoSCoW values on both sides of "before"; the parenthetical carries no pairing; proven by t13 green over the full current doc plus the recorded allow-probe | t13 green (both copies) + gate-log-draft.md E3 probe ("parenthetical: allowed") |
+| 7 | concurrency/order | shares ship-tasks.md with TASK-IMP-097 in batch 4 | serialized by plan: ONE sub-agent (this one) drives 097 then 099 through ONE filesystem view - §11a's one-writer-one-view rule applied to its own document; 097 ran and was evidenced at 2.6.3 before this task touched the version | batch-4 plan §0a + both tasks' gate logs (097 E1/E4 at 2.6.3, 099 E1 at 2.6.4) |
+| 8 | SECURITY | queue selection decides WHICH task an unattended agent picks next - a silent wording change to the ordering rule is an integrity surface | any rewording of the rule or its version is loud: t13 pins the exact ordering phrase, t09/t12/t13 pin the exact version in source and both vendored copies, and the doc-driven executable (modules/cuo/cuo/ship_manifest.py `_PRIORITY_RANK`) ranks both scales identically so prose and code cannot silently diverge in opposite directions | t13 + t09 + t12 + inspection (ship_manifest.py lines 22-30, unchanged) |
+| 9 | DEGRADATION | a downstream repo mid-migration still carries MUST/SHOULD/COULD priorities in old task frontmatter | ordering still deterministic: `_PRIORITY_RANK` accepts both scales (MUST->p0, SHOULD->p1, COULD->p2, WONT->p3) and the parenthetical tells the reader why; new specs with MoSCoW values are rejected by FM-105 (modules/skill/task-audit/RUBRIC.md:26) so the legacy set only shrinks | inspection (ship_manifest.py `_PRIORITY_RANK`) + modules/skill/task-audit/RUBRIC.md:37 migration note - out of scope to change, in scope to describe |
+| 10 | DEGRADATION | payload staleness: source at 2.6.4 while a consumer's vendored copy lags | detection: t13/t09/t12 grep a SCRATCH build of the current source every run, and check-version-sync.sh + payload-gate.yml CI re-prove dist on every commit/push; recovery: consumer re-vendor via install (soft update-check nags automatically) | t13 (payload arm) + distribution-sync chain in ship-tasks.md (pre-existing) |
+
+Documented-by-design: other MoSCoW mentions in ship-tasks.md remain legal where they are not ordering rules (today the reworded parenthetical is the file's ONLY MoSCoW mention - `grep -ci moscow` = 1, gate-log-draft.md E2); historical task specs keep MUST/SHOULD priorities as records, out of scope per spec. SECURITY-class beyond row 8: none - prose and test pins, no execution surface.
