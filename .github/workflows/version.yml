@@ -47,7 +47,7 @@ jobs:
           ssh-key: ${{ secrets.VERSION_BUMP_SSH_KEY }}
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24.18.0'
       - name: Compute + apply the next version
         id: bump
         run: node scripts/cyberos-version.mjs --apply ${{ github.event.inputs.level && format('--level {0}', github.event.inputs.level) || '' }}

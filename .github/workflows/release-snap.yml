@@ -69,7 +69,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24.18.0'
 
       - name: Stamp VERSION into the installers
         run: node scripts/stamp-release-version.mjs --apply

@@ -42,7 +42,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24.18.0'
 
       # Same discipline as the desktop job: installers carry their own version fields;
       # stamp them so the MAS pkg can never ship a number that disagrees with VERSION.

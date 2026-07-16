@@ -176,7 +176,7 @@ jobs:
         with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
       - uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "24.18.0"
           registry-url: "https://registry.npmjs.org"
       - name: npm must be >= 11.5.1 for OIDC
         run: |
@@ -250,7 +250,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24.18.0'
 
       # The installers carry their OWN version fields and had drifted from the platform VERSION
       # (tauri.conf.json still said 1.0.0 while VERSION said 1.2.0). Stamp them so a tag can never ship a
@@ -565,7 +565,7 @@ jobs:
           ref: "${{ github.event.inputs.tag || github.ref_name }}"
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 24.18.0
       - name: Build the site from the markdown sources
         run: bash tools/docs-site/build.sh
       # TASK-IMP-079: shared shipper - this job and deploy.yml's docs job used to inline the same

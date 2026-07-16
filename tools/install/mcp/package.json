@@ -7,7 +7,7 @@
     "cyberos-mcp": "./cyberos-mcp.mjs"
   },
   "engines": {
-    "node": ">=24"
+    "node": ">=24 <25"
   },
   "files": [
     "cyberos-mcp.mjs",

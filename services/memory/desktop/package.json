@@ -26,6 +26,6 @@
     "autoprefixer": "^10.4.20"
   },
   "engines": {
-    "node": ">=24"
+    "node": ">=24 <25"
   }
 }
