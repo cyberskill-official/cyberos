@@ -152,50 +152,64 @@ jobs:
   # npx-cli. The channel was declared in the manifest while the npm package did not exist --
   # `npx cyberos` 404'd for anyone who followed the docs. Guarded on the secret so a fork, or
   # this repo before NPM_TOKEN is set, skips cleanly instead of failing the release.
+  # npx-cli, published via TRUSTED PUBLISHING (OIDC) -- no npm token anywhere.
+  #
+  # npm exchanges this job's short-lived GitHub OIDC token for a scoped publish token at
+  # publish time. Nothing long-lived exists to leak, rotate, or over-scope. The trust is
+  # pinned on npmjs.com to: this org + repo + THIS workflow filename (release.yml).
+  #
+  # Four things the docs make load-bearing, all of which bit us or would have:
+  #   1. Node >= 22.14.0 / npm >= 11.5.1. This job ran Node 20, which cannot do OIDC.
+  #   2. package.json `repository.url` must EXACTLY match the GitHub repo, or npm refuses.
+  #      build.sh emits it; check-repository-url below fails loudly rather than at publish.
+  #   3. NO --provenance flag. Trusted publishing generates provenance automatically, and
+  #      passing the flag is how the previous attempt died (EUSAGE on id-token).
+  #   4. The workflow FILENAME is part of the trust. Renaming this file silently breaks
+  #      publishing with ENEEDAUTH -- npm never validates the config when you save it.
   npm:
     needs: payload
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest        # OIDC requires a cloud runner; self-hosted is unsupported
     permissions:
       contents: read
-      # --provenance signs the package with a Sigstore attestation binding it to this
-      # workflow + commit, which is what makes `npx cyberos` verifiable rather than
-      # merely available. It needs an OIDC token; the workflow-level default is
-      # contents:write only, so npm failed with:
-      #   EUSAGE: Provenance generation in GitHub Actions requires "write" access to
-      #   the "id-token" permission
-      # Found by running the job for real -- the package built (673.9 kB, 1510 files)
-      # and reached the publish call before the registry ever saw it.
-      id-token: write
+      id-token: write             # mints the OIDC token npm exchanges. Without it: ENEEDAUTH.
     env:
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
         with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
       - uses: actions/setup-node@v4
-        with: { node-version: "20", registry-url: "https://registry.npmjs.org" }
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+      - name: npm must be >= 11.5.1 for OIDC
+        run: |
+          set -euo pipefail
+          npm install -g npm@latest
+          echo "npm $(npm -v) / node $(node -v)"
+          node -e 'const [a,b,c]=process.versions.node.split(".").map(Number);
+                   if (a<22 || (a===22 && b<14)) { console.error("node too old for OIDC"); process.exit(1); }'
       - name: Build the payload (build.sh generates the npm package.json)
         run: bash tools/install/build.sh "$RUNNER_TEMP/payload"
-      - name: Publish cyberos to npm
-        if: ${{ env.NPM_TOKEN != '' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish @cyberskill/cyberos via OIDC
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/payload"
           test -f package.json || { echo "build.sh produced no package.json"; exit 1; }
           name="$(node -p "require('./package.json').name")"
-          test "$name" = "@cyberskill/cyberos" || { echo "package name is '$name', want '@cyberskill/cyberos'"; exit 1; }
+          test "$name" = "@cyberskill/cyberos" || { echo "package name is '$name'"; exit 1; }
+          # npm rejects the publish when repository.url does not match the GitHub repo.
+          # Assert it here so the failure names its cause instead of surfacing as auth noise.
+          url="$(node -p "require('./package.json').repository?.url || ''")"
+          case "$url" in
+            *cyberskill-official/cyberos*) : ;;
+            *) echo "repository.url is '$url' — must point at cyberskill-official/cyberos"; exit 1 ;;
+          esac
           # Re-running a release must not fail on an already-published version.
           if npm view "@cyberskill/cyberos@${TAG#v}" version >/dev/null 2>&1; then
             echo "@cyberskill/cyberos@${TAG#v} already published — nothing to do"
           else
-            npm publish --access public --provenance
+            npm publish --access public   # provenance is automatic under trusted publishing
           fi
-      - name: Skipped (no NPM_TOKEN)
-        if: ${{ env.NPM_TOKEN == '' }}
-        env: { NPM_TOKEN: "${{ secrets.NPM_TOKEN }}" }
-        run: echo "NPM_TOKEN is not set — skipping the npx-cli channel publish."
 
   # Signed native desktop installers (.dmg / .msi / .AppImage) via the official Tauri action. The desktop app
   # is a thin shell that loads os.cyberskill.world/web, so there is no web build step here.

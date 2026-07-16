@@ -81,6 +81,30 @@ if [ -f "$cli" ]; then
   grep -q '"cyberos": *"cli/bin/cli.mjs"' "$root/tools/install/build.sh" \
     && ok "npx-cli: build.sh maps bin.cyberos -> cli/bin/cli.mjs" \
     || bad "npx-cli: build.sh does not map bin.cyberos to cli/bin/cli.mjs"
+
+  # Trusted publishing (OIDC) has four requirements that fail as AUTH errors, not as the
+  # thing that is actually wrong. Assert each one here, where the message can say so.
+  rel="$root/.github/workflows/release.yml"
+  grep -q '"repository": *{ *"type": *"git", *"url": *"git+https://github.com/cyberskill-official/cyberos.git" *}' \
+       "$root/tools/install/build.sh" \
+    && ok "npx-cli: package.json carries repository.url matching the GitHub repo" \
+    || bad "npx-cli: repository.url missing/wrong -- OIDC publish rejects it as an auth failure"
+  grep -qE 'node-version: *"24"' "$rel" \
+    && ok "npx-cli: npm job runs Node 24 (OIDC needs >= 22.14)" \
+    || bad "npx-cli: npm job node-version is too old for OIDC"
+  grep -q 'id-token: write' "$rel" \
+    && ok "npx-cli: npm job has id-token: write" \
+    || bad "npx-cli: npm job lacks id-token: write -- publish fails with ENEEDAUTH"
+  if grep -qE 'npm publish[^|]*--provenance' "$rel"; then
+    bad "npx-cli: --provenance is passed; trusted publishing generates it automatically and the flag errors"
+  else
+    ok "npx-cli: no --provenance flag (automatic under trusted publishing)"
+  fi
+  if grep -qE 'NODE_AUTH_TOKEN|secrets\.NPM_TOKEN' "$rel"; then
+    bad "npx-cli: a long-lived npm token is still referenced; OIDC replaced it"
+  else
+    ok "npx-cli: no npm token referenced anywhere (OIDC only)"
+  fi
   # A bare `npx cyberos` must print help and change nothing on disk.
   out="$(node "$cli" 2>&1 </dev/null | head -4)"
   printf '%s' "$out" | grep -qi "usage\|command\|cyberos" \

@@ -285,11 +285,19 @@ cat > "$out/package.json" <<PKG
     "cyberos": "cli/bin/cli.mjs"
   },
   "engines": { "node": ">=18" },
+  "repository": { "type": "git", "url": "git+https://github.com/cyberskill-official/cyberos.git" },
+  "homepage": "https://github.com/cyberskill-official/cyberos#readme",
+  "bugs": { "url": "https://github.com/cyberskill-official/cyberos/issues" },
   "files": ["cuo", "memory", "plugin", "mcp", "cli", "ci", "template", "lib", "install.sh", "uninstall.sh", "version.sh", "status.sh", "help.sh", "bootstrap.sh", "create.sh", "Dockerfile", "VERSION", "manifest.yaml", "GUIDE.md", "README.md", ".claude-plugin"],
   "keywords": ["cyberos", "tasks", "agents", "mcp", "workflow", "hitl", "gates"],
   "license": "MIT"
 }
 PKG
+# repository.url is NOT decoration. Trusted publishing (OIDC) rejects the publish unless it
+# exactly matches the GitHub repo the workflow runs in -- npm's own docs call this out as a
+# common failure for "misconfigured packages", and it surfaces as an auth error rather than
+# as "your metadata is wrong". release.yml asserts it before calling publish so the message
+# names the cause.
 # stamp the standalone mcp package version too (best-effort; ignore if sed is quirky).
 # Match ANY current version, not just the "0.0.0" placeholder: since the repo source at
 # tools/install/mcp/package.json is itself stamped at bump time (stamp-release-version.mjs),

@@ -149,6 +149,39 @@ Repo variable:
 
 - `ANDROID_RELEASE` = `true` - turns on the android job; `IOS_RELEASE` = `true` - turns on the ios job (separate, so Android ships without dragging in the not-yet-existing iOS project). Legacy `MOBILE_RELEASE=true` still enables Android for existing setups. Leave these unset until the Capacitor shells are committed and the mobile secrets are in, so tagged releases keep working in the meantime (they just build desktop only).
 
+npm (the npx-cli channel) - NO SECRET. It publishes with trusted publishing (OIDC): the `npm` job mints a short-lived GitHub OIDC token and npm exchanges it for a scoped publish token at publish time. There is no `NPM_TOKEN` to leak, rotate, or over-scope, and provenance is generated automatically. Setup is a one-time thing on npmjs.com, described below.
+
+### npm: first publish, then trusted publishing (do once)
+
+npm configures a trusted publisher **on a package that already exists**, so the very first publish of a new name has to create it. After that, OIDC owns every release and no token is involved.
+
+1. Publish `@cyberskill/cyberos@1.0.0` once, by hand, from a clean checkout of the tag:
+
+       bash tools/install/build.sh dist/cyberos
+       cd dist/cyberos && npm publish --access public
+
+   `npm login` first if needed; 2FA applies. This only ever happens once, to claim the name.
+
+2. On npmjs.com go to the package -> **Settings** -> **Trusted Publisher** -> **GitHub Actions**, and enter exactly:
+
+   | field | value |
+   |---|---|
+   | Organization or user | `cyberskill-official` |
+   | Repository | `cyberos` |
+   | Workflow filename | `release.yml` |
+   | Environment name | *(leave empty)* |
+   | Allowed actions | `npm publish` |
+
+   Every field is case-sensitive, and npm does **not** validate this when you save it - a typo only shows up as `ENEEDAUTH` at publish time.
+
+3. Lock the door behind you: package **Settings** -> **Publishing access** -> **Require two-factor authentication and disallow tokens**. Trusted publishing keeps working (it is OIDC, not a token), and no token can publish this package again.
+
+4. Revoke any npm automation token that existed for this package.
+
+From then on, `release.yml` publishes on every `v*` tag with no credential anywhere.
+
+Three things silently break this, so `tools/install/tests/test_channels.sh` asserts all of them (each proven to fail before being trusted): renaming `release.yml` (the filename is part of the trust), dropping `id-token: write`, and changing `repository.url` in the generated `package.json` so it no longer matches this repo. Node must also stay >= 22.14 - OIDC does not exist on older runtimes - and `--provenance` must NOT be passed, because trusted publishing generates provenance itself and the flag errors.
+
 ## Step by step
 
 ### Part A: first-time setup (do once, in this order)
