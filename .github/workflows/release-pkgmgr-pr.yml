@@ -27,7 +27,7 @@ jobs:
   guard-and-assert-gates:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: No submission command exists in repo tooling (AC #3, both checks)
         run: |
           # Patterns split so this guard never matches its own source (same idiom as the
@@ -53,7 +53,7 @@ jobs:
     if: ${{ vars.PKGMGR_CASK_RELEASE == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Re-derive version + SHA256 from the release .dmg and render the draft (AC #5)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -73,7 +73,7 @@ jobs:
           # placeholder survives the render.
           grep -q "$SHA" staged/cyberos.rb || { echo "::error::rendered cask draft missing this run's computed sha256"; exit 1; }
           ! grep -q "REPLACE_WITH_SHA256" staged/cyberos.rb || { echo "::error::placeholder survived the cask render"; exit 1; }
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: cyberos-cask-manifest-draft
           path: staged/cyberos.rb
@@ -82,7 +82,7 @@ jobs:
     if: ${{ vars.PKGMGR_WINGET_RELEASE == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Re-derive version + SHA256 from the release installer and render the draft set (AC #5)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -103,7 +103,7 @@ jobs:
           done
           grep -q "$SHA" staged/CyberSkill.CyberOS/CyberSkill.CyberOS.installer.yaml || { echo "::error::rendered winget draft missing this run's computed sha256"; exit 1; }
           ! grep -rq "REPLACE_WITH_SHA256" staged/ || { echo "::error::placeholder survived the winget render"; exit 1; }
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: cyberos-winget-manifest-draft
           path: staged/CyberSkill.CyberOS/

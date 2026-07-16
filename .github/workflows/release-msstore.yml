@@ -29,7 +29,7 @@ jobs:
   assert-msstore-gate-inert:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Identity lint (inert mode - proves the lint itself runs green outside a Store attempt)
         run: bash tools/msix-identity-lint.sh
       - run: echo "workflow executed; see build-and-submit-msstore conclusion for gate state"
@@ -38,7 +38,7 @@ jobs:
     if: ${{ vars.MSSTORE_RELEASE == 'true' }}
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # AC #3's hard gate: MSSTORE_RELEASE is true here by the job condition, so the lint
       # fails the build while the Partner Center identity is still the placeholder.
@@ -48,7 +48,7 @@ jobs:
           MSSTORE_RELEASE: 'true'
         run: bash tools/msix-identity-lint.sh
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
 
@@ -130,7 +130,7 @@ jobs:
             /tr http://timestamp.digicert.com /td SHA256 CyberOS.msix
           if ($LASTEXITCODE -ne 0) { throw "signtool failed with exit $LASTEXITCODE" }
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: cyberos-msix
           path: CyberOS.msix

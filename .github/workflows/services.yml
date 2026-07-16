@@ -24,7 +24,7 @@ jobs:
       run:
         working-directory: services
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # The cargo cache (services/target) is multi-GB; reclaim the runner's
       # preinstalled Android/dotnet/haskell tooling first so the restore + build
@@ -85,7 +85,7 @@ jobs:
       run:
         working-directory: services
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Free disk space
         run: |

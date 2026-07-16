@@ -37,7 +37,7 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || !startsWith(github.event.head_commit.message, 'chore(release):') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # full history + tags: the baseline is the last commit that touched VERSION
           ref: main
@@ -45,7 +45,7 @@ jobs:
           # CANNOT bypass a ruleset; a Deploy Key added to the ruleset bypass list can. Unset = fall back to
           # the token, and the push step below degrades to a warning instead of failing. Setup in RELEASE.md.
           ssh-key: ${{ secrets.VERSION_BUMP_SSH_KEY }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
       - name: Compute + apply the next version

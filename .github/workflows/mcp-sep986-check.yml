@@ -19,6 +19,6 @@ jobs:
   sep986:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: SEP-986 skill-ID naming gate
         run: bash scripts/check_sep986_naming.sh
