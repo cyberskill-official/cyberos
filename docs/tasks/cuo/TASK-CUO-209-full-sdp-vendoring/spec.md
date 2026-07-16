@@ -24,7 +24,7 @@ blocks: []
 source_pages:
   - modules/cuo/docs/appendices.md
   - tools/install/build.sh
-  - tools/install/init.sh
+  - tools/install/install.sh
 source_decisions:
   - "2026-07-12 operator decision (plan approval): vendor the full SDP set BY DEFAULT - not an opt-in profile. The plugin today covers stages 5-10 of the 14-stage SDP; the upstream (SOW, PRD, SRS, NFR, SDD, threat-model) and downstream (deploy, release, runbook, retro/postmortem/decommission) pairs exist in modules/skill but never ship."
   - "Reduced profile semantics unchanged: doc-driven floor remains for payloads built without skill bodies."
@@ -51,7 +51,7 @@ Normative clauses:
 4. The payload GUIDE (`dist` GUIDE.md source) MUST gain a lifecycle map: one row per SDP stage 1..14 -> skill pair -> invoked by (`/create-tasks`, `/ship-tasks`, or standalone-on-request), so operators see which stages the two commands automate and which they invoke ad hoc.
 5. Both checks from the sibling tasks MUST pass over the expanded set: chain coverage (TASK-SKILL-116) and pair parity where the pair is at full contract (TASK-SKILL-118) - thin-but-shipped upstream pairs are permitted at their current completeness (parity applies per-pair as they are deepened; the checker's scope list says which pairs are held to full parity).
 6. Build output MUST report payload size (bytes of the payload dir and of cyberos.plugin) on every build; the plugin zip MUST stay under 2 MB with the expanded set (current: ~322 KB), asserted in the build.
-7. Reduced-profile behavior MUST be unchanged: a payload built without skill bodies still degrades to the doc-driven floor; `/init` behavior in target repos is unchanged apart from the larger `cuo/skills/` tree.
+7. Reduced-profile behavior MUST be unchanged: a payload built without skill bodies still degrades to the doc-driven floor; `/install` behavior in target repos is unchanged apart from the larger `cuo/skills/` tree.
 8. The two workflow docs MUST NOT change in this task - upstream/downstream skills vendor as standalone-invocable; wiring them into new workflow steps is future work by separate task. (Amended post-ship 2026-07-12: the guard is a point-in-time scope clause proven by this task's commits in git history; the suite's t08 now asserts the durable form - both workflow docs vendored intact in the payload - so later tasks may legitimately evolve the docs. Surfaced by TASK-CUO-206.)
 
 ## §2 - Why this design

@@ -3777,7 +3777,7 @@ This document is the source of truth for **which skills exist in this module, wh
 
 §0.2 **Author + Audit pair per artifact.** For every artifact CyberSkill produces in the software delivery lifecycle, this module SHALL ship two sibling skills: `<artifact>-author` (generates the artifact) and `<artifact>-audit` (validates the artifact against a versioned rubric). Both bundles are independently invocable. The author chains to the audit by default via its output envelope's `next_skill_recommendation`.
 
-§0.3 **Audit-fix loop until outputs fit inputs.** Every skill SHALL implement the 8-step audit loop (`docs/AUDIT_LOOP.md`): locate -> hash -> load-or-init report -> run rubric -> attempt fixes -> re-audit -> termination check -> write report. The loop terminates only on `PASS`, `HITL_PAUSE`, `EXHAUSTED`, or `NO_PROGRESS`. The author + audit pair MUST be able to round-trip until the artifact passes its own rubric (10/10) or a human intervenes.
+§0.3 **Audit-fix loop until outputs fit inputs.** Every skill SHALL implement the 8-step audit loop (`docs/AUDIT_LOOP.md`): locate -> hash -> load-or-create report -> run rubric -> attempt fixes -> re-audit -> termination check -> write report. The loop terminates only on `PASS`, `HITL_PAUSE`, `EXHAUSTED`, or `NO_PROGRESS`. The author + audit pair MUST be able to round-trip until the artifact passes its own rubric (10/10) or a human intervenes.
 
 §0.4 **Anthropic Agent Skills compliance.** Every bundle MUST be a valid Anthropic Agent Skill (SKILL.md + frontmatter + progressive disclosure). CyberOS extensions live under the spec-permitted `metadata` map or in sibling files (`INVARIANTS.md`, `RUBRIC.md`, `AUDIT_LOOP.md`, etc.). See `docs/SPEC.md` §3.1 for the extension list.
 
@@ -4624,7 +4624,7 @@ _End of ANTHROPIC_GUIDE_DIGEST.md._
 
 ## Appendix K - TASK-SKILL-111..115 completion plan
 
-> Source: `FR_111_115_COMPLETION_PLAN.md` (merged here 2026-05-21). Implementation plan for TASK-SKILL-111 through TASK-SKILL-115.
+> Source: `TASK_111_115_COMPLETION_PLAN.md` (merged here 2026-05-21). Implementation plan for TASK-SKILL-111 through TASK-SKILL-115.
 
 # TASK-SKILL-111..115 - 100% completion plan
 

@@ -196,7 +196,7 @@ pub fn init_zdr_table(config_path: &Path) -> Result<(), ZdrInitError> {
 
     // Idempotent: create the cell once, then atomically swap the freshly parsed table in
     // (mirrors the cost-table loader). A single-shot OnceCell::set made every call after the
-    // first fail with AlreadyInitialised, which broke re-init in tests and any live reload.
+    // first fail with AlreadyInitialised, which broke re-install in tests and any live reload.
     TABLE
         .get_or_init(|| ArcSwap::from_pointee(AttestationTable::new()))
         .store(Arc::new(parsed));

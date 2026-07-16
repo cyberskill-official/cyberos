@@ -196,7 +196,7 @@ pub fn init(clock: Box<dyn Clock>) {
 #[cfg(any(test, feature = "test-mock-clock"))]
 pub fn reset_for_tests() {
     if let Some(map) = BREAKERS.get() { map.clear(); }
-    // CLOCK is global; tests should re-init with a fresh MockClock per test file, not per test.
+    // CLOCK is global; tests should re-install with a fresh MockClock per test file, not per test.
 }
 ```
 

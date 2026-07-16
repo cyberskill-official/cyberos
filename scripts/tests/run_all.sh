@@ -5,12 +5,12 @@
 # gate at all - not .githooks/pre-commit, not scripts/local_verify.sh, not any of the 24 CI
 # workflows. Three had been red for months and reported it to nobody:
 #
-#   test_task_layout.sh      t09 asserted against tools/install/init.sh, deleted at
+#   test_task_layout.sh      t09 asserted against tools/install/install.sh, deleted at
 #                            bb0f2392e. `grep` on a missing file returns 1, short-circuits
 #                            the && chain into fail. Red since that commit.
 #   test_templates_module.sh t02 pinned status-hub@1; ac33beb54 shipped status-hub@2.
 #                            t03 knew :html and bare slots; status-hub@2 added :json.
-#   test_render_status_hub.sh t03/t05/t07/t08 - stale fixture + a dead FR- regex that
+#   test_render_status_hub.sh t03/t05/t07/t08 - stale fixture + a dead id regex that
 #                            silently emptied the changelog->task binding in production.
 #
 # A hand-maintained list has the same failure mode as those asserts: it is a second place

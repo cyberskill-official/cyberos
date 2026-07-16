@@ -1,6 +1,6 @@
 ---
 id: TASK-CUO-207
-title: "Portability hardening - init.sh gate autodetect for Go/JVM/.NET/PHP/Ruby + per-repo .cyberos/config.yaml overrides"
+title: "Portability hardening - install.sh gate autodetect for Go/JVM/.NET/PHP/Ruby + per-repo .cyberos/config.yaml overrides"
 eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 client_visible: false
@@ -22,18 +22,18 @@ related_tasks: [TASK-CUO-208, TASK-SKILL-118, TASK-IMP-070]
 depends_on: []
 blocks: [TASK-CUO-208]
 source_pages:
-  - tools/install/init.sh
+  - tools/install/install.sh
   - tools/install/gates/run-gates.sh
   - tools/install/README.md
 source_decisions:
-  - "2026-07-12 operator goal: the two workflows will be used heavily across other projects after /init; today's gate autodetect covers Rust/Node/Python only, and there is no per-repo way to override gate commands, coverage threshold, or defaults without editing vendored files."
+  - "2026-07-12 operator goal: the two workflows will be used heavily across other projects after /install; today's gate autodetect covers Rust/Node/Python only, and there is no per-repo way to override gate commands, coverage threshold, or defaults without editing vendored files."
   - "Unknown stacks keep degrading to the reduced-profile floor - portability means detecting more, never guessing."
 language: bash + yaml
 service: tools/install/
 new_files:
   - tools/install/tests/test_gate_autodetect.sh
 modified_files:
-  - tools/install/init.sh
+  - tools/install/install.sh
   - tools/install/gates/run-gates.sh
   - tools/install/README.md
 ---
@@ -42,13 +42,13 @@ modified_files:
 
 ## §1 - Description
 
-Make /init produce working gates on the stacks CyberSkill's client projects actually use, and give every repo one sanctioned place to override what detection gets wrong - so vendored files stay pristine and updates never clobber local decisions.
+Make /install produce working gates on the stacks CyberSkill's client projects actually use, and give every repo one sanctioned place to override what detection gets wrong - so vendored files stay pristine and updates never clobber local decisions.
 
 Normative clauses:
 
 1. Gate autodetection MUST extend to, in documented order after the existing Rust/Node/Python detectors: Go (`go.mod` -> build `go build ./...`, lint `go vet ./...`, test `go test ./...`, coverage `go test -coverprofile`), Maven (`pom.xml` -> `mvn -q -DskipTests package` / `mvn -q verify`), Gradle (`build.gradle` or `build.gradle.kts`, preferring `./gradlew` when present -> `build` / `test`), .NET (`*.sln` or `*.csproj` -> `dotnet build` / `dotnet test`), PHP (`composer.json` -> `composer validate --strict` plus `vendor/bin/phpunit` when present), Ruby (`Gemfile` -> `bundle exec rspec` when spec/ exists, else `bundle exec rake test` when a Rakefile exists). Multi-stack repos MUST union the detected gates; detection MUST never invent a command whose tool marker file is absent.
 2. A per-repo config file `.cyberos/config.yaml` MUST be honored by `run-gates.sh` when present, with keys: `gates.build`, `gates.lint`, `gates.test`, `gates.coverage` (string commands; each overrides ONLY its own gate), `coverage_threshold` (integer, default 90), `task_template` (`engineering-spec@1` | `task@1`, consumed by TASK-CUO-208), `profile` (`full` | `reduced`). Unknown keys MUST warn, not fail.
-3. `init.sh` MUST scaffold `.cyberos/config.yaml` exactly once (never clobber an existing one, same discipline as BACKLOG/AGENTS), pre-filled with every value commented out and the DETECTED commands written as comments beside each key, so the file documents what will run by default.
+3. `install.sh` MUST scaffold `.cyberos/config.yaml` exactly once (never clobber an existing one, same discipline as BACKLOG/AGENTS), pre-filled with every value commented out and the DETECTED commands written as comments beside each key, so the file documents what will run by default.
 4. `run-gates.sh` MUST resolve each gate as: config value if set, else autodetected, else absent - and MUST print one provenance line per gate before running it: `gate <name>: <command> (source: config|autodetect:<stack>|absent)`.
 5. `coverage_threshold` MUST flow to the coverage gate: `run-gates.sh` exposes it (env `CYBEROS_COVERAGE_THRESHOLD`) and the coverage-gate skill contract reads it, defaulting to 90 when unset (hook already named by TASK-SKILL-118's rubric constants).
 6. Repos where nothing is detected and no config exists MUST keep today's reduced-floor behavior with an explicit message naming the config file as the fix.
@@ -56,7 +56,7 @@ Normative clauses:
 
 ## §2 - Why this design
 
-Config-over-autodetect (per key, not all-or-nothing) matches how real repos deviate: usually one gate is special, the rest are standard. Scaffolding the config WITH detection results as comments makes /init self-documenting on day one and keeps the file inert until the operator uncomments a line - update-safe by construction. The provenance line kills the classic debugging question ("which command even ran?") across a fleet of differently-shaped repos.
+Config-over-autodetect (per key, not all-or-nothing) matches how real repos deviate: usually one gate is special, the rest are standard. Scaffolding the config WITH detection results as comments makes /install self-documenting on day one and keeps the file inert until the operator uncomments a line - update-safe by construction. The provenance line kills the classic debugging question ("which command even ran?") across a fleet of differently-shaped repos.
 
 ## §3 - Contract
 
@@ -68,7 +68,7 @@ Config-over-autodetect (per key, not all-or-nothing) matches how real repos devi
 #   test: "go test ./..."          # autodetected: go
 #   coverage: "go test -coverprofile=coverage.out ./..."   # autodetected: go
 # coverage_threshold: 90
-# fr_template: engineering-spec@1
+# task_template: engineering-spec@1
 # profile: full
 ```
 
@@ -80,7 +80,7 @@ Provenance output: `gate test: go test ./... (source: autodetect:go)` | `gate li
 2. **Multi-stack unions** (§1 #1) - a fixture with `go.mod` + `package.json` yields both stacks' gates, deduplicated by gate name with both provenance lines.
 3. **No marker, no command** (§1 #1) - a PHP fixture without `vendor/bin/phpunit` gets `composer validate --strict` only.
 4. **Config overrides per key** (§1 #2, #4) - config setting only `gates.lint` leaves build/test/coverage autodetected; provenance lines show `config` for lint and `autodetect` for the rest.
-5. **Scaffold once, never clobber** (§1 #3) - first init writes the commented config with detected values; a hand-edited config survives a re-init byte-identical.
+5. **Scaffold once, never clobber** (§1 #3) - first init writes the commented config with detected values; a hand-edited config survives a re-install byte-identical.
 6. **Threshold flows** (§1 #5) - `coverage_threshold: 85` surfaces as `CYBEROS_COVERAGE_THRESHOLD=85` in the gate environment; unset -> 90.
 7. **Reduced floor preserved with pointer** (§1 #6) - an empty fixture repo reports the floor message naming `.cyberos/config.yaml`.
 8. **Malformed config fails loudly** (§1 #7) - a config with a tab-indented or unparseable line fails `run-gates.sh` citing the line number; no gate runs.
@@ -101,7 +101,7 @@ t08_malformed_config_loud()      # AC 8
 
 ## §6 - Implementation skeleton
 
-`init.sh`: extend the detector case-block; emit the commented config via heredoc when absent. `run-gates.sh`: minimal reader (`cfg_get key` via awk over the two-level subset), resolution order per gate, provenance echo, threshold export. README: stack table + config reference.
+`install.sh`: extend the detector case-block; emit the commented config via heredoc when absent. `run-gates.sh`: minimal reader (`cfg_get key` via awk over the two-level subset), resolution order per gate, provenance echo, threshold export. README: stack table + config reference.
 
 ## §7 - Dependencies
 

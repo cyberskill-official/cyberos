@@ -79,7 +79,7 @@ Write-Host ""
 Write-Host "→ step 4/6: initialise .cyberos/memory/store"
 $Brain = Join-Path $Target ".cyberos/memory/store"
 if ((Test-Path $Brain) -and -not $Force) {
-    Write-Host "  – $Brain exists; use -Force to re-init"
+    Write-Host "  – $Brain exists; use -Force to re-install"
 } else {
     $subs = @(
         "audit",

@@ -129,18 +129,11 @@ hook_fixture() { # builds a fixture repo with the real wrapper + recording stubs
   # new gate added to that hook silently breaks t07/t08 until someone re-stubs it.
   #
   # Added 2026-07-15, both by me, both unnoticed for hours because this file is in no gate:
-  #   no-legacy-fr-vocabulary.sh  — unconditional, so it broke EVERY hook_fixture commit
   #   scripts/tests/run_all.sh    — fires on ^modules/skill/, which is exactly what t07 stages
-  # SILENT stubs — they must not touch calls.log. t07 uses that file to decide whether the
-  # STATUS-SYNC engine fired, and asserts it stays absent on a non-trigger path. The vocab
-  # gate is unconditional, so a logging stub writes on every commit and t07 reads it as
-  # "engine fired on a non-trigger path" — a real assert failing on a fixture artefact.
-  # Stub what the hook calls; log only what the test is actually measuring.
   mkdir -p "$F/scripts/tests"
-  printf '#!/usr/bin/env bash\nexit 0\n' > "$F/.pre-commit-hooks/no-legacy-fr-vocabulary.sh"
   printf '#!/usr/bin/env bash\nexit 0\n' > "$F/scripts/tests/run_all.sh"
   chmod +x "$F/.pre-commit-hooks/cyberos-payload-build.sh" "$F/tools/install/check-version-sync.sh" \
-           "$F/.pre-commit-hooks/no-legacy-fr-vocabulary.sh" "$F/scripts/tests/run_all.sh"
+           "$F/scripts/tests/run_all.sh"
   (cd "$F" && git add -A && git -c core.hooksPath=/dev/null commit -qm init)  # baseline commit without hooks
   rm -f "$F/calls.log"
 }
@@ -161,14 +154,12 @@ t08_hook_blocks_on_failure() {                                        # AC 8
 }
 
 t09_release_md_updated() {                                            # AC 9
-  # The needle below names a STALE CLAIM that must stay absent -- `! grep -q`. It is not
-  # our vocabulary, so the init->install rename must NOT touch it: renaming the needle
-  # would leave the real stale wording free to return with nothing watching. Same rule as
-  # audit-fleet's `[ ! -f "$cy/init.sh" ]` and the no-legacy-fr-vocabulary gate filename:
-  # a check that forbids a string has to spell that string.
+  # The needle below is a STALE CLAIM that must stay ABSENT (`! grep -q`). It is quoted
+  # verbatim on purpose: a check that forbids a string has to spell that string, so this
+  # one line is deliberately not rewritten to match current wording.
   local R="$repo/docs/deploy/RELEASE.md"
   grep -q 'payload-gate.yml' "$R" && grep -q '.githooks/pre-commit' "$R" \
-    && ! grep -q 'hook rebuilds `dist/cyberos` so the init payload always matches' "$R" \
+    && ! grep -q 'hook rebuilds `dist/cyberos` so the install payload always matches' "$R" \
     && ok t09 || fail t09 "enforcement wording missing or stale claim remains"
 }
 

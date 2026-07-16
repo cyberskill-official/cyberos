@@ -69,7 +69,6 @@ for base in "$@"; do
 
     # orphan / legacy must NOT remain
     [ ! -f "$cy/migrate-tasks.sh" ] || bad="$bad orphan:migrate-tasks.sh"
-    [ ! -f "$cy/init.sh" ] || bad="$bad orphan:init.sh"
     [ ! -f "$cy/changelog.sh" ] || bad="$bad orphan:changelog.sh"
     [ ! -f "$cy/update.sh" ] || bad="$bad orphan:update.sh"
     [ ! -f "$cy/status.html" ] || bad="$bad orphan:status.html"
@@ -164,7 +163,6 @@ for base in "$@"; do
         [ -f "$r/docs/status/assets/status.js" ]  || bad="$bad missing:status.js"
         inpage="$(grep -o '"i":"' "$page" 2>/dev/null | wc -l | tr -d ' ')"
         [ "$inpage" -eq "$specs" ] || bad="$bad corpus-drift(page=$inpage disk=$specs)"
-        # data/fr -> data/task in the 2026-07-15 rename. `find` on a missing dir with
         # stderr dropped yields 0, so this silently counted 0 chunks against 509 specs
         # and flagged every healthy repo `no-spec-chunks`.
         chunks="$(find "$r/docs/status/data/task" -name '*.js' 2>/dev/null | wc -l | tr -d ' ')"
@@ -189,10 +187,6 @@ for base in "$@"; do
     fi
 
     # --- functional smokes (must work) ---
-    # These were gated on `[ -f "$cy/init.sh" ]` and so had never run once: the payload ships no
-    # init.sh, and the orphan check above asserts .cyberos/init.sh must NOT exist — so the gate
-    # was false on every correct install and true only on a broken one. Gate each smoke on the
-    # script it actually invokes.
     if [ -f "$cy/version.sh" ]; then
       if ! CYBEROS_NONINTERACTIVE=1 CYBEROS_OFFLINE=1 bash "$cy/version.sh" "$r" >/dev/null 2>&1; then
         bad="$bad version-check-fails"

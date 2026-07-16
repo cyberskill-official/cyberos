@@ -89,7 +89,7 @@ circuit_breaker:
 ---
 # Ship Tasks — `chief-technology-officer/ship-tasks`
 
-The canonical CTO workflow for **shipping** each `BACKLOG.md` task end-to-end through the full lifecycle. Renamed from `implement-backlog-frs` (v1.x) in v2.0.0 because the workflow doesn't just implement — it drives the task through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1). The old name suggested the workflow stopped at code-write; the new name reflects that it covers the full ship.
+The canonical CTO workflow for **shipping** each `BACKLOG.md` task end-to-end through the full lifecycle. The workflow doesn't just implement — it drives the task through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1). The old name suggested the workflow stopped at code-write; the new name reflects that it covers the full ship.
 
 ### One workflow, improvement folds in here
 

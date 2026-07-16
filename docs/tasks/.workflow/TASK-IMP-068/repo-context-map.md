@@ -7,7 +7,7 @@ verdict: pass (repo-context-map-audit)
 # Repo context map - TASK-IMP-068
 
 ## Baseline patterns the new code must follow
-- error_type: bash `set -euo pipefail`, explicit numeric exit codes (0 ok / 10 policy fail / 2 unreadable) - pinned_in: tools/install/init.sh, scripts/caf_gate.sh
+- error_type: bash `set -euo pipefail`, explicit numeric exit codes (0 ok / 10 policy fail / 2 unreadable) - pinned_in: tools/install/install.sh, scripts/caf_gate.sh
 - logging: `cyberos:` / `cyberos:` prefixed echo lines, errors to stderr - pinned_in: tools/install/build.sh, .pre-commit-hooks/cyberos-payload-build.sh
 - test_framework: standalone bash test scripts, function-per-case, no framework - pinned_in: deploy/obs/tests, scripts/local_verify.sh style
 

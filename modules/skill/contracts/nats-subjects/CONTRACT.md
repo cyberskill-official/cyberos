@@ -29,7 +29,7 @@ emitted_source_freshness_tier: 15   # high authority — this IS the wire protoc
 
 ## Why this contract exists
 
-Skills decoupled via NATS pub-sub (per DEC-029) need a shared vocabulary so the supervisor's classify-act node can route events to follow-up skills deterministically. Without a contract, two teams could independently invent `cuo.fr.create.done` and `cuo.task_author.completed` for the same event — the supervisor would catch one and miss the other. This contract fixes the names at the registry level, not the skill level, so every consumer has a single source of truth.
+Skills decoupled via NATS pub-sub (per DEC-029) need a shared vocabulary so the supervisor's classify-act node can route events to follow-up skills deterministically. Without a contract, two teams could independently invent `cuo.task.create.done` and `cuo.task_author.completed` for the same event — the supervisor would catch one and miss the other. This contract fixes the names at the registry level, not the skill level, so every consumer has a single source of truth.
 
 ## How a skill consumes this contract
 

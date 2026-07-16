@@ -66,7 +66,7 @@ Summary stdout: `status-hub: N tasks, R releases, VERSION X (deck+3 tabs)`. Page
 3. **Backlog tab facets** (§1 #3) - rows carry data attrs for all four facets; filter script wired.
 4. **Supersession clean** (§1 #4) - roadmap.html is a stub pointing at status.html#roadmap; nav says Status; repointed legacy suite passes.
 5. **Determinism + honesty + tokens** (§1 #1, #5) - byte-identical rebuilds; failure fixtures fail loud; no hex outside token block.
-6. **task-page links** (§1 #3) - board/backlog rows href `frs/<module>/<STEM>/` when TASK-DOCS-005 is present in the build (fixture with pages asserts hrefs).
+6. **task-page links** (§1 #3) - board/backlog rows href `tasks/<module>/<STEM>/` when TASK-DOCS-005 is present in the build (fixture with pages asserts hrefs).
 
 ## §5 - Verification
 
@@ -78,7 +78,7 @@ Port render-roadmap's parsers; add backlog-table + deck renderers; substitute st
 
 ## §7 - Dependencies
 
-TASK-TPL-001 (shell). Soft: TASK-DOCS-005 (links activate when pages exist; builder feature-detects the frs/ output dir).
+TASK-TPL-001 (shell). Soft: TASK-DOCS-005 (links activate when pages exist; builder feature-detects the tasks/ output dir).
 
 ## §8 - Example payloads
 

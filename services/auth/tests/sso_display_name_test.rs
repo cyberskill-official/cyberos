@@ -78,7 +78,7 @@ async fn seed_tenant(pool: &PgPool) -> Uuid {
               VALUES ($1, $2, 'TASK-AUTH-111 Tenant', 'VN', 'starter', 'active', 'vn-1')",
     )
     .bind(id)
-    .bind(format!("fr111-{}", id.simple()))
+    .bind(format!("task111-{}", id.simple()))
     .execute(&mut *tx)
     .await
     .expect("seed tenant");

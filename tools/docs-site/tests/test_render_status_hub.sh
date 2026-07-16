@@ -67,7 +67,7 @@ t06_task_page_links() {                                                  # AC 6 
   grep -q '"pg":"../tasks/aa/TASK-AA-001-first/index.html"' "$TMP/d/out/reference/status.html" \
     && ok t06 || fail t06 "task page link absent from the corpus"
 }
-t07_changelog_binds_frs() {                                            # the changelog references tasks, not prose
+t07_changelog_binds_tasks() {                                            # the changelog references tasks, not prose
   h="$TMP/a/out/reference/status.html"
   grep -q '"cited":\["TASK-AA-001"\]' "$h" \
     && grep -q 'data-task=\\"TASK-AA-001\\"' "$h" \
@@ -101,6 +101,6 @@ t10_token_clean() {                                                    # colour 
 }
 
 t01_deck_true; t02_one_page_three_lenses; t03_facets_and_search; t04_supersession
-t05_deterministic; t06_task_page_links; t07_changelog_binds_frs; t08_spec_chunks
+t05_deterministic; t06_task_page_links; t07_changelog_binds_tasks; t08_spec_chunks
 t09_nojs_and_honest_failures; t10_token_clean
 echo "----"; echo "pass=$PASS fail=$FAIL"; [ "$FAIL" -eq 0 ]

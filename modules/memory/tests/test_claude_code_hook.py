@@ -79,7 +79,7 @@ def test_frontmatter_carries_required_fields() -> None:
     assert fm["tool"] == "Read"
     assert fm["sync_class"] == "private"
     assert fm["pii_policy"] == "redact"
-    assert fm["source"] == "fr-memory-109"
+    assert fm["source"] == "task-memory-109"
 
 
 def test_body_includes_payload_json() -> None:

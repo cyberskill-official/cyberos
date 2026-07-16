@@ -274,7 +274,7 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
 
 **Why scope check enforced at gateway (§1 #11, DEC-267)?** Per defense in depth: the gateway IS the trust boundary for external agents. Even if the module server has its own auth, the gateway's check catches issues earlier (cheaper) and uniformly (one place to update scope rules). Tool-specific scope requirements are part of registration.
 
-**Why `Mcp-Session-Id` header for resumption (§1 #4)?** Clients reconnect (network blip, browser refresh). Without session resumption, every reconnect re-runs `initialize`; not catastrophic but adds latency. Session id is a UUID; gateway maintains session metadata (tenant_id, persona) in-memory; expired sessions force re-init.
+**Why `Mcp-Session-Id` header for resumption (§1 #4)?** Clients reconnect (network blip, browser refresh). Without session resumption, every reconnect re-runs `initialize`; not catastrophic but adds latency. Session id is a UUID; gateway maintains session metadata (tenant_id, persona) in-memory; expired sessions force re-install.
 
 **Why batch dispatch concurrent with per-tool isolation (§1 #9, DEC-263)?** Batch requests benefit from parallelism (5 unrelated reads run in 100ms instead of 500ms). Per-tool isolation means one tool's failure doesn't fail the batch; each gets its own response slot. JSON-RPC mandates same-order response array — preserved.
 
@@ -658,7 +658,7 @@ pub async fn handle_tools_call(
 23. **memory audit pair emitted** — every tools/call writes both started + completed rows; started has `arguments_sha256`, completed has `outcome` + `duration_ms` + `result_sha256` (on success).
 24. **W3C traceparent propagated** — outbound dispatch carries the same `traceparent` as inbound.
 25. **Mcp-Session-Id header set on initialize response** — UUID format.
-26. **Session re-init on expired Mcp-Session-Id** — gateway returns 404; client re-initialises.
+26. **Session re-install on expired Mcp-Session-Id** — gateway returns 404; client re-initialises.
 27. **Initialize p95 < 100 ms** — `initialize_perf_test`.
 28. **tools/list p95 < 200 ms** — `tools_list_perf_test`.
 29. **tools/call gateway-side p95 < 50 ms** — excluding module execution; `tools_call_perf_test`.
@@ -986,7 +986,7 @@ All other questions resolved.
 - **Spec conformance test runs against modelcontextprotocol/inspector** — full reference client validates the gateway end-to-end at CI.
 - **JSON-RPC errors -32001..-32099** are MCP-specific (per spec); custom codes outside that range = bug.
 - **`elicitation_required` -32005 is a stub at slice 4** — TASK-MCP-006 ships the full flow with the `Elicitation-Confirmed` header check + back-and-forth.
-- **`Mcp-Session-Id` allows re-init on expiry** — client treats HTTP 404 on a request with valid id as "re-initialise"; not a hard error.
+- **`Mcp-Session-Id` allows re-install on expiry** — client treats HTTP 404 on a request with valid id as "re-initialise"; not a hard error.
 - **Module endpoint discovered via TASK-MCP-002 registration** — at slice 4 this task uses a static map for tests; production lookup via TASK-MCP-002.
 - **No persistence in this task** — sessions are in-memory; rate-limit windows in-memory; registry in-memory. Persistence (Tasks store, session re-distribution across instances) lands in later tasks.
 

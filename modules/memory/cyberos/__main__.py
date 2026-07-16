@@ -1679,7 +1679,7 @@ def _cmd_init(args: argparse.Namespace) -> int:
     into memory files.
 
     Tracks the cyberos release version in ``manifest.json:cyberos_version``.
-    On ``--force`` re-init, detects version changes and prints migration info.
+    On ``--force`` re-install, detects version changes and prints migration info.
     """
     import hashlib
     import json
@@ -2063,7 +2063,7 @@ def _write_manifest(store: Path, data: dict) -> None:
 
 
 def _cmd_self_update(args: argparse.Namespace) -> int:
-    """Check for a newer version in the source repo, update, and re-init.
+    """Check for a newer version in the source repo, update, and re-install.
 
     1. Locate the source repo (modules/memory/) from the installed package.
     2. Compare installed version with source ``__init__.py`` version.

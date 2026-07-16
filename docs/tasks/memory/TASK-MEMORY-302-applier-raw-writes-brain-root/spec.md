@@ -44,7 +44,7 @@ incident: null
 ## Blast radius
 
 - **Who is affected**: every repo running `ship-tasks`. `cyberos doctor` reports FAIL, which is the signal operators are told to trust.
-- **Since when**: predates the fr->task rename. The rename did not create these dirs — `--emit-brain-ops` derives every path from `store.rglob("*.md")`, so it can only rename within a layout that already existed. Proven: the same five dirs appear in the first BRAIN inspection of 2026-07-14, before any op ran.
+- **Since when**: predates the task->task rename. The rename did not create these dirs — `--emit-brain-ops` derives every path from `store.rglob("*.md")`, so it can only rename within a layout that already existed. Proven: the same five dirs appear in the first BRAIN inspection of 2026-07-14, before any op ran.
 - **Workaround**: none needed today — see below.
 - **Data integrity**: **no corruption, and this is the important part.** The chain is intact: 252,940 records, `ledger-link-invariant` / `ledger-hash-invariant` / `ledger-crc-tail` / `ledger-mmr-cross-check` all PASS. These 9 files are *invisible* to the chain, not *inconsistent* with it. Nothing to backfill; the fix is to relocate them and route future writes through the writer.
 
@@ -76,7 +76,7 @@ from cyberos.core.ops import put
 put(f"memories/decisions/{shard(adr_id)}/{filename}", body, meta={"kind": "decisions", ...})
 ```
 
-Then one migration pass to move the 9 existing files under `memories/<kind>/` as `move()` ops — same protocol-legal pattern as the fr->task BRAIN rename, for the same reason.
+Then one migration pass to move the 9 existing files under `memories/<kind>/` as `move()` ops — same protocol-legal pattern as the task->task BRAIN rename, for the same reason.
 
 ## Regression test
 

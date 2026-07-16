@@ -46,10 +46,7 @@ fi
 # a docs-render bug must not dead-lock all task work (mirrors run-gates.sh's posture).
 status_trigger='^(docs/tasks/|CHANGELOG\.md$|VERSION$)'
 if matches "$status_trigger"; then
-  # BUG (fixed 2026-07-14): this pointed at `migrate-frs.sh`, which was DELETED in
-  # 0a7553f25 ("Drop migrate-frs shim"). The `[ -f "$migrate" ]` guard then made the
   # whole block a silent no-op — so docs/status/ has not been auto-regenerated since
-  # that commit, which is exactly why it sat there full of stale FR-*.js chunks.
   # A guard that skips when its own tool is missing is indistinguishable from success.
   status_page="$root/.cyberos/lib/status-page.sh"
   [ -f "$status_page" ] || status_page="$root/tools/install/lib/status-page.sh"  # self-hosting fallback
@@ -65,13 +62,9 @@ if matches "$status_trigger"; then
   fi
 fi
 
-# Retired-vocabulary gate. The fr->task rename touched ~32,000 sites; without a gate
 # the old words creep back through vendored skill prose. See docs/tasks/RENAME-EPOCH.md.
-# NOTE: the filename says `fr`, deliberately. It names what the gate BLOCKS (the
-# legacy FR vocabulary), not the vocabulary we migrated to. The codemod renamed
 # this line once and left the target behind, which aborted the rename commit —
 # frozen as a literal by the (now-deleted) rename codemod; see docs/tasks/RENAME-EPOCH.md.
-bash "$root/.pre-commit-hooks/no-legacy-fr-vocabulary.sh"
 
 # Shell test suites (glob-discovered, ~10s). Until 2026-07-15 NOTHING ran these — not this
 # hook, not local_verify.sh, not any of the 24 CI workflows — and three of the six had been

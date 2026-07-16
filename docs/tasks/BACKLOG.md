@@ -16,7 +16,7 @@ Totals: 336 draft, 4 ready_to_implement, 12 implementing, 155 done, 1 on_hold, 1
 
 ## app  (1 implementing, 4 done)
 
-- [implementing] TASK-APP-001-desktop-cyberos-operations - Desktop CyberOS operations - build payload, init/update projects from the UI
+- [implementing] TASK-APP-001-desktop-cyberos-operations - Desktop CyberOS operations - build payload, install/update projects from the UI
 
 ## auth  (17 done)
 
@@ -192,7 +192,7 @@ Totals: 336 draft, 4 ready_to_implement, 12 implementing, 155 done, 1 on_hold, 1
 - [draft] TASK-IMP-020-task-outcome-scoring - task outcome scoring
 - [draft] TASK-IMP-021-rubric-evals-for-llm-outputs-anchored-judge - Rubric evals for LLM outputs, anchored judge
 - [draft] TASK-IMP-022-ban-defensive-asserts - Ban defensive asserts
-- [draft] TASK-IMP-023-groom-draft-frs-with-value-and-confidence - Groom draft tasks with value and confidence
+- [draft] TASK-IMP-023-groom-draft-tasks-with-value-and-confidence - Groom draft tasks with value and confidence
 - [draft] TASK-IMP-024-dream-proposal-ranking - Dream proposal ranking
 - [draft] TASK-IMP-025-dream-budget-latency-and-drift-gates - Dream budget, latency and drift gates
 - [draft] TASK-IMP-026-auto-revert-on-gate-regression - Auto-revert on gate regression

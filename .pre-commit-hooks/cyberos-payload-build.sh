@@ -13,7 +13,7 @@ set -euo pipefail
 root="$(git rev-parse --show-toplevel)"
 
 # The sources build.sh reads into the payload (cuo workflow + doctrine + status
-# contract + author/audit skills + caf + memory protocol/schema + the init tool +
+# contract + author/audit skills + caf + memory protocol/schema + the install tool +
 # the single VERSION). Touch any of these and the payload is stale.
 if ! git diff --cached --name-only | grep -Eq \
   '^(modules/cuo/|modules/skill/|modules/memory/memory\.(schema\.json|invariants\.yaml)|AGENTS\.md|tools/install/|tools/caf/|scripts/caf_gate\.sh|VERSION)'; then

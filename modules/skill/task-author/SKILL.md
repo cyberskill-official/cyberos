@@ -786,7 +786,7 @@ Routine surprises (a single missing dependency on an upstream task, a one-off re
 
 - **§8.3a State transitions not CAS-guarded → emit_transition fires twice under race.** Any "MUST emit once" transition needs a CAS that gates the emit on CAS-winner status. Origin: TASK-AI-009 ISS-002.
 - **§8.3b Registration function not idempotent → silent duplicate registration.** Any "register-X-at-startup" function needs a guard global + WARN-on-double-call + `reset_for_tests()` cfg-gated reset. Origin: TASK-AI-012 ISS-003, TASK-AI-009 ISS-004.
-- **§8.3c `init` swallowing double-call errors via `.ok()` breaks test isolation.** Surface programmer errors with `.expect()` AND provide a `reset_for_tests()` cfg-gated function for legitimate test re-init. Origin: TASK-AI-009 ISS-004.
+- **§8.3c `init` swallowing double-call errors via `.ok()` breaks test isolation.** Surface programmer errors with `.expect()` AND provide a `reset_for_tests()` cfg-gated function for legitimate test re-install. Origin: TASK-AI-009 ISS-004.
 - **§8.3d Per-call String allocation on the hot path contradicts <100ns claim.** When a §1 latency MUST is "<100ns single atomic load", the lookup key MUST use `Borrow`-based zero-alloc lookup, not owned-key construction. Origin: TASK-AI-009 ISS-003.
 
 ### §8.4 — Stream / async / cleanup hygiene

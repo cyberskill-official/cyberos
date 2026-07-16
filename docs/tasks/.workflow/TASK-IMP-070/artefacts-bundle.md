@@ -18,14 +18,14 @@ null/empty: empty endpoint response -> unknown (t03); repo without .cyberos -> i
 
 ## Coverage (branch enumeration)
 check-latest.sh: offline-early, file vs curl branch, bare/JSON/garbage parse, found/unknown output. 7/7 (t01, t02, t03, t06).
-init.sh --check region: latest resolution + skip, three-value output, all 4 verdict branches + note, is_ver/ver_lt comparator, resolver-absent fallback ([-f check-latest.sh] guard). 9/9 (t03, t04A-D, t05).
+install.sh --check region: latest resolution + skip, three-value output, all 4 verdict branches + note, is_ver/ver_lt comparator, resolver-absent fallback ([-f check-latest.sh] guard). 9/9 (t03, t04A-D, t05).
 Docs: t07, t08. All prior suites green as regression (10/10, 6/6, 9/9).
 
 ## §1 -> tests
 #1 resolver contract: t01, t02, t03, t06 | #2 three values + verdicts + next: t04 | #3 numeric semver: t05 | #4 update.md: t07 | #5 changelog.md: t08 | #6 offline first-class: t03, t04D, t06 | #7 read-only: t04 fixtures unmodified (mkrepo-only writes).
 
 ## Deviations
-1. build.sh gains one copy line (check-latest.sh vendored beside init.sh) so payload-run checks can resolve latest - added to keep the resolver available where init.sh actually runs; older payloads degrade gracefully via the [-f] guard.
+1. build.sh gains one copy line (check-latest.sh vendored beside install.sh) so payload-run checks can resolve latest - added to keep the resolver available where install.sh actually runs; older payloads degrade gracefully via the [-f] guard.
 2. Legacy `CyberOS: installed=X available=Y` line replaced by the machine-parseable three-value format (spec-mandated). TASK-APP-001's Ops tab displays raw output per its own clause 3, so it inherits the richer report.
 
 ## Verdict requested

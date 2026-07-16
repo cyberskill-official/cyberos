@@ -2,11 +2,6 @@
 # Build from a built pack dir:  docker build -t cyberos /path/to/dist/cyberos
 # Install into a repo:          docker run --rm -v "$PWD":/work cyberos
 #
-# The ENTRYPOINT was /opt/cyberos/init.sh, deleted at the 1.0.0 CLI surface — so this image
-# failed on `docker run` before doing anything. gates/run-gates.sh was equally wrong: the
-# payload puts it under cuo/gates/. Both are probed at build time now, so a payload that
-# cannot serve this channel fails the BUILD instead of shipping a broken image.
-#
 # Note: this image installs the machine. It does NOT carry your project's toolchain, so run
 # the gates on a runner that has your build/test tools:
 #   docker run --rm -v "$PWD":/work --entrypoint bash cyberos \

@@ -140,7 +140,7 @@ cp "$here/marketplace/.claude-plugin/marketplace.json" "$out/.claude-plugin/mark
 cp "$here/install.sh"   "$out/install.sh"
 cp "$here/uninstall.sh" "$out/uninstall.sh"
 cp "$here/check-latest.sh"      "$out/check-latest.sh"
-# Portable lib + docs-tools (status-page hooks, update soft-check). No migrate-tasks / init.sh.
+# Portable lib + docs-tools (status-page hooks, update soft-check). No migrate-tasks / install.sh.
 mkdir -p "$out/lib"
 [ -f "$here/lib/task-migrate.sh" ] && cp "$here/lib/task-migrate.sh" "$out/lib/task-migrate.sh"
 [ -f "$here/lib/update-check.sh" ] && cp "$here/lib/update-check.sh" "$out/lib/update-check.sh"
@@ -160,7 +160,7 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
 fi
 # Never ship retired names (pre-1.0.0)
 # (retired-orphan scrub removed at 1.0.0: no build step has emitted migrate-tasks.sh /
-#  init.sh / changelog.sh / update.sh since bb0f2392e, so this deleted nothing.)
+#  install.sh / changelog.sh / update.sh since bb0f2392e, so this deleted nothing.)
 cp "$here/bootstrap.sh" "$out/bootstrap.sh"
 cp "$here/create.sh"    "$out/create.sh"        # template / fresh-project scaffolder channel
 # 1.0.0 CLI: install | uninstall | version | status | help
@@ -211,9 +211,6 @@ import os, re, sys
 root, LIMIT, bad = sys.argv[1], 1024, []
 # A bundled skill dir with no SKILL.md does not load, and a dir whose name != frontmatter
 # `name:` loads under the wrong id. Both are silent: the description scan below used to
-# `continue` past a missing SKILL.md, so the rename leaving plugin/skills/ship-feature-requests/
-# beside an empty plugin/skills/ship-tasks/ shipped a dead flagship skill through a green build.
-# Structure is checked FIRST and is fatal — a skill that cannot load has no description to lint.
 broken = []
 for name in sorted(os.listdir(root)):
     d = os.path.join(root, name)

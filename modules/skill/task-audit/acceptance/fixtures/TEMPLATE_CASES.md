@@ -4,13 +4,13 @@ Executable case table; fixtures inline below (each case: detection -> families -
 
 | case | fixture | detected | expected |
 |---|---|---|---|
-| TC-01 | fr1-missing-alternatives (below) | task@1 (template key) | fail SEC-004 |
+| TC-01 | task1-missing-alternatives (below) | task@1 (template key) | fail SEC-004 |
 | TC-02 | engspec-missing-s10 (below) | engineering-spec@1 (§ grammar) | fail §12 structural (missing §10) |
 | TC-03 | ambiguous-both-markers (below) | BOTH | needs_human `template_ambiguous` naming the conflict |
 | TC-04 | mixed batch = TC-01 file + any repo engineering-spec exemplar | per file | each judged by own families; one audit report per file |
 | TC-05 | same interview authored twice (author AC 3) | n/a | engineering-spec output carries §1..§11 + end marker; task output carries SEC-001..007 sections + FM fields |
 
-## fixture: fr1-missing-alternatives (frontmatter fragment + sections)
+## fixture: task1-missing-alternatives (frontmatter fragment + sections)
 
 ```markdown
 ---

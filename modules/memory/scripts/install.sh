@@ -89,7 +89,7 @@ echo
 echo "→ step 2/5: initialise .cyberos/memory/store/"
 memory="$TARGET/.cyberos/memory/store"
 
-# Build cyberos init command
+# Build cyberos install command
 init_cmd="python -m cyberos --store .cyberos/memory/store init"
 if [[ "$FORCE" == "1" ]]; then
     init_cmd="$init_cmd --force"
@@ -103,13 +103,13 @@ fi
 
 cd "$TARGET"
 if [[ -d "$memory" && "$FORCE" != "1" ]]; then
-    echo "  – $memory already exists; skipping store init (use --force to re-init)"
+    echo "  – $memory already exists; skipping store init (use --force to re-install)"
 else
     echo "  Running: $init_cmd"
     if eval "$init_cmd"; then
-        echo "  ✓ $memory/ initialized via cyberos init"
+        echo "  ✓ $memory/ initialized via cyberos install"
     else
-        echo "  ⚠ cyberos init failed, falling back to manual initialization"
+        echo "  ⚠ cyberos install failed, falling back to manual initialization"
         mkdir -p "$memory"/{audit,memories/decisions,memories/facts,memories/people,memories/projects,memories/preferences,memories/drift,memories/refinements,meta,company,module,member,client,project,persona,conflicts,exports,index}
         cat > "$memory/manifest.json" <<EOF
 {

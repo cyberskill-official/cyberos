@@ -30,7 +30,7 @@ Steps proven against version N of the spec would resume against version N+1. Res
 "Next eligible" without a total order produces different picks per agent. Resolved: §1 #4 priority -> created -> id ordering with an operator-visible reasoning line, AC 5 determinism assertion.
 
 ### ISS-005 committed-or-ignored ambiguity
-Manifests in git would churn every ship run; unstated either way invites both. Resolved: §1 #5 gitignore scaffold (repo + init.sh), AC 6.
+Manifests in git would churn every ship run; unstated either way invites both. Resolved: §1 #5 gitignore scaffold (repo + install.sh), AC 6.
 
 ### ISS-006 terminal-state handling
 Manifests of done tasks would accumulate; route-backs would lose history. Resolved: §1 #6 delete-on-done, keep-with-incremented-count on route-back, AC 7 fixture pair.

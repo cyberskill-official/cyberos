@@ -34,7 +34,7 @@ classifier_version: 3.0.0-a4
   These ARE the author's positive triggers — by design, the classifier MUST
   pick the right side based on verb cues ("draft" / "generate" vs "audit" /
   "check").
-- Negative 3 from the planned downstream chain (fr → tech-spec).
+- Negative 3 from the planned downstream chain (task → tech-spec).
 - Negative 4 is canonical "no skill" sanity.
 - Re-author when classifier_version MAJOR-bumps.
 - TASK-CUO-208 cases (P5/N5, last bullets above): template-profile routing added with TEMPLATE_PROFILES.md.

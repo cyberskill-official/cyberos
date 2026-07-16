@@ -49,9 +49,9 @@ In the previous enum, these were sticky terminal statuses. They are no longer st
 
 This section previously said:
 
-> Future hook — Issue Request artefact (TBD): when an FR is routed back to
+> Future hook — Issue Request artefact (TBD): when an TASK is routed back to
 > `ready_to_implement` from a downstream stage, the system will eventually auto-spawn
-> an Issue Request (a new artefact type, distinct from FR) carrying the failure
+> an Issue Request (a new artefact type, distinct from TASK) carrying the failure
 > reason, the failing test name(s), and the reverting commit hash.
 
 That artefact needed no new type. It is a task with `type: bug`. The route-back path
@@ -183,7 +183,7 @@ The previous (pre-2026-05-19) enum is **fully retired**. For repository archaeol
 | `rejected` | `closed` | merged |
 | `superseded` | `closed` | merged |
 
-The `re_audit` mode that briefly existed in `implement-backlog-frs` v1.2.0 is also retired — the operator just HITL-flips `done → ready_to_review` instead, and `ship-tasks` re-runs the review + test gates naturally.
+The `re_audit` mode is retired — the operator just HITL-flips `done → ready_to_review` instead, and `ship-tasks` re-runs the review + test gates naturally.
 
 ---
 

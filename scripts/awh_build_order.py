@@ -65,7 +65,7 @@ def main() -> int:
 
     if args.json:
         print(json.dumps({
-            "n_frs": len(mod), "n_layers": len(layers),
+            "n_tasks": len(mod), "n_layers": len(layers),
             "layers": [[{"task": f, "module": mod[f]} for f in lay] for lay in layers],
             "cyclic": cyclic,
             "missing_deps": missing,

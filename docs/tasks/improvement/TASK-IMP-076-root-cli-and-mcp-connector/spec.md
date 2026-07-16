@@ -1,6 +1,6 @@
 ---
 id: TASK-IMP-076
-title: "Distribution expansion — root CLI .sh commands (init/update/changelog/help) + remote MCP connector transport for agent UIs"
+title: "Distribution expansion — root CLI .sh commands (install/update/changelog/help) + remote MCP connector transport for agent UIs"
 eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 client_visible: false
@@ -22,7 +22,7 @@ related_tasks: [TASK-IMP-074, TASK-CUO-206]
 depends_on: []
 blocks: []
 source_pages:
-  - "tools/install/ (init.sh exists with --check three-value report per TASK-IMP-070; update/changelog/help existed only as plugin commands - commands/*.md)"
+  - "tools/install/ (install.sh exists with --check three-value report per TASK-IMP-070; update/changelog/help existed only as plugin commands - commands/*.md)"
   - "tools/install/mcp/cyberos-mcp.mjs (184 lines, zero-dep stdio JSON-RPC; handle() dispatch is transport-agnostic - reused verbatim for http)"
   - "Stephen's screenshots 2026-07-13: Grok 'Custom Connector' (Name + MCP server URL, /sse placeholder) and Claude 'Add custom connector' (Name + Remote MCP server URL + optional OAuth client id/secret)"
 source_decisions:
@@ -42,7 +42,7 @@ disallowed_tools:
   - Exposing the http transport publicly without the auth/TLS checklist (docs/deploy/mcp-connector.md) - the tools execute repo workflows
 effort_hours: 5
 subtasks:
-  - "help.sh / changelog.sh / update.sh at payload root; update.sh wraps init.sh (--check default, --apply executes) (2h)"
+  - "help.sh / changelog.sh / update.sh at payload root; update.sh wraps install.sh (--check default, --apply executes) (2h)"
   - "build.sh: copy + chmod trio, npm files array, channels += mcp-connector + root-cli (1h)"
   - "cyberos-mcp.mjs --http [port]: streamable-HTTP POST endpoint + /healthz, reusing handle() dispatch; stdio unchanged as default (1.5h)"
   - "docs/deploy/mcp-connector.md: Claude/Grok hookup + production TLS/auth checklist (0.5h)"
@@ -50,7 +50,7 @@ risk_if_skipped: "update/changelog/help remain reachable only through an install
 ---
 
 ## §1 — Description
-1. `update.sh`, `changelog.sh`, `help.sh` **MUST** exist at the payload root beside the already-shipping `init.sh`, directly runnable (`bash update.sh`), mirroring the plugin commands' semantics: update = read-only check by default with `--apply` to execute (thin wrapper over init.sh, which owns the logic); changelog = installed version + `rules_sha` + pointers, read from the manifest beside the script; help = the command surface.
+1. `update.sh`, `changelog.sh`, `help.sh` **MUST** exist at the payload root beside the already-shipping `install.sh`, directly runnable (`bash update.sh`), mirroring the plugin commands' semantics: update = read-only check by default with `--apply` to execute (thin wrapper over install.sh, which owns the logic); changelog = installed version + `rules_sha` + pointers, read from the manifest beside the script; help = the command surface.
 2. `build.sh` **MUST** ship the trio in every payload (copy + chmod + npm `files` array) and declare the two new channels in `manifest.yaml`: `root-cli`, `mcp-connector`.
 3. `cyberos-mcp.mjs` **MUST** gain a `--http [port]` mode: MCP streamable-HTTP style endpoint (POST = one JSON-RPC message or batch → `application/json`; notifications → 202 empty; non-POST → 405; `GET /healthz` probe), reusing the existing `handle()` dispatch verbatim so stdio and http can never drift. stdio stays the default; zero new dependencies.
 4. A `docs/deploy/mcp-connector.md` runbook **MUST** capture the agent-UI hookup (Claude: Name + Remote MCP server URL + optional OAuth; Grok: Name + Server URL) and the production checklist: reverse-proxy TLS, supervisor, and the explicit warning that the transport ships unauthenticated - public exposure requires proxy-level auth since the tools execute repo workflows.
@@ -59,18 +59,18 @@ risk_if_skipped: "update/changelog/help remain reachable only through an install
 *Length note: sanctioned lean profile - every §5 check ran live in-session (scripts executed, endpoint curl-verified).*
 
 ## §2 — Why
-update.sh wraps init.sh instead of duplicating logic (single source of truth for vendoring + --check). The http mode reuses `handle()` so a tool added once serves both transports. Auth is deliberately NOT hand-rolled into the node process: proxy-level auth at nginx is the checklist item - a bespoke token check in a zero-dep server is worse than the battle-tested proxy layer already fronting the VPS.
+update.sh wraps install.sh instead of duplicating logic (single source of truth for vendoring + --check). The http mode reuses `handle()` so a tool added once serves both transports. Auth is deliberately NOT hand-rolled into the node process: proxy-level auth at nginx is the checklist item - a bespoke token check in a zero-dep server is worse than the battle-tested proxy layer already fronting the VPS.
 
 ## §4/§5 — Acceptance + verification (all run live 2026-07-13)
 1. Payload contains executable trio; `check-version-sync.sh` still green. ✅ (build to /tmp, ls + run)
-2. `help.sh` prints the surface; `changelog.sh` prints version + rules_sha from its own manifest; `update.sh` (no args, offline) emits init.sh --check's three-value report + verdict. ✅ (all executed)
+2. `help.sh` prints the surface; `changelog.sh` prints version + rules_sha from its own manifest; `update.sh` (no args, offline) emits install.sh --check's three-value report + verdict. ✅ (all executed)
 3. `--http`: `/healthz` 200 JSON; POST tools/list returns the 4 workflow tools; notification → 202; GET → 405. ✅ (curl-verified)
 4. stdio unchanged (default branch untouched semantics). ✅ (code path conditional on --http only)
 5. Runbook exists with hookup + security checklist. ✅
 
 ## §5b — Testing pass (2026-07-13, post gate-1 "approve all")
 - Payload rebuilt to /tmp: help.sh 17-line surface exit 0; changelog.sh prints 1.0.0 + rules_sha + pointers; endpoint healthz 200 / tools-list 4 / notification 202 / GET 405. PASS
-- DEFECT CAUGHT + FIXED IN-PHASE: `update.sh --check` passed the flag through twice (`exec init.sh --check "$@"` without shifting), so init.sh read the second `--check` as its TARGET ("cd: --: invalid option"; root detection broken, installed=none from an installed repo). The no-arg default path had masked it at implementation time. Fix: case/shift in update.sh. Re-run, all arg shapes green - live report: installed=1.0.0 payload=1.0.0 latest=1.0.0 (GitHub releases reachable) verdict=up_to_date.
+- DEFECT CAUGHT + FIXED IN-PHASE: `update.sh --check` passed the flag through twice (`exec install.sh --check "$@"` without shifting), so install.sh read the second `--check` as its TARGET ("cd: --: invalid option"; root detection broken, installed=none from an installed repo). The no-arg default path had masked it at implementation time. Fix: case/shift in update.sh. Re-run, all arg shapes green - live report: installed=1.0.0 payload=1.0.0 latest=1.0.0 (GitHub releases reachable) verdict=up_to_date.
 
 ## §9 — Open questions
 - Grok legacy-SSE transport if streamable HTTP is rejected at hookup (recorded, not assumed).

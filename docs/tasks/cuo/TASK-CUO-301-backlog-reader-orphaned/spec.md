@@ -44,7 +44,7 @@ incident: null
 ## Blast radius
 
 - **Who is affected**: every consumer of the ship pipeline — `ship-tasks`, `cyberos-cuo drain`, `status_server`, `brief_generator`.
-- **Since when**: since BACKLOG.md was regenerated in bullet form. Predates the fr->task rename; the rename merely surfaced it.
+- **Since when**: since BACKLOG.md was regenerated in bullet form. Predates the task->task rename; the rename merely surfaced it.
 - **Workaround**: none. The queue is simply dead.
 - **Data integrity**: no corruption. The failure is read-side and write-side no-op, not write-side wrong. Nothing to backfill.
 

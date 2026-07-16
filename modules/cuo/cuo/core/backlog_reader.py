@@ -61,7 +61,7 @@ class TaskRow:
 
 # ── Spec-frontmatter mode ────────────────────────────────────────────────────
 #
-# BACKLOG.md is an ORPHAN. Three facts, none of them caused by the fr->task rename:
+# BACKLOG.md is an ORPHAN. Three facts, none of them caused by the task->task rename:
 #
 #   1. Its own header says so: "Source of truth = task frontmatter. This file lists
 #      ONLY remaining work."

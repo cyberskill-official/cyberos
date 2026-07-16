@@ -103,6 +103,6 @@ are gitignored. No push." && echo "  committed"
   ver="$(cat .cyberos/VERSION 2>/dev/null || echo none)"
   store=NO; [ -f .cyberos/memory/store/manifest.json ] && [ -f .cyberos/memory/store/HEAD ] && store=yes
   gz=NO; [ -s .cyberos/gates.env ] && gz=yes
-  plug=NO; [ -f .cyberos/plugin/.claude-plugin/plugin.json ] && plug=yes   # was ship-fr.md: a command that exists under no name (ship-tasks is a SKILL), so this read NO forever
+  plug=NO; [ -f .cyberos/plugin/.claude-plugin/plugin.json ] && plug=yes, so this read NO forever
   echo "  RESULT $name: v$ver workflow=$wf store=$store gates.env=$gz plugin=$plug moved-improvement=$moved brain-migrated=$brain_migrated backlog-conventions=$appended"
 done

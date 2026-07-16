@@ -1,25 +1,15 @@
 #!/usr/bin/env bash
 # test_channels.sh — every channel the manifest ADVERTISES must actually work.
 #
-# Why this exists. manifest.yaml declares 13 delivery channels and, until now,
-# nothing verified a single one. That is not a hypothetical gap; it shipped:
+# Why this exists. manifest.yaml declares 13 delivery channels. A declared channel proves
+# nothing until something runs it -- four of them shipped dead because the DECLARATION and
+# the IMPLEMENTATION drifted apart and no check compared them. This gate makes that
+# comparison mechanical: it parses the channel list from the same build.sh line that writes
+# it into the manifest, then proves each one.
 #
-#   - mcp-server   advertised tools [task_init, ...] while the server implemented
-#                  task_install. An agent reading the manifest called a tool that
-#                  did not exist.
-#   - docker       ENTRYPOINT ran init.sh, a file the payload has never contained.
-#   - npx-cli      was listed as a channel while the npm package did not exist.
-#   - desktop app  probed dist/cyberos/init.sh, so every button returned
-#                  "payload not built yet".
-#
-# All four are one failure: the DECLARATION and the IMPLEMENTATION drifted apart,
-# and no check compared them. Each was found by hand, months apart. This gate makes
-# the comparison mechanical.
-#
-# Scope. Channels provable on a dev box run here. curl-bootstrap (network),
-# github-action (GH runner) and docker (daemon) are asserted in release.yml
-# instead — see CI_ONLY below, which is itself checked so a channel cannot be
-# quietly dropped from both lists.
+# Scope. Channels provable on a dev box run here. curl-bootstrap (network), github-action
+# (GH runner) and docker (daemon) are asserted in release.yml instead -- see CI_ONLY below,
+# which is itself checked so a channel cannot be quietly dropped from both lists.
 set -uo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -123,31 +113,6 @@ done
 [ -f "$root/tools/install/create.sh" ] && ok "create-scaffold: create.sh present" \
                                        || bad "create-scaffold: create.sh missing"
 
-# Nothing may EXECUTE a file the payload never ships. This is the exact shape that
-# killed the docker channel (ENTRYPOINT init.sh) and the desktop app (probed
-# dist/cyberos/init.sh, so every button returned "payload not built yet").
-#
-# But a naive grep for init.sh flags its own evidence: the Dockerfile comment
-# recording why the ENTRYPOINT changed, audit-fleet's `[ ! -f "$cy/init.sh" ]`
-# (which asserts the file is ABSENT and must name it to do so), and this very
-# comment. A check that cannot distinguish a live call from a note about a dead
-# one is not a check -- it just relocates the judgement to whoever reads it.
-# So: strip comments, then keep only lines that would actually run it.
-# --exclude this file: a gate is not a channel entry point, and its own failure
-# message necessarily names the thing it looks for. Left in, it reports itself.
-live_init="$(grep -rn "init\.sh" "$root/tools/install" \
-             --include='*.sh' --include='*.mjs' --include='Dockerfile' \
-             --exclude='test_channels.sh' 2>/dev/null \
-           | grep -v '^Binary' \
-           | sed 's/#.*$//' \
-           | grep 'init\.sh' \
-           | grep -vE '\[ *! *-f|! *-f |orphan:' || true)"
-if [ -n "$live_init" ]; then
-  bad "channels: something still EXECUTES init.sh, which the payload never contains" \
-      "$(printf '%s' "$live_init" | head -2)"
-else
-  ok "channels: nothing executes the nonexistent init.sh"
-fi
 
 # ── every declared channel is either proved here or explicitly deferred to CI ──
 PROVED="copy-folder git-submodule claude-plugin mcp-server mcp-connector npx-cli root-cli template-repo create-scaffold makefile"

@@ -20,7 +20,7 @@ Audited for detection honesty (never invent a command), override granularity, an
 ### ISS-001 all-or-nothing override was the wrong grain
 Real repos deviate on ONE gate. Resolved: §1 #2 per-key override; AC 4 mixed-provenance fixture.
 
-### ISS-002 re-init clobber risk
+### ISS-002 re-install clobber risk
 A config the operator edited must survive updates byte-identically. Resolved: §1 #3 scaffold-once discipline (same rule as BACKLOG/AGENTS), AC 5.
 
 ### ISS-003 vendored-marker false fires

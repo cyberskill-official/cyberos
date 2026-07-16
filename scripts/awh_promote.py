@@ -77,7 +77,7 @@ def run_gate(m: str):
     return weighted, ("GREEN" if green else f"RED (rc={rc} failing={failing})")
 
 
-def ready_frs(module_dir: str):
+def ready_tasks(module_dir: str):
     d = TASK_DIR / module_dir
     if not d.is_dir():
         return []
@@ -109,7 +109,7 @@ def main() -> int:
     decisions = []  # (action, module, task, reason)
     all_mods = sorted({p.parent.name for p in TASK_DIR.glob("*/*.md")})
     for mod in all_mods:
-        tasks = ready_frs(mod)
+        tasks = ready_tasks(mod)
         if not tasks:
             continue
         if mod in GATED and gate.get(mod) == "GREEN":

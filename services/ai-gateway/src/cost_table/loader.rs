@@ -120,7 +120,7 @@ pub async fn init_cost_table(config_path: &Path) -> Result<CostTableHandle, Load
     // table. Re-calling init_cost_table reloads (the same lock-free swap the hot-reload
     // watcher uses) instead of failing with AlreadyInitialised. ArcSwap exists precisely so a
     // reload never blocks readers; a single-shot OnceCell::set defeated that and made every
-    // call after the first (each integration test, any re-init) error.
+    // call after the first (each integration test, any re-install) error.
     TABLE
         .get_or_init(|| ArcSwap::from_pointee(HashMap::new()))
         .store(Arc::new(table));

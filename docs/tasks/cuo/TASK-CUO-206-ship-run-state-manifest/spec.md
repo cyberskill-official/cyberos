@@ -53,7 +53,7 @@ Normative clauses:
 2. The ship workflow MUST write the manifest to `docs/tasks/.workflow/<task-ID>.ship.json` after EVERY completed, failed, or conditionally-skipped step, using two-phase atomic writes (`.tmp.<nonce>` then rename), mirroring the memory-protocol write discipline.
 3. On invocation for a task whose manifest exists with matching `workflow_version`, ship MUST resume at the first non-done step AFTER re-verifying every recorded `artefact_sha256` against disk; a mismatch marks that step and all later steps stale (redo from the earliest stale step). A `workflow_version` mismatch MUST route to needs_human, never a silent mixed-version run.
 4. Invoked WITHOUT a task id, ship MUST select deterministically: among tasks at `ready_to_implement` whose `depends_on` are all `done`, order by priority (MUST before SHOULD before COULD), then `created` ascending, then id ascending; the selection and its reasoning line MUST be echoed to the operator before step 1 runs.
-5. Manifests MUST be gitignored via a scaffolded `docs/tasks/.workflow/.gitignore` (content: `*.ship.json`); task frontmatter and BACKLOG.md remain the only committed state. `/init` MUST scaffold the same ignore file in target repos.
+5. Manifests MUST be gitignored via a scaffolded `docs/tasks/.workflow/.gitignore` (content: `*.ship.json`); task frontmatter and BACKLOG.md remain the only committed state. `/install` MUST scaffold the same ignore file in target repos.
 6. On the task reaching `done` (HITL gate 2 passed), ship MUST delete the manifest; on route-back to `ready_to_implement`, ship MUST keep it with `routed_back_count` incremented (the next run starts fresh at step 1 by §1 #3's staleness rule but retains the count and history).
 7. The workflow doc MUST gain a `## Resume semantics` section and EXECUTION-DISCIPLINE.md a pointer to it; the plugin wrapper SKILL.md MUST mention resume-on-restart so agents look for the manifest before starting step 1.
 8. HITL gates MUST NOT be inferable from the manifest alone: resuming at a gate step re-requests the human approval; a recorded `hitl.requested_at` never substitutes for the approval itself.
@@ -92,7 +92,7 @@ The manifest is a cache of proven work, never an authority: every resume re-hash
 3. **Resume skips proven work** (§1 #3) - fixture: manifest with steps 1-10 done and artefacts intact -> resume plan says step 11; corrupting step 5's artefact makes the resume plan restart at 5 with 5..31 stale.
 4. **Version mismatch halts** (§1 #3) - manifest at 2.3.0 vs workflow 2.3.1 -> needs_human, no auto-run.
 5. **Queue selection is total and deterministic** (§1 #4) - fixture backlog (mixed statuses, unmet depends_on, tied priorities) yields one defined winner; re-running yields the same; the reasoning line matches the fixture expectation.
-6. **Gitignore scaffolding** (§1 #5) - the ignore file exists with `*.ship.json`; `git status` in a fixture repo shows no manifest after a simulated run; init.sh scaffolds it in a scratch target.
+6. **Gitignore scaffolding** (§1 #5) - the ignore file exists with `*.ship.json`; `git status` in a fixture repo shows no manifest after a simulated run; install.sh scaffolds it in a scratch target.
 7. **Terminal handling** (§1 #6) - done deletes the manifest; route-back keeps it with the incremented count (fixture pair).
 8. **Human gates re-ask on resume** (§1 #8) - resuming a manifest parked at step 19/31 (gates) produces a fresh approval request; the doc forbids treating requested_at as approval.
 

@@ -3,7 +3,7 @@
 ## repo-context-map (step 1)
 Patterns followed: contract docs live at modules/skill/contracts/task/ (STATUS-REFERENCE,
 MANIFEST_SCHEMA precedent); python helpers as pure functions in modules/cuo/cuo/ (package with tests
-in modules/cuo/tests/, plain unittest, no deps); two-phase atomic writes per AGENTS.md §4.1; init.sh
+in modules/cuo/tests/, plain unittest, no deps); two-phase atomic writes per AGENTS.md §4.1; install.sh
 scaffolding block at the `mkdir -p "$CY"` cluster. Blast radius: 4 new files, 4 modified; modules cuo
 + skill + tools/install; no cross-module edges beyond documented contract references.
 Placement check: cuo is correct (workflow run-state is CTO-workflow machinery, not skill contracts
@@ -30,7 +30,7 @@ docs/tasks/.workflow/.gitignore (*.ship.json).
 Modified: ship-tasks.md (workflow_version 2.3.1 -> 2.4.0; Resume semantics section: write
 points, 4-rule resume, gate re-ask, terminal handling, queue algorithm; cross-ref entry);
 EXECUTION-DISCIPLINE.md (Run-state manifests section); plugin wrapper SKILL.md (resume-on-restart
-paragraph); init.sh (scaffolds .workflow/.gitignore).
+paragraph); install.sh (scaffolds .workflow/.gitignore).
 Field finding folded back: TASK-CUO-209's t08 was a point-in-time scope guard as permanent invariant -
 amended post-ship (task §1 #8 + AC 8 + audit §11), t08 repurposed to workflows_vendored_intact.
 
@@ -40,9 +40,9 @@ Operator-facing state transitions echo as greppable lines (contract-pinned): res
 reasons (needs_human reason string carries both versions). No PII surface.
 
 ## code review vs §1 clauses (steps 16-18)
-#1 contract fields all present incl. fr_sha256 (test AC1 greps 14 tokens) PASS; #2 write points +
+#1 contract fields all present incl. task_sha256 (test AC1 greps 14 tokens) PASS; #2 write points +
 tmp/rename in doc (AC2) PASS; #3 resume/staleness/version rules (AC3+AC4) PASS; #4 deterministic
-queue + reasoning echo (AC5) PASS; #5 gitignore + init scaffold (AC6, git check-ignore live) PASS;
+queue + reasoning echo (AC5) PASS; #5 gitignore + install scaffold (AC6, git check-ignore live) PASS;
 #6 done-deletes/route-back-keeps (AC7) PASS; #7 Resume section + ED pointer + wrapper mention
 (greps in AC2/AC8 + manual) PASS; #8 gate re-ask normative (AC8) PASS. Secret scan: none. Injection:
 no shell interpolation from manifest content. Backwards compat: no existing manifests exist; version

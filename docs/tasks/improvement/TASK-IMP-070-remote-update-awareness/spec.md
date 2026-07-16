@@ -1,6 +1,6 @@
 ---
 id: TASK-IMP-070
-title: "Remote update awareness - /update and init.sh --check compare installed vs latest published release, not the local payload"
+title: "Remote update awareness - /update and install.sh --check compare installed vs latest published release, not the local payload"
 eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 client_visible: false
@@ -22,11 +22,11 @@ related_tasks: [TASK-IMP-068, TASK-IMP-069, TASK-APP-001]
 depends_on: [TASK-IMP-069]
 blocks: []
 source_pages:
-  - tools/install/init.sh
+  - tools/install/install.sh
   - tools/install/plugin/commands/update.md
   - tools/install/plugin/commands/changelog.md
 source_decisions:
-  - "2026-07-12 investigation: with a stale local payload, init.sh --check reports installed=1.2.0 available=1.2.0 and /update says up to date while VERSION is 1.7.0. The available number must come from the published channel, not the laptop."
+  - "2026-07-12 investigation: with a stale local payload, install.sh --check reports installed=1.2.0 available=1.2.0 and /update says up to date while VERSION is 1.7.0. The available number must come from the published channel, not the laptop."
   - "No auto-update: the check only reports; applying an update stays an explicit operator action."
 language: bash + markdown (command docs)
 service: tools/install/
@@ -34,8 +34,8 @@ new_files:
   - tools/install/check-latest.sh
   - tools/install/tests/test_check_latest.sh
 modified_files:
-  - tools/install/build.sh   # deviation, recorded in review packet: vendor check-latest.sh beside init.sh
-  - tools/install/init.sh
+  - tools/install/build.sh   # deviation, recorded in review packet: vendor check-latest.sh beside install.sh
+  - tools/install/install.sh
   - tools/install/plugin/commands/update.md
   - tools/install/plugin/commands/changelog.md
   - tools/install/README.md
@@ -45,12 +45,12 @@ modified_files:
 
 ## §1 - Description
 
-`init.sh --check` compares a target repo's `.cyberos/VERSION` against the LOCAL payload's VERSION, and the `/update` command trusts that answer. Once TASK-IMP-069 publishes every release, the honest comparison is against the latest published version. This task adds that third data point and rewrites the verdict logic around it.
+`install.sh --check` compares a target repo's `.cyberos/VERSION` against the LOCAL payload's VERSION, and the `/update` command trusts that answer. Once TASK-IMP-069 publishes every release, the honest comparison is against the latest published version. This task adds that third data point and rewrites the verdict logic around it.
 
 Normative clauses:
 
 1. A script `tools/install/check-latest.sh` MUST resolve the latest published version and print exactly one line `latest=<X.Y.Z|unknown> source=<url|offline>`. Resolution order: `$CYBEROS_RELEASE_ENDPOINT` when set (an https URL or a local file path returning either a bare `X.Y.Z` or GitHub's `/releases/latest` JSON, from which `tag_name` minus the `v` is taken), else the repo's public `releases/latest` page redirect (Location header names the tag; immune to API rate limits), with the `releases/latest` API URL as fallback (amended post-ship 2026-07-12 after a live 403 rate-limit). Total network budget MUST be <= 3 seconds (curl `--max-time 3`); any failure MUST yield `latest=unknown source=offline` with exit 0 - the script never breaks a caller.
-2. `init.sh --check <repo>` MUST report three values - `installed` (`<repo>/.cyberos/VERSION`), `payload` (the local payload's VERSION), `latest` (via check-latest.sh, skipped when `CYBEROS_OFFLINE=1`) - followed by exactly one verdict line: `verdict=up_to_date` (installed == latest, or latest unknown and installed == payload), `verdict=repo_stale` (installed < payload or installed < latest), or `verdict=payload_stale` (payload < latest). `installed >= latest` MUST count as up to date - the check never advises a downgrade. Each non-clean verdict MUST print the exact next command (`bash <payload>/init.sh <repo>` for repo_stale; the TASK-IMP-069 download one-liner or `build.sh` for payload_stale).
+2. `install.sh --check <repo>` MUST report three values - `installed` (`<repo>/.cyberos/VERSION`), `payload` (the local payload's VERSION), `latest` (via check-latest.sh, skipped when `CYBEROS_OFFLINE=1`) - followed by exactly one verdict line: `verdict=up_to_date` (installed == latest, or latest unknown and installed == payload), `verdict=repo_stale` (installed < payload or installed < latest), or `verdict=payload_stale` (payload < latest). `installed >= latest` MUST count as up to date - the check never advises a downgrade. Each non-clean verdict MUST print the exact next command (`bash <payload>/install.sh <repo>` for repo_stale; the TASK-IMP-069 download one-liner or `build.sh` for payload_stale).
 3. Version comparison MUST be numeric semver (major, minor, patch), not string comparison.
 4. `plugin/commands/update.md` MUST direct the agent to run the extended `--check` and act on the verdict: on `payload_stale`, fetch the latest release payload (or rebuild from a current checkout) BEFORE re-running init, and never report "up to date" from the local-payload comparison alone. On `latest=unknown` it MUST say the remote check was skipped and the answer is only as fresh as the local payload.
 5. `plugin/commands/changelog.md` MUST, when `latest` is newer than `installed`, link the GitHub Releases page as the span to read (installed+1 .. latest), in addition to the local `.cyberos/manifest.yaml` details.
@@ -59,7 +59,7 @@ Normative clauses:
 
 ## §2 - Why this design
 
-The three-value report makes the two failure directions distinguishable: a stale TARGET repo (fix: rerun init) versus a stale LOCAL payload (fix: download/rebuild), which today collapse into one misleading "up to date". A separate `check-latest.sh` keeps network code out of `init.sh`'s critical path, gives the desktop Ops tab (TASK-APP-001) and `/update` one shared resolver, and makes the endpoint overridable so tests run on `file://`-style fixtures with zero network.
+The three-value report makes the two failure directions distinguishable: a stale TARGET repo (fix: rerun init) versus a stale LOCAL payload (fix: download/rebuild), which today collapse into one misleading "up to date". A separate `check-latest.sh` keeps network code out of `install.sh`'s critical path, gives the desktop Ops tab (TASK-APP-001) and `/update` one shared resolver, and makes the endpoint overridable so tests run on `file://`-style fixtures with zero network.
 
 ## §3 - Contract
 
@@ -70,12 +70,12 @@ check-latest.sh
       or: latest=unknown source=offline
   exit: always 0
 
-init.sh --check <repo>   (extended output, order fixed)
+install.sh --check <repo>   (extended output, order fixed)
   installed=1.2.0
   payload=1.7.0
   latest=1.8.0 source=<url>
   verdict=repo_stale
-  next: bash <payload>/init.sh <repo>
+  next: bash <payload>/install.sh <repo>
 ```
 
 ## §4 - Acceptance criteria
@@ -108,21 +108,21 @@ t08_changelog_doc_contract()     # AC 8
 
 ## §6 - Implementation skeleton
 
-`check-latest.sh`: ~40 lines - endpoint resolution, `curl -sf --max-time 3` (or `cat` for a local path), parse bare/JSON, print. `init.sh --check`: keep existing reads, add the resolver call + a `ver_ge()` numeric comparator + verdict table from §3.
+`check-latest.sh`: ~40 lines - endpoint resolution, `curl -sf --max-time 3` (or `cat` for a local path), parse bare/JSON, print. `install.sh --check`: keep existing reads, add the resolver call + a `ver_ge()` numeric comparator + verdict table from §3.
 
 ## §7 - Dependencies
 
-Depends on TASK-IMP-069 (there must BE a published latest). TASK-APP-001's Check button inherits the richer output for free since it shells out to `init.sh --check`.
+Depends on TASK-IMP-069 (there must BE a published latest). TASK-APP-001's Check button inherits the richer output for free since it shells out to `install.sh --check`.
 
 ## §8 - Example payloads
 
 ```
-$ CYBEROS_OFFLINE=1 bash dist/cyberos/init.sh --check ~/Projects/clientA
+$ CYBEROS_OFFLINE=1 bash dist/cyberos/install.sh --check ~/Projects/clientA
 installed=1.6.0
 payload=1.7.0
 latest=unknown source=offline
 verdict=repo_stale
-next: bash dist/cyberos/init.sh /Users/stephen/Projects/clientA
+next: bash dist/cyberos/install.sh /Users/stephen/Projects/clientA
 ```
 
 ## §9 - Open questions

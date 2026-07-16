@@ -35,7 +35,7 @@ One-time: `git config core.hooksPath .githooks` and install the pre-commit hooks
 | docs-prerender-gate | `bash tools/docs-site/build.sh` |
 | deploy.yml's gate step | same as the pure-Rust job above |
 
-The hooks run the important ones automatically: pre-push runs `local_verify.sh` when the push touches `services/` and Docker is up (`NO_DB_VERIFY=1` or `SKIP_LOCAL_CHECKS=1` to bypass; it falls back to the pure-Rust checks when Docker is down), and pre-commit rebuilds the init payload and verifies the docs site build when their sources are staged.
+The hooks run the important ones automatically: pre-push runs `local_verify.sh` when the push touches `services/` and Docker is up (`NO_DB_VERIFY=1` or `SKIP_LOCAL_CHECKS=1` to bypass; it falls back to the pure-Rust checks when Docker is down), and pre-commit rebuilds the install payload and verifies the docs site build when their sources are staged.
 
 ## Why not act?
 

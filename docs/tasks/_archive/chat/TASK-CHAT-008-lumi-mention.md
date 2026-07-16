@@ -1003,7 +1003,7 @@ All resolved. Deferred:
 | Concurrent @lumi cancel from same user | both succeed; second is no-op | None | None |
 | memory audit emit fails | logged + counter | mention not auditable | Operator restores memory |
 | OBS metrics collector down | metrics dropped | None visible | None |
-| MM hot-reload causes plugin re-init | plugin lifecycle | mention queue drained; no loss | None |
+| MM hot-reload causes plugin re-install | plugin lifecycle | mention queue drained; no loss | None |
 | LLM hallucination in reply | n/a; not detectable | user sees wrong answer | Operator improves persona/safety rules |
 | User mentions @lumi inside a thread reply (not top-level) | parent post is the mention | reply threads to root (= mention post) | None |
 | User mentions @lumi in a Lumi-authored reply (recursion attempt) | filtered by user_id check | None | None |

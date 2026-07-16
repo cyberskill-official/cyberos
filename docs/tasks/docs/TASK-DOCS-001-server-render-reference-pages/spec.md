@@ -45,7 +45,7 @@ new_files:
   - website/build/templates/_card.hbs
   - website/build/data/nfrs.json
   - website/build/data/risks.json
-  - website/build/data/frs.json
+  - website/build/data/tasks.json
   - website/build/tests/render_test.mjs
   - website/build/tests/determinism_test.mjs
   - website/build/tests/pagefind_index_test.mjs
@@ -91,7 +91,7 @@ risk_if_skipped: "First paint of /reference/* shows empty scaffold + 'of NFRs ma
 
 The CyberOS documentation build pipeline **MUST** server-render the three reference catalog pages at build time, producing static HTML rows visible at first paint AND indexed by Pagefind. Each piece:
 
-1. **MUST** parse the data arrays (`NFR_DATA`, `RISKS`, `TASK_CATALOG`) at build time. Source-of-truth becomes JSON files at `website/build/data/{nfrs,risks,frs}.json` (DEC-221); both the build script AND the Alpine reactive layer consume from JSON.
+1. **MUST** parse the data arrays (`NFR_DATA`, `RISKS`, `TASK_CATALOG`) at build time. Source-of-truth becomes JSON files at `website/build/data/{nfrs,risks,tasks}.json` (DEC-221); both the build script AND the Alpine reactive layer consume from JSON.
 2. **MUST** emit a `<section data-prerendered="true">` block per page, containing the same `<article>` cards Alpine would render at runtime. Prerendered cards include all card content (title, IDs, descriptions, badges) — visible without JS.
 3. **MUST** be deterministic — running the build twice on the same JSON inputs produces byte-identical HTML output. No Date.now(), no RNG, no unsorted iteration. CI gate (§1 #11) enforces.
 4. **MUST** preserve Alpine reactive behaviour: on JS hydration, `hydrated=true` is set; CSS `[x-cloak] { display: none }` hides prerendered AND Alpine takes over. No double-render flash.
@@ -155,7 +155,7 @@ import path from 'path';
 const PAGES = [
   { html: 'docs/reference/nfr-catalog.html', data: 'build/data/nfrs.json',  template: 'build/templates/nfr-catalog.hbs', selector: '#nfr-list' },
   { html: 'docs/reference/risk-register.html', data: 'build/data/risks.json', template: 'build/templates/risk-register.hbs', selector: '#risk-list' },
-  { html: 'docs/reference/task-catalog.html',  data: 'build/data/frs.json',   template: 'build/templates/task-catalog.hbs', selector: '#task-list' },
+  { html: 'docs/reference/task-catalog.html',  data: 'build/data/tasks.json',   template: 'build/templates/task-catalog.hbs', selector: '#task-list' },
 ];
 
 async function renderPage({ html, data, template, selector }) {
@@ -423,7 +423,7 @@ import vm from 'vm';
 const FILES = [
   { html: 'docs/reference/nfr-catalog.html', varName: 'NFR_DATA', out: 'build/data/nfrs.json' },
   { html: 'docs/reference/risk-register.html', varName: 'RISKS', out: 'build/data/risks.json' },
-  { html: 'docs/reference/task-catalog.html', varName: 'TASK_CATALOG', out: 'build/data/frs.json' },
+  { html: 'docs/reference/task-catalog.html', varName: 'TASK_CATALOG', out: 'build/data/tasks.json' },
 ];
 
 for (const { html, varName, out } of FILES) {
@@ -542,7 +542,7 @@ All resolved. Deferred:
 
 **Supersession record (2026-07-12, conflict-scan doctrine: newest wins).** The live intent of this task
 shipped through the TASK-DOCS-002/005/006 pipeline: data extraction to JSON (tools/docs-site/data-extract.mjs
--> data/frs.json, nfrs), prerendered `<section data-prerendered="true">` catalog cards (render-task-catalog /
+-> data/tasks.json, nfrs), prerendered `<section data-prerendered="true">` catalog cards (render-task-catalog /
 render-nfr-catalog carry `TASK-DOCS-001 §1 #2` citations), deterministic builds, stable per-card anchors,
 and last-build-report.json. The remaining clauses are obsolete by later approved doctrine: #1's
 website/build paths and #8's Cloudflare Pages (replaced by tools/docs-site + VPS deploy), #4/#5 Alpine

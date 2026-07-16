@@ -45,7 +45,7 @@ Every task folder renders to one CDS-styled page a human can read anywhere - spe
 
 Normative clauses:
 
-1. A builder `tools/docs-site/render-task-pages.mjs` MUST walk `docs/tasks/<module>/<STEM>/spec.md`, render markdown via the existing dependency-free `md.mjs`, and emit `dist/website/frs/<module>/<STEM>/index.html` through the `deliverable@1` template (TASK-TPL-001), node stdlib only.
+1. A builder `tools/docs-site/render-task-pages.mjs` MUST walk `docs/tasks/<module>/<STEM>/spec.md`, render markdown via the existing dependency-free `md.mjs`, and emit `dist/website/tasks/<module>/<STEM>/index.html` through the `deliverable@1` template (TASK-TPL-001), node stdlib only.
 2. Each page MUST show: id, title, status badge, module + class + priority badges, key frontmatter (created/shipped/depends_on/blocks as links when those tasks have pages), the rendered spec body with heading anchors per §-section, and the audit verdict + score when `audit.md` exists (rendered below the spec, visually separated).
 3. Assets MUST work: `<STEM>/assets/**` is copied beside the page; relative `assets/...` references in the markdown resolve unchanged; image links render as `<img>`, and links to video files (mp4/webm/mov) render as `<video controls>` - both capped to content width.
 4. Self-containment (template rule): CDS tokens + shell styles inlined into each page; the only external references are the page's own relative assets - pages work from file://.
@@ -58,7 +58,7 @@ Rendering through the templates module is what makes "CDS everywhere" a property
 
 ## §3 - Contract
 
-Page path: `frs/<module>/<STEM>/index.html`; template `deliverable@1`; asset copy: sibling `assets/`. Build summary line: `task-pages: N pages, M assets copied, K with audits`.
+Page path: `tasks/<module>/<STEM>/index.html`; template `deliverable@1`; asset copy: sibling `assets/`. Build summary line: `task-pages: N pages, M assets copied, K with audits`.
 
 ## §4 - Acceptance criteria
 

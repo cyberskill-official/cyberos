@@ -1,6 +1,6 @@
 # CyberOS release process
 
-One page for how CyberOS ships across every surface. CyberOS carries ONE platform version (the root `VERSION` file, stamped into the init payload and every consumer repo's `.cyberos/VERSION`); module versions are internal. There are two release tracks, deliberately separate:
+One page for how CyberOS ships across every surface. CyberOS carries ONE platform version (the root `VERSION` file, stamped into the install payload and every consumer repo's `.cyberos/VERSION`); module versions are internal. There are two release tracks, deliberately separate:
 
 - Continuous delivery (web + services): every push to `main` updates the live site and the backend. No version, no tag, no manual step. This is where day-to-day work goes out.
 - Versioned native release (desktop + mobile): cut on demand by pushing a `vX.Y.Z` tag. Only the native installers are versioned, because only they are downloaded and pinned to a machine.

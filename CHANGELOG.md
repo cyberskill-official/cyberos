@@ -31,12 +31,12 @@ Changed
   carrying each task's full spec (lazy per-task chunks), relationship graph and metadata. The releases
   lens is generated from this CHANGELOG (task chips for cited ids + shipped-date matches). Extends
   TASK-DOCS-006 / TASK-DOCS-007 and the auto-sync of TASK-IMP-074.
-- Renamed consumer entrypoints for 1.0.0: init → install, changelog → status (open page), update →
+- Renamed consumer entrypoints for 1.0.0: install → install, changelog → status (open page), update →
   version (check-only). No user-facing `install --page` / `--check`; page regen is internal
   (`lib/status-page.sh` for hooks and run-gates).
 - Install/migration hardened by a 23-repo fleet roll: protocol dumps and protocol-symlinks at root
   AGENTS.md are replaced with the thin pointer; status-page freshness is proven by re-render +
-  byte-compare. tools/install/{fleet-init-test,audit-fleet}.sh roll and PROVE the fleet.
+  byte-compare. tools/install/{fleet-install-test,audit-fleet}.sh roll and PROVE the fleet.
 
 ## [0.4.0] - 2026-07-12
 
@@ -168,7 +168,7 @@ Added
 
 Added
 - rename to /create-tasks + bundle every chained skill + suggested_prompts
-- version parity with CyberOS + /new-fr authoring command
+- version parity with CyberOS + /new-task authoring command
 
 Fixed
 - keep bundled skill descriptions under the 1024-char host limit
@@ -184,28 +184,28 @@ Fixed
 
 ## [1.1.0] - 2026-07-11
 
-Multi-agent distribution for the `cyberos-install` payload, plus three new install channels. Backward compatible: `init.sh` never clobbers an existing operator file, so re-running it on a 1.0.0 repo only adds what is missing.
+Multi-agent distribution for the `cyberos-install` payload, plus three new install channels. Backward compatible: `install.sh` never clobbers an existing operator file, so re-running it on a 1.0.0 repo only adds what is missing.
 
 Added
-- Agent surface in `init.sh`: `AGENTS.md` is the canonical cross-agent spine, with create-if-absent pointer files per agent (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.cursor/rules/*.mdc`, `.grok/GROK.md`, `.github/copilot-instructions.md`, `.agents/rules/`, `.windsurfrules`) and native installs of the `ship-tasks` skill into `.claude/skills`, `.grok/skills`, `.commandcode/skills`, `.codex/skills`, `.opencode/skill`. Controls: `CYBEROS_AGENTS`, `CYBEROS_COPY_SKILLS`, `CYBEROS_GLOBAL_SKILLS`, `CYBEROS_NO_MCP`. Covers Claude Code, Codex, Cursor, Gemini, Antigravity, Grok CLI, zcode, Command Code, Hermes, Copilot, Windsurf.
-- MCP server channel (`tools/install/mcp/cyberos-mcp.mjs`): zero-dependency Node stdio server exposing `task_init`, `task_gates`, `task_status`, `ship_task` (HITL-gated; never self-accepts). `init.sh` writes `.mcp.json` / `.cursor/mcp.json` when absent.
+- Agent surface in `install.sh`: `AGENTS.md` is the canonical cross-agent spine, with create-if-absent pointer files per agent (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.cursor/rules/*.mdc`, `.grok/GROK.md`, `.github/copilot-instructions.md`, `.agents/rules/`, `.windsurfrules`) and native installs of the `ship-tasks` skill into `.claude/skills`, `.grok/skills`, `.commandcode/skills`, `.codex/skills`, `.opencode/skill`. Controls: `CYBEROS_AGENTS`, `CYBEROS_COPY_SKILLS`, `CYBEROS_GLOBAL_SKILLS`, `CYBEROS_NO_MCP`. Covers Claude Code, Codex, Cursor, Gemini, Antigravity, Grok CLI, zcode, Command Code, Hermes, Copilot, Windsurf.
+- MCP server channel (`tools/install/mcp/cyberos-mcp.mjs`): zero-dependency Node stdio server exposing `task_install`, `task_gates`, `task_status`, `ship_task` (HITL-gated; never self-accepts). `install.sh` writes `.mcp.json` / `.cursor/mcp.json` when absent.
 - npx CLI channel: root `package.json` with `cyberos-install`, `cyberos-gates`, `cyberos-mcp` bins.
 - Template channel: `create.sh` scaffolder + `template/` skeleton for a fresh project or a GitHub template repo.
 - Auto-versioning ("auto version, manual release"): `scripts/cyberos-version.mjs` computes the next version from Conventional Commits; `.github/workflows/version.yml` auto-commits the bump to `main` on push (never tags or deploys); `.githooks/commit-msg` is an advisory Conventional-Commit nudge that shows the projected next version. Cutting a release stays a manual `vX.Y.Z` tag. See `docs/deploy/RELEASE.md`.
 
 Changed
-- Root `AGENTS.md` produced by `init.sh` is now a concise workflow spine (was the full memory protocol); the dense Layer-1 protocol lives only at `.cyberos/memory/AGENTS.md`, referenced from the spine.
-- `init.sh` errors clearly when run from an un-built source tree.
+- Root `AGENTS.md` produced by `install.sh` is now a concise workflow spine (was the full memory protocol); the dense Layer-1 protocol lives only at `.cyberos/memory/AGENTS.md`, referenced from the spine.
+- `install.sh` errors clearly when run from an un-built source tree.
 
 ## [1.0.0] - 2026-07-10
 
-The first platform release. One version (`VERSION`) across every surface: services (GHCR images + VPS), the web console and PWA at os.cyberskill.world, the desktop app (Tauri, with the CyberOS Ops tab), the distributable init payload (`dist/cyberos`), the Claude plugin, and the generated docs site.
+The first platform release. One version (`VERSION`) across every surface: services (GHCR images + VPS), the web console and PWA at os.cyberskill.world, the desktop app (Tauri, with the CyberOS Ops tab), the distributable install payload (`dist/cyberos`), the Claude plugin, and the generated docs site.
 
 Added
 - ship-tasks as the single governed workflow (product + improvement classes, one backlog, HITL at the two human-acceptance gates).
-- cyberos-install payload: `init.sh` (idempotent install/update, `--check`), agent-independent entry (`.cyberos/AGENT-ENTRY.md` + pointer stubs), `rollout.sh`, plugin marketplace + one-file `cyberos.plugin` bundle.
-- Claude plugin 1.0.0: `/init`, `/update`, `/changelog`, `/help` commands + the `ship-tasks` skill.
-- Desktop CyberOS Ops tab (TASK-APP-001): build payload, list projects with installed versions, check, init/update - over the canonical scripts.
+- cyberos-install payload: `install.sh` (idempotent install/update, `--check`), agent-independent entry (`.cyberos/AGENT-ENTRY.md` + pointer stubs), `rollout.sh`, plugin marketplace + one-file `cyberos.plugin` bundle.
+- Claude plugin 1.0.0: `/install`, `/update`, `/changelog`, `/help` commands + the `ship-tasks` skill.
+- Desktop CyberOS Ops tab (TASK-APP-001): build payload, list projects with installed versions, check, install/update - over the canonical scripts.
 - Documentation single source of truth (TASK-DOCS-002): markdown sources (module-owned + global), generated site at `dist/website`, Vercel hosting wiring for cyberos.cyberskill.world/docs, docs-prerender CI gate + pre-commit build check.
 - CI/local parity: `scripts/local_verify.sh` runs the same migrations + per-crate DB suites as the services workflow; pre-push hook runs it when Docker is up.
 

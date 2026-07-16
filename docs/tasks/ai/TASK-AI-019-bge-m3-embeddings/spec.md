@@ -683,7 +683,7 @@ All resolved at authoring time. Items deferred to later tasks:
 | Sidecar process down | Health check 503 OR connection refused | Circuit breaker (TASK-AI-009) opens; failover to managed (Bedrock Titan) | Operator restarts sidecar; breaker recovers via half-open probe |
 | Sidecar checksum mismatch at startup | `verify_model_checksum` raises | Sidecar exits with non-zero; gateway refuses to bind; sev-1 alert | Operator investigates supply-chain integrity; re-downloads model |
 | GPU OOM (input too long) | Pre-validation 413 (§1 #12) | Caller sees 413; chunks text upstream | By design |
-| Mid-run GPU failure → CPU fallback | `device` field flips in response | sev-2 OBS event; SLO budget adjusts | Operator investigates GPU health; restarts sidecar to attempt cuda re-init |
+| Mid-run GPU failure → CPU fallback | `device` field flips in response | sev-2 OBS event; SLO budget adjusts | Operator investigates GPU health; restarts sidecar to attempt cuda re-install |
 | Cold start (first request 30s+) | Health endpoint 503 during warmup | Gateway waits up to 60s; refuses to bind if not ready | Self-resolves within 60s |
 | CPU fallback latency > 300ms | `bge_test::cpu_latency_p95` fails OR live SLO breach | sev-3 alarm | Operator provisions GPU OR reduces batch size |
 | Adaptive batch buffer 50ms timeout | Background dispatcher fires | Partial batch sent | By design |

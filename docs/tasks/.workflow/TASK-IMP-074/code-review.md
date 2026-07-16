@@ -1,5 +1,5 @@
 # TASK-IMP-074 — batch run record + review packet (v2.5.0 first live use)
-Batch: {TASK-IMP-074, TASK-IMP-075} — cone-independent (workflow/hooks/CI-docs vs apps/desktop Rust). Steps 1-12 lean bundle: context grounded in .githooks/pre-commit (41 lines, no --page wiring - migrate-frs.sh's own comment was aspirational), run-gates.sh 82-88, deploy.yml paths, build.sh manifest block. ADR skipped (infra wiring). No mocks. Status: `reviewing`, HALTED at HITL gate 1.
+Batch: {TASK-IMP-074, TASK-IMP-075} — cone-independent (workflow/hooks/CI-docs vs apps/desktop Rust). Steps 1-12 lean bundle: context grounded in .githooks/pre-commit (41 lines, no --page wiring - migrate-tasks.sh's own comment was aspirational), run-gates.sh 82-88, deploy.yml paths, build.sh manifest block. ADR skipped (infra wiring). No mocks. Status: `reviewing`, HALTED at HITL gate 1.
 
 ## §1 clause → evidence
 | Clause | Evidence | ✓ |

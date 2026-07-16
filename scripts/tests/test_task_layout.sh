@@ -58,10 +58,10 @@ t08_contracts_updated() {
     && ok t08 || fail t08 "author/audit contracts"
 }
 t09_ship_and_init_coherent() {
-  # Asserts the scaffolder documents folder-per-task, not the flat FR-era layout.
+  # Asserts the scaffolder documents folder-per-task, not the old flat layout.
   #
-  # Was `tools/install/init.sh` until bb0f2392e ("1.0.0 CLI surface") deleted
-  # init.sh and moved the scaffold grammar into install.sh. The assert did not
+  # Was `tools/install/install.sh` until bb0f2392e ("1.0.0 CLI surface") deleted
+  # install.sh and moved the scaffold grammar into install.sh. The assert did not
   # follow, so t09 has been red ever since — `grep` on a missing file returns 1 and
   # short-circuits the && chain into fail. It went unnoticed because this file is
   # wired into NO gate: not .githooks/pre-commit, not local_verify.sh, not CI. A

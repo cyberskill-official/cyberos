@@ -90,7 +90,7 @@ function parseFrontmatter(md) {
 // (superseded specs) and _audits/ (audit evidence). They are NOT catalog input.
 //
 // Nothing excluded them before. _archive/ was skipped purely because its files were named
-// FR-*, which /^TASK-.*\.md$/ did not match — an accident of naming, not a rule. The
+// Ids that /^TASK-.*\.md$/ did not match — an accident of naming, not a rule. The
 // 2026-07-15 rename moved them to TASK-*, they started matching, and the catalog jumped
 // 509 -> 529 with TASK-APP-001 listed TWICE: once live, once from its archived copy.
 // _audits/ survived only on the .audit.md suffix check — one coincidence deep.

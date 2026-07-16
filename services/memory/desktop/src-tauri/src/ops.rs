@@ -1,5 +1,5 @@
 //! TASK-APP-001 — CyberOS operations from the desktop UI: build the distributable payload,
-//! list candidate projects, check installed-vs-available, and init/update a project.
+//! list candidate projects, check installed-vs-available, and install/update a project.
 //!
 //! Doctrine (§1 #2): every operation shells out to the canonical `tools/install`
 //! scripts — the UI never reimplements init logic, so UI and CLI cannot diverge.
@@ -79,8 +79,7 @@ fn require_checkout(checkout: &str) -> Result<PathBuf, String> {
     Ok(root)
 }
 
-/// Resolve a payload entry point. `init.sh` was deleted at the 1.0.0 CLI surface and split
-/// into install.sh / version.sh / lib/status-page.sh, but this gate still probed for it — so
+/// Resolve a payload entry point.
 /// it returned "payload not built yet" on EVERY op, even with a freshly built payload. The
 /// whole CyberOS Ops tab (Check + Init) was dead. Probe the script each command actually runs.
 fn require_payload_script(root: &Path, script: &str) -> Result<PathBuf, String> {
@@ -152,7 +151,7 @@ pub async fn ops_build(checkout: String) -> Result<OpResult, String> {
 }
 
 /// Installed-vs-available: `bash dist/cyberos/version.sh <project>`.
-/// Was `init.sh --check`; --check is version.sh now, and it takes the repo as a bare arg.
+/// Check a project's installed version against the payload.
 /// CYBEROS_NONINTERACTIVE keeps version.sh from prompting "update now?" at a GUI with no tty.
 #[tauri::command]
 pub async fn ops_check(checkout: String, project: String) -> Result<OpResult, String> {
@@ -169,7 +168,7 @@ pub async fn ops_check(checkout: String, project: String) -> Result<OpResult, St
 }
 
 /// Install or re-vendor a project: `bash dist/cyberos/install.sh <project>`. Idempotent by design.
-/// Was init.sh; install is the only re-vendor path (there is deliberately no second one).
+/// install is the only re-vendor path (there is deliberately no second one).
 #[tauri::command]
 pub async fn ops_install(checkout: String, project: String) -> Result<OpResult, String> {
     let root = require_checkout(&checkout)?;

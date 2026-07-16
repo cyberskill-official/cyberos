@@ -815,6 +815,6 @@ All resolved 2026-05-15 (round 2). Promoted to §1 normative clauses:
 
 ---
 
-*End of TASK-AI-005. Run `task-audit` next: `cargo run -p cyberos-skill-cli -- run task-audit --input '{"fr_path": "docs/tasks/ai/TASK-AI-005-tenant-policy-yaml-loader/spec.md"}'`*
+*End of TASK-AI-005. Run `task-audit` next: `cargo run -p cyberos-skill-cli -- run task-audit --input '{"artefact_paths": ["docs/tasks/ai/TASK-AI-005-tenant-policy-yaml-loader/spec.md"]}'`*
 
 **Slice-1 status after TASK-AI-005:** all 5 slice-1 tasks (TASK-AI-001 .. TASK-AI-005) are now `status: draft`. Next step per workflow §4: run `task-audit` on the batch, then the user reviews and accepts. After accept, slice 1 is implementable as 5 PRs (one per task) in dependency order: TASK-AI-005 (loader) → TASK-AI-003 (audit bridge) → TASK-AI-001 (precheck) → TASK-AI-002 (reconcile) → TASK-AI-004 (cleanup).

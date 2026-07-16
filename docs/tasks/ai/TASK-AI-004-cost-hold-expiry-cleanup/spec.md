@@ -569,4 +569,4 @@ All resolved 2026-05-15 (round 2). Promoted to §1 normative clauses or deferred
 
 ---
 
-*End of TASK-AI-004. Run `task-audit` next: `cargo run -p cyberos-skill-cli -- run task-audit --input '{"fr_path": "docs/tasks/ai/TASK-AI-004-cost-hold-expiry-cleanup/spec.md"}'`*
+*End of TASK-AI-004. Run `task-audit` next: `cargo run -p cyberos-skill-cli -- run task-audit --input '{"artefact_paths": ["docs/tasks/ai/TASK-AI-004-cost-hold-expiry-cleanup/spec.md"]}'`*

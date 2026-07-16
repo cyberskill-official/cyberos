@@ -59,13 +59,6 @@ cp -R "$src/plugin" "$CY/plugin"
 # lib (task-migrate, update-check, status-page) + docs-tools
 [ -d "$src/lib" ] && rm -rf "$CY/lib" && cp -R "$src/lib" "$CY/lib"
 [ -d "$src/docs-tools" ] && rm -rf "$CY/docs-tools" && cp -R "$src/docs-tools" "$CY/docs-tools"
-# Retired-orphan scrub removed at 1.0.0. It deleted init.sh / changelog.sh / update.sh /
-# migrate-tasks.sh / status.html / status-site/ from older installs. Every one of those was
-# gone before the v1.0.0 tag (init.sh at bb0f2392e), so NO payload that has ever shipped can
-# produce them, and a sweep of all 24 installed repos found 0 of 6 present. It was cleaning
-# up after a build that no longer exists.
-# The audit-fleet `orphan:` assertions stay — they are the PROOF this scrub is unnecessary,
-# and they surface a legacy install for a human instead of silently deleting files.
 rm -f "$CY"/gates.env.bak.* 2>/dev/null || true   # not an orphan: our own backup churn
 chmod +x "$CY/cuo/gates/run-gates.sh" 2>/dev/null || true
 [ -f "$CY/mcp/cyberos-mcp.mjs" ] && chmod +x "$CY/mcp/cyberos-mcp.mjs" 2>/dev/null || true
@@ -289,11 +282,6 @@ if [ "${CYBEROS_NO_MEMORY:-0}" != "1" ] && [ -d "$src/memory" ]; then
     head -c 8 /dev/zero > "$brain/HEAD"                       # 8-byte LE u64 seq counter = 0
     fp="$( (head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n') 2>/dev/null || echo 0000000000000000 )"
     ns="$(( $(date +%s) * 1000000000 ))"
-    # actor is the MACHINE, not the command that happened to create the store. It was
-    # "cyberos-init", which silently became "cyberos-install" when the verb was renamed —
-    # an audit identity that tracks whichever command is fashionable is the same trap as a
-    # bin named after a verb. `cyberos` is stable. Guarded above by [ ! -d "$brain" ], so
-    # only FRESH stores get it; existing BRAINs keep whatever created them, untouched.
     cat > "$brain/manifest.json" <<JSON
 {
   "actor": "cyberos",
@@ -509,12 +497,19 @@ gi_block() {
   fi
   printf '%s\n' "$GI_END"
 }
-# strip any prior managed block + the exact legacy lines pre-block inits appended, then trim
-# the trailing blank run and append the fresh block (one blank line of separation).
-awk -v b="$GI_BEGIN" -v e="$GI_END" '
-  $0==b {inblk=1; next} $0==e {inblk=0; next} inblk {next}
-  $0=="# CyberOS vendored machine + local BRAIN at .cyberos/memory/store (regenerable via init; tenant data). Do not commit." {next}
-  $0=="# CyberOS skill symlinks -> .cyberos/plugin/skills (regenerable via init)." {next}
+# Strip any prior managed block, then trim the trailing blank run and append the fresh block.
+#
+# The begin marker is matched by SHAPE (/^# >>> cyberos .*>>>$/), never by exact text. An
+# exact match cannot survive its own wording changing: renaming `cyberos init` ->
+# `cyberos install` inside the marker made every already-installed block unstrippable, so
+# install appended a SECOND block beside the first and left the original's comment lines
+# orphaned. That shipped to 21 of 23 repos. A marker that identifies a block must not depend
+# on prose nobody thinks of as an interface.
+awk -v e="$GI_END" '
+  /^# >>> cyberos .*>>>$/ {inblk=1; next} $0==e {inblk=0; next} inblk {next}
+  # orphans from a block whose marker changed before the shape-match fix landed
+  /^# vendored machine \+ local BRAIN store \+ render intermediates \(regenerable via/ {next}
+  /^# skill symlinks -> \.cyberos\/plugin\/skills \(regenerable via/ {next}
   $0==".cyberos/" {next}
   $0==".claude/skills/ship-tasks" {next}
   $0==".grok/skills/ship-tasks" {next}
@@ -687,21 +682,6 @@ exit $_cyberos_rc
 # <<< cyberos-status-hook <<<
 HOOK
       HOOK_SET="appended status-sync v2 to your existing pre-commit hook"
-    fi
-    # Repoint any hook still calling a retired entrypoint at lib/status-page.sh
-    if [ -f "$hk" ] && grep -qE 'migrate-tasks|init\.sh --page' "$hk" 2>/dev/null; then
-      tmp="$hk.cyberos.tmp"
-      sed -e 's|\.cyberos/migrate-tasks\.sh|.cyberos/lib/status-page.sh|g' \
-          -e 's|\.cyberos/init\.sh --page|.cyberos/lib/status-page.sh|g' \
-          -e 's|bash \.cyberos/init\.sh --page \.|bash .cyberos/lib/status-page.sh .|g' \
-          -e 's|migrate-tasks\.sh --page|lib/status-page.sh|g' \
-          -e 's|migrate-tasks --page|status-page|g' \
-          "$hk" > "$tmp" && mv "$tmp" "$hk"
-      if grep -qE 'migrate-tasks|init\.sh --page' "$hk" 2>/dev/null; then
-        sed -e 's|migrate-tasks\.sh|lib/status-page.sh|g' \
-            -e 's|init\.sh --page|lib/status-page.sh|g' "$hk" > "$tmp" && mv "$tmp" "$hk"
-      fi
-      HOOK_SET="${HOOK_SET}; scrubbed legacy status regen paths from pre-commit"
     fi
     chmod +x "$hk"
   fi

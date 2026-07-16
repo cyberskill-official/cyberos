@@ -82,9 +82,8 @@ jobs:
   # CI_ONLY list and this job are two halves of one contract: a channel absent from BOTH is a
   # hard failure there, so a channel cannot be quietly dropped by deleting it from one side.
   #
-  # This exists because these channels were declared and dead. The Dockerfile's ENTRYPOINT ran
-  # /opt/cyberos/init.sh -- a file the payload has never contained -- so `docker run` failed on
-  # the first instruction, for every user, for the life of the channel. Nothing built the image.
+  # This exists because a declared channel proves nothing until something runs it. Each step
+  # below executes the channel end to end rather than checking that its files are present.
   channels:
     runs-on: ubuntu-latest
     env:
@@ -101,8 +100,8 @@ jobs:
       - name: Channel gate (local-provable channels)
         run: bash tools/install/tests/test_channels.sh
 
-      # docker: BUILD it and RUN it. A build alone would not have caught the init.sh
-      # ENTRYPOINT -- that image built fine and died on `docker run`.
+      # docker: BUILD it and RUN it. A build proves the image assembles; only a run proves
+      # the ENTRYPOINT resolves and the machine lands on disk.
       - name: docker channel — build
         run: docker build -f tools/install/Dockerfile -t cyberos:ci "$RUNNER_TEMP/payload"
       - name: docker channel — run against a real repo, then assert it installed
@@ -118,9 +117,8 @@ jobs:
           test "$got" = "$want" || { echo "docker: rules_sha drift got=$got want=$want"; exit 1; }
           echo "docker channel: installed, rules_sha matches the payload"
 
-      # github-action: the action the channel advertises must parse and point at a real entry
-      # point. rollout.sh's plugin probe read NO forever because it grepped a file that had
-      # been renamed -- a probe nobody ever watched fail.
+      # github-action: the action the channel advertises must parse AND every script it
+      # invokes must exist in the payload.
       - name: github-action channel — action.yml resolves and runs a real entry point
         run: |
           set -euo pipefail

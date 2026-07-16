@@ -91,7 +91,7 @@ function frontmatter(text, file) {
 }
 const str = v => (Array.isArray(v) ? '' : String(v ?? '')).trim();
 const list = v => Array.isArray(v) ? v : (str(v) && str(v) !== 'null' ? [str(v)] : []);
-// Matches TASK-*, not FR-*. The constant was renamed FRID -> TASKID in the 2026-07-15
+// Matches TASK-*. The constant is TASKID in the 2026-07-15
 // rename; this body was not, so it matched an id shape that no longer exists anywhere.
 // Result: `cited` came back [] for every release and the changelog -> task binding was
 // dead on the live status page. A renamed name over an unrenamed body reads as correct.

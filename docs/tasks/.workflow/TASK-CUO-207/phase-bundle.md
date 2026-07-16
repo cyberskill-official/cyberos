@@ -1,7 +1,7 @@
 # TASK-CUO-207 phase bundle
 
 ## repo-context-map (step 1)
-Touched surface: init.sh detector block (was elif-chain = single-stack; §1 #1 demands union) +
+Touched surface: install.sh detector block (was elif-chain = single-stack; §1 #1 demands union) +
 gates.env write; run-gates.sh gate() (2-arg -> 4-arg with config + provenance); README; coverage-gate
 pair contract hook. Patterns: scaffold-once discipline copied from BACKLOG/AGENTS handling; test suite
 copies test_check_latest's payload+fixture-repo pattern. Blast radius: 2 scripts, 1 README, 2 skill
@@ -17,7 +17,7 @@ checks ($root/package.json literal paths). DEGRADATION: unknown config keys warn
 detector tool absent (golangci-lint) -> documented fallback (go vet), never invented commands (t01/t03).
 
 ## implementation (steps 6-14)
-init.sh: claim() union detector (documented order rust,node,python,go,maven,gradle,dotnet,php,ruby,make;
+install.sh: claim() union detector (documented order rust,node,python,go,maven,gradle,dotnet,php,ruby,make;
 first claim per gate wins), per-gate SRC_* provenance into gates.env, config.yaml scaffolded once with
 detected commands as comments. JVM coverage deliberately undetected (audit ISS-004). run-gates.sh:
 dependency-free yaml-subset reader (awk, top-level + one nesting), per-key resolution

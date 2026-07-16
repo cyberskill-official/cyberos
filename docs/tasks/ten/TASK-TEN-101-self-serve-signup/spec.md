@@ -1131,7 +1131,7 @@ All resolved for slice 1. Deferred to later slices:
 
 **§11.24** Analytics emission: the 5 funnel stages (start, otp_verified, payment_captured, provisioned, completed) emit OTel events with attribute `funnel_stage`; drop-off analysis lives in OBS (TASK-OBS-005).
 
-**§11.25** Locale handling: `locale_hint` from the client (Accept-Language header default + override) drives consent locale + welcome email locale + UI strings. Supported at slice 1: `en-US`, `vi-VN`; slice 2 adds `zh-SG`, `de-DE`, `fr-task`, `es-ES`.
+**§11.25** Locale handling: `locale_hint` from the client (Accept-Language header default + override) drives consent locale + welcome email locale + UI strings. Supported at slice 1: `en-US`, `vi-VN`; slice 2 adds `zh-SG`, `de-DE`, `task-task`, `es-ES`.
 
 **§11.26** The form submits to our backend over HTTPS only; HSTS preload + Content-Security-Policy `default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://js.stripe.com` prevents MitM + XSS. Stripe Elements iframes are sandboxed.
 

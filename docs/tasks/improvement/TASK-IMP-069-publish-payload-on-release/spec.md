@@ -47,7 +47,7 @@ modified_files:
 
 ## §1 - Description
 
-Today the payload exists only as a gitignored local build; every consumer (Claude marketplace add, `.plugin` file pick, `init.sh`, `rollout.sh`) copies whatever a laptop last built. This task gives the payload one canonical, versioned, downloadable source: the GitHub Release for each `vX.Y.Z` tag.
+Today the payload exists only as a gitignored local build; every consumer (Claude marketplace add, `.plugin` file pick, `install.sh`, `rollout.sh`) copies whatever a laptop last built. This task gives the payload one canonical, versioned, downloadable source: the GitHub Release for each `vX.Y.Z` tag.
 
 Normative clauses:
 
@@ -55,7 +55,7 @@ Normative clauses:
 2. `release-assets.sh` MUST exit 10 without producing output when `<payload>/VERSION`, root `VERSION`, and the intended tag do not all agree. The intended tag is `$TAG` when set (the release workflow sets it from `inputs.tag || ref_name`, covering workflow_dispatch where `GITHUB_REF_NAME` is the branch), else `$GITHUB_REF_NAME` when set; neither set (local run) skips the tag leg. (Amended post-ship 2026-07-12: release #35 failed on dispatch because the script read only GITHUB_REF_NAME.)
 3. `.github/workflows/release.yml` MUST gain a `payload` job that, for every `v*` tag: checks out, runs `build.sh` into a temp dir, runs `check-version-sync.sh` (TASK-IMP-068) against it, runs `release-assets.sh`, and uploads the four files + `SHA256SUMS` to that tag's GitHub Release. Default `GITHUB_TOKEN` with `contents: write` MUST suffice; no new secrets.
 4. The `payload` job MUST fail when the pushed tag does not equal `v$(cat VERSION)` at that commit.
-5. `bootstrap.sh` MUST support fetching the payload from a URL: `CYBEROS_PAYLOAD_URL` overrides; default = the repo's `releases/latest/download/cyberos-payload.tar.gz`. It MUST download `SHA256SUMS` from the same location, verify the tarball's checksum before unpacking, and then run `init.sh` from the unpacked payload. Verification failure MUST abort before any file lands in the target repo.
+5. `bootstrap.sh` MUST support fetching the payload from a URL: `CYBEROS_PAYLOAD_URL` overrides; default = the repo's `releases/latest/download/cyberos-payload.tar.gz`. It MUST download `SHA256SUMS` from the same location, verify the tarball's checksum before unpacking, and then run `install.sh` from the unpacked payload. Verification failure MUST abort before any file lands in the target repo.
 6. `rollout.sh` MUST accept, in place of a local payload dir, `--from-release [tag]`: download + verify once into a temp dir (per #5's mechanics), then proceed unchanged for every listed repo.
 7. `tools/install/README.md` and `docs/deploy/RELEASE.md` MUST document the release-install paths for each channel: Claude Code (`/plugin marketplace add` on the unpacked payload), Claude desktop/Cowork (download `cyberos.plugin` from the release), curl bootstrap one-liner, and fleet `rollout.sh --from-release`. The "available once you host a tarball" placeholder MUST be replaced by the real URLs.
 
@@ -101,7 +101,7 @@ release.yml addition (shape):
 3. **Checksums verify** (§1 #1) - `sha256sum -c SHA256SUMS` passes in the out-dir; corrupting one byte of the tarball makes it fail.
 4. **Version triple-check** (§1 #2) - payload 1.7.0 + root 1.7.0 + `GITHUB_REF_NAME=v1.6.0` exits 10 and writes nothing.
 5. **Tag guard in CI** (§1 #3, #4) - the `payload` job's first step compares `v$(cat VERSION)` to the tag; the job uploads exactly the five §1 #1 files with `--clobber`.
-6. **bootstrap URL flow** (§1 #5) - with `CYBEROS_PAYLOAD_URL=file://<fixture>/cyberos-payload.tar.gz` and a matching `SHA256SUMS`, bootstrap downloads, verifies, unpacks, and runs `init.sh` against the target repo (`.cyberos/VERSION` appears).
+6. **bootstrap URL flow** (§1 #5) - with `CYBEROS_PAYLOAD_URL=file://<fixture>/cyberos-payload.tar.gz` and a matching `SHA256SUMS`, bootstrap downloads, verifies, unpacks, and runs `install.sh` against the target repo (`.cyberos/VERSION` appears).
 7. **bootstrap rejects a bad checksum** (§1 #5) - with a tampered fixture tarball, bootstrap aborts before touching the target repo (no `.cyberos/` created).
 8. **rollout from a release source** (§1 #6) - `rollout.sh --from-release` against the file:// fixture initializes two scratch repos from one download (fixture served once; second repo reuses the temp payload).
 9. **Docs list the four install paths with real URLs** (§1 #7) - README and RELEASE.md contain the `releases/latest/download/` URLs and the placeholder sentence is gone.
@@ -126,7 +126,7 @@ t09_docs_real_urls()             # AC 9
 
 ## §6 - Implementation skeleton
 
-`release-assets.sh`: version guard; `tar --sort=name --owner=0 --group=0 --mtime='2000-01-01 00:00:00Z' -cf - -C <payload> . | gzip -n`; copies; `sha256sum > SHA256SUMS`. The upload step MUST be create-or-upload idempotent: `gh release create "$GITHUB_REF_NAME" --verify-tag --notes-from-tag 2>/dev/null || true` before `gh release upload ... --clobber`, so the payload job never races the installer jobs on release creation. bootstrap: `curl -sfL` both files, `sha256sum -c --ignore-missing`, `tar -xzf` into mktemp, exec `init.sh`. rollout: argument branch that materializes the payload then falls through to the existing loop.
+`release-assets.sh`: version guard; `tar --sort=name --owner=0 --group=0 --mtime='2000-01-01 00:00:00Z' -cf - -C <payload> . | gzip -n`; copies; `sha256sum > SHA256SUMS`. The upload step MUST be create-or-upload idempotent: `gh release create "$GITHUB_REF_NAME" --verify-tag --notes-from-tag 2>/dev/null || true` before `gh release upload ... --clobber`, so the payload job never races the installer jobs on release creation. bootstrap: `curl -sfL` both files, `sha256sum -c --ignore-missing`, `tar -xzf` into mktemp, exec `install.sh`. rollout: argument branch that materializes the payload then falls through to the existing loop.
 
 ## §7 - Dependencies
 
@@ -154,6 +154,6 @@ None blocking. Whether to ALSO publish on every VERSION bump (not just tags) is 
 
 ## §11 - Implementation notes
 
-Keep asset names exactly as specified; TASK-IMP-070 and future npm packaging key off them. The tarball packs the payload CONTENTS at archive root (unpack -> `init.sh` at top level), matching what `bootstrap.sh` expects from a local payload dir. Determinism flags (`--sort`, `--owner`, `--mtime`, `gzip -n`) are GNU tar/gzip semantics: the CI job runs on ubuntu; the test suite MUST skip the determinism case with a visible SKIP on non-GNU (macOS bsdtar) hosts rather than false-fail.
+Keep asset names exactly as specified; TASK-IMP-070 and future npm packaging key off them. The tarball packs the payload CONTENTS at archive root (unpack -> `install.sh` at top level), matching what `bootstrap.sh` expects from a local payload dir. Determinism flags (`--sort`, `--owner`, `--mtime`, `gzip -n`) are GNU tar/gzip semantics: the CI job runs on ubuntu; the test suite MUST skip the determinism case with a visible SKIP on non-GNU (macOS bsdtar) hosts rather than false-fail.
 
 *End of TASK-IMP-069.*

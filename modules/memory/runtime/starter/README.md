@@ -7,7 +7,7 @@ Templates that get copied when starting a new project that should adopt the Cybe
 | Subfolder | Purpose |
 | --- | --- |
 | [`cyberos-starter/`](cyberos-starter/) | Full project skeleton: empty `.cyberos/memory/store/` (memory), `manifest.json` with placeholders, AGENTS.md symlink recipe, smoke-test script. |
-| [`templates/`](templates/) | Layer-1 starter templates (small `.md` skeletons) loaded by `cyberos init` and `cyberos add <TYPE>`. |
+| [`templates/`](templates/) | Layer-1 starter templates (small `.md` skeletons) loaded by `cyberos install` and `cyberos add <TYPE>`. |
 
 ## When to use
 

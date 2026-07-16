@@ -150,7 +150,7 @@ def main() -> int:
             "transitions": transitions,
             "unknown_status": [p["task_id"] for p in unknown],
             "no_status_field": [str(p["path"]) for p in no_status],
-            "changed_frs": [p["task_id"] for p in changed],
+            "changed_tasks": [p["task_id"] for p in changed],
             "applied": args.apply,
         }, indent=2))
         return 0

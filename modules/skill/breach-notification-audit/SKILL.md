@@ -301,4 +301,4 @@ Input:
 Begin with CONTRACT_ECHO.
 ```
 
-For each artefact: locate → hash → load-or-init audit report → apply rubric → fix or escalate → re-audit → terminate. Each artefact gets a sibling `<artefact_path>.audit.md`. The skill emits `AUDIT_BATCH_SUMMARY` listing per-artefact `overall_status`.
+For each artefact: locate → hash → load-or-create audit report → apply rubric → fix or escalate → re-audit → terminate. Each artefact gets a sibling `<artefact_path>.audit.md`. The skill emits `AUDIT_BATCH_SUMMARY` listing per-artefact `overall_status`.

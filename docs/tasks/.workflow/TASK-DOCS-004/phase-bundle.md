@@ -7,7 +7,7 @@ yaml trips on; zero manual): corpus now 100% strict-yaml. Migrator scripts/migra
 repo-root + one-level-relative + same-dir citations across live trees (archives/.workflow excluded);
 2 write-protected memory test files chmod'd + swept. Tooling on the new layout: regen (folder glob,
 stem-from-folder, LOUD read_fm - unparseable files listed on stderr), roadmap walker, data-extract
-walker (frs.json for the catalog), doc-anchors extended to the task tree with corpus-wide planned-files
+walker (tasks.json for the catalog), doc-anchors extended to the task tree with corpus-wide planned-files
 rule (any spec's new_files legitimizes a citation - TRACE-003's own semantics) + status-aware severity
 (done/closed/on_hold spec refs warn as historical; active tasks must resolve). Fixtures folderized.
 

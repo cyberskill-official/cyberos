@@ -834,4 +834,4 @@ For reference, the questions considered + resolved during authoring:
 
 ---
 
-*End of TASK-AI-006. Status: draft (10/10 target, expanded from compressed first-pass per workflow correction 2026-05-15). Run `task-audit` next: `cargo run -p cyberos-skill-cli -- run task-audit --input '{"fr_path": "docs/tasks/ai/TASK-AI-006-model-alias-resolution/spec.md"}'`*
+*End of TASK-AI-006. Status: draft (10/10 target, expanded from compressed first-pass per workflow correction 2026-05-15). Run `task-audit` next: `cargo run -p cyberos-skill-cli -- run task-audit --input '{"artefact_paths": ["docs/tasks/ai/TASK-AI-006-model-alias-resolution/spec.md"]}'`*
