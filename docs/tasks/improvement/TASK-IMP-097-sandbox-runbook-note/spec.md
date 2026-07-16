@@ -4,7 +4,7 @@ title: GUIDE gains the sandboxed-agent runbook section
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: implementing
 priority: p3
 author: "@stephencheng"
 department: engineering

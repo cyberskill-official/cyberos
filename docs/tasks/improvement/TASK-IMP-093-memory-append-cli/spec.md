@@ -4,7 +4,7 @@ title: memory-append CLI, doc-driven runs can append chained BRAIN rows
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: implementing
 priority: p1
 author: "@stephencheng"
 department: engineering
