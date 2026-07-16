@@ -168,7 +168,7 @@ Totals: 336 draft, 4 ready_to_implement, 15 implementing, 155 done, 1 on_hold, 1
 - [draft] TASK-HR-008-performance-signals - HR performance signal aggregator — read-only consumer of PROJ + TIME + LEARN signals for periodic performance snapshots
 - [draft] TASK-HR-009-termination-workflow - HR termination workflow — Good-Leaver / Bad-Leaver branch with CFO+CEO co-sign + ESOP forfeiture + access revocation cascade
 
-## improvement  (67 draft, 3 ready_to_implement, 17 done)
+## improvement  (67 draft, 3 implementing, 17 done)
 
 - [draft] TASK-IMP-001-dependency-audit-in-ci-cargo-audit-cargo-deny - Dependency audit in CI (cargo-audit + cargo-deny)
 - [draft] TASK-IMP-002-refuse-dev-cors-in-production-boot - Refuse dev CORS in production boot
@@ -240,9 +240,9 @@ Totals: 336 draft, 4 ready_to_implement, 15 implementing, 155 done, 1 on_hold, 1
 - [done] TASK-IMP-082-status-stamp-byte-stable - Status page provenance stamp becomes a corpus fingerprint (byte-stable)
 - [done] TASK-IMP-083-hookspath-aware-status-hook - install lands the status-sync hook where core.hooksPath points
 - [done] TASK-IMP-084-task-lint-machine-floor - task-lint, a deterministic machine floor under the task-audit rubric
-- [ready_to_implement] TASK-IMP-085-workflow-helpers - Doc-driven workflow helpers, ship-manifest and backlog-mutate CLIs
-- [ready_to_implement] TASK-IMP-086-backlog-index-backfill - Backfill the improvement backlog index rows 068-081 to frontmatter truth
-- [ready_to_implement] TASK-IMP-087-release-checklist - Release-readiness checklist for 1.0.0 at docs/release/
+- [implementing] TASK-IMP-085-workflow-helpers - Doc-driven workflow helpers, ship-manifest and backlog-mutate CLIs
+- [implementing] TASK-IMP-086-backlog-index-backfill - Backfill the improvement backlog index rows 068-081 to frontmatter truth
+- [implementing] TASK-IMP-087-release-checklist - Release-readiness checklist for 1.0.0 at docs/release/
 
 ## inv  (10 draft, 1 ready_to_implement)
 

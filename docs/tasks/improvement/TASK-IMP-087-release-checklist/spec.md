@@ -4,7 +4,7 @@ title: Release-readiness checklist for 1.0.0 at docs/release/
 template: task@1
 type: chore
 module: improvement
-status: ready_to_implement
+status: implementing
 priority: p1
 author: "@stephencheng"
 department: engineering
