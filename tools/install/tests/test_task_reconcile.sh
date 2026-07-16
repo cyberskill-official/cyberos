@@ -156,11 +156,61 @@ t05_payload_vendored() {
   esac
 }
 
+# ── t06: the body binding is preferred and lifecycle-proof (TASK-IMP-102) ───
+# The convention this arm guards exists because the ladder red-flagged a correctly-shipped
+# task: audits bound whole-file bytes that ship-tasks rewrites (and that no commit carried).
+body_sha() {   # normative half: body + frontmatter minus the lifecycle-mutable fields
+  python3 - "$1" <<'PYB'
+import hashlib, sys
+L = open(sys.argv[1]).read().split("\n")
+end = [i for i, l in enumerate(L) if i > 0 and l.strip() == "---"][0]
+keep = [l for l in L[1:end] if not any(l.startswith(f + ":") for f in ("status", "shipped", "routed_back_count", "memory_chain_hash"))]
+print(hashlib.sha256("\n".join(keep + L[end + 1:]).encode()).hexdigest()[:16])
+PYB
+}
+t06_body_binding_preferred() {
+  local d="$TMP/t06"; fixture "$d" reviewing yes committed pass
+  local t="$d/docs/tasks/demo/TASK-DEMO-001-thing"
+  # re-audit with the body field, then flip status like the workflow does
+  local b; b="$(body_sha "$t/spec.md")"
+  printf -- '---\naudited_file_sha256_prefix: "deadbeefdeadbeef"\naudited_body_sha256_prefix: "%s"\noverall_status: "pass"\n---\n# audit\n' "$b" > "$t/audit.md"
+  sed -i 's/^status: reviewing$/status: done/' "$t/spec.md"
+  ( cd "$d" && git add -A && git commit -qm "body-bound audit + lifecycle flip" )
+  [ "$(rung_of "$TR" TASK-DEMO-001 "$d" "" r1)" = "pass" ] \
+    || { fail t06 "body binding did not survive a lifecycle flip"; return; }
+  node "$TR" TASK-DEMO-001 --repo "$d" 2>/dev/null | grep -q "binding gap" \
+    && { fail t06 "body-bound audit still reported a binding gap"; return; }
+  # a clause edit is real drift
+  sed -i 's/- 1.1 The thing MUST exist./- 1.1 The thing MUST exist and MUST be blue./' "$t/spec.md"
+  ( cd "$d" && git add -A && git commit -qm "clause edit after the audit" )
+  [ "$(rung_of "$TR" TASK-DEMO-001 "$d" "" r1)" = "red" ] || { fail t06 "normative edit was not caught"; return; }
+  node "$TR" TASK-DEMO-001 --repo "$d" 2>/dev/null | grep -q "SPEC DRIFT" || { fail t06 "drift not named"; return; }
+  # legacy audit (no body field) still resolves via the audit commit, gap named as legacy
+  local e="$TMP/t06b"; fixture "$e" reviewing yes committed pass
+  sed -i 's/^status: reviewing$/status: done/' "$e/docs/tasks/demo/TASK-DEMO-001-thing/spec.md"
+  ( cd "$e" && git add -A && git commit -qm "legacy audit + flip" )
+  node "$TR" TASK-DEMO-001 --repo "$e" 2>/dev/null | grep -q "via the audit commit" \
+    || { fail t06 "legacy audit did not resolve through the audit-commit path"; return; }
+  [ "$(rung_of "$TR" TASK-DEMO-001 "$e" "" r1)" = "pass" ] || { fail t06 "legacy lifecycle churn misread as drift"; return; }
+  # legacy AND dishonest (the corpus's real shape: sha recorded pre-flip, so no commit carries
+  # those bytes) -> the gap is named as legacy, and the substantive check still runs
+  local f="$TMP/t06c"; fixture "$f" reviewing yes committed pass
+  local ft="$f/docs/tasks/demo/TASK-DEMO-001-thing"
+  printf -- '---\naudited_file_sha256_prefix: "beefbeefbeefbeef"\noverall_status: "pass"\n---\n# audit\n' > "$ft/audit.md"
+  ( cd "$f" && git add -A && git commit -qm "legacy audit bound to bytes no commit carries" )
+  node "$TR" TASK-DEMO-001 --repo "$f" 2>/dev/null | grep -q "legacy audit: no audited_body_sha256_prefix" \
+    || { fail t06 "the legacy binding gap did not name itself"; return; }
+  [ "$(rung_of "$TR" TASK-DEMO-001 "$f" "" r1)" = "pass" ] \
+    || { fail t06 "a binding gap was upgraded into a verdict (it is a note)"; return; }
+  ok t06_body_binding_preferred
+}
+
 echo "task-reconcile suite (TASK-IMP-100):"
 t01_clean_resume
 t02_route_back
 t03_adopt_candidate
 t04_read_only_and_spec_drift
 t05_payload_vendored
+t06_body_binding_preferred
 echo "test_task_reconcile: pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ] || exit 1

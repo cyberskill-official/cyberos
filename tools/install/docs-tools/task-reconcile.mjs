@@ -141,6 +141,17 @@ function rung1(root, t) {
   // Byte-binding. The recorded prefix is a whole-FILE sha taken at audit time, and the
   // workflow legitimately rewrites lifecycle fields afterwards - so verify the binding
   // against the spec AS OF THE AUDIT COMMIT, then judge drift on the normative half.
+  // TASK-IMP-102: the BODY binding is the verifiable one - it covers exactly what the audit
+  // judged and nothing ship-tasks rewrites afterwards. Prefer it; fall back to the legacy
+  // whole-file field via the audit commit (and say so) for audits written before the rule.
+  const wantBody = String(afm.audited_body_sha256_prefix || "");
+  if (wantBody) {
+    const gotBody = sha(Buffer.from(normativeHalf(readFileSync(t.spec, "utf8"))));
+    if (gotBody.startsWith(wantBody)) notes.push(`audit binding intact (normative half matches ${wantBody}... - lifecycle flips do not affect it)`);
+    else notes.push(`SPEC DRIFT: the normative half hashes ${gotBody.slice(0, 16)}..., the audit bound ${wantBody}... - clauses/ACs the audit blessed are not the clauses/ACs on disk`);
+    const redB = notes.some(n => /FAILED|absent|DRIFT|not pass/.test(n));
+    return { verdict: redB ? "red" : "pass", notes };
+  }
   const want = String(afm.audited_file_sha256_prefix || "");
   const specRel = t.spec.replace(root + "/", "");
   const auditRel = auditPath.replace(root + "/", "");
@@ -162,7 +173,7 @@ function rung1(root, t) {
       // gap worth naming, but it is NOT the substantive question, which we can still answer
       // from the audit commit: did the NORMATIVE half change after the audit?
       const same = normativeHalf(at.stdout) === normativeHalf(now);
-      notes.push(`audit binding gap: ${want}... matches no committed version of the spec (audits that hash pre-flip bytes bind to a state no commit carries - see the reconcile follow-up finding). Substantive check against the audit commit ${auditCommit.slice(0, 8)}: normative half ${same ? "UNCHANGED" : "CHANGED"}`);
+      notes.push(`audit binding gap: ${want}... matches no committed version of the spec (legacy audit: no audited_body_sha256_prefix (TASK-IMP-102 defines it); pre-flip whole-file hashing binds to a state no commit carries). Substantive check against the audit commit ${auditCommit.slice(0, 8)}: normative half ${same ? "UNCHANGED" : "CHANGED"}`);
       if (!same) notes.push(`SPEC DRIFT: the normative half changed after the audit (audit commit ${auditCommit.slice(0, 8)}) - clauses/ACs the audit blessed are not the clauses/ACs on disk`);
     } else if (normativeHalf(at.stdout) !== normativeHalf(now)) {
       notes.push(`SPEC DRIFT: the normative half changed after the audit (audit commit ${auditCommit.slice(0, 8)}) - clauses/ACs the audit blessed are not the clauses/ACs on disk`);

@@ -83,7 +83,7 @@ exposable_as:
 audit:
   emit_to: genie.action_log
   row_kind: artefact_write
-  payload_hash_field: audited_file_sha256
+  payload_hash_field: audited_body_sha256   # the VERIFIABLE binding (TASK-IMP-102); audited_file_sha256 stays as provenance
   explanation_pane: required
 
 # ── Trust calibration ────────────────────────────────────────────────
@@ -143,7 +143,7 @@ human_fine_tune:
 # ── Determinism ──────────────────────────────────────────────────────
 determinism:
   reproducible: true
-  fixity_notes: "Audit reports are byte-stable for a given artefact + rubric version. Two runs against the same audited_file_sha256 produce identical reports modulo the last_audit_at timestamp."
+  fixity_notes: "Audit reports are byte-stable for a given artefact + rubric version. Two runs against the same audited_body_sha256 produce identical reports modulo the last_audit_at timestamp. Stated against the BODY hash deliberately (TASK-IMP-102): audited_file_sha256 covers status/shipped, which ship-tasks rewrites at every phase, so it cannot be a stable key for anything."
 
 # ── Source-tier emitted ──────────────────────────────────────────────
 emitted_source_freshness_tier: 15
@@ -188,7 +188,7 @@ hitl_categories:                 [customer_quotes, ai_act_risk_boundary, success
                                   stale_artefact_disposition]
 hitl_policy:                     HALT_BATCH_ON_NEEDS_HUMAN
 max_iterations_per_artefact:     10
-re_entrancy:                     idempotent_on_audited_file_sha256
+re_entrancy:                     idempotent_on_audited_body_sha256   # TASK-IMP-102: the file hash is not stable across lifecycle flips
 untrusted_content_handling:      spotlight_xml_tagged
 file_scope:                      MUST NOT write outside any artefact_path's parent
 inputs:
@@ -839,6 +839,32 @@ To support seamless workflow execution, resumption, and manual intervention, the
 ---
 
 *End of task-audit skill — version 1.6 — 2026-05-20 (added Rework Mode and in-construction deliverable discipline).*
+
+## §12 — Byte-binding: what an audit records about what it judged (TASK-IMP-102, added 2026-07-17)
+
+Every audit report MUST record BOTH:
+
+- **`audited_body_sha256_prefix`** (16 hex) — sha256 over the audited spec's **normative half**:
+  the body plus the frontmatter **minus** `status`, `shipped`, `routed_back_count`,
+  `memory_chain_hash`. This is the binding. It covers exactly what the audit judged — clauses,
+  ACs, scope, metrics — and nothing the workflow rewrites afterwards, so it stays verifiable for
+  the life of the task. A mismatch means the spec's normative content changed after the audit:
+  real drift, and the audit no longer describes the task.
+- **`audited_file_sha256_prefix`** (16 hex) — sha256 over the whole file as read. Provenance of
+  the exact bytes seen, NOT a binding: `status` flips at every phase (`draft` →
+  `ready_to_implement` → … → `done`), so this field stops matching the moment the task moves,
+  and when the audit is written before the flip it matches no commit at all.
+
+Why the distinction exists: `task-reconcile`'s first live run flagged a task that had shipped
+correctly through both human gates, because the only recorded hash could not mean what it
+claimed (TASK-IMP-100 gate log E4). A hash nobody can check is the same class of defect as a
+status nobody can check — and this skill is the one that hands out the hashes.
+
+Readers (`task-reconcile` R1, §11's rework-mode detection) prefer the body field, fall back to
+the file field via the audit commit for legacy audits, and never upgrade a binding gap into a
+drift verdict. Audits written before this rule stay valid and are read as legacy.
+
+---
 
 ## Template detection + family selection (TASK-CUO-208)
 
