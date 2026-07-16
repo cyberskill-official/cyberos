@@ -100,10 +100,14 @@ if [ -f "$cli" ]; then
   else
     ok "npx-cli: no --provenance flag (automatic under trusted publishing)"
   fi
-  if grep -qE 'NODE_AUTH_TOKEN|secrets\.NPM_TOKEN' "$rel"; then
-    bad "npx-cli: a long-lived npm token is still referenced; OIDC replaced it"
+  # Any mention at all, including a comment. A stale comment describing a guard that no
+  # longer exists is how the next reader learns something false -- one survived this very
+  # migration ("skips cleanly ... before NPM_TOKEN is set") above the block that replaced it.
+  if grep -qE 'NODE_AUTH_TOKEN|NPM_TOKEN' "$rel"; then
+    bad "npx-cli: npm token still referenced (code OR comment); OIDC replaced it" \
+        "$(grep -nE 'NODE_AUTH_TOKEN|NPM_TOKEN' "$rel" | head -2)"
   else
-    ok "npx-cli: no npm token referenced anywhere (OIDC only)"
+    ok "npx-cli: no npm token referenced anywhere, comments included (OIDC only)"
   fi
   # A bare `npx cyberos` must print help and change nothing on disk.
   out="$(node "$cli" 2>&1 </dev/null | head -4)"

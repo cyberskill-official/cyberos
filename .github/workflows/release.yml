@@ -149,9 +149,6 @@ jobs:
           test "$miss" -eq 0
           echo "github-action channel: $act parses; all $n invoked script(s) exist in the payload"
 
-  # npx-cli. The channel was declared in the manifest while the npm package did not exist --
-  # `npx cyberos` 404'd for anyone who followed the docs. Guarded on the secret so a fork, or
-  # this repo before NPM_TOKEN is set, skips cleanly instead of failing the release.
   # npx-cli, published via TRUSTED PUBLISHING (OIDC) -- no npm token anywhere.
   #
   # npm exchanges this job's short-lived GitHub OIDC token for a scoped publish token at
