@@ -4,7 +4,7 @@ title: Lost-update hardening, retally headers and committed-object evidence
 template: task@1
 type: improvement
 module: improvement
-status: reviewing
+status: testing
 priority: p0
 author: "@stephencheng"
 department: engineering
