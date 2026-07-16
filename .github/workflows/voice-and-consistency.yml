@@ -57,10 +57,7 @@ jobs:
         run: |
           python tools/cyberos_generate_schema.py \
               --check \
-              --out memory.schema.json \
-            || python tools/cyberos_generate_schema.py \
-              --check \
-              --out docs/memory.schema.json
+              --out memory.schema.json
 
   validate-memory:
     runs-on: ubuntu-latest
@@ -69,12 +66,12 @@ jobs:
       - uses: actions/setup-python@v6
         with: { python-version: "3.11" }
       - name: install deps
-        # numpy required by core semantic tests (even with FakeModel encode path)
+        # numpy + pytest-asyncio required by core semantic / dream tests
         run: |
           pip install -r modules/memory/cyberos/requirements.txt \
             || pip install -r modules/memory/requirements.txt \
             || pip install msgspec cryptography crc32c rfc8785 'pyyaml>=6' jsonschema zstandard
-          pip install numpy pytest
+          pip install numpy pytest pytest-asyncio
       - name: cyberos test suite
         working-directory: modules/memory
         run: |
