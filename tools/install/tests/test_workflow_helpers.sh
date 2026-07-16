@@ -457,7 +457,7 @@ t09_doctrine_wiring() {
     grep -q 'backlog-mutate\.mjs' "$TMP/layout.sec" || { fail t09 "$f: backlog layout lacks the backlog-mutate.mjs pointer"; return; }
     grep -q 'byte-discipline executor' "$TMP/layout.sec" || { fail t09 "$f: pointer does not say byte-discipline executor"; return; }
     # the doc gained normative pointers -> workflow_version bumped
-    grep -q '^workflow_version: 2\.6\.4$' "$f" || { fail t09 "$f: workflow_version not current (want 2.6.4)"; return; }
+    grep -q '^workflow_version: 2\.7\.0$' "$f" || { fail t09 "$f: workflow_version not current (want 2.6.4)"; return; }
   done
   ok t09
 }
@@ -568,7 +568,7 @@ t12_doctrine_view_rules_vendored() {
     grep -q 'never a working view' "$f" \
       || { fail t12 "$f: never-a-working-view rule missing"; return; }
     # the doc gained normative rules -> workflow_version bumped
-    grep -q '^workflow_version: 2\.6\.4$' "$f" \
+    grep -q '^workflow_version: 2\.7\.0$' "$f" \
       || { fail t12 "$f: workflow_version not bumped to 2.6.4"; return; }
   done
   ok t12
@@ -592,9 +592,29 @@ t13_queue_rule_p0_p3() {
       && { fail t13 "$f: bare MoSCoW ordering rule survives: $(grep -Ein '(MUST|SHOULD|COULD|WON.?T)[[:space:]]+before' "$f" | head -3)"; return; }
   done
   # the reword is a normative change: the payload ships it at the bumped version
-  grep -q '^workflow_version: 2\.6\.4$' "$TMP/payload/cuo/ship-tasks.md" \
+  grep -q '^workflow_version: 2\.7\.0$' "$TMP/payload/cuo/ship-tasks.md" \
     || { fail t13 "payload cuo/ship-tasks.md workflow_version not 2.6.4"; return; }
   ok t13
+}
+
+# ── t14: reconcile entry + depends_on evidence gate are vendored (TASK-IMP-101) ──
+# The workflow gained a MECHANISM, not a wording fix: step 0, the conditional third gate,
+# and the deps-evidence rule must reach consumers, not just the source tree.
+t14_reconcile_entry_and_deps_gate() {
+  ensure_payload || { fail t14 "build.sh failed"; return; }
+  local f
+  for f in "$repo/modules/cuo/chief-technology-officer/workflows/ship-tasks.md" \
+           "$TMP/payload/cuo/ship-tasks.md"; do
+    [ -s "$f" ] || { fail t14 "missing $f"; return; }
+    grep -q '^## Reconcile entry' "$f"             || { fail t14 "$f: reconcile entry section missing"; return; }
+    grep -q 'no ship-manifest exists OR' "$f"      || { fail t14 "$f: trigger condition missing"; return; }
+    grep -q 'NEVER executes a branch' "$f"         || { fail t14 "$f: no-silent-execution rule missing"; return; }
+    grep -q '^## depends_on evidence gate' "$f"    || { fail t14 "$f: deps gate section missing"; return; }
+    grep -q 'MUST carry evidence' "$f"             || { fail t14 "$f: deps evidence MUST missing"; return; }
+    grep -q 'step: 0,  skill: task-reconcile' "$f" || { fail t14 "$f: chain step 0 missing"; return; }
+    grep -q '^workflow_version: 2\.7\.0$' "$f"     || { fail t14 "$f: version not 2.7.0"; return; }
+  done
+  ok t14
 }
 
 want t01 && t01_manifest_lifecycle
@@ -610,6 +630,7 @@ want t10 && t10_retally_corrects_lying_header
 want t11 && t11_footprint_holds_with_retally
 want t12 && t12_doctrine_view_rules_vendored
 want t13 && t13_queue_rule_p0_p3
+want t14 && t14_reconcile_entry_and_deps_gate
 
 echo "test_workflow_helpers: pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

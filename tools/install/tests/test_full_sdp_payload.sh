@@ -26,7 +26,7 @@ code-review coverage-gate deployment-checklist release-notes runbook retrospecti
     done; done
   done
   n="$(ls "$TMP/payload/cuo/skills" | wc -l)"
-  [ "$n" -eq 52 ] || { fail t01 "expected 52 vendored skills, got $n"; all=0; }
+  [ "$n" -eq 53 ] || { fail t01 "expected 53 vendored skills, got $n"; all=0; }
   [ "$all" -eq 1 ] && ok t01
 }
 t02_set_is_reviewable_data() {                                        # AC 2

@@ -1,6 +1,6 @@
 ---
 workflow_id: chief-technology-officer/ship-tasks
-workflow_version: 2.6.4
+workflow_version: 2.7.0
 purpose: Drive each eligible task in `docs/tasks/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the task back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
 persona: chief-technology-officer
 cadence: per-task (loops continuously over BACKLOG.md)
@@ -24,9 +24,12 @@ outputs:
   - { name: task_audit_report,           format: task-audit@2.0 (pre-flight, one per task), recipient: memory audit chain + <task>/audit.md §10 }
   - { name: coverage_gate_report,      format: coverage-gate-audit@1 (one per task),                 recipient: memory audit chain + <task>/audit.md §10.4 }
   - { name: awh_gate_report,           format: awh-eval@1 (one per task, out-of-band rerun),         recipient: memory audit chain (memory.awh_gate_result) + <task>/audit.md §10.5 }
+  - { name: reconcile_report,          format: reconcile-report@1 (conditional, one per drifted entry), recipient: memory audit chain + HITL gate }
   - { name: caf_gate_report,           format: caf-gate@1 (one per task, code-audit floor),          recipient: memory audit chain (memory.caf_gate_result) + <task>/audit.md §10.6 }
 
 skill_chain:
+  # ── Conditional entry: the task claims work this workflow did not perform (see 'Reconcile entry' §) ──
+  - { step: 0,  skill: task-reconcile,                             inputs_from: { task: next_task, repo_root: repo_root },                    outputs_to: reconcile_report,                          condition: 'entry state drifted — status past ready_to_implement AND (no ship-manifest OR manifest verify fails OR the claimed phase artefact set is missing)', phase: "entry (reconcile)" }
   # ── Phase: ready_to_implement → implementing (workflow start) ──
   - { step: 1,  skill: repo-context-map-author,                    inputs_from: { repo_root: repo_root, task_id: next_task_id },              outputs_to: context_map_draft,                         phase: "ready_to_implement → implementing" }
   - { step: 2,  skill: repo-context-map-audit,                     inputs_from: context_map_draft,                                        outputs_to: context_map }
@@ -277,6 +280,62 @@ The workflow MUST drive **all phases of a task to completion in one continuous s
 5. If genuinely blocked mid-task (e.g. needs ADR-class operator decision), DOCUMENT the block in §10.7 of the task's audit.md, route back to `ready_to_implement` with `routed_back_count += 1` and `reason: "<blocker>"`. Do NOT silently ship a partial phase and walk away.
 
 See `task-audit` skill §9.1 for the full clause + grandfathered exceptions.
+
+## Reconcile entry — when a task claims work this workflow did not perform (v2.7.0, TASK-IMP-101)
+
+This workflow trusts two things: its own run manifests (hash-verified — see Resume semantics
+below) and its own gates (route-back on failure). A status cell is neither. A task can arrive
+already implemented — mid-shipping from another session, or long "done" — with no manifest, a
+manifest that no longer verifies, or a phase artefact set that does not exist. Trusting that
+cell is how a claim outruns its evidence (learned 2026-07-16, the TASK-IMP-086 incident: a
+task marked done whose deliverable no commit carried).
+
+**Trigger.** Before entering the chain for a task, if its status is past `ready_to_implement`
+AND (no ship-manifest exists OR `ship-manifest.mjs verify` fails OR the claimed phase's
+artefact set is missing), run step 0:
+
+```
+node .cyberos/docs-tools/task-reconcile.mjs <task-ID> --run-tests
+```
+
+A VALID manifest means resume semantics own the task — reconcile does not fire, and the two
+mechanisms never double-handle the same state.
+
+**The gate.** The report carries exactly one recommendation. Present it — claimed status, the
+recommendation, the two or three facts driving it, what each branch costs — and take the
+operator's verdict:
+
+| Verdict | The workflow then |
+|---|---|
+| `resume_at_phase(N)` | re-enters the chain at step N and continues normally |
+| `route_back` | flips to `ready_to_implement`, `routed_back_count += 1` (STATUS-REFERENCE §1.3), records the report's reasons and emits `task_routed_back` |
+| `adopt_candidate` | backfills the phase artefact set from the evidence, then re-enters at the verified phase |
+
+**The rule.** The agent NEVER executes a branch — resume, route back, or adopt — without the
+recorded human verdict. This is a third, CONDITIONAL human gate; the two acceptance gates
+(reviewing → ready_to_test, testing → done) are untouched and still apply afterwards. An
+operator verdict that departs from the recommendation is legitimate and emits
+`memory.status_overridden` with its reason. Skill contract:
+`modules/skill/task-reconcile/SKILL.md`.
+
+## depends_on evidence gate (v2.7.0, TASK-IMP-101)
+
+Before starting any task, every `depends_on` id whose status is `done` MUST carry evidence:
+a `coverage-gate` artefact in either artefact home (the task folder or
+`docs/tasks/.workflow/<task-ID>/`), or a `reconcile-report@1` whose verdict the operator
+accepted. A dependency that carries neither is a done-by-claim, not a done-by-evidence, and
+the dependent task is BLOCKED — surfaced at a gate where the operator may override.
+
+Rationale: building on unverified foundations is how one bad claim becomes a subtree of them.
+The check is cheap and the override is always available — what it removes is the SILENT case,
+where nobody knew the foundation was unwitnessed.
+
+- Both artefact homes count, so the historical corpus (bundles under `docs/tasks/.workflow/`)
+  does not false-block.
+- `depends_on` naming an off-ramped task (`closed`, `duplicate`, `cannot_reproduce`) is an
+  unmet dependency under the existing eligibility rules and is surfaced the same way.
+- Every override emits `memory.status_overridden` `{actor, task_id, prior_status, new_status,
+  reason}` — the operator's call, on the record.
 
 ## Resume semantics (ship-manifest@1) - added by TASK-CUO-206
 
