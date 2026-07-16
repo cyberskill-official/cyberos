@@ -4,7 +4,7 @@ title: coverage-scope helper maps a task diff to per-file coverage
 template: task@1
 type: improvement
 module: improvement
-status: reviewing
+status: testing
 priority: p2
 author: "@stephencheng"
 department: engineering

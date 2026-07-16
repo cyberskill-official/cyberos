@@ -4,7 +4,7 @@ title: Channels, shared .agents/skills dir plus Devin and Windsurf rules
 template: task@1
 type: improvement
 module: improvement
-status: reviewing
+status: testing
 priority: p1
 author: "@stephencheng"
 department: engineering

@@ -4,7 +4,7 @@ title: Queue selection prose ranks p0-p3, MoSCoW wording retired
 template: task@1
 type: improvement
 module: improvement
-status: reviewing
+status: testing
 priority: p3
 author: "@stephencheng"
 department: engineering
