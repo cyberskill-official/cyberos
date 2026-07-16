@@ -245,6 +245,10 @@ Single phase: `AUDIT`. There is no PLAN or WORKER concept here — every invocat
 
 ## §3  Audit loop (per artefact)
 
+**Machine floor first (TASK-IMP-084).** When the deterministic lint is present — `.cyberos/docs-tools/task-lint.mjs` in installed repos, `tools/install/docs-tools/task-lint.mjs` in the platform repo — the auditor MUST run it FIRST (`node <lint-path> <artefact_path>`) and seed the report's mechanical findings from its `rule_id`-tagged output: the FM, SEC, COND, and structural-TRACE families arrive pre-checked, byte-stable, and cited per rule, so model diligence is spent on the judgment families only (QA semantics, SAFE content scanning, TRACE semantic sufficiency, XCHAIN/STALE cross-checks).
+
+The lint floors the audit; it never replaces it. A clean lint exit is necessary, not sufficient — the 10/10 verdict, every judgment-family call, and all `needs_human` halts remain the model auditor's responsibility, exactly as the loop below prescribes.
+
 See `cyberos/skill/docs/AUDIT_LOOP.md` for the canonical 8-step algorithm. Summary:
 
 1. **Locate** `artefact_path` and compute `audit_path` per `audit_path_pattern`.

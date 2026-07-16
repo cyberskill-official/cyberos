@@ -8,7 +8,11 @@
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 target="${1:-$(pwd)}"
-root="$(cd "$target" 2>/dev/null && git rev-parse --show-toplevel 2>/dev/null || cd "$target" && pwd)"
+# Explicit grouping (TASK-IMP-083). The ungrouped form parsed as ((cd && rev-parse) || cd)
+# && pwd - so after a SUCCESSFUL rev-parse the trailing pwd still ran and $root captured
+# TWO newline-joined paths. "$root/.cyberos" then never existed, every uninstall on a git
+# repo exited "nothing to do", and the hook/gitignore/BRAIN sections were unreachable.
+root="$( (cd "$target" 2>/dev/null && git rev-parse --show-toplevel 2>/dev/null) || (cd "$target" && pwd) )"
 CY="$root/.cyberos"
 
 echo "cyberos uninstall: target=$root"
@@ -21,9 +25,42 @@ if [ ! -d "$CY" ]; then
 fi
 
 # 1. pre-commit: strip cyberos blocks / managed hook
-hk="$root/.git/hooks/pre-commit"
+# Resolve the EFFECTIVE hooks directory exactly as install.sh step 6b does (TASK-IMP-083):
+# git runs hooks from core.hooksPath when set (relative anchors at the repo root, absolute
+# used as is), else .git/hooks - so we remove/unappend from where install actually wrote,
+# and never touch .git/hooks/pre-commit when hooksPath points elsewhere.
+hooks_path="$(git -C "$root" config core.hooksPath 2>/dev/null || true)"
+if [ -z "$hooks_path" ]; then
+  hooks_dir="$root/.git/hooks"
+else
+  case "$hooks_path" in
+    /*) hooks_dir="$hooks_path" ;;
+    *)  hooks_dir="$root/${hooks_path%/}" ;;
+  esac
+fi
+hk="$hooks_dir/pre-commit"
+
+# Do we own this file OUTRIGHT? Exact line-2 test, copied from install.sh step 6b, which
+# found and fixed this bug class on the install side. The heuristic it replaces here -
+# `head -5 "$hk" | grep -q cyberos-status-hook` - asked "is our marker near the top?",
+# not "is this our file?": for a FOREIGN hook shorter than five lines carrying our
+# appended block, the block's `>>>` marker lands inside head -5, the heuristic classified
+# the file as ours, and rm -f deleted the user's hook WHOLE. Our standalone form always
+# carries the managed header on line 2; the appended form is marked `>>>` and belongs to
+# whoever owns the lines above it. Line 2 + the `>>>` exclusion separates them exactly,
+# at any file length.
+_cyberos_owns_hook() {
+  [ -f "$1" ] || return 1
+  local l2; l2="$(sed -n '2p' "$1" 2>/dev/null)"
+  case "$l2" in
+    *'>>>'*)                    return 1 ;;   # the APPENDED form — the file is theirs
+    '# cyberos-status-hook'*)   return 0 ;;   # our managed standalone header
+    *)                          return 1 ;;
+  esac
+}
+
 if [ -f "$hk" ]; then
-  if head -5 "$hk" 2>/dev/null | grep -q "cyberos-status-hook"; then
+  if _cyberos_owns_hook "$hk"; then
     rm -f "$hk"
     echo "  removed managed pre-commit hook"
   elif grep -q "cyberos-status-hook" "$hk" 2>/dev/null; then
