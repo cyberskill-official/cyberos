@@ -4,7 +4,7 @@ title: Doc-driven workflow helpers, ship-manifest and backlog-mutate CLIs
 template: task@1
 type: improvement
 module: improvement
-status: reviewing
+status: testing
 priority: p0
 author: "@stephencheng"
 department: engineering
