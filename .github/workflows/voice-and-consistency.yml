@@ -4,12 +4,13 @@ on:
   # GitHub CI is deploy-only on push; this runs on pull requests and on demand only.
   pull_request:
     paths:
-      - "memory/docs/AGENTS.md"
-      - "memory/docs/memory.schema.json"
-      - "memory/cyberos/**"
-      - "memory/tools/voice_check.py"
-      - "memory/tools/cyberos_generate_schema.py"
-      - "memory/tests/**"
+      - "modules/memory/docs/**"
+      - "modules/memory/memory.schema.json"
+      - "modules/memory/cyberos/**"
+      - "modules/memory/tools/voice_check.py"
+      - "modules/memory/tools/cyberos_generate_schema.py"
+      - "modules/memory/tests/**"
+      - ".github/workflows/voice-and-consistency.yml"
   workflow_dispatch:
 
 # Pinned to Node 24-compatible action versions (Node.js 20 is deprecated
@@ -27,18 +28,16 @@ jobs:
         run: pip install pyyaml rfc8785
       - name: voice linter (advisory)
         run: |
-          # Voice standard adoption is additive per AGENTS.md §0.5 — non-strict on existing docs.
-          # When a new DEC/REF/FACT lands, the lint should pass on that file.
-          python3 memory/tools/voice_check.py --summary
+          # Voice standard adoption is additive — non-strict on existing docs.
+          python3 modules/memory/tools/voice_check.py --summary
         continue-on-error: true  # advisory only; remove once voice debt cleared
       - name: voice linter strict on new DEC/REF/FACT
         run: |
-          # Check only files changed in this PR
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD \
               | grep -E "memories/(decisions|refinements|facts)/" || true)
             if [ -n "$CHANGED" ]; then
-              python3 memory/tools/voice_check.py --strict $CHANGED
+              python3 modules/memory/tools/voice_check.py --strict $CHANGED
             fi
           fi
 
@@ -49,14 +48,17 @@ jobs:
       - uses: actions/setup-python@v6
         with: { python-version: "3.11" }
       - name: install deps
-        run: pip install -r memory/cyberos/requirements.txt || pip install msgspec cryptography crc32c rfc8785 'pyyaml>=6' jsonschema zstandard
-      - name: schema regeneration is reproducible
-        working-directory: memory
         run: |
-          # Confirms memory/docs/memory.schema.json matches what
-          # cyberos_generate_schema would emit today. Fails if cyberos.core
-          # msgspec Structs changed without a schema regeneration.
+          pip install -r modules/memory/cyberos/requirements.txt \
+            || pip install -r modules/memory/requirements.txt \
+            || pip install msgspec cryptography crc32c rfc8785 'pyyaml>=6' jsonschema zstandard
+      - name: schema regeneration is reproducible
+        working-directory: modules/memory
+        run: |
           python tools/cyberos_generate_schema.py \
+              --check \
+              --out memory.schema.json \
+            || python tools/cyberos_generate_schema.py \
               --check \
               --out docs/memory.schema.json
 
@@ -69,27 +71,20 @@ jobs:
       - name: install deps
         # numpy required by core semantic tests (even with FakeModel encode path)
         run: |
-          pip install -r memory/cyberos/requirements.txt || pip install msgspec cryptography crc32c rfc8785 'pyyaml>=6' jsonschema zstandard
+          pip install -r modules/memory/cyberos/requirements.txt \
+            || pip install -r modules/memory/requirements.txt \
+            || pip install msgspec cryptography crc32c rfc8785 'pyyaml>=6' jsonschema zstandard
           pip install numpy pytest
       - name: cyberos test suite
-        working-directory: memory
+        working-directory: modules/memory
         run: |
-          # Replaces the legacy single-file cyberos_validate.py with the
-          # full pytest suite. Covers writer, walker, lock, MMR, STH, ops,
-          # conflicts, sessions, serve, etc.
           python -m pytest tests/ -q
       - name: cyberos doctor on a fresh greenfield store
-        working-directory: memory
+        working-directory: modules/memory
         run: |
-          # Smoke-test that the doctor walker runs end-to-end on a fresh
-          # store. The host CI runner provides a clean tmp path (avoiding
-          # the layout-no-sandbox-path guard that fires on /tmp/).
           STORE="${RUNNER_TEMP:-/tmp}/cyberos-ci-smoke"
           rm -rf "$STORE"
           mkdir -p "$STORE/audit"
           echo '{}' > "$STORE/manifest.json"
-          # The doctor's layout-no-sandbox-path guard rejects paths
-          # containing common sandbox fragments; CYBEROS_HOST_MOUNT_PREFIX
-          # exempts the runner's actual working tree.
           export CYBEROS_HOST_MOUNT_PREFIX="$(dirname "$STORE")"
           python -m cyberos --store "$STORE" doctor
