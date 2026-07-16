@@ -4,7 +4,7 @@ title: Non-git installs state the ship-tasks git requirement
 template: task@1
 type: improvement
 module: improvement
-status: testing
+status: done
 priority: p3
 author: "@stephencheng"
 department: engineering
@@ -21,7 +21,7 @@ verify: T
 phase: "pre-1.0.0 release"
 owner: Stephen Cheng (CTO)
 created: 2026-07-17
-shipped: null
+shipped: 2026-07-17
 memory_chain_hash: null
 effort_hours: 1
 service: tools/install

@@ -242,7 +242,7 @@ Totals: 336 draft, 4 ready_to_implement, 19 implementing, 166 done, 1 on_hold, 1
 - [draft] TASK-HR-008-performance-signals - HR performance signal aggregator — read-only consumer of PROJ + TIME + LEARN signals for periodic performance snapshots
 - [draft] TASK-HR-009-termination-workflow - HR termination workflow — Good-Leaver / Bad-Leaver branch with CFO+CEO co-sign + ESOP forfeiture + access revocation cascade
 
-## improvement  (67 draft, 7 testing, 25 done)
+## improvement  (67 draft, 32 done)
 
 - [draft] TASK-IMP-001-dependency-audit-in-ci-cargo-audit-cargo-deny - Dependency audit in CI (cargo-audit + cargo-deny)
 - [draft] TASK-IMP-002-refuse-dev-cors-in-production-boot - Refuse dev CORS in production boot
@@ -336,13 +336,13 @@ Totals: 336 draft, 4 ready_to_implement, 19 implementing, 166 done, 1 on_hold, 1
 - [done] TASK-IMP-090-untracked-author-manifests - task-author manifests default to untracked .workflow session state
 - [done] TASK-IMP-091-regen-backlog-all-statuses - regen_backlog emits every status and recomputes Totals from frontmatter
 - [done] TASK-IMP-092-view-safe-mutations - Lost-update hardening, retally headers and committed-object evidence
-- [testing] TASK-IMP-093-memory-append-cli - memory-append CLI, doc-driven runs can append chained BRAIN rows
-- [testing] TASK-IMP-094-channel-freshness - Channels, shared .agents/skills dir plus Devin and Windsurf rules
-- [testing] TASK-IMP-095-gates-env-regen-notice - gates.env regeneration names its backup and the durable home
-- [testing] TASK-IMP-096-nongit-install-notice - Non-git installs state the ship-tasks git requirement
-- [testing] TASK-IMP-097-sandbox-runbook-note - GUIDE gains the sandboxed-agent runbook section
-- [testing] TASK-IMP-098-coverage-scope-helper - coverage-scope helper maps a task diff to per-file coverage
-- [testing] TASK-IMP-099-queue-selection-p0-p3 - Queue selection prose ranks p0-p3, MoSCoW wording retired
+- [done] TASK-IMP-093-memory-append-cli - memory-append CLI, doc-driven runs can append chained BRAIN rows
+- [done] TASK-IMP-094-channel-freshness - Channels, shared .agents/skills dir plus Devin and Windsurf rules
+- [done] TASK-IMP-095-gates-env-regen-notice - gates.env regeneration names its backup and the durable home
+- [done] TASK-IMP-096-nongit-install-notice - Non-git installs state the ship-tasks git requirement
+- [done] TASK-IMP-097-sandbox-runbook-note - GUIDE gains the sandboxed-agent runbook section
+- [done] TASK-IMP-098-coverage-scope-helper - coverage-scope helper maps a task diff to per-file coverage
+- [done] TASK-IMP-099-queue-selection-p0-p3 - Queue selection prose ranks p0-p3, MoSCoW wording retired
 
 ## inv  (10 draft, 1 ready_to_implement)
 
