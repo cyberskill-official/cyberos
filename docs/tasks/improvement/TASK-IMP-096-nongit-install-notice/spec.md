@@ -4,7 +4,7 @@ title: Non-git installs state the ship-tasks git requirement
 template: task@1
 type: improvement
 module: improvement
-status: implementing
+status: reviewing
 priority: p3
 author: "@stephencheng"
 department: engineering

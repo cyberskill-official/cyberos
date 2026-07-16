@@ -4,7 +4,7 @@ title: gates.env regeneration names its backup and the durable home
 template: task@1
 type: improvement
 module: improvement
-status: implementing
+status: reviewing
 priority: p2
 author: "@stephencheng"
 department: engineering
