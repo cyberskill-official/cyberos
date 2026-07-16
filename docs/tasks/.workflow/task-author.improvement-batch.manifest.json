@@ -1,0 +1,26 @@
+{
+  "manifest_version": "task-manifest@1",
+  "skill_id": "task-author",
+  "skill_version": "1.0.0",
+  "created_at": "2026-07-16T11:40:00Z",
+  "trace_id": "cowork-cyberos-improvement-batch-2026-07-16",
+  "caller_persona": "operator:stephen-cheng",
+  "output_dir": "docs/tasks/improvement/",
+  "naming_pattern": "TASK-IMP-{NNN}-{slug}/spec.md",
+  "batch_size_requested": 3,
+  "template_resolution": { "resolved": "task@1", "source": "repo corpus convention (docs/tasks/improvement/*)", "chain": "corpus > default" },
+  "source_files": [ { "path": "../IMPROVEMENT_HANDOFF.md", "media_type": "text/markdown", "note": "sits beside the repo at ~/Projects/CyberSkill/" } ],
+  "source_hash_prefix": "a3e65a89ed1e0608",
+  "plan": {
+    "status": "AWAITING_APPROVAL",
+    "open_questions": [
+      "Batch 1 scope = the three S1 [auto] items (IMP-01 stamp, IMP-02 hooksPath, IMP-03 task-lint). IMP-04 (S1, helpers) deferred to batch 2 by size; DECISION items (IMP-06/07/11/15) await operator choices; remaining S2/S3 queue behind."
+    ]
+  },
+  "artefacts": [
+    { "id": "TASK-IMP-082", "slug": "status-stamp-byte-stable", "title": "Status page provenance stamp: corpus fingerprint, byte-stable re-renders", "type": "improvement", "module": "improvement", "priority": "p0", "depends_on": [], "status": "PLANNED", "file_path": "docs/tasks/improvement/TASK-IMP-082-status-stamp-byte-stable/spec.md", "handoff_item": "IMP-01" },
+    { "id": "TASK-IMP-083", "slug": "hookspath-aware-status-hook", "title": "install: status-sync hook lands where core.hooksPath points", "type": "improvement", "module": "improvement", "priority": "p0", "depends_on": [], "status": "PLANNED", "file_path": "docs/tasks/improvement/TASK-IMP-083-hookspath-aware-status-hook/spec.md", "handoff_item": "IMP-02" },
+    { "id": "TASK-IMP-084", "slug": "task-lint-machine-floor", "title": "task-lint: deterministic machine floor for the task-audit rubric", "type": "improvement", "module": "improvement", "priority": "p1", "depends_on": [], "status": "PLANNED", "file_path": "docs/tasks/improvement/TASK-IMP-084-task-lint-machine-floor/spec.md", "handoff_item": "IMP-03" }
+  ],
+  "hitl_pending": { "any_blocking": true, "gate": "PLAN_APPROVAL" }
+}

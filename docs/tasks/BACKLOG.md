@@ -168,7 +168,7 @@ Totals: 336 draft, 4 ready_to_implement, 12 implementing, 155 done, 1 on_hold, 1
 - [draft] TASK-HR-008-performance-signals - HR performance signal aggregator — read-only consumer of PROJ + TIME + LEARN signals for periodic performance snapshots
 - [draft] TASK-HR-009-termination-workflow - HR termination workflow — Good-Leaver / Bad-Leaver branch with CFO+CEO co-sign + ESOP forfeiture + access revocation cascade
 
-## improvement  (67 draft, 14 done)
+## improvement  (67 draft, 3 ready_to_implement, 14 done)
 
 - [draft] TASK-IMP-001-dependency-audit-in-ci-cargo-audit-cargo-deny - Dependency audit in CI (cargo-audit + cargo-deny)
 - [draft] TASK-IMP-002-refuse-dev-cors-in-production-boot - Refuse dev CORS in production boot
@@ -237,6 +237,9 @@ Totals: 336 draft, 4 ready_to_implement, 12 implementing, 155 done, 1 on_hold, 1
 - [draft] TASK-IMP-065-track-b-mobile-shells-and-store-release-pipeline - Track B: mobile shells and store release pipeline
 - [draft] TASK-IMP-066-track-c-brain-activation-rollout-deploy-notice-a - Track C: brain activation rollout (deploy, notice, ack, capture)
 - [draft] TASK-IMP-067-go-live-readiness-gate-safety-nets-before-fully - Go-live readiness gate (safety nets before fully on)
+- [ready_to_implement] TASK-IMP-082-status-stamp-byte-stable - Status page provenance stamp becomes a corpus fingerprint (byte-stable) (improvement)
+- [ready_to_implement] TASK-IMP-083-hookspath-aware-status-hook - install lands the status-sync hook where core.hooksPath points (improvement)
+- [ready_to_implement] TASK-IMP-084-task-lint-machine-floor - task-lint, a deterministic machine floor under the task-audit rubric (improvement)
 
 ## inv  (10 draft, 1 ready_to_implement)
 
