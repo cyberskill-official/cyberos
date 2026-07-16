@@ -433,8 +433,11 @@ jobs:
       # Needs a Play service account with "Release to testing tracks" permission; its JSON goes in
       # PLAY_SERVICE_ACCOUNT_JSON (docs/deploy/RELEASE.md). Internal track is the safe default: it does not
       # go to users until you promote it in the Play Console.
+      # continue-on-error: Play "edit has expired" and similar API flakes must not red the
+      # whole release once the signed AAB is already attached as an artifact above.
       - name: Publish to Google Play (internal track)
         if: ${{ vars.PLAY_PUBLISH == 'true' }}
+        continue-on-error: true
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}

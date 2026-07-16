@@ -67,14 +67,16 @@ jobs:
       - uses: actions/setup-python@v6
         with: { python-version: "3.11" }
       - name: install deps
-        run: pip install -r memory/cyberos/requirements.txt || pip install msgspec cryptography crc32c rfc8785 'pyyaml>=6' jsonschema zstandard
+        # numpy required by core semantic tests (even with FakeModel encode path)
+        run: |
+          pip install -r memory/cyberos/requirements.txt || pip install msgspec cryptography crc32c rfc8785 'pyyaml>=6' jsonschema zstandard
+          pip install numpy pytest
       - name: cyberos test suite
         working-directory: memory
         run: |
           # Replaces the legacy single-file cyberos_validate.py with the
           # full pytest suite. Covers writer, walker, lock, MMR, STH, ops,
           # conflicts, sessions, serve, etc.
-          pip install pytest
           python -m pytest tests/ -q
       - name: cyberos doctor on a fresh greenfield store
         working-directory: memory
