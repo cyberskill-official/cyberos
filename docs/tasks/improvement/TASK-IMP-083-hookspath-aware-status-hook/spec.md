@@ -4,7 +4,7 @@ title: install lands the status-sync hook where core.hooksPath points
 template: task@1
 type: improvement
 module: improvement
-status: implementing
+status: reviewing
 priority: p0
 author: "@stephencheng"
 department: engineering
