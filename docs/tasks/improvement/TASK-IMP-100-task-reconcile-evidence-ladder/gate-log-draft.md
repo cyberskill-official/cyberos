@@ -82,3 +82,29 @@ clobbered) and found the logic self-consistent. Recorded, no change.
 `normativeHalf()` in task-reconcile.mjs and the independent Python `body_sha` in the suite -
 the cross-implementation agreement that makes TASK-IMP-102's binding load-bearing. That the two
 were written independently and agree is the point of the arm; confirmation welcome.
+
+## PR-review addendum 3 (2026-07-17, Devin Review)
+
+**F-exec (defect, fixed - the sharpest of the run).** rung5 extracted `test:` citations from
+the spec with a permissive regex and handed each straight to bash, checked only with
+`existsSync(join(root, f))`. A spec is INPUT. A crafted one could cite `../../anything.sh` and
+this tool would execute it - while spec §3 already promised "`--run-tests` executes only
+repo-tracked suite files named by the spec, never constructed commands". Third time this run
+that a sentence I wrote outran the code beneath it, and the first with a real execution
+surface.
+
+Two gates now hold, in order, each a RED rung with the reason named (never a silent skip):
+1. CONFINEMENT - `relUnderRoot`, the same predicate as `--out` and coverage-scope. An escaping
+   citation is refused, not executed.
+2. TRACKED - the file must exist at HEAD. An untracked file on disk cannot be a cited suite
+   (TRACE-003 cites repo artefacts), and this is the line between running the repo's tests and
+   running whatever landed in a working tree.
+
+Arms in t02: a spec citing `../../outside.sh` (a script that would `touch $TMP/PWNED`) must be
+refused AND the PWNED artifact must not exist - the assert proves non-execution, not just the
+message; and a suite `git rm --cached`'d on disk must be refused as untracked. Suite 6/6.
+
+**F-order (info, fixed).** rung4's verdict read `notes[0].startsWith("all")` - correct for every
+current input, silently wrong the day anyone pushes an informational note ahead of the summary
+line. A verdict that depends on prose is a verdict waiting to be broken by a comment. It now
+tracks an `anyMissing` boolean.

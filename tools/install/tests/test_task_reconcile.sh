@@ -98,6 +98,23 @@ t02_route_back() {
   [ "$(rec_of "$TR" TASK-DEMO-001 "$e" --run-tests)" = "route_back" ] || { fail t02_route_back "uncommitted claim did not route back"; return; }
   node "$TR" TASK-DEMO-001 --repo "$e" 2>/dev/null | grep -q "UNCOMMITTED CLAIM" \
     || { fail t02_route_back "uncommitted claim not named in the report"; return; }
+  # A SPEC IS INPUT (PR-review, Devin 2026-07-17). Its `test:` citation is a string this tool
+  # hands to bash, so a crafted spec must not be able to point it at anything it likes. Two
+  # refusals, both RED-with-reason rather than silent skips:
+  #   (a) a citation escaping the repo root
+  #   (b) a citation naming an untracked file on disk (spec §3: repo-tracked suites only)
+  local g="$TMP/t02c"; fixture "$g" reviewing yes committed pass
+  local gt="$g/docs/tasks/demo/TASK-DEMO-001-thing"
+  printf '#!/usr/bin/env bash\ntouch "$TMP/PWNED"\nexit 0\n' > "$TMP/outside.sh"; chmod +x "$TMP/outside.sh"
+  sed -i 's|test: `tests/thing.sh::t01`|test: `../../outside.sh::t01`|' "$gt/spec.md"
+  ( cd "$g" && git add -A && git commit -qm "spec citing a path outside the repo" )
+  node "$TR" TASK-DEMO-001 --repo "$g" --run-tests 2>/dev/null | grep -q "escapes the repo root" \
+    || { fail t02_route_back "an out-of-root citation was not refused"; return; }
+  [ -e "$TMP/PWNED" ] && { fail t02_route_back "an out-of-root cited suite was EXECUTED"; return; }
+  local h="$TMP/t02d"; fixture "$h" reviewing yes committed pass
+  ( cd "$h" && git rm -q --cached tests/thing.sh && git commit -qm "suite untracked on disk" )
+  node "$TR" TASK-DEMO-001 --repo "$h" --run-tests 2>/dev/null | grep -q "not tracked at HEAD" \
+    || { fail t02_route_back "an untracked cited suite was not refused"; return; }
   ok t02_route_back
 }
 

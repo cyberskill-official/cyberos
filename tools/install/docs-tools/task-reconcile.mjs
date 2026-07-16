@@ -246,16 +246,20 @@ function rung4(root, fm) {
   const claimed = [...(Array.isArray(fm.new_files) ? fm.new_files : []),
                    ...(Array.isArray(fm.modified_files) ? fm.modified_files : [])].filter(Boolean);
   if (!claimed.length) return { verdict: "absent", notes: ["frontmatter names no new_files/modified_files - nothing to measure"] };
-  const notes = []; let red = false;
+  // PR-review fix (Devin, 2026-07-17): the verdict tracks a BOOLEAN, not the text and array
+  // position of a note. The old expression read notes[0].startsWith("all") - correct for every
+  // current input, and silently wrong the day anyone pushes an informational note first.
+  // A verdict that depends on prose is a verdict waiting to be broken by a comment.
+  const notes = []; let anyMissing = false;
   for (const p of claimed) {
     const at = sh("git", ["ls-tree", "HEAD", "--", p], root);
-    const inHead = at.status === 0 && at.stdout.trim() !== "";
-    if (inHead) continue;
-    if (existsSync(join(root, p))) { red = true; notes.push(`UNCOMMITTED CLAIM: ${p} exists on disk but no commit carries it (TASK-IMP-086 class)`); }
+    if (at.status === 0 && at.stdout.trim() !== "") continue;
+    anyMissing = true;
+    if (existsSync(join(root, p))) notes.push(`UNCOMMITTED CLAIM: ${p} exists on disk but no commit carries it (TASK-IMP-086 class)`);
     else notes.push(`absent at HEAD and on disk: ${p}`);
   }
-  if (!notes.length) notes.push(`all ${claimed.length} claimed path(s) present at HEAD`);
-  return { verdict: red ? "red" : (notes[0].startsWith("all") ? "pass" : "red"), notes };
+  if (!anyMissing) notes.push(`all ${claimed.length} claimed path(s) present at HEAD`);
+  return { verdict: anyMissing ? "red" : "pass", notes };
 }
 
 // ── R5: cited tests, only under --run-tests ──────────────────────────────────
@@ -265,10 +269,28 @@ function rung5(root, specText, run) {
   if (!files.length) return { verdict: "absent", notes: ["no test: citations in §2"] };
   const notes = []; let red = false;
   for (const f of files) {
-    if (!existsSync(join(root, f))) { red = true; notes.push(`cited suite resolves nowhere: ${f} (TRACE-003 drift at run time)`); continue; }
-    const r = sh("bash", [f], root);
-    if (r.status !== 0) { red = true; notes.push(`cited suite FAILS now: ${f} (exit ${r.status})`); }
-    else notes.push(`passes: ${f}`);
+    // PR-review fix (Devin, 2026-07-17): a spec is INPUT, and its `test:` citation is a
+    // string this tool hands to bash. Spec §3 already promised "repo-tracked suite files
+    // named by the spec, never constructed commands" - the code checked neither. Two gates
+    // now hold, in this order:
+    //   (1) CONFINEMENT: the path must resolve inside the repo root (a ../ or absolute
+    //       citation is refused, not executed) - same predicate as --out and the sibling
+    //       coverage-scope.mjs.
+    //   (2) TRACKED: the file must exist at HEAD. An untracked file on disk cannot be a
+    //       cited suite (TRACE-003 says citations name repo artefacts), and this is the
+    //       difference between running the repo's tests and running whatever a crafted
+    //       spec dropped in the working tree.
+    // A refusal is a RED rung with the reason named - never a silent skip, never a run.
+    const rel = relUnderRoot(root, f);
+    if (rel === null) { red = true; notes.push(`cited suite path escapes the repo root: ${f} - REFUSED, not executed`); continue; }
+    if (!existsSync(join(root, rel))) { red = true; notes.push(`cited suite resolves nowhere: ${rel} (TRACE-003 drift at run time)`); continue; }
+    const tracked = sh("git", ["ls-tree", "HEAD", "--", rel], root);
+    if (!(tracked.status === 0 && tracked.stdout.trim() !== "")) {
+      red = true; notes.push(`cited suite is not tracked at HEAD: ${rel} - REFUSED, not executed (spec §3: repo-tracked suites only)`); continue;
+    }
+    const r = sh("bash", [rel], root);
+    if (r.status !== 0) { red = true; notes.push(`cited suite FAILS now: ${rel} (exit ${r.status})`); }
+    else notes.push(`passes: ${rel}`);
   }
   return { verdict: red ? "red" : "pass", notes };
 }

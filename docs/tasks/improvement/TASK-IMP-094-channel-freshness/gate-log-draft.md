@@ -80,3 +80,15 @@ copy must still be removed. channels 25/25.
 CYBEROS_AGENTS excludes the agents family - the paths are ignored but never created. Harmless
 (ignoring a non-existent path is a no-op) and consistent with how every other per-agent skill
 path in that same loop is treated. Recorded.
+
+## PR-review addendum 3 (2026-07-17, Devin Review)
+
+**F-skilldirs (cosmetic, fixed).** Making `install_skill` multi-skill (this task) left its
+ship-tasks arm appending the CONTAINING dir (`.claude/skills`) while the new arms appended full
+paths - so the install summary's operator-facing `native skills:` line mixed two shapes. One
+shape now: the full skill path for every entry, matching what the shared `.agents/skills`
+entries already report. Live summary after the fix:
+  native skills: .claude/skills/ship-tasks .grok/skills/ship-tasks .commandcode/skills/ship-tasks
+                 .codex/skills/ship-tasks .opencode/skill/ship-tasks .claude/skills/task-author
+                 .claude/skills/task-audit .agents/skills/{ship-tasks,task-author,task-audit}
+No test pinned the old shape (checked); channels 25/25, hygiene 19/19 after.

@@ -485,7 +485,13 @@ install_skill() {           # $1 = agent skills dir (rel to root), $2 = agent ke
   else
     ln -s "$(relup "$1").cyberos/plugin/skills/$skill" "$dest" 2>/dev/null || cp -R "$src" "$dest"
   fi
-  case "$skill" in ship-tasks) SKILL_DIRS="$SKILL_DIRS $1" ;; *) SKILL_DIRS="$SKILL_DIRS $1/$skill" ;; esac
+  # One shape for every entry: the FULL skill path. TASK-IMP-094 made install_skill
+  # multi-skill, and the ship-tasks arm kept appending its containing dir (.claude/skills)
+  # while the new arms appended full paths - so the summary's "native skills:" line mixed
+  # two shapes (PR-review, Devin 2026-07-17: cosmetic, no functional consequence, but the
+  # line is read by operators). Full paths for all: it is the more informative shape, and
+  # it is what the shared .agents/skills entries already report.
+  SKILL_DIRS="$SKILL_DIRS $1/$skill"
 }
 install_skill .claude/skills      claude-code    # Claude Code
 install_skill .grok/skills        grok           # Grok CLI
