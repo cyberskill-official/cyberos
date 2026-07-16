@@ -18,8 +18,11 @@
 #   t05  insert: uniqueness gate (exit 7 anywhere in the file), regenerator-
 #        identical grammar, stem-ascending placement (titles never affect it),
 #        placeholder replacement in an empty section, no-counts header untouched.
-#   t06  section-header counts stay true across flips and inserts (from -1,
-#        to +1, zero counts dropped, lifecycle order).
+#   t06  section-header counts stay true across flips and inserts — the counted
+#        header is retallied from the section's ACTUAL rows after every mutation
+#        (zero counts dropped, lifecycle order; TASK-IMP-092 replaced the
+#        incremental +1/-1 adjust, so even the fixture's inherited header drift
+#        is corrected by the first mutation).
 #   t07  --json envelopes parse; --help documents the exit codes; byte-identical
 #        reruns (both tools; ship-manifest under a pinned CYBEROS_NOW); whole-file
 #        discipline proven by diff (= 1 row + at most 1 header line); CRLF
@@ -28,7 +31,19 @@
 #        install lays them into .cyberos/docs-tools/ where they run.
 #   t09  doctrine wiring: ship-tasks.md (source + payload cuo/ + plugin copy)
 #        names ship-manifest.mjs in Resume semantics and backlog-mutate.mjs in
-#        the backlog-layout/state-engine area; workflow_version bumped to 2.6.2.
+#        the backlog-layout/state-engine area; workflow_version current (2.6.3
+#        since TASK-IMP-092).
+#   t10  a LYING counted header (counts disagreeing with the section's rows —
+#        the 086 incident's shape) is rewritten to the true tally by any flip
+#        AND any insert; statuses the header never listed join in lifecycle
+#        order; a placeholder insert under phantom counts drops the header to
+#        the sole real status (TASK-IMP-092).
+#   t11  the retally stays inside the whole-file discipline: a mutation's diff
+#        is exactly 1 row + at most 1 header line even when the header
+#        correction is large (asserted line-by-line on the lying fixture).
+#   t12  doctrine: ship-tasks.md carries the one-writer-one-view rule (§11a)
+#        and the committed-object evidence rule (§9), in the source AND the
+#        scratch payload's cuo/ copy, at workflow_version 2.6.3.
 #
 # Origin: 2026-07-16 sachviet + cyberos batch-1 runs (IMPROVEMENT_HANDOFF.md
 # IMP-04) - manifests were skipped and every backlog flip was hand-sed; the two
@@ -294,23 +309,25 @@ t05_insert_uniqueness_and_grammar() {
 
 t06_counts_maintained() {
   local f="$TMP/t06/BACKLOG.md"; emit_backlog "$f"
-  # flip: from -1, to +1, lifecycle order preserved
+  # flip: the header is retallied from the section's rows (TASK-IMP-092) — the fixture's
+  # alpha header claims '2 done' over zero done rows, so the first mutation corrects it away
   bm flip TASK-ALPHA-001 ready_to_implement implementing --backlog "$f" || { fail t06 "flip 1 failed"; return; }
-  grep -q '^## alpha  (1 draft, 1 ready_to_implement, 1 implementing, 2 done)$' "$f" \
+  grep -q '^## alpha  (1 draft, 1 ready_to_implement, 1 implementing)$' "$f" \
     || { fail t06 "header after flip 1: $(grep '^## alpha' "$f")"; return; }
   # flip the last ready_to_implement away: the zero count is dropped from the header
   bm flip TASK-ALPHA-003 ready_to_implement implementing --backlog "$f" || { fail t06 "flip 2 failed"; return; }
-  grep -q '^## alpha  (1 draft, 2 implementing, 2 done)$' "$f" \
+  grep -q '^## alpha  (1 draft, 2 implementing)$' "$f" \
     || { fail t06 "zero count not dropped: $(grep '^## alpha' "$f")"; return; }
-  # insert: +1 draft
+  # insert: the retally counts the new row
   bm insert TASK-ALPHA-002 TASK-ALPHA-002-token-scope "Token scoping" draft --backlog "$f" \
     || { fail t06 "insert failed"; return; }
-  grep -q '^## alpha  (2 draft, 2 implementing, 2 done)$' "$f" \
+  grep -q '^## alpha  (2 draft, 2 implementing)$' "$f" \
     || { fail t06 "header after insert: $(grep '^## alpha' "$f")"; return; }
-  # placeholder insert into beta: a NEW status joins the header counts in order
+  # placeholder insert into beta: the phantom '17 done' (a count with no rows) drops to
+  # the sole real status — never a zero entry, never an inherited ghost
   bm insert TASK-BETA-001 TASK-BETA-001-first "First" ready_to_implement --backlog "$f" --section beta \
     || { fail t06 "beta insert failed"; return; }
-  grep -q '^## beta  (1 ready_to_implement, 17 done)$' "$f" \
+  grep -q '^## beta  (1 ready_to_implement)$' "$f" \
     || { fail t06 "beta header: $(grep '^## beta' "$f")"; return; }
   # the file-top Totals line is NEVER touched (not part of the declared mutation)
   grep -q '^Totals: 1 draft, 2 ready_to_implement, 1 implementing, 19 done$' "$f" \
@@ -436,9 +453,121 @@ t09_doctrine_wiring() {
     grep -q 'backlog-mutate\.mjs' "$TMP/layout.sec" || { fail t09 "$f: backlog layout lacks the backlog-mutate.mjs pointer"; return; }
     grep -q 'byte-discipline executor' "$TMP/layout.sec" || { fail t09 "$f: pointer does not say byte-discipline executor"; return; }
     # the doc gained normative pointers -> workflow_version bumped
-    grep -q '^workflow_version: 2\.6\.2$' "$f" || { fail t09 "$f: workflow_version not bumped to 2.6.2"; return; }
+    grep -q '^workflow_version: 2\.6\.3$' "$f" || { fail t09 "$f: workflow_version not current (want 2.6.3)"; return; }
   done
   ok t09
+}
+
+# The 086 incident's shape: counted headers that DISAGREE with their rows — alpha
+# claims '34 done' over rows tallying 1 draft, 1 implementing, 2 done (the incident's
+# inherited 34-vs-true-20 baseline in miniature); omega claims '9 draft' over an empty
+# section. The incremental adjust preserved such lies through six mutations; the
+# retally (TASK-IMP-092) must correct them on ANY mutation.
+emit_lying_backlog() { # $1 = file
+  mkdir -p "$(dirname "$1")"
+  cat > "$1" <<'EOF'
+# CyberOS task backlog (regenerated 2026-07-09)
+
+Totals: 1 draft, 1 implementing, 2 done
+
+## alpha  (34 done)
+
+- [draft] TASK-ALPHA-001-login-rate-limit - Login rate limiting
+- [implementing] TASK-ALPHA-002-token-scope - Token scoping
+- [done] TASK-ALPHA-003-token-rotation - Token rotation (improvement)
+- [done] TASK-ALPHA-005-cache-layer - Cache layer
+
+## omega  (9 draft)
+
+- (nothing remaining)
+
+Totals are never touched by mutations.
+EOF
+}
+
+t10_retally_corrects_lying_header() {
+  # flip: the rewritten header is the section's TRUE tally, not old-counts ± 1 —
+  # statuses the header never listed (implementing, ready_to_review) join in
+  # lifecycle order and the inherited '34 done' collapses to the real 2
+  local f="$TMP/t10/flip.md"; emit_lying_backlog "$f"
+  bm flip TASK-ALPHA-001 draft ready_to_review --backlog "$f" || { fail t10 "flip failed: $(cat "$TMP/err")"; return; }
+  grep -q '^## alpha  (1 implementing, 1 ready_to_review, 2 done)$' "$f" \
+    || { fail t10 "flip did not retally: $(grep '^## alpha' "$f")"; return; }
+  # insert corrects the same lie (fresh fixture — ANY mutation, not just flip)
+  local g="$TMP/t10/insert.md"; emit_lying_backlog "$g"
+  bm insert TASK-ALPHA-004 TASK-ALPHA-004-new-row "New row" draft --backlog "$g" \
+    || { fail t10 "insert failed: $(cat "$TMP/err")"; return; }
+  grep -q '^## alpha  (2 draft, 1 implementing, 2 done)$' "$g" \
+    || { fail t10 "insert did not retally: $(grep '^## alpha' "$g")"; return; }
+  # empty section under phantom counts: the placeholder insert drops '9 draft' to the
+  # sole real status — never a zero entry, never a negative
+  bm insert TASK-OMEGA-001 TASK-OMEGA-001-first "First omega" done --backlog "$g" --section omega \
+    || { fail t10 "omega insert failed: $(cat "$TMP/err")"; return; }
+  grep -q '^## omega  (1 done)$' "$g" || { fail t10 "omega header: $(grep '^## omega' "$g")"; return; }
+  # the --json envelope names the correction, so a caller SEES the lie it just fixed
+  node "$BM" --json flip TASK-ALPHA-002 implementing done --backlog "$g" > "$TMP/t10/j.json" 2>&1 \
+    || { fail t10 "json flip failed: $(cat "$TMP/t10/j.json")"; return; }
+  node -e '
+    const j=JSON.parse(require("node:fs").readFileSync(process.argv[1],"utf8"));
+    if (j.old_header!=="## alpha  (2 draft, 1 implementing, 2 done)") process.exit(1);
+    if (j.new_header!=="## alpha  (2 draft, 3 done)") process.exit(1);
+  ' "$TMP/t10/j.json" || { fail t10 "envelope old/new header wrong: $(cat "$TMP/t10/j.json")"; return; }
+  ok t10
+}
+
+t11_footprint_holds_with_retally() {
+  # even a LARGE header correction stays inside the whole-file discipline: the diff is
+  # exactly the mutated row + the one header line the mutation was allowed to touch
+  local d="$TMP/t11"; emit_lying_backlog "$d/pre.md"; emit_lying_backlog "$d/flip.md"
+  bm flip TASK-ALPHA-001 draft ready_to_review --backlog "$d/flip.md" || { fail t11 "flip failed"; return; }
+  diff "$d/pre.md" "$d/flip.md" | sed -n 's/^< //p' > "$d/removed"
+  diff "$d/pre.md" "$d/flip.md" | sed -n 's/^> //p' > "$d/added"
+  { [ "$(wc -l < "$d/removed")" -eq 2 ] && [ "$(wc -l < "$d/added")" -eq 2 ]; } \
+    || { fail t11 "flip footprint not 1 row + 1 header: removed=[$(cat "$d/removed")] added=[$(cat "$d/added")]"; return; }
+  { grep -qxF '## alpha  (34 done)' "$d/removed" \
+      && grep -qxF -- '- [draft] TASK-ALPHA-001-login-rate-limit - Login rate limiting' "$d/removed"; } \
+    || { fail t11 "flip removed lines are not header+row: $(cat "$d/removed")"; return; }
+  { grep -qxF '## alpha  (1 implementing, 1 ready_to_review, 2 done)' "$d/added" \
+      && grep -qxF -- '- [ready_to_review] TASK-ALPHA-001-login-rate-limit - Login rate limiting' "$d/added"; } \
+    || { fail t11 "flip added lines are not header+row: $(cat "$d/added")"; return; }
+  # insert: 1 rewritten header + 1 added row, nothing else
+  emit_lying_backlog "$d/ins.md"
+  bm insert TASK-ALPHA-004 TASK-ALPHA-004-new-row "New row" draft --backlog "$d/ins.md" || { fail t11 "insert failed"; return; }
+  local removed added
+  removed="$(diff "$d/pre.md" "$d/ins.md" | grep -c '^<')"; added="$(diff "$d/pre.md" "$d/ins.md" | grep -c '^>')"
+  { [ "$removed" -eq 1 ] && [ "$added" -eq 2 ]; } \
+    || { fail t11 "insert footprint not 1 row + 1 header (removed=$removed added=$added)"; return; }
+  # 'at most one': a mutation under a BARE header changes exactly the one row
+  emit_backlog "$d/bare-pre.md"; emit_backlog "$d/bare.md"
+  bm flip TASK-GAMMA-001 implementing ready_to_review --backlog "$d/bare.md" || { fail t11 "bare flip failed"; return; }
+  removed="$(diff "$d/bare-pre.md" "$d/bare.md" | grep -c '^<')"; added="$(diff "$d/bare-pre.md" "$d/bare.md" | grep -c '^>')"
+  { [ "$removed" -eq 1 ] && [ "$added" -eq 1 ]; } \
+    || { fail t11 "bare-header footprint not 1 row + 0 header (removed=$removed added=$added)"; return; }
+  ok t11
+}
+
+t12_doctrine_view_rules_vendored() {
+  ensure_payload || { fail t12 "build.sh failed"; return; }
+  local f
+  for f in \
+    "$repo/modules/cuo/chief-technology-officer/workflows/ship-tasks.md" \
+    "$TMP/payload/cuo/ship-tasks.md"; do
+    [ -s "$f" ] || { fail t12 "missing $f"; return; }
+    # §11a swarm rule: shared files get ONE writer through ONE filesystem view per run
+    grep -q 'ONE writer through ONE filesystem view' "$f" \
+      || { fail t12 "$f: one-writer-one-view rule missing"; return; }
+    grep -q 'cone-independence includes view-independence' "$f" \
+      || { fail t12 "$f: view-independence passage missing"; return; }
+    # §9 testing-phase rule: committed-object evidence for content deliverables
+    grep -q 'git show <commit>:<path>' "$f" \
+      || { fail t12 "$f: committed-object evidence command missing"; return; }
+    grep -q 'never a working view' "$f" \
+      || { fail t12 "$f: never-a-working-view rule missing"; return; }
+    # the doc gained normative rules -> workflow_version bumped
+    grep -q '^workflow_version: 2\.6\.3$' "$f" \
+      || { fail t12 "$f: workflow_version not bumped to 2.6.3"; return; }
+  done
+  ok t12
 }
 
 want t01 && t01_manifest_lifecycle
@@ -450,6 +579,9 @@ want t06 && t06_counts_maintained
 want t07 && t07_json_and_determinism
 want t08 && t08_payload_and_install
 want t09 && t09_doctrine_wiring
+want t10 && t10_retally_corrects_lying_header
+want t11 && t11_footprint_holds_with_retally
+want t12 && t12_doctrine_view_rules_vendored
 
 echo "test_workflow_helpers: pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

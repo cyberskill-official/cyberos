@@ -11,6 +11,13 @@
 #        points (git runs hooks from there, not .git/hooks); no-hooksPath repos stay
 #        byte/word-identical; uninstall resolves the same dir and owns-outright only on
 #        the exact line-2 header (the old head-5 heuristic deleted short foreign hooks).
+#   t06_consumer_template_default / t06_platform_keeps_comment / t06_existing_config_untouched
+#        (TASK-IMP-088) step 3b config.yaml scaffold: consumer installs carry a LIVE
+#        `task_template: task@1` line; the platform repo (marker file) keeps the commented
+#        engineering-spec default; an existing config.yaml is never touched (create-once).
+#   t07_workflow_gitignore_patterns (TASK-IMP-090) .workflow/.gitignore seed covers
+#        *.ship.json AND *.manifest.json; a pre-existing seed (operator lines, even without
+#        a trailing newline) gains the manifest pattern exactly once across two installs.
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../../.." && pwd)"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
@@ -281,6 +288,73 @@ t05_non_git_skip() {
     || fail t05_non_git_skip "non-git summary line missing"
 }
 
+# ---------------------------------------------------------------------------
+# t06_* (TASK-IMP-088) - step 3b config.yaml scaffold. Config scaffolding does not
+# depend on migrate/memory/MCP, so these installs use the speed flags like _t05_install.
+# ---------------------------------------------------------------------------
+_t06_install() { CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 CYBEROS_NO_MCP=1 bash "$TMP/payload/install.sh" "$1" 2>&1; }
+
+t06_consumer_template_default() {
+  local all=1 d="$TMP/ct-consumer"; mkrepo "$d"
+  _t06_install "$d" >/dev/null
+  [ -f "$d/.cyberos/config.yaml" ] || { fail t06_consumer_template_default "no config.yaml scaffolded"; return; }
+  grep -qx 'task_template: task@1' "$d/.cyberos/config.yaml" \
+    || { fail t06_consumer_template_default "live task@1 line missing"; all=0; }
+  grep -q 'engineering-spec@1' "$d/.cyberos/config.yaml" \
+    && { fail t06_consumer_template_default "engineering-spec line present on a consumer install"; all=0; }
+  grep -qx '# profile: full' "$d/.cyberos/config.yaml" && grep -qx '# coverage_threshold: 90' "$d/.cyberos/config.yaml" \
+    || { fail t06_consumer_template_default "rest of the scaffold not as today"; all=0; }
+  [ "$all" -eq 1 ] && ok t06_consumer_template_default
+}
+
+t06_platform_keeps_comment() {
+  local all=1 d="$TMP/ct-platform"; mkrepo "$d"
+  mkdir -p "$d/modules/memory"; : > "$d/modules/memory/memory.schema.json"   # is_platform_repo()'s marker file
+  _t06_install "$d" >/dev/null
+  [ -f "$d/.cyberos/config.yaml" ] || { fail t06_platform_keeps_comment "no config.yaml scaffolded"; return; }
+  grep -qx '# task_template: engineering-spec@1' "$d/.cyberos/config.yaml" \
+    || { fail t06_platform_keeps_comment "commented engineering-spec default missing"; all=0; }
+  grep -qx 'task_template: task@1' "$d/.cyberos/config.yaml" \
+    && { fail t06_platform_keeps_comment "live task@1 line leaked into the platform scaffold"; all=0; }
+  [ "$all" -eq 1 ] && ok t06_platform_keeps_comment
+}
+
+t06_existing_config_untouched() {
+  local d="$TMP/ct-existing"; mkrepo "$d"
+  mkdir -p "$d/.cyberos"
+  printf '# operator config\ntask_template: engineering-spec@1\ncustom: yes\n' > "$d/.cyberos/config.yaml"
+  cp "$d/.cyberos/config.yaml" "$TMP/ct-existing.want"
+  _t06_install "$d" >/dev/null                        # re-install over the pre-seeded file
+  cmp -s "$d/.cyberos/config.yaml" "$TMP/ct-existing.want" \
+    && ok t06_existing_config_untouched \
+    || fail t06_existing_config_untouched "pre-seeded config.yaml not byte-identical after re-install"
+}
+
+# t07 (TASK-IMP-090) - .workflow/.gitignore covers ship AND author-manifest run state;
+# append-once migration for pre-existing seeds. Same speed flags as t06 (the seed is
+# written at install step 0, before migrate/memory/MCP).
+t07_workflow_gitignore_patterns() {
+  local all=1 f="$TMP/wf-fresh"; mkrepo "$f"
+  _t06_install "$f" >/dev/null
+  local gi="$f/docs/tasks/.workflow/.gitignore"
+  [ -f "$gi" ] || { fail t07_workflow_gitignore_patterns "fresh install wrote no .workflow/.gitignore"; return; }
+  { grep -qxF '*.ship.json' "$gi" && grep -qxF '*.manifest.json' "$gi"; } \
+    || { fail t07_workflow_gitignore_patterns "fresh seed missing a pattern"; all=0; }
+  local e="$TMP/wf-exist"; mkrepo "$e"
+  mkdir -p "$e/docs/tasks/.workflow"
+  printf '*.ship.json\n# operator note\nkeep-me.json' > "$e/docs/tasks/.workflow/.gitignore"   # pre-IMP-090 seed + operator lines, NO trailing newline
+  _t06_install "$e" >/dev/null
+  _t06_install "$e" >/dev/null                       # append-once must hold across two installs
+  local gi2="$e/docs/tasks/.workflow/.gitignore"
+  [ "$(grep -cxF '*.manifest.json' "$gi2")" = 1 ] \
+    || { fail t07_workflow_gitignore_patterns "manifest pattern not exactly once after two installs"; all=0; }
+  [ "$(grep -cxF '*.ship.json' "$gi2")" = 1 ] \
+    || { fail t07_workflow_gitignore_patterns "ship pattern churned"; all=0; }
+  { grep -qxF '# operator note' "$gi2" && grep -qxF 'keep-me.json' "$gi2"; } \
+    || { fail t07_workflow_gitignore_patterns "operator lines lost or mangled (trailing-newline heal broken)"; all=0; }
+  [ "$all" -eq 1 ] && ok t07_workflow_gitignore_patterns
+}
+
 t01_gitignore_managed_block
 t02_changelog_once
 t03_root_task_migration
@@ -294,6 +368,10 @@ t05_hookspath_uninstall
 t05_short_foreign_uninstall_preserved
 t05_summary_names_path
 t05_non_git_skip
+t06_consumer_template_default
+t06_platform_keeps_comment
+t06_existing_config_untouched
+t07_workflow_gitignore_patterns
 
 echo "install-hygiene: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

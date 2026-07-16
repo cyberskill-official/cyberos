@@ -18,9 +18,11 @@
 //       that one cell; every other byte of the line (title, tags, comments, CR) is
 //       preserved. Refuses with exit 6 on a missing row, on 2+ matching rows (corrupted
 //       backlog — both lines are named, never a guess), or on any drift. When the
-//       containing `## section` header carries `(N status, ...)` counts, the counts are
-//       updated (from -1, to +1, zero counts dropped, statuses in lifecycle order);
-//       a header without parseable counts is left untouched.
+//       containing `## section` header carries `(N status, ...)` counts, the header is
+//       rewritten from a FULL RETALLY of the section's rows after the flip (zero-count
+//       statuses omitted, statuses in lifecycle order) — an inherited wrong count is
+//       corrected, never propagated (TASK-IMP-092); a header without parseable counts
+//       is left untouched.
 //   insert <task-id> <stem> <title> <status> [--backlog <path>] [--section <name>] [--class product|improvement]
 //       Uniqueness gate first: NO row for <task-id> (or <stem>) may pre-exist anywhere
 //       in the file — violation is exit 7 naming the line. The row is rendered in the
@@ -28,7 +30,8 @@
 //       for --class improvement) and placed in stem-ascending order inside the target
 //       section's contiguous row block (bytewise on the stem token only — titles never
 //       affect placement). A `- (nothing remaining)` placeholder is replaced by the new
-//       first row. Header counts gain +1 <status> when the header carries counts.
+//       first row. A counted header is rewritten from a full retally of the section's
+//       rows after the insert (same rule as flip - TASK-IMP-092).
 //       --section names the target `## <name>` section; without it the section is
 //       auto-detected as the unique section already holding rows with the same
 //       `TASK-<MODULE>-` prefix (zero or many candidates = exit 2, pass --section).
@@ -135,21 +138,30 @@ function parseCountsHeader(raw) {
   return { prefix: m[1], counts };
 }
 
-// Returns the rewritten header line, or null when the header carries no counts or the
-// counts do not cover the mutation (a header that never counted this row is left alone
-// rather than rewritten into a lie).
-function updateHeaderCounts(raw, deltas) {
-  const parsed = parseCountsHeader(raw);
+// Rewrites the header at lines[h] from a FULL RETALLY of its section's rows — every
+// `- [<status>] <stem> - <title>` row between the header and the next `## ` header (in
+// the regenerated layout that is the section's contiguous row block; the placeholder
+// parses as no row). Replaces the incremental +1/-1 adjust (TASK-IMP-092): incremental
+// adjustment faithfully preserves an inherited lie forever (the 086 incident's 34 vs
+// true 20), while the retally makes every mutation emit the section's truth. Returns
+// the rewritten line, or null when the header carries no parseable counts (bare
+// headers stay untouched) or the section has no rows to tally (never `()`, never a
+// zero entry). Rendering keeps the file's own convention: two spaces before the paren,
+// zero-count statuses omitted, statuses in lifecycle (STATUS_ORDER) order; rows whose
+// status token is outside the enum are not counted, matching regen_backlog().
+function retallyHeader(lines, h) {
+  const parsed = parseCountsHeader(lines[h]);
   if (!parsed) return null;
-  const { prefix, counts } = parsed;
-  for (const [status, d] of Object.entries(deltas)) {
-    const cur = counts.get(status) || 0;
-    if (cur + d < 0) return null; // counts don't cover this row; refuse to write a negative
-    counts.set(status, cur + d);
+  const tally = new Map();
+  for (let i = h + 1; i < lines.length; i++) {
+    if (stripCR(lines[i]).startsWith("## ")) break;
+    const row = parseRow(lines[i]);
+    if (row && STATUS_ORDER.includes(row.status)) tally.set(row.status, (tally.get(row.status) || 0) + 1);
   }
-  const rendered = STATUS_ORDER.filter((s) => (counts.get(s) || 0) > 0)
-    .map((s) => `${counts.get(s)} ${s}`).join(", ");
-  return `${prefix}  (${rendered})` + crOf(raw);
+  if (tally.size === 0) return null;
+  const rendered = STATUS_ORDER.filter((s) => (tally.get(s) || 0) > 0)
+    .map((s) => `${tally.get(s)} ${s}`).join(", ");
+  return `${parsed.prefix}  (${rendered})` + crOf(lines[h]);
 }
 
 const nearestHeaderAbove = (lines, idx) => {
@@ -189,7 +201,7 @@ function cmdFlip(root, positionals, opts) {
   let headerInfo = { header_line: null, old_header: null, new_header: null };
   const h = nearestHeaderAbove(lines, i);
   if (h >= 0) {
-    const rewritten = updateHeaderCounts(lines[h], { [from]: -1, [to]: +1 });
+    const rewritten = retallyHeader(lines, h);
     if (rewritten !== null && rewritten !== lines[h]) {
       headerInfo = { header_line: h + 1, old_header: stripCR(lines[h]), new_header: stripCR(rewritten) };
       lines[h] = rewritten;
@@ -198,7 +210,7 @@ function cmdFlip(root, positionals, opts) {
   atomicWrite(path, lines.join("\n"));
   return {
     code: 0, backlog: given, line: i + 1, old_line: stripCR(oldLine), new_line: stripCR(newLine), ...headerInfo,
-    message: `flip ${id}: [${from}] -> [${to}] at line ${i + 1}${headerInfo.header_line ? `; header counts updated at line ${headerInfo.header_line}` : ""}`,
+    message: `flip ${id}: [${from}] -> [${to}] at line ${i + 1}${headerInfo.header_line ? `; header retallied at line ${headerInfo.header_line}` : ""}`,
   };
 }
 
@@ -294,7 +306,7 @@ function cmdInsert(root, positionals, opts) {
   }
 
   let headerInfo = { header_line: null, old_header: null, new_header: null };
-  const rewritten = updateHeaderCounts(lines[target.header], { [status]: +1 });
+  const rewritten = retallyHeader(lines, target.header);
   if (rewritten !== null && rewritten !== lines[target.header]) {
     headerInfo = { header_line: target.header + 1, old_header: stripCR(lines[target.header]), new_header: stripCR(rewritten) };
     lines[target.header] = rewritten;
@@ -303,7 +315,7 @@ function cmdInsert(root, positionals, opts) {
   return {
     code: 0, backlog: given, line: insertedAt + 1, row: stripCR(newRow), section: target.name,
     replaced_placeholder: single, ...headerInfo,
-    message: `insert ${id}: row landed at line ${insertedAt + 1} in '## ${target.name}'${single ? " (placeholder replaced)" : ""}${headerInfo.header_line ? `; header counts updated at line ${headerInfo.header_line}` : ""}`,
+    message: `insert ${id}: row landed at line ${insertedAt + 1} in '## ${target.name}'${single ? " (placeholder replaced)" : ""}${headerInfo.header_line ? `; header retallied at line ${headerInfo.header_line}` : ""}`,
   };
 }
 
@@ -316,8 +328,9 @@ commands
   flip <task-id> <from> <to> [--backlog <path>] [--old-line <text>]
       rewrite ONE status cell: the row is located by stem, the cell must equal <from>,
       and --old-line (the recorded pre-image) must match the full line byte-for-byte
-      when given; every other byte of the line is preserved. Section-header counts
-      update when the header carries '(N status, ...)' counts.
+      when given; every other byte of the line is preserved. A counted section header
+      ('(N status, ...)') is rewritten from a full retally of the section's rows after
+      the flip; bare headers stay untouched.
   insert <task-id> <stem> <title> <status> [--backlog <path>] [--section <name>] [--class product|improvement]
       insert ONE row in the regenerator-identical grammar
       '- [<status>] <stem> - <title>' (+ ' (improvement)'), stem-ascending inside the
@@ -333,7 +346,9 @@ exit codes
   7  insert refusal: a row for the id already exists (uniqueness pre-image violated)
 
 discipline
-  a mutation is exactly one row plus at most one header line; this tool never moves,
+  a mutation is exactly one row plus at most one header line; the header line, when
+  counted, is a FULL retally of the section's rows after the mutation — an inherited
+  wrong count is corrected, never propagated (TASK-IMP-092). this tool never moves,
   reorders, or deletes rows, never normalizes line endings (CRLF round-trips), and never
   touches the Totals line. deterministic: identical input + args = byte-identical result
   file and stdout (no clock, no randomness in output). writes are two-phase atomic

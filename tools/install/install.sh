@@ -41,7 +41,17 @@ fi
 echo "cyberos install: target repo = $root (CyberOS $avail_ver)"
 mkdir -p "$CY" "$root/docs/tasks/_audits"
 mkdir -p "$root/docs/tasks/.workflow"
-[ -f "$root/docs/tasks/.workflow/.gitignore" ] || printf '%s\n' '*.ship.json' > "$root/docs/tasks/.workflow/.gitignore"  # ship-manifest@1 run state stays untracked (TASK-CUO-206)
+# .workflow run state stays untracked: ship manifests (TASK-CUO-206) + task-author run
+# manifests (TASK-IMP-090). Fresh seed carries both patterns; an existing seed that
+# predates the manifest pattern gains it exactly once (append-once, idempotent across
+# re-installs; operator lines and everything else in the file are never touched).
+wf_ignore="$root/docs/tasks/.workflow/.gitignore"
+if [ ! -f "$wf_ignore" ]; then
+  printf '%s\n' '*.ship.json' '*.manifest.json' > "$wf_ignore"
+elif ! grep -qxF '*.manifest.json' "$wf_ignore"; then
+  [ -z "$(tail -c 1 "$wf_ignore")" ] || printf '\n' >> "$wf_ignore"   # heal a missing trailing newline so the pattern lands as its own line
+  printf '%s\n' '*.manifest.json' >> "$wf_ignore"
+fi
 
 # 1. vendor the machine by module (replace any prior copy) --------------------
 rm -rf "$CY/cuo" "$CY/plugin" "$CY/mcp"
@@ -170,19 +180,31 @@ HITL_REQUIRED="true"
 EOF
 
 # 3b. scaffold .cyberos/config.yaml exactly once (TASK-CUO-207 §1 #3; never clobber) --
+# is_platform_repo() is HOISTED here from the AGENTS.md handling further down (its other
+# caller) because step 3b runs first and needs it: consumer installs scaffold a LIVE
+# `task_template: task@1` line so a fresh repo's first authoring run resolves the profile
+# its vendored materials assume; the platform repo keeps the commented corpus default so
+# the heavy profile stays operator-chosen (TASK-IMP-088, recorded decision IMP-06).
+is_platform_repo() {
+  # CyberOS monorepo: root AGENTS.md is the normative Layer-1 protocol source.
+  [ -f "$root/modules/memory/memory.schema.json" ]
+}
 cfg_file="$root/.cyberos/config.yaml"
 if [ ! -f "$cfg_file" ]; then
+  cfg_tmpl_line="task_template: task@1"
+  is_platform_repo && cfg_tmpl_line="# task_template: engineering-spec@1"
   cat > "$cfg_file" <<EOF
-# .cyberos/config.yaml - per-repo CyberOS overrides (TASK-CUO-207). Everything below is
-# commented out = inert; uncomment a line to override ONLY that key. Detected defaults
-# are shown as comments so this file documents what runs today.
+# .cyberos/config.yaml - per-repo CyberOS overrides (TASK-CUO-207). Commented lines are
+# inert; uncomment one to override ONLY that key. Detected defaults are shown as comments
+# so this file documents what runs today. Live (uncommented) lines are in effect as
+# written - on consumer installs, task_template is scaffolded live (TASK-IMP-088).
 # gates:
 #   build: "$BUILD_CMD"$([ -n "$SRC_BUILD" ] && printf '%s' "        # autodetected: $SRC_BUILD")
 #   lint: "$LINT_CMD"$([ -n "$SRC_LINT" ] && printf '%s' "         # autodetected: $SRC_LINT")
 #   test: "$TEST_CMD"$([ -n "$SRC_TEST" ] && printf '%s' "         # autodetected: $SRC_TEST")
 #   coverage: "$COVERAGE_CMD"$([ -n "$SRC_COVERAGE" ] && printf '%s' "     # autodetected: $SRC_COVERAGE")
 # coverage_threshold: 90
-# task_template: engineering-spec@1
+$cfg_tmpl_line
 # profile: full
 EOF
 fi
@@ -359,10 +381,7 @@ SP_MARK="cyberos-agent-spine (managed by cyberos install; edit above/below this 
 write_agents_spine() {
   { agents_spine; printf '\n<!-- %s -->\n' "$SP_MARK"; } > "$root/AGENTS.md"
 }
-is_platform_repo() {
-  # CyberOS monorepo: root AGENTS.md is the normative Layer-1 protocol source.
-  [ -f "$root/modules/memory/memory.schema.json" ]
-}
+# is_platform_repo() is defined above step 3b (hoisted there for the config.yaml scaffold - TASK-IMP-088).
 is_protocol_dump() {
   # Follows symlinks; true if content is the dense Layer-1 protocol.
   [ -e "$root/AGENTS.md" ] && grep -q 'Layer-1 Memory Protocol' "$root/AGENTS.md" 2>/dev/null
