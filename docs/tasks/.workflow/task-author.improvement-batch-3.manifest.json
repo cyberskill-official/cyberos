@@ -1,0 +1,19 @@
+{
+  "manifest_version": "task-manifest@1",
+  "skill_id": "task-author",
+  "created_at": "2026-07-16T17:20:00Z",
+  "trace_id": "cowork-cyberos-improvement-batch3-2026-07-16",
+  "output_dir": "docs/tasks/improvement/",
+  "batch_size_requested": 5,
+  "template_resolution": { "resolved": "task@1", "source": "repo corpus convention" },
+  "source_files": [ { "path": "../IMPROVEMENT_HANDOFF.md (IMP-06/07/11 decisions recorded 2026-07-16; IMP-17/18 findings)", "media_type": "text/markdown" } ],
+  "plan": { "status": "AWAITING_APPROVAL", "open_questions": [] },
+  "artefacts": [
+    { "id": "TASK-IMP-088", "slug": "consumer-default-template", "title": "install scaffolds task_template task@1 in consumer config.yaml", "type": "improvement", "priority": "p1", "handoff_item": "IMP-06", "cone": "tools/install/install.sh step 3b + hygiene test", "status": "PLANNED" },
+    { "id": "TASK-IMP-089", "slug": "template-drop-section-4", "title": "task@1 template drops the duplicate out-of-scope section 4", "type": "improvement", "priority": "p2", "handoff_item": "IMP-07", "cone": "tools/install/templates/TASK-TEMPLATE.md + template schema test", "status": "PLANNED" },
+    { "id": "TASK-IMP-090", "slug": "untracked-author-manifests", "title": "task-author manifests default to untracked .workflow session state", "type": "improvement", "priority": "p2", "handoff_item": "IMP-11", "cone": "modules/skill/task-author/SKILL.md + install.sh .workflow gitignore seed (serial with 088, same agent)", "status": "PLANNED" },
+    { "id": "TASK-IMP-091", "slug": "regen-backlog-all-statuses", "title": "regen_backlog emits every status and recomputes Totals from frontmatter", "type": "improvement", "priority": "p1", "handoff_item": "IMP-17", "cone": "scripts/migrate_improvement_to_task.py + regen parity test", "status": "PLANNED" },
+    { "id": "TASK-IMP-092", "slug": "view-safe-mutations", "title": "Lost-update hardening, retally headers and committed-object evidence", "type": "improvement", "priority": "p0", "handoff_item": "IMP-18", "cone": "backlog-mutate.mjs retally + test_workflow_helpers + ship-tasks.md doctrine (one writer one view; git-show evidence)", "status": "PLANNED" }
+  ],
+  "hitl_pending": { "any_blocking": true, "gate": "PLAN_APPROVAL" }
+}

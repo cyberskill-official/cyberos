@@ -168,7 +168,7 @@ Totals: 336 draft, 4 ready_to_implement, 15 implementing, 158 done, 1 on_hold, 1
 - [draft] TASK-HR-008-performance-signals - HR performance signal aggregator — read-only consumer of PROJ + TIME + LEARN signals for periodic performance snapshots
 - [draft] TASK-HR-009-termination-workflow - HR termination workflow — Good-Leaver / Bad-Leaver branch with CFO+CEO co-sign + ESOP forfeiture + access revocation cascade
 
-## improvement  (67 draft, 20 done)
+## improvement  (67 draft, 5 ready_to_implement, 20 done)
 
 - [draft] TASK-IMP-001-dependency-audit-in-ci-cargo-audit-cargo-deny - Dependency audit in CI (cargo-audit + cargo-deny)
 - [draft] TASK-IMP-002-refuse-dev-cors-in-production-boot - Refuse dev CORS in production boot
@@ -257,6 +257,11 @@ Totals: 336 draft, 4 ready_to_implement, 15 implementing, 158 done, 1 on_hold, 1
 - [done] TASK-IMP-085-workflow-helpers - Doc-driven workflow helpers, ship-manifest and backlog-mutate CLIs
 - [done] TASK-IMP-086-backlog-index-backfill - Backfill the improvement backlog index rows 068-081 to frontmatter truth
 - [done] TASK-IMP-087-release-checklist - Release-readiness checklist for 1.0.0 at docs/release/
+- [ready_to_implement] TASK-IMP-088-consumer-default-template - install scaffolds task_template task@1 in consumer config.yaml
+- [ready_to_implement] TASK-IMP-089-template-drop-section-4 - task@1 template drops the duplicate out-of-scope section 4
+- [ready_to_implement] TASK-IMP-090-untracked-author-manifests - task-author manifests default to untracked .workflow session state
+- [ready_to_implement] TASK-IMP-091-regen-backlog-all-statuses - regen_backlog emits every status and recomputes Totals from frontmatter
+- [ready_to_implement] TASK-IMP-092-view-safe-mutations - Lost-update hardening, retally headers and committed-object evidence
 
 ## inv  (10 draft, 1 ready_to_implement)
 
