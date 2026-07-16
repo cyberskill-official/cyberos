@@ -1,0 +1,28 @@
+{
+  "manifest_version": "task-manifest@1",
+  "skill_id": "task-author",
+  "skill_version": "1.0.0",
+  "created_at": "2026-07-16T15:10:00Z",
+  "trace_id": "cowork-cyberos-improvement-batch2-2026-07-16",
+  "caller_persona": "operator:stephen-cheng",
+  "output_dir": "docs/tasks/improvement/",
+  "naming_pattern": "TASK-IMP-{NNN}-{slug}/spec.md",
+  "batch_size_requested": 3,
+  "template_resolution": { "resolved": "task@1", "source": "repo corpus convention", "chain": "corpus > default" },
+  "source_files": [ { "path": "../IMPROVEMENT_HANDOFF.md", "media_type": "text/markdown" }, { "path": "batch-1 run findings (backlog index drift 068-081)", "media_type": "run-evidence" } ],
+  "plan": {
+    "status": "AWAITING_APPROVAL",
+    "open_questions": [
+      "Q1 PLAN approval for the 3-member batch",
+      "Q2 IMP-06 decision: default template profile for installed repos",
+      "Q3 IMP-07 decision: task@1 dual out-of-scope sections",
+      "Q4 IMP-11 decision: task-author manifest location and tracking policy"
+    ]
+  },
+  "artefacts": [
+    { "id": "TASK-IMP-085", "slug": "workflow-helpers", "title": "Doc-driven workflow helpers, ship-manifest and backlog-mutate CLIs", "type": "improvement", "module": "improvement", "priority": "p0", "depends_on": [], "status": "PLANNED", "handoff_item": "IMP-04" },
+    { "id": "TASK-IMP-086", "slug": "backlog-index-backfill", "title": "Backfill the improvement backlog index rows 068-081 to frontmatter truth", "type": "chore", "module": "improvement", "priority": "p1", "depends_on": [], "status": "PLANNED", "handoff_item": "batch-1 finding" },
+    { "id": "TASK-IMP-087", "slug": "release-checklist", "title": "Release-readiness checklist for 1.0.0 at docs/release/", "type": "chore", "module": "improvement", "priority": "p1", "depends_on": [], "status": "PLANNED", "handoff_item": "IMP-15" }
+  ],
+  "hitl_pending": { "any_blocking": true, "gate": "PLAN_APPROVAL" }
+}

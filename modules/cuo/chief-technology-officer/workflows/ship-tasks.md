@@ -1,6 +1,6 @@
 ---
 workflow_id: chief-technology-officer/ship-tasks
-workflow_version: 2.6.1
+workflow_version: 2.6.2
 purpose: Drive each eligible task in `docs/tasks/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the task back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
 persona: chief-technology-officer
 cadence: per-task (loops continuously over BACKLOG.md)
@@ -110,6 +110,8 @@ There is exactly ONE backlog: `docs/tasks/BACKLOG.md` indexes every task, `class
 - Row format: `- [status] task-ID-slug - title`, with an `(improvement)` suffix tag on `class: improvement` rows; product rows are untagged. Example: `- [ready_to_implement] TASK-007-rate-limit - login rate limiting (improvement)`.
 - Grouping: small repos group rows into lifecycle-status sections (`ready_to_implement` / in flight / done / on_hold-closed — the init template); large monorepos may group by module with the status tag on each row. Both are conforming: frontmatter is the record of truth and every row carries its status either way.
 - Task files all live under `docs/tasks/`: flat (`TASK-001-slug.md`) for small repos, module subfolders (`<module>/task-<MOD>-NNN-slug.md`) for monorepos. `improvement/` is a normal subfolder there for cross-cutting hardening tasks — not a separate top-level home.
+
+Backlog writes are executed by `tools/install/docs-tools/backlog-mutate.mjs` (`.cyberos/docs-tools/backlog-mutate.mjs` in installed repos) - the byte-discipline executor for `backlog-state-update` mutations: it flips one status cell only after verifying the old line byte-for-byte (refusing on drift with a non-zero exit), inserts one row under the uniqueness gate with the section's own grammar and stem-ascending placement, and keeps section-header counts true - never hand-sed (TASK-IMP-085).
 
 ### HITL — human-in-the-loop is REQUIRED
 
@@ -306,6 +308,11 @@ staleness rule but retains count and history.
 order by priority (MUST before SHOULD before COULD), then `created` ascending, then id ascending. Echo the
 selection before step 1: `queue: picked <id> (priority=<p>, created=<d>) over <n> other eligible tasks`.
 Reference implementation: `modules/cuo/cuo/ship_manifest.py` (doc-driven agents apply this section directly).
+The vendored executable of this section is `tools/install/docs-tools/ship-manifest.mjs`
+(`.cyberos/docs-tools/ship-manifest.mjs` in installed repos) - the doc-driven reference
+implementation alongside `ship_manifest.py`: `init` pins, `record` hashes artefacts at write
+time, `verify`/`resume-line` walk the staleness order above with distinct exit codes and echo
+the mandated resume line; reach for it instead of re-deriving the algorithm (TASK-IMP-085).
 
 ## Cross-references
 

@@ -1,0 +1,28 @@
+---
+artefact: edge-case-matrix@1
+task_id: TASK-IMP-085
+total_rows: 13
+created: 2026-07-16
+verdict: pass (edge-case-matrix-audit: every category >=1 row, covered-by names real test functions, SECURITY rows point at code+test, DEGRADATION rows carry detection+recovery)
+---
+# Edge-case matrix - TASK-IMP-085
+
+All test functions live in tools/install/tests/test_workflow_helpers.sh.
+
+| # | category | trigger | expected behavior | covered by |
+|---|---|---|---|---|
+| 1 | null/empty | step recorded without an artefact (`skipped-conditional`, gate steps) | entry carries the full seven-field shape with `artefact_path`/`artefact_sha256`/`completed_at` nulls where the contract says null - never omitted keys | t01_manifest_lifecycle (step-3 shape assert) |
+| 2 | null/empty | insert into an empty section (regen placeholder `- (nothing remaining)` only) | the placeholder becomes the first row of the block (regen-identical: rows XOR placeholder, never both); header counts gain the new status | t05_insert_uniqueness_and_grammar + t06_counts_maintained (beta arms) |
+| 3 | bounds | SEVERAL artefacts stale at once (steps 1 and 2 both tampered) | exit 5 names step 1 - the EARLIEST mismatch, walk ascending, stop at first; step 2 never appears (that step and all later are stale by implication) | t03_verify_staleness_exits |
+| 4 | bounds | a flip drains a status to zero; an insert introduces a status the header never carried | zero counts are DROPPED from the header (never `0 x`, never negative); a new status joins in lifecycle (STATUS_ORDER) position, not appended | t06_counts_maintained |
+| 5 | malformed | kill mid-write: a garbage `.ship.json.tmp.<nonce>` litters `.workflow/` | readers open the manifest path exactly and ignore tmp files - verify exit 0, record lands, main file stays valid JSON, the planted tmp is never consumed and successful writes leave no litter of their own | t02_two_phase_atomic |
+| 6 | malformed | the flip target row appears TWICE (corrupted backlog) | exit 6 naming both line numbers - never guess which row is real | t04_flip_and_drift_refusal (dup arm) |
+| 7 | malformed | task spec edited (or moved - unreadable re-hash) after init | verify exit 4, never a crash: every step stale, restart at step 1, history and routed_back_count retained (verify only reports, it never rewrites) | t03_verify_staleness_exits |
+| 8 | concurrency/order | pre-image drifted under the writer: status cell no longer `<from>`, or `--old-line` differs byte-for-byte | exit 6 refusal (optimistic concurrency, SKILL.md §3). Two flips racing is out of scope BY DESIGN - single-writer discipline stays with the workflow; this refusal is the guard when it is violated anyway | t04_flip_and_drift_refusal |
+| 9 | concurrency/order | identical runs repeated: init+record on two fresh roots under one pinned `CYBEROS_NOW`; verify/flip `--json` twice; flip on two identical fixture copies | byte-identical manifests, envelopes, and mutated backlogs (cmp) - the injectable clock is the ONLY time source, JSON is stable-stringified, nothing random reaches output | t07_json_and_determinism |
+| 10 | concurrency/order | unicode title (`Tiêu đề tiếng Việt ✓`) inserted among ASCII stems | placement is bytewise on the STEM token only - titles never affect order; the rendered row carries the title and the ` (improvement)` tag verbatim | t05_insert_uniqueness_and_grammar |
+| 11 | SECURITY | hostile arguments: a task-id shaped like a path (`../x`), a title smuggling `\n- [done] TASK-X - smuggled` | task-id must match `^[A-Za-z0-9._-]+$` (a filename component, never a path - ship-manifest.mjs ID_RE); titles with newline bytes are exit 2 under the row-injection guard (one mutation is one row). Both tools read/write only the declared files under docs/tasks/, import node:fs/path/crypto only - no shell-out, no network, no eval; `--json` output is data | t05_insert_uniqueness_and_grammar (injection arm) + code inspection (import blocks) |
+| 12 | SECURITY/bytes | CRLF backlog | bytes preserved outside the mutated line: CR count unchanged across flip, the flipped row keeps its `\r`, an inserted row INHERITS the section's ending - the tool neither normalizes nor introduces line-ending drift | t07_json_and_determinism (CRLF arms) |
+| 13 | DEGRADATION | manifest missing; artefact missing at record time; tools dropped from the payload; doctrine pointers lost | detection: verify/record on nothing -> loud exit 2 (`run init first` / `unreadable at record time` - never a null hash for a claimed file); t08 gates payload presence + byte parity with source + a live run of the INSTALLED copies incl. an init/verify lifecycle in the scratch repo; t09 gates the two ship-tasks.md pointers (source, payload cuo/, plugin copy) + the 2.6.2 bump. recovery: build.sh guarded copies are a re-vendor away; re-install lays the tools back down | t01_manifest_lifecycle, t02_two_phase_atomic, t08_payload_and_install, t09_doctrine_wiring |
+
+Documented-by-design: `verify <task-id>` with no version source anywhere (no flag, no doc discoverable) SKIPS the version check with a loud note rather than failing or silently passing - the fixture repos exercise the note path implicitly, and real repos always have a discoverable doc (modules/ or .cyberos/). A flip whose section header counts do not cover the from-status leaves the header untouched (the tool never writes a negative or a lie); `Totals:` at file top is outside every declared mutation (t06 pins it). Section CREATION is refused (exit 2) - regen owns it; SKILL.md §2b's "create the section" branch stays with the regenerator, disclosed in code-review.md.

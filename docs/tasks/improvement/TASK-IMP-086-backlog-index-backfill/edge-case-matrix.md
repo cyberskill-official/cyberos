@@ -1,0 +1,28 @@
+---
+artefact: edge-case-matrix@1
+task_id: TASK-IMP-086
+total_rows: 6
+created: 2026-07-16
+verdict: pass (edge-case-matrix-audit: every category >=1 row, covered-by names recorded evidence items in gate-log-draft.md (this is an ops-verified chore - the evidence log stands where a test suite would), SECURITY row points at mechanism+evidence, DEGRADATION row carries detection+recovery)
+---
+# Edge-case matrix - TASK-IMP-086
+
+Covered-by references are evidence items in gate-log-draft.md (E0-E6, E-SPLICE) -
+the spec's ACs 1-4 are ops-verified with recorded evidence; a permanent test is
+explicitly out of scope (it would go red on other sections' pre-existing drift).
+
+| # | category | trigger | expected behavior | covered by |
+|---|---|---|---|---|
+| 1 | enum / off-ramp | a 068-081 task whose frontmatter status is an off-ramp (`on_hold`, `closed`) | the row carries that status verbatim and the header tally includes it - the emitter has NO mapping table to miss a value (f-string straight from yaml), and the header formatter iterates the full STATUS_ORDER including both off-ramps | E-SPLICE (verbatim f-string + STATUS_ORDER incl. on_hold/closed; run output shows the tally built from row cells), E3 (tally-vs-header equality); factually none present today - all fourteen read `done` at write time (E5) |
+| 2 | grammar collision | title containing the grammar's own ` - ` separator (068, 070, 071, 072, 081 - e.g. 081's title even cites another task id) | title emitted verbatim after the FIRST separator; parsers key on the stem token (`$3`), never the tail, so the extra separators and the embedded "TASK-IMP-080" change nothing | E5 (byte-exact row equality for all five titles), E4 (the `$3`-keyed dup scan returns 0 despite the tails; the token-level 080 hit is located at the title tail, line 253, and explained) |
+| 3 | DEGRADATION / fallback | the preferred regenerator path would churn pre-existing rows (§1 #1.5 violation) | detection: dry-run to /tmp/dry86 and diff BEFORE any repo write - caught 3 done-row deletions + a Totals rewrite + zero backfill rows (ACTIVE filter drops done tasks). recovery: surgical splice; the repo pre-image was never touched by the trial (script relocated so ROOT resolved to /tmp) | E1 (full commands, diff output, and the migrate_improvement_to_task.py:19-20/:201 pin for WHY) |
+| 4 | malformed input | a 068-081 folder with missing spec.md, unparseable frontmatter, id/folder-stem mismatch, or a multi-line title | HALT naming the folder, before any write - a row is never invented (spec §3: "surface it and halt rather than inventing a row") | E-SPLICE (the four sys.exit guards in the recorded script text, all positioned before `bl.write_text`); E0/E5 (pre-scan and recheck parsed 14/14, so no guard fired) |
+| 5 | uniqueness / order | duplicate stem in the pre-image, or one introduced by the splice; block order broken by insertion | pre-check IS AC 4's scan run before writing (0 dups, zero 068-081 rows pre-existed -> insertion cannot double a row); post-image: folder stems 0 dup, row stems 0 dup, whole block still bytewise stem-ascending | E0 (pre-check), E4 (three scans + the explained token hit), E4b (sort -c over the whole 87-row block) |
+| 6 | SECURITY | hostile title bytes attempting to fabricate structure - a title containing a row prefix (`- [draft] FAKE...`), a section heading (`## evil`), or an id token of another task | cannot break out of the tail: the emitter refuses multi-line titles (HALT), so a title can never carry a newline into the index - and without a newline, row/heading grammar cannot start; the payload lands as inline text after the stem on ONE line of inert markdown (no execution surface, spec §3 security-class: none). Foreign id tokens in tails are data - nothing keys on them | E-SPLICE (the `'\n' in title` HALT guard), E5 (each row is exactly one line, byte-equal to grammar + frontmatter), E4/E4c (the real-world instance: 081's tail cites TASK-IMP-080 and alters no scan verdict keyed on stems) |
+
+Documented-by-design: the recomputed header equalling the pre-existing header
+byte-for-byte (E-SPLICE) is not an edge slipped past - the old header already
+forward-counted 068-081 from frontmatter (regen counts unlisted done tasks), so
+row-parity restoration NECESSARILY reproduces it; §1 #1.4 demands recompute-and-
+match, not a byte change. The repo-wide `Totals:` line drift (155 vs 158 done,
+E1) is other sections' pre-existing drift, named out-of-scope by the spec.
