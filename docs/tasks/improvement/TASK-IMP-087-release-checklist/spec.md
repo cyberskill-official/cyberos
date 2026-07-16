@@ -4,7 +4,7 @@ title: Release-readiness checklist for 1.0.0 at docs/release/
 template: task@1
 type: chore
 module: improvement
-status: testing
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
@@ -21,7 +21,7 @@ verify: I
 phase: "pre-1.0.0 release"
 owner: Stephen Cheng (CTO)
 created: 2026-07-16
-shipped: null
+shipped: 2026-07-16
 memory_chain_hash: null
 effort_hours: 2
 service: docs/release

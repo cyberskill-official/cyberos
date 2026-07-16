@@ -4,7 +4,7 @@ title: Doc-driven workflow helpers, ship-manifest and backlog-mutate CLIs
 template: task@1
 type: improvement
 module: improvement
-status: testing
+status: done
 priority: p0
 author: "@stephencheng"
 department: engineering
@@ -21,7 +21,7 @@ verify: T
 phase: "pre-1.0.0 hardening"
 owner: Stephen Cheng (CTO)
 created: 2026-07-16
-shipped: null
+shipped: 2026-07-16
 memory_chain_hash: null
 effort_hours: 6
 service: tools/install/docs-tools
