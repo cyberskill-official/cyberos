@@ -4,7 +4,7 @@ title: install scaffolds task_template task@1 in consumer config.yaml
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: implementing
 priority: p1
 author: "@stephencheng"
 department: engineering
