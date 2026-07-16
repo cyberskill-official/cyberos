@@ -4,7 +4,7 @@ title: ship-tasks reconcile entry phase and depends_on evidence gating
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: implementing
 priority: p1
 author: "@stephencheng"
 department: engineering

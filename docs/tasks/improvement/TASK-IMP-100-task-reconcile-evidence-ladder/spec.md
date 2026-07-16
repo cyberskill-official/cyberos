@@ -4,7 +4,7 @@ title: task-reconcile, evidence ladder and report for drifted task states
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: implementing
 priority: p1
 author: "@stephencheng"
 department: engineering
