@@ -172,6 +172,9 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   [ -f "$here/../docs-site/md.mjs" ] && cp "$here/../docs-site/md.mjs" "$out/docs-tools/"
   # task-lint: deterministic machine floor under audit_rubric@2.0 (TASK-IMP-084)
   [ -f "$here/docs-tools/task-lint.mjs" ] && cp "$here/docs-tools/task-lint.mjs" "$out/docs-tools/"
+  # workflow helpers: ship-manifest@1 executor + backlog-state-update byte-discipline executor (TASK-IMP-085)
+  [ -f "$here/docs-tools/ship-manifest.mjs" ] && cp "$here/docs-tools/ship-manifest.mjs" "$out/docs-tools/"
+  [ -f "$here/docs-tools/backlog-mutate.mjs" ] && cp "$here/docs-tools/backlog-mutate.mjs" "$out/docs-tools/"
   [ -f "$here/../../modules/templates/html/status-hub.html" ] && cp "$here/../../modules/templates/html/status-hub.html" "$out/docs-tools/templates/"
   [ -f "$here/../../modules/templates/html/status-app.js" ] && cp "$here/../../modules/templates/html/status-app.js" "$out/docs-tools/templates/"
   [ -f "$here/../../modules/templates/cds/status.css" ] && cp "$here/../../modules/templates/cds/status.css" "$out/docs-tools/templates/"
