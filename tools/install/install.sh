@@ -245,13 +245,21 @@ if [ "${CYBEROS_NO_MIGRATE:-0}" != "1" ]; then
   fi
 fi
 
-# The summary must never claim a page that was not rendered (migration is what renders it).
+# The summary must never claim a page (or a part of it) that was not rendered (migration is
+# what renders it). data/ holds per-task spec chunks and only exists once tasks land, so a
+# fresh 0-task install legitimately ships index.html + assets/ alone - list what IS there.
 if [ -f "$root/docs/status/index.html" ]; then
-  STATUS_SET="docs/status/ (index.html + assets/ + data/; ONE page, three lenses - board | table |
+  status_parts="index.html"
+  [ -d "$root/docs/status/assets" ] && status_parts="$status_parts + assets/"
+  [ -d "$root/docs/status/data" ]   && status_parts="$status_parts + data/"
+  STATUS_SET="docs/status/ ($status_parts; ONE page, three lenses - board | table |
                                        releases - over THIS repo's tasks, with a drawer carrying each
-                                       full spec. Replaces the old standalone docs; tracked)"
+                                       full spec. data/ spec chunks appear once tasks land. Replaces
+                                       the old standalone docs; tracked)"
 else
-  STATUS_SET="none (no tasks to render - the page appears the moment this repo has its first task)"
+  # A successful install always renders the page (CHANGELOG.md seeds >=1 release even with
+  # 0 tasks), so absence here means migration was skipped or failed - say that, not "no tasks".
+  STATUS_SET="none (render skipped or failed - re-run: bash .cyberos/lib/status-page.sh .)"
 fi
 
 # 5. memory module + BRAIN (default on; skip with CYBEROS_NO_MEMORY=1) --------
