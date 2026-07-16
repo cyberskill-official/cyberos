@@ -44,7 +44,7 @@
 //        2 usage, 3 task not resolvable. Never non-zero to signal "bad task".
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { join, resolve, dirname, basename } from "node:path";
+import { join, resolve, dirname, basename, relative, isAbsolute } from "node:path";
 import { createHash } from "node:crypto";
 
 const PHASE_OF = {            // claimed status -> ship-tasks skill_chain step (workflow §skill_chain)
@@ -62,6 +62,16 @@ const ARTEFACTS_FOR = {       // cumulative phase artefact sets (corpus conventi
 const NOT_APPLICABLE = new Set(["draft", "ready_to_implement"]);
 
 class Usage extends Error { constructor(m) { super(m); this.code = 2; } }
+
+// PR-review fix (Devin, 2026-07-17): --out was resolved against the root but never CONFINED
+// to it - an absolute path or a ../ value wrote (and mkdir'd) anywhere the process could
+// reach. The sibling tool coverage-scope.mjs has always refused out-of-root paths; a
+// read-only instrument must be the stricter of the two, not the looser. Same predicate,
+// same refusal.
+const relUnderRoot = (root, p) => {
+  const rel = relative(root, resolve(root, p));
+  return (rel === "" || rel.startsWith("..") || isAbsolute(rel)) ? null : rel;
+};
 class Unresolved extends Error { constructor(m) { super(m); this.code = 3; } }
 
 const sh = (cmd, args, cwd) => spawnSync(cmd, args, { cwd, encoding: "utf8" });
@@ -186,8 +196,12 @@ function rung1(root, t) {
 }
 
 // ── R2: artefact set for the claimed phase (either home) ─────────────────────
-function rung2(root, t, status) {
-  const wfDir = join(root, "docs", "tasks", ".workflow", basename(t.dir).split("-").slice(0, 3).join("-"));
+function rung2(root, t, status, id) {
+  // The .workflow home is keyed by the task ID itself - NOT by slicing three dash-segments
+  // off the folder name (PR-review note, Devin 2026-07-17: that assumed every id is exactly
+  // three segments; a differently-shaped id would resolve the wrong home and miss a real
+  // artefact bundle). The id is what the caller resolved the folder with, so use it.
+  const wfDir = join(root, "docs", "tasks", ".workflow", id);
   const homes = [t.dir, wfDir].filter(existsSync);
   const bundleText = homes.flatMap(h => readdirSync(h)
     .filter(f => /bundle|packet|artefacts|coverage-and-review/i.test(f))
@@ -319,17 +333,19 @@ function main(argv) {
 
   const na = NOT_APPLICABLE.has(status);
   const r1 = na ? { verdict: "skipped", notes: ["not applicable"] } : rung1(root, t);
-  const r2 = na ? { verdict: "skipped", notes: ["not applicable"], missing: [] } : rung2(root, t, status);
+  const r2 = na ? { verdict: "skipped", notes: ["not applicable"], missing: [] } : rung2(root, t, status, id);
   const r3 = na ? { verdict: "skipped", notes: ["not applicable"] } : rung3(root, id);
   const r4 = na ? { verdict: "skipped", notes: ["not applicable"] } : rung4(root, fm);
   const r5 = na ? { verdict: "skipped", notes: ["not applicable"] } : rung5(root, specText, opts.runTests);
   const rec = recommend(status, r1, r2, r3, r4, r5);
   const text = report(id, status, { r1, r2, r3, r4, r5 }, rec, opts.json);
   if (opts.out) {
-    const p = resolve(root, opts.out);
+    const outRel = relUnderRoot(root, opts.out);
+    if (outRel === null) throw new Usage(`--out '${opts.out}' resolves outside the repo root - refused (a read-only instrument writes only where it was pointed)`);
+    const p = resolve(root, outRel);
     mkdirSync(dirname(p), { recursive: true });
     writeFileSync(p, text);
-    process.stderr.write(`task-reconcile: wrote ${opts.out}\n`);
+    process.stderr.write(`task-reconcile: wrote ${outRel}\n`);
   } else process.stdout.write(text);
   return 0;
 }

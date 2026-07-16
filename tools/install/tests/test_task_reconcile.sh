@@ -139,6 +139,16 @@ t04_read_only_and_spec_drift() {
   # not_applicable
   local f="$TMP/t04c"; fixture "$f" ready_to_implement no none missing
   [ "$(rec_of "$TR" TASK-DEMO-001 "$f")" = "not_applicable" ] || { fail t04_read_only_and_spec_drift "ready_to_implement was not not_applicable"; return; }
+  # --out must be confined to the repo root (PR-review, Devin 2026-07-17): resolve-without-
+  # confine let an absolute or ../ value write anywhere the process could reach. The sibling
+  # coverage-scope.mjs always refused it; a read-only instrument cannot be the looser of the two.
+  local out; out="$(node "$TR" TASK-DEMO-001 --repo "$d" --out ../escaped.md 2>&1)"; local rc=$?
+  { [ "$rc" -eq 2 ] && grep -q "resolves outside the repo root" <<<"$out"; } \
+    || { fail t04_read_only_and_spec_drift "--out ../escaped.md was not refused (rc=$rc)"; return; }
+  [ -e "$(dirname "$d")/escaped.md" ] && { fail t04_read_only_and_spec_drift "--out escaped the root"; return; }
+  out="$(node "$TR" TASK-DEMO-001 --repo "$d" --out /tmp/cyberos-escape-probe.md 2>&1)"; rc=$?
+  { [ "$rc" -eq 2 ] && [ ! -e /tmp/cyberos-escape-probe.md ]; } \
+    || { rm -f /tmp/cyberos-escape-probe.md; fail t04_read_only_and_spec_drift "absolute --out was not refused"; return; }
   ok t04_read_only_and_spec_drift
 }
 

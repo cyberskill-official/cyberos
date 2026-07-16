@@ -18,3 +18,16 @@ E3 - payload + chain: build.sh "skills=53"; check-chain-coverage.sh "chain OK: 2
 
 E4 - whole-tree gates after both tasks: 24/24 suites green (groups A 8/8, B 7/7, C 9/9);
   scripts/check_doc_anchors.sh "anchors OK: 448 references resolved", exit 0.
+
+## PR-review addendum (2026-07-17, Devin Review)
+
+**F-diag (defect, fixed).** The 2.6.4 -> 2.7.0 bump moved the version PREDICATES in t09/t12/t13
+but left their failure MESSAGES naming 2.6.4 ("workflow_version not bumped to 2.6.4"), plus
+three stale header comments. The checks were correct; the diagnostics would have sent whoever
+debugged a real failure after the wrong version. All predicates and messages now name 2.7.0.
+
+A note on the class: this is the same shape as the finding TASK-IMP-092 hardened against -
+an assertion whose STATEMENT and whose CHECK drifted apart. The check was gated; the sentence
+about the check was not. Worth remembering that a test's message is part of its contract.
+
+Reruns: test_workflow_helpers 14/14 (t09/t12/t13 pins + messages at 2.7.0), 25/25 repo-wide.

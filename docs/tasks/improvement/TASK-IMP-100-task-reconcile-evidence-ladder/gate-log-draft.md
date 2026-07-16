@@ -35,3 +35,28 @@ E4 - DOGFOOD FINDING (the reason this task exists, proving itself):
 
 E5 - read-only proof (AC 4): fixture tree sha256 fingerprint identical before/after both a
   --run-tests run and a --json run; the tool writes only under --out.
+
+## PR-review addendum (2026-07-17, Devin Review)
+
+**F-out (defect, fixed).** `--out` resolved against the repo root but never CONFINED to it -
+an absolute path or a `../` value would write, and mkdir, anywhere the process could reach.
+The sibling `coverage-scope.mjs` has always refused out-of-root paths via `relUnderRoot`; a
+tool whose whole contract is "read-only instrument" cannot be the looser of the two. Same
+predicate, same refusal (exit 2), same message shape. t04 gained two arms: `--out
+../escaped.md` and an absolute `--out /tmp/...` - both refused, neither file created.
+Spec §3's security line ("refuses paths escaping the store root") was written and then not
+implemented for --out; the review caught the gap between the sentence and the code.
+
+**F-home (info, fixed anyway).** rung2 derived the `.workflow` artefact home by slicing three
+dash-segments off the folder name - true for the whole current corpus, wrong the moment a task
+id has a different shape, and it would silently miss a real artefact bundle (a false
+adopt_candidate). The home is now keyed by the task ID the caller already resolved. No
+behavior change for the corpus; verified TASK-IMP-092 still reads resume_at_phase(confirm-done).
+
+**F-chain / F-lease / F-symlink / F-nongit (info, affirmed).** The bot independently verified
+the chain-blanking's sorted-key/quote-escape reasoning, the lease reboot+orphan guards (incl.
+that the fresh-lease case never trips the horizon check), the relative symlink target math, and
+the rev-parse-based non-git probe. Recorded; no change.
+
+Reruns: test_task_reconcile 6/6, test_workflow_helpers 14/14, 25/25 repo-wide, build ok,
+sync OK 1.0.0.

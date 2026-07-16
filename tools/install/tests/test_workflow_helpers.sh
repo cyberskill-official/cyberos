@@ -31,7 +31,7 @@
 #        install lays them into .cyberos/docs-tools/ where they run.
 #   t09  doctrine wiring: ship-tasks.md (source + payload cuo/ + plugin copy)
 #        names ship-manifest.mjs in Resume semantics and backlog-mutate.mjs in
-#        the backlog-layout/state-engine area; workflow_version current (2.6.4
+#        the backlog-layout/state-engine area; workflow_version current (2.7.0
 #        since TASK-IMP-099).
 #   t10  a LYING counted header (counts disagreeing with the section's rows —
 #        the 086 incident's shape) is rewritten to the true tally by any flip
@@ -43,11 +43,11 @@
 #        correction is large (asserted line-by-line on the lying fixture).
 #   t12  doctrine: ship-tasks.md carries the one-writer-one-view rule (§11a)
 #        and the committed-object evidence rule (§9), in the source AND the
-#        scratch payload's cuo/ copy, at workflow_version 2.6.4.
+#        scratch payload's cuo/ copy, at workflow_version 2.7.0.
 #   t13  queue selection ranks p0 before p1 before p2 before p3 (FM-105 scale)
 #        in the source AND the scratch payload's cuo/ copy, with NO bare MoSCoW
 #        ordering rule surviving (the FM-105 legacy-mapping parenthetical is the
-#        one allowed mention), payload at workflow_version 2.6.4 (TASK-IMP-099).
+#        one allowed mention), payload at workflow_version 2.7.0 (TASK-IMP-099, bumped by TASK-IMP-101).
 #
 # Origin: 2026-07-16 sachviet + cyberos batch-1 runs (IMPROVEMENT_HANDOFF.md
 # IMP-04) - manifests were skipped and every backlog flip was hand-sed; the two
@@ -457,7 +457,7 @@ t09_doctrine_wiring() {
     grep -q 'backlog-mutate\.mjs' "$TMP/layout.sec" || { fail t09 "$f: backlog layout lacks the backlog-mutate.mjs pointer"; return; }
     grep -q 'byte-discipline executor' "$TMP/layout.sec" || { fail t09 "$f: pointer does not say byte-discipline executor"; return; }
     # the doc gained normative pointers -> workflow_version bumped
-    grep -q '^workflow_version: 2\.7\.0$' "$f" || { fail t09 "$f: workflow_version not current (want 2.6.4)"; return; }
+    grep -q '^workflow_version: 2\.7\.0$' "$f" || { fail t09 "$f: workflow_version not current (want 2.7.0)"; return; }
   done
   ok t09
 }
@@ -569,7 +569,7 @@ t12_doctrine_view_rules_vendored() {
       || { fail t12 "$f: never-a-working-view rule missing"; return; }
     # the doc gained normative rules -> workflow_version bumped
     grep -q '^workflow_version: 2\.7\.0$' "$f" \
-      || { fail t12 "$f: workflow_version not bumped to 2.6.4"; return; }
+      || { fail t12 "$f: workflow_version not bumped to 2.7.0"; return; }
   done
   ok t12
 }
@@ -593,7 +593,7 @@ t13_queue_rule_p0_p3() {
   done
   # the reword is a normative change: the payload ships it at the bumped version
   grep -q '^workflow_version: 2\.7\.0$' "$TMP/payload/cuo/ship-tasks.md" \
-    || { fail t13 "payload cuo/ship-tasks.md workflow_version not 2.6.4"; return; }
+    || { fail t13 "payload cuo/ship-tasks.md workflow_version not 2.7.0"; return; }
   ok t13
 }
 
