@@ -4,7 +4,7 @@ title: task@1 template drops the duplicate out-of-scope section 4
 template: task@1
 type: improvement
 module: improvement
-status: testing
+status: done
 priority: p2
 author: "@stephencheng"
 department: engineering
@@ -21,7 +21,7 @@ verify: T
 phase: "pre-1.0.0 release"
 owner: Stephen Cheng (CTO)
 created: 2026-07-16
-shipped: null
+shipped: 2026-07-17
 memory_chain_hash: null
 effort_hours: 1
 service: tools/install/templates
