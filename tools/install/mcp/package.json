@@ -3,8 +3,15 @@
   "version": "1.0.0",
   "description": "Zero-dependency stdio MCP server exposing the CyberOS ship-tasks workflow (task_install, task_gates, task_status, ship_task) to any MCP-capable agent.",
   "type": "module",
-  "bin": { "cyberos-mcp": "./cyberos-mcp.mjs" },
-  "engines": { "node": ">=18" },
-  "files": ["cyberos-mcp.mjs", "README.md"],
+  "bin": {
+    "cyberos-mcp": "./cyberos-mcp.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "files": [
+    "cyberos-mcp.mjs",
+    "README.md"
+  ],
   "license": "MIT"
 }
