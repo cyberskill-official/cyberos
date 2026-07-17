@@ -2,9 +2,18 @@
 // workflow-improve.mjs — the outer loop's machine floor (TASK-IMP-110).
 //
 // Every ingredient of a learning loop already exists and nothing consumes them: human
-// verdicts at two gates, route-back reasons, `memory.status_overridden` rows, reconcile
-// reports. This tool READS a bounded window of that exhaust and emits `skill-amendment@1`
-// proposals. It PROPOSES; it never edits.
+// verdicts at two gates, route-back reasons, reconcile reports. This tool READS a bounded window
+// of that exhaust and emits `skill-amendment@1` proposals. It PROPOSES; it never edits.
+//
+// NOT read: `memory.status_overridden` rows. TASK-IMP-110 §1.1 named them as a fourth stream and
+// this header advertised them, but they live ONLY in `.cyberos/memory/store` - per-install, and
+// gitignored (0 tracked files). This tool refuses any path not tracked at HEAD, on purpose: its
+// evidence must be the corpus every reader can see, not one machine's local state. Reading them
+// would mean weakening that guard AND making the output depend on which host ran it.
+//
+// So the spec asked for a stream the guard is right to refuse. The claim is corrected here rather
+// than satisfied. If operator overrides are evidence the loop must learn from, they belong
+// somewhere tracked - a design change, not a patch. (Greptile, PR #53, 2026-07-17.)
 //
 // THE HARD RULE (spec §1.4): this tool MUST NOT write to modules/**, any SKILL.md, any
 // rubric, or any workflow file. There is exactly ONE write path in this file — the `--out`
@@ -148,9 +157,15 @@ const window = tasks.slice(0, WINDOW);
 const undated = window.filter((t) => t.order_source === "none").map((t) => t.id);
 if (undated.length) notes.push(`ordered last in the window (no shipped and no parseable created_at): ${undated.join(", ")}`);
 
-// ── the readers (§1.1): gate logs · route-back reasons · status_overridden · reconcile ──
-// Three line matchers, a closed documented set, applied to the four named sources. Each
-// yields ONE reasonText — the recorded text, kept verbatim for quoting.
+// ── the readers: gate logs · route-back reasons · reconcile reports ──────────────────
+// Three line matchers, a closed documented set, applied to the three sources harvest() is
+// actually pointed at (see the harvest calls below). Each yields ONE reasonText — the recorded
+// text, kept verbatim for quoting.
+//
+// `status_overridden` stays in the set: it fires if such a line is ever RECORDED in a gate log,
+// which is where a doc-driven run would write it. It does NOT mean the memory store is read -
+// see the header. A matcher whose name implies a source nobody harvests is what made this look
+// satisfied for a whole review round.
 const MATCHERS = [
   { name: "routed_back_comment", re: /<!--\s*routed back:\s*(.+?)\s*-->/ },
   { name: "recorded_reason", re: /^\s*[-*|>]?\s*(?:reason|route_back_reason)\s*[:=]\s*["']?(.+?)["']?\s*\|?\s*$/i },

@@ -3,7 +3,7 @@
 name: workflow-improver
 description: >-
   The outer loop: reads a bounded window of the workflow's own run exhaust —
-  gate logs, route-back reasons, `memory.status_overridden` rows, reconcile
+  gate logs, route-back reasons, reconcile reports (NOT memory rows - see below)
   reports — clusters the shapes that RECUR, and proposes at most three
   `skill-amendment@1` records naming the target skill, the target passage, the
   quoted evidence with its ids, and the change. Runs
@@ -26,7 +26,7 @@ hitl: required
 ## Why this exists
 
 Every ingredient of a learning loop is already on disk and nothing reads it back. Human
-verdicts at two gates, `routed_back_count`, route-back reasons, `memory.status_overridden`
+verdicts at two gates, `routed_back_count`, route-back reasons
 rows, retrospectives, reconcile reports: all written down, none consumed. So an external
 reviewer found the same defect class in three consecutive rounds and a *human* spotted the
 pattern, not the system. Every correction an operator makes ("drop section 4", "gate
