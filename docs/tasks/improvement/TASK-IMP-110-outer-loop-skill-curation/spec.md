@@ -4,7 +4,7 @@ title: Outer loop - propose skill amendments from run evidence
 template: task@1
 type: improvement
 module: improvement
-status: testing
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
