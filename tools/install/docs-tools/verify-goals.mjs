@@ -30,7 +30,10 @@ const asJson = argv.includes("--json");
 // indexOf returns -1 when a flag is absent, and -1 + 1 = 0 - which reads the FIRST argv element
 // as the value. `--timeout` absent therefore yielded Number("--repo") = NaN and spawnSync threw
 // on the DEFAULT invocation. Read flags by presence, never by blind offset. (Caught by t03.)
-const flag = (name, dflt) => { const i = argv.indexOf(name); return (i >= 0 && argv[i + 1] !== undefined) ? argv[i + 1] : dflt; };
+// Guard the NEXT token too, matching batch-select.mjs. Without it `--repo --json` swallows the
+// flag as a path. These two are siblings and have drifted apart once already: the argv-offset
+// bug was found and fixed HERE and never back-ported THERE. Keep them identical. (Review 2026-07-17.)
+const flag = (name, dflt) => { const i = argv.indexOf(name); return (i >= 0 && argv[i + 1] !== undefined && !argv[i + 1].startsWith("--")) ? argv[i + 1] : dflt; };
 const root = resolve(flag("--repo", "."));
 const TIMEOUT_S = Number(flag("--timeout", "60"));
 if (!Number.isFinite(TIMEOUT_S) || TIMEOUT_S <= 0) { console.error(`verify-goals: --timeout must be a positive number of seconds (got '${flag("--timeout", "60")}')`); process.exit(2); }

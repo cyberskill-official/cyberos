@@ -825,14 +825,6 @@ HOOK
       HOOK_SET="pre-commit hook v2 installed${hook_at} (blocks if docs/status regen fails; auto-stages status page)"
     elif grep -q "cyberos-status-hook v2" "$hk" 2>/dev/null; then
       HOOK_SET="kept your pre-commit hook${hook_at} (cyberos status-sync v2 already present)"
-    elif grep -q "status-page.sh" "$hk" 2>/dev/null; then
-      # The hook ALREADY regenerates docs/status, just without our marker - a hand-written or
-      # self-hosted hook (the platform repo's own is exactly this). Appending the managed block
-      # would regenerate the page TWICE per commit and bolt an `exit 1` onto a hook whose own
-      # comments state a non-blocking posture. What we did not write, we do not "fix".
-      # (External review, 2026-07-17: the marker-only check treated this repo's own hook as
-      # foreign and duplicated its regen.)
-      HOOK_SET="kept your pre-commit hook${hook_at} (it already regenerates docs/status - no second block appended)"
     elif grep -q "cyberos-status-hook" "$hk" 2>/dev/null; then
       # Upgrade v1 append block → v2
       if grep -q ">>> cyberos-status-hook v1" "$hk" 2>/dev/null; then
@@ -867,6 +859,20 @@ if [ "$_cyberos_hit" = 1 ]; then
     if bash .cyberos/lib/status-page.sh .; then
       git add docs/status 2>/dev/null || true
       echo "cyberos: docs/status regenerated + staged"
+    elif grep -q "status-page.sh" "$hk" 2>/dev/null; then
+      # ORDER MATTERS - this generic CONTENT check is LAST of the three on purpose. Every
+      # marked block, v1 and v2 alike, also contains "status-page.sh", so placed above the
+      # marker checks it swallows them: a v1 hook would match here and never upgrade to v2.
+      # (External review 2026-07-17, second pass, caught exactly that - a regression the first
+      # pass introduced while fixing a different one. `git log -S "cyberos-status-hook v1"`
+      # confirms the v1 append block does contain `bash .cyberos/lib/status-page.sh .`)
+      #
+      # Reaching here means the hook regenerates docs/status but carries NO cyberos marker: a
+      # hand-written or self-hosted hook (this repo's own is exactly this). Appending the
+      # managed block would regenerate the page TWICE per commit and bolt an `exit 1` onto a
+      # hook whose own comments state a non-blocking posture. What we did not write, we do not
+      # "fix".
+      HOOK_SET="kept your pre-commit hook${hook_at} (it already regenerates docs/status - no second block appended)"
     else
       echo "cyberos: ERROR docs/status regen failed" >&2
       exit 1

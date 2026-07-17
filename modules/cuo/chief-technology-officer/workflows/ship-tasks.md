@@ -240,7 +240,10 @@ while ! stop_signal:
     if batch is empty: break           # backlog drained
     if len(batch) > 1: dispatch_swarm(batch)     # one sub-agent per member, ONE parallel round
     else:              ship(batch[0])            # a 1-member batch is serial by arithmetic, not by choice
-    invoke_workflow("chief-technology-officer/ship-tasks", { repo_root, next_task })
+    # NO re-invoke here. The `while` above IS the loop. The pre-v2.8.0 shape ended each pass by
+    # re-invoking the workflow with `next_task`; the batch rewrite replaced that variable and left
+    # the call behind, so the line named something nothing assigns AND re-dispatched work that the
+    # two lines above had already shipped. (External review, 2026-07-17.)
 ```
 
 The supervisor handles persistence (state survives across sessions because the truth is in BACKLOG.md + the memory chain), parallelism (multiple tasks may run in parallel when their dependency cones don't overlap), and observability (the per-phase `workflow_phase_complete` + the final `workflow_complete` rows are enough to reconstruct the run).

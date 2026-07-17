@@ -157,7 +157,7 @@ for (const mod of readdirSync(TASK_ROOT, { withFileTypes: true }).sort((a, b) =>
       // which is the truth for every task this run did not author - the page must not invent a
       // reason it was not told. `rb` lets the reader see thrash (routed_back_count > 0) without
       // opening the frontmatter, which is the whole complaint the field answers.
-      dr: str(m.draft_reason), ev: str(m.entered_via), rb: str(m.routed_back_count),
+      dr: str(m.draft_reason), ev: str(m.entered_via), rb: Number(str(m.routed_back_count)) || 0,
       st: list(m.subtasks),
       // relations are resolved AFTER the corpus is known: a repo's ids are not always
       // TASK-shaped (strategem carries COV-001, API-READY...), so an id-regex alone would
