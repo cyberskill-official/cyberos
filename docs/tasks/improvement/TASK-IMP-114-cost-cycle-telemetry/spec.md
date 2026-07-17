@@ -4,7 +4,7 @@ title: Cost and cycle telemetry - make the loop's economics visible
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: done
 priority: p3
 author: "@stephencheng"
 department: engineering

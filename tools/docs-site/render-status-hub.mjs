@@ -3,7 +3,10 @@
 // ONE page answers "where is the project". Roadmap, Backlog and Changelog stopped being
 // three tabs: they are three lenses (board / table / releases) over one filtered corpus,
 // with a task detail drawer that carries the full spec.
-// Inputs (exactly three, unchanged): task frontmatter, CHANGELOG.md version sections, VERSION.
+// Inputs (four): task frontmatter, CHANGELOG.md version sections, VERSION, and the per-batch
+// economics ledgers under docs/batches/ (TASK-IMP-114). All four are committed bytes; all four
+// are hashed into the fp- stamp, because a stamp that does not cover an input is a stamp that
+// lies about what determined the page.
 // Node stdlib only; deterministic stamp (corpus fingerprint - no git, no wall clock); honest failures.
 // Emits: reference/status.html, reference/data/task/<ID>.js (per-task spec chunks, lazy-loaded),
 //        reference/assets/{status.css,status.js,favicon.svg} when CYBEROS_PAGE_ASSETS=1,
@@ -237,6 +240,81 @@ for (const f of tasks) {
   delete f._d; delete f._b; delete f._rl;
 }
 
+// ---- batch economics (TASK-IMP-114 §1.1-1.6) -------------------------------------------
+// `routed_back_count` was the loop's only cycle metric and nothing ever added two of them up;
+// there was no wall-time or token accounting at all. So "was this batch worth running" had no
+// number, while this run supplied the data the hard way: two API spend-limit cutoffs, one of
+// them losing three of four swarm agents mid-flight.
+//
+// The LEDGER (docs/batches/<batch-id>.md, written at the batch close - ship-tasks §11d) carries
+// only what nothing else knows: which tasks were in the batch, the two instants that bound it,
+// the route-backs that happened INSIDE it, the gate re-asks, and tokens when a harness reported
+// them and the figure was committed.
+//
+// Tasks shipped is DERIVED from the members' own frontmatter (§1.3) rather than copied: `status`
+// already IS "did this task ship", and a second home for one fact is a home that disagrees.
+//
+// Route-backs is NOT derived from `routed_back_count`, and the distinction is the whole edge case.
+// That counter is a task's LIFETIME total across every batch it ever sat in; the row wants the
+// route-backs that happened in THIS batch, "which is where the cost fell". Summing the lifetime
+// counter over the members charges batch 1 for a route-back that happened in batch 2, and charges
+// it retroactively - a closed batch's row would drift upward months later. They are two different
+// facts that happen to be spelled with the same word.
+const BATCH_ROOT = join(ROOT, 'docs', 'batches');
+const batchFiles = [];                 // { rel, abs } - hashed into the stamp beside the specs
+
+// Wall time is the distance between two COMMITTED instants, and never a distance to now.
+// A batch cut mid-flight has no end (this run, twice) and `incomplete` is the truth about it:
+// computing a duration to the clock would both fabricate the number and make the page churn
+// every render, breaking TASK-IMP-082's fp- byte-stability. No wall clock is read here.
+const wallTime = (a, b) => {
+  if (!a) return 'unknown';
+  if (!b) return 'incomplete';
+  const t0 = Date.parse(a), t1 = Date.parse(b);
+  if (!Number.isFinite(t0) || !Number.isFinite(t1) || t1 < t0) return 'unknown';
+  const mins = Math.round((t1 - t0) / 60000);
+  return mins < 60 ? `${mins}m` : `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, '0')}m`;
+};
+
+const batches = (() => {
+  if (!existsSync(BATCH_ROOT)) return [];
+  const rows = [];
+  for (const e of readdirSync(BATCH_ROOT, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    if (!e.isFile() || !e.name.endsWith('.md') || e.name.startsWith('.')) continue;
+    const abs = join(BATCH_ROOT, e.name);
+    batchFiles.push({ rel: `docs/batches/${e.name}`, abs });
+    let meta;
+    try { meta = frontmatter(readFileSync(abs, 'utf-8'), abs).meta; }
+    catch (err) {
+      if (!LENIENT) throw err;                  // strict mode keeps the honest-failure contract
+      console.error(`status-hub: WARN ${err.message} (lenient - batch skipped)`);
+      continue;
+    }
+    const id = str(meta.batch) || e.name.replace(/\.md$/, '');
+    const members = list(meta.members);
+    const known = members.filter(m => byId.has(m));
+    for (const m of members) if (!byId.has(m)) console.error(`status-hub: WARN batch ${id} names ${m}, which is not in this corpus`);
+    // a counter the ledger did not record reads `unknown`, never 0 - the same rule tokens get
+    // below, for the same reason: a zero asserts a fact nobody measured.
+    const num = k => { const v = str(meta[k]); return v !== '' && Number.isFinite(Number(v)) ? Number(v) : null; };
+    const row = {
+      id, members, tasks: members.length,
+      // `done`, not bucketOf()'s done: a `closed` member was decided against, not shipped.
+      shipped: known.filter(m => byId.get(m).s === 'done').length,
+      route_backs: num('route_backs'),
+      gate_reasks: num('gate_reasks'),
+      wall: wallTime(str(meta.started), str(meta.ended)),
+    };
+    // §1.2: tokens exist on the row ONLY when the harness reported them and the ledger committed
+    // the figure. Absent stays absent - a 0 would assert a fact nobody measured, and a metric
+    // that requires a specific host is a metric that expires.
+    const tk = str(meta.tokens);
+    if (tk !== '' && Number.isFinite(Number(tk))) row.tokens = Number(tk);
+    rows.push(row);
+  }
+  return rows;
+})();
+
 const modules = [...new Set(tasks.map(f => f.m))].sort();
 const phases = [...new Set(tasks.map(f => f.ph).filter(Boolean))].sort();
 const priorities = [...new Set(tasks.map(f => f.p).filter(Boolean))].sort();
@@ -339,7 +417,9 @@ const VERSION = existsSync(join(ROOT, 'VERSION'))
 // git checkout or not. CYBEROS_COMMIT still pins an explicit stamp when set and non-empty.
 function corpusFingerprint() {
   const h = createHash('sha256');
-  const files = [...specFiles].sort((a, b) => Buffer.compare(Buffer.from(a.rel), Buffer.from(b.rel)));
+  // batch ledgers join the specs here (TASK-IMP-114): they determine rendered bytes, so a stamp
+  // that skipped them would report the same fp- for two different pages.
+  const files = [...specFiles, ...batchFiles].sort((a, b) => Buffer.compare(Buffer.from(a.rel), Buffer.from(b.rel)));
   for (const f of files) h.update(readFileSync(f.abs));   // per-file update - no concat buffer
   if (existsSync(clPath)) h.update(readFileSync(clPath));
   const vPath = join(ROOT, 'VERSION');
@@ -393,6 +473,38 @@ const deck = `
   <p class="relnote">tasks bound to each release — cited in the entry, or matched by <code>shipped:</code> date.</p>`
     : '<p class="relnote">No release sections parsed from CHANGELOG.md.</p>'}
 </div>`;
+
+// TASK-IMP-114 §1.4 - the row RENDERS, beside the corpus counts, in the deck.
+//
+// Server-side and not in the JSON payload, deliberately. §1.7 of TASK-IMP-108 shipped `done` with
+// its report emitted into the payload and read by nothing, and its test passed because it asserted
+// the string was PRESENT rather than RENDERED. A metric nobody can see is not a metric. This panel
+// is markup, readable with JS off, like the staleness report below it.
+//
+// §1.5 - there is no threshold here, no colour ramp, no budget, and nothing that turns a row red.
+// It MEASURES. Measuring is not enforcing, and a number that starts blocking is a gate that
+// arrived without anyone deciding to add one. The operator reads the row and makes the call.
+const anyTokens = batches.some(b => 'tokens' in b);
+const economicsHtml = batches.length ? `
+<div class="panel" style="grid-column:1/-1">
+  <h2>Batch economics · ${batches.length} ${batches.length === 1 ? 'batch' : 'batches'}</h2>
+  <table class="nojs-t">
+    <thead><tr><th>batch</th><th>tasks</th><th>shipped</th><th>route-backs</th><th>gate re-asks</th><th>wall time</th>${anyTokens ? '<th>tokens</th>' : ''}</tr></thead>
+    <tbody>${batches.map(b => `<tr><td class="code">${esc(b.id)}</td><td>${b.tasks}</td><td>${b.shipped}</td>` +
+      `<td>${b.route_backs === null ? 'unknown' : b.route_backs}</td>` +
+      `<td>${b.gate_reasks === null ? 'unknown' : b.gate_reasks}</td>` +
+      `<td>${esc(b.wall)}</td>` +
+      (anyTokens ? `<td>${'tokens' in b ? b.tokens : 'not reported'}</td>` : '') +
+      '</tr>').join('')}</tbody>
+  </table>
+  <p class="muted">Measured, not enforced: no threshold, no budget, no gate — the row is a number to
+  decide with. Tasks shipped is derived from each member's own frontmatter, so it cannot disagree
+  with it; route-backs are the ones that happened inside <em>this</em> batch, which is where the cost
+  fell, and not a member's lifetime counter. An unfinished batch reads
+  <span class="code">incomplete</span> rather than a duration to now. Tokens appear only where a
+  harness reported them and the batch record carries the figure. Anything the record does not carry
+  reads <span class="code">unknown</span>; a zero would assert a fact nobody measured.</p>
+</div>` : '';
 
 const nowHtml = moving.length ? `
 <section class="now">
@@ -514,7 +626,7 @@ for (const [k, v] of Object.entries({
   'subtitle': `Where ${esc(NAME)} is and what is coming — generated from task frontmatter, CHANGELOG and VERSION`,
   'search_placeholder': `Search ${tasks.length} tasks — id, title, module, owner, phase…`,
   'meta:html': `VERSION <span class="code">${esc(VERSION)}</span> · built from <span class="code">${esc(COMMIT)}</span> · ${tasks.length} tasks · ${releases.length} releases`,
-  'deck:html': deck,
+  'deck:html': deck + economicsHtml,
   'now:html': nowHtml,
   'staleness:html': stalenessHtml,
   'facets:html': facets,
@@ -558,4 +670,5 @@ const summary = STATUSES.filter(s => tasks.some(f => f.s === s))
 console.log(`status-hub: ${tasks.length} tasks (${summary}), ${modules.length} modules, ${releases.length} releases, ` +
   `VERSION ${VERSION} - one page, three lenses` +
   (specs.size ? `, ${specs.size} spec chunks (${(specBytes / 1048576).toFixed(1)} MB)` : ', no spec chunks (CYBEROS_STATUS_SPECS=0)') +
+  (batches.length ? `, ${batches.length} batch economics rows` : '') +
   (invalid.length ? `, ${invalid.length} invalid status` : ''));

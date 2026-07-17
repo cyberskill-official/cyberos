@@ -150,7 +150,91 @@ t11_draft_staleness_report() {                                         # TASK-IM
   ok t11_draft_staleness_report
 }
 
+
+# --- TASK-IMP-114: the batch economics row ---------------------------------------------
+# NOTE ON THE NAMES. TASK-IMP-114's AC 3 / AC 5 cite `t09_economics_row` and
+# `t10_economics_row_deterministic`, and the citations are what TRACE-004 greps, so the names
+# stand as written. The t09/t10 prefixes were already taken by t09_nojs_and_honest_failures and
+# t10_token_clean when the spec was authored - the function names are distinct, the numbering is
+# not. Reported as a spec defect rather than silently renumbered: a renamed arm is an AC that
+# cites a test which does not exist.
+#
+# Its own fixture, not mkfix's: t01's counts and t05's cmp are asserted against $TMP/a, and a
+# suite arm that perturbs a sibling arm's fixture is a flake waiting for a bad day.
+mkbatchfix() {
+  local d="$1"; mkfix "$d"; mkdir -p "$d/docs/batches"
+  # AA is done (2 route-backs), BB is not (1) -> shipped 1 of 2, route-backs 3
+  sed -i.bak 's/^shipped: 2026-07-01$/shipped: 2026-07-01\nrouted_back_count: 2/' "$d/docs/tasks/aa/TASK-AA-001-first/spec.md"
+  sed -i.bak 's/^status: draft$/status: draft\nrouted_back_count: 1/' "$d/docs/tasks/bb/TASK-BB-001-third/spec.md"
+  printf -- '---\nbatch: batch/1-closed\nmembers: [TASK-AA-001, TASK-BB-001]\nstarted: 2026-07-17T14:00:00Z\nended: 2026-07-17T15:30:00Z\nroute_backs: 3\ngate_reasks: 3\n---\n# closed batch\n' \
+    > "$d/docs/batches/batch-1-closed.md"
+  # the batch this run lost three of four agents from: started, never ended
+  printf -- '---\nbatch: batch/2-cut\nmembers: [TASK-AA-001]\nstarted: 2026-07-17T16:00:00Z\nroute_backs: 0\ngate_reasks: 0\n---\n# cut mid-flight\n' \
+    > "$d/docs/batches/batch-2-cut.md"
+}
+vis() {                                                                # the page minus every script
+  node -e 'const fs=require("fs");let h=fs.readFileSync(process.argv[1],"utf8");
+    h=h.replace(/<script[\s\S]*?<\/script>/g,"");process.stdout.write(h)' "$1"
+}
+
+t09_economics_row() {                                                  # TASK-IMP-114 AC 3 - §1.4
+  # §1.4: "The row MUST render on the status page." RENDER, not "appear in the payload" - the
+  # distinction §1.7 shipped `done` without, so the payload is stripped before anything is asserted.
+  mkbatchfix "$TMP/e"
+  node "$R" "$TMP/e" "$TMP/e/out" >/dev/null 2>&1 || { fail t09_economics_row "render failed"; return; }
+  local v; v="$(vis "$TMP/e/out/reference/status.html")"
+  grep -q "Batch economics" <<<"$v"      || { fail t09_economics_row "no rendered economics panel outside the payload - §1.4 says RENDER"; return; }
+  # §1.1 - every non-optional field is a column, and the batch's own row carries the derived values
+  for c in "<th>batch</th>" "<th>tasks</th>" "<th>shipped</th>" "<th>route-backs</th>" "<th>gate re-asks</th>" "<th>wall time</th>"; do
+    grep -q "$c" <<<"$v" || { fail t09_economics_row "column $c missing - §1.1 requires it"; return; }
+  done
+  local r; r="$(node -e 'const fs=require("fs");let h=fs.readFileSync(process.argv[1],"utf8");
+    h=h.replace(/<script[\s\S]*?<\/script>/g,"");
+    const m=h.match(/<tr><td class="code">batch\/1-closed<\/td>[\s\S]*?<\/tr>/);
+    process.stdout.write(m?m[0]:"")' "$TMP/e/out/reference/status.html")"
+  [ "$r" = '<tr><td class="code">batch/1-closed</td><td>2</td><td>1</td><td>3</td><td>3</td><td>1h 30m</td></tr>' ] \
+    || { fail t09_economics_row "the rendered row is not the derived one: $r"; return; }
+  # §1.5 - it MUST NOT gate. Assert it stayed a measurement, on the page, where the reader is.
+  grep -q "Measured, not enforced" <<<"$v" || { fail t09_economics_row "the panel does not state that it enforces nothing"; return; }
+  ok t09_economics_row
+}
+
+t10_economics_row_deterministic() {                                    # TASK-IMP-114 AC 5 - §1.6
+  # §1.6: "a re-render of an unchanged corpus stays byte-identical, economics row included."
+  #
+  # cmp alone would NOT catch a clock: two renders 40 ms apart with minute granularity agree.
+  # So the arm pins the two things a wall clock would actually break - the OPEN batch reads
+  # `incomplete` instead of a duration to now, and the closed one reads exactly the distance
+  # between its two committed instants - and then diffs the bytes on top.
+  local v; v="$(vis "$TMP/e/out/reference/status.html")"
+  grep -q "<td>incomplete</td>" <<<"$v" \
+    || { fail t10_economics_row_deterministic "a batch with no end did not read incomplete - §1.6 / the mid-flight edge case"; return; }
+  local cut; cut="$(node -e 'const fs=require("fs");let h=fs.readFileSync(process.argv[1],"utf8");
+    h=h.replace(/<script[\s\S]*?<\/script>/g,"");
+    const m=h.match(/<tr><td class="code">batch\/2-cut<\/td>[\s\S]*?<\/tr>/);
+    process.stdout.write(m?m[0]:"")' "$TMP/e/out/reference/status.html")"
+  grep -qE '<td>[0-9]+(m|h [0-9]+m)</td>' <<<"$cut" \
+    && { fail t10_economics_row_deterministic "an unfinished batch was given a duration: $cut"; return; }
+
+  # byte-for-byte, twice, same corpus
+  node "$R" "$TMP/e" "$TMP/e/out2" >/dev/null 2>&1
+  cmp -s "$TMP/e/out/reference/status.html" "$TMP/e/out2/reference/status.html" \
+    || { fail t10_economics_row_deterministic "re-render of an unchanged corpus differs"; return; }
+
+  # and the fp- stamp must MOVE when a ledger moves: a stamp that ignores an input reports the
+  # same fingerprint for two different pages, which is TASK-IMP-082's guarantee inverted.
+  local fp1 fp2
+  fp1="$(grep -oE 'built from <span class="code">fp-[0-9a-f]{12}' "$TMP/e/out/reference/status.html")"
+  sed -i.bak 's/^gate_reasks: 3$/gate_reasks: 9/' "$TMP/e/docs/batches/batch-1-closed.md"
+  node "$R" "$TMP/e" "$TMP/e/out3" >/dev/null 2>&1
+  fp2="$(grep -oE 'built from <span class="code">fp-[0-9a-f]{12}' "$TMP/e/out3/reference/status.html")"
+  [ -n "$fp1" ] && [ "$fp1" != "$fp2" ] \
+    || { fail t10_economics_row_deterministic "the fp- stamp does not cover the batch ledgers ($fp1)"; return; }
+  ok t10_economics_row_deterministic
+}
+
 t01_deck_true; t02_one_page_three_lenses; t03_facets_and_search; t04_supersession
 t05_deterministic; t06_task_page_links; t07_changelog_binds_tasks; t08_spec_chunks
 t09_nojs_and_honest_failures; t10_token_clean; t11_draft_staleness_report
+t09_economics_row; t10_economics_row_deterministic
 echo "----"; echo "pass=$PASS fail=$FAIL"; [ "$FAIL" -eq 0 ]

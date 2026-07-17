@@ -109,6 +109,104 @@ t09_empty_and_missing_corpus(){
   ok t09_empty_and_missing_corpus
 }
 # --- t10: the payload carries it. §11a names the vendored path; a payload without it cannot obey.
+t12_undeclared_cone_ships_alone(){
+  # An undeclared cone is UNKNOWN, not empty. Before this arm, {} conflicted with nothing, so a
+  # silent spec joined EVERY batch - TASK-IMP-117 rewrites 501 specs, TASK-TEMPLATE.md and
+  # build.sh, declared none of it, and was admitted alongside a task excluded for touching
+  # build.sh. Two sub-agents, one file, one parallel round. (Operator decision, 2026-07-17.)
+  #
+  # Written by hand, not via spec(): that helper always emits `new_files:\n  - (none)` and a
+  # `service:` line, so it CANNOT express a spec that declares nothing - which is exactly the
+  # shape under test. A fixture that cannot produce the defect cannot test the fix.
+  local d="$TMP/t12"
+  spec "$d" TASK-A-001 ready_to_implement p1 svc/a "" src/a.js     # declares a cone
+  mkdir -p "$d/docs/tasks/m/TASK-A-002"
+  printf -- '---\nid: TASK-A-002\nstatus: ready_to_implement\npriority: p1\ndepends_on: []\n---\n# TASK-A-002\n' \
+    > "$d/docs/tasks/m/TASK-A-002/spec.md"                          # no service, no new_files, no modified_files
+  local out; out="$(node "$BS" --repo "$d" 2>/dev/null)"
+  grep -qE "BATCH +TASK-A-001" <<<"$out" || { no t12_undeclared_cone_ships_alone "a declared task was not batched: $out"; return; }
+  grep -qE "excluded TASK-A-002" <<<"$out" || { no t12_undeclared_cone_ships_alone "an UNDECLARED cone was admitted - it conflicts with nothing only because it says nothing: $out"; return; }
+  grep -q "no cone declared" <<<"$out" || { no t12_undeclared_cone_ships_alone "exclusion did not name the reason: $out"; return; }
+  grep -q "conflicts with null" <<<"$out" && { no t12_undeclared_cone_ships_alone "printed a blocking task that does not exist: $out"; return; }
+  ok t12_undeclared_cone_ships_alone
+}
+
+# --- the arms t12 could not reach --------------------------------------------------------
+# t12's fixture ALWAYS has a declared sibling to fill the batch, so it proves the undeclared task
+# is excluded and never that it ships. "Ships alone" needs a queue with nothing else in it.
+# (Greptile P1, 2026-07-17: found on the fix for the previous review, within the hour.)
+undeclared(){ # undeclared <dir> <id> <priority>
+  mkdir -p "$1/docs/tasks/m/$2"
+  printf -- '---\nid: %s\nstatus: ready_to_implement\npriority: %s\ndepends_on: []\n---\n# %s\n' "$2" "$3" "$2" \
+    > "$1/docs/tasks/m/$2/spec.md"
+}
+
+t17_declared_empty_is_not_reported_as_absent(){
+  # Two ways to reach an empty cone; the refusal must not confuse them. A spec that WRITES
+  # `new_files: (none)` / `modified_files: (none)` has declared - emptily, and falsely, since a
+  # task that touches nothing does nothing - but it has NOT been silent. The old message told such
+  # an author their fields were "all absent", sending them to look for a line they had already
+  # written. Behaviour is identical (ships alone); only the reason differs. (Greptile, PR #53.)
+  local d="$TMP/t17"
+  spec "$d" TASK-A-001 ready_to_implement p1 svc/a "" src/a.js
+  mkdir -p "$d/docs/tasks/m/TASK-E-001"
+  printf -- '---\nid: TASK-E-001\nstatus: ready_to_implement\npriority: p1\ndepends_on: []\nnew_files:\n  - (none)\nmodified_files:\n  - (none)\n---\n# x\n' \
+    > "$d/docs/tasks/m/TASK-E-001/spec.md"
+  local out; out="$(node "$BS" --repo "$d" 2>/dev/null)"
+  grep -qE "excluded TASK-E-001" <<<"$out" || { no t17_declared_empty_is_not_reported_as_absent "a declared-empty cone joined a batch - 'touches nothing' is not a proof of independence: $out"; return; }
+  grep -q "cone declared EMPTY" <<<"$out" || { no t17_declared_empty_is_not_reported_as_absent "declared-empty not named as such: $out"; return; }
+  grep -q "TASK-E-001.*all absent" <<<"$out" && { no t17_declared_empty_is_not_reported_as_absent "claimed the fields are absent when the spec wrote them: $out"; return; }
+  ok t17_declared_empty_is_not_reported_as_absent
+}
+
+t14_lone_undeclared_task_actually_ships(){
+  # The whole defect: batch 0 for a queue with an eligible task. §11's outer loop reads an empty
+  # batch as `break # backlog drained` - so the task never ships, the loop reports success, and the
+  # backlog stalls forever while looking finished. The refusal message said "ships alone" one line
+  # above the code that made it never ship.
+  local d="$TMP/t14"; undeclared "$d" TASK-U-001 p1
+  local out; out="$(node "$BS" --repo "$d" 2>/dev/null)"
+  grep -qE "BATCH +TASK-U-001" <<<"$out" || { no t14_lone_undeclared_task_actually_ships "the only eligible task did not ship - batch is empty and the outer loop will call that 'backlog drained': $out"; return; }
+  grep -q "batch 1" <<<"$out" || { no t14_lone_undeclared_task_actually_ships "expected a 1-member batch: $out"; return; }
+  grep -q "swarm_required=false" <<<"$out" || { no t14_lone_undeclared_task_actually_ships "a 1-member batch must not require a swarm: $out"; return; }
+  ok t14_lone_undeclared_task_actually_ships
+}
+
+t15_undeclared_never_joins_a_declared_batch(){
+  # ...and the fix must not undo t12: when something DECLARED is eligible, the undeclared task
+  # still cannot ride along. It ships alone LATER, not alongside now.
+  local d="$TMP/t15"
+  spec "$d" TASK-A-001 ready_to_implement p1 svc/a "" src/a.js
+  undeclared "$d" TASK-U-001 p1
+  local out; out="$(node "$BS" --repo "$d" 2>/dev/null)"
+  grep -qE "BATCH +TASK-A-001" <<<"$out" || { no t15_undeclared_never_joins_a_declared_batch "declared task not batched: $out"; return; }
+  grep -qE "BATCH +TASK-U-001" <<<"$out" && { no t15_undeclared_never_joins_a_declared_batch "an undeclared task joined a batch with a declared member - it cannot be proven independent of it: $out"; return; }
+  grep -qE "excluded TASK-U-001" <<<"$out" || { no t15_undeclared_never_joins_a_declared_batch "undeclared task neither batched nor excluded - it vanished: $out"; return; }
+  ok t15_undeclared_never_joins_a_declared_batch
+}
+
+t16_many_undeclared_ship_one_at_a_time(){
+  # Two undeclared, nothing declared: exactly ONE ships (the highest priority), the other is
+  # excluded and waits for the next round. Not zero, not both.
+  local d="$TMP/t16"; undeclared "$d" TASK-U-001 p3; undeclared "$d" TASK-U-002 p1
+  local out; out="$(node "$BS" --repo "$d" 2>/dev/null)"
+  grep -q "batch 1" <<<"$out" || { no t16_many_undeclared_ship_one_at_a_time "expected exactly 1 to ship: $out"; return; }
+  grep -qE "BATCH +TASK-U-002" <<<"$out" || { no t16_many_undeclared_ship_one_at_a_time "priority ignored - p1 must ship before p3: $out"; return; }
+  grep -qE "excluded TASK-U-001" <<<"$out" || { no t16_many_undeclared_ship_one_at_a_time "the second undeclared task vanished: $out"; return; }
+  ok t16_many_undeclared_ship_one_at_a_time
+}
+
+t13_declaring_a_cone_readmits_it(){
+  # The refusal must be about the DECLARATION, not the task. Same task, cone declared -> batched.
+  # Without this, "exclude everything" would pass t12 and break batching entirely.
+  local d="$TMP/t13"
+  spec "$d" TASK-A-001 ready_to_implement p1 svc/a "" src/a.js
+  spec "$d" TASK-A-002 ready_to_implement p1 svc/b "" src/b.js     # now declares, and does not clash
+  local out; out="$(node "$BS" --repo "$d" 2>/dev/null)"
+  grep -qE "BATCH +TASK-A-002" <<<"$out" || { no t13_declaring_a_cone_readmits_it "a declared, non-clashing task was refused: $out"; return; }
+  ok t13_declaring_a_cone_readmits_it
+}
+
 t11_deterministic_output_is_byte_identical(){
   # The file header says "Deterministic by construction". Nothing asserted it, and the code had
   # drifted: `generated: new Date()` made one corpus yield a different artefact each day, so a
@@ -127,9 +225,20 @@ t11_deterministic_output_is_byte_identical(){
 }
 
 t10_payload_carries_it(){
-  local p="$root/dist/cyberos/docs-tools/batch-select.mjs"
-  [ -f "$p" ] || { no t10_payload_carries_it "payload lacks batch-select.mjs - §11a names a path that does not exist"; return; }
-  grep -q 'node .cyberos/docs-tools/batch-select.mjs' "$root/dist/cyberos/cuo/ship-tasks.md" \
+  # BUILD the payload, then assert. This arm used to read $root/dist/ directly - a GITIGNORED
+  # build artifact, 0 tracked files. It passed for anyone who had run build.sh recently and FAILED
+  # on every fresh checkout, which is exactly where CI and a new contributor live. External review
+  # ran the suite on a clean tree and got "payload lacks batch-select.mjs"; my sandbox always had
+  # a stale dist/ lying around, so my check could not fail the way a real one does.
+  #
+  # A test that asserts a build output must build it. Anything else asserts my working directory.
+  # (Greptile, PR #53, 2026-07-17.)
+  local out="$TMP/t10_payload"
+  bash "$root/tools/install/build.sh" "$out" >/dev/null 2>&1 \
+    || { no t10_payload_carries_it "build.sh failed - cannot assert what the payload carries"; return; }
+  [ -f "$out/docs-tools/batch-select.mjs" ] \
+    || { no t10_payload_carries_it "build.sh's copy list omits batch-select.mjs - §11a names a path the payload does not carry"; return; }
+  grep -q 'node .cyberos/docs-tools/batch-select.mjs' "$out/cuo/ship-tasks.md" \
     || { no t10_payload_carries_it "payload doctrine does not name the runner"; return; }
   ok t10_payload_carries_it
 }
@@ -137,6 +246,6 @@ echo "test_batch_select.sh (ship-tasks v2.8.0 mandatory step)"
 t01_documented_invocation_works; t02_flag_order_independent; t03_eligibility
 t04_file_conflict_excludes; t05_service_conflict_excludes; t06_file_inside_sibling_service_conflicts
 t07_swarm_required_flag; t08_exclusions_name_the_conflict; t09_empty_and_missing_corpus
-t10_payload_carries_it; t11_deterministic_output_is_byte_identical
+t10_payload_carries_it; t11_deterministic_output_is_byte_identical; t12_undeclared_cone_ships_alone; t13_declaring_a_cone_readmits_it; t14_lone_undeclared_task_actually_ships; t15_undeclared_never_joins_a_declared_batch; t16_many_undeclared_ship_one_at_a_time; t17_declared_empty_is_not_reported_as_absent
 echo "  ---"; echo "  $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

@@ -44,6 +44,12 @@ const fm = (t) => {
   return t.slice(4, e);
 };
 const one = (f, k) => (f.match(new RegExp(`^${k}:\\s*(.*)$`, "m"))?.[1] ?? "").trim();
+// Did the spec MENTION this key at all - whatever value it gave? Distinct from list(), which
+// tells you what survived filtering. `new_files: (none)` is PRESENT and EMPTY; a missing
+// new_files is ABSENT. Both yield an empty cone and both ship alone, but only one of them is
+// "absent", and the refusal message used to claim absence for both. (Greptile, PR #53.)
+const declares = (f, k) => new RegExp(`^${k}:`, "m").test(f);
+
 const list = (f, k) => {
   const inline = one(f, k);
   if (inline.startsWith("[")) return inline.slice(1, -1).split(",").map(s => s.trim()).filter(Boolean);
@@ -72,6 +78,8 @@ for (const { f } of tasks) {
     // lib/update-check.sh - both inside its service, neither declared. Files-only would have let
     // a sibling tools/install task race it on files nobody wrote down.
     cone: new Set([...list(f, "new_files"), ...list(f, "modified_files"), ...(one(f, "service") ? [one(f, "service")] : [])]),
+    // whether the AUTHOR said anything about the cone, separate from whether the cone is empty
+    declared: declares(f, "new_files") || declares(f, "modified_files") || declares(f, "service"),
   });
 }
 const done = (id) => byId.get(id)?.status === "done";
@@ -88,11 +96,46 @@ const clash = (a, b) => {
   return null;
 };
 
-const batch = [], excluded = [];
+// An UNDECLARED cone is not an empty cone. It is an UNKNOWN cone, and unknown cannot be proven
+// independent of anything. Treating {} as "touches nothing" made every silent spec conflict-free
+// by construction, so it joined EVERY batch: TASK-IMP-117 rewrites 501 specs, TASK-TEMPLATE.md
+// and build.sh, declared none of it, and was admitted alongside a task excluded for touching
+// build.sh. Two sub-agents, one file, one parallel round.
+//
+// TASK-IMP-104 taught the near-miss version of this (declared install.sh, edited two more files
+// inside its service) and the fix was to fold `service` into the cone - which assumed a cone was
+// declared at all. Nothing enforced that. Fail closed: a task that will not say what it touches
+// ships ALONE. (Operator decision, 2026-07-17.)
+const batch = [], excluded = [], undeclared = [];
 for (const t of eligible) {
+  if (t.cone.size === 0) { undeclared.push(t); continue; }
   const hit = batch.map(m => [m, clash(m, t)]).find(([, c]) => c);
   if (hit) excluded.push({ id: t.id, blocked_by: hit[0].id, conflict: hit[1] });
   else batch.push(t);
+}
+
+// "Ships alone" has to mean it SHIPS. The first cut excluded every undeclared task and stopped
+// there, so a queue whose only eligible task is undeclared produced `batch: []` - and §11's outer
+// loop reads an empty batch as `break # backlog drained`. The task never shipped, the loop
+// reported success, and the backlog silently stalled forever. The refusal message said "ships
+// alone" one line above the code that made it never ship.
+//
+// So: an undeclared task cannot join a batch (it cannot be proven independent of anything), but
+// when nothing DECLARED is eligible it becomes the batch, by itself. Shipping it alone is exactly
+// what its unknown cone permits - there is no sibling to race. `eligible` is priority-sorted, so
+// this takes the highest-priority one.
+// (Greptile P1, 2026-07-17 - found within the hour, on the fix for the previous review.)
+if (batch.length === 0 && undeclared.length) batch.push(undeclared.shift());
+for (const t of undeclared) {
+  // Two ways to get an empty cone, and the message must not confuse them. ABSENT fields are
+  // silence: the author said nothing, so nothing is known. PRESENT fields declaring `(none)` are
+  // a CLAIM - "this task touches nothing" - which is either not a task or not true, since a task
+  // that changes no file does nothing. Both cannot be proven independent of a sibling and both
+  // ship alone; the earlier message asserted "all absent" for both, which was false for the
+  // second and sent the author looking for a field they had already written. (Greptile, PR #53.)
+  excluded.push({ id: t.id, blocked_by: null, conflict: t.declared
+    ? "cone declared EMPTY (new_files / modified_files are `(none)`, no service) - a task that touches nothing is not a task; cannot join a batch, ships alone when nothing declared is eligible"
+    : "no cone declared (new_files / modified_files / service all absent) - undeclared is UNKNOWN, not empty; cannot join a batch, ships alone when nothing declared is eligible" });
 }
 const out = {
   // No `generated` date. The file header claims "deterministic by construction"; a wall-clock
@@ -109,5 +152,17 @@ const out = {
 if (asJson) { console.log(JSON.stringify(out, null, 2)); process.exit(0); }
 console.log(`batch-selection@1  (eligible ${eligible.length}, batch ${batch.length}, swarm_required=${out.swarm_required})`);
 for (const t of batch) console.log(`  BATCH    ${t.id}  [${t.priority}]  service=${t.service}`);
-for (const e of excluded) console.log(`  excluded ${e.id}  <- conflicts with ${e.blocked_by} on: ${e.conflict}`);
+// batch-selection@1 SHAPE, stated because it changed: `excluded[].blocked_by` is a task id when
+// another member blocked this one, and NULL for a self-exclusion (empty cone) - nothing blocked
+// it, its own silence did. Before 2026-07-17 every excluded entry carried a real id, so a
+// consumer written against the old artefact could assume non-null. Nothing in this repo does
+// (the only readers are this renderer and test_batch_select), but the field is part of a NAMED
+// artefact and a named artefact's shape is a contract. Consumers must tolerate null.
+// (Devin, PR #53 - "worth noting rather than a bug". Recorded rather than left implicit: an
+// undocumented shape change is how the next reader gets surprised.)
+//
+// Printing "conflicts with null" would also name a task that does not exist.
+for (const e of excluded) console.log(e.blocked_by
+  ? `  excluded ${e.id}  <- conflicts with ${e.blocked_by} on: ${e.conflict}`
+  : `  excluded ${e.id}  <- ${e.conflict}`);
 process.exit(0);

@@ -256,6 +256,35 @@ One-task-at-a-time is no longer the only sanctioned mode. The default is now BAT
 - **Batch selection is a STEP, not a preference (v2.8.0).** This section described batching as the default from v2.5.0 and the outer loop still asked for `next_eligible()` - one task. Nothing computed a batch, so nothing could notice when a batch was skipped, and on 2026-07-17 the workflow shipped TASK-IMP-104 alone while TASK-IMP-106 sat eligible and cone-independent beside it. A default that no step computes is not a default; it is a comment. Step -1 now computes it and records the reasoning.
 - **Batch selection.** The eligible set is every `ready_to_implement` task whose `depends_on` rows are all `done`. A batch is a greedy subset of that set whose members are pairwise independent: no `depends_on`/`blocks` edge between any two members, AND no overlap between their declared cones (frontmatter `new_files` + `modified_files` + `service`). tasks whose cones overlap stay serial relative to each other, in Queue-selection priority order.
 
+  An EMPTY cone ships ALONE - and "alone" means it SHIPS. Two ways to get one, and the rule covers
+  both: the fields are ABSENT (the author said nothing, so nothing is known), or they are PRESENT
+  and declare `(none)` (the author claims the task touches nothing - which is either not a task or
+  not true, since a task that changes no file does nothing). Neither can be proven independent of
+  a batch member, so neither may JOIN a batch. The refusal names WHICH case it is: telling an
+  author their fields are "absent" when they wrote `(none)` sends them looking for a line they
+  already have. (External review, PR #53.) But when nothing declared is eligible, it BECOMES the batch, by
+  itself, at the head of the priority order. Shipping it alone is exactly what its unknown cone
+  permits: there is no sibling to race.
+
+  The first cut of this rule excluded it and stopped there, so a queue whose only eligible task was
+  undeclared produced an EMPTY batch - and the outer loop above reads an empty batch as
+  `break # backlog drained`. The task never shipped, the loop reported success, and the backlog
+  stalled forever while looking finished. The refusal message said "ships alone" one line above the
+  code that made it never ship. (External review, 2026-07-17, on the fix for the previous review.) Undeclared is
+  UNKNOWN, not empty - and unknown cannot be proven independent of anything. Before 2026-07-17 an
+  empty cone conflicted with nothing by construction, so the silent spec joined EVERY batch:
+  TASK-IMP-117 rewrites 501 specs, TASK-TEMPLATE.md and build.sh, declared none of it, and was
+  admitted alongside a task excluded for touching build.sh. Two sub-agents, one file, one parallel
+  round. TASK-IMP-104 taught the near-miss version (declared install.sh, edited two more files
+  inside its service); the fix folded `service` into the cone and assumed a cone was declared at
+  all. Nothing enforced that. The remedy for an exclusion is to declare the cone, not to widen it.
+
+  `batch-selection@1` shape: each `excluded[]` entry carries `blocked_by` - the id of the member
+  that blocked it, or NULL when the task excluded itself (an empty cone; nothing blocked it, its
+  own silence did). Every entry carried a real id before 2026-07-17, so a consumer written against
+  the older artefact may assume non-null. Nothing reads it that way today, but the shape is part of
+  a named artefact and therefore a contract. (External review, PR #53.)
+
   Greedy, not maximum: members are admitted in priority order and a task excluded by an earlier
   admission is never reconsidered, so a strictly larger independent set may exist. That is
   deliberate - the maximum independent set is NP-hard, and a bigger batch that ignores priority is
@@ -334,6 +363,54 @@ turnstile, not a sentinel. A `done` task that never comes back is never examined
   evidence loss this whole mechanism exists to prevent.
 - **When it runs is the operator's business.** Scheduling is a host decision; CyberOS is invoked.
 
+## 11d. Batch economics: what the loop cost (v2.8.0, TASK-IMP-114)
+
+`routed_back_count` is the only cycle metric this loop has ever written, and nothing has ever added
+two of them together. There is no wall-time and no token accounting anywhere, so "was this batch
+worth running" has never had a number — while five batches whose relative cost nobody can compare
+went past. This run supplied the missing data the expensive way: two API spend-limit cutoffs, one
+of them losing three of four swarm agents mid-flight.
+
+- **At the batch close, ship-tasks MUST write `docs/batches/<batch-id>.md`** — an append-only
+  LEDGER of one batch. It carries `batch`, `members`, `started`, `ended`, `route_backs`,
+  `gate_reasks`, and `tokens` when the harness reports them. The status page renders one row per
+  ledger.
+- **The ledger records ONLY what nothing else knows.** Tasks shipped is NOT written into it: the
+  page DERIVES it from each member's own frontmatter, because `status` already IS "did this task
+  ship". A number copied into a second place is a number that will eventually disagree with the
+  first, and frontmatter is the record of truth either way.
+- **`route_backs` is the batch's own count, NOT a sum of `routed_back_count`.** That counter is a
+  task's LIFETIME total across every batch it ever sat in. The row wants the route-backs that
+  happened in THIS batch — which is where the cost fell — so summing the lifetime counter over the
+  members charges batch 1 for a route-back that happened in batch 2, and charges it retroactively:
+  a closed batch's row would drift upward months later. Two different facts, one word. Record the
+  batch's own; a task that routed back and left (§11a) keeps its route-back on the batch it left,
+  because that batch is what paid for it.
+- **Anything the ledger does not record reads `unknown`, never `0`.** A zero asserts a fact nobody
+  measured. This applies to `route_backs` and `gate_reasks` exactly as it applies to `tokens`.
+- **This is not a new writer on the phase path.** Steps 1-31 are untouched, nothing new is measured
+  inside a task, and no gate consumes any of this. The batch close transcribes instants the run
+  already had — the same shape as §11c's goal write at the `done` flip.
+- **Timestamps belong here and nowhere else.** `started` and `ended` are the two instants that bound
+  the batch; the page computes wall time from them and never from the clock. A ledger is the one
+  artefact where a wall-clock reading is honest, because it records when something happened instead
+  of deriving a fact from now.
+- **A batch cut mid-flight has no `ended`.** Leave the key absent and the page renders `incomplete`.
+  It MUST NOT be back-filled with the time somebody noticed, and the page MUST NOT compute a
+  duration to now. An unfinished batch has no wall time; inventing one is the fabrication the whole
+  corpus exists to refuse.
+- **Tokens are OPTIONAL and MUST NOT be zeroed.** Omit the key when the harness reports nothing — a
+  `0` asserts a fact nobody measured. Only a COMMITTED figure reaches the rendered row: a
+  harness-reported number that varies per read would break the byte-stability TASK-IMP-082's `fp-`
+  stamp depends on, and a metric that requires one specific host is a metric that expires.
+- **A batch of one still gets a ledger.** Small batches are the comparison baseline.
+- **Route-backs count in the batch where they happened**, which is where the cost fell — a task
+  routed back leaves its batch (§11a) and its next attempt is the next batch's cost, not this one's.
+- **This MEASURES; it MUST NOT gate.** No threshold, no budget, no warning, nothing that turns a row
+  red, and no status changes because of a number here. Measuring is not enforcing. A metric that
+  starts blocking is a gate that arrived without anyone deciding to add one; the operator reads the
+  row and makes the call. Spend limits are a real problem, and the answer to them is not a machine
+  that stops itself for a reason nobody agreed to.
 
 ## 12. No partial-ship-and-pause within a task
 
