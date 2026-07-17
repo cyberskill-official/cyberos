@@ -44,6 +44,12 @@ const fm = (t) => {
   return t.slice(4, e);
 };
 const one = (f, k) => (f.match(new RegExp(`^${k}:\\s*(.*)$`, "m"))?.[1] ?? "").trim();
+// Did the spec MENTION this key at all - whatever value it gave? Distinct from list(), which
+// tells you what survived filtering. `new_files: (none)` is PRESENT and EMPTY; a missing
+// new_files is ABSENT. Both yield an empty cone and both ship alone, but only one of them is
+// "absent", and the refusal message used to claim absence for both. (Greptile, PR #53.)
+const declares = (f, k) => new RegExp(`^${k}:`, "m").test(f);
+
 const list = (f, k) => {
   const inline = one(f, k);
   if (inline.startsWith("[")) return inline.slice(1, -1).split(",").map(s => s.trim()).filter(Boolean);
@@ -72,6 +78,8 @@ for (const { f } of tasks) {
     // lib/update-check.sh - both inside its service, neither declared. Files-only would have let
     // a sibling tools/install task race it on files nobody wrote down.
     cone: new Set([...list(f, "new_files"), ...list(f, "modified_files"), ...(one(f, "service") ? [one(f, "service")] : [])]),
+    // whether the AUTHOR said anything about the cone, separate from whether the cone is empty
+    declared: declares(f, "new_files") || declares(f, "modified_files") || declares(f, "service"),
   });
 }
 const done = (id) => byId.get(id)?.status === "done";
@@ -119,7 +127,15 @@ for (const t of eligible) {
 // (Greptile P1, 2026-07-17 - found within the hour, on the fix for the previous review.)
 if (batch.length === 0 && undeclared.length) batch.push(undeclared.shift());
 for (const t of undeclared) {
-  excluded.push({ id: t.id, blocked_by: null, conflict: "no cone declared (new_files / modified_files / service all absent) - undeclared is UNKNOWN, not empty; cannot join a batch, ships alone when nothing declared is eligible" });
+  // Two ways to get an empty cone, and the message must not confuse them. ABSENT fields are
+  // silence: the author said nothing, so nothing is known. PRESENT fields declaring `(none)` are
+  // a CLAIM - "this task touches nothing" - which is either not a task or not true, since a task
+  // that changes no file does nothing. Both cannot be proven independent of a sibling and both
+  // ship alone; the earlier message asserted "all absent" for both, which was false for the
+  // second and sent the author looking for a field they had already written. (Greptile, PR #53.)
+  excluded.push({ id: t.id, blocked_by: null, conflict: t.declared
+    ? "cone declared EMPTY (new_files / modified_files are `(none)`, no service) - a task that touches nothing is not a task; cannot join a batch, ships alone when nothing declared is eligible"
+    : "no cone declared (new_files / modified_files / service all absent) - undeclared is UNKNOWN, not empty; cannot join a batch, ships alone when nothing declared is eligible" });
 }
 const out = {
   // No `generated` date. The file header claims "deterministic by construction"; a wall-clock

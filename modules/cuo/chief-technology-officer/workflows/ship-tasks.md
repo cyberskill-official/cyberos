@@ -256,9 +256,13 @@ One-task-at-a-time is no longer the only sanctioned mode. The default is now BAT
 - **Batch selection is a STEP, not a preference (v2.8.0).** This section described batching as the default from v2.5.0 and the outer loop still asked for `next_eligible()` - one task. Nothing computed a batch, so nothing could notice when a batch was skipped, and on 2026-07-17 the workflow shipped TASK-IMP-104 alone while TASK-IMP-106 sat eligible and cone-independent beside it. A default that no step computes is not a default; it is a comment. Step -1 now computes it and records the reasoning.
 - **Batch selection.** The eligible set is every `ready_to_implement` task whose `depends_on` rows are all `done`. A batch is a greedy subset of that set whose members are pairwise independent: no `depends_on`/`blocks` edge between any two members, AND no overlap between their declared cones (frontmatter `new_files` + `modified_files` + `service`). tasks whose cones overlap stay serial relative to each other, in Queue-selection priority order.
 
-  An UNDECLARED cone ships ALONE - and "alone" means it SHIPS. A task whose frontmatter carries no
-  `new_files`, no `modified_files` and no `service` can never JOIN a batch, because it cannot be
-  proven independent of any member. But when nothing declared is eligible, it BECOMES the batch, by
+  An EMPTY cone ships ALONE - and "alone" means it SHIPS. Two ways to get one, and the rule covers
+  both: the fields are ABSENT (the author said nothing, so nothing is known), or they are PRESENT
+  and declare `(none)` (the author claims the task touches nothing - which is either not a task or
+  not true, since a task that changes no file does nothing). Neither can be proven independent of
+  a batch member, so neither may JOIN a batch. The refusal names WHICH case it is: telling an
+  author their fields are "absent" when they wrote `(none)` sends them looking for a line they
+  already have. (External review, PR #53.) But when nothing declared is eligible, it BECOMES the batch, by
   itself, at the head of the priority order. Shipping it alone is exactly what its unknown cone
   permits: there is no sibling to race.
 

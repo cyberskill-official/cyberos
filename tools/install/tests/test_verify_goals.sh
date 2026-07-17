@@ -37,8 +37,14 @@ t01_done_emits_goal(){
   grep -q 'node .cyberos/docs-tools/verify-goals.mjs' "$w"     || { no t01_done_emits_goal "runner path not named"; return; }
   # the payload must carry what the doctrine names, or the rule is live in the source and dead
   # in the machine that runs (this happened three times on 2026-07-17 before it was checked)
-  local pay="$root/dist/cyberos"
-  [ -f "$pay/docs-tools/verify-goals.mjs" ] || { no t01_done_emits_goal "payload lacks verify-goals.mjs - §11c names a path that does not exist"; return; }
+  #
+  # BUILD it. This read $root/dist/cyberos - a gitignored artifact, 0 tracked files - so the arm
+  # asserted whatever my working directory happened to contain and FAILED on every fresh checkout.
+  # Same defect external review found in test_batch_select's t10; there were two, and only one was
+  # reported. A test that asserts a build output must build it. (Greptile, PR #53, 2026-07-17.)
+  local pay="$TMP/t01_payload"
+  bash "$root/tools/install/build.sh" "$pay" >/dev/null 2>&1 || { no t01_done_emits_goal "build.sh failed - cannot assert what the payload carries"; return; }
+  [ -f "$pay/docs-tools/verify-goals.mjs" ] || { no t01_done_emits_goal "build.sh's copy list omits verify-goals.mjs - §11c names a path the payload does not carry"; return; }
   grep -q '^## 11c. Standing goals' "$pay/cuo/ship-tasks.md"   || { no t01_done_emits_goal "payload ship-tasks lacks §11c"; return; }
   ok t01_done_emits_goal
 }

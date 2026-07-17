@@ -141,6 +141,24 @@ undeclared(){ # undeclared <dir> <id> <priority>
     > "$1/docs/tasks/m/$2/spec.md"
 }
 
+t17_declared_empty_is_not_reported_as_absent(){
+  # Two ways to reach an empty cone; the refusal must not confuse them. A spec that WRITES
+  # `new_files: (none)` / `modified_files: (none)` has declared - emptily, and falsely, since a
+  # task that touches nothing does nothing - but it has NOT been silent. The old message told such
+  # an author their fields were "all absent", sending them to look for a line they had already
+  # written. Behaviour is identical (ships alone); only the reason differs. (Greptile, PR #53.)
+  local d="$TMP/t17"
+  spec "$d" TASK-A-001 ready_to_implement p1 svc/a "" src/a.js
+  mkdir -p "$d/docs/tasks/m/TASK-E-001"
+  printf -- '---\nid: TASK-E-001\nstatus: ready_to_implement\npriority: p1\ndepends_on: []\nnew_files:\n  - (none)\nmodified_files:\n  - (none)\n---\n# x\n' \
+    > "$d/docs/tasks/m/TASK-E-001/spec.md"
+  local out; out="$(node "$BS" --repo "$d" 2>/dev/null)"
+  grep -qE "excluded TASK-E-001" <<<"$out" || { no t17_declared_empty_is_not_reported_as_absent "a declared-empty cone joined a batch - 'touches nothing' is not a proof of independence: $out"; return; }
+  grep -q "cone declared EMPTY" <<<"$out" || { no t17_declared_empty_is_not_reported_as_absent "declared-empty not named as such: $out"; return; }
+  grep -q "TASK-E-001.*all absent" <<<"$out" && { no t17_declared_empty_is_not_reported_as_absent "claimed the fields are absent when the spec wrote them: $out"; return; }
+  ok t17_declared_empty_is_not_reported_as_absent
+}
+
 t14_lone_undeclared_task_actually_ships(){
   # The whole defect: batch 0 for a queue with an eligible task. §11's outer loop reads an empty
   # batch as `break # backlog drained` - so the task never ships, the loop reports success, and the
@@ -207,9 +225,20 @@ t11_deterministic_output_is_byte_identical(){
 }
 
 t10_payload_carries_it(){
-  local p="$root/dist/cyberos/docs-tools/batch-select.mjs"
-  [ -f "$p" ] || { no t10_payload_carries_it "payload lacks batch-select.mjs - §11a names a path that does not exist"; return; }
-  grep -q 'node .cyberos/docs-tools/batch-select.mjs' "$root/dist/cyberos/cuo/ship-tasks.md" \
+  # BUILD the payload, then assert. This arm used to read $root/dist/ directly - a GITIGNORED
+  # build artifact, 0 tracked files. It passed for anyone who had run build.sh recently and FAILED
+  # on every fresh checkout, which is exactly where CI and a new contributor live. External review
+  # ran the suite on a clean tree and got "payload lacks batch-select.mjs"; my sandbox always had
+  # a stale dist/ lying around, so my check could not fail the way a real one does.
+  #
+  # A test that asserts a build output must build it. Anything else asserts my working directory.
+  # (Greptile, PR #53, 2026-07-17.)
+  local out="$TMP/t10_payload"
+  bash "$root/tools/install/build.sh" "$out" >/dev/null 2>&1 \
+    || { no t10_payload_carries_it "build.sh failed - cannot assert what the payload carries"; return; }
+  [ -f "$out/docs-tools/batch-select.mjs" ] \
+    || { no t10_payload_carries_it "build.sh's copy list omits batch-select.mjs - §11a names a path the payload does not carry"; return; }
+  grep -q 'node .cyberos/docs-tools/batch-select.mjs' "$out/cuo/ship-tasks.md" \
     || { no t10_payload_carries_it "payload doctrine does not name the runner"; return; }
   ok t10_payload_carries_it
 }
@@ -217,6 +246,6 @@ echo "test_batch_select.sh (ship-tasks v2.8.0 mandatory step)"
 t01_documented_invocation_works; t02_flag_order_independent; t03_eligibility
 t04_file_conflict_excludes; t05_service_conflict_excludes; t06_file_inside_sibling_service_conflicts
 t07_swarm_required_flag; t08_exclusions_name_the_conflict; t09_empty_and_missing_corpus
-t10_payload_carries_it; t11_deterministic_output_is_byte_identical; t12_undeclared_cone_ships_alone; t13_declaring_a_cone_readmits_it; t14_lone_undeclared_task_actually_ships; t15_undeclared_never_joins_a_declared_batch; t16_many_undeclared_ship_one_at_a_time
+t10_payload_carries_it; t11_deterministic_output_is_byte_identical; t12_undeclared_cone_ships_alone; t13_declaring_a_cone_readmits_it; t14_lone_undeclared_task_actually_ships; t15_undeclared_never_joins_a_declared_batch; t16_many_undeclared_ship_one_at_a_time; t17_declared_empty_is_not_reported_as_absent
 echo "  ---"; echo "  $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
