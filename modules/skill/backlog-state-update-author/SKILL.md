@@ -52,6 +52,21 @@ This skill is called between **every phase transition** of `ship-tasks`, not jus
 - `reviewing → ready_to_test` (review approved)
 - `ready_to_test → testing` (tester claims)
 - `testing → done` (coverage-gate-audit passes)
+**Declared mutation footprint (TASK-IMP-116).** A `backlog-state-update@2` write declares THREE
+lines: the status cell's row, its section header (retallied from the section's rows; a BARE header
+carries no counts and stays untouched), and the file-top `Totals:` line (retallied from every row
+in the file). Capped at three - a footprint that grows on convenience is not a footprint.
+
+TASK-IMP-092 replaced incremental header adjustment with a retally because "incremental adjustment
+faithfully preserves an inherited lie forever (the 086 incident's 34 vs true 20)". It stopped at
+section headers, and the file's most-read number rotted exactly as that argument predicts: a
+2026-07-17 review found `Totals: 336 draft, 4 ready_to_implement, 176 done` over a file whose
+improvement section alone read 67/9/39. `regen_backlog` owns that line and cannot run. Every
+mutation now emits the whole file's truth, not just its section's.
+
+Footprint shapes, all deliberate: counted header -> 3 lines; bare header -> 2 (row + Totals);
+insert -> 1 added row + 2 changed lines. A file with no `Totals:` line is legal and is never given one.
+
 - any-stage → `ready_to_implement` (failure/blocker rework path, increments `routed_back_count`, sets `entered_via: rework`)
 - any-stage → `draft` (SPEC-rejected path, TASK-IMP-108 §1.5: increments `routed_back_count`, sets `entered_via: spec_rejected`). Use when the failure is the spec, not the code - re-authoring and re-auditing is the remedy, and `ready_to_implement` would hand an unchanged wrong spec back to an implementer.
 

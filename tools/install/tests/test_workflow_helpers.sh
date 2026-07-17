@@ -311,6 +311,19 @@ t05_insert_uniqueness_and_grammar() {
   ok t05
 }
 
+# TASK-IMP-116 AC 1/2: count the file's rows INDEPENDENTLY of backlog-mutate, or the assertion
+# is the tool agreeing with itself.
+bm_expected_totals() {
+  awk '
+    /^- \[[a-z_]+\] / { st=$0; sub(/^- \[/,"",st); sub(/\].*/,"",st); n[st]++ }
+    END {
+      split("draft ready_to_implement implementing ready_to_review reviewing ready_to_test testing done on_hold closed cannot_reproduce duplicate", order, " ")
+      out=""
+      for (i=1; i<=12; i++) if (n[order[i]]) out = out (out?", ":"") n[order[i]] " " order[i]
+      print out
+    }' "$1"
+}
+
 t06_counts_maintained() {
   local f="$TMP/t06/BACKLOG.md"; emit_backlog "$f"
   # flip: the header is retallied from the section's rows (TASK-IMP-092) — the fixture's
@@ -333,9 +346,14 @@ t06_counts_maintained() {
     || { fail t06 "beta insert failed"; return; }
   grep -q '^## beta  (1 ready_to_implement)$' "$f" \
     || { fail t06 "beta header: $(grep '^## beta' "$f")"; return; }
-  # the file-top Totals line is NEVER touched (not part of the declared mutation)
-  grep -q '^Totals: 1 draft, 2 ready_to_implement, 1 implementing, 19 done$' "$f" \
-    || { fail t06 "Totals line was touched"; return; }
+  # TASK-IMP-116: the file-top Totals line IS part of the declared mutation now. TASK-IMP-092's
+  # own argument - "incremental adjustment faithfully preserves an inherited lie forever" - stopped
+  # at section headers and let the file's most-read number rot (a 2026-07-17 review found it wrong
+  # by 4 ready_to_implement and 4 done). The mutation declares THREE lines: row, section header,
+  # Totals. Capped there. The fixture's Totals claims 19 done over rows that say otherwise, so the
+  # first mutation corrects it away - exactly as the section header does.
+  local want_totals; want_totals="Totals: $(bm_expected_totals "$f")"
+  grep -qF "$want_totals" "$f" || { fail t06 "Totals not retallied: got '$(grep '^Totals:' "$f")', want '$want_totals'"; return; }
   ok t06
 }
 
@@ -375,20 +393,26 @@ t07_json_and_determinism() {
     || { fail t07 "flip envelope lacks old_line/new_line/new_header"; return; }
   local removed added
   removed="$(diff "$d/pre.md" "$d/c1/BACKLOG.md" | grep -c '^<')"; added="$(diff "$d/pre.md" "$d/c1/BACKLOG.md" | grep -c '^>')"
-  { [ "$removed" -eq 2 ] && [ "$added" -eq 2 ]; } \
-    || { fail t07 "flip footprint not 1 row + 1 header (removed=$removed added=$added)"; return; }
+  # TASK-IMP-116: the declared mutation is THREE lines - row, section header, file Totals - and
+  # §1.6 caps it there. A fourth means something started widening on convenience.
+  { [ "$removed" -eq 3 ] && [ "$added" -eq 3 ]; } \
+    || { fail t07 "flip footprint not 1 row + 1 header + Totals (removed=$removed added=$added)"; return; }
   # insert footprint: 1 added row + 1 changed header, nothing else
   emit_backlog "$d/c3/BACKLOG.md"
   bm insert TASK-ALPHA-002 TASK-ALPHA-002-token-scope "Token scoping" draft --backlog "$d/c3/BACKLOG.md" \
     || { fail t07 "insert for footprint failed"; return; }
   removed="$(diff "$d/pre.md" "$d/c3/BACKLOG.md" | grep -c '^<')"; added="$(diff "$d/pre.md" "$d/c3/BACKLOG.md" | grep -c '^>')"
-  { [ "$removed" -eq 1 ] && [ "$added" -eq 2 ]; } \
-    || { fail t07 "insert footprint not 1 row + 1 header (removed=$removed added=$added)"; return; }
-  # no-counts flip footprint: exactly the one row
+  # TASK-IMP-116: insert ADDS a row and CHANGES the section header + file Totals. Asymmetric by
+  # nature - removed=2, added=3, unlike a flip's 3/3.
+  { [ "$removed" -eq 2 ] && [ "$added" -eq 3 ]; } \
+    || { fail t07 "insert footprint not 1 new row + section header + Totals (removed=$removed added=$added)"; return; }
+  # no-counts flip footprint (TASK-IMP-116): a BARE header carries no counts and stays untouched,
+  # so the mutation is the row + the file Totals = 2/2. Three footprint shapes, all deliberate:
+  #   counted header -> 3/3   bare header -> 2/2   insert -> 2/3 (the row is new)
   emit_backlog "$d/c4/BACKLOG.md"
   bm flip TASK-GAMMA-001 implementing ready_to_review --backlog "$d/c4/BACKLOG.md" || { fail t07 "gamma flip failed"; return; }
   removed="$(diff "$d/pre.md" "$d/c4/BACKLOG.md" | grep -c '^<')"; added="$(diff "$d/pre.md" "$d/c4/BACKLOG.md" | grep -c '^>')"
-  { [ "$removed" -eq 1 ] && [ "$added" -eq 1 ]; } || { fail t07 "no-counts flip footprint (removed=$removed added=$added)"; return; }
+  { [ "$removed" -eq 2 ] && [ "$added" -eq 2 ]; } || { fail t07 "no-counts flip footprint not 1 row + Totals (removed=$removed added=$added)"; return; }
   # CRLF: bytes preserved outside the mutated line; no line-ending drift anywhere
   emit_backlog "$d/crlf.md"; sed 's/$/\r/' "$d/crlf.md" > "$d/crlf2.md"; mv "$d/crlf2.md" "$d/crlf.md"
   local crlf_before; crlf_before="$(grep -c $'\r$' "$d/crlf.md")"
@@ -526,8 +550,9 @@ t11_footprint_holds_with_retally() {
   bm flip TASK-ALPHA-001 draft ready_to_review --backlog "$d/flip.md" || { fail t11 "flip failed"; return; }
   diff "$d/pre.md" "$d/flip.md" | sed -n 's/^< //p' > "$d/removed"
   diff "$d/pre.md" "$d/flip.md" | sed -n 's/^> //p' > "$d/added"
-  { [ "$(wc -l < "$d/removed")" -eq 2 ] && [ "$(wc -l < "$d/added")" -eq 2 ]; } \
-    || { fail t11 "flip footprint not 1 row + 1 header: removed=[$(cat "$d/removed")] added=[$(cat "$d/added")]"; return; }
+  # TASK-IMP-116: row + section header + Totals = 3.
+  { [ "$(wc -l < "$d/removed")" -eq 3 ] && [ "$(wc -l < "$d/added")" -eq 3 ]; } \
+    || { fail t11 "flip footprint not 1 row + 1 header + Totals: removed=[$(cat "$d/removed")] added=[$(cat "$d/added")]"; return; }
   { grep -qxF '## alpha  (34 done)' "$d/removed" \
       && grep -qxF -- '- [draft] TASK-ALPHA-001-login-rate-limit - Login rate limiting' "$d/removed"; } \
     || { fail t11 "flip removed lines are not header+row: $(cat "$d/removed")"; return; }
@@ -539,14 +564,19 @@ t11_footprint_holds_with_retally() {
   bm insert TASK-ALPHA-004 TASK-ALPHA-004-new-row "New row" draft --backlog "$d/ins.md" || { fail t11 "insert failed"; return; }
   local removed added
   removed="$(diff "$d/pre.md" "$d/ins.md" | grep -c '^<')"; added="$(diff "$d/pre.md" "$d/ins.md" | grep -c '^>')"
-  { [ "$removed" -eq 1 ] && [ "$added" -eq 2 ]; } \
-    || { fail t11 "insert footprint not 1 row + 1 header (removed=$removed added=$added)"; return; }
-  # 'at most one': a mutation under a BARE header changes exactly the one row
+  # TASK-IMP-116: insert ADDS a row and CHANGES the section header + file Totals. Asymmetric by
+  # nature - removed=2, added=3, unlike a flip's 3/3.
+  { [ "$removed" -eq 2 ] && [ "$added" -eq 3 ]; } \
+    || { fail t11 "insert footprint not 1 new row + section header + Totals (removed=$removed added=$added)"; return; }
+  # 'at most one' (TASK-IMP-116): a BARE header carries no counts and stays untouched, so the
+  # mutation is the row + the file Totals. The header rule is unchanged; Totals is now declared.
   emit_backlog "$d/bare-pre.md"; emit_backlog "$d/bare.md"
   bm flip TASK-GAMMA-001 implementing ready_to_review --backlog "$d/bare.md" || { fail t11 "bare flip failed"; return; }
   removed="$(diff "$d/bare-pre.md" "$d/bare.md" | grep -c '^<')"; added="$(diff "$d/bare-pre.md" "$d/bare.md" | grep -c '^>')"
-  { [ "$removed" -eq 1 ] && [ "$added" -eq 1 ]; } \
-    || { fail t11 "bare-header footprint not 1 row + 0 header (removed=$removed added=$added)"; return; }
+  { [ "$removed" -eq 2 ] && [ "$added" -eq 2 ]; } \
+    || { fail t11 "bare-header footprint not 1 row + Totals, 0 header (removed=$removed added=$added)"; return; }
+  # the bare header itself MUST still be untouched - Totals moving is not licence to touch it
+  grep -q '^## gamma$' "$d/bare.md" || { fail t11 "bare header was rewritten"; return; }
   ok t11
 }
 
