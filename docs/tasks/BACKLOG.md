@@ -242,7 +242,7 @@ Totals: 336 draft, 4 ready_to_implement, 12 implementing, 176 done, 1 on_hold, 1
 - [draft] TASK-HR-008-performance-signals - HR performance signal aggregator — read-only consumer of PROJ + TIME + LEARN signals for periodic performance snapshots
 - [draft] TASK-HR-009-termination-workflow - HR termination workflow — Good-Leaver / Bad-Leaver branch with CFO+CEO co-sign + ESOP forfeiture + access revocation cascade
 
-## improvement  (67 draft, 12 ready_to_implement, 1 testing, 35 done)
+## improvement  (67 draft, 12 ready_to_implement, 36 done)
 
 - [draft] TASK-IMP-001-dependency-audit-in-ci-cargo-audit-cargo-deny - Dependency audit in CI (cargo-audit + cargo-deny)
 - [draft] TASK-IMP-002-refuse-dev-cors-in-production-boot - Refuse dev CORS in production boot
@@ -346,7 +346,7 @@ Totals: 336 draft, 4 ready_to_implement, 12 implementing, 176 done, 1 on_hold, 1
 - [done] TASK-IMP-100-task-reconcile-evidence-ladder - task-reconcile, evidence ladder and report for drifted task states
 - [done] TASK-IMP-101-reconcile-entry-and-deps-gating - ship-tasks reconcile entry phase and depends_on evidence gating
 - [done] TASK-IMP-102-audit-binding-normative-half - Audits bind the normative half, not bytes the workflow rewrites
-- [testing] TASK-IMP-103-install-concurrency-lock - Install concurrency lock
+- [done] TASK-IMP-103-install-concurrency-lock - Install concurrency lock
 - [ready_to_implement] TASK-IMP-104-refuse-older-payload-downgrade - Refuse an older payload over a newer .cyberos
 - [ready_to_implement] TASK-IMP-105-task-id-allocation-rule - Task-id allocation rule + next-id helper
 - [ready_to_implement] TASK-IMP-106-uninstall-summary-names-kept - Uninstall summary names what it kept

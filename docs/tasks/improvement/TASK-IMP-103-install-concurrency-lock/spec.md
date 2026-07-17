@@ -4,7 +4,7 @@ title: Install concurrency lock
 template: task@1
 type: improvement
 module: improvement
-status: testing
+status: done
 priority: p2
 author: "@stephencheng"
 department: engineering
@@ -22,6 +22,7 @@ phase: "pre-1.0.0 release"
 owner: Stephen Cheng (CTO)
 created: 2026-07-17
 memory_chain_hash: null
+shipped: 2026-07-17
 effort_hours: 3
 service: tools/install
 new_files:
