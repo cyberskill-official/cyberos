@@ -4,8 +4,8 @@
 // Executes the two sanctioned BACKLOG.md mutations from
 // modules/skill/backlog-state-update-author/SKILL.md §2-§3 — flip one status cell,
 // insert one row — and NOTHING else: this tool never moves, reorders, or deletes rows,
-// and never edits a line outside the declared mutation (whole-file discipline: one row
-// plus at most one section-header line per mutation). Grammar authority stays with
+// and never edits a line outside the declared mutation (whole-file discipline: one row,
+// at most one section header, at most one Totals line - TASK-IMP-116). Grammar authority stays with
 // regen_backlog() in scripts/migrate_task_layout.py / migrate_improvement_to_task.py;
 // this tool encodes it, never redefines it.
 //
@@ -377,13 +377,14 @@ exit codes
   7  insert refusal: a row for the id already exists (uniqueness pre-image violated)
 
 discipline
-  a mutation is exactly one row plus at most one header line; the header line, when
-  counted, is a FULL retally of the section's rows after the mutation — an inherited
-  wrong count is corrected, never propagated (TASK-IMP-092). this tool never moves,
-  reorders, or deletes rows, never normalizes line endings (CRLF round-trips), and never
-  touches the Totals line. deterministic: identical input + args = byte-identical result
-  file and stdout (no clock, no randomness in output). writes are two-phase atomic
-  (.tmp.<nonce> then rename). node stdlib only.
+    a mutation is exactly one row, at most one section header, and at most one Totals
+    line - a 3-line ceiling (TASK-IMP-116). the header and Totals, when present and
+    counted, are FULL retallies after the mutation: an inherited wrong count is corrected,
+    never propagated (TASK-IMP-092). a file with no Totals line is never given one. this
+    tool never moves, reorders, or deletes rows and never normalizes line endings (CRLF
+    round-trips). deterministic: identical input + args = byte-identical result
+    file and stdout (no clock, no randomness in output). writes are two-phase atomic
+    (.tmp.<nonce> then rename). node stdlib only.
 `;
 
 function main(argv) {
