@@ -18,14 +18,14 @@
 // task. The sentinel detects; the pipeline fixes. An auto-fix on a violated acceptance is the
 // machine grading its own homework at the exact moment nobody is watching.
 //
-// usage: node verify-goals.mjs [--repo <root>] [--json] [--timeout <secs>]
+// usage: node verify-goals.mjs [--repo <root>] [--json] [--timeout <secs>]\n  exit: 0 all checked and passing · 1 a goal violated · 2 usage · 3 goals that cannot be checked
 // exits: 0 all goals hold   1 one or more VIOLATED   2 usage   3 corpus unreadable
 import { readFileSync, writeFileSync, readdirSync, existsSync, appendFileSync, mkdirSync } from "node:fs";
 import { join, resolve, relative, isAbsolute, dirname } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const argv = process.argv.slice(2);
-if (argv.includes("--help")) { console.log("usage: node verify-goals.mjs [--repo <root>] [--json] [--timeout <secs>]"); process.exit(2); }
+if (argv.includes("--help")) { console.log("usage: node verify-goals.mjs [--repo <root>] [--json] [--timeout <secs>]\n  exit: 0 all checked and passing · 1 a goal violated · 2 usage · 3 goals that cannot be checked"); process.exit(2); }
 const asJson = argv.includes("--json");
 // indexOf returns -1 when a flag is absent, and -1 + 1 = 0 - which reads the FIRST argv element
 // as the value. `--timeout` absent therefore yielded Number("--repo") = NaN and spawnSync threw
@@ -64,6 +64,7 @@ const preds = (f) => {
 const results = [], ledgerRows = [];
 const retiredTasks = new Set();   // have a goal, quarantined - NOT the same as having none
 let violations = 0;
+let unverifiable = 0;   // goals that CANNOT be checked - distinct from goals that FAILED
 
 for (const e of readdirSync(goalsDir)) {
   if (!e.endsWith(".md") || e.startsWith(".")) continue;
@@ -79,6 +80,7 @@ for (const e of readdirSync(goalsDir)) {
   // `predicate: none`. The absence IS the finding - it must not read as a pass.
   if (!list.length) {
     results.push({ goal: e, task: id, verdict: "no_predicate", notes: [one(f, "predicate_none_reason") || "no mechanically re-runnable predicate (verify:-only ACs are not predicates - §1.3)"] });
+    unverifiable++;   // §1.4 - see the exit contract at the foot of this file
     ledgerRows.push([new Date().toISOString(), id, "NO_PREDICATE", "0"].join("\t"));
     continue;
   }
@@ -145,15 +147,37 @@ const coverage = (() => {
   return { done_tasks: doneTasks.length, enrolled: doneTasks.length - missing.length, without_goal: missing.length, retired: [...retiredTasks].filter(t => doneTasks.includes(t)).length };
 })();
 
-const out = { artefact: "goal-ledger@1", generated: new Date().toISOString().slice(0, 10), coverage, goals: results, violations };
+// No `generated` date: the artefact is a function of the corpus, and a wall-clock field made one
+// corpus emit a different artefact every day. Same defect external review found in batch-select;
+// fixed here in the same pass rather than left for the next reviewer to find twice. The LEDGER
+// timestamps stay - a log of runs is exactly where a clock belongs.
+const out = { artefact: "goal-ledger@1", coverage, goals: results, violations, unverifiable };
 if (asJson) console.log(JSON.stringify(out, null, 2));
 else {
-  console.log(`verify-goals: ${results.length} goal(s), ${violations} violated`);
+  console.log(`verify-goals: ${results.length} goal(s), ${violations} violated, ${unverifiable} unverifiable`);
   console.log(`  coverage: ${coverage.enrolled}/${coverage.done_tasks} done tasks enrolled - ${coverage.without_goal} have NO goal and are unverified since the day they shipped${coverage.retired ? `; ${coverage.retired} have a QUARANTINED goal (has one, not verifying)` : ""}.`);
   for (const r of results) {
     console.log(`  ${r.verdict.padEnd(12)} ${r.task}`);
     for (const n of r.notes) console.log(`      ${n}`);
   }
   if (violations) console.log("\n  A violated goal is a FINDING, not a fix. Remedy: a type: bug task through create-tasks -> ship-tasks.");
+  if (unverifiable && !violations) console.log(`\n  ${unverifiable} goal(s) CANNOT be checked (exit 3). Nothing is broken; nothing is proven either.`);
 }
-process.exit(violations ? 1 : 0);
+
+// Exit contract (§1.4 + §1.6):
+//   0  every goal was checked and passed
+//   1  at least one goal VIOLATED - something that passed now fails (§1.6)
+//   2  usage error
+//   3  no violations, but goals exist that cannot be checked at all (§1.4)
+//
+// 3 exists because §1.4 says the absent predicate IS the finding and "must not read as a pass" -
+// and this branch used to `continue` without touching any counter, so the tool printed the
+// finding and exited 0. CI and operators read the exit code, not the prose: a green tick for a
+// task nobody ever checked. I wrote the rule and broke it in the same block. (Greptile P1,
+// 2026-07-17.)
+//
+// Not folded into 1, deliberately: "cannot be checked" and "was passing, now broken" are
+// different facts. §1.6's word is VIOLATED, and calling an honest gap a violation is a different
+// lie - it would also paint CI red for a state §1.4 explicitly blesses, which teaches people to
+// ignore red.
+process.exit(violations ? 1 : unverifiable ? 3 : 0);

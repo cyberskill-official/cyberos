@@ -63,12 +63,30 @@ t03_passing_refreshes(){
   ok t03_passing_refreshes
 }
 # --- AC 4 (#1.3,#1.4): no runnable predicate -> a goal marked none, NOT a silent pass
+t13_violated_outranks_unverifiable(){
+  # The whole point of a separate code is that "cannot be checked" and "was passing, now broken"
+  # stay different facts. A corpus with BOTH must exit 1: a real regression outranks a known gap.
+  local d="$TMP/t13"; mk "$d"
+  goal "$d" gap satisfied                                  # no predicate -> unverifiable
+  printf '#!/usr/bin/env bash\nexit 1\n' > "$d/breaks.sh"; chmod +x "$d/breaks.sh"
+  ( cd "$d" && git add -A >/dev/null 2>&1 && git -c user.email=t@t -c user.name=t commit -qm p >/dev/null 2>&1 ) || true
+  goal "$d" broken satisfied breaks.sh                     # predicate fails -> violated
+  node "$VG" --repo "$d" >/dev/null 2>&1; local rc=$?
+  [ "$rc" -eq 1 ] || { no t13_violated_outranks_unverifiable "violated+unverifiable exited $rc, want 1 - a regression must not be masked by a gap"; return; }
+  ok t13_violated_outranks_unverifiable
+}
+
 t04_unrunnable_named_not_faked(){
   local d="$TMP/t04"; mk "$d"; goal "$d" g satisfied
   local out; out="$(node "$VG" --repo "$d" 2>&1)"
   grep -q "no_predicate" <<<"$out" || { no t04_unrunnable_named_not_faked "absent predicate not named: $out"; return; }
   grep -q "satisfied " <<<"$out" && { no t04_unrunnable_named_not_faked "no-predicate goal reported as satisfied - it must not read as a pass"; return; }
   grep -q "NO_PREDICATE" "$d/docs/goals/.ledger.tsv" || { no t04_unrunnable_named_not_faked "no ledger row"; return; }
+  # §1.4 says the absence "must not read as a pass". CI and operators read the EXIT CODE, not the
+  # prose - and this arm only ever checked the prose, so the tool printed the finding and exited 0
+  # for two weeks. A green tick for a task nobody checked. (Greptile P1, 2026-07-17.)
+  node "$VG" --repo "$d" >/dev/null 2>&1; local rc=$?
+  [ "$rc" -eq 3 ] || { no t04_unrunnable_named_not_faked "an unverifiable goal exited $rc - 3 means 'cannot be checked'; 0 would read as a pass"; return; }
   ok t04_unrunnable_named_not_faked
 }
 # --- AC 5 (#1.7): DETECTION ONLY. No task status changes, no code is written.
@@ -157,6 +175,6 @@ t01_done_emits_goal; t02_broken_test_violates; t03_passing_refreshes; t04_unrunn
 t05_detection_only; t06_timeout_is_violation
 t07_predicate_escaping_root_refused; t08_untracked_predicate_refused
 t09_refusal_is_a_violation_not_a_skip; t10_retired_goal_skipped
-t11_report_states_its_coverage; t12_retired_goal_is_not_missing
+t11_report_states_its_coverage; t12_retired_goal_is_not_missing; t13_violated_outranks_unverifiable
 echo "  ---"; echo "  $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

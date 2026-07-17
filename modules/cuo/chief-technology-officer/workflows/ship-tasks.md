@@ -248,58 +248,6 @@ while ! stop_signal:
 
 The supervisor handles persistence (state survives across sessions because the truth is in BACKLOG.md + the memory chain), parallelism (multiple tasks may run in parallel when their dependency cones don't overlap), and observability (the per-phase `workflow_phase_complete` + the final `workflow_complete` rows are enough to reconstruct the run).
 
-## 11c. Standing goals: what `done` claimed, re-verified (v2.8.0, TASK-IMP-109)
-
-`done` is terminal and nothing re-checks it. TRACE-004 proves every clause had a passing test ON
-THE DAY IT SHIPPED; nothing looks again. A task shipped in batch 1 could be broken today and the
-corpus would still show it green. A goal you verify once is an assumption with a timestamp.
-
-`task-reconcile` does NOT close this. It measures drift when a task RE-ENTERS the workflow - a
-turnstile, not a sentinel. A `done` task that never comes back is never examined again by anything.
-
-- **At the `done` flip, ship-tasks MUST write `docs/goals/<task-id>.md`** carrying: `predicates`
-  (the task's §1 cited tests - already collected, because TRACE-004 just verified them, so the
-  predicate is free), `born`, `source`, `status: satisfied`, `last_pass`, `on_violation: report`.
-- **The predicate set is the CITED TESTS, nothing invented.** A goal MUST NOT claim a check the
-  task never made.
-- **ACs whose evidence is a justified `verify:` are NOT enrolled** and the goal names them as not
-  mechanically re-verifiable. A predicate that cannot be re-run is not a predicate.
-- **A task reaching `done` with zero runnable predicates STILL gets a goal**, marked
-  `predicate: none` with the reason. The absence is the finding; it must never read as a pass.
-- **Re-verification is `node .cyberos/docs-tools/verify-goals.mjs`.** DETECTION ONLY: a violated
-  goal changes no status, writes no code, and re-opens no task. The remedy is a new `type: bug`
-  task through create-tasks -> ship-tasks. The sentinel detects; the pipeline fixes. An auto-fix
-  on a violated acceptance is the machine grading its own homework at the moment nobody is watching.
-- **Retirement is a human decision, logged.** A flaky predicate is quarantined
-  (`status: retired`, reason recorded), never deleted - a goal deleted without a reason is the
-  evidence loss this whole mechanism exists to prevent.
-- **When it runs is the operator's business.** Scheduling is a host decision; CyberOS is invoked.
-
-## 11b. Route-back ceiling (v2.8.0, TASK-IMP-108)
-
-`routed_back_count` has been written on every route-back since it was defined and read as a limit
-exactly nowhere - 18 references in this file, all increments. The 5-fail circuit breaker bounds
-the DEBUGGING cycle inside one testing phase; nothing bounds how many times a task circles the
-whole loop. A task that keeps failing can cycle implement -> review -> test -> route back forever,
-burning budget with no escalation. This session hit the adjacent failure twice (API spend limits)
-and the loop had nothing to say about it.
-
-- **At `routed_back_count >= 3`, ship-tasks MUST HALT** at an operator gate instead of re-entering.
-  Present every route-back reason on record side by side, and ask for one verdict: re-enter /
-  split the task / `on_hold` / `closed`. Re-entering without a recorded verdict is a violation.
-- **Three is a judgment, not a derivation**, and the workflow says so rather than implying false
-  precision. The reasoning: "the same task failed three DIFFERENT ways" is evidence about the
-  spec, not the implementation - and a spec problem is not fixed by another implementation pass.
-- **The ceiling counts cycles, not causes.** Three route-backs from one flaky test still halt. A
-  human reading three identical reasons decides in seconds; the alternative is a loop that never
-  asks.
-- **The halt belongs to the parent** (§11a): a swarm sub-agent MUST NOT resolve it. The verdict is
-  the operator's.
-- **Under the ceiling, nothing changes.** A task at `routed_back_count: 2` re-enters normally.
-- **`entered_via: spec_rejected` routes to `draft`, not `ready_to_implement`** (STATUS-REFERENCE
-  §1.3). Pairs with this ceiling: three route-backs usually IS a spec problem wearing an
-  implementation problem's clothes.
-
 ## 11a. Batch selection and parallel shipping (v2.5.0, TASK-IMP-074)
 
 One-task-at-a-time is no longer the only sanctioned mode. The default is now BATCH shipping of parallel-safe tasks:
@@ -327,6 +275,58 @@ One-task-at-a-time is no longer the only sanctioned mode. The default is now BAT
   - Reason: a separate file is a second place the reader must find, and it rots the moment the task moves. The operator opens the task; the steps are there. Anything else asks them to hold two documents in their head and guess which is current.
   - Shape: numbered, copy-pasteable, one command or one click per step, with the expected output stated. If a step is GUI-only and the agent has OS/browser control, the agent does it (`EXECUTION-DISCIPLINE.md` §2b) and the guideline records what was driven — it does not ask the operator to repeat it.
   - The task halts at that gate only if the steps are genuinely operator-only under §2. "The agent wrote a guideline" is not itself a halt.
+## 11b. Route-back ceiling (v2.8.0, TASK-IMP-108)
+
+`routed_back_count` has been written on every route-back since it was defined and read as a limit
+exactly nowhere - 18 references in this file, all increments. The 5-fail circuit breaker bounds
+the DEBUGGING cycle inside one testing phase; nothing bounds how many times a task circles the
+whole loop. A task that keeps failing can cycle implement -> review -> test -> route back forever,
+burning budget with no escalation. This session hit the adjacent failure twice (API spend limits)
+and the loop had nothing to say about it.
+
+- **At `routed_back_count >= 3`, ship-tasks MUST HALT** at an operator gate instead of re-entering.
+  Present every route-back reason on record side by side, and ask for one verdict: re-enter /
+  split the task / `on_hold` / `closed`. Re-entering without a recorded verdict is a violation.
+- **Three is a judgment, not a derivation**, and the workflow says so rather than implying false
+  precision. The reasoning: "the same task failed three DIFFERENT ways" is evidence about the
+  spec, not the implementation - and a spec problem is not fixed by another implementation pass.
+- **The ceiling counts cycles, not causes.** Three route-backs from one flaky test still halt. A
+  human reading three identical reasons decides in seconds; the alternative is a loop that never
+  asks.
+- **The halt belongs to the parent** (§11a): a swarm sub-agent MUST NOT resolve it. The verdict is
+  the operator's.
+- **Under the ceiling, nothing changes.** A task at `routed_back_count: 2` re-enters normally.
+- **`entered_via: spec_rejected` routes to `draft`, not `ready_to_implement`** (STATUS-REFERENCE
+  §1.3). Pairs with this ceiling: three route-backs usually IS a spec problem wearing an
+  implementation problem's clothes.
+
+## 11c. Standing goals: what `done` claimed, re-verified (v2.8.0, TASK-IMP-109)
+
+`done` is terminal and nothing re-checks it. TRACE-004 proves every clause had a passing test ON
+THE DAY IT SHIPPED; nothing looks again. A task shipped in batch 1 could be broken today and the
+corpus would still show it green. A goal you verify once is an assumption with a timestamp.
+
+`task-reconcile` does NOT close this. It measures drift when a task RE-ENTERS the workflow - a
+turnstile, not a sentinel. A `done` task that never comes back is never examined again by anything.
+
+- **At the `done` flip, ship-tasks MUST write `docs/goals/<task-id>.md`** carrying: `predicates`
+  (the task's §1 cited tests - already collected, because TRACE-004 just verified them, so the
+  predicate is free), `born`, `source`, `status: satisfied`, `last_pass`, `on_violation: report`.
+- **The predicate set is the CITED TESTS, nothing invented.** A goal MUST NOT claim a check the
+  task never made.
+- **ACs whose evidence is a justified `verify:` are NOT enrolled** and the goal names them as not
+  mechanically re-verifiable. A predicate that cannot be re-run is not a predicate.
+- **A task reaching `done` with zero runnable predicates STILL gets a goal**, marked
+  `predicate: none` with the reason. The absence is the finding; it must never read as a pass.
+- **Re-verification is `node .cyberos/docs-tools/verify-goals.mjs`.** DETECTION ONLY: a violated
+  goal changes no status, writes no code, and re-opens no task. The remedy is a new `type: bug`
+  task through create-tasks -> ship-tasks. The sentinel detects; the pipeline fixes. An auto-fix
+  on a violated acceptance is the machine grading its own homework at the moment nobody is watching.
+- **Retirement is a human decision, logged.** A flaky predicate is quarantined
+  (`status: retired`, reason recorded), never deleted - a goal deleted without a reason is the
+  evidence loss this whole mechanism exists to prevent.
+- **When it runs is the operator's business.** Scheduling is a host decision; CyberOS is invoked.
+
 
 ## 12. No partial-ship-and-pause within a task
 

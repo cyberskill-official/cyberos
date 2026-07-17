@@ -155,8 +155,19 @@ for (const mod of readdirSync(TASK_ROOT, { withFileTypes: true }).sort((a, b) =>
       e: str(m.effort_hours), v: str(m.verify), r: str(m.risk_if_skipped),
       // TASK-IMP-108 §1.7: WHICH KIND of draft / ready_to_implement. Absent renders as 'unknown',
       // which is the truth for every task this run did not author - the page must not invent a
-      // reason it was not told. `rb` lets the reader see thrash (routed_back_count > 0) without
-      // opening the frontmatter, which is the whole complaint the field answers.
+      // reason it was not told.
+      //
+      // These three are PAYLOAD ONLY today. The staleness report (rendered server-side, above)
+      // is what discharges §1.7; per-task dr/ev/rb reach the payload and no client reads them.
+      // This comment previously claimed `rb` "lets the reader see thrash without opening the
+      // frontmatter" - it does not, because nothing renders it, so the reader still opens the
+      // frontmatter. Corrected rather than left: an unrendered field described as a reader
+      // benefit is exactly the emitted-but-unrendered class TASK-IMP-118 names, and 108 §1.7
+      // already shipped `done` on that mistake once today.
+      //
+      // They stay because the drawer is the obvious consumer and the data is free here. That is
+      // a plan, not a promise: no clause requires per-task dr/ev/rb to render, so nothing is
+      // unsatisfied by their absence from the UI. (External review 2026-07-17.)
       dr: str(m.draft_reason), ev: str(m.entered_via), rb: Number(str(m.routed_back_count)) || 0,
       st: list(m.subtasks),
       // relations are resolved AFTER the corpus is known: a repo's ids are not always
