@@ -109,6 +109,23 @@ t09_empty_and_missing_corpus(){
   ok t09_empty_and_missing_corpus
 }
 # --- t10: the payload carries it. §11a names the vendored path; a payload without it cannot obey.
+t11_deterministic_output_is_byte_identical(){
+  # The file header says "Deterministic by construction". Nothing asserted it, and the code had
+  # drifted: `generated: new Date()` made one corpus yield a different artefact each day, so a
+  # consumer diffing batch-selection@1 for equality would see a change that was only the calendar.
+  # A claim with no test is a comment. (External review 2026-07-17 - TASK-IMP-118's shape exactly.)
+  local d="$TMP/t11"
+  spec "$d" TASK-A-001 ready_to_implement p1 svc/a "" src/a.js
+  spec "$d" TASK-A-002 ready_to_implement p1 svc/b "" src/b.js
+  local a b
+  a="$(node "$BS" --repo "$d" --json 2>/dev/null)"
+  b="$(node "$BS" --repo "$d" --json 2>/dev/null)"
+  [ -n "$a" ] || { no t11_deterministic_output_is_byte_identical "no output"; return; }
+  grep -q '"generated"' <<<"$a" && { no t11_deterministic_output_is_byte_identical "artefact still carries a wall-clock field"; return; }
+  if [ "$a" = "$b" ]; then ok t11_deterministic_output_is_byte_identical
+  else no t11_deterministic_output_is_byte_identical "two runs over one corpus differ - the header's determinism claim is false"; fi
+}
+
 t10_payload_carries_it(){
   local p="$root/dist/cyberos/docs-tools/batch-select.mjs"
   [ -f "$p" ] || { no t10_payload_carries_it "payload lacks batch-select.mjs - §11a names a path that does not exist"; return; }
@@ -120,6 +137,6 @@ echo "test_batch_select.sh (ship-tasks v2.8.0 mandatory step)"
 t01_documented_invocation_works; t02_flag_order_independent; t03_eligibility
 t04_file_conflict_excludes; t05_service_conflict_excludes; t06_file_inside_sibling_service_conflicts
 t07_swarm_required_flag; t08_exclusions_name_the_conflict; t09_empty_and_missing_corpus
-t10_payload_carries_it
+t10_payload_carries_it; t11_deterministic_output_is_byte_identical
 echo "  ---"; echo "  $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

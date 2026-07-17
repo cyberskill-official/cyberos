@@ -85,7 +85,14 @@ for (const t of eligible) {
   else batch.push(t);
 }
 const out = {
-  artefact: "batch-selection@1", generated: new Date().toISOString().slice(0, 10),
+  // No `generated` date. The file header claims "deterministic by construction"; a wall-clock
+  // field made that false - the same corpus produced a different artefact tomorrow, so any
+  // consumer diffing batch-selection@1 outputs for equality would see a spurious change.
+  // The selection is a function of the corpus and nothing else. If a consumer needs "when",
+  // the commit that carries the artefact has it, and that timestamp is not invented here.
+  // (External review 2026-07-17. The claim had no test, which is why it drifted from the code
+  // without anything noticing - the exact gap TASK-IMP-118 exists to close. t11 now pins it.)
+  artefact: "batch-selection@1",
   eligible: eligible.map(t => t.id), batch: batch.map(t => t.id),
   swarm_required: batch.length > 1, excluded,
 };

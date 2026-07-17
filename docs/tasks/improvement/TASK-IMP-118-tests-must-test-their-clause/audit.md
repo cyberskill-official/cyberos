@@ -1,7 +1,7 @@
 ---
 audited_file: docs/tasks/improvement/TASK-IMP-118-tests-must-test-their-clause/spec.md
-audited_file_sha256: e80e9b85b7d56b24
-audited_body_sha256_prefix: 85257517bec2baca
+audited_file_sha256: 11ec9977797a8bd4
+audited_body_sha256_prefix: 85fadd8a036537b9
 rubric: audit_rubric@2.0
 audited_at: 2026-07-17T15:10:00+07:00
 auditor: claude-fable-5
@@ -48,6 +48,27 @@ the handoff, matching how 117 handled its own corpus question.
   108 §1.7 mistake.
 - SAFE: adds no executable surface. Changes documents and one skill.
 - TRACE: 1.1-1.5 cite tests; AC1-AC6 cite clauses. AC6 is the load-bearing one.
+
+## Re-binding, 2026-07-17
+
+The spec's §Scope cited a `contracts/task/RUBRIC.md` path under `modules/skill/`. No such file
+exists - the rubric is at `modules/skill/task-audit/RUBRIC.md`. I pattern-matched off
+`modules/skill/contracts/task/STATUS-REFERENCE.md`, which IS real, and assumed RUBRIC.md sat
+beside it.
+
+(The dead path is described here rather than quoted: check_doc_anchors reads audit bodies too, so
+writing it out verbatim re-commits the same error inside the note explaining it. Found by the
+checker on the first re-run, which is the check doing its job twice in five minutes.)
+
+CI caught it (`check_doc_anchors.sh`, TASK-SKILL-119, exit 10). The check exists and runs
+locally; I ran build, version-sync, and six suites before committing, and not this one. The
+mechanism was not missing - I did not run it. That is a worse failure than the ones this task is
+about, and it is recorded rather than quietly amended.
+
+This was a BODY edit, so `audited_body_sha256_prefix` genuinely moved (85257517bec2baca -> 85fadd8a036537b9) and
+both hashes are re-bound above. The verdict is unchanged: correcting a citation does not touch the
+argument the audit assessed. Had the change altered a clause, this would be a re-audit, not a
+re-binding.
 
 ## Verdict
 

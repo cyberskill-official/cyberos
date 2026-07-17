@@ -94,7 +94,7 @@ None. audit_rubric@2.0 and the task-audit skill both exist. This adds one judgme
 
 ## Scope
 
-In scope: the TRACE-006 rule text in `modules/skill/contracts/task/RUBRIC.md`, the verb-to-evidence
+In scope: the TRACE-006 rule text in `modules/skill/task-audit/RUBRIC.md`, the verb-to-evidence
 table, `task-audit/SKILL.md`'s per-clause instruction, a re-audit of 108 as the acceptance
 evidence, and the §12 analysis in IMPROVEMENT_HANDOFF.md.
 
