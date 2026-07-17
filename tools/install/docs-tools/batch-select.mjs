@@ -98,15 +98,28 @@ const clash = (a, b) => {
 // inside its service) and the fix was to fold `service` into the cone - which assumed a cone was
 // declared at all. Nothing enforced that. Fail closed: a task that will not say what it touches
 // ships ALONE. (Operator decision, 2026-07-17.)
-const batch = [], excluded = [];
+const batch = [], excluded = [], undeclared = [];
 for (const t of eligible) {
-  if (t.cone.size === 0) {
-    excluded.push({ id: t.id, blocked_by: null, conflict: "no cone declared (new_files / modified_files / service all absent) - undeclared is UNKNOWN, not empty; ships alone" });
-    continue;
-  }
+  if (t.cone.size === 0) { undeclared.push(t); continue; }
   const hit = batch.map(m => [m, clash(m, t)]).find(([, c]) => c);
   if (hit) excluded.push({ id: t.id, blocked_by: hit[0].id, conflict: hit[1] });
   else batch.push(t);
+}
+
+// "Ships alone" has to mean it SHIPS. The first cut excluded every undeclared task and stopped
+// there, so a queue whose only eligible task is undeclared produced `batch: []` - and §11's outer
+// loop reads an empty batch as `break # backlog drained`. The task never shipped, the loop
+// reported success, and the backlog silently stalled forever. The refusal message said "ships
+// alone" one line above the code that made it never ship.
+//
+// So: an undeclared task cannot join a batch (it cannot be proven independent of anything), but
+// when nothing DECLARED is eligible it becomes the batch, by itself. Shipping it alone is exactly
+// what its unknown cone permits - there is no sibling to race. `eligible` is priority-sorted, so
+// this takes the highest-priority one.
+// (Greptile P1, 2026-07-17 - found within the hour, on the fix for the previous review.)
+if (batch.length === 0 && undeclared.length) batch.push(undeclared.shift());
+for (const t of undeclared) {
+  excluded.push({ id: t.id, blocked_by: null, conflict: "no cone declared (new_files / modified_files / service all absent) - undeclared is UNKNOWN, not empty; cannot join a batch, ships alone when nothing declared is eligible" });
 }
 const out = {
   // No `generated` date. The file header claims "deterministic by construction"; a wall-clock

@@ -256,8 +256,17 @@ One-task-at-a-time is no longer the only sanctioned mode. The default is now BAT
 - **Batch selection is a STEP, not a preference (v2.8.0).** This section described batching as the default from v2.5.0 and the outer loop still asked for `next_eligible()` - one task. Nothing computed a batch, so nothing could notice when a batch was skipped, and on 2026-07-17 the workflow shipped TASK-IMP-104 alone while TASK-IMP-106 sat eligible and cone-independent beside it. A default that no step computes is not a default; it is a comment. Step -1 now computes it and records the reasoning.
 - **Batch selection.** The eligible set is every `ready_to_implement` task whose `depends_on` rows are all `done`. A batch is a greedy subset of that set whose members are pairwise independent: no `depends_on`/`blocks` edge between any two members, AND no overlap between their declared cones (frontmatter `new_files` + `modified_files` + `service`). tasks whose cones overlap stay serial relative to each other, in Queue-selection priority order.
 
-  An UNDECLARED cone ships ALONE. A task whose frontmatter carries no `new_files`, no
-  `modified_files` and no `service` is excluded from every batch and named as such. Undeclared is
+  An UNDECLARED cone ships ALONE - and "alone" means it SHIPS. A task whose frontmatter carries no
+  `new_files`, no `modified_files` and no `service` can never JOIN a batch, because it cannot be
+  proven independent of any member. But when nothing declared is eligible, it BECOMES the batch, by
+  itself, at the head of the priority order. Shipping it alone is exactly what its unknown cone
+  permits: there is no sibling to race.
+
+  The first cut of this rule excluded it and stopped there, so a queue whose only eligible task was
+  undeclared produced an EMPTY batch - and the outer loop above reads an empty batch as
+  `break # backlog drained`. The task never shipped, the loop reported success, and the backlog
+  stalled forever while looking finished. The refusal message said "ships alone" one line above the
+  code that made it never ship. (External review, 2026-07-17, on the fix for the previous review.) Undeclared is
   UNKNOWN, not empty - and unknown cannot be proven independent of anything. Before 2026-07-17 an
   empty cone conflicted with nothing by construction, so the silent spec joined EVERY batch:
   TASK-IMP-117 rewrites 501 specs, TASK-TEMPLATE.md and build.sh, declared none of it, and was

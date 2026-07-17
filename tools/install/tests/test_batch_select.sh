@@ -131,6 +131,53 @@ t12_undeclared_cone_ships_alone(){
   ok t12_undeclared_cone_ships_alone
 }
 
+# --- the arms t12 could not reach --------------------------------------------------------
+# t12's fixture ALWAYS has a declared sibling to fill the batch, so it proves the undeclared task
+# is excluded and never that it ships. "Ships alone" needs a queue with nothing else in it.
+# (Greptile P1, 2026-07-17: found on the fix for the previous review, within the hour.)
+undeclared(){ # undeclared <dir> <id> <priority>
+  mkdir -p "$1/docs/tasks/m/$2"
+  printf -- '---\nid: %s\nstatus: ready_to_implement\npriority: %s\ndepends_on: []\n---\n# %s\n' "$2" "$3" "$2" \
+    > "$1/docs/tasks/m/$2/spec.md"
+}
+
+t14_lone_undeclared_task_actually_ships(){
+  # The whole defect: batch 0 for a queue with an eligible task. §11's outer loop reads an empty
+  # batch as `break # backlog drained` - so the task never ships, the loop reports success, and the
+  # backlog stalls forever while looking finished. The refusal message said "ships alone" one line
+  # above the code that made it never ship.
+  local d="$TMP/t14"; undeclared "$d" TASK-U-001 p1
+  local out; out="$(node "$BS" --repo "$d" 2>/dev/null)"
+  grep -qE "BATCH +TASK-U-001" <<<"$out" || { no t14_lone_undeclared_task_actually_ships "the only eligible task did not ship - batch is empty and the outer loop will call that 'backlog drained': $out"; return; }
+  grep -q "batch 1" <<<"$out" || { no t14_lone_undeclared_task_actually_ships "expected a 1-member batch: $out"; return; }
+  grep -q "swarm_required=false" <<<"$out" || { no t14_lone_undeclared_task_actually_ships "a 1-member batch must not require a swarm: $out"; return; }
+  ok t14_lone_undeclared_task_actually_ships
+}
+
+t15_undeclared_never_joins_a_declared_batch(){
+  # ...and the fix must not undo t12: when something DECLARED is eligible, the undeclared task
+  # still cannot ride along. It ships alone LATER, not alongside now.
+  local d="$TMP/t15"
+  spec "$d" TASK-A-001 ready_to_implement p1 svc/a "" src/a.js
+  undeclared "$d" TASK-U-001 p1
+  local out; out="$(node "$BS" --repo "$d" 2>/dev/null)"
+  grep -qE "BATCH +TASK-A-001" <<<"$out" || { no t15_undeclared_never_joins_a_declared_batch "declared task not batched: $out"; return; }
+  grep -qE "BATCH +TASK-U-001" <<<"$out" && { no t15_undeclared_never_joins_a_declared_batch "an undeclared task joined a batch with a declared member - it cannot be proven independent of it: $out"; return; }
+  grep -qE "excluded TASK-U-001" <<<"$out" || { no t15_undeclared_never_joins_a_declared_batch "undeclared task neither batched nor excluded - it vanished: $out"; return; }
+  ok t15_undeclared_never_joins_a_declared_batch
+}
+
+t16_many_undeclared_ship_one_at_a_time(){
+  # Two undeclared, nothing declared: exactly ONE ships (the highest priority), the other is
+  # excluded and waits for the next round. Not zero, not both.
+  local d="$TMP/t16"; undeclared "$d" TASK-U-001 p3; undeclared "$d" TASK-U-002 p1
+  local out; out="$(node "$BS" --repo "$d" 2>/dev/null)"
+  grep -q "batch 1" <<<"$out" || { no t16_many_undeclared_ship_one_at_a_time "expected exactly 1 to ship: $out"; return; }
+  grep -qE "BATCH +TASK-U-002" <<<"$out" || { no t16_many_undeclared_ship_one_at_a_time "priority ignored - p1 must ship before p3: $out"; return; }
+  grep -qE "excluded TASK-U-001" <<<"$out" || { no t16_many_undeclared_ship_one_at_a_time "the second undeclared task vanished: $out"; return; }
+  ok t16_many_undeclared_ship_one_at_a_time
+}
+
 t13_declaring_a_cone_readmits_it(){
   # The refusal must be about the DECLARATION, not the task. Same task, cone declared -> batched.
   # Without this, "exclude everything" would pass t12 and break batching entirely.
@@ -170,6 +217,6 @@ echo "test_batch_select.sh (ship-tasks v2.8.0 mandatory step)"
 t01_documented_invocation_works; t02_flag_order_independent; t03_eligibility
 t04_file_conflict_excludes; t05_service_conflict_excludes; t06_file_inside_sibling_service_conflicts
 t07_swarm_required_flag; t08_exclusions_name_the_conflict; t09_empty_and_missing_corpus
-t10_payload_carries_it; t11_deterministic_output_is_byte_identical; t12_undeclared_cone_ships_alone; t13_declaring_a_cone_readmits_it
+t10_payload_carries_it; t11_deterministic_output_is_byte_identical; t12_undeclared_cone_ships_alone; t13_declaring_a_cone_readmits_it; t14_lone_undeclared_task_actually_ships; t15_undeclared_never_joins_a_declared_batch; t16_many_undeclared_ship_one_at_a_time
 echo "  ---"; echo "  $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
