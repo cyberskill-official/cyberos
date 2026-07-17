@@ -256,6 +256,16 @@ One-task-at-a-time is no longer the only sanctioned mode. The default is now BAT
 - **Batch selection is a STEP, not a preference (v2.8.0).** This section described batching as the default from v2.5.0 and the outer loop still asked for `next_eligible()` - one task. Nothing computed a batch, so nothing could notice when a batch was skipped, and on 2026-07-17 the workflow shipped TASK-IMP-104 alone while TASK-IMP-106 sat eligible and cone-independent beside it. A default that no step computes is not a default; it is a comment. Step -1 now computes it and records the reasoning.
 - **Batch selection.** The eligible set is every `ready_to_implement` task whose `depends_on` rows are all `done`. A batch is a greedy subset of that set whose members are pairwise independent: no `depends_on`/`blocks` edge between any two members, AND no overlap between their declared cones (frontmatter `new_files` + `modified_files` + `service`). tasks whose cones overlap stay serial relative to each other, in Queue-selection priority order.
 
+  An UNDECLARED cone ships ALONE. A task whose frontmatter carries no `new_files`, no
+  `modified_files` and no `service` is excluded from every batch and named as such. Undeclared is
+  UNKNOWN, not empty - and unknown cannot be proven independent of anything. Before 2026-07-17 an
+  empty cone conflicted with nothing by construction, so the silent spec joined EVERY batch:
+  TASK-IMP-117 rewrites 501 specs, TASK-TEMPLATE.md and build.sh, declared none of it, and was
+  admitted alongside a task excluded for touching build.sh. Two sub-agents, one file, one parallel
+  round. TASK-IMP-104 taught the near-miss version (declared install.sh, edited two more files
+  inside its service); the fix folded `service` into the cone and assumed a cone was declared at
+  all. Nothing enforced that. The remedy for an exclusion is to declare the cone, not to widen it.
+
   Greedy, not maximum: members are admitted in priority order and a task excluded by an earlier
   admission is never reconsidered, so a strictly larger independent set may exist. That is
   deliberate - the maximum independent set is NP-hard, and a bigger batch that ignores priority is

@@ -109,6 +109,39 @@ t09_empty_and_missing_corpus(){
   ok t09_empty_and_missing_corpus
 }
 # --- t10: the payload carries it. §11a names the vendored path; a payload without it cannot obey.
+t12_undeclared_cone_ships_alone(){
+  # An undeclared cone is UNKNOWN, not empty. Before this arm, {} conflicted with nothing, so a
+  # silent spec joined EVERY batch - TASK-IMP-117 rewrites 501 specs, TASK-TEMPLATE.md and
+  # build.sh, declared none of it, and was admitted alongside a task excluded for touching
+  # build.sh. Two sub-agents, one file, one parallel round. (Operator decision, 2026-07-17.)
+  #
+  # Written by hand, not via spec(): that helper always emits `new_files:\n  - (none)` and a
+  # `service:` line, so it CANNOT express a spec that declares nothing - which is exactly the
+  # shape under test. A fixture that cannot produce the defect cannot test the fix.
+  local d="$TMP/t12"
+  spec "$d" TASK-A-001 ready_to_implement p1 svc/a "" src/a.js     # declares a cone
+  mkdir -p "$d/docs/tasks/m/TASK-A-002"
+  printf -- '---\nid: TASK-A-002\nstatus: ready_to_implement\npriority: p1\ndepends_on: []\n---\n# TASK-A-002\n' \
+    > "$d/docs/tasks/m/TASK-A-002/spec.md"                          # no service, no new_files, no modified_files
+  local out; out="$(node "$BS" --repo "$d" 2>/dev/null)"
+  grep -qE "BATCH +TASK-A-001" <<<"$out" || { no t12_undeclared_cone_ships_alone "a declared task was not batched: $out"; return; }
+  grep -qE "excluded TASK-A-002" <<<"$out" || { no t12_undeclared_cone_ships_alone "an UNDECLARED cone was admitted - it conflicts with nothing only because it says nothing: $out"; return; }
+  grep -q "no cone declared" <<<"$out" || { no t12_undeclared_cone_ships_alone "exclusion did not name the reason: $out"; return; }
+  grep -q "conflicts with null" <<<"$out" && { no t12_undeclared_cone_ships_alone "printed a blocking task that does not exist: $out"; return; }
+  ok t12_undeclared_cone_ships_alone
+}
+
+t13_declaring_a_cone_readmits_it(){
+  # The refusal must be about the DECLARATION, not the task. Same task, cone declared -> batched.
+  # Without this, "exclude everything" would pass t12 and break batching entirely.
+  local d="$TMP/t13"
+  spec "$d" TASK-A-001 ready_to_implement p1 svc/a "" src/a.js
+  spec "$d" TASK-A-002 ready_to_implement p1 svc/b "" src/b.js     # now declares, and does not clash
+  local out; out="$(node "$BS" --repo "$d" 2>/dev/null)"
+  grep -qE "BATCH +TASK-A-002" <<<"$out" || { no t13_declaring_a_cone_readmits_it "a declared, non-clashing task was refused: $out"; return; }
+  ok t13_declaring_a_cone_readmits_it
+}
+
 t11_deterministic_output_is_byte_identical(){
   # The file header says "Deterministic by construction". Nothing asserted it, and the code had
   # drifted: `generated: new Date()` made one corpus yield a different artefact each day, so a
@@ -137,6 +170,6 @@ echo "test_batch_select.sh (ship-tasks v2.8.0 mandatory step)"
 t01_documented_invocation_works; t02_flag_order_independent; t03_eligibility
 t04_file_conflict_excludes; t05_service_conflict_excludes; t06_file_inside_sibling_service_conflicts
 t07_swarm_required_flag; t08_exclusions_name_the_conflict; t09_empty_and_missing_corpus
-t10_payload_carries_it; t11_deterministic_output_is_byte_identical
+t10_payload_carries_it; t11_deterministic_output_is_byte_identical; t12_undeclared_cone_ships_alone; t13_declaring_a_cone_readmits_it
 echo "  ---"; echo "  $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

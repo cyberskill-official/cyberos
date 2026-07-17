@@ -88,8 +88,22 @@ const clash = (a, b) => {
   return null;
 };
 
+// An UNDECLARED cone is not an empty cone. It is an UNKNOWN cone, and unknown cannot be proven
+// independent of anything. Treating {} as "touches nothing" made every silent spec conflict-free
+// by construction, so it joined EVERY batch: TASK-IMP-117 rewrites 501 specs, TASK-TEMPLATE.md
+// and build.sh, declared none of it, and was admitted alongside a task excluded for touching
+// build.sh. Two sub-agents, one file, one parallel round.
+//
+// TASK-IMP-104 taught the near-miss version of this (declared install.sh, edited two more files
+// inside its service) and the fix was to fold `service` into the cone - which assumed a cone was
+// declared at all. Nothing enforced that. Fail closed: a task that will not say what it touches
+// ships ALONE. (Operator decision, 2026-07-17.)
 const batch = [], excluded = [];
 for (const t of eligible) {
+  if (t.cone.size === 0) {
+    excluded.push({ id: t.id, blocked_by: null, conflict: "no cone declared (new_files / modified_files / service all absent) - undeclared is UNKNOWN, not empty; ships alone" });
+    continue;
+  }
   const hit = batch.map(m => [m, clash(m, t)]).find(([, c]) => c);
   if (hit) excluded.push({ id: t.id, blocked_by: hit[0].id, conflict: hit[1] });
   else batch.push(t);
@@ -109,5 +123,9 @@ const out = {
 if (asJson) { console.log(JSON.stringify(out, null, 2)); process.exit(0); }
 console.log(`batch-selection@1  (eligible ${eligible.length}, batch ${batch.length}, swarm_required=${out.swarm_required})`);
 for (const t of batch) console.log(`  BATCH    ${t.id}  [${t.priority}]  service=${t.service}`);
-for (const e of excluded) console.log(`  excluded ${e.id}  <- conflicts with ${e.blocked_by} on: ${e.conflict}`);
+// blocked_by is null for a self-exclusion (no cone declared): nothing blocked it, its own silence
+// did. Printing "conflicts with null" would name a task that does not exist.
+for (const e of excluded) console.log(e.blocked_by
+  ? `  excluded ${e.id}  <- conflicts with ${e.blocked_by} on: ${e.conflict}`
+  : `  excluded ${e.id}  <- ${e.conflict}`);
 process.exit(0);
