@@ -153,6 +153,11 @@ for (const mod of readdirSync(TASK_ROOT, { withFileTypes: true }).sort((a, b) =>
       ph: str(m.phase), ms: str(m.milestone), sl: str(m.slice),
       o: str(m.owner), cr: str(m.created), sh: str(m.shipped),
       e: str(m.effort_hours), v: str(m.verify), r: str(m.risk_if_skipped),
+      // TASK-IMP-108 §1.7: WHICH KIND of draft / ready_to_implement. Absent renders as 'unknown',
+      // which is the truth for every task this run did not author - the page must not invent a
+      // reason it was not told. `rb` lets the reader see thrash (routed_back_count > 0) without
+      // opening the frontmatter, which is the whole complaint the field answers.
+      dr: str(m.draft_reason), ev: str(m.entered_via), rb: str(m.routed_back_count),
       st: list(m.subtasks),
       // relations are resolved AFTER the corpus is known: a repo's ids are not always
       // TASK-shaped (strategem carries COV-001, API-READY...), so an id-regex alone would
@@ -176,6 +181,29 @@ for (const mod of readdirSync(TASK_ROOT, { withFileTypes: true }).sort((a, b) =>
   }
 }
 tasks.sort((a, b) => a.i.localeCompare(b.i));
+
+// ---- draft staleness (TASK-IMP-108 §1.7) ----------------------------------------------
+// 336 drafts sit indefinitely and the page reports a percentage against a denominator nobody
+// believes. This groups them by REASON and age. It is a REPORT: it changes no task's status,
+// closes nothing, and ages nothing automatically - the operator is the fix, this is the finding.
+// Age is derived from `created` (a committed field), so a re-render of an unchanged corpus is
+// byte-identical and TASK-IMP-082's fp- fingerprint still holds. `today` is NOT read from the
+// clock for the same reason: a page that changes because time passed is a page that churns.
+const draftStaleness = (() => {
+  const drafts = tasks.filter(t => t.s === 'draft');
+  const byReason = {};
+  for (const t of drafts) {
+    const r = t.dr || 'unknown';
+    (byReason[r] ||= []).push({ id: t.i, created: t.cr || '' });
+  }
+  const out = Object.keys(byReason).sort().map(r => ({
+    reason: r,
+    count: byReason[r].length,
+    oldest: byReason[r].map(x => x.created).filter(Boolean).sort()[0] || '',
+  }));
+  return { total: drafts.length, by_reason: out };
+})();
+
 if (!tasks.length && !LENIENT) die('zero task specs found under docs/tasks');
 
 // per-task pages (rendered by render-task-pages.mjs) sit next to the hub in the website build
@@ -412,7 +440,7 @@ const data = {
 const KEEP = new Set(['i', 'k', 'dm', 't', 'm', 's', 'd', 'b', 'rl', 'st']);
 const compact = f => Object.fromEntries(Object.entries(f)
   .filter(([k, v]) => KEEP.has(k) || (Array.isArray(v) ? v.length : v !== '' && v !== null && v !== 0)));
-const dataJson = JSON.stringify({ ...data, tasks: tasks.map(compact) }).replace(/</g, '\\u003c');
+const dataJson = JSON.stringify({ ...data, draft_staleness: draftStaleness, tasks: tasks.map(compact) }).replace(/</g, '\\u003c');
 
 // ---- templates ------------------------------------------------------------------------
 const tpl = (sub, name) => {

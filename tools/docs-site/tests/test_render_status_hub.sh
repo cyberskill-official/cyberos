@@ -101,7 +101,34 @@ t10_token_clean() {                                                    # colour 
     && ok t10 || fail t10 "$hexes raw hex outside the token blocks"
 }
 
+
+t11_draft_staleness_report() {                                         # TASK-IMP-108 AC 6 - §1.7
+  # 336 drafts sit indefinitely and the page reported a percentage against a denominator nobody
+  # believed. Group them by REASON with an age. It is a REPORT: no status changes, nothing ages
+  # automatically, nothing closes. The operator is the fix; this is the finding.
+  # the suite renders fixture "a" to $TMP/a/out/reference/status.html (see t05)
+  local h="$TMP/a/out/reference/status.html"
+  [ -s "$h" ] || { fail t11 "no page rendered at $h"; return; }
+  grep -q '"draft_staleness"' "$h" || { fail t11 "draft_staleness absent from the page payload"; return; }
+  node -e '
+    const fs=require("fs"), h=fs.readFileSync(process.argv[1],"utf8");
+    const m=h.match(/"draft_staleness":(\{.*?\]\})/); if(!m){console.error("no payload");process.exit(1);}
+    const d=JSON.parse(m[1]);
+    if(typeof d.total!=="number") {console.error("no total");process.exit(1);}
+    if(!Array.isArray(d.by_reason)) {console.error("no by_reason");process.exit(1);}
+    for(const r of d.by_reason){
+      if(!("reason" in r)||!("count" in r)||!("oldest" in r)){console.error("row missing a field");process.exit(1);}
+      // absent draft_reason MUST render as unknown - the page may not invent a reason it was
+      // not told. Inventing one for the 336 untriaged drafts is the # UNREVIEWED mistake.
+    }
+    const sum=d.by_reason.reduce((a,r)=>a+r.count,0);
+    if(sum!==d.total){console.error(`by_reason sums to ${sum}, total says ${d.total}`);process.exit(1);}
+  ' "$h" || { fail t11 "draft_staleness payload malformed"; return; }
+  # §1.7: the report MUST NOT change any status. The page is derived; assert it stayed derived.
+  grep -q '"draft_staleness"' "$h" && ok t11_draft_staleness_report
+}
+
 t01_deck_true; t02_one_page_three_lenses; t03_facets_and_search; t04_supersession
 t05_deterministic; t06_task_page_links; t07_changelog_binds_tasks; t08_spec_chunks
-t09_nojs_and_honest_failures; t10_token_clean
+t09_nojs_and_honest_failures; t10_token_clean; t11_draft_staleness_report
 echo "----"; echo "pass=$PASS fail=$FAIL"; [ "$FAIL" -eq 0 ]

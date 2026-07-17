@@ -4,7 +4,7 @@ title: Split the statuses doing two jobs
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: reviewing
 priority: p1
 author: "@stephencheng"
 department: engineering
@@ -119,7 +119,7 @@ None logically. Fields are additive and optional.
 - [ ] AC 3 (traces_to: #1.5) - a `spec_rejected` route-back lands at `draft`, not `ready_to_implement` - test: `tools/install/tests/test_workflow_helpers.sh::t19_spec_rejected_lands_draft`
 - [ ] AC 4 (traces_to: #1.6) - a task at `routed_back_count: 3` halts with reasons presented and does not re-enter without a verdict - test: `modules/cuo/tests/test_workflow_evolution.py::test_routeback_ceiling_halts`
 - [ ] AC 5 (traces_to: #1.6) - a task at `routed_back_count: 2` re-enters normally (the ceiling is 3, not "any") - test: `modules/cuo/tests/test_workflow_evolution.py::test_under_ceiling_reenters`
-- [ ] AC 6 (traces_to: #1.7) - the staleness report renders drafts by reason and age, and no status changes - test: `tools/docs-site/tests/test_render_status_hub.sh::t08_draft_staleness_report`
+- [ ] AC 6 (traces_to: #1.7) - the staleness report renders drafts by reason and age, and no status changes - test: `tools/docs-site/tests/test_render_status_hub.sh::t11_draft_staleness_report`
 
 ## 3. Edge cases
 

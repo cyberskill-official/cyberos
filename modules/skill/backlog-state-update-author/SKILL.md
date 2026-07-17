@@ -52,7 +52,8 @@ This skill is called between **every phase transition** of `ship-tasks`, not jus
 - `reviewing → ready_to_test` (review approved)
 - `ready_to_test → testing` (tester claims)
 - `testing → done` (coverage-gate-audit passes)
-- any-stage → `ready_to_implement` (failure/blocker rework path, increments `routed_back_count`)
+- any-stage → `ready_to_implement` (failure/blocker rework path, increments `routed_back_count`, sets `entered_via: rework`)
+- any-stage → `draft` (SPEC-rejected path, TASK-IMP-108 §1.5: increments `routed_back_count`, sets `entered_via: spec_rejected`). Use when the failure is the spec, not the code - re-authoring and re-auditing is the remedy, and `ready_to_implement` would hand an unchanged wrong spec back to an implementer.
 
 ## 2. Output schema
 
@@ -65,6 +66,13 @@ prior_status: <one of the 10 enum values from STATUS-REFERENCE.md §1>
 new_status: <one of the 10 enum values from STATUS-REFERENCE.md §1>
 transition_kind: forward | rework | off_ramp
 routed_back_count_delta: 0 | 1   # 1 only when transition_kind == "rework"
+entered_via: audit | rework | spec_rejected | null   # TASK-IMP-108 §1.4. REQUIRED on any write
+                                 # landing at ready_to_implement or draft via a failure path:
+                                 # 'rework' with routed_back_count_delta: 1, or 'spec_rejected'
+                                 # when the SPEC was wrong (which lands at DRAFT, not
+                                 # ready_to_implement - §1.5). null on a normal forward flip.
+                                 # The agent writes it to frontmatter in the same edit that moves
+                                 # the status cell; frontmatter stays the record of truth.
 line_number: <int — the BACKLOG.md line being mutated>
 old_line: "<full text of the line being replaced>"
 new_line: "<full text of the replacement line>"

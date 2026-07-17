@@ -245,6 +245,31 @@ while ! stop_signal:
 
 The supervisor handles persistence (state survives across sessions because the truth is in BACKLOG.md + the memory chain), parallelism (multiple tasks may run in parallel when their dependency cones don't overlap), and observability (the per-phase `workflow_phase_complete` + the final `workflow_complete` rows are enough to reconstruct the run).
 
+## 11b. Route-back ceiling (v2.8.0, TASK-IMP-108)
+
+`routed_back_count` has been written on every route-back since it was defined and read as a limit
+exactly nowhere - 18 references in this file, all increments. The 5-fail circuit breaker bounds
+the DEBUGGING cycle inside one testing phase; nothing bounds how many times a task circles the
+whole loop. A task that keeps failing can cycle implement -> review -> test -> route back forever,
+burning budget with no escalation. This session hit the adjacent failure twice (API spend limits)
+and the loop had nothing to say about it.
+
+- **At `routed_back_count >= 3`, ship-tasks MUST HALT** at an operator gate instead of re-entering.
+  Present every route-back reason on record side by side, and ask for one verdict: re-enter /
+  split the task / `on_hold` / `closed`. Re-entering without a recorded verdict is a violation.
+- **Three is a judgment, not a derivation**, and the workflow says so rather than implying false
+  precision. The reasoning: "the same task failed three DIFFERENT ways" is evidence about the
+  spec, not the implementation - and a spec problem is not fixed by another implementation pass.
+- **The ceiling counts cycles, not causes.** Three route-backs from one flaky test still halt. A
+  human reading three identical reasons decides in seconds; the alternative is a loop that never
+  asks.
+- **The halt belongs to the parent** (§11a): a swarm sub-agent MUST NOT resolve it. The verdict is
+  the operator's.
+- **Under the ceiling, nothing changes.** A task at `routed_back_count: 2` re-enters normally.
+- **`entered_via: spec_rejected` routes to `draft`, not `ready_to_implement`** (STATUS-REFERENCE
+  §1.3). Pairs with this ceiling: three route-backs usually IS a spec problem wearing an
+  implementation problem's clothes.
+
 ## 11a. Batch selection and parallel shipping (v2.5.0, TASK-IMP-074)
 
 One-task-at-a-time is no longer the only sanctioned mode. The default is now BATCH shipping of parallel-safe tasks:

@@ -31,7 +31,7 @@
 #        install lays them into .cyberos/docs-tools/ where they run.
 #   t09  doctrine wiring: ship-tasks.md (source + payload cuo/ + plugin copy)
 #        names ship-manifest.mjs in Resume semantics and backlog-mutate.mjs in
-#        the backlog-layout/state-engine area; workflow_version current (2.7.0
+#        the backlog-layout/state-engine area; workflow_version current (2.8.0
 #        since TASK-IMP-099).
 #   t10  a LYING counted header (counts disagreeing with the section's rows —
 #        the 086 incident's shape) is rewritten to the true tally by any flip
@@ -43,11 +43,11 @@
 #        correction is large (asserted line-by-line on the lying fixture).
 #   t12  doctrine: ship-tasks.md carries the one-writer-one-view rule (§11a)
 #        and the committed-object evidence rule (§9), in the source AND the
-#        scratch payload's cuo/ copy, at workflow_version 2.7.0.
+#        scratch payload's cuo/ copy, at workflow_version 2.8.0.
 #   t13  queue selection ranks p0 before p1 before p2 before p3 (FM-105 scale)
 #        in the source AND the scratch payload's cuo/ copy, with NO bare MoSCoW
 #        ordering rule surviving (the FM-105 legacy-mapping parenthetical is the
-#        one allowed mention), payload at workflow_version 2.7.0 (TASK-IMP-099, bumped by TASK-IMP-101).
+#        one allowed mention), payload at workflow_version 2.8.0 (TASK-IMP-099, bumped by TASK-IMP-101).
 #
 # Origin: 2026-07-16 sachviet + cyberos batch-1 runs (IMPROVEMENT_HANDOFF.md
 # IMP-04) - manifests were skipped and every backlog flip was hand-sed; the two
@@ -457,7 +457,7 @@ t09_doctrine_wiring() {
     grep -q 'backlog-mutate\.mjs' "$TMP/layout.sec" || { fail t09 "$f: backlog layout lacks the backlog-mutate.mjs pointer"; return; }
     grep -q 'byte-discipline executor' "$TMP/layout.sec" || { fail t09 "$f: pointer does not say byte-discipline executor"; return; }
     # the doc gained normative pointers -> workflow_version bumped
-    grep -q '^workflow_version: 2\.7\.0$' "$f" || { fail t09 "$f: workflow_version not current (want 2.7.0)"; return; }
+    grep -q '^workflow_version: 2\.8\.0$' "$f" || { fail t09 "$f: workflow_version not current (want 2.8.0)"; return; }
   done
   ok t09
 }
@@ -568,8 +568,8 @@ t12_doctrine_view_rules_vendored() {
     grep -q 'never a working view' "$f" \
       || { fail t12 "$f: never-a-working-view rule missing"; return; }
     # the doc gained normative rules -> workflow_version bumped
-    grep -q '^workflow_version: 2\.7\.0$' "$f" \
-      || { fail t12 "$f: workflow_version not bumped to 2.7.0"; return; }
+    grep -q '^workflow_version: 2\.8\.0$' "$f" \
+      || { fail t12 "$f: workflow_version not bumped to 2.8.0"; return; }
   done
   ok t12
 }
@@ -592,8 +592,8 @@ t13_queue_rule_p0_p3() {
       && { fail t13 "$f: bare MoSCoW ordering rule survives: $(grep -Ein '(MUST|SHOULD|COULD|WON.?T)[[:space:]]+before' "$f" | head -3)"; return; }
   done
   # the reword is a normative change: the payload ships it at the bumped version
-  grep -q '^workflow_version: 2\.7\.0$' "$TMP/payload/cuo/ship-tasks.md" \
-    || { fail t13 "payload cuo/ship-tasks.md workflow_version not 2.7.0"; return; }
+  grep -q '^workflow_version: 2\.8\.0$' "$TMP/payload/cuo/ship-tasks.md" \
+    || { fail t13 "payload cuo/ship-tasks.md workflow_version not 2.8.0"; return; }
   ok t13
 }
 
@@ -612,9 +612,47 @@ t14_reconcile_entry_and_deps_gate() {
     grep -q '^## depends_on evidence gate' "$f"    || { fail t14 "$f: deps gate section missing"; return; }
     grep -q 'MUST carry evidence' "$f"             || { fail t14 "$f: deps evidence MUST missing"; return; }
     grep -q 'step: 0,  skill: task-reconcile' "$f" || { fail t14 "$f: chain step 0 missing"; return; }
-    grep -q '^workflow_version: 2\.7\.0$' "$f"     || { fail t14 "$f: version not 2.7.0"; return; }
+    grep -q '^workflow_version: 2\.8\.0$' "$f"     || { fail t14 "$f: version not 2.8.0"; return; }
   done
   ok t14
+}
+
+t18_entered_via_contract() {
+  # TASK-IMP-108 §1.4 + §1.5. entered_via is written to FRONTMATTER by the agent in the same edit
+  # that moves the status cell - backlog-mutate deliberately never touches frontmatter (it writes
+  # rows). So the contract lives in the skill, and this asserts the contract STRUCTURALLY, the way
+  # TASK-IMP-104's t05 pins the single comparator. A contract nobody checks is a suggestion.
+  ensure_payload || { fail t18 "build.sh failed"; return; }
+  local f
+  for f in "$repo/modules/skill/backlog-state-update-author/SKILL.md" \
+           "$TMP/payload/cuo/skills/backlog-state-update-author/SKILL.md"; do
+    [ -s "$f" ] || { fail t18 "missing $f"; return; }
+    grep -q 'entered_via: audit | rework | spec_rejected | null' "$f" || { fail t18 "$f: entered_via not in the envelope"; return; }
+    grep -q "sets \`entered_via: rework\`" "$f"                      || { fail t18 "$f: rework path does not set entered_via"; return; }
+    grep -q "sets \`entered_via: spec_rejected\`" "$f"               || { fail t18 "$f: spec_rejected path missing"; return; }
+  done
+  ok t18_entered_via_contract
+}
+
+t19_spec_rejected_lands_draft() {
+  # §1.5: a wrong SPEC returns to draft, NOT ready_to_implement. Routing it to ready_to_implement
+  # hands an unchanged wrong spec to an implementer, who builds the same wrong thing.
+  ensure_payload || { fail t19 "build.sh failed"; return; }
+  local f
+  for f in "$repo/modules/skill/contracts/task/STATUS-REFERENCE.md" \
+           "$TMP/payload/cuo/skills/contracts/task/STATUS-REFERENCE.md"; do
+    [ -s "$f" ] || continue     # the contract is vendored under more than one root; check what exists
+    grep -q 'SPEC REJECTED' "$f"      || { fail t19 "$f: spec_rejected route missing"; return; }
+    grep -qE '\| \*\*.draft.\*\* \(with .routed_back_count \+= 1., .entered_via: spec_rejected.\)' "$f" \
+      || { fail t19 "$f: spec_rejected does not land at draft"; return; }
+    grep -q 'entered_via' "$f"        || { fail t19 "$f: entered_via not documented"; return; }
+    grep -q 'draft_reason' "$f"       || { fail t19 "$f: draft_reason not documented"; return; }
+  done
+  # the ceiling itself (§1.6) - 18 increments, zero reads, until now
+  local w="$repo/modules/cuo/chief-technology-officer/workflows/ship-tasks.md"
+  grep -q '^## 11b. Route-back ceiling' "$w"          || { fail t19 "$w: no route-back ceiling section"; return; }
+  grep -q 'routed_back_count >= 3.*MUST HALT' "$w"    || { fail t19 "$w: ceiling is not a MUST HALT"; return; }
+  ok t19_spec_rejected_lands_draft
 }
 
 want t01 && t01_manifest_lifecycle
@@ -631,6 +669,8 @@ want t11 && t11_footprint_holds_with_retally
 want t12 && t12_doctrine_view_rules_vendored
 want t13 && t13_queue_rule_p0_p3
 want t14 && t14_reconcile_entry_and_deps_gate
+want t18 && t18_entered_via_contract
+want t19 && t19_spec_rejected_lands_draft
 
 echo "test_workflow_helpers: pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

@@ -4,7 +4,7 @@ title: Refuse an older payload over a newer .cyberos
 template: task@1
 type: improvement
 module: improvement
-status: testing
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
@@ -22,6 +22,7 @@ phase: "pre-1.0.0 release"
 owner: Stephen Cheng (CTO)
 created: 2026-07-17
 memory_chain_hash: null
+shipped: 2026-07-17
 effort_hours: 2
 service: tools/install
 new_files:

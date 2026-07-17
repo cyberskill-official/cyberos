@@ -15,6 +15,8 @@
 #        install lays it into .cyberos/docs-tools/.
 #   t08  the task-audit skill carries the lint-first machine-floor wiring, in
 #        modules/ AND in the payload's cuo/skills + plugin/skills copies.
+#   t09  FM-115/FM-116: draft_reason + entered_via are OPTIONAL enums - absent is legal
+#        (the 336 untriaged drafts must not red), present-and-wrong names its rule.
 #
 # Origin: 2026-07-16 sachviet run (IMPROVEMENT_HANDOFF.md IMP-03) - six spec audits
 # re-derived every mechanical rubric rule by model. The rubric calls itself
@@ -276,6 +278,31 @@ t08_skill_wiring_present() {
   ok t08
 }
 
+t09_optional_status_reason_enums() {
+  # TASK-IMP-108 §1.1/§1.2/§1.3: draft_reason + entered_via are OPTIONAL enums. Absent is legal
+  # (336 existing drafts carry neither and MUST NOT red); present-and-wrong reds naming the rule.
+  local d="$TMP/t09"; emit_green "$d/base/spec.md"; local base="$d/base/spec.md"
+
+  # absent -> clean. This is the arm that protects the corpus from the rule.
+  node "$LINT" "$base" >/dev/null 2>&1 || { fail t09 "green base with neither field red"; return; }
+
+  local v
+  for v in authoring migrated_stub needs_spec parked_idea; do
+    mkdir -p "$d/dr-$v"; awk -v val="$v" '{print} /^status: /{print "draft_reason: " val}' "$base" > "$d/dr-$v/spec.md"
+    node "$LINT" "$d/dr-$v/spec.md" >/dev/null 2>&1 || { fail t09 "legal draft_reason '$v' red"; return; }
+  done
+  for v in audit rework spec_rejected; do
+    mkdir -p "$d/ev-$v"; awk -v val="$v" '{print} /^status: /{print "entered_via: " val}' "$base" > "$d/ev-$v/spec.md"
+    node "$LINT" "$d/ev-$v/spec.md" >/dev/null 2>&1 || { fail t09 "legal entered_via '$v' red"; return; }
+  done
+
+  mkdir -p "$d/f115"; awk '{print} /^status: /{print "draft_reason: whenever"}' "$base" > "$d/f115/spec.md"
+  expect_one_rule "t09 FM-115" "$d/f115/spec.md" FM-115 || return
+  mkdir -p "$d/f116"; awk '{print} /^status: /{print "entered_via: vibes"}' "$base" > "$d/f116/spec.md"
+  expect_one_rule "t09 FM-116" "$d/f116/spec.md" FM-116 || return
+  ok t09_optional_status_reason_enums
+}
+
 want t01 && t01_cli_and_determinism
 want t02 && t02_fm_family
 want t03 && t03_sec_family
@@ -284,6 +311,7 @@ want t05 && t05_trace_family
 want t06 && t06_green_corpus
 want t07 && t07_payload_and_install
 want t08 && t08_skill_wiring_present
+want t09 && t09_optional_status_reason_enums
 
 echo "test_task_lint: pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]
