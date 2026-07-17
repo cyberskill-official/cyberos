@@ -242,7 +242,7 @@ Totals: 336 draft, 4 ready_to_implement, 12 implementing, 176 done, 1 on_hold, 1
 - [draft] TASK-HR-008-performance-signals - HR performance signal aggregator — read-only consumer of PROJ + TIME + LEARN signals for periodic performance snapshots
 - [draft] TASK-HR-009-termination-workflow - HR termination workflow — Good-Leaver / Bad-Leaver branch with CFO+CEO co-sign + ESOP forfeiture + access revocation cascade
 
-## improvement  (67 draft, 9 ready_to_implement, 1 testing, 38 done)
+## improvement  (67 draft, 9 ready_to_implement, 39 done)
 
 - [draft] TASK-IMP-001-dependency-audit-in-ci-cargo-audit-cargo-deny - Dependency audit in CI (cargo-audit + cargo-deny)
 - [draft] TASK-IMP-002-refuse-dev-cors-in-production-boot - Refuse dev CORS in production boot
@@ -352,7 +352,7 @@ Totals: 336 draft, 4 ready_to_implement, 12 implementing, 176 done, 1 on_hold, 1
 - [ready_to_implement] TASK-IMP-106-uninstall-summary-names-kept - Uninstall summary names what it kept
 - [ready_to_implement] TASK-IMP-107-e2e-mechanical-smoke-test - End-to-end mechanical smoke test
 - [done] TASK-IMP-108-split-statuses-doing-two-jobs - Split the statuses doing two jobs
-- [testing] TASK-IMP-109-standing-goals-done-reverification - Standing goals - re-verify done, forever
+- [done] TASK-IMP-109-standing-goals-done-reverification - Standing goals - re-verify done, forever
 - [ready_to_implement] TASK-IMP-110-outer-loop-skill-curation - Outer loop - propose skill amendments from run evidence
 - [ready_to_implement] TASK-IMP-111-plan-workflow - The plan workflow
 - [ready_to_implement] TASK-IMP-112-structured-review-findings - Structured review findings alongside the prose packet

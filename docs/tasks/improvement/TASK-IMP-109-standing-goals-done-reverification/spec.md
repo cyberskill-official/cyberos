@@ -4,7 +4,7 @@ title: Standing goals - re-verify done, forever
 template: task@1
 type: improvement
 module: improvement
-status: testing
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
@@ -22,6 +22,7 @@ phase: "post-1.0.0"
 owner: Stephen Cheng (CTO)
 created: 2026-07-17
 memory_chain_hash: null
+shipped: 2026-07-17
 effort_hours: 8
 service: modules/cuo
 new_files:
