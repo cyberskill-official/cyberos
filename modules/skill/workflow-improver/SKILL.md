@@ -61,7 +61,7 @@ proposals. The mechanical half is the tool's and the model does not re-derive it
 
 | Step | What the tool decides |
 |---|---|
-| Window | the last N `status: done` tasks (default 20), ordered by task number — the corpus's own ordering |
+| Window | the last N `status: done` tasks (default 20), ordered by `shipped` (falling back to `created_at`) — the recorded completion date, NOT the task number. Ordering by number put TASK-CUO-301 above every TASK-IMP-1xx and produced a window containing none of the run's own tasks: 20 read, 0 evidence, indistinguishable from a clean window. The tool reports which key it used per task (`order_source`). |
 | Readers | `docs/tasks/BACKLOG.md` route-back cells; each task's `gate-log*.md` and `reconcile*.md` |
 | Row | a recorded `reason` / `routed back:` / `status_overridden` line, quoted VERBATIM, id = sha of `<path>:<line>` |
 | Attribution | the ONE existing `modules/skill/*` name on the row. Zero or many → unattributable, never guessed |
