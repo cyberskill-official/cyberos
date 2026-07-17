@@ -4,7 +4,7 @@ title: Split the statuses doing two jobs
 template: task@1
 type: improvement
 module: improvement
-status: testing
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
@@ -22,6 +22,7 @@ phase: "pre-1.0.0 release"
 owner: Stephen Cheng (CTO)
 created: 2026-07-17
 memory_chain_hash: null
+shipped: 2026-07-17
 effort_hours: 6
 service: modules/skill
 new_files:
