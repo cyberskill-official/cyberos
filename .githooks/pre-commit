@@ -85,37 +85,3 @@ if grep -qx "VERSION" <<<"$staged"; then
     exit 1
   fi
 fi
-
-# >>> cyberos-status-hook v2 (appended by cyberos install; edits above survive re-install) >>>
-# POSIX sh ONLY. This block is appended to a hook we did not write, whose shebang is very
-# often `#!/bin/sh`. It used `grep -Eq ... <<<"$staged"` — a bash herestring, a SYNTAX
-# ERROR under dash — so wherever /bin/sh is dash the hook aborted and the foreign hook's
-# exit code was lost. It looked correct on macOS, where /bin/sh is bash in sh-mode and
-# herestrings work. (The standalone form above declares `#!/usr/bin/env bash` and may
-# keep its bash-isms. This one may not: the shebang is the user's, not ours.)
-#
-# `case` and not `printf | grep -q`: the pipe is exactly what the standalone form's own
-# comment warns about — grep -q exits early, the writer takes SIGPIPE, and under a foreign
-# hook's `set -o pipefail` that becomes a spurious failure. A case loop has no pipe and no
-# herestring, so it holds under dash, bash, and whatever options the user's hook set.
-_cyberos_rc=$?
-_cyberos_staged="$(git diff --cached --name-only || true)"
-_cyberos_hit=0
-for _cyberos_f in $_cyberos_staged; do
-  case "$_cyberos_f" in
-    docs/tasks/*|CHANGELOG.md|VERSION) _cyberos_hit=1; break ;;
-  esac
-done
-if [ "$_cyberos_hit" = 1 ]; then
-  if [ -f .cyberos/lib/status-page.sh ] && command -v node >/dev/null 2>&1; then
-    if bash .cyberos/lib/status-page.sh .; then
-      git add docs/status 2>/dev/null || true
-      echo "cyberos: docs/status regenerated + staged"
-    else
-      echo "cyberos: ERROR docs/status regen failed" >&2
-      exit 1
-    fi
-  fi
-fi
-exit $_cyberos_rc
-# <<< cyberos-status-hook <<<

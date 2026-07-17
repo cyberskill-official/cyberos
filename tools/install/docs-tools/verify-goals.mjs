@@ -59,6 +59,7 @@ const preds = (f) => {
 };
 
 const results = [], ledgerRows = [];
+const retiredTasks = new Set();   // have a goal, quarantined - NOT the same as having none
 let violations = 0;
 
 for (const e of readdirSync(goalsDir)) {
@@ -67,7 +68,7 @@ for (const e of readdirSync(goalsDir)) {
   const f = fm(readFileSync(p, "utf8"));
   if (!f) { console.error(`verify-goals: WARN unparseable goal ${e} - skipped, not counted`); continue; }
   const status = one(f, "status");
-  if (status === "retired") continue;                     // quarantined; never deleted (§3)
+  if (status === "retired") { retiredTasks.add(one(f, "source") || e.replace(/\.md$/, "")); continue; }   // quarantined; never deleted (§3)
   const id = one(f, "source") || e.replace(/\.md$/, "");
   const list = preds(f);
 
@@ -122,7 +123,10 @@ if (ledgerRows.length) { mkdirSync(dirname(ledger), { recursive: true }); append
 // Enrolment starts at the done flip and is NOT backfilled (explicit Non-Goal), so this number is
 // large by design and shrinks only as tasks ship. It is a coverage statement, not a failure.
 const coverage = (() => {
-  const enrolled = new Set(results.map(r => r.task));
+  // A task whose goal is quarantined HAS a goal - it is just not actively verifying. Counting it
+  // under "have NO goal" overstates the unverified set and makes the report inaccurate about the
+  // exact case §3 asks us to handle gently. (External review, 2026-07-17.)
+  const enrolled = new Set([...results.map(r => r.task), ...retiredTasks]);
   const doneTasks = [];
   const walk = (d) => { if (!existsSync(d)) return;
     for (const e of readdirSync(d, { withFileTypes: true })) {
@@ -135,14 +139,14 @@ const coverage = (() => {
     } };
   walk(join(root, "docs", "tasks"));
   const missing = doneTasks.filter(t => !enrolled.has(t));
-  return { done_tasks: doneTasks.length, enrolled: doneTasks.length - missing.length, without_goal: missing.length };
+  return { done_tasks: doneTasks.length, enrolled: doneTasks.length - missing.length, without_goal: missing.length, retired: [...retiredTasks].filter(t => doneTasks.includes(t)).length };
 })();
 
 const out = { artefact: "goal-ledger@1", generated: new Date().toISOString().slice(0, 10), coverage, goals: results, violations };
 if (asJson) console.log(JSON.stringify(out, null, 2));
 else {
   console.log(`verify-goals: ${results.length} goal(s), ${violations} violated`);
-  console.log(`  coverage: ${coverage.enrolled}/${coverage.done_tasks} done tasks enrolled - ${coverage.without_goal} have NO goal and are unverified since the day they shipped.`);
+  console.log(`  coverage: ${coverage.enrolled}/${coverage.done_tasks} done tasks enrolled - ${coverage.without_goal} have NO goal and are unverified since the day they shipped${coverage.retired ? `; ${coverage.retired} have a QUARANTINED goal (has one, not verifying)` : ""}.`);
   for (const r of results) {
     console.log(`  ${r.verdict.padEnd(12)} ${r.task}`);
     for (const n of r.notes) console.log(`      ${n}`);

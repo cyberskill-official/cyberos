@@ -139,11 +139,24 @@ t11_report_states_its_coverage(){
   ok t11_report_states_its_coverage
 }
 
+# --- external review 2026-07-17: a RETIRED goal's task HAS a goal - it must not read as "no goal"
+t12_retired_goal_is_not_missing(){
+  local d="$TMP/t12"; mk "$d"; goal "$d" g retired tests/pass.sh
+  mkdir -p "$d/docs/tasks/x/TASK-XX-001"
+  printf -- "---\nid: TASK-XX-001\nstatus: done\n---\n# a\n" > "$d/docs/tasks/x/TASK-XX-001/spec.md"
+  sed -i 's/^source: .*/source: TASK-XX-001/' "$d/docs/goals/g.md"
+  local out; out="$(node "$VG" --repo "$d" 2>&1)"
+  grep -q "0 have NO goal" <<<"$out" || { no t12_retired_goal_is_not_missing "a quarantined goal counted as missing: $out"; return; }
+  grep -q "QUARANTINED" <<<"$out" || { no t12_retired_goal_is_not_missing "quarantine not named: $out"; return; }
+  node "$VG" --repo "$d" --json 2>/dev/null | grep -q '"retired": 1' || { no t12_retired_goal_is_not_missing "retired count absent from --json"; return; }
+  ok t12_retired_goal_is_not_missing
+}
+
 echo "test_verify_goals.sh (TASK-IMP-109)"
 t01_done_emits_goal; t02_broken_test_violates; t03_passing_refreshes; t04_unrunnable_named_not_faked
 t05_detection_only; t06_timeout_is_violation
 t07_predicate_escaping_root_refused; t08_untracked_predicate_refused
 t09_refusal_is_a_violation_not_a_skip; t10_retired_goal_skipped
-t11_report_states_its_coverage
+t11_report_states_its_coverage; t12_retired_goal_is_not_missing
 echo "  ---"; echo "  $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

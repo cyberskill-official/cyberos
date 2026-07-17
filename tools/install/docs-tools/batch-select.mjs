@@ -17,7 +17,14 @@ import { join, resolve } from "node:path";
 const argv = process.argv.slice(2);
 if (argv.includes("--help")) { console.log("usage: node batch-select.mjs [--repo <root>] [--json]"); process.exit(2); }
 const asJson = argv.includes("--json");
-const root = resolve(argv[argv.indexOf("--repo") + 1] ?? ".");
+// indexOf returns -1 when a flag is absent, and -1 + 1 = 0 - which reads argv[0] as the value.
+// `--repo` absent therefore made `--json` the repo root, so the DOCUMENTED invocation
+// (ship-tasks §11a: `node .cyberos/docs-tools/batch-select.mjs --json`) always exited 3 with
+// "no docs/tasks under <cwd>/--json". The mandatory batch step could never run as documented.
+// The sibling verify-goals.mjs already fixed this exact defect and it was not back-ported;
+// batch-select had no suite, so nothing caught it. Read flags by presence, never by offset.
+const flag = (name, dflt) => { const i = argv.indexOf(name); return (i >= 0 && argv[i + 1] !== undefined && !argv[i + 1].startsWith("--")) ? argv[i + 1] : dflt; };
+const root = resolve(flag("--repo", "."));
 const tasksDir = join(root, "docs", "tasks");
 if (!existsSync(tasksDir)) { console.error(`batch-select: no docs/tasks under ${root}`); process.exit(3); }
 
