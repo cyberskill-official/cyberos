@@ -4,7 +4,7 @@ title: Install concurrency lock
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: testing
 priority: p2
 author: "@stephencheng"
 department: engineering

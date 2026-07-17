@@ -96,8 +96,26 @@ t06_non_contention_failure_named(){
   grep -q "NOT contention" <<<"$out" || { no t06_non_contention_failure_named "conflated with contention: $out"; return; }
   ok t06_non_contention_failure_named
 }
+# --- edge (§3): a foreign host's pid is unknowable -> treated as ALIVE until the threshold
+t07_foreign_host_pid_is_alive(){
+  local d="$TMP/t07"; mk_harness "$d"
+  mkdir -p "$d/.cyberos/.install.lock"
+  # dead pid, but owned by another host: liveness is undecidable, so it must NOT be broken
+  printf 'pid=999999\nstarted_at=x\nhost=some-other-machine\n' > "$d/.cyberos/.install.lock/owner"
+  # FRESH (mtime = now) + a live threshold: liveness is unverifiable, so it must defer, not break
+  local out rc; out="$(CYBEROS_LOCK_STALE_SECS=900 "$d/h.sh" _cy_lock_acquire 2>&1)"; rc=$?
+  [ "$rc" -ne 0 ] || { no t07_foreign_host_pid_is_alive "broke a foreign-host lock on an unverifiable pid"; return; }
+  grep -q "on some-other-machine" <<<"$out" || { no t07_foreign_host_pid_is_alive "holder host not named: $out"; return; }
+  # ...but once the threshold expires, it IS broken - the threshold is the only honest signal
+  # there, and deferring forever would wedge the lock permanently on a shared mount.
+  touch -t 200001010000 "$d/.cyberos/.install.lock" 2>/dev/null
+  out="$(CYBEROS_LOCK_STALE_SECS=1 "$d/h.sh" _cy_lock_acquire 2>&1)"; rc=$?
+  [ "$rc" -eq 0 ] || { no t07_foreign_host_pid_is_alive "stale foreign lock never expires (rc=$rc)"; return; }
+  ok t07_foreign_host_pid_is_alive
+}
 echo "test_install_lock.sh (TASK-IMP-103)"
 t01_concurrent_refuses; t02_stale_broken_with_warning; t03_fresh_dead_pid_refuses
 t04_trap_releases_on_signal; t05_uninstall_lock_ownership; t06_non_contention_failure_named
+t07_foreign_host_pid_is_alive
 echo "  ---"; echo "  $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

@@ -101,14 +101,22 @@ host=%s
   _lock_mtime="$(stat -c %Y "$CY_LOCK" 2>/dev/null || stat -f %m "$CY_LOCK" 2>/dev/null || echo 0)"
   case "$_lock_mtime" in ""|*[!0-9]*) _lock_mtime=0 ;; esac
   _age=$(( $(_cy_now) - _lock_mtime )); [ "$_age" -lt 0 ] && _age=0
-  # Liveness is same-host only. Another host's pid, or an unreadable owner, reads as ALIVE.
-  _alive=1
+  # Liveness is TRI-STATE, not a boolean: alive | dead | unknown. Same-host pids are decidable
+  # via kill -0. A pid from another host on a shared mount, or an owner file we cannot read, is
+  # UNKNOWN - and unknown is NOT alive. Collapsing unknown into alive wedges the lock forever:
+  # nothing would ever break a foreign lock at any age (caught by t07, 2026-07-17 - the same
+  # reboot-wedge class the batch-4 review found in TASK-IMP-093's lease).
+  #   alive   -> never break (a live install owns it)
+  #   dead    -> break iff stale (§1.3); refuse while fresh (§1.4)
+  #   unknown -> break iff stale. Past the threshold the holder is gone or hung, and both mean
+  #              abandoned; before it, we defer - which is the §3 "alive until the threshold" rule.
+  _liveness=unknown
   _this_host="$(hostname 2>/dev/null || echo unknown)"
   if [ -n "$_lp" ] && [ "$_lh" = "$_this_host" ]; then
-    kill -0 "$_lp" 2>/dev/null || _alive=0
+    if kill -0 "$_lp" 2>/dev/null; then _liveness=alive; else _liveness=dead; fi
   fi
-  if [ "$_alive" -eq 0 ] && [ "$_age" -ge "$CYBEROS_LOCK_STALE_SECS" ]; then
-    echo "cyberos install: breaking stale lock (pid ${_lp:-unknown}, age ${_age}s >= ${CYBEROS_LOCK_STALE_SECS}s, owner process is gone)" >&2
+  if [ "$_liveness" != alive ] && [ "$_age" -ge "$CYBEROS_LOCK_STALE_SECS" ]; then
+    echo "cyberos install: breaking stale lock (pid ${_lp:-unknown}${_lh:+ on $_lh}, age ${_age}s >= ${CYBEROS_LOCK_STALE_SECS}s, liveness=${_liveness})" >&2
     rm -rf "$CY_LOCK"
     _cy_lock_acquire; return $?
   fi
