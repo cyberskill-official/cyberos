@@ -29,6 +29,7 @@ avail_ver="$( [ -f "$src/VERSION" ] && tr -d ' \n\r' < "$src/VERSION" || echo un
 target="${1:-$(pwd)}"; target="$(cd -P "$target" && pwd -P)"
 root="$(cd "$target" && git rev-parse --show-toplevel 2>/dev/null || echo "$target")"
 CY="$root/.cyberos"
+_cy_downgrade_note=""    # §1.4: set only when an operator overrides a refused downgrade
 
 # guard: install.sh runs from an ASSEMBLED payload (build.sh output), where cuo/ + VERSION are
 # siblings. Running it from the un-built source tree is a common mistake - fail with a clear hint.
@@ -51,6 +52,43 @@ if [ ! -f "$wf_ignore" ]; then
 elif ! grep -qxF '*.manifest.json' "$wf_ignore"; then
   [ -z "$(tail -c 1 "$wf_ignore")" ] || printf '\n' >> "$wf_ignore"   # heal a missing trailing newline so the pattern lands as its own line
   printf '%s\n' '*.manifest.json' >> "$wf_ignore"
+fi
+
+# 0a. downgrade guard (TASK-IMP-104) -----------------------------------------
+# install vendored whatever it was handed and never compared versions, so an older payload
+# silently downgraded a consumer: skills vanish, doctrine reverts, and the only trace is a
+# VERSION line nobody re-reads. The workflow-version pins cannot catch it - they live in the
+# payload being installed. Runs BEFORE the lock (§1.1): a refused downgrade takes no lock.
+_vc="$src/lib/version-compare.sh"; [ -f "$_vc" ] || _vc="$(dirname "$0")/lib/version-compare.sh"
+if [ ! -f "$_vc" ]; then
+  # FAIL CLOSED. A guard that skips itself when its comparator is missing is not a guard - it is
+  # a comment. Caught by t01 on first run: build.sh had not vendored the lib, so the payload
+  # silently downgraded with the check present in the source and absent from the artefact.
+  echo "cyberos install: version-compare.sh is missing from this payload - the downgrade guard cannot run." >&2
+  echo "  This payload is malformed. Rebuild it: bash tools/install/build.sh" >&2
+  exit 1
+fi
+if true; then
+  . "$_vc"
+  _inst_ver=""
+  [ -f "$CY/VERSION" ] && _inst_ver="$(tr -d ' \n\r' < "$CY/VERSION" 2>/dev/null || echo "")"
+  if [ -z "$_inst_ver" ]; then
+    :                                   # §1.6 first install or damaged machine - not a downgrade
+  elif ! is_ver "$_inst_ver" || ! is_ver "$avail_ver"; then
+    # §1.6 + §3: 'unknown' and pre-release strings are NOT comparable. Not comparable is not
+    # older - refusing on an ordering we cannot defend would block legitimate installs.
+    echo "cyberos install: version not comparable (installed '$_inst_ver', payload '$avail_ver') - proceeding." >&2
+  elif ver_lt "$avail_ver" "$_inst_ver"; then
+    if [ "${CYBEROS_ALLOW_DOWNGRADE:-0}" = "1" ]; then
+      echo "cyberos install: DOWNGRADE $_inst_ver -> $avail_ver (CYBEROS_ALLOW_DOWNGRADE=1)." >&2
+      _cy_downgrade_note="downgraded $_inst_ver -> $avail_ver (operator override)"
+    else
+      echo "cyberos install: payload $avail_ver is OLDER than the installed $_inst_ver. Refusing." >&2
+      echo "  An older payload removes skills and reverts doctrine with no other trace." >&2
+      echo "  Deliberate rollback: CYBEROS_ALLOW_DOWNGRADE=1 bash $0 $root" >&2
+      exit 1
+    fi
+  fi
 fi
 
 # 0. concurrency lock (TASK-IMP-103) -----------------------------------------
@@ -898,7 +936,8 @@ cyberos install: done.
   gitignored: one managed block in .gitignore covers .cyberos/ (vendored machine + BRAIN store)
               + the skill symlinks; agent files, docs/tasks/**, CHANGELOG.md and
               docs/status/ stay TRACKED (commit them). Everything outside the block is yours.
-  version   -> CyberOS $avail_ver (.cyberos/VERSION); check: bash .cyberos/version.sh  (auto soft-check on any .cyberos use)
+  version   -> CyberOS $avail_ver (.cyberos/VERSION); check: bash .cyberos/version.sh  (auto soft-check on any .cyberos use)${_cy_downgrade_note:+
+  DOWNGRADE -> $_cy_downgrade_note}
 
 Next:
   1. Write a task from the template:

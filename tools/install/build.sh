@@ -160,6 +160,9 @@ cp "$here/uninstall.sh" "$out/uninstall.sh"
 cp "$here/check-latest.sh"      "$out/check-latest.sh"
 # Portable lib + docs-tools (status-page hooks, update soft-check). No migrate-tasks / install.sh.
 mkdir -p "$out/lib"
+# version-compare.sh is REQUIRED, not optional: install.sh's downgrade guard and update-check.sh
+# both source it, and a payload without it would silently skip the guard (TASK-IMP-104).
+cp "$here/lib/version-compare.sh" "$out/lib/version-compare.sh"
 [ -f "$here/lib/task-migrate.sh" ] && cp "$here/lib/task-migrate.sh" "$out/lib/task-migrate.sh"
 [ -f "$here/lib/update-check.sh" ] && cp "$here/lib/update-check.sh" "$out/lib/update-check.sh"
 [ -f "$here/lib/status-page.sh" ] && cp "$here/lib/status-page.sh" "$out/lib/status-page.sh"

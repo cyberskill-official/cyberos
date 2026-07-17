@@ -58,11 +58,8 @@ _cyberos_update_check() {
   fi
   latest="${latest_line#latest=}"; latest="${latest%% *}"
 
-  is_ver() { printf '%s' "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; }
-  ver_lt() {
-    [ "$1" = "$2" ] && return 1
-    [ "$(printf '%s\n%s\n' "$1" "$2" | sort -t. -k1,1n -k2,2n -k3,3n | head -1)" = "$1" ]
-  }
+  # ONE comparator, sourced (TASK-IMP-104). This file used to carry a second copy.
+  . "$(dirname "${BASH_SOURCE[0]}")/version-compare.sh"
 
   verdict="up_to_date"
   if is_ver "$latest" && is_ver "$inst" && ver_lt "$inst" "$latest"; then
