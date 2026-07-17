@@ -4,7 +4,7 @@ title: Standing goals - re-verify done, forever
 template: task@1
 type: improvement
 module: improvement
-status: reviewing
+status: testing
 priority: p1
 author: "@stephencheng"
 department: engineering

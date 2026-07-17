@@ -124,10 +124,26 @@ t10_retired_goal_skipped(){
   node "$VG" --repo "$d" >/dev/null 2>&1 || { no t10_retired_goal_skipped "a retired (quarantined) goal still ran"; return; }
   ok t10_retired_goal_skipped
 }
+# --- §3 (operator, review gate): the report MUST state how many done tasks have NO goal.
+t11_report_states_its_coverage(){
+  local d="$TMP/t11"; mk "$d"; goal "$d" g satisfied tests/pass.sh
+  # two done tasks, only one enrolled
+  mkdir -p "$d/docs/tasks/x/TASK-XX-001" "$d/docs/tasks/x/TASK-XX-002"
+  printf -- "---\nid: TASK-XX-001\nstatus: done\n---\n# a\n" > "$d/docs/tasks/x/TASK-XX-001/spec.md"
+  printf -- "---\nid: TASK-XX-002\nstatus: done\n---\n# b\n" > "$d/docs/tasks/x/TASK-XX-002/spec.md"
+  local out; out="$(node "$VG" --repo "$d" 2>&1)"
+  grep -q "1/2 done tasks enrolled" <<<"$out" || { no t11_report_states_its_coverage "coverage not stated: $out"; return; }
+  grep -q "1 have NO goal" <<<"$out" || { no t11_report_states_its_coverage "unenrolled count not named: $out"; return; }
+  # and in the machine-readable form
+  node "$VG" --repo "$d" --json 2>/dev/null | grep -q '"without_goal": 1' || { no t11_report_states_its_coverage "coverage absent from --json"; return; }
+  ok t11_report_states_its_coverage
+}
+
 echo "test_verify_goals.sh (TASK-IMP-109)"
 t01_done_emits_goal; t02_broken_test_violates; t03_passing_refreshes; t04_unrunnable_named_not_faked
 t05_detection_only; t06_timeout_is_violation
 t07_predicate_escaping_root_refused; t08_untracked_predicate_refused
 t09_refusal_is_a_violation_not_a_skip; t10_retired_goal_skipped
+t11_report_states_its_coverage
 echo "  ---"; echo "  $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
