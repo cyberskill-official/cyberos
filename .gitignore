@@ -124,8 +124,14 @@ tools/docs-site/last-nfr-build-report.json
 .cyberos/
 # skill symlinks -> .cyberos/plugin/skills (regenerable via install)
 .claude/skills/ship-tasks
+.claude/skills/task-author
+.claude/skills/task-audit
 .grok/skills/ship-tasks
 .commandcode/skills/ship-tasks
 .codex/skills/ship-tasks
 .opencode/skill/ship-tasks
+# shared .agents/skills entries (Agent Skills open standard) chain via .claude/skills (TASK-IMP-094)
+.agents/skills/ship-tasks
+.agents/skills/task-author
+.agents/skills/task-audit
 # <<< cyberos <<<
