@@ -235,7 +235,7 @@ The CUO supervisor invokes this workflow in a loop:
 
 ```
 while ! stop_signal:
-    batch = read_backlog().next_batch()          # MANDATORY (v2.8.0): the maximal cone-independent
+    batch = read_backlog().next_batch()          # MANDATORY (v2.8.0): a greedy cone-independent
                                                  # set, not one task. Emits batch-selection@1.
     if batch is empty: break           # backlog drained
     if len(batch) > 1: dispatch_swarm(batch)     # one sub-agent per member, ONE parallel round
@@ -254,7 +254,14 @@ One-task-at-a-time is no longer the only sanctioned mode. The default is now BAT
 
 - **Batch selection is EXECUTED, not preferred (v2.8.0).** Before step 1 the workflow MUST run `node .cyberos/docs-tools/batch-select.mjs --json` and record its `batch-selection@1` output in the ship-manifest. It is a deterministic helper rather than a vendored skill - batch membership is arithmetic over frontmatter (machine floor, TASK-IMP-084), and only the HITL verdicts are judgment. Shipping serially while `batch.length > 1` is a violation the artefact makes visible; an absent artefact is itself the violation.
 - **Batch selection is a STEP, not a preference (v2.8.0).** This section described batching as the default from v2.5.0 and the outer loop still asked for `next_eligible()` - one task. Nothing computed a batch, so nothing could notice when a batch was skipped, and on 2026-07-17 the workflow shipped TASK-IMP-104 alone while TASK-IMP-106 sat eligible and cone-independent beside it. A default that no step computes is not a default; it is a comment. Step -1 now computes it and records the reasoning.
-- **Batch selection.** The eligible set is every `ready_to_implement` task whose `depends_on` rows are all `done`. A batch is a maximal subset of that set whose members are pairwise independent: no `depends_on`/`blocks` edge between any two members, AND no overlap between their declared cones (frontmatter `new_files` + `modified_files` + `service`). tasks whose cones overlap stay serial relative to each other, in Queue-selection priority order.
+- **Batch selection.** The eligible set is every `ready_to_implement` task whose `depends_on` rows are all `done`. A batch is a greedy subset of that set whose members are pairwise independent: no `depends_on`/`blocks` edge between any two members, AND no overlap between their declared cones (frontmatter `new_files` + `modified_files` + `service`). tasks whose cones overlap stay serial relative to each other, in Queue-selection priority order.
+
+  Greedy, not maximum: members are admitted in priority order and a task excluded by an earlier
+  admission is never reconsidered, so a strictly larger independent set may exist. That is
+  deliberate - the maximum independent set is NP-hard, and a bigger batch that ignores priority is
+  the wrong batch. This doctrine said "maximal" until 2026-07-17; the word promised a guarantee
+  the loop does not compute, and nothing should be built on it. What batch-select gives you is
+  that the batch is COMPUTED rather than chosen by mood, which is the whole point of §11a.
 - **Batched execution.** Phases MAY run batch-wide (map the repo once, implement all members, review all members, test all members) and commits MAY batch per phase across members. What stays strictly per-task: the artefact set (context map, matrix, plan, review packet, coverage gate), the ship-manifest, the BACKLOG/frontmatter status cells, and the recorded HITL verdicts.
 - **HITL is unchanged by batching.** Both human-acceptance gates apply to every member individually. A single human reply MAY record verdicts for many members at once (one utterance, N recorded per-task verdicts — e.g. "approve all" / "accept all"); batching reduces round-trips, never guarantees.
 - **Unlock rescan.** Whenever any task reaches `done`, re-scan the backlog for tasks whose `depends_on` just became fully satisfied; append the newly-eligible, cone-independent ones to the running batch queue and continue (EXECUTION-DISCIPLINE §1 — no pause to ask). Cone-overlapping unlocks queue serially behind the member they overlap with.

@@ -18,8 +18,13 @@
 // task. The sentinel detects; the pipeline fixes. An auto-fix on a violated acceptance is the
 // machine grading its own homework at the exact moment nobody is watching.
 //
-// usage: node verify-goals.mjs [--repo <root>] [--json] [--timeout <secs>]\n  exit: 0 all checked and passing · 1 a goal violated · 2 usage · 3 goals that cannot be checked
-// exits: 0 all goals hold   1 one or more VIOLATED   2 usage   3 corpus unreadable
+// usage: node verify-goals.mjs [--repo <root>] [--json] [--timeout <secs>]
+// exits: 0 all goals checked and passing · 1 one or more VIOLATED · 2 usage · 3 goals present
+//        that CANNOT be checked (no re-runnable predicate). A missing or empty docs/goals is
+//        NOT 3 - there is nothing to verify, so it is 0 (see the early return below).
+//        This line read '3 corpus unreadable' until 2026-07-17: a code documented and never
+//        implemented, which then collided with the real meaning 3 acquired. The authoritative
+//        contract is at the foot of this file; this header must agree with it. (Devin review.)
 import { readFileSync, writeFileSync, readdirSync, existsSync, appendFileSync, mkdirSync } from "node:fs";
 import { join, resolve, relative, isAbsolute, dirname } from "node:path";
 import { spawnSync } from "node:child_process";

@@ -1,5 +1,15 @@
 #!/usr/bin/env node
-// batch-select.mjs - the maximal cone-independent batch, computed (TASK-IMP-104 evidence, v2.8.0).
+// batch-select.mjs - a greedy cone-independent batch, computed (TASK-IMP-104 evidence, v2.8.0).
+//
+// GREEDY, not maximal. Members are admitted in Queue-selection priority order and any task that
+// clashes with an already-admitted member is excluded and never reconsidered. A lower-priority
+// task dropped by an early admission could sometimes have permitted a strictly larger independent
+// set, so this is not a maximum independent set and does not try to be - that problem is NP-hard,
+// and a batch that is larger but ignores priority is the wrong batch anyway.
+//
+// The header said "maximal" until 2026-07-17. It overstated what the loop computes. The value
+// here is that a batch is COMPUTED at all rather than chosen by mood; overstating the guarantee
+// invited a consumer to depend on maximality that was never delivered. (Devin review.)
 //
 // ship-tasks.md has called BATCH the default since v2.5.0 while its outer loop asked for
 // next_eligible() - one task. Nothing computed a batch, so nothing could notice when one was
