@@ -13,6 +13,15 @@ ai_authorship: generated_then_reviewed
 eu_ai_act_risk_class: not_ai
 client_visible: false
 depends_on: []
+service: tools/install
+new_files:
+  - tools/install/docs-tools/fm001-migrate.mjs
+  - tools/install/tests/test_fm001_migrate.sh
+modified_files:
+  - tools/install/templates/TASK-TEMPLATE.md
+  - tools/install/build.sh
+  - tools/install/install.sh
+  - docs/tasks
 routed_back_count: 0
 awh: N/A
 ---

@@ -1,6 +1,6 @@
 ---
 audited_file: docs/tasks/improvement/TASK-IMP-117-fm001-conformance/spec.md
-audited_file_sha256: dd05322dfe9209c4
+audited_file_sha256: 24151e4d1cb373f0
 audited_body_sha256_prefix: 547a9a53e34784f1
 rubric: audit_rubric@2.0
 audited_at: 2026-07-17T14:20:00+07:00
@@ -48,6 +48,19 @@ backlog-mutate's existing discipline rather than inventing a new one.
   explicitly refuses to run against consumer repos from here - the tool ships, the operator runs it.
 - TRACE: 1.1-1.7 each cite a test; AC1-AC6 each cite a clause or test. TRACE-004 (every cited test
   actually passes) is the coverage gate's job at testing, not this gate's.
+
+## Cone declared, 2026-07-17
+
+The spec reached `ready_to_implement` with NO `new_files`, `modified_files` or `service`. Its
+§Scope described what it touches in prose, where no tool reads it. batch-select computes conflicts
+from those three fields, so an undeclared cone is the EMPTY SET - which intersects nothing, so the
+task was provably independent of everything and joined every batch. I authored this spec today and
+did not declare its cone; the batch it then joined was wrong because of it.
+
+Cone now declared from this spec's own §Scope. Frontmatter-only edit, so `audited_body_sha256_prefix`
+HELD (547a9a53e34784f1) and only `audited_file_sha256` is re-bound - TASK-IMP-102 built that split so
+lifecycle and metadata edits cannot break an audit's binding to the argument it assessed. Verdict
+unchanged: declaring what the spec already said touches nothing the audit weighed.
 
 ## Verdict
 

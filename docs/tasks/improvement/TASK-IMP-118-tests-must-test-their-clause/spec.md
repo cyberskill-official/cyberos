@@ -13,6 +13,13 @@ ai_authorship: generated_then_reviewed
 eu_ai_act_risk_class: not_ai
 client_visible: false
 depends_on: []
+service: modules/skill
+new_files:
+  - (none)
+modified_files:
+  - modules/skill/task-audit/RUBRIC.md
+  - modules/skill/task-audit/SKILL.md
+  - tools/install/docs-tools/templates/task-audit/RUBRIC.md
 routed_back_count: 0
 awh: N/A
 ---
