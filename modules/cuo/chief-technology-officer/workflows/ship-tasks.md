@@ -245,6 +245,33 @@ while ! stop_signal:
 
 The supervisor handles persistence (state survives across sessions because the truth is in BACKLOG.md + the memory chain), parallelism (multiple tasks may run in parallel when their dependency cones don't overlap), and observability (the per-phase `workflow_phase_complete` + the final `workflow_complete` rows are enough to reconstruct the run).
 
+## 11c. Standing goals: what `done` claimed, re-verified (v2.8.0, TASK-IMP-109)
+
+`done` is terminal and nothing re-checks it. TRACE-004 proves every clause had a passing test ON
+THE DAY IT SHIPPED; nothing looks again. A task shipped in batch 1 could be broken today and the
+corpus would still show it green. A goal you verify once is an assumption with a timestamp.
+
+`task-reconcile` does NOT close this. It measures drift when a task RE-ENTERS the workflow - a
+turnstile, not a sentinel. A `done` task that never comes back is never examined again by anything.
+
+- **At the `done` flip, ship-tasks MUST write `docs/goals/<task-id>.md`** carrying: `predicates`
+  (the task's §1 cited tests - already collected, because TRACE-004 just verified them, so the
+  predicate is free), `born`, `source`, `status: satisfied`, `last_pass`, `on_violation: report`.
+- **The predicate set is the CITED TESTS, nothing invented.** A goal MUST NOT claim a check the
+  task never made.
+- **ACs whose evidence is a justified `verify:` are NOT enrolled** and the goal names them as not
+  mechanically re-verifiable. A predicate that cannot be re-run is not a predicate.
+- **A task reaching `done` with zero runnable predicates STILL gets a goal**, marked
+  `predicate: none` with the reason. The absence is the finding; it must never read as a pass.
+- **Re-verification is `node .cyberos/docs-tools/verify-goals.mjs`.** DETECTION ONLY: a violated
+  goal changes no status, writes no code, and re-opens no task. The remedy is a new `type: bug`
+  task through create-tasks -> ship-tasks. The sentinel detects; the pipeline fixes. An auto-fix
+  on a violated acceptance is the machine grading its own homework at the moment nobody is watching.
+- **Retirement is a human decision, logged.** A flaky predicate is quarantined
+  (`status: retired`, reason recorded), never deleted - a goal deleted without a reason is the
+  evidence loss this whole mechanism exists to prevent.
+- **When it runs is the operator's business.** Scheduling is a host decision; CyberOS is invoked.
+
 ## 11b. Route-back ceiling (v2.8.0, TASK-IMP-108)
 
 `routed_back_count` has been written on every route-back since it was defined and read as a limit
