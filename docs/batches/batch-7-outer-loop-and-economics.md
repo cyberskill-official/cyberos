@@ -1,7 +1,7 @@
 ---
 batch: batch/7-outer-loop-and-economics
 members: [TASK-IMP-110, TASK-IMP-114]
-started: 2026-07-17T16:40:04+07:00
+started: 2026-07-17T09:40:04Z
 ended: 2026-07-17T10:13:03Z
 route_backs: 0
 gate_reasks: 0
@@ -14,6 +14,12 @@ later. TASK-IMP-114 shipped in this batch and its ledger is this file: the featu
 is itself.
 
 ## Why each field says what it says
+
+Both instants are UTC. The first cut mixed notations - `started` carried git's `+07:00` local
+offset and `ended` came from `date -u` with a `Z` - which parses correctly and renders the right
+33m, but reads as though the batch ended before it started. A ledger whose two timestamps use
+different clocks invites a reader to distrust the one number the row exists to carry.
+(External review, 2026-07-17.)
 
 `route_backs: 0` and `gate_reasks: 0` are MEASURED, not assumed. Neither member routed back;
 each acceptance gate was asked once and answered once. §11d says an unrecorded field reads
