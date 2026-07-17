@@ -279,6 +279,12 @@ One-task-at-a-time is no longer the only sanctioned mode. The default is now BAT
   inside its service); the fix folded `service` into the cone and assumed a cone was declared at
   all. Nothing enforced that. The remedy for an exclusion is to declare the cone, not to widen it.
 
+  `batch-selection@1` shape: each `excluded[]` entry carries `blocked_by` - the id of the member
+  that blocked it, or NULL when the task excluded itself (an empty cone; nothing blocked it, its
+  own silence did). Every entry carried a real id before 2026-07-17, so a consumer written against
+  the older artefact may assume non-null. Nothing reads it that way today, but the shape is part of
+  a named artefact and therefore a contract. (External review, PR #53.)
+
   Greedy, not maximum: members are admitted in priority order and a task excluded by an earlier
   admission is never reconsidered, so a strictly larger independent set may exist. That is
   deliberate - the maximum independent set is NP-hard, and a bigger batch that ignores priority is

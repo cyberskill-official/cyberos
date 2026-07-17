@@ -152,8 +152,16 @@ const out = {
 if (asJson) { console.log(JSON.stringify(out, null, 2)); process.exit(0); }
 console.log(`batch-selection@1  (eligible ${eligible.length}, batch ${batch.length}, swarm_required=${out.swarm_required})`);
 for (const t of batch) console.log(`  BATCH    ${t.id}  [${t.priority}]  service=${t.service}`);
-// blocked_by is null for a self-exclusion (no cone declared): nothing blocked it, its own silence
-// did. Printing "conflicts with null" would name a task that does not exist.
+// batch-selection@1 SHAPE, stated because it changed: `excluded[].blocked_by` is a task id when
+// another member blocked this one, and NULL for a self-exclusion (empty cone) - nothing blocked
+// it, its own silence did. Before 2026-07-17 every excluded entry carried a real id, so a
+// consumer written against the old artefact could assume non-null. Nothing in this repo does
+// (the only readers are this renderer and test_batch_select), but the field is part of a NAMED
+// artefact and a named artefact's shape is a contract. Consumers must tolerate null.
+// (Devin, PR #53 - "worth noting rather than a bug". Recorded rather than left implicit: an
+// undocumented shape change is how the next reader gets surprised.)
+//
+// Printing "conflicts with null" would also name a task that does not exist.
 for (const e of excluded) console.log(e.blocked_by
   ? `  excluded ${e.id}  <- conflicts with ${e.blocked_by} on: ${e.conflict}`
   : `  excluded ${e.id}  <- ${e.conflict}`);
