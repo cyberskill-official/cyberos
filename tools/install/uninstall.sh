@@ -131,6 +131,23 @@ else
 fi
 
 # 4. remove machine
+# The install lock (TASK-IMP-103) lives inside the machine, so removing $CY removes it.
+# But if a lock is held by a LIVE install on this host right now, tearing the tree out from
+# under it is how you get a half-removed machine and a very confused operator. Same rule as
+# the .cyberos-owned marker above: what we did not create, we do not silently destroy.
+_ul="$CY/.install.lock"
+if [ -d "$_ul" ]; then
+  _ulp=""; _ulh=""
+  if [ -r "$_ul/owner" ]; then
+    _ulp="$(sed -n 's/^pid=//p'  "$_ul/owner" 2>/dev/null | head -1)"
+    _ulh="$(sed -n 's/^host=//p' "$_ul/owner" 2>/dev/null | head -1)"
+  fi
+  if [ -n "$_ulp" ] && [ "$_ulh" = "$(hostname 2>/dev/null || echo unknown)" ] && kill -0 "$_ulp" 2>/dev/null; then
+    echo "cyberos uninstall: an install is running (pid $_ulp holds $_ul). Refusing to remove the machine underneath it." >&2
+    exit 1
+  fi
+  echo "  removing stale install lock (pid ${_ulp:-unknown})"
+fi
 rm -rf "$CY"
 echo "  removed .cyberos/"
 

@@ -53,6 +53,71 @@ elif ! grep -qxF '*.manifest.json' "$wf_ignore"; then
   printf '%s\n' '*.manifest.json' >> "$wf_ignore"
 fi
 
+# 0. concurrency lock (TASK-IMP-103) -----------------------------------------
+# The vendor step below removes the machine and re-copies it. Between those two
+# operations .cyberos/ does not exist. A second install - or an agent reading
+# .cyberos/ mid-install - sees a half-vendored tree. `mkdir` is the atomic primitive
+# everywhere we run (flock is absent on stock macOS; the payload's floor is POSIX).
+#
+# Refusal vs breakage: a lock is broken ONLY when it is BOTH older than the stale
+# threshold AND its pid is provably dead on THIS host. Either alone refuses - a
+# just-started install has not had time to look alive (§1.4), and a pid from another
+# machine on a shared mount is unknowable, so it is treated as alive until the
+# threshold expires (the same conservative default TASK-IMP-093's lease uses).
+CY_LOCK="$CY/.install.lock"
+CYBEROS_LOCK_STALE_SECS="${CYBEROS_LOCK_STALE_SECS:-900}"
+_cy_lock_held=""                       # set only once WE own it; the refusal path never releases
+
+_cy_lock_release() { [ -n "$_cy_lock_held" ] && rm -rf "$CY_LOCK" 2>/dev/null; return 0; }
+_cy_now() { date +%s; }
+
+_cy_lock_acquire() {
+  if mkdir "$CY_LOCK" 2>/dev/null; then
+    _cy_lock_held=1
+    trap '_cy_lock_release' EXIT INT TERM
+    printf 'pid=%s
+started_at=%s
+host=%s
+' "$$" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(hostname 2>/dev/null || echo unknown)" > "$CY_LOCK/owner" 2>/dev/null || true
+    return 0
+  fi
+  # mkdir failed. Contention, or something else entirely? Distinguishing the two is the
+  # difference between an operator killing a process and an operator hunting a ghost.
+  if [ ! -d "$CY_LOCK" ]; then
+    echo "cyberos install: cannot create lock at $CY_LOCK (permissions or read-only filesystem) - this is NOT contention." >&2
+    exit 1
+  fi
+  _lp=""; _ls=""; _lh=""
+  if [ -r "$CY_LOCK/owner" ]; then
+    _lp="$(sed -n 's/^pid=//p'        "$CY_LOCK/owner" 2>/dev/null | head -1)"
+    _ls="$(sed -n 's/^started_at=//p' "$CY_LOCK/owner" 2>/dev/null | head -1)"
+    _lh="$(sed -n 's/^host=//p'       "$CY_LOCK/owner" 2>/dev/null | head -1)"
+  fi
+  # Age from the directory's own mtime: survives an owner file that was never written
+  # (killed between mkdir and the write) and cannot be forged by editing the file.
+  # GNU stat -f is --file-system and SUCCEEDS with unrelated output ("File: ..."), which then
+  # detonates in arithmetic under set -u. Try GNU -c first, BSD -f second, and hard-validate
+  # numeric before any arithmetic touches it. Caught by t02 on Linux, 2026-07-17.
+  _lock_mtime="$(stat -c %Y "$CY_LOCK" 2>/dev/null || stat -f %m "$CY_LOCK" 2>/dev/null || echo 0)"
+  case "$_lock_mtime" in ""|*[!0-9]*) _lock_mtime=0 ;; esac
+  _age=$(( $(_cy_now) - _lock_mtime )); [ "$_age" -lt 0 ] && _age=0
+  # Liveness is same-host only. Another host's pid, or an unreadable owner, reads as ALIVE.
+  _alive=1
+  _this_host="$(hostname 2>/dev/null || echo unknown)"
+  if [ -n "$_lp" ] && [ "$_lh" = "$_this_host" ]; then
+    kill -0 "$_lp" 2>/dev/null || _alive=0
+  fi
+  if [ "$_alive" -eq 0 ] && [ "$_age" -ge "$CYBEROS_LOCK_STALE_SECS" ]; then
+    echo "cyberos install: breaking stale lock (pid ${_lp:-unknown}, age ${_age}s >= ${CYBEROS_LOCK_STALE_SECS}s, owner process is gone)" >&2
+    rm -rf "$CY_LOCK"
+    _cy_lock_acquire; return $?
+  fi
+  echo "cyberos install: another install holds the lock (pid ${_lp:-unknown}${_lh:+ on $_lh}, age ${_age}s); this pid $$. Refusing." >&2
+  echo "  If that process is gone, the lock is broken automatically after ${CYBEROS_LOCK_STALE_SECS}s (CYBEROS_LOCK_STALE_SECS)." >&2
+  exit 1
+}
+_cy_lock_acquire
+
 # 1. vendor the machine by module (replace any prior copy) --------------------
 rm -rf "$CY/cuo" "$CY/plugin" "$CY/mcp"
 cp -R "$src/cuo"    "$CY/cuo"
