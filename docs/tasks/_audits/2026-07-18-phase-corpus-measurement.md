@@ -164,3 +164,35 @@ not from a directory listing of the payload.
   REACHABLE", or the design changes. Still an open operator decision.
 - §1.1 must drop `check-version-sync.sh`: `grep -c '\.cyberos'` = 0; it compares payload stamps to
   the root VERSION and has no installed side at all.
+
+---
+
+# FINDING: one field, four questions - the status filter mixes incomparable values
+
+Filed 2026-07-18 (operator decision). TASK-IMP-123 was DROPPED: `phase` is a live reporting
+dimension that works, its scheduling harm is already fixed by `d19362ad` (release intent moved
+into `priority`, the field that schedules), and removing it provably does NOT unblock the queue -
+`TASK-IMP-106` excludes ten tasks today with `phase` playing no part. The serialisation is
+service-cone subsumption (10 of 11 tasks touch `tools/install`), which is TASK-IMP-119's ground.
+
+**What IS worth fixing, and it is not scheduling.** `phase` is read by six consumers - including
+`render-status-hub.mjs` (filter facet + group-by + sortable column) and
+`modules/templates/html/status-app.js` (filter key `ph`, search index, `<td>`, detail row). It is
+how the corpus is sliced on the status page. But one dropdown now mixes five vocabularies:
+
+    P0 | Wave 3 - widen the envelope | Phase 0 - safety rails | pre-1.0.0 release | Wave C
+
+Those are not alternatives to one another. They are four different questions sharing one field
+name: which module rollout wave · which programme wave · which programme phase · which release
+gate. Grouping by `phase` therefore groups incomparable things, and filtering to `P0` silently
+excludes every Wave/Phase/release-gate task rather than narrowing within a dimension.
+
+Severity S3, reporting only. No scheduling impact - nothing reads it for scheduling, which is the
+whole point. Scope if picked up: this is a corpus migration (531 specs, 31 values), so size it from
+the measurement above, NOT from an estimate. The word `phase` also carries two further meanings
+in-tree that any migration must not collide with: `MODULE_META.phase` (a module attribute
+hardcoded in `render-module-changelog.mjs:17-39`, never read from a task) and
+`coverage-scope.mjs:224`'s `phase: testing` in coverage-gate artefacts.
+
+Not authored as a task. Recorded here so the next person has the measurement and the reasoning
+rather than a 4-hour estimate derived from a false count.
