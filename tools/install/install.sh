@@ -105,18 +105,34 @@ fi
 CY_LOCK="$CY/.install.lock"
 CYBEROS_LOCK_STALE_SECS="${CYBEROS_LOCK_STALE_SECS:-900}"
 _cy_lock_held=""                       # set only once WE own it; the refusal path never releases
+_cy_lock_stamp=""                      # the exact owner bytes WE wrote; identity, not just intent
 
-_cy_lock_release() { [ -n "$_cy_lock_held" ] && rm -rf "$CY_LOCK" 2>/dev/null; return 0; }
+# Release only what we STILL own. `_cy_lock_held` records that we once acquired the lock - it
+# cannot record that we still hold it. The gap is real: we acquire, we hang past the stale
+# threshold, a second installer breaks our lock (§1.3) and mkdirs a NEW one at the same path,
+# then we wake and exit. A held-only check would `rm -rf` the new holder's lock and reopen the
+# unguarded vendor window for a third process - the exact window the lock exists to close.
+# So compare the owner bytes: ours, or nobody's business.
+# (External review, 2026-07-17. The earlier review confirmed the REFUSAL path cannot delete a
+# holder's lock, which is true and is a different path. This is the stale-break path.)
+_cy_lock_release() {
+  [ -n "$_cy_lock_held" ] || return 0
+  # Unreadable or changed owner -> not provably ours -> leave it. A leaked lock self-heals at
+  # the stale threshold; a wrongly-deleted lock corrupts a live install. Fail safe, not tidy.
+  [ "$(cat "$CY_LOCK/owner" 2>/dev/null)" = "$_cy_lock_stamp" ] || return 0
+  rm -rf "$CY_LOCK" 2>/dev/null
+  return 0
+}
 _cy_now() { date +%s; }
 
 _cy_lock_acquire() {
   if mkdir "$CY_LOCK" 2>/dev/null; then
     _cy_lock_held=1
+    # Build the stamp BEFORE the trap arms: the trap must never fire against an empty stamp,
+    # which would compare equal to an unreadable owner file and delete a lock we cannot verify.
+    _cy_lock_stamp="$(printf 'pid=%s\nstarted_at=%s\nhost=%s\n' "$$" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(hostname 2>/dev/null || echo unknown)")"
+    printf '%s\n' "$_cy_lock_stamp" > "$CY_LOCK/owner" 2>/dev/null || true
     trap '_cy_lock_release' EXIT INT TERM
-    printf 'pid=%s
-started_at=%s
-host=%s
-' "$$" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(hostname 2>/dev/null || echo unknown)" > "$CY_LOCK/owner" 2>/dev/null || true
     return 0
   fi
   # mkdir failed. Contention, or something else entirely? Distinguishing the two is the
@@ -859,20 +875,6 @@ if [ "$_cyberos_hit" = 1 ]; then
     if bash .cyberos/lib/status-page.sh .; then
       git add docs/status 2>/dev/null || true
       echo "cyberos: docs/status regenerated + staged"
-    elif grep -q "status-page.sh" "$hk" 2>/dev/null; then
-      # ORDER MATTERS - this generic CONTENT check is LAST of the three on purpose. Every
-      # marked block, v1 and v2 alike, also contains "status-page.sh", so placed above the
-      # marker checks it swallows them: a v1 hook would match here and never upgrade to v2.
-      # (External review 2026-07-17, second pass, caught exactly that - a regression the first
-      # pass introduced while fixing a different one. `git log -S "cyberos-status-hook v1"`
-      # confirms the v1 append block does contain `bash .cyberos/lib/status-page.sh .`)
-      #
-      # Reaching here means the hook regenerates docs/status but carries NO cyberos marker: a
-      # hand-written or self-hosted hook (this repo's own is exactly this). Appending the
-      # managed block would regenerate the page TWICE per commit and bolt an `exit 1` onto a
-      # hook whose own comments state a non-blocking posture. What we did not write, we do not
-      # "fix".
-      HOOK_SET="kept your pre-commit hook${hook_at} (it already regenerates docs/status - no second block appended)"
     else
       echo "cyberos: ERROR docs/status regen failed" >&2
       exit 1
@@ -886,6 +888,26 @@ HOOK
       else
         HOOK_SET="kept your pre-commit hook${hook_at} (cyberos status-sync v2 already appended)"
       fi
+    elif grep -q "status-page.sh" "$hk" 2>/dev/null; then
+      # Reaching here means the hook regenerates docs/status but carries NO cyberos marker: a
+      # hand-written or self-hosted hook (this repo's own is exactly this). Appending the managed
+      # block would regenerate the page TWICE per commit and bolt an `exit 1` onto a hook whose
+      # own comments state a non-blocking posture. What we did not write, we do not "fix".
+      #
+      # ORDER MATTERS, TWICE OVER:
+      #  1. This generic CONTENT check must come AFTER both marker checks. Every marked block, v1
+      #     and v2 alike, contains "status-page.sh" (`git log -S "cyberos-status-hook v1"` shows
+      #     the v1 block runs `bash .cyberos/lib/status-page.sh .`), so placed first it swallows
+      #     them and a v1 hook never upgrades.
+      #  2. It belongs HERE, in the installer's if/elif chain - NOT inside the <<'HOOK' heredoc
+      #     above. That heredoc is single-quoted: every line is copied verbatim into the USER's
+      #     pre-commit hook. A branch placed there never executes at install time, and ships
+      #     $hk / ${hook_at} / HOOK_SET into a foreign hook where they are unbound - under
+      #     `set -u` that aborts the user's commit.
+      # (External review 2026-07-17: pass 2 caught (1), a regression pass 1 introduced; pass 3
+      # caught (2), a regression the fix for (1) introduced. Both are recorded because the next
+      # editor of this chain will be tempted to make the same two moves.)
+      HOOK_SET="kept your pre-commit hook${hook_at} (it already regenerates docs/status - no second block appended)"
     else
       # a FOREIGN hook exists: append a marked block that preserves the foreign exit code
       cat >> "$hk" <<'HOOK'

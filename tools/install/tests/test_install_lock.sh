@@ -114,8 +114,62 @@ t07_foreign_host_pid_is_alive(){
   ok t07_foreign_host_pid_is_alive
 }
 echo "test_install_lock.sh (TASK-IMP-103)"
+# t08 - the stale-break handoff. Greptile P1, 2026-07-17: `_cy_lock_held` records that we ONCE
+# owned the lock, never that we STILL do. A holds it and hangs; B breaks the stale lock (§1.3) and
+# mkdirs a new one at the same path; A wakes and exits. A held-only release deletes B's lock and
+# reopens the unguarded vendor window - the exact window the lock exists to close.
+t08_stale_break_handoff_is_not_released(){
+  local d="$TMP/t08"; mkdir -p "$d/.cyberos/.install.lock"
+  # the lock now at this path belongs to B, not to us
+  printf 'pid=999999\nstarted_at=2099-01-01T00:00:00Z\nhost=other\n' > "$d/.cyberos/.install.lock/owner"
+  local blk; blk="$(sed -n '/^CY_LOCK=/,/^_cy_lock_acquire$/p' "$root/tools/install/install.sh" | sed '$d')"
+  # A's state: it held the lock and stamped it with ITS bytes, which are no longer on disk.
+  CY="$d/.cyberos" bash -c "set -uo pipefail
+CY=\"$d/.cyberos\"
+$blk
+_cy_lock_held=1
+_cy_lock_stamp=\"pid=1
+started_at=1970-01-01T00:00:00Z
+host=A\"
+_cy_lock_release" >/dev/null 2>&1
+  if [ -d "$d/.cyberos/.install.lock" ]; then ok t08_stale_break_handoff_is_not_released
+  else no t08_stale_break_handoff_is_not_released "A's trap deleted a lock it no longer owned"; fi
+}
+
+# t09 - the fail-safe direction. An unreadable or absent owner file is NOT provably ours, so
+# release leaves it. A leaked lock self-heals at the stale threshold; a wrongly-deleted one
+# corrupts a live install. Tidiness loses to safety here, deliberately.
+t09_unverifiable_owner_is_left_alone(){
+  local d="$TMP/t09"; mkdir -p "$d/.cyberos/.install.lock"   # no owner file at all
+  local blk; blk="$(sed -n '/^CY_LOCK=/,/^_cy_lock_acquire$/p' "$root/tools/install/install.sh" | sed '$d')"
+  CY="$d/.cyberos" bash -c "set -uo pipefail
+CY=\"$d/.cyberos\"
+$blk
+_cy_lock_held=1
+_cy_lock_stamp=\"pid=1\"
+_cy_lock_release" >/dev/null 2>&1
+  if [ -d "$d/.cyberos/.install.lock" ]; then ok t09_unverifiable_owner_is_left_alone
+  else no t09_unverifiable_owner_is_left_alone "released a lock whose ownership could not be read"; fi
+}
+
+# t10 - and the release MUST still work when it IS ours, or the fix has simply broken the lock.
+t10_own_lock_is_released(){
+  local d="$TMP/t10"; mkdir -p "$d/.cyberos/.install.lock"
+  local stamp; stamp="$(printf 'pid=1\nstarted_at=x\nhost=A\n')"
+  printf '%s\n' "$stamp" > "$d/.cyberos/.install.lock/owner"
+  local blk; blk="$(sed -n '/^CY_LOCK=/,/^_cy_lock_acquire$/p' "$root/tools/install/install.sh" | sed '$d')"
+  CY="$d/.cyberos" bash -c "set -uo pipefail
+CY=\"$d/.cyberos\"
+$blk
+_cy_lock_held=1
+_cy_lock_stamp=\"$stamp\"
+_cy_lock_release" >/dev/null 2>&1
+  if [ ! -d "$d/.cyberos/.install.lock" ]; then ok t10_own_lock_is_released
+  else no t10_own_lock_is_released "refused to release a lock that IS ours - the lock now leaks forever"; fi
+}
+
 t01_concurrent_refuses; t02_stale_broken_with_warning; t03_fresh_dead_pid_refuses
 t04_trap_releases_on_signal; t05_uninstall_lock_ownership; t06_non_contention_failure_named
-t07_foreign_host_pid_is_alive
+t07_foreign_host_pid_is_alive; t08_stale_break_handoff_is_not_released; t09_unverifiable_owner_is_left_alone; t10_own_lock_is_released
 echo "  ---"; echo "  $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
