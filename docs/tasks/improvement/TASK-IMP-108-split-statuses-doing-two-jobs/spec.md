@@ -4,7 +4,7 @@ title: Split the statuses doing two jobs
 template: task@1
 type: improvement
 module: improvement
-status: reviewing
+status: testing
 priority: p1
 author: "@stephencheng"
 department: engineering
