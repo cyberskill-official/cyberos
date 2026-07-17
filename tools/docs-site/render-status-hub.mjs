@@ -391,6 +391,29 @@ const nowHtml = moving.length ? `
   ).join('')}</div>
 </section>` : '';
 
+// TASK-IMP-108 §1.7 - the report must RENDER, not merely be computed.
+//
+// The first pass emitted draft_staleness into the JSON payload and stopped. Nothing read it:
+// status-app.js has zero references to the key, so the report existed in the page and was
+// rendered by nothing. The cited test asserted the STRING appeared in the HTML - true, inside a
+// JSON blob no code consumes - so §1.7 shipped `done` with its own clause unsatisfied, and the
+// test passed because it tested the payload rather than the promise. (External review 2026-07-17.)
+//
+// Server-side, not client-side, deliberately: this file's own doctrine is that the page stays
+// readable without status-app.js (see the <noscript> table). A JS-only report would break the
+// clause again for anyone reading over file:// with JS off.
+const stalenessHtml = draftStaleness.total ? `
+  <section class="now">
+    <h2>Drafts awaiting triage (${draftStaleness.total})</h2>
+    <table class="nojs-t">
+      <thead><tr><th>reason</th><th>count</th><th>oldest</th></tr></thead>
+      <tbody>${draftStaleness.by_reason.map(r =>
+        `<tr><td>${esc(r.reason)}</td><td>${r.count}</td><td>${esc(r.oldest || 'unknown')}</td></tr>`
+      ).join('')}</tbody>
+    </table>
+    <p class="muted">A report, not an action: no status changed, nothing aged, nothing closed. The operator is the fix.</p>
+  </section>` : '';
+
 const sel = (id, label, values) =>
   `<label class="facet">${esc(label)}<select id="f-${id}"><option value="">all</option>` +
   values.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('') + '</select></label>';
@@ -482,6 +505,7 @@ for (const [k, v] of Object.entries({
   'meta:html': `VERSION <span class="code">${esc(VERSION)}</span> · built from <span class="code">${esc(COMMIT)}</span> · ${tasks.length} tasks · ${releases.length} releases`,
   'deck:html': deck,
   'now:html': nowHtml,
+  'staleness:html': stalenessHtml,
   'facets:html': facets,
   'nojs:html': nojs,
   'data:json': dataJson,

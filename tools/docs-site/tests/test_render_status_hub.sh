@@ -103,29 +103,51 @@ t10_token_clean() {                                                    # colour 
 
 
 t11_draft_staleness_report() {                                         # TASK-IMP-108 AC 6 - §1.7
-  # 336 drafts sit indefinitely and the page reported a percentage against a denominator nobody
-  # believed. Group them by REASON with an age. It is a REPORT: no status changes, nothing ages
-  # automatically, nothing closes. The operator is the fix; this is the finding.
-  # the suite renders fixture "a" to $TMP/a/out/reference/status.html (see t05)
+  # §1.7: "The status page MUST RENDER a staleness report."
+  #
+  # This arm previously asserted `grep -q '"draft_staleness"'` - that the string appeared in the
+  # HTML. It did, inside a JSON blob no code read: status-app.js has zero references to the key.
+  # So the clause said RENDER, the test said PRESENT-IN-PAYLOAD, and 108 shipped `done` with §1.7
+  # unsatisfied and this arm green. A test that cites a clause and asserts something weaker than
+  # the clause is not evidence. (External review 2026-07-17.)
+  #
+  # It now asserts the RENDERED report: real markup, outside the payload, readable with JS off.
   local h="$TMP/a/out/reference/status.html"
   [ -s "$h" ] || { fail t11 "no page rendered at $h"; return; }
-  grep -q '"draft_staleness"' "$h" || { fail t11 "draft_staleness absent from the page payload"; return; }
+
+  # 1. the report is VISIBLE MARKUP, not payload. Strip the data island first, then look.
+  local visible; visible="$(node -e '
+    const fs=require("fs"); let h=fs.readFileSync(process.argv[1],"utf8");
+    h=h.replace(/<script[^>]*id="cs-data"[\s\S]*?<\/script>/g,"");   // the JSON island
+    h=h.replace(/<script[\s\S]*?<\/script>/g,"");                    // and every other script
+    process.stdout.write(h);' "$h")"
+  grep -q "Drafts awaiting triage" <<<"$visible" || { fail t11 "no rendered staleness section outside the payload - §1.7 says RENDER"; return; }
+
+  # 2. grouped BY REASON with an AGE, as §1.7 words it - a heading alone is not a report.
+  grep -qE "<th>reason</th>" <<<"$visible" || { fail t11 "rendered report has no reason column"; return; }
+  grep -qE "<th>oldest</th>"  <<<"$visible" || { fail t11 "rendered report has no age - §1.7 requires age"; return; }
+  grep -qE "<td>[a-z_]+</td><td>[0-9]+</td>" <<<"$visible" || { fail t11 "no reason/count row rendered"; return; }
+
+  # 3. absent draft_reason MUST render as `unknown`. The page may not invent a reason it was not
+  #    told - inventing one for the untriaged drafts is the `# UNREVIEWED` mistake in new clothes.
+  grep -q "<td>unknown</td>" <<<"$visible" || { fail t11 "absent draft_reason did not render as unknown"; return; }
+
+  # 4. §1.7: it MUST NOT change any status. The report is derived; assert it stayed a report.
+  grep -q "A report, not an action" <<<"$visible" || { fail t11 "the report does not state that it changes nothing"; return; }
+
+  # 5. the payload stays well-formed too - the client may render it later, and the sums must hold.
   node -e '
     const fs=require("fs"), h=fs.readFileSync(process.argv[1],"utf8");
     const m=h.match(/"draft_staleness":(\{.*?\]\})/); if(!m){console.error("no payload");process.exit(1);}
     const d=JSON.parse(m[1]);
-    if(typeof d.total!=="number") {console.error("no total");process.exit(1);}
-    if(!Array.isArray(d.by_reason)) {console.error("no by_reason");process.exit(1);}
-    for(const r of d.by_reason){
-      if(!("reason" in r)||!("count" in r)||!("oldest" in r)){console.error("row missing a field");process.exit(1);}
-      // absent draft_reason MUST render as unknown - the page may not invent a reason it was
-      // not told. Inventing one for the 336 untriaged drafts is the # UNREVIEWED mistake.
-    }
+    if(typeof d.total!=="number"){console.error("no total");process.exit(1);}
+    if(!Array.isArray(d.by_reason)){console.error("no by_reason");process.exit(1);}
+    for(const r of d.by_reason) if(!("reason" in r)||!("count" in r)||!("oldest" in r)){console.error("row missing a field");process.exit(1);}
     const sum=d.by_reason.reduce((a,r)=>a+r.count,0);
     if(sum!==d.total){console.error(`by_reason sums to ${sum}, total says ${d.total}`);process.exit(1);}
   ' "$h" || { fail t11 "draft_staleness payload malformed"; return; }
-  # §1.7: the report MUST NOT change any status. The page is derived; assert it stayed derived.
-  grep -q '"draft_staleness"' "$h" && ok t11_draft_staleness_report
+
+  ok t11_draft_staleness_report
 }
 
 t01_deck_true; t02_one_page_three_lenses; t03_facets_and_search; t04_supersession
