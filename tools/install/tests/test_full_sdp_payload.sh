@@ -26,7 +26,10 @@ code-review coverage-gate deployment-checklist release-notes runbook retrospecti
     done; done
   done
   n="$(ls "$TMP/payload/cuo/skills" | wc -l)"
-  [ "$n" -eq 53 ] || { fail t01 "expected 53 vendored skills, got $n"; all=0; }
+  # Census of the vendored set, not a stage assertion (the stage matrix is the loop above).
+  # Bump it whenever VENDORED_SKILLS grows, and say what grew it:
+  #   53 -> 54: workflow-improver (TASK-IMP-110, the outer loop).
+  [ "$n" -eq 54 ] || { fail t01 "expected 54 vendored skills, got $n"; all=0; }
   [ "$all" -eq 1 ] && ok t01
 }
 t02_set_is_reviewable_data() {                                        # AC 2

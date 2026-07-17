@@ -123,6 +123,7 @@ postmortem-author                           # SDP 14
 postmortem-audit                            # SDP 14
 decommissioning-author                      # SDP 14
 decommissioning-audit                       # SDP 14
+workflow-improver                # outer loop: propose skill amendments from run evidence (TASK-IMP-110)
 VENDORED_SKILLS
 )"
 vendored_skills=0
@@ -191,6 +192,10 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   [ -f "$here/docs-tools/coverage-scope.mjs" ] && cp "$here/docs-tools/coverage-scope.mjs" "$out/docs-tools/"
   # TASK-IMP-100: reconcile the third state - work this workflow did not perform.
   [ -f "$here/docs-tools/task-reconcile.mjs" ] && cp "$here/docs-tools/task-reconcile.mjs" "$out/docs-tools/"
+  # workflow-improve: the outer loop's machine floor (TASK-IMP-110). The workflow-improver skill
+  # and the /improve command both name `.cyberos/docs-tools/workflow-improve.mjs`, so a payload
+  # without it ships a skill that cannot reach its own floor.
+  [ -f "$here/docs-tools/workflow-improve.mjs" ] && cp "$here/docs-tools/workflow-improve.mjs" "$out/docs-tools/"
   [ -f "$here/../../modules/templates/html/status-hub.html" ] && cp "$here/../../modules/templates/html/status-hub.html" "$out/docs-tools/templates/"
   [ -f "$here/../../modules/templates/html/status-app.js" ] && cp "$here/../../modules/templates/html/status-app.js" "$out/docs-tools/templates/"
   [ -f "$here/../../modules/templates/cds/status.css" ] && cp "$here/../../modules/templates/cds/status.css" "$out/docs-tools/templates/"
