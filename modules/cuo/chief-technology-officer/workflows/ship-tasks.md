@@ -1,6 +1,6 @@
 ---
 workflow_id: chief-technology-officer/ship-tasks
-workflow_version: 2.6.3
+workflow_version: 2.7.0
 purpose: Drive each eligible task in `docs/tasks/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the task back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
 persona: chief-technology-officer
 cadence: per-task (loops continuously over BACKLOG.md)
@@ -24,9 +24,12 @@ outputs:
   - { name: task_audit_report,           format: task-audit@2.0 (pre-flight, one per task), recipient: memory audit chain + <task>/audit.md §10 }
   - { name: coverage_gate_report,      format: coverage-gate-audit@1 (one per task),                 recipient: memory audit chain + <task>/audit.md §10.4 }
   - { name: awh_gate_report,           format: awh-eval@1 (one per task, out-of-band rerun),         recipient: memory audit chain (memory.awh_gate_result) + <task>/audit.md §10.5 }
+  - { name: reconcile_report,          format: reconcile-report@1 (conditional, one per drifted entry), recipient: memory audit chain + HITL gate }
   - { name: caf_gate_report,           format: caf-gate@1 (one per task, code-audit floor),          recipient: memory audit chain (memory.caf_gate_result) + <task>/audit.md §10.6 }
 
 skill_chain:
+  # ── Conditional entry: the task claims work this workflow did not perform (see 'Reconcile entry' §) ──
+  - { step: 0,  skill: task-reconcile,                             inputs_from: { task: next_task, repo_root: repo_root },                    outputs_to: reconcile_report,                          condition: 'entry state drifted — status past ready_to_implement AND (no ship-manifest OR manifest verify fails OR the claimed phase artefact set is missing)', phase: "entry (reconcile)" }
   # ── Phase: ready_to_implement → implementing (workflow start) ──
   - { step: 1,  skill: repo-context-map-author,                    inputs_from: { repo_root: repo_root, task_id: next_task_id },              outputs_to: context_map_draft,                         phase: "ready_to_implement → implementing" }
   - { step: 2,  skill: repo-context-map-audit,                     inputs_from: context_map_draft,                                        outputs_to: context_map }
@@ -255,6 +258,7 @@ One-task-at-a-time is no longer the only sanctioned mode. The default is now BAT
   - Cap the round at the point where reviewing N diffs stops being possible. Sub-agents are cheap; a human reading 12 unrelated diffs at one gate is not. When the batch exceeds a reviewable round, ship it as consecutive rounds on the same branch.
   - A sub-agent that hits a §2 halt returns it; the parent collects halts and surfaces them together rather than stopping the whole round on the first one.
   - Shared files are owned by ONE writer through ONE filesystem view per run — cone-independence includes view-independence (v2.6.3, TASK-IMP-092). Two agents writing one file through different filesystem views produce lost updates even when their writes are time-serialized: each view's reads stay self-consistent while the other view's writes vanish, so every read looks right and the committed truth is wrong. Route every write to a shared file (BACKLOG.md above all) through its one owner on its one view. (Learned 2026-07-16, TASK-IMP-086 incident: the member agent wrote the backlog through one view while the parent's phase flips ran through another — no commit ever carried both.)
+  - Constrained environments: when the run itself is sandboxed (per-command time caps, background processes dying with the call, synced-mount filesystems), follow the environment runbook — “Running CyberOS under sandboxed agents” in the payload GUIDE (source: `tools/install/docs/index.md`); the rules above stay normative there.
 - **One branch per BATCH, not per task (v2.6.0).** The batch is the unit of review and the unit of merge, so it is the unit of branching. Name it `batch/<n>-<short-theme>` (e.g. `batch/3-auth-hardening`). Every member commits to that branch, per phase, with its own conventional commit — per-task commits stay, per-task branches go. Rationale: N branches for N tasks that were selected *because they are independent* produces N PRs that touch disjoint files and merge in any order — pure ceremony. Cone-overlapping tasks were never in the batch to begin with.
   - The next batch branches from the previous batch's merge, not from its tip, unless the operator says otherwise. Unlock rescan means batch N+1's eligibility usually depends on batch N being `done`.
   - A task routed back to `ready_to_implement` mid-batch leaves the batch; it re-enters selection later and MUST NOT hold its batch's branch open.
@@ -276,6 +280,62 @@ The workflow MUST drive **all phases of a task to completion in one continuous s
 5. If genuinely blocked mid-task (e.g. needs ADR-class operator decision), DOCUMENT the block in §10.7 of the task's audit.md, route back to `ready_to_implement` with `routed_back_count += 1` and `reason: "<blocker>"`. Do NOT silently ship a partial phase and walk away.
 
 See `task-audit` skill §9.1 for the full clause + grandfathered exceptions.
+
+## Reconcile entry — when a task claims work this workflow did not perform (v2.7.0, TASK-IMP-101)
+
+This workflow trusts two things: its own run manifests (hash-verified — see Resume semantics
+below) and its own gates (route-back on failure). A status cell is neither. A task can arrive
+already implemented — mid-shipping from another session, or long "done" — with no manifest, a
+manifest that no longer verifies, or a phase artefact set that does not exist. Trusting that
+cell is how a claim outruns its evidence (learned 2026-07-16, the TASK-IMP-086 incident: a
+task marked done whose deliverable no commit carried).
+
+**Trigger.** Before entering the chain for a task, if its status is past `ready_to_implement`
+AND (no ship-manifest exists OR `ship-manifest.mjs verify` fails OR the claimed phase's
+artefact set is missing), run step 0:
+
+```
+node .cyberos/docs-tools/task-reconcile.mjs <task-ID> --run-tests
+```
+
+A VALID manifest means resume semantics own the task — reconcile does not fire, and the two
+mechanisms never double-handle the same state.
+
+**The gate.** The report carries exactly one recommendation. Present it — claimed status, the
+recommendation, the two or three facts driving it, what each branch costs — and take the
+operator's verdict:
+
+| Verdict | The workflow then |
+|---|---|
+| `resume_at_phase(N)` | re-enters the chain at step N and continues normally |
+| `route_back` | flips to `ready_to_implement`, `routed_back_count += 1` (STATUS-REFERENCE §1.3), records the report's reasons and emits `task_routed_back` |
+| `adopt_candidate` | backfills the phase artefact set from the evidence, then re-enters at the verified phase |
+
+**The rule.** The agent NEVER executes a branch — resume, route back, or adopt — without the
+recorded human verdict. This is a third, CONDITIONAL human gate; the two acceptance gates
+(reviewing → ready_to_test, testing → done) are untouched and still apply afterwards. An
+operator verdict that departs from the recommendation is legitimate and emits
+`memory.status_overridden` with its reason. Skill contract:
+`modules/skill/task-reconcile/SKILL.md`.
+
+## depends_on evidence gate (v2.7.0, TASK-IMP-101)
+
+Before starting any task, every `depends_on` id whose status is `done` MUST carry evidence:
+a `coverage-gate` artefact in either artefact home (the task folder or
+`docs/tasks/.workflow/<task-ID>/`), or a `reconcile-report@1` whose verdict the operator
+accepted. A dependency that carries neither is a done-by-claim, not a done-by-evidence, and
+the dependent task is BLOCKED — surfaced at a gate where the operator may override.
+
+Rationale: building on unverified foundations is how one bad claim becomes a subtree of them.
+The check is cheap and the override is always available — what it removes is the SILENT case,
+where nobody knew the foundation was unwitnessed.
+
+- Both artefact homes count, so the historical corpus (bundles under `docs/tasks/.workflow/`)
+  does not false-block.
+- `depends_on` naming an off-ramped task (`closed`, `duplicate`, `cannot_reproduce`) is an
+  unmet dependency under the existing eligibility rules and is surfaced the same way.
+- Every override emits `memory.status_overridden` `{actor, task_id, prior_status, new_status,
+  reason}` — the operator's call, on the record.
 
 ## Resume semantics (ship-manifest@1) - added by TASK-CUO-206
 
@@ -308,7 +368,7 @@ to `ready_to_implement`, keep it with `routed_back_count += 1` - the next run re
 staleness rule but retains count and history.
 
 **Queue selection (no task id given).** Among tasks at `ready_to_implement` whose `depends_on` are all `done`:
-order by priority (MUST before SHOULD before COULD), then `created` ascending, then id ascending. Echo the
+order by priority: `p0` before `p1` before `p2` before `p3` (legacy MoSCoW values map per FM-105), then `created` ascending, then id ascending. Echo the
 selection before step 1: `queue: picked <id> (priority=<p>, created=<d>) over <n> other eligible tasks`.
 Reference implementation: `modules/cuo/cuo/ship_manifest.py` (doc-driven agents apply this section directly).
 The vendored executable of this section is `tools/install/docs-tools/ship-manifest.mjs`

@@ -155,6 +155,117 @@ done
 [ -f "$root/tools/install/create.sh" ] && ok "create-scaffold: create.sh present" \
                                        || bad "create-scaffold: create.sh missing"
 
+# ── agent-surface freshness (TASK-IMP-094): shared .agents/skills + Devin/Windsurf rules ──
+# The 2026-07-16 channel research (RELEASE-CHECKLIST.md matrix + line E3) recorded two
+# convention moves: the Agent Skills open standard's shared .agents/skills/ dir (read by
+# Codex, Copilot, Cursor, Gemini CLI, OpenCode) and the Windsurf->Devin rebrand. A declared
+# surface proves nothing until an install lands it, so these scenarios run the real
+# installer against a scratch repo (same build-a-payload harness as test_install_hygiene.sh)
+# and hold it to create + idempotence + resolution.
+SHARED_CMDS="ship-tasks task-author task-audit"
+CH_TMP="$(mktemp -d)"; trap 'rm -rf "$CH_TMP"' EXIT
+_ch_install() {   # surface-focused: skip what step 5b does not need (migrate/memory/MCP/hook)
+  CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 CYBEROS_NO_MCP=1 CYBEROS_NO_HOOK=1 \
+    bash "$CH_TMP/payload/install.sh" "$1" >/dev/null 2>&1
+}
+_ch_snapshot() {  # normalized view of every TASK-IMP-094 path: link targets, file bytes, copy manifests
+  local r="$1" c
+  for c in $SHARED_CMDS; do
+    if [ -L "$r/.agents/skills/$c" ]; then printf 'link %s -> %s\n' "$c" "$(readlink "$r/.agents/skills/$c")"
+    elif [ -d "$r/.agents/skills/$c" ]; then
+      printf 'copy %s\n' "$c"; (cd "$r/.agents/skills/$c" && find . -type f | LC_ALL=C sort | xargs cksum 2>/dev/null)
+    else printf 'missing %s\n' "$c"; fi
+  done
+  cat "$r/.devin/rules/cyberos.md" "$r/.windsurf/rules/cyberos.md" "$r/.windsurfrules" "$r/.gitignore" 2>/dev/null
+}
+
+if bash "$root/tools/install/build.sh" "$CH_TMP/payload" >/dev/null 2>&1; then
+  chd="$CH_TMP/scratch"; mkdir -p "$chd"; (cd "$chd" && git init -q . 2>/dev/null || true)
+  _ch_install "$chd"
+
+  t_shared_skills_and_devin_rules() {
+    local miss="" c
+    for c in $SHARED_CMDS; do
+      { [ -e "$chd/.agents/skills/$c" ] || [ -L "$chd/.agents/skills/$c" ]; } || miss="$miss .agents/skills/$c"
+    done
+    [ -f "$chd/.devin/rules/cyberos.md" ]    || miss="$miss .devin/rules/cyberos.md"
+    [ -f "$chd/.windsurf/rules/cyberos.md" ] || miss="$miss .windsurf/rules/cyberos.md"
+    [ -f "$chd/.windsurfrules" ]             || miss="$miss .windsurfrules(legacy)"
+    grep -q 'AGENT-ENTRY\.md' "$chd/.devin/rules/cyberos.md" 2>/dev/null    || miss="$miss devin-pointer-body"
+    grep -q 'AGENT-ENTRY\.md' "$chd/.windsurf/rules/cyberos.md" 2>/dev/null || miss="$miss windsurf-pointer-body"
+    # CYBEROS_AGENTS exclusion: a filter that omits the agents/devin/windsurf families
+    # must create none of the new paths (existing want_agent semantics, spec edge 3).
+    local xd="$CH_TMP/excl"; mkdir -p "$xd"; (cd "$xd" && git init -q . 2>/dev/null || true)
+    CYBEROS_AGENTS="claude-code" CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 CYBEROS_NO_MCP=1 CYBEROS_NO_HOOK=1 \
+      bash "$CH_TMP/payload/install.sh" "$xd" >/dev/null 2>&1
+    [ ! -e "$xd/.agents/skills" ] || miss="$miss excl:.agents/skills-created"
+    [ ! -e "$xd/.devin" ]         || miss="$miss excl:.devin-created"
+    [ ! -e "$xd/.windsurf" ]      || miss="$miss excl:.windsurf-created"
+    if [ -z "$miss" ]; then ok "t_shared_skills_and_devin_rules: 3 shared entries + both rules pointers, legacy kept, filter honored"
+    else bad "t_shared_skills_and_devin_rules: missing/broken:$miss"; fi
+  }
+
+  t_channel_idempotence() {
+    _ch_snapshot "$chd" > "$CH_TMP/snap1"
+    _ch_install "$chd"                               # second install over the same repo
+    _ch_snapshot "$chd" > "$CH_TMP/snap2"
+    local dup; dup="$(grep -cxF '.agents/skills/ship-tasks' "$chd/.gitignore")"
+    if cmp -s "$CH_TMP/snap1" "$CH_TMP/snap2" && [ "$dup" = 1 ]; then
+      ok "t_channel_idempotence: second install byte-identical on the new paths (gitignore entry x1)"
+    else
+      bad "t_channel_idempotence: second install churned the new paths" \
+          "$(diff "$CH_TMP/snap1" "$CH_TMP/snap2" 2>/dev/null | head -4; echo gitignore-entries=$dup)"
+    fi
+  }
+
+  t_shared_skills_resolve() {
+    local err="" c p phys rphys
+    rphys="$(cd -P "$chd" && pwd -P)"
+    for c in $SHARED_CMDS; do
+      p="$chd/.agents/skills/$c"
+      if [ -L "$p" ]; then
+        case "$(readlink "$p")" in /*) err="$err $c:absolute-target";; esac
+        [ -e "$p" ] || { err="$err $c:dangling"; continue; }
+      elif [ ! -d "$p" ]; then err="$err $c:missing"; continue; fi
+      [ -f "$p/SKILL.md" ] || err="$err $c:no-SKILL.md"
+      phys="$(cd -P "$p" 2>/dev/null && pwd -P)"
+      case "$phys/" in "$rphys"/*) ;; *) err="$err $c:resolves-outside-repo";; esac
+    done
+    [ -z "$err" ] && ok "t_shared_skills_resolve: every entry resolves in-repo (symlink or copy; no dangling links)" \
+                  || bad "t_shared_skills_resolve:$err"
+  }
+
+  # ── ownership of a COPY-fallback entry (PR-review, Devin 2026-07-17) ──────────
+  # The symlink arm proves ownership by readlink target. A copy is byte-indistinguishable
+  # from an operator's own directory, so uninstall's old "dir with a SKILL.md" heuristic
+  # would rm -rf work it never created - precisely what TASK-IMP-094 §1.3 promises never to
+  # touch. Installer copies now carry .cyberos-owned; anything unmarked is kept and named.
+  t_shared_skills_copy_ownership() {
+    local o="$CH_TMP/own"; mkdir -p "$o"; (cd "$o" && git init -q . 2>/dev/null || true)
+    CYBEROS_COPY_SKILLS=1 _ch_install "$o"
+    [ -f "$o/.agents/skills/ship-tasks/.cyberos-owned" ] \
+      || { bad "t_shared_skills_copy_ownership: installer copy carries no ownership marker"; return; }
+    rm -rf "$o/.agents/skills/task-audit"; mkdir -p "$o/.agents/skills/task-audit"
+    printf -- '---\nname: task-audit\n---\n# my own skill, not the installer\x27s\n' > "$o/.agents/skills/task-audit/SKILL.md"
+    echo "operator work" > "$o/.agents/skills/task-audit/NOTES.md"
+    bash "$o/.cyberos/uninstall.sh" "$o" >"$CH_TMP/uninst.log" 2>&1 || true
+    if [ ! -f "$o/.agents/skills/task-audit/SKILL.md" ] || [ ! -f "$o/.agents/skills/task-audit/NOTES.md" ]; then
+      bad "t_shared_skills_copy_ownership: uninstall DELETED an operator's own skill dir"; return
+    fi
+    grep -q "kept .agents/skills/task-audit" "$CH_TMP/uninst.log" \
+      || { bad "t_shared_skills_copy_ownership: uninstall did not name the unmarked dir it kept"; return; }
+    [ -e "$o/.agents/skills/ship-tasks" ] \
+      && { bad "t_shared_skills_copy_ownership: the marked installer copy was not removed"; return; }
+    ok "t_shared_skills_copy_ownership: marked copies removed, operator dirs kept and named"
+  }
+
+  t_shared_skills_and_devin_rules
+  t_channel_idempotence
+  t_shared_skills_resolve
+  t_shared_skills_copy_ownership
+else
+  bad "agent-surface: scratch payload build failed (build.sh) - t_shared_skills_and_devin_rules / t_channel_idempotence / t_shared_skills_resolve not run"
+fi
 
 # ── every declared channel is either proved here or explicitly deferred to CI ──
 PROVED="copy-folder git-submodule claude-plugin mcp-server mcp-connector npx-cli root-cli template-repo create-scaffold makefile"

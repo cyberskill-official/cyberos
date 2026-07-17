@@ -82,6 +82,7 @@ nfr-test-runner                             # SDP 4  NFR
 nfr-regression-handler                      # SDP 4  NFR
 task-author                      # SDP 5  task
 task-audit                       # SDP 5
+task-reconcile                   # SDP 5  reconcile drifted entry states (TASK-IMP-100)
 architectural-spike-author                  # SDP 6  spike (ADR input)
 architectural-spike-audit                   # SDP 6
 architecture-decision-record-author         # SDP 6  ADR
@@ -175,6 +176,12 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   # workflow helpers: ship-manifest@1 executor + backlog-state-update byte-discipline executor (TASK-IMP-085)
   [ -f "$here/docs-tools/ship-manifest.mjs" ] && cp "$here/docs-tools/ship-manifest.mjs" "$out/docs-tools/"
   [ -f "$here/docs-tools/backlog-mutate.mjs" ] && cp "$here/docs-tools/backlog-mutate.mjs" "$out/docs-tools/"
+  # memory-append: doc-driven appender for the BRAIN audit chain (TASK-IMP-093)
+  [ -f "$here/docs-tools/memory-append.mjs" ] && cp "$here/docs-tools/memory-append.mjs" "$out/docs-tools/"
+  # coverage-scope: task diff -> per-file coverage skeleton (TASK-IMP-098)
+  [ -f "$here/docs-tools/coverage-scope.mjs" ] && cp "$here/docs-tools/coverage-scope.mjs" "$out/docs-tools/"
+  # TASK-IMP-100: reconcile the third state - work this workflow did not perform.
+  [ -f "$here/docs-tools/task-reconcile.mjs" ] && cp "$here/docs-tools/task-reconcile.mjs" "$out/docs-tools/"
   [ -f "$here/../../modules/templates/html/status-hub.html" ] && cp "$here/../../modules/templates/html/status-hub.html" "$out/docs-tools/templates/"
   [ -f "$here/../../modules/templates/html/status-app.js" ] && cp "$here/../../modules/templates/html/status-app.js" "$out/docs-tools/templates/"
   [ -f "$here/../../modules/templates/cds/status.css" ] && cp "$here/../../modules/templates/cds/status.css" "$out/docs-tools/templates/"

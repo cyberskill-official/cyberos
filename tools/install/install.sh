@@ -154,7 +154,11 @@ fi
 
 # 3. write the gate env at .cyberos/gates.env (never clobber; back up) --------
 env_file="$CY/gates.env"
-[ -f "$env_file" ] && cp "$env_file" "$env_file.bak.$(date +%s)"
+env_bak=""
+if [ -f "$env_file" ]; then
+  env_bak="$env_file.bak.$(date +%s)"
+  cp "$env_file" "$env_bak"
+fi
 cat > "$env_file" <<EOF
 # .cyberos/gates.env - gate commands for the task workflow (edit freely).
 # Auto-detected ecosystem: $ECOSYSTEM. Empty command = that gate is skipped.
@@ -178,6 +182,13 @@ AWH_CMD=""
 # acceptance) are never automated. The agent halts; a human records each verdict.
 HITL_REQUIRED="true"
 EOF
+# A silent clobber of an operator-edited file is a trust leak even when the backup exists
+# (TASK-IMP-095): when regeneration CHANGED the file, say where the previous content went
+# and where durable overrides belong. Identical regeneration and the fresh-create case
+# stay silent - nothing was lost. gates.env stays machine-owned (TASK-CUO-207).
+if [ -n "$env_bak" ] && ! cmp -s "$env_bak" "$env_file"; then
+  echo "cyberos install: gates.env regenerated (previous kept at $env_bak); durable overrides belong in .cyberos/config.yaml"
+fi
 
 # 3b. scaffold .cyberos/config.yaml exactly once (TASK-CUO-207 §1 #3; never clobber) --
 # is_platform_repo() is HOISTED here from the AGENTS.md handling further down (its other
@@ -448,7 +459,9 @@ pointer cursor        .cursor/rules/cyberos.mdc          mdc     # Cursor (moder
 pointer grok          .grok/GROK.md                      md      # Grok CLI (superagent-ai)
 pointer copilot       .github/copilot-instructions.md    md      # GitHub Copilot
 pointer antigravity   .agents/rules/cyberos.md           md      # Antigravity / zcode workspace rules (.agents/rules/)
-pointer windsurf      .windsurfrules                     plain   # Windsurf
+pointer windsurf      .windsurfrules                     plain   # Windsurf (legacy file - still read post-rebrand, kept; TASK-IMP-094)
+pointer devin         .devin/rules/cyberos.md            md      # Devin Desktop (Windsurf rebrand, June 2026; .devin/rules/ preferred)
+pointer windsurf      .windsurf/rules/cyberos.md         md      # Windsurf rules dir (rebrand fallback beside the legacy file)
 # Codex, zcode, Command Code, Aider, Zed, Jules, Warp, OpenCode read AGENTS.md -> covered by the spine.
 
 # --- native skill install: drop ship-tasks into each skill-aware agent's dir ---
@@ -457,31 +470,84 @@ pointer windsurf      .windsurfrules                     plain   # Windsurf
 # updates on re-install; regenerable, so gitignored). CYBEROS_COPY_SKILLS=1 copies it instead.
 SKILL_SRC="$CY/plugin/skills/ship-tasks"
 relup() { local up="" seg; local IFS=/; for seg in $1; do [ -n "$seg" ] && up="../$up"; done; printf '%s' "$up"; }
-install_skill() {                                  # $1 = agent skills dir (rel to root)
+install_skill() {           # $1 = agent skills dir (rel to root), $2 = agent key, $3 = skill (default ship-tasks; TASK-IMP-094)
   want_agent "$2" || return 0
-  [ -d "$SKILL_SRC" ] || return 0
-  local dir="$root/$1" dest="$root/$1/ship-tasks"
+  local skill="${3:-ship-tasks}" src="$CY/plugin/skills/${3:-ship-tasks}"
+  [ -d "$src" ] || return 0
+  local dir="$root/$1" dest="$root/$1/$skill"
   if [ -e "$dest" ] || [ -L "$dest" ]; then         # already there: only refresh OUR own link/copy
-    case "$(readlink "$dest" 2>/dev/null)" in *".cyberos/plugin/skills/ship-tasks") : ;; *) return 0;; esac
+    case "$(readlink "$dest" 2>/dev/null)" in *".cyberos/plugin/skills/$skill") : ;; *) return 0;; esac
     rm -rf "$dest" 2>/dev/null || return 0
   fi
   mkdir -p "$dir"
   if [ "${CYBEROS_COPY_SKILLS:-0}" = "1" ]; then
-    cp -R "$SKILL_SRC" "$dest"
+    cp -R "$src" "$dest"
   else
-    ln -s "$(relup "$1").cyberos/plugin/skills/ship-tasks" "$dest" 2>/dev/null || cp -R "$SKILL_SRC" "$dest"
+    ln -s "$(relup "$1").cyberos/plugin/skills/$skill" "$dest" 2>/dev/null || cp -R "$src" "$dest"
   fi
-  SKILL_DIRS="$SKILL_DIRS $1"
+  # One shape for every entry: the FULL skill path. TASK-IMP-094 made install_skill
+  # multi-skill, and the ship-tasks arm kept appending its containing dir (.claude/skills)
+  # while the new arms appended full paths - so the summary's "native skills:" line mixed
+  # two shapes (PR-review, Devin 2026-07-17: cosmetic, no functional consequence, but the
+  # line is read by operators). Full paths for all: it is the more informative shape, and
+  # it is what the shared .agents/skills entries already report.
+  SKILL_DIRS="$SKILL_DIRS $1/$skill"
 }
 install_skill .claude/skills      claude-code    # Claude Code
 install_skill .grok/skills        grok           # Grok CLI
 install_skill .commandcode/skills command-code   # Command Code
 install_skill .codex/skills       codex          # Codex CLI (skills)
 install_skill .opencode/skill     opencode       # OpenCode (singular 'skill')
+# /create-tasks runs the task-author + task-audit pair; they land beside ship-tasks for the
+# claude-code family so the shared .agents/skills entries below have in-repo counterparts
+# to point at (TASK-IMP-094).
+install_skill .claude/skills      claude-code task-author
+install_skill .claude/skills      claude-code task-audit
 # zcode + Hermes load skills from a global home ($HOME); opt in with CYBEROS_GLOBAL_SKILLS=1.
 if [ "${CYBEROS_GLOBAL_SKILLS:-0}" = "1" ]; then
   for gp in "$HOME/.claude/skills" "$HOME/.grok/skills" "$HOME/.hermes/skills" "$HOME/.commandcode/skills"; do
     [ -e "$gp/ship-tasks" ] || { mkdir -p "$gp" && cp -R "$SKILL_SRC" "$gp/ship-tasks" 2>/dev/null && SKILL_DIRS="$SKILL_DIRS ~${gp#"$HOME"}"; }
+  done
+fi
+
+# --- shared project skills dir: .agents/skills/ (Agent Skills open standard) ---
+# ONE dir read natively by Codex, Copilot, Cursor, Gemini CLI and OpenCode (2026-07-16
+# channel research; RELEASE-CHECKLIST.md matrix + line E3). Entries are the three workflow
+# commands' skills - ship-tasks (/ship-tasks) plus task-author + task-audit (the pair
+# behind /create-tasks) - each a RELATIVE symlink to its .claude/skills/<cmd> copy so the
+# skill stays single-sourced; where a resolving symlink cannot exist (no symlink support,
+# CYBEROS_COPY_SKILLS=1, or the claude-code family filtered off so the counterpart is
+# absent) a plain copy of the payload skill lands instead. Create-if-absent: an entry an
+# operator put there is never touched. (TASK-IMP-094)
+SHARED_CMDS="ship-tasks task-author task-audit"
+if want_agent agents; then
+  for _sc in $SHARED_CMDS; do
+    [ -d "$CY/plugin/skills/$_sc" ] || continue
+    _sdest="$root/.agents/skills/$_sc"
+    # Create-if-absent is deliberate idempotence: an entry that landed as a COPY (its
+    # .claude/skills counterpart was filtered off at first install) stays a copy on later
+    # installs even after the counterpart appears - no churn of existing trees. Re-vendor
+    # from scratch (uninstall + install) if the symlink form is wanted. (PR-review note,
+    # Devin 2026-07-17: behavioral nuance, not a defect.)
+    { [ -e "$_sdest" ] || [ -L "$_sdest" ]; } && continue
+    mkdir -p "$root/.agents/skills"
+    if [ "${CYBEROS_COPY_SKILLS:-0}" != "1" ] && [ -e "$root/.claude/skills/$_sc" ] \
+       && ln -s "$(relup ".agents/skills").claude/skills/$_sc" "$_sdest" 2>/dev/null && [ -e "$_sdest" ]; then
+      :                                              # relative link resolves via .claude/skills
+    else
+      rm -f "$_sdest" 2>/dev/null || true            # never leave a dangling link behind
+      cp -R "$CY/plugin/skills/$_sc" "$_sdest"
+      # PR-review fix (Devin, 2026-07-17): mark the copy as OURS. The symlink arm proves
+      # ownership by readlink target; a copy had no such proof, so uninstall's "dir with a
+      # SKILL.md" heuristic would rm -rf an operator's own .agents/skills/<cmd>/ that happens
+      # to carry one - exactly what spec §1.3 promises never to touch. A marker file is the
+      # copy's readlink: uninstall removes only what carries it.
+      printf '%s\n' "cyberos install marker (TASK-IMP-094) - this directory is an installer" \
+        "copy-fallback of .cyberos/plugin/skills/$_sc. uninstall.sh removes ONLY directories" \
+        "carrying this file. Delete it to adopt the directory as your own; uninstall will" \
+        "then leave it alone." > "$_sdest/.cyberos-owned"
+    fi
+    SKILL_DIRS="$SKILL_DIRS .agents/skills/$_sc"
   done
 fi
 
@@ -500,6 +566,7 @@ fi
 # Policy (what install writes, tracked vs ignored):
 #   TRACKED  - the agent surface (AGENTS.md, CLAUDE.md, GEMINI.md, .cursorrules, .cursor/rules/,
 #              .grok/GROK.md, .github/copilot-instructions.md, .agents/rules/, .windsurfrules,
+#              .devin/rules/cyberos.md, .windsurf/rules/cyberos.md (TASK-IMP-094 pointers),
 #              .mcp.json, .cursor/mcp.json), docs/tasks/** (BACKLOG + specs/audits),
 #              CHANGELOG.md, docs/status.html (the generated status page - the repo's published
 #              Roadmap/Backlog/Changelog view), and skill COPIES (CYBEROS_COPY_SKILLS=1).
@@ -518,7 +585,11 @@ gi_block() {
   printf '%s\n' ".cyberos/"
   if [ "${CYBEROS_COPY_SKILLS:-0}" != "1" ]; then
     printf '%s\n' "# skill symlinks -> .cyberos/plugin/skills (regenerable via install)"
-    for sp in .claude/skills/ship-tasks .grok/skills/ship-tasks .commandcode/skills/ship-tasks .codex/skills/ship-tasks .opencode/skill/ship-tasks; do
+    for sp in .claude/skills/ship-tasks .claude/skills/task-author .claude/skills/task-audit .grok/skills/ship-tasks .commandcode/skills/ship-tasks .codex/skills/ship-tasks .opencode/skill/ship-tasks; do
+      printf '%s\n' "$sp"
+    done
+    printf '%s\n' "# shared .agents/skills entries (Agent Skills open standard) chain via .claude/skills (TASK-IMP-094)"
+    for sp in .agents/skills/ship-tasks .agents/skills/task-author .agents/skills/task-audit; do
       printf '%s\n' "$sp"
     done
   fi
@@ -768,7 +839,7 @@ Next:
        bash .cyberos/cuo/gates/run-gates.sh
 
 Every popular agent is wired: AGENTS.md is the cross-agent spine, and Claude Code, Codex,
-Cursor, Gemini, Antigravity, Grok CLI, zcode, Command Code, Copilot & Windsurf each get the
+Cursor, Gemini, Antigravity, Grok CLI, zcode, Command Code, Copilot, Windsurf & Devin each get the
 right pointer file / native skill / MCP registration (all create-if-absent; your files are
 never clobbered). Restrict with CYBEROS_AGENTS=..., copy skills with CYBEROS_COPY_SKILLS=1,
 skip MCP with CYBEROS_NO_MCP=1. MCP server + per-agent registration snippets: .cyberos/mcp/README.md.
@@ -778,6 +849,14 @@ data). The rules are in .cyberos/memory/AGENTS.md (root AGENTS.md is a thin poin
 .cyberos/AGENT-ENTRY.md, like CLAUDE.md). An agent working here records decisions, audits,
 and plans into the BRAIN per that protocol. Skip with CYBEROS_NO_MEMORY=1 on install.
 EOF
+
+# Say the quiet part where it is cheap to learn (TASK-IMP-096): ship-tasks needs commits,
+# diff-scoped coverage, and route-back restores - none exist without git. Same truth the
+# root resolution at the top of this file uses (git rev-parse), NOT a -d .git probe: a
+# worktree or submodule checkout where .git is a FILE counts as a checkout and stays silent.
+if ! git -C "$root" rev-parse --show-toplevel >/dev/null 2>&1; then
+  echo "cyberos install: this repo is not a git checkout - ship-tasks needs one; run: git init -b main && git add -A && git commit -m init"
+fi
 
 # 8. payload self-cleanup ------------------------------------------------------
 # A payload COPIED INSIDE the target repo at the canonical channel-1 location

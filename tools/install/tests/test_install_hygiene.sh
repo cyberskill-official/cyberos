@@ -18,6 +18,15 @@
 #   t07_workflow_gitignore_patterns (TASK-IMP-090) .workflow/.gitignore seed covers
 #        *.ship.json AND *.manifest.json; a pre-existing seed (operator lines, even without
 #        a trailing newline) gains the manifest pattern exactly once across two installs.
+#   t01 extension (TASK-IMP-094): the managed block also covers the shared .agents/skills
+#        entries + the /create-tasks pair's .claude/skills counterparts (once each across a
+#        double install), and uninstall strips those artifacts (no orphans; rules pointers stay).
+#   t08_gates_env_regen_notice (TASK-IMP-095) step 3 prints ONE line naming the .bak and
+#        .cyberos/config.yaml when regeneration changed gates.env; identical re-install and
+#        fresh install stay silent.
+#   t09_nongit_summary_line (TASK-IMP-096) non-git installs get the one-line ship-tasks git
+#        requirement + verbatim remedy in the summary (git rev-parse semantics, so a stale
+#        .git FILE remnant is still non-git); git installs print nothing new.
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../../.." && pwd)"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
@@ -54,13 +63,31 @@ node_modules/
 GI
   bash "$TMP/payload/install.sh" "$d" >/dev/null 2>&1
   bash "$TMP/payload/install.sh" "$d" >/dev/null 2>&1     # second run must not duplicate anything
-  local blocks legacy cyb ops
+  local blocks legacy cyb ops np un sp
   blocks="$(grep -c '>>> cyberos' "$d/.gitignore")"
   legacy="$(grep -c 'regenerable via init' "$d/.gitignore" || true)"
   cyb="$(grep -cx '\.cyberos/' "$d/.gitignore")"
   ops=1; { grep -qx 'node_modules/' "$d/.gitignore" && grep -qx '\*.log' "$d/.gitignore"; } || ops=0
-  [ "$blocks" = 1 ] && [ "$legacy" = 0 ] && [ "$cyb" = 1 ] && [ "$ops" = 1 ] \
-    && ok t01 || fail t01 "blocks=$blocks legacy=$legacy .cyberos-lines=$cyb operator-lines=$ops"
+  # TASK-IMP-094 round-trip: the regenerated block covers the shared .agents/skills entries
+  # and the /create-tasks pair's .claude/skills counterparts - exactly once each even after
+  # the double install above (the strip half of the round-trip is what keeps it at one).
+  np=1
+  for sp in .claude/skills/task-author .claude/skills/task-audit \
+            .agents/skills/ship-tasks .agents/skills/task-author .agents/skills/task-audit; do
+    [ "$(grep -cxF "$sp" "$d/.gitignore")" = 1 ] || np=0
+  done
+  # ... and uninstall strips the new-path artifacts (no orphans, dirs pruned when emptied)
+  # while the tracked rules pointers stay operator surface.
+  un=1
+  bash "$d/.cyberos/uninstall.sh" "$d" >/dev/null 2>&1 || un=0
+  [ "$(grep -c '>>> cyberos' "$d/.gitignore" || true)" = 0 ] || un=0
+  for sp in ship-tasks task-author task-audit; do
+    { [ ! -e "$d/.agents/skills/$sp" ] && [ ! -L "$d/.agents/skills/$sp" ]; } || un=0
+  done
+  { [ ! -L "$d/.claude/skills/task-author" ] && [ ! -L "$d/.claude/skills/task-audit" ]; } || un=0
+  [ -f "$d/.devin/rules/cyberos.md" ] || un=0
+  [ "$blocks" = 1 ] && [ "$legacy" = 0 ] && [ "$cyb" = 1 ] && [ "$ops" = 1 ] && [ "$np" = 1 ] && [ "$un" = 1 ] \
+    && ok t01 || fail t01 "blocks=$blocks legacy=$legacy .cyberos-lines=$cyb operator-lines=$ops new-paths=$np uninstall-strip=$un"
 }
 
 t02_changelog_once() {
@@ -355,6 +382,63 @@ t07_workflow_gitignore_patterns() {
   [ "$all" -eq 1 ] && ok t07_workflow_gitignore_patterns
 }
 
+# t08 (TASK-IMP-095) - gates.env regeneration notice. A prior file that DIFFERS from the
+# regenerated one earns exactly one line naming the .bak path and the durable override home;
+# an identical re-install and a fresh install stay silent (nothing was lost). Speed flags ok:
+# step 3 runs before migrate/memory/MCP.
+t08_gates_env_regen_notice() {
+  local all=1 d="$TMP/genv"; mkrepo "$d"
+  local out line bak
+  out="$(_t06_install "$d")"
+  grep -q 'gates.env regenerated' <<<"$out" \
+    && { fail t08_gates_env_regen_notice "fresh install printed the notice"; all=0; }
+  out="$(_t06_install "$d")"
+  grep -q 'gates.env regenerated' <<<"$out" \
+    && { fail t08_gates_env_regen_notice "unedited re-install printed the notice"; all=0; }
+  printf 'OPERATOR_EDIT="kept-out-of-regen"\n' >> "$d/.cyberos/gates.env"
+  out="$(_t06_install "$d")"
+  line="$(grep 'gates.env regenerated' <<<"$out" || true)"
+  if [ -z "$line" ]; then
+    fail t08_gates_env_regen_notice "edited re-install printed no notice"; all=0
+  else
+    [ "$(grep -c 'gates.env regenerated' <<<"$out")" = 1 ] \
+      || { fail t08_gates_env_regen_notice "notice printed more than once"; all=0; }
+    grep -qF 'durable overrides belong in .cyberos/config.yaml' <<<"$line" \
+      || { fail t08_gates_env_regen_notice "notice does not name the durable override home"; all=0; }
+    bak="$(sed -n 's/.*previous kept at \(.*\)); durable overrides.*/\1/p' <<<"$line")"
+    if [ -n "$bak" ] && [ -f "$bak" ]; then
+      grep -qF 'OPERATOR_EDIT="kept-out-of-regen"' "$bak" \
+        || { fail t08_gates_env_regen_notice ".bak named by the notice does not carry the operator edit"; all=0; }
+    else
+      fail t08_gates_env_regen_notice "notice names no existing .bak (got: '$bak')"; all=0
+    fi
+  fi
+  [ "$all" -eq 1 ] && ok t08_gates_env_regen_notice
+}
+
+# t09 (TASK-IMP-096) - the summary states the ship-tasks git requirement on non-git targets
+# and stays silent on git ones. Non-git detection is git-rev-parse-based (matching install.sh's
+# own root resolution), NOT a -d .git probe - a stale .git FILE remnant is still non-git.
+# CYBEROS_NO_MIGRATE path per spec 1.3.
+t09_nongit_summary_line() {
+  local all=1 d="$TMP/nogit-sum"; mkdir -p "$d"      # deliberately NO git init
+  local out
+  out="$(_t06_install "$d")"
+  [ "$(grep -cF 'this repo is not a git checkout - ship-tasks needs one' <<<"$out")" = 1 ] \
+    || { fail t09_nongit_summary_line "non-git install did not print the line exactly once"; all=0; }
+  grep -qF 'run: git init -b main && git add -A && git commit -m init' <<<"$out" \
+    || { fail t09_nongit_summary_line "remedy command not verbatim"; all=0; }
+  local st="$TMP/nogit-stale"; mkdir -p "$st"; printf 'gitdir: /nonexistent\n' > "$st/.git"
+  out="$(_t06_install "$st")"
+  grep -qF 'this repo is not a git checkout' <<<"$out" \
+    || { fail t09_nongit_summary_line "stale .git remnant not treated as non-git (rev-parse semantics)"; all=0; }
+  local g="$TMP/git-sum"; mkrepo "$g"
+  out="$(_t06_install "$g")"
+  grep -qF 'this repo is not a git checkout' <<<"$out" \
+    && { fail t09_nongit_summary_line "git install printed the non-git line"; all=0; }
+  [ "$all" -eq 1 ] && ok t09_nongit_summary_line
+}
+
 t01_gitignore_managed_block
 t02_changelog_once
 t03_root_task_migration
@@ -372,6 +456,8 @@ t06_consumer_template_default
 t06_platform_keeps_comment
 t06_existing_config_untouched
 t07_workflow_gitignore_patterns
+t08_gates_env_regen_notice
+t09_nongit_summary_line
 
 echo "install-hygiene: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

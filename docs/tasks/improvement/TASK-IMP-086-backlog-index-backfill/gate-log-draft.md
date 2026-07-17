@@ -277,3 +277,14 @@ rows present, working tree clean against HEAD.
 Rule adopted from this incident (filed as IMP-18 in IMPROVEMENT_HANDOFF.md): shared files
 get ONE writer through ONE view, and acceptance evidence for content deliverables MUST be
 measured on the committed object, never on a working view.
+
+## PR-review affirmation (2026-07-17, Devin Review, batch-5 PR)
+
+The bot independently recomputed the BACKLOG status counts from the file and confirmed the
+regenerated `Totals:` line matches exactly (draft 336, ready_to_implement 4, implementing 12,
+done 176, on_hold 1, closed 1), that the `## improvement (67 draft, 35 done)` header matches its
+section, and that the global done delta (+15 vs +10 new improvement tasks) is explained by
+pre-existing tasks flipping implementing -> done (implementing 17 -> 12). No staleness bug.
+
+Recording it here because this is the file the 2026-07-16 incident corrupted: an outside
+recomputation agreeing with the retally is exactly the evidence the incident lacked.
