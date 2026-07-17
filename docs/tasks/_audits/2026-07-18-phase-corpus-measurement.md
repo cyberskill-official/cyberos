@@ -102,3 +102,65 @@ The failure this file exists to prevent: a grep scoped to one module, reported a
 with no denominator stated. Four counts were wrong in one spec (2 vs 5 vocabularies, 4 vs 20
 missing, 183 vs 176 done-with-phase, 2 vs 6 readers). Every one would have passed task-lint, and
 did. The floor cannot see a false measurement; only re-measurement can.
+
+---
+
+# ADDENDUM: the comparable-set decision (TASK-IMP-122 NEW-001)
+
+The rewrite of TASK-IMP-122 failed at 6/10 on a design defect: it conflated the PAYLOAD cone with
+the INSTALLED cone. Measured here so the next rewrite has the answer rather than an assumption.
+
+## Measured: depth-1 dirs, payload vs installed
+
+| dir | in payload | installed | verdict |
+|---|---|---|---|
+| `cuo` | yes | yes | COMPARABLE |
+| `plugin` | yes | yes | COMPARABLE |
+| `mcp` | yes | yes | COMPARABLE |
+| `memory` | yes | yes | COMPARABLE (minus `memory/store/`, install-generated) |
+| `docs-tools` | yes | yes | **COMPARABLE - and NOT in today's cone** |
+| `lib` | yes | yes | **COMPARABLE - and NOT in today's cone** |
+| `ci` | yes | **no** | distribution-only |
+| `cli` | yes | **no** | distribution-only - **and IS in today's cone** |
+| `template` | yes | **no** | distribution-only |
+
+```
+cone today (build.sh:354)  : find cuo plugin mcp cli memory
+comparable (vendored set)  : cuo docs-tools lib mcp memory plugin
+  in cone, never installed : cli          -> the cause of the false drift
+  installed, not in cone   : docs-tools lib -> the blind spot (4 of the 6 measured drifts)
+```
+
+## The decision
+
+**The cone is the VENDORED set, not the SHIPPED set.** The question the check answers is "is this
+installed machine the machine this payload would install?" - so the cone is what install installs.
+Derived from `install.sh:184-195`, not from `ls dist/cyberos/*/`.
+
+    cone := cuo plugin mcp memory docs-tools lib
+          + the vendored root scripts (install.sh uninstall.sh version.sh status.sh help.sh
+            check-latest.sh - all `cp`'d at :190-195 and covered by NO cone today)
+          - memory/store/          (install-generated; payload has 3 files, install has 8)
+          - gates.env, config.yaml, .update-check-cache   (install-generated / operator-owned)
+          - manifest.yaml          (MUST be excluded: it CONTAINS rules_sha, so hashing it is
+                                    circular - the value would depend on itself)
+          - VERSION                (TASK-IMP-104's axis, not this one)
+
+So TASK-IMP-122's §1.3 ("the cone MUST cover every directory the payload SHIPS") is wrong and is
+what forced `ci/`, `cli/`, `template/` in and guaranteed self-drift. The correct clause is "every
+path install VENDORS". The build-time check derives its expected set from install.sh's copy steps,
+not from a directory listing of the payload.
+
+## Consequences for the next rewrite
+
+- §1.2 "same cone as build.sh" survives only if build.sh's cone is FIXED first (drop `cli`, add
+  `docs-tools`, `lib`, the root scripts). The build cone and the compare cone must be one list,
+  defined once.
+- §1.6 "byte-identical" and AC 7 "freshly installed" become the same proposition once the cone is
+  the vendored set - which is what makes that prior finding closable rather than a wording fix.
+- §1.5 "name every differing path" is still unsatisfiable against a tree hash (build.sh:355 does
+  `| _rsha | cut`, discarding per-file digests) and audit-fleet.sh has only a bare token, no tree.
+  Unresolved: either §1.5 drops to "report drift, and name paths WHERE A PAYLOAD TREE IS
+  REACHABLE", or the design changes. Still an open operator decision.
+- §1.1 must drop `check-version-sync.sh`: `grep -c '\.cyberos'` = 0; it compares payload stamps to
+  the root VERSION and has no installed side at all.
