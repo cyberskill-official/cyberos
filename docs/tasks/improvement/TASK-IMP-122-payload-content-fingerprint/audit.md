@@ -1,111 +1,137 @@
 ---
 task_id: TASK-IMP-122
-audited: 2026-07-18 (rewrite 2; supersedes the rewrite-1 audit)
+audited: 2026-07-18 (rewrite 3; supersedes the rewrite-2 audit)
 verdict: FAIL
 score: 6/10
-score_history: "4/10 -> 6/10 -> 6/10 (flat, but the defects are different and narrower)"
+score_history: "4/10 -> 6/10 -> 6/10 -> 6/10 (FLAT for four rounds)"
 issues_closed: 4
 issues_partially_closed: 3
-issues_open: 11
+issues_open: 4 (survived VERBATIM) + 8 new
 template: task@1
 audit_rubric_version: audit_rubric@2.0
-machine_floor: task-lint clean. TRACE-001/002/003 pass. Fails on judgment, three rounds running.
-auditor: independent subagent; MEASURED all three candidate cones over both trees
+machine_floor: task-lint clean, four rounds running. TRACE-001/002/003 pass every time.
+auditor: independent subagent; diffed 2d478393..f8899d64 and measured all four cone combinations
+STOP_SIGNAL: >
+  The author has failed to raise this score across three rewrites. The failure mode is now
+  legible and is recorded in §2. A fourth rewrite by the same author, patching the findings
+  below, will likely reproduce it. Read §2 before attempting one.
 ---
 
 ## §1 - Verdict summary
 
-FAIL at 6/10. The vendored-set DECISION is right and the auditor measured it working. The spec
-cites the wrong eleven lines for it, and that single citation takes docs-tools/, lib/, memory/,
-AC 2, §1.3 and §1.4 down with it.
+FAIL at 6/10, flat for a fourth round. The operator's maintained-list decision IS honoured and
+rewrite 2's two CRITICALs ARE genuinely closed. It fails because the diff proves the hypothesis
+it was given: rewrite 3 edited ONLY §1.2, §1.3, §1.4, §1.6 and AC 2/3/4/6/7/10 - the exact block
+the prior audit named. Everything outside that block survived VERBATIM, and two of the edits are
+REGRESSIONS that deleted working normative text.
 
-## §2 - Prior findings
-NEW-001 PARTIAL (symptom fixed, cone definition newly wrong) | NEW-002 PARTIAL (arms mis-assigned)
-NEW-003 CLOSED | NEW-004 CLOSED (the model repair - the gap is now admitted, not reassigned)
-NEW-005 CLOSED | NEW-006 CLOSED | NEW-007 PARTIAL ("every run" survives verbatim)
+## §2 - THE FAILURE MODE (read this before rewriting)
 
-## §3 - The measurement that settles it
-Auditor ran all three candidate cones over both trees:
-```
-A. today's cone (find cuo plugin mcp cli memory)
-   payload 66bb0459  install ae756045   MISMATCH
-B. §1.2's cone AS WRITTEN (:184-195 minus manifest.yaml + VERSION)
-   payload ff7de70e  install ff7de70e   MATCH  <- but only by EXCLUDING docs-tools/ + lib/
-C. the ADDENDUM's INTENDED cone (+ docs-tools lib memory, - memory/store)
-   payload 102dc507  install 102dc507   MATCH  <- the correct answer
-```
-So the false-drift half IS closed and the decision IS right. B "passes" by dropping Defect 2.
+The author patches what the audit NAMES and does not re-read the document. Consequences, all
+measured this round:
 
-## §4 - Open findings
+1. **Four findings survived verbatim** because they sat outside the named block: NEW2-005 (the
+   Proposed Solution still says "token"), NEW2-009 (Summary duplicates a proposition), NEW2-010
+   (":99 on every run" - THIRD round unedited), NEW2-011 (AC 1's "BOTH stored manifest tokens").
+2. **A fix DELETED the clause that catches the live bug** (NEW3-001, below).
+3. **A repaired clause now contradicts two unrepaired sections** (NEW3-002, below).
+4. **A false number was copied from the evidence file's parenthetical without re-measuring**
+   (AC 7's memory counts), while the AI-authorship disclosure claims "every claim here was
+   re-measured against source that day". It was not.
 
-### NEW2-001 (CRITICAL) - the cone citation excludes the blind spot; §1.2 and AC 2 contradict.
-Author verified: `lib` vendors at :197, `docs-tools` at :198, `memory` at :432 - ALL OUTSIDE the
-":184-195" §1.2 makes normative and exclusive ("and nothing else"). So the four artefacts in
-docs-tools/ that motivated the task stay uncovered. AC 2 demands the cone include docs-tools+lib
-while deriving from a range that omits them: self-defeating in one document. Correct range is
-:184-198 PLUS :432.
+The pattern across four rounds: close the named finding, introduce the same defect class one
+layer deeper. Rewrite 1 conflated payload/installed cones. Rewrite 2 cited a line range that
+excluded the blind spot. Rewrite 3 deleted the direction that catches `cli`. Each is "the check
+does not cover the thing it exists to check", relocated.
 
-### NEW2-002 (CRITICAL) - §1.3 and §1.4 are mutually unsatisfiable; the build fails always.
-install.sh:188-189 VENDOR manifest.yaml and VERSION (author verified). §1.3 mandates both OUT of
-the cone. §1.4: "a path install.sh vendors and the cone does not cover MUST fail the build."
-=> the build MUST fail, unconditionally. AC 3 (manifest out of cone, build passes) and AC 4
-(vendored-but-uncovered fails the build) assert contradictory outcomes. Same defect CLASS as
-rewrite-1's NEW-001, at a new pair of clauses.
+## §3 - Prior findings
+CLOSED: NEW2-001 (cone now covers lib/docs-tools/memory; `:185-198` is BETTER than the audit's
+`:184-198` - `:184` is `rm -rf`, not a vendor), NEW2-002 (all 18 vendored paths land in cone ∪
+exclusions - the build no longer always-fails), NEW2-007, NEW2-008 (auditor measured all four
+combinations: prune cli only -> 1f05a84f/ae756045 MISMATCH; prune store only -> 66bb0459/1f05a84f
+MISMATCH; prune both -> MATCH. The independence claim is EXACTLY right).
+PARTIALLY: NEW2-003, NEW2-004, NEW2-006.
+NOT CLOSED (verbatim survivors): NEW2-005, NEW2-009, NEW2-010, NEW2-011.
 
-### NEW2-003 (MAJOR) - the cone is not mechanically derivable, and §1.4 is circular.
-install's copies are conditional (:187, :197-198 `[ -d ] &&`), loop-bound (:432 inside
-`for f in AGENTS.md memory.schema.json memory.invariants.yaml`), env-conditional
-(memory only when CYBEROS_NO_MEMORY != 1), and :666 copies OUT of $CY (false-positives a naive
-grep). Deriving the set is bash static analysis; effort_hours: 6 is not sized for an analyzer and
-the spec names no mechanism. And §1.4 is circular: if install's copies come FROM the shared
-definition, the check compares the list to itself - unfalsifiable. The second direction is a
-tautology once §1.2 defines cone == vendored set.
+## §4 - New findings
 
-### NEW2-004 (MAJOR) - §1.6's arms are per-COMPONENT; reachability is per-INVOCATION, and backwards for 2 of 3.
-version.sh run as `.cyberos/version.sh` -> $here == $CY -> NO payload tree, cannot name paths.
-update-check.sh sourced from .cyberos/lib/ (its PRIMARY mode, header :2) -> self_root == $CY ->
-NO payload tree; the source comment even says "when it IS the install, it self-compares equal".
-audit-fleet.sh's DEFAULT (:16-18) resolves a REAL tree at dist/cyberos/ - yet §1.6 puts it in the
-token-only arm. AC 6 requires the first two to name three paths in invocations where they cannot.
+### NEW3-001 (CRITICAL, REGRESSION) - §1.4's second direction was DELETED; the check can no longer catch the live defect.
+Author verified by diff:
+  rewrite 2: "A path the cone covers that `install.sh` does not vendor MUST fail the build."
+  rewrite 3: [deleted]
+The prior audit called that direction a tautology - true ONLY while §1.2 defined cone == vendored
+set. §1.2 no longer says that (it now says "a single explicit list"), so the tautology is gone and
+the direction is LOAD-BEARING again. And today's live defect IS exactly that direction: `cli` is
+IN the cone and NEVER vendored - the measured cause of 66bb0459 vs ae756045, named by §1.7, and
+half of AC 7's own reasoning. Nothing in §1.3 forbids `cli` in the cone; §1.4 now fires only on
+vendored-but-unclassified. The build check the rewrite was built around CANNOT FAIL on the defect
+that motivated it.
 
-### NEW2-005 (MODERATE) - Proposed Solution and §1.6 describe two different comparisons.
-Proposed Solution says compare against "the payload's manifest TOKEN". A digest-vs-token
-comparison can NEVER name paths. §1.6's first arm needs a per-file walk of TWO TREES - a
-mechanism the Solution never introduces, and one that makes rules_sha redundant to `diff -rq`.
-Alternatives forbids "a per-file manifest ... a second comparator" without saying whether a live
-two-tree walk IS that second comparator.
+### NEW3-002 (CRITICAL) - the Proposed Solution and Success Metrics still mandate the RETRACTED cone.
+Author verified, unedited at :102-103 and :128:
+  ":102 ... compare that against the payload's manifest token. Widen the cone"
+  ":103 to every directory the payload ships."
+  ":128 - Guardrail: every directory present in the payload is inside the cone, enforced at build."
+The evidence file RETRACTS that formulation by name: "'the cone MUST cover every directory the
+payload SHIPS' is wrong and is what forced ci/, cli/, template/ in and guaranteed self-drift".
+§1.3 was repaired; the identical retracted wording survives in two other sections, where it now
+contradicts §1.3, §1.7, AC 7 and the operator decision - and mandates precisely the cone AC 7
+exists to fail on.
 
-### Also open
-NEW2-006 AC 3 never tests §1.3's VERSION exclusion (1 of 6 exclusions untested).
-NEW2-007 AC 10 tests only soft mode; §1.10 binds strict/always/off too.
-NEW2-008 AC 7's cause is incomplete: pruning `cli` alone still leaves ae756045 vs 1f05a84f;
-  `memory/store/` is a CO-EQUAL independent cause (payload 3 files, install 8).
-NEW2-009 the Summary duplicates a proposition in two consecutive sentences - the tell of a patch
-  applied over the prior finding rather than a re-read.
-NEW2-010 source_pages' ":99 writes the cache on every run" survives VERBATIM from the prior audit
-  (three early returns precede :99).
-NEW2-011 AC 1's "BOTH stored manifest tokens" does not apply to audit-fleet.sh (one manifest, one
-  env token).
+### NEW3-003 (MAJOR) - AC 3 tests class (a) by its trivial member.
+`gates.env` sits OUTSIDE every coned dir - excluding it requires nothing. `memory/store/` sits
+INSIDE a coned dir - excluding it requires an ACTIVE PRUNE, and is a measured co-equal cause of
+the false drift. AC 3 tests the exclusion that cannot break and skips the only one that can.
+6 of the 7 paths in class (a) untested.
 
-## §5 - Clause-verb table: 4 of 12 weaker (was 3 of 10)
-WEAKER: AC 2 (§1.2's "ONE shared definition" half untested), AC 3 (VERSION untested), AC 7
-(§1.7's "out-of-cone paths MUST NOT affect the verdict" untested - ci/cli/template never
-exercised), AC 10 (one mode of "MUST NOT change its exit semantics").
-The rewrite's claim that each AC "states the failure it must produce against TODAY's code" holds
-for AC 2 (in letter - but its own derivation cannot detect what it asserts) and AC 7 (digits
-reproduced exactly), and is FALSE for AC 10's first half: today's update-check ALREADY exits 0
-under soft default, so that half states no failure at all.
-AC 3 does NOT test the circularity claim: circularity is a BUILD-TIME ORDERING property
-(build.sh:354 computes rules_sha, :357 writes the manifest containing it). Mutating an installed
-manifest tests EXCLUSION, not ordering. And the AC never says WHAT to mutate.
+### NEW3-004 (MAJOR) - the cone's element grammar is undefined; `memory` is the proof.
+§1.2 mandates "a single explicit list" and never says what an entry IS. build.sh:354 is
+dir-granular. §1.3 needs three kinds: dirs (`cuo`), files (the three under `memory/`), prunes
+(`memory/store/`). "cover the vendored FILES under memory/" is file-granular - under which class
+(a)'s `memory/store/` entry is DEAD TEXT. Listing `memory/store/` as an exclusion implies
+dir-minus-prune - under which AC 3 never tests it. Either reading carries a defect.
+
+### NEW3-005 (MODERATE) - §1.8 has §1.2's disease and did not get §1.2's cure.
+§1.8 requires "build.sh's OWN `_rsha()`". `_rsha()` is defined INLINE at build.sh:353, and
+**build.sh is NEVER VENDORED** (absent from dist/cyberos/). So `.cyberos/version.sh` and
+`.cyberos/lib/update-check.sh` cannot reach it - §1.8 is unsatisfiable for two of three
+comparators. It needs exactly what §1.2 gave the cone (one shared, vendored definition). AC 8
+tests EQUALITY of digest, not IDENTITY of implementation - so AC 8 PERMITS the duplicated second
+implementation that AC 2 forbids for the cone.
+
+### NEW3-006 (MODERATE) - §1.6's invocation cut is incomplete; AC 6 dropped a capability.
+update-check.sh:84 gives CYBEROS_PAYLOAD PRECEDENCE over self_root - so reachability there is
+decided by the env var, not by where it was sourced. §1.6 hedges ("in its PRIMARY mode") and never
+says what the non-primary mode owes. And AC 6 DROPPED update-check.sh entirely - rewrite 2's AC 6
+tested it. Regression.
+
+### NEW3-007 (MINOR) - §1.2's deliverable is in neither new_files nor modified_files.
+The shared cone file appears nowhere; no such file exists in-tree; install.sh (which must vendor
+it for the two installed comparators to read it) is absent from modified_files. effort_hours: 6
+is UNCHANGED across all four revisions despite the prior audit's explicit "re-size effort_hours".
+
+### NEW3-008 (LOW) - three citation errors the author inherited and did not re-measure.
+- `build.sh:357` cited as the manifest write. Author verified: **:357 is a BLANK LINE**; the write
+  is `cat > "$out/manifest.yaml" <<EOF` at **:358**. This is the load-bearing rationale for
+  exclusion class (b).
+- AC 7: "`memory/store/` 3 payload files vs 8 installed" is **FALSE**. Author measured: **0 and 5**.
+  The 3-vs-8 is `memory/`'s tree total, misattributed. It also CONTRADICTS the spec's own §1.7
+  ("installs and never ships"). Two clauses, one document, opposite counts.
+- §1.2 says "three separate places" and cites TWO ranges (`:185-198` and `:432`).
+
+## §5 - Clause-verb table: 4 of 12 weaker (identical count to rewrite 2)
+The SET moved: AC 2/7/10 CLOSED; AC 4/6/8 NEWLY weaker; AC 3 weaker for a new reason. **Three of
+the four weak ACs are ones the author rewrote this round.** The rewrite relocated the weakness.
+AC 4 restates §1.4's prohibition with no fixture and no observable - the identical defect the
+prior audit already flagged once ("the AC never says WHAT to mutate"), recurring at a new AC.
 
 ## §6 - Required before re-audit
-1. Fix the cone citation: :184-198 PLUS :432, and it is env-conditional.
-2. Carve manifest.yaml + VERSION out of §1.4's first direction, or drop them from §1.3. AC 3 and
-   AC 4 must stop contradicting.
-3. State the derivation mechanism, or admit the cone is a MAINTAINED LIST that a build check
-   reconciles against install.sh - and re-size effort_hours. Say which direction of §1.4 can fail.
-4. Re-cut §1.6 by INVOCATION, not component.
-5. Reconcile the Solution's token comparison with §1.6's two-tree walk; say whether that walk is
-   the second comparator Alternatives forbids.
-6. AC 3 must test VERSION; AC 10 must test the modes §1.10 binds; AC 7 must name memory/store/.
+1. RESTORE §1.4's second direction and AC 4's matching half. Rewrite 2 had it right.
+2. Rewrite the Proposed Solution AND Success Metrics - never edited, still retracted wording.
+3. Name the mechanism by which §1.4 reads install.sh's vendored set, given §1.2 says no static
+   read yields it, and say how it resolves the `memory/$f` loop without hardcoding.
+4. Give §1.2's list an element grammar (dir / file / prune); settle `memory`.
+5. Give `_rsha()` §1.2's treatment; make AC 8 test identity, not equality.
+6. AC 3 must test memory/store/. AC 6 must test update-check.sh + CYBEROS_PAYLOAD. AC 4 needs a fixture.
+7. Fix the four verbatim survivors and the three citation errors.
+8. Add the shared cone file to new_files, install.sh to modified_files, re-size effort_hours.
