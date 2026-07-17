@@ -32,6 +32,14 @@ import { join, dirname, resolve } from "node:path";
 
 // ── rubric enums (RUBRIC.md §2; FM-104 per STATUS-REFERENCE.md §1) ───────────
 const DEPARTMENTS = ["engineering", "design", "product", "sales", "operations", "hr", "client_success"];
+// TASK-IMP-108: two words were doing two jobs each. `draft` meant four different things (336 rows)
+// and `ready_to_implement` meant both "audited, never built" and "built, failed, going round
+// again". The fix is to record the REASON, never to mint a status - the enum stays at 12 values
+// (operator decision 2026-07-17: `implement` keeps its name). Both fields are OPTIONAL: absent
+// means unknown, which is honest for the 336 drafts this run did not author. Inventing a reason
+// for them would be the `# UNREVIEWED` mistake with better manners.
+const DRAFT_REASONS = ["authoring", "migrated_stub", "needs_spec", "parked_idea"];
+const ENTERED_VIA   = ["audit", "rework", "spec_rejected"];
 const STATUSES = ["draft", "ready_to_implement", "implementing", "ready_to_review", "reviewing",
   "ready_to_test", "testing", "done", "on_hold", "closed", "cannot_reproduce", "duplicate"];
 const PRIORITIES = ["p0", "p1", "p2", "p3"];
@@ -223,6 +231,20 @@ function scalarOf(entries, key) {
   return { present: true, v: e.v, quoted: e.quoted, line: e.line };
 }
 
+// Absent is LEGAL here (unlike checkEnumField, where absence is an error). A field that means
+// "unknown" must be allowed to be unknown, or every existing task reds on a rule about tasks
+// nobody has triaged yet.
+function checkOptionalEnumField(findings, file, entries, key, rule, allowed) {
+  const f = scalarOf(entries, key);
+  if (!f.present || (!f.isList && (f.v === null || f.v === ""))) return undefined;   // unknown: fine
+  if (f.isList) { finding(findings, "error", rule, file, f.line, `${key} must be a string scalar`); return undefined; }
+  if (!allowed.includes(f.v)) {
+    finding(findings, "error", rule, file, f.line, `${key} must be one of ${allowed.join("|")} (got '${f.v}')`);
+    return undefined;
+  }
+  return f.v;
+}
+
 function checkEnumField(findings, file, entries, key, rule, allowed, label) {
   const f = scalarOf(entries, key);
   if (!f.present || (!f.isList && (f.v === null || f.v === ""))) {
@@ -261,6 +283,10 @@ function checkFrontmatterFields(findings, file, entries, root) {
   checkEnumField(findings, file, entries, "priority", "FM-105", PRIORITIES, PRIORITIES.join("|"));
   const aiAuth = checkEnumField(findings, file, entries, "ai_authorship", "FM-107", AI_AUTHORSHIP, AI_AUTHORSHIP.join("|"));
   const type = checkEnumField(findings, file, entries, "type", "FM-108", TYPES, TYPES.join("|"));
+  // FM-115 draft_reason - which KIND of draft this is (TASK-IMP-108 §1.1/§1.2)
+  checkOptionalEnumField(findings, file, entries, "draft_reason", "FM-115", DRAFT_REASONS);
+  // FM-116 entered_via - which KIND of ready_to_implement this is (TASK-IMP-108 §1.3)
+  checkOptionalEnumField(findings, file, entries, "entered_via", "FM-116", ENTERED_VIA);
   // FM-106 created_at: ISO 8601 with timezone (Z or +-HH:MM)
   const created = scalarOf(entries, "created_at");
   if (!created.present || (!created.isList && (created.v === null || created.v === ""))) {

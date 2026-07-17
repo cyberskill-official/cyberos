@@ -4,8 +4,8 @@
 // Executes the two sanctioned BACKLOG.md mutations from
 // modules/skill/backlog-state-update-author/SKILL.md §2-§3 — flip one status cell,
 // insert one row — and NOTHING else: this tool never moves, reorders, or deletes rows,
-// and never edits a line outside the declared mutation (whole-file discipline: one row
-// plus at most one section-header line per mutation). Grammar authority stays with
+// and never edits a line outside the declared mutation (whole-file discipline: one row,
+// at most one section header, at most one Totals line - TASK-IMP-116). Grammar authority stays with
 // regen_backlog() in scripts/migrate_task_layout.py / migrate_improvement_to_task.py;
 // this tool encodes it, never redefines it.
 //
@@ -149,6 +149,31 @@ function parseCountsHeader(raw) {
 // zero entry). Rendering keeps the file's own convention: two spaces before the paren,
 // zero-count statuses omitted, statuses in lifecycle (STATUS_ORDER) order; rows whose
 // status token is outside the enum are not counted, matching regen_backlog().
+// The file-top `Totals:` line, retallied from EVERY parseable row (TASK-IMP-116). TASK-IMP-092
+// replaced incremental header adjustment with a retally because "incremental adjustment faithfully
+// preserves an inherited lie forever (the 086 incident's 34 vs true 20)" - and stopped at section
+// headers, leaving the file's most-read number free to grow the same lie one line higher. It did:
+// a 2026-07-17 review found `Totals: 336 draft, 4 ready_to_implement, 176 done` over a file whose
+// improvement section alone read 67/9/39. The line had no maintainer - regen_backlog owns it and
+// cannot run (it reads docs/improvement/memory/backlog.yaml, retired 2026-07-08).
+//
+// The declared mutation is now THREE lines: the row, its section header, and this. Capped there
+// (§1.6): a footprint that grows on convenience is not a footprint. Returns { line, text } or
+// { line: -1 } when the file has no Totals line (legal - it is never given one) or no countable
+// rows. Counting rule is retallyHeader's, exactly: out-of-enum statuses do not count.
+function retallyTotals(lines) {
+  const t = lines.findIndex(l => /^Totals:\s/.test(stripCR(l)));
+  if (t < 0) return { line: -1, text: null };
+  const tally = new Map();
+  for (const l of lines) {
+    const row = parseRow(l);
+    if (row && STATUS_ORDER.includes(row.status)) tally.set(row.status, (tally.get(row.status) || 0) + 1);
+  }
+  if (tally.size === 0) return { line: -1, text: null };
+  const rendered = STATUS_ORDER.filter(st => tally.get(st)).map(st => `${tally.get(st)} ${st}`).join(", ");
+  return { line: t, text: `Totals: ${rendered}` + crOf(lines[t]) };
+}
+
 function retallyHeader(lines, h) {
   const parsed = parseCountsHeader(lines[h]);
   if (!parsed) return null;
@@ -207,10 +232,13 @@ function cmdFlip(root, positionals, opts) {
       lines[h] = rewritten;
     }
   }
+  const tot = retallyTotals(lines);            // §1.2
+  let totalsInfo = {};
+  if (tot.line >= 0 && tot.text !== lines[tot.line]) { totalsInfo = { totals_line: tot.line + 1 }; lines[tot.line] = tot.text; }
   atomicWrite(path, lines.join("\n"));
   return {
-    code: 0, backlog: given, line: i + 1, old_line: stripCR(oldLine), new_line: stripCR(newLine), ...headerInfo,
-    message: `flip ${id}: [${from}] -> [${to}] at line ${i + 1}${headerInfo.header_line ? `; header retallied at line ${headerInfo.header_line}` : ""}`,
+    code: 0, backlog: given, line: i + 1, old_line: stripCR(oldLine), new_line: stripCR(newLine), ...headerInfo, ...totalsInfo,
+    message: `flip ${id}: [${from}] -> [${to}] at line ${i + 1}${headerInfo.header_line ? `; header retallied at line ${headerInfo.header_line}` : ""}${totalsInfo.totals_line ? `; Totals retallied at line ${totalsInfo.totals_line}` : ""}`,
   };
 }
 
@@ -311,11 +339,14 @@ function cmdInsert(root, positionals, opts) {
     headerInfo = { header_line: target.header + 1, old_header: stripCR(lines[target.header]), new_header: stripCR(rewritten) };
     lines[target.header] = rewritten;
   }
+  const tot = retallyTotals(lines);            // §1.3 - a stale total is stale whichever mutation caused it
+  let totalsInfo = {};
+  if (tot.line >= 0 && tot.text !== lines[tot.line]) { totalsInfo = { totals_line: tot.line + 1 }; lines[tot.line] = tot.text; }
   atomicWrite(path, lines.join("\n"));
   return {
     code: 0, backlog: given, line: insertedAt + 1, row: stripCR(newRow), section: target.name,
-    replaced_placeholder: single, ...headerInfo,
-    message: `insert ${id}: row landed at line ${insertedAt + 1} in '## ${target.name}'${single ? " (placeholder replaced)" : ""}${headerInfo.header_line ? `; header retallied at line ${headerInfo.header_line}` : ""}`,
+    replaced_placeholder: single, ...headerInfo, ...totalsInfo,
+    message: `insert ${id}: row landed at line ${insertedAt + 1} in '## ${target.name}'${single ? " (placeholder replaced)" : ""}${headerInfo.header_line ? `; header retallied at line ${headerInfo.header_line}` : ""}${totalsInfo.totals_line ? `; Totals retallied at line ${totalsInfo.totals_line}` : ""}`,
   };
 }
 
@@ -346,13 +377,14 @@ exit codes
   7  insert refusal: a row for the id already exists (uniqueness pre-image violated)
 
 discipline
-  a mutation is exactly one row plus at most one header line; the header line, when
-  counted, is a FULL retally of the section's rows after the mutation — an inherited
-  wrong count is corrected, never propagated (TASK-IMP-092). this tool never moves,
-  reorders, or deletes rows, never normalizes line endings (CRLF round-trips), and never
-  touches the Totals line. deterministic: identical input + args = byte-identical result
-  file and stdout (no clock, no randomness in output). writes are two-phase atomic
-  (.tmp.<nonce> then rename). node stdlib only.
+    a mutation is exactly one row, at most one section header, and at most one Totals
+    line - a 3-line ceiling (TASK-IMP-116). the header and Totals, when present and
+    counted, are FULL retallies after the mutation: an inherited wrong count is corrected,
+    never propagated (TASK-IMP-092). a file with no Totals line is never given one. this
+    tool never moves, reorders, or deletes rows and never normalizes line endings (CRLF
+    round-trips). deterministic: identical input + args = byte-identical result
+    file and stdout (no clock, no randomness in output). writes are two-phase atomic
+    (.tmp.<nonce> then rename). node stdlib only.
 `;
 
 function main(argv) {

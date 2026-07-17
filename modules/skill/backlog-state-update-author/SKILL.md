@@ -52,7 +52,23 @@ This skill is called between **every phase transition** of `ship-tasks`, not jus
 - `reviewing → ready_to_test` (review approved)
 - `ready_to_test → testing` (tester claims)
 - `testing → done` (coverage-gate-audit passes)
-- any-stage → `ready_to_implement` (failure/blocker rework path, increments `routed_back_count`)
+**Declared mutation footprint (TASK-IMP-116).** A `backlog-state-update@2` write declares THREE
+lines: the status cell's row, its section header (retallied from the section's rows; a BARE header
+carries no counts and stays untouched), and the file-top `Totals:` line (retallied from every row
+in the file). Capped at three - a footprint that grows on convenience is not a footprint.
+
+TASK-IMP-092 replaced incremental header adjustment with a retally because "incremental adjustment
+faithfully preserves an inherited lie forever (the 086 incident's 34 vs true 20)". It stopped at
+section headers, and the file's most-read number rotted exactly as that argument predicts: a
+2026-07-17 review found `Totals: 336 draft, 4 ready_to_implement, 176 done` over a file whose
+improvement section alone read 67/9/39. `regen_backlog` owns that line and cannot run. Every
+mutation now emits the whole file's truth, not just its section's.
+
+Footprint shapes, all deliberate: counted header -> 3 lines; bare header -> 2 (row + Totals);
+insert -> 1 added row + 2 changed lines. A file with no `Totals:` line is legal and is never given one.
+
+- any-stage → `ready_to_implement` (failure/blocker rework path, increments `routed_back_count`, sets `entered_via: rework`)
+- any-stage → `draft` (SPEC-rejected path, TASK-IMP-108 §1.5: increments `routed_back_count`, sets `entered_via: spec_rejected`). Use when the failure is the spec, not the code - re-authoring and re-auditing is the remedy, and `ready_to_implement` would hand an unchanged wrong spec back to an implementer.
 
 ## 2. Output schema
 
@@ -65,6 +81,13 @@ prior_status: <one of the 10 enum values from STATUS-REFERENCE.md §1>
 new_status: <one of the 10 enum values from STATUS-REFERENCE.md §1>
 transition_kind: forward | rework | off_ramp
 routed_back_count_delta: 0 | 1   # 1 only when transition_kind == "rework"
+entered_via: audit | rework | spec_rejected | null   # TASK-IMP-108 §1.4. REQUIRED on any write
+                                 # landing at ready_to_implement or draft via a failure path:
+                                 # 'rework' with routed_back_count_delta: 1, or 'spec_rejected'
+                                 # when the SPEC was wrong (which lands at DRAFT, not
+                                 # ready_to_implement - §1.5). null on a normal forward flip.
+                                 # The agent writes it to frontmatter in the same edit that moves
+                                 # the status cell; frontmatter stays the record of truth.
 line_number: <int — the BACKLOG.md line being mutated>
 old_line: "<full text of the line being replaced>"
 new_line: "<full text of the replacement line>"

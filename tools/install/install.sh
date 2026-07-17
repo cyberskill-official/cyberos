@@ -29,6 +29,7 @@ avail_ver="$( [ -f "$src/VERSION" ] && tr -d ' \n\r' < "$src/VERSION" || echo un
 target="${1:-$(pwd)}"; target="$(cd -P "$target" && pwd -P)"
 root="$(cd "$target" && git rev-parse --show-toplevel 2>/dev/null || echo "$target")"
 CY="$root/.cyberos"
+_cy_downgrade_note=""    # §1.4: set only when an operator overrides a refused downgrade
 
 # guard: install.sh runs from an ASSEMBLED payload (build.sh output), where cuo/ + VERSION are
 # siblings. Running it from the un-built source tree is a common mistake - fail with a clear hint.
@@ -52,6 +53,132 @@ elif ! grep -qxF '*.manifest.json' "$wf_ignore"; then
   [ -z "$(tail -c 1 "$wf_ignore")" ] || printf '\n' >> "$wf_ignore"   # heal a missing trailing newline so the pattern lands as its own line
   printf '%s\n' '*.manifest.json' >> "$wf_ignore"
 fi
+
+# 0a. downgrade guard (TASK-IMP-104) -----------------------------------------
+# install vendored whatever it was handed and never compared versions, so an older payload
+# silently downgraded a consumer: skills vanish, doctrine reverts, and the only trace is a
+# VERSION line nobody re-reads. The workflow-version pins cannot catch it - they live in the
+# payload being installed. Runs BEFORE the lock (§1.1): a refused downgrade takes no lock.
+_vc="$src/lib/version-compare.sh"; [ -f "$_vc" ] || _vc="$(dirname "$0")/lib/version-compare.sh"
+if [ ! -f "$_vc" ]; then
+  # FAIL CLOSED. A guard that skips itself when its comparator is missing is not a guard - it is
+  # a comment. Caught by t01 on first run: build.sh had not vendored the lib, so the payload
+  # silently downgraded with the check present in the source and absent from the artefact.
+  echo "cyberos install: version-compare.sh is missing from this payload - the downgrade guard cannot run." >&2
+  echo "  This payload is malformed. Rebuild it: bash tools/install/build.sh" >&2
+  exit 1
+fi
+if true; then
+  . "$_vc"
+  _inst_ver=""
+  [ -f "$CY/VERSION" ] && _inst_ver="$(tr -d ' \n\r' < "$CY/VERSION" 2>/dev/null || echo "")"
+  if [ -z "$_inst_ver" ]; then
+    :                                   # §1.6 first install or damaged machine - not a downgrade
+  elif ! is_ver "$_inst_ver" || ! is_ver "$avail_ver"; then
+    # §1.6 + §3: 'unknown' and pre-release strings are NOT comparable. Not comparable is not
+    # older - refusing on an ordering we cannot defend would block legitimate installs.
+    echo "cyberos install: version not comparable (installed '$_inst_ver', payload '$avail_ver') - proceeding." >&2
+  elif ver_lt "$avail_ver" "$_inst_ver"; then
+    if [ "${CYBEROS_ALLOW_DOWNGRADE:-0}" = "1" ]; then
+      echo "cyberos install: DOWNGRADE $_inst_ver -> $avail_ver (CYBEROS_ALLOW_DOWNGRADE=1)." >&2
+      _cy_downgrade_note="downgraded $_inst_ver -> $avail_ver (operator override)"
+    else
+      echo "cyberos install: payload $avail_ver is OLDER than the installed $_inst_ver. Refusing." >&2
+      echo "  An older payload removes skills and reverts doctrine with no other trace." >&2
+      echo "  Deliberate rollback: CYBEROS_ALLOW_DOWNGRADE=1 bash $0 $root" >&2
+      exit 1
+    fi
+  fi
+fi
+
+# 0. concurrency lock (TASK-IMP-103) -----------------------------------------
+# The vendor step below removes the machine and re-copies it. Between those two
+# operations .cyberos/ does not exist. A second install - or an agent reading
+# .cyberos/ mid-install - sees a half-vendored tree. `mkdir` is the atomic primitive
+# everywhere we run (flock is absent on stock macOS; the payload's floor is POSIX).
+#
+# Refusal vs breakage: a lock is broken ONLY when it is BOTH older than the stale
+# threshold AND its pid is provably dead on THIS host. Either alone refuses - a
+# just-started install has not had time to look alive (§1.4), and a pid from another
+# machine on a shared mount is unknowable, so it is treated as alive until the
+# threshold expires (the same conservative default TASK-IMP-093's lease uses).
+CY_LOCK="$CY/.install.lock"
+CYBEROS_LOCK_STALE_SECS="${CYBEROS_LOCK_STALE_SECS:-900}"
+_cy_lock_held=""                       # set only once WE own it; the refusal path never releases
+_cy_lock_stamp=""                      # the exact owner bytes WE wrote; identity, not just intent
+
+# Release only what we STILL own. `_cy_lock_held` records that we once acquired the lock - it
+# cannot record that we still hold it. The gap is real: we acquire, we hang past the stale
+# threshold, a second installer breaks our lock (§1.3) and mkdirs a NEW one at the same path,
+# then we wake and exit. A held-only check would `rm -rf` the new holder's lock and reopen the
+# unguarded vendor window for a third process - the exact window the lock exists to close.
+# So compare the owner bytes: ours, or nobody's business.
+# (External review, 2026-07-17. The earlier review confirmed the REFUSAL path cannot delete a
+# holder's lock, which is true and is a different path. This is the stale-break path.)
+_cy_lock_release() {
+  [ -n "$_cy_lock_held" ] || return 0
+  # Unreadable or changed owner -> not provably ours -> leave it. A leaked lock self-heals at
+  # the stale threshold; a wrongly-deleted lock corrupts a live install. Fail safe, not tidy.
+  [ "$(cat "$CY_LOCK/owner" 2>/dev/null)" = "$_cy_lock_stamp" ] || return 0
+  rm -rf "$CY_LOCK" 2>/dev/null
+  return 0
+}
+_cy_now() { date +%s; }
+
+_cy_lock_acquire() {
+  if mkdir "$CY_LOCK" 2>/dev/null; then
+    _cy_lock_held=1
+    # Build the stamp BEFORE the trap arms: the trap must never fire against an empty stamp,
+    # which would compare equal to an unreadable owner file and delete a lock we cannot verify.
+    _cy_lock_stamp="$(printf 'pid=%s\nstarted_at=%s\nhost=%s\n' "$$" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(hostname 2>/dev/null || echo unknown)")"
+    printf '%s\n' "$_cy_lock_stamp" > "$CY_LOCK/owner" 2>/dev/null || true
+    trap '_cy_lock_release' EXIT INT TERM
+    return 0
+  fi
+  # mkdir failed. Contention, or something else entirely? Distinguishing the two is the
+  # difference between an operator killing a process and an operator hunting a ghost.
+  if [ ! -d "$CY_LOCK" ]; then
+    echo "cyberos install: cannot create lock at $CY_LOCK (permissions or read-only filesystem) - this is NOT contention." >&2
+    exit 1
+  fi
+  _lp=""; _ls=""; _lh=""
+  if [ -r "$CY_LOCK/owner" ]; then
+    _lp="$(sed -n 's/^pid=//p'        "$CY_LOCK/owner" 2>/dev/null | head -1)"
+    _ls="$(sed -n 's/^started_at=//p' "$CY_LOCK/owner" 2>/dev/null | head -1)"
+    _lh="$(sed -n 's/^host=//p'       "$CY_LOCK/owner" 2>/dev/null | head -1)"
+  fi
+  # Age from the directory's own mtime: survives an owner file that was never written
+  # (killed between mkdir and the write) and cannot be forged by editing the file.
+  # GNU stat -f is --file-system and SUCCEEDS with unrelated output ("File: ..."), which then
+  # detonates in arithmetic under set -u. Try GNU -c first, BSD -f second, and hard-validate
+  # numeric before any arithmetic touches it. Caught by t02 on Linux, 2026-07-17.
+  _lock_mtime="$(stat -c %Y "$CY_LOCK" 2>/dev/null || stat -f %m "$CY_LOCK" 2>/dev/null || echo 0)"
+  case "$_lock_mtime" in ""|*[!0-9]*) _lock_mtime=0 ;; esac
+  _age=$(( $(_cy_now) - _lock_mtime )); [ "$_age" -lt 0 ] && _age=0
+  # Liveness is TRI-STATE, not a boolean: alive | dead | unknown. Same-host pids are decidable
+  # via kill -0. A pid from another host on a shared mount, or an owner file we cannot read, is
+  # UNKNOWN - and unknown is NOT alive. Collapsing unknown into alive wedges the lock forever:
+  # nothing would ever break a foreign lock at any age (caught by t07, 2026-07-17 - the same
+  # reboot-wedge class the batch-4 review found in TASK-IMP-093's lease).
+  #   alive   -> never break (a live install owns it)
+  #   dead    -> break iff stale (§1.3); refuse while fresh (§1.4)
+  #   unknown -> break iff stale. Past the threshold the holder is gone or hung, and both mean
+  #              abandoned; before it, we defer - which is the §3 "alive until the threshold" rule.
+  _liveness=unknown
+  _this_host="$(hostname 2>/dev/null || echo unknown)"
+  if [ -n "$_lp" ] && [ "$_lh" = "$_this_host" ]; then
+    if kill -0 "$_lp" 2>/dev/null; then _liveness=alive; else _liveness=dead; fi
+  fi
+  if [ "$_liveness" != alive ] && [ "$_age" -ge "$CYBEROS_LOCK_STALE_SECS" ]; then
+    echo "cyberos install: breaking stale lock (pid ${_lp:-unknown}${_lh:+ on $_lh}, age ${_age}s >= ${CYBEROS_LOCK_STALE_SECS}s, liveness=${_liveness})" >&2
+    rm -rf "$CY_LOCK"
+    _cy_lock_acquire; return $?
+  fi
+  echo "cyberos install: another install holds the lock (pid ${_lp:-unknown}${_lh:+ on $_lh}, age ${_age}s); this pid $$. Refusing." >&2
+  echo "  If that process is gone, the lock is broken automatically after ${CYBEROS_LOCK_STALE_SECS}s (CYBEROS_LOCK_STALE_SECS)." >&2
+  exit 1
+}
+_cy_lock_acquire
 
 # 1. vendor the machine by module (replace any prior copy) --------------------
 rm -rf "$CY/cuo" "$CY/plugin" "$CY/mcp"
@@ -761,6 +888,26 @@ HOOK
       else
         HOOK_SET="kept your pre-commit hook${hook_at} (cyberos status-sync v2 already appended)"
       fi
+    elif grep -q "status-page.sh" "$hk" 2>/dev/null; then
+      # Reaching here means the hook regenerates docs/status but carries NO cyberos marker: a
+      # hand-written or self-hosted hook (this repo's own is exactly this). Appending the managed
+      # block would regenerate the page TWICE per commit and bolt an `exit 1` onto a hook whose
+      # own comments state a non-blocking posture. What we did not write, we do not "fix".
+      #
+      # ORDER MATTERS, TWICE OVER:
+      #  1. This generic CONTENT check must come AFTER both marker checks. Every marked block, v1
+      #     and v2 alike, contains "status-page.sh" (`git log -S "cyberos-status-hook v1"` shows
+      #     the v1 block runs `bash .cyberos/lib/status-page.sh .`), so placed first it swallows
+      #     them and a v1 hook never upgrades.
+      #  2. It belongs HERE, in the installer's if/elif chain - NOT inside the <<'HOOK' heredoc
+      #     above. That heredoc is single-quoted: every line is copied verbatim into the USER's
+      #     pre-commit hook. A branch placed there never executes at install time, and ships
+      #     $hk / ${hook_at} / HOOK_SET into a foreign hook where they are unbound - under
+      #     `set -u` that aborts the user's commit.
+      # (External review 2026-07-17: pass 2 caught (1), a regression pass 1 introduced; pass 3
+      # caught (2), a regression the fix for (1) introduced. Both are recorded because the next
+      # editor of this chain will be tempted to make the same two moves.)
+      HOOK_SET="kept your pre-commit hook${hook_at} (it already regenerates docs/status - no second block appended)"
     else
       # a FOREIGN hook exists: append a marked block that preserves the foreign exit code
       cat >> "$hk" <<'HOOK'
@@ -825,7 +972,8 @@ cyberos install: done.
   gitignored: one managed block in .gitignore covers .cyberos/ (vendored machine + BRAIN store)
               + the skill symlinks; agent files, docs/tasks/**, CHANGELOG.md and
               docs/status/ stay TRACKED (commit them). Everything outside the block is yours.
-  version   -> CyberOS $avail_ver (.cyberos/VERSION); check: bash .cyberos/version.sh  (auto soft-check on any .cyberos use)
+  version   -> CyberOS $avail_ver (.cyberos/VERSION); check: bash .cyberos/version.sh  (auto soft-check on any .cyberos use)${_cy_downgrade_note:+
+  DOWNGRADE -> $_cy_downgrade_note}
 
 Next:
   1. Write a task from the template:

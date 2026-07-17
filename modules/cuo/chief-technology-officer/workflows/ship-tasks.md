@@ -1,6 +1,6 @@
 ---
 workflow_id: chief-technology-officer/ship-tasks
-workflow_version: 2.7.0
+workflow_version: 2.8.0
 purpose: Drive each eligible task in `docs/tasks/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the task back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
 persona: chief-technology-officer
 cadence: per-task (loops continuously over BACKLOG.md)
@@ -235,9 +235,15 @@ The CUO supervisor invokes this workflow in a loop:
 
 ```
 while ! stop_signal:
-    next_task = read_backlog().next_eligible()   # deterministic: see 'Queue selection' in Resume semantics below
-    if next_task is None: break        # backlog drained
-    invoke_workflow("chief-technology-officer/ship-tasks", { repo_root, next_task })
+    batch = read_backlog().next_batch()          # MANDATORY (v2.8.0): a greedy cone-independent
+                                                 # set, not one task. Emits batch-selection@1.
+    if batch is empty: break           # backlog drained
+    if len(batch) > 1: dispatch_swarm(batch)     # one sub-agent per member, ONE parallel round
+    else:              ship(batch[0])            # a 1-member batch is serial by arithmetic, not by choice
+    # NO re-invoke here. The `while` above IS the loop. The pre-v2.8.0 shape ended each pass by
+    # re-invoking the workflow with `next_task`; the batch rewrite replaced that variable and left
+    # the call behind, so the line named something nothing assigns AND re-dispatched work that the
+    # two lines above had already shipped. (External review, 2026-07-17.)
 ```
 
 The supervisor handles persistence (state survives across sessions because the truth is in BACKLOG.md + the memory chain), parallelism (multiple tasks may run in parallel when their dependency cones don't overlap), and observability (the per-phase `workflow_phase_complete` + the final `workflow_complete` rows are enough to reconstruct the run).
@@ -246,12 +252,22 @@ The supervisor handles persistence (state survives across sessions because the t
 
 One-task-at-a-time is no longer the only sanctioned mode. The default is now BATCH shipping of parallel-safe tasks:
 
-- **Batch selection.** The eligible set is every `ready_to_implement` task whose `depends_on` rows are all `done`. A batch is a maximal subset of that set whose members are pairwise independent: no `depends_on`/`blocks` edge between any two members, AND no overlap between their declared cones (frontmatter `new_files` + `modified_files` + `service`). tasks whose cones overlap stay serial relative to each other, in Queue-selection priority order.
+- **Batch selection is EXECUTED, not preferred (v2.8.0).** Before step 1 the workflow MUST run `node .cyberos/docs-tools/batch-select.mjs --json` and record its `batch-selection@1` output in the ship-manifest. It is a deterministic helper rather than a vendored skill - batch membership is arithmetic over frontmatter (machine floor, TASK-IMP-084), and only the HITL verdicts are judgment. Shipping serially while `batch.length > 1` is a violation the artefact makes visible; an absent artefact is itself the violation.
+- **Batch selection is a STEP, not a preference (v2.8.0).** This section described batching as the default from v2.5.0 and the outer loop still asked for `next_eligible()` - one task. Nothing computed a batch, so nothing could notice when a batch was skipped, and on 2026-07-17 the workflow shipped TASK-IMP-104 alone while TASK-IMP-106 sat eligible and cone-independent beside it. A default that no step computes is not a default; it is a comment. Step -1 now computes it and records the reasoning.
+- **Batch selection.** The eligible set is every `ready_to_implement` task whose `depends_on` rows are all `done`. A batch is a greedy subset of that set whose members are pairwise independent: no `depends_on`/`blocks` edge between any two members, AND no overlap between their declared cones (frontmatter `new_files` + `modified_files` + `service`). tasks whose cones overlap stay serial relative to each other, in Queue-selection priority order.
+
+  Greedy, not maximum: members are admitted in priority order and a task excluded by an earlier
+  admission is never reconsidered, so a strictly larger independent set may exist. That is
+  deliberate - the maximum independent set is NP-hard, and a bigger batch that ignores priority is
+  the wrong batch. This doctrine said "maximal" until 2026-07-17; the word promised a guarantee
+  the loop does not compute, and nothing should be built on it. What batch-select gives you is
+  that the batch is COMPUTED rather than chosen by mood, which is the whole point of §11a.
 - **Batched execution.** Phases MAY run batch-wide (map the repo once, implement all members, review all members, test all members) and commits MAY batch per phase across members. What stays strictly per-task: the artefact set (context map, matrix, plan, review packet, coverage gate), the ship-manifest, the BACKLOG/frontmatter status cells, and the recorded HITL verdicts.
 - **HITL is unchanged by batching.** Both human-acceptance gates apply to every member individually. A single human reply MAY record verdicts for many members at once (one utterance, N recorded per-task verdicts — e.g. "approve all" / "accept all"); batching reduces round-trips, never guarantees.
 - **Unlock rescan.** Whenever any task reaches `done`, re-scan the backlog for tasks whose `depends_on` just became fully satisfied; append the newly-eligible, cone-independent ones to the running batch queue and continue (EXECUTION-DISCIPLINE §1 — no pause to ask). Cone-overlapping unlocks queue serially behind the member they overlap with.
 - **Status-page sync rule (group A).** Every backlog-state-update write rides with a regenerated `docs/status/` page in the same commit — enforced mechanically by the pre-commit hook (`.cyberos/lib/status-page.sh` + auto-stage on any `docs/tasks/**`, `CHANGELOG.md`, or `VERSION` change). A status cell that moves without the page moving is a bug.
-- **Swarm execution (v2.6.0).** A batch SHOULD be shipped by a swarm — one sub-agent per member, dispatched in a single parallel round — not by looping the members serially in one agent. Cone-independence is exactly the property that makes this safe: members touch disjoint files, so their edits cannot race. Serialising a batch that was selected for parallelism throws away the only reason to have batched it.
+- **Cones are optimistic; `service` is part of the cone and is not decorative (v2.8.0).** A task's declared `modified_files` is what the author EXPECTED to touch, not what the implementer touched. Live evidence: TASK-IMP-104 declared `install.sh` and ended up editing `version.sh` and `lib/update-check.sh` - both inside its `service` (`tools/install`), neither in its `modified_files`. Had the cone been read as files-only, a sibling `tools/install` task could have been batched alongside it and raced on files nobody declared. Two tasks sharing a `service` therefore OVERLAP and MUST stay serial, even when their declared file lists are disjoint.
+- **Swarm execution (v2.6.0; MUST as of v2.8.0).** A batch with more than one member MUST be shipped by a swarm — one sub-agent per member, dispatched in a single parallel round — not by looping the members serially in one agent. Cone-independence is exactly the property that makes this safe: members touch disjoint files, so their edits cannot race. Serialising a batch that was selected for parallelism throws away the only reason to have batched it.
   - Dispatch every member of the round in ONE message with N parallel calls. N sequential dispatches is a serial loop with extra steps.
   - Each sub-agent owns its member end-to-end and returns the artefact set. The parent owns what stays per-batch: the branch, the commits, the HITL round-trips, the BACKLOG writes.
   - Shared-tree gates belong to the PARENT. A sub-agent self-verifies only inside its own cone (its member's test file, lint scoped to its member's files) and MUST NOT run whole-workspace checks — a repo-wide typecheck/build/coverage run while a sibling member is mid-write fails spuriously on the sibling's half-written files. The parent runs the full gate suite exactly once per phase, after every member of the round has landed. (Learned on the 2026-07-16 sachviet consumer-repo run: two cone-disjoint members, per-cone vitest+eslint in the sub-agents, one parent gate run — clean.)
@@ -266,6 +282,58 @@ One-task-at-a-time is no longer the only sanctioned mode. The default is now BAT
   - Reason: a separate file is a second place the reader must find, and it rots the moment the task moves. The operator opens the task; the steps are there. Anything else asks them to hold two documents in their head and guess which is current.
   - Shape: numbered, copy-pasteable, one command or one click per step, with the expected output stated. If a step is GUI-only and the agent has OS/browser control, the agent does it (`EXECUTION-DISCIPLINE.md` §2b) and the guideline records what was driven — it does not ask the operator to repeat it.
   - The task halts at that gate only if the steps are genuinely operator-only under §2. "The agent wrote a guideline" is not itself a halt.
+## 11b. Route-back ceiling (v2.8.0, TASK-IMP-108)
+
+`routed_back_count` has been written on every route-back since it was defined and read as a limit
+exactly nowhere - 18 references in this file, all increments. The 5-fail circuit breaker bounds
+the DEBUGGING cycle inside one testing phase; nothing bounds how many times a task circles the
+whole loop. A task that keeps failing can cycle implement -> review -> test -> route back forever,
+burning budget with no escalation. This session hit the adjacent failure twice (API spend limits)
+and the loop had nothing to say about it.
+
+- **At `routed_back_count >= 3`, ship-tasks MUST HALT** at an operator gate instead of re-entering.
+  Present every route-back reason on record side by side, and ask for one verdict: re-enter /
+  split the task / `on_hold` / `closed`. Re-entering without a recorded verdict is a violation.
+- **Three is a judgment, not a derivation**, and the workflow says so rather than implying false
+  precision. The reasoning: "the same task failed three DIFFERENT ways" is evidence about the
+  spec, not the implementation - and a spec problem is not fixed by another implementation pass.
+- **The ceiling counts cycles, not causes.** Three route-backs from one flaky test still halt. A
+  human reading three identical reasons decides in seconds; the alternative is a loop that never
+  asks.
+- **The halt belongs to the parent** (§11a): a swarm sub-agent MUST NOT resolve it. The verdict is
+  the operator's.
+- **Under the ceiling, nothing changes.** A task at `routed_back_count: 2` re-enters normally.
+- **`entered_via: spec_rejected` routes to `draft`, not `ready_to_implement`** (STATUS-REFERENCE
+  §1.3). Pairs with this ceiling: three route-backs usually IS a spec problem wearing an
+  implementation problem's clothes.
+
+## 11c. Standing goals: what `done` claimed, re-verified (v2.8.0, TASK-IMP-109)
+
+`done` is terminal and nothing re-checks it. TRACE-004 proves every clause had a passing test ON
+THE DAY IT SHIPPED; nothing looks again. A task shipped in batch 1 could be broken today and the
+corpus would still show it green. A goal you verify once is an assumption with a timestamp.
+
+`task-reconcile` does NOT close this. It measures drift when a task RE-ENTERS the workflow - a
+turnstile, not a sentinel. A `done` task that never comes back is never examined again by anything.
+
+- **At the `done` flip, ship-tasks MUST write `docs/goals/<task-id>.md`** carrying: `predicates`
+  (the task's §1 cited tests - already collected, because TRACE-004 just verified them, so the
+  predicate is free), `born`, `source`, `status: satisfied`, `last_pass`, `on_violation: report`.
+- **The predicate set is the CITED TESTS, nothing invented.** A goal MUST NOT claim a check the
+  task never made.
+- **ACs whose evidence is a justified `verify:` are NOT enrolled** and the goal names them as not
+  mechanically re-verifiable. A predicate that cannot be re-run is not a predicate.
+- **A task reaching `done` with zero runnable predicates STILL gets a goal**, marked
+  `predicate: none` with the reason. The absence is the finding; it must never read as a pass.
+- **Re-verification is `node .cyberos/docs-tools/verify-goals.mjs`.** DETECTION ONLY: a violated
+  goal changes no status, writes no code, and re-opens no task. The remedy is a new `type: bug`
+  task through create-tasks -> ship-tasks. The sentinel detects; the pipeline fixes. An auto-fix
+  on a violated acceptance is the machine grading its own homework at the moment nobody is watching.
+- **Retirement is a human decision, logged.** A flaky predicate is quarantined
+  (`status: retired`, reason recorded), never deleted - a goal deleted without a reason is the
+  evidence loss this whole mechanism exists to prevent.
+- **When it runs is the operator's business.** Scheduling is a host decision; CyberOS is invoked.
+
 
 ## 12. No partial-ship-and-pause within a task
 

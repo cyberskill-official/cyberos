@@ -190,3 +190,61 @@ def test_workflow_and_skill_stripes_disjoint() -> None:
                                        "needs_human_rate_above", []))
     assert "/" in wf_stripe
     assert "/" not in skill_stripe
+
+
+# ----------------------------------------------------------------------------
+# TASK-IMP-108 §1.6 — the route-back ceiling.
+#
+# `routed_back_count` has been written on every route-back since it was defined and read as a
+# limit exactly nowhere: 18 references in ship-tasks.md, all increments. The 5-fail circuit
+# breaker bounds the DEBUGGING cycle inside one testing phase; nothing bounded how many times a
+# task circles the whole loop. These arms pin the doctrine that now does.
+#
+# Structural by necessity: the ceiling is a HALT for a human, and a suite cannot simulate the
+# human without becoming a test of the fixture. So it pins the RULE - same rationale as
+# TASK-IMP-104's t05_single_comparator and this suite's own doctrine arms.
+# ----------------------------------------------------------------------------
+
+_SHIP_TASKS = (
+    Path(__file__).resolve().parents[3]
+    / "modules/cuo/chief-technology-officer/workflows/ship-tasks.md"
+)
+
+
+def _ship_tasks_text() -> str:
+    assert _SHIP_TASKS.is_file(), f"ship-tasks.md not found at {_SHIP_TASKS}"
+    return _SHIP_TASKS.read_text(encoding="utf-8")
+
+
+def test_routeback_ceiling_halts() -> None:
+    """AC 4 — at routed_back_count >= 3 the workflow HALTS for an operator verdict."""
+    t = _ship_tasks_text()
+    assert "## 11b. Route-back ceiling" in t, "no route-back ceiling section"
+    assert re.search(r"routed_back_count >= 3.*MUST HALT", t), "ceiling is not a MUST HALT"
+    # the verdict set must be named, or 'halt' means 'stop and improvise'
+    for verdict in ("re-enter", "split the task", "on_hold", "closed"):
+        assert verdict in t, f"ceiling does not offer the '{verdict}' verdict"
+    assert "Re-entering without a recorded verdict is a violation" in t
+    # the halt is the parent's: a swarm member must not resolve it (§11a)
+    assert re.search(r"halt belongs to the parent", t), "ceiling does not bind the halt to the parent"
+
+
+def test_under_ceiling_reenters() -> None:
+    """AC 5 — the ceiling is 3, not 'any'. A task at 2 re-enters normally."""
+    t = _ship_tasks_text()
+    assert "Under the ceiling, nothing changes" in t, "no under-ceiling rule"
+    assert re.search(r"routed_back_count: 2. re-enters normally", t), "2 is not stated as re-entering"
+
+
+def test_ceiling_is_a_judgment_not_a_derivation() -> None:
+    """The number is a judgment and the workflow says so - false precision is its own defect."""
+    t = _ship_tasks_text()
+    assert "Three is a judgment, not a derivation" in t
+    assert "evidence about the\n  spec, not the implementation" in t.replace("\r", "")
+
+
+def test_spec_rejected_pairs_with_the_ceiling() -> None:
+    """§1.5 - a wrong SPEC routes to draft, not ready_to_implement."""
+    t = _ship_tasks_text()
+    assert "entered_via: spec_rejected` routes to `draft`" in t
+    assert "wearing an\n  implementation problem's clothes" in t.replace("\r", "")

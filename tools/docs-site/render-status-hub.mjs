@@ -153,6 +153,22 @@ for (const mod of readdirSync(TASK_ROOT, { withFileTypes: true }).sort((a, b) =>
       ph: str(m.phase), ms: str(m.milestone), sl: str(m.slice),
       o: str(m.owner), cr: str(m.created), sh: str(m.shipped),
       e: str(m.effort_hours), v: str(m.verify), r: str(m.risk_if_skipped),
+      // TASK-IMP-108 §1.7: WHICH KIND of draft / ready_to_implement. Absent renders as 'unknown',
+      // which is the truth for every task this run did not author - the page must not invent a
+      // reason it was not told.
+      //
+      // These three are PAYLOAD ONLY today. The staleness report (rendered server-side, above)
+      // is what discharges §1.7; per-task dr/ev/rb reach the payload and no client reads them.
+      // This comment previously claimed `rb` "lets the reader see thrash without opening the
+      // frontmatter" - it does not, because nothing renders it, so the reader still opens the
+      // frontmatter. Corrected rather than left: an unrendered field described as a reader
+      // benefit is exactly the emitted-but-unrendered class TASK-IMP-118 names, and 108 §1.7
+      // already shipped `done` on that mistake once today.
+      //
+      // They stay because the drawer is the obvious consumer and the data is free here. That is
+      // a plan, not a promise: no clause requires per-task dr/ev/rb to render, so nothing is
+      // unsatisfied by their absence from the UI. (External review 2026-07-17.)
+      dr: str(m.draft_reason), ev: str(m.entered_via), rb: Number(str(m.routed_back_count)) || 0,
       st: list(m.subtasks),
       // relations are resolved AFTER the corpus is known: a repo's ids are not always
       // TASK-shaped (strategem carries COV-001, API-READY...), so an id-regex alone would
@@ -176,6 +192,29 @@ for (const mod of readdirSync(TASK_ROOT, { withFileTypes: true }).sort((a, b) =>
   }
 }
 tasks.sort((a, b) => a.i.localeCompare(b.i));
+
+// ---- draft staleness (TASK-IMP-108 §1.7) ----------------------------------------------
+// 336 drafts sit indefinitely and the page reports a percentage against a denominator nobody
+// believes. This groups them by REASON and age. It is a REPORT: it changes no task's status,
+// closes nothing, and ages nothing automatically - the operator is the fix, this is the finding.
+// Age is derived from `created` (a committed field), so a re-render of an unchanged corpus is
+// byte-identical and TASK-IMP-082's fp- fingerprint still holds. `today` is NOT read from the
+// clock for the same reason: a page that changes because time passed is a page that churns.
+const draftStaleness = (() => {
+  const drafts = tasks.filter(t => t.s === 'draft');
+  const byReason = {};
+  for (const t of drafts) {
+    const r = t.dr || 'unknown';
+    (byReason[r] ||= []).push({ id: t.i, created: t.cr || '' });
+  }
+  const out = Object.keys(byReason).sort().map(r => ({
+    reason: r,
+    count: byReason[r].length,
+    oldest: byReason[r].map(x => x.created).filter(Boolean).sort()[0] || '',
+  }));
+  return { total: drafts.length, by_reason: out };
+})();
+
 if (!tasks.length && !LENIENT) die('zero task specs found under docs/tasks');
 
 // per-task pages (rendered by render-task-pages.mjs) sit next to the hub in the website build
@@ -363,6 +402,29 @@ const nowHtml = moving.length ? `
   ).join('')}</div>
 </section>` : '';
 
+// TASK-IMP-108 §1.7 - the report must RENDER, not merely be computed.
+//
+// The first pass emitted draft_staleness into the JSON payload and stopped. Nothing read it:
+// status-app.js has zero references to the key, so the report existed in the page and was
+// rendered by nothing. The cited test asserted the STRING appeared in the HTML - true, inside a
+// JSON blob no code consumes - so §1.7 shipped `done` with its own clause unsatisfied, and the
+// test passed because it tested the payload rather than the promise. (External review 2026-07-17.)
+//
+// Server-side, not client-side, deliberately: this file's own doctrine is that the page stays
+// readable without status-app.js (see the <noscript> table). A JS-only report would break the
+// clause again for anyone reading over file:// with JS off.
+const stalenessHtml = draftStaleness.total ? `
+  <section class="now">
+    <h2>Drafts awaiting triage (${draftStaleness.total})</h2>
+    <table class="nojs-t">
+      <thead><tr><th>reason</th><th>count</th><th>oldest</th></tr></thead>
+      <tbody>${draftStaleness.by_reason.map(r =>
+        `<tr><td>${esc(r.reason)}</td><td>${r.count}</td><td>${esc(r.oldest || 'unknown')}</td></tr>`
+      ).join('')}</tbody>
+    </table>
+    <p class="muted">A report, not an action: no status changed, nothing aged, nothing closed. The operator is the fix.</p>
+  </section>` : '';
+
 const sel = (id, label, values) =>
   `<label class="facet">${esc(label)}<select id="f-${id}"><option value="">all</option>` +
   values.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('') + '</select></label>';
@@ -412,7 +474,7 @@ const data = {
 const KEEP = new Set(['i', 'k', 'dm', 't', 'm', 's', 'd', 'b', 'rl', 'st']);
 const compact = f => Object.fromEntries(Object.entries(f)
   .filter(([k, v]) => KEEP.has(k) || (Array.isArray(v) ? v.length : v !== '' && v !== null && v !== 0)));
-const dataJson = JSON.stringify({ ...data, tasks: tasks.map(compact) }).replace(/</g, '\\u003c');
+const dataJson = JSON.stringify({ ...data, draft_staleness: draftStaleness, tasks: tasks.map(compact) }).replace(/</g, '\\u003c');
 
 // ---- templates ------------------------------------------------------------------------
 const tpl = (sub, name) => {
@@ -454,6 +516,7 @@ for (const [k, v] of Object.entries({
   'meta:html': `VERSION <span class="code">${esc(VERSION)}</span> · built from <span class="code">${esc(COMMIT)}</span> · ${tasks.length} tasks · ${releases.length} releases`,
   'deck:html': deck,
   'now:html': nowHtml,
+  'staleness:html': stalenessHtml,
   'facets:html': facets,
   'nojs:html': nojs,
   'data:json': dataJson,

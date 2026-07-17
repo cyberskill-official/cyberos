@@ -145,6 +145,8 @@ Now that `status` is a single linear axis, two pieces of metadata that used to b
 | `status` | enum | see §1.1 / §1.2 | `draft` |
 | `implementation_kind` | enum (optional) | `real` \| `mocked` | `real` |
 | `routed_back_count` | int (optional) | 0..N — increments every time the task drops to `ready_to_implement` from a downstream stage | `0` |
+| `draft_reason` | enum (optional) | `authoring` \| `migrated_stub` \| `needs_spec` \| `parked_idea` — WHICH KIND of draft. Absent means unknown, which is the honest value for the 336 drafts nobody has triaged. Lint: FM-115 (TASK-IMP-108) | absent |
+| `entered_via` | enum (optional) | `audit` \| `rework` \| `spec_rejected` — WHICH KIND of `ready_to_implement`. `audit` = passed 10/10, never built. `rework` = built, failed downstream, going round again (pairs with `routed_back_count > 0`). `spec_rejected` = the SPEC was wrong; see §1.3. Lint: FM-116 (TASK-IMP-108) | absent |
 
 `implementation_kind: mocked` replaces the old `shipped + mocked-dependency` status. It means the implementation shipped against a mock service (parity-only contract test) because the real dependency isn't available. The task can still reach `done` — the mocked-ness is a property of the implementation, not the lifecycle stage. **NOTE:** decision pending — Stephen indicated "drop" for `mocked-dependency`; this field is retained here as the recommended way to capture that information if needed later. Default behaviour treats every task as `real`; if Stephen confirms total drop, this row will be removed in a follow-up patch.
 
@@ -177,8 +179,9 @@ The previous (pre-2026-05-19) enum is **fully retired**. For repository archaeol
 | `in_progress` | `implementing` | legacy alias also merged |
 | `shipped + strict-audited` | `done` | modifier dropped — `done` is sufficient |
 | `shipped + mocked-dependency` | `done` | per Stephen's "drop" decision; if needed, set `implementation_kind: mocked` in frontmatter (§3) |
-| `[FAILED: UNRESOLVABLE ERROR]` | `ready_to_implement` (with `routed_back_count += 1`) | now a rework path, not terminal |
-| `[BLOCKED: <reason>]` | `ready_to_implement` (with `routed_back_count += 1`) | now a rework path, not terminal |
+| `[FAILED: UNRESOLVABLE ERROR]` | `ready_to_implement` (with `routed_back_count += 1`, `entered_via: rework`) | now a rework path, not terminal |
+| `[BLOCKED: <reason>]` | `ready_to_implement` (with `routed_back_count += 1`, `entered_via: rework`) | now a rework path, not terminal |
+| `[SPEC REJECTED: <reason>]` | **`draft`** (with `routed_back_count += 1`, `entered_via: spec_rejected`) | TASK-IMP-108. When review or testing fails because the SPEC is wrong - not the code - the task MUST return to `draft` for re-authoring and re-audit. Routing it to `ready_to_implement` hands an unchanged wrong spec to an implementer, who builds the same wrong thing. §1.3 previously sent EVERY failure to `ready_to_implement`, which quietly assumed the spec was always right. |
 | `deferred` | `on_hold` | renamed |
 | `rejected` | `closed` | merged |
 | `superseded` | `closed` | merged |

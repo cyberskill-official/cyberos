@@ -31,7 +31,7 @@
 #        install lays them into .cyberos/docs-tools/ where they run.
 #   t09  doctrine wiring: ship-tasks.md (source + payload cuo/ + plugin copy)
 #        names ship-manifest.mjs in Resume semantics and backlog-mutate.mjs in
-#        the backlog-layout/state-engine area; workflow_version current (2.7.0
+#        the backlog-layout/state-engine area; workflow_version current (2.8.0
 #        since TASK-IMP-099).
 #   t10  a LYING counted header (counts disagreeing with the section's rows —
 #        the 086 incident's shape) is rewritten to the true tally by any flip
@@ -43,11 +43,11 @@
 #        correction is large (asserted line-by-line on the lying fixture).
 #   t12  doctrine: ship-tasks.md carries the one-writer-one-view rule (§11a)
 #        and the committed-object evidence rule (§9), in the source AND the
-#        scratch payload's cuo/ copy, at workflow_version 2.7.0.
+#        scratch payload's cuo/ copy, at workflow_version 2.8.0.
 #   t13  queue selection ranks p0 before p1 before p2 before p3 (FM-105 scale)
 #        in the source AND the scratch payload's cuo/ copy, with NO bare MoSCoW
 #        ordering rule surviving (the FM-105 legacy-mapping parenthetical is the
-#        one allowed mention), payload at workflow_version 2.7.0 (TASK-IMP-099, bumped by TASK-IMP-101).
+#        one allowed mention), payload at workflow_version 2.8.0 (TASK-IMP-099, bumped by TASK-IMP-101).
 #
 # Origin: 2026-07-16 sachviet + cyberos batch-1 runs (IMPROVEMENT_HANDOFF.md
 # IMP-04) - manifests were skipped and every backlog flip was hand-sed; the two
@@ -311,6 +311,19 @@ t05_insert_uniqueness_and_grammar() {
   ok t05
 }
 
+# TASK-IMP-116 AC 1/2: count the file's rows INDEPENDENTLY of backlog-mutate, or the assertion
+# is the tool agreeing with itself.
+bm_expected_totals() {
+  awk '
+    /^- \[[a-z_]+\] / { st=$0; sub(/^- \[/,"",st); sub(/\].*/,"",st); n[st]++ }
+    END {
+      split("draft ready_to_implement implementing ready_to_review reviewing ready_to_test testing done on_hold closed cannot_reproduce duplicate", order, " ")
+      out=""
+      for (i=1; i<=12; i++) if (n[order[i]]) out = out (out?", ":"") n[order[i]] " " order[i]
+      print out
+    }' "$1"
+}
+
 t06_counts_maintained() {
   local f="$TMP/t06/BACKLOG.md"; emit_backlog "$f"
   # flip: the header is retallied from the section's rows (TASK-IMP-092) — the fixture's
@@ -333,9 +346,14 @@ t06_counts_maintained() {
     || { fail t06 "beta insert failed"; return; }
   grep -q '^## beta  (1 ready_to_implement)$' "$f" \
     || { fail t06 "beta header: $(grep '^## beta' "$f")"; return; }
-  # the file-top Totals line is NEVER touched (not part of the declared mutation)
-  grep -q '^Totals: 1 draft, 2 ready_to_implement, 1 implementing, 19 done$' "$f" \
-    || { fail t06 "Totals line was touched"; return; }
+  # TASK-IMP-116: the file-top Totals line IS part of the declared mutation now. TASK-IMP-092's
+  # own argument - "incremental adjustment faithfully preserves an inherited lie forever" - stopped
+  # at section headers and let the file's most-read number rot (a 2026-07-17 review found it wrong
+  # by 4 ready_to_implement and 4 done). The mutation declares THREE lines: row, section header,
+  # Totals. Capped there. The fixture's Totals claims 19 done over rows that say otherwise, so the
+  # first mutation corrects it away - exactly as the section header does.
+  local want_totals; want_totals="Totals: $(bm_expected_totals "$f")"
+  grep -qF "$want_totals" "$f" || { fail t06 "Totals not retallied: got '$(grep '^Totals:' "$f")', want '$want_totals'"; return; }
   ok t06
 }
 
@@ -375,20 +393,26 @@ t07_json_and_determinism() {
     || { fail t07 "flip envelope lacks old_line/new_line/new_header"; return; }
   local removed added
   removed="$(diff "$d/pre.md" "$d/c1/BACKLOG.md" | grep -c '^<')"; added="$(diff "$d/pre.md" "$d/c1/BACKLOG.md" | grep -c '^>')"
-  { [ "$removed" -eq 2 ] && [ "$added" -eq 2 ]; } \
-    || { fail t07 "flip footprint not 1 row + 1 header (removed=$removed added=$added)"; return; }
+  # TASK-IMP-116: the declared mutation is THREE lines - row, section header, file Totals - and
+  # §1.6 caps it there. A fourth means something started widening on convenience.
+  { [ "$removed" -eq 3 ] && [ "$added" -eq 3 ]; } \
+    || { fail t07 "flip footprint not 1 row + 1 header + Totals (removed=$removed added=$added)"; return; }
   # insert footprint: 1 added row + 1 changed header, nothing else
   emit_backlog "$d/c3/BACKLOG.md"
   bm insert TASK-ALPHA-002 TASK-ALPHA-002-token-scope "Token scoping" draft --backlog "$d/c3/BACKLOG.md" \
     || { fail t07 "insert for footprint failed"; return; }
   removed="$(diff "$d/pre.md" "$d/c3/BACKLOG.md" | grep -c '^<')"; added="$(diff "$d/pre.md" "$d/c3/BACKLOG.md" | grep -c '^>')"
-  { [ "$removed" -eq 1 ] && [ "$added" -eq 2 ]; } \
-    || { fail t07 "insert footprint not 1 row + 1 header (removed=$removed added=$added)"; return; }
-  # no-counts flip footprint: exactly the one row
+  # TASK-IMP-116: insert ADDS a row and CHANGES the section header + file Totals. Asymmetric by
+  # nature - removed=2, added=3, unlike a flip's 3/3.
+  { [ "$removed" -eq 2 ] && [ "$added" -eq 3 ]; } \
+    || { fail t07 "insert footprint not 1 new row + section header + Totals (removed=$removed added=$added)"; return; }
+  # no-counts flip footprint (TASK-IMP-116): a BARE header carries no counts and stays untouched,
+  # so the mutation is the row + the file Totals = 2/2. Three footprint shapes, all deliberate:
+  #   counted header -> 3/3   bare header -> 2/2   insert -> 2/3 (the row is new)
   emit_backlog "$d/c4/BACKLOG.md"
   bm flip TASK-GAMMA-001 implementing ready_to_review --backlog "$d/c4/BACKLOG.md" || { fail t07 "gamma flip failed"; return; }
   removed="$(diff "$d/pre.md" "$d/c4/BACKLOG.md" | grep -c '^<')"; added="$(diff "$d/pre.md" "$d/c4/BACKLOG.md" | grep -c '^>')"
-  { [ "$removed" -eq 1 ] && [ "$added" -eq 1 ]; } || { fail t07 "no-counts flip footprint (removed=$removed added=$added)"; return; }
+  { [ "$removed" -eq 2 ] && [ "$added" -eq 2 ]; } || { fail t07 "no-counts flip footprint not 1 row + Totals (removed=$removed added=$added)"; return; }
   # CRLF: bytes preserved outside the mutated line; no line-ending drift anywhere
   emit_backlog "$d/crlf.md"; sed 's/$/\r/' "$d/crlf.md" > "$d/crlf2.md"; mv "$d/crlf2.md" "$d/crlf.md"
   local crlf_before; crlf_before="$(grep -c $'\r$' "$d/crlf.md")"
@@ -457,7 +481,7 @@ t09_doctrine_wiring() {
     grep -q 'backlog-mutate\.mjs' "$TMP/layout.sec" || { fail t09 "$f: backlog layout lacks the backlog-mutate.mjs pointer"; return; }
     grep -q 'byte-discipline executor' "$TMP/layout.sec" || { fail t09 "$f: pointer does not say byte-discipline executor"; return; }
     # the doc gained normative pointers -> workflow_version bumped
-    grep -q '^workflow_version: 2\.7\.0$' "$f" || { fail t09 "$f: workflow_version not current (want 2.7.0)"; return; }
+    grep -q '^workflow_version: 2\.8\.0$' "$f" || { fail t09 "$f: workflow_version not current (want 2.8.0)"; return; }
   done
   ok t09
 }
@@ -526,8 +550,9 @@ t11_footprint_holds_with_retally() {
   bm flip TASK-ALPHA-001 draft ready_to_review --backlog "$d/flip.md" || { fail t11 "flip failed"; return; }
   diff "$d/pre.md" "$d/flip.md" | sed -n 's/^< //p' > "$d/removed"
   diff "$d/pre.md" "$d/flip.md" | sed -n 's/^> //p' > "$d/added"
-  { [ "$(wc -l < "$d/removed")" -eq 2 ] && [ "$(wc -l < "$d/added")" -eq 2 ]; } \
-    || { fail t11 "flip footprint not 1 row + 1 header: removed=[$(cat "$d/removed")] added=[$(cat "$d/added")]"; return; }
+  # TASK-IMP-116: row + section header + Totals = 3.
+  { [ "$(wc -l < "$d/removed")" -eq 3 ] && [ "$(wc -l < "$d/added")" -eq 3 ]; } \
+    || { fail t11 "flip footprint not 1 row + 1 header + Totals: removed=[$(cat "$d/removed")] added=[$(cat "$d/added")]"; return; }
   { grep -qxF '## alpha  (34 done)' "$d/removed" \
       && grep -qxF -- '- [draft] TASK-ALPHA-001-login-rate-limit - Login rate limiting' "$d/removed"; } \
     || { fail t11 "flip removed lines are not header+row: $(cat "$d/removed")"; return; }
@@ -539,14 +564,19 @@ t11_footprint_holds_with_retally() {
   bm insert TASK-ALPHA-004 TASK-ALPHA-004-new-row "New row" draft --backlog "$d/ins.md" || { fail t11 "insert failed"; return; }
   local removed added
   removed="$(diff "$d/pre.md" "$d/ins.md" | grep -c '^<')"; added="$(diff "$d/pre.md" "$d/ins.md" | grep -c '^>')"
-  { [ "$removed" -eq 1 ] && [ "$added" -eq 2 ]; } \
-    || { fail t11 "insert footprint not 1 row + 1 header (removed=$removed added=$added)"; return; }
-  # 'at most one': a mutation under a BARE header changes exactly the one row
+  # TASK-IMP-116: insert ADDS a row and CHANGES the section header + file Totals. Asymmetric by
+  # nature - removed=2, added=3, unlike a flip's 3/3.
+  { [ "$removed" -eq 2 ] && [ "$added" -eq 3 ]; } \
+    || { fail t11 "insert footprint not 1 new row + section header + Totals (removed=$removed added=$added)"; return; }
+  # 'at most one' (TASK-IMP-116): a BARE header carries no counts and stays untouched, so the
+  # mutation is the row + the file Totals. The header rule is unchanged; Totals is now declared.
   emit_backlog "$d/bare-pre.md"; emit_backlog "$d/bare.md"
   bm flip TASK-GAMMA-001 implementing ready_to_review --backlog "$d/bare.md" || { fail t11 "bare flip failed"; return; }
   removed="$(diff "$d/bare-pre.md" "$d/bare.md" | grep -c '^<')"; added="$(diff "$d/bare-pre.md" "$d/bare.md" | grep -c '^>')"
-  { [ "$removed" -eq 1 ] && [ "$added" -eq 1 ]; } \
-    || { fail t11 "bare-header footprint not 1 row + 0 header (removed=$removed added=$added)"; return; }
+  { [ "$removed" -eq 2 ] && [ "$added" -eq 2 ]; } \
+    || { fail t11 "bare-header footprint not 1 row + Totals, 0 header (removed=$removed added=$added)"; return; }
+  # the bare header itself MUST still be untouched - Totals moving is not licence to touch it
+  grep -q '^## gamma$' "$d/bare.md" || { fail t11 "bare header was rewritten"; return; }
   ok t11
 }
 
@@ -568,8 +598,8 @@ t12_doctrine_view_rules_vendored() {
     grep -q 'never a working view' "$f" \
       || { fail t12 "$f: never-a-working-view rule missing"; return; }
     # the doc gained normative rules -> workflow_version bumped
-    grep -q '^workflow_version: 2\.7\.0$' "$f" \
-      || { fail t12 "$f: workflow_version not bumped to 2.7.0"; return; }
+    grep -q '^workflow_version: 2\.8\.0$' "$f" \
+      || { fail t12 "$f: workflow_version not bumped to 2.8.0"; return; }
   done
   ok t12
 }
@@ -592,8 +622,8 @@ t13_queue_rule_p0_p3() {
       && { fail t13 "$f: bare MoSCoW ordering rule survives: $(grep -Ein '(MUST|SHOULD|COULD|WON.?T)[[:space:]]+before' "$f" | head -3)"; return; }
   done
   # the reword is a normative change: the payload ships it at the bumped version
-  grep -q '^workflow_version: 2\.7\.0$' "$TMP/payload/cuo/ship-tasks.md" \
-    || { fail t13 "payload cuo/ship-tasks.md workflow_version not 2.7.0"; return; }
+  grep -q '^workflow_version: 2\.8\.0$' "$TMP/payload/cuo/ship-tasks.md" \
+    || { fail t13 "payload cuo/ship-tasks.md workflow_version not 2.8.0"; return; }
   ok t13
 }
 
@@ -612,9 +642,47 @@ t14_reconcile_entry_and_deps_gate() {
     grep -q '^## depends_on evidence gate' "$f"    || { fail t14 "$f: deps gate section missing"; return; }
     grep -q 'MUST carry evidence' "$f"             || { fail t14 "$f: deps evidence MUST missing"; return; }
     grep -q 'step: 0,  skill: task-reconcile' "$f" || { fail t14 "$f: chain step 0 missing"; return; }
-    grep -q '^workflow_version: 2\.7\.0$' "$f"     || { fail t14 "$f: version not 2.7.0"; return; }
+    grep -q '^workflow_version: 2\.8\.0$' "$f"     || { fail t14 "$f: version not 2.8.0"; return; }
   done
   ok t14
+}
+
+t18_entered_via_contract() {
+  # TASK-IMP-108 §1.4 + §1.5. entered_via is written to FRONTMATTER by the agent in the same edit
+  # that moves the status cell - backlog-mutate deliberately never touches frontmatter (it writes
+  # rows). So the contract lives in the skill, and this asserts the contract STRUCTURALLY, the way
+  # TASK-IMP-104's t05 pins the single comparator. A contract nobody checks is a suggestion.
+  ensure_payload || { fail t18 "build.sh failed"; return; }
+  local f
+  for f in "$repo/modules/skill/backlog-state-update-author/SKILL.md" \
+           "$TMP/payload/cuo/skills/backlog-state-update-author/SKILL.md"; do
+    [ -s "$f" ] || { fail t18 "missing $f"; return; }
+    grep -q 'entered_via: audit | rework | spec_rejected | null' "$f" || { fail t18 "$f: entered_via not in the envelope"; return; }
+    grep -q "sets \`entered_via: rework\`" "$f"                      || { fail t18 "$f: rework path does not set entered_via"; return; }
+    grep -q "sets \`entered_via: spec_rejected\`" "$f"               || { fail t18 "$f: spec_rejected path missing"; return; }
+  done
+  ok t18_entered_via_contract
+}
+
+t19_spec_rejected_lands_draft() {
+  # §1.5: a wrong SPEC returns to draft, NOT ready_to_implement. Routing it to ready_to_implement
+  # hands an unchanged wrong spec to an implementer, who builds the same wrong thing.
+  ensure_payload || { fail t19 "build.sh failed"; return; }
+  local f
+  for f in "$repo/modules/skill/contracts/task/STATUS-REFERENCE.md" \
+           "$TMP/payload/cuo/skills/contracts/task/STATUS-REFERENCE.md"; do
+    [ -s "$f" ] || continue     # the contract is vendored under more than one root; check what exists
+    grep -q 'SPEC REJECTED' "$f"      || { fail t19 "$f: spec_rejected route missing"; return; }
+    grep -qE '\| \*\*.draft.\*\* \(with .routed_back_count \+= 1., .entered_via: spec_rejected.\)' "$f" \
+      || { fail t19 "$f: spec_rejected does not land at draft"; return; }
+    grep -q 'entered_via' "$f"        || { fail t19 "$f: entered_via not documented"; return; }
+    grep -q 'draft_reason' "$f"       || { fail t19 "$f: draft_reason not documented"; return; }
+  done
+  # the ceiling itself (§1.6) - 18 increments, zero reads, until now
+  local w="$repo/modules/cuo/chief-technology-officer/workflows/ship-tasks.md"
+  grep -q '^## 11b. Route-back ceiling' "$w"          || { fail t19 "$w: no route-back ceiling section"; return; }
+  grep -q 'routed_back_count >= 3.*MUST HALT' "$w"    || { fail t19 "$w: ceiling is not a MUST HALT"; return; }
+  ok t19_spec_rejected_lands_draft
 }
 
 want t01 && t01_manifest_lifecycle
@@ -631,6 +699,8 @@ want t11 && t11_footprint_holds_with_retally
 want t12 && t12_doctrine_view_rules_vendored
 want t13 && t13_queue_rule_p0_p3
 want t14 && t14_reconcile_entry_and_deps_gate
+want t18 && t18_entered_via_contract
+want t19 && t19_spec_rejected_lands_draft
 
 echo "test_workflow_helpers: pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

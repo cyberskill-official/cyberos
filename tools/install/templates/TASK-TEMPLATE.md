@@ -19,6 +19,9 @@ eu_ai_act_risk_class: not_ai   # not_ai | minimal | limited | high
 client_visible: false
 depends_on: []           # ids that must be done first
 routed_back_count: 0
+# draft_reason (optional, drafts only): authoring | migrated_stub | needs_spec | parked_idea
+# entered_via (optional): audit | rework | spec_rejected
+
 awh: N/A                 # N/A unless this repo has a sealed goldenset for the touched area
 ---
 

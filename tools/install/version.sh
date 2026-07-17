@@ -73,8 +73,10 @@ echo "$latest_line"
 echo "installed_rules_sha=${inst_sha:-none}"
 echo "payload_rules_sha=${pay_sha:-none}"
 
-is_ver() { printf '%s' "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; }
-ver_lt() { [ "$1" = "$2" ] && return 1; [ "$(printf '%s\n%s\n' "$1" "$2" | sort -t. -k1,1n -k2,2n -k3,3n | head -1)" = "$1" ]; }
+# The comparison lives in ONE place (TASK-IMP-104). Sibling in the same dir when vendored,
+# lib/ in the source tree - resolve both rather than assume a layout.
+_vc="$(dirname "$0")/lib/version-compare.sh"; [ -f "$_vc" ] || _vc="$(dirname "$0")/version-compare.sh"
+. "$_vc"
 
 verdict="up_to_date"
 if is_ver "$latest" && is_ver "$payload_ver" && ver_lt "$payload_ver" "$latest"; then

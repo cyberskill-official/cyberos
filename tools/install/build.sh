@@ -160,6 +160,9 @@ cp "$here/uninstall.sh" "$out/uninstall.sh"
 cp "$here/check-latest.sh"      "$out/check-latest.sh"
 # Portable lib + docs-tools (status-page hooks, update soft-check). No migrate-tasks / install.sh.
 mkdir -p "$out/lib"
+# version-compare.sh is REQUIRED, not optional: install.sh's downgrade guard and update-check.sh
+# both source it, and a payload without it would silently skip the guard (TASK-IMP-104).
+cp "$here/lib/version-compare.sh" "$out/lib/version-compare.sh"
 [ -f "$here/lib/task-migrate.sh" ] && cp "$here/lib/task-migrate.sh" "$out/lib/task-migrate.sh"
 [ -f "$here/lib/update-check.sh" ] && cp "$here/lib/update-check.sh" "$out/lib/update-check.sh"
 [ -f "$here/lib/status-page.sh" ] && cp "$here/lib/status-page.sh" "$out/lib/status-page.sh"
@@ -173,6 +176,12 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   [ -f "$here/../docs-site/md.mjs" ] && cp "$here/../docs-site/md.mjs" "$out/docs-tools/"
   # task-lint: deterministic machine floor under audit_rubric@2.0 (TASK-IMP-084)
   [ -f "$here/docs-tools/task-lint.mjs" ] && cp "$here/docs-tools/task-lint.mjs" "$out/docs-tools/"
+  # batch-select: the maximal cone-independent batch, computed (v2.8.0). ship-tasks §11a runs it
+  # before step 1, so a payload without it cannot obey the batch rule.
+  [ -f "$here/docs-tools/batch-select.mjs" ] && cp "$here/docs-tools/batch-select.mjs" "$out/docs-tools/"
+  # verify-goals: re-verifies what done claimed (TASK-IMP-109). ship-tasks §11c names the
+  # vendored path, so a payload without it cannot obey the rule.
+  [ -f "$here/docs-tools/verify-goals.mjs" ] && cp "$here/docs-tools/verify-goals.mjs" "$out/docs-tools/"
   # workflow helpers: ship-manifest@1 executor + backlog-state-update byte-discipline executor (TASK-IMP-085)
   [ -f "$here/docs-tools/ship-manifest.mjs" ] && cp "$here/docs-tools/ship-manifest.mjs" "$out/docs-tools/"
   [ -f "$here/docs-tools/backlog-mutate.mjs" ] && cp "$here/docs-tools/backlog-mutate.mjs" "$out/docs-tools/"

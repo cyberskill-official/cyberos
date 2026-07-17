@@ -21,6 +21,28 @@ Run the two skills in order. Both are bundled with this plugin (`${CLAUDE_PLUGIN
 
 4. Report. List each task: id, title, class, final status, and the audit verdict. Then state the next move plainly: the tasks now at `ready_to_implement` are ready, and `/ship-tasks` will drive the next eligible one through implement -> review -> test, halting at the two human-acceptance gates.
 
+5. Surface the material findings - `SPEC_DEFECTS_FOUND`. A batch can pass 10/10 and still have had real defects fixed on the way there; those are the most valuable output of the run and they are exactly what gets skimmed past when they are written as prose. After the report, emit ONE fenced block in the same family as `CONTRACT_ECHO` / `AUDIT_BATCH_SUMMARY`:
+
+```
+SPEC_DEFECTS_FOUND
+count:        <N>
+severity:     <would_have_failed | conflicts_with_shipped | unrecorded_constraint | cosmetic>
+- task:       TASK-XXX-NNN
+  iss:        ISS-NNN
+  defect:     <one line - what was WRONG, not what was added>
+  evidence:   <the file:line or artefact that proves it>
+  resolved:   <the clause or AC that now covers it>
+```
+
+Emission rules:
+- Emit the block whenever >= 1 finding is `material`. A finding is MATERIAL when it changed a spec's normative content: a false claim, an AC that would have failed at testing, a conflict with a shipped task, an unrecorded cross-task constraint, or a security-class gap. Wording, tone, and formatting findings are NOT material and MUST NOT be listed.
+- Zero material findings: emit `SPEC_DEFECTS_FOUND` with `count: 0` and nothing else. The empty block is the signal that the check ran - silence is indistinguishable from not looking.
+- The block is emitted even when every task passes 10/10. Passing is not the absence of defects; it is their resolution.
+- Never pad to a count, never re-list a finding the operator already saw in an earlier batch, and never describe a defect in the language of the fix ("added X") - name what was wrong ("X was claimed and was false").
+- The block is a report, not a gate. It halts nothing; the two HITL gates downstream are unchanged.
+
+This is a REPORTING contract, not a learning loop: the model writes it by reading its own audit files. The mechanism that would find these patterns ACROSS runs, without being asked, is `workflow-improver` (TASK-IMP-110) - unbuilt as of 2026-07-17. Do not let this block imply otherwise.
+
 Never set `done`, never push, merge, or deploy. If the repo has no `.cyberos/` yet, tell the user to run `/install` first.
 
 ## Task folder scaffolding (TASK-SKILL-120 / TASK-DOCS-004)
