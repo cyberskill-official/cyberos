@@ -66,6 +66,18 @@ else
   echo "cyberos: WARN no modules/skill/contracts/task/rubrics/ in source - payload ships without per-type rule families (task-audit cannot enforce BUG-*/REGRESSION-*)" >&2
 fi
 
+# TASK-IMP-111: the plan workflow's standalone rubric. plan-audit loads plan_rubric@1.0 from
+# modules/skill/rubrics/plan_rubric.md and flattens it into cuo/rubrics/ next to bug.md/common.md
+# (the installed home .cyberos/cuo/rubrics/). A rubric correct in modules/ and absent from dist/ is
+# correct nowhere: the vendored plan-audit would name a rubric no installed repo carries. Best-effort
+# like the block above, but loud — a silent skip is exactly how the per-type templates went missing.
+if [ -f "$repo/modules/skill/rubrics/plan_rubric.md" ]; then
+  mkdir -p "$out/cuo/rubrics"
+  cp "$repo/modules/skill/rubrics/plan_rubric.md" "$out/cuo/rubrics/plan_rubric.md"
+else
+  echo "cyberos: WARN no modules/skill/rubrics/plan_rubric.md in source - payload ships without plan_rubric@1.0 (plan-audit cannot enforce PLAN-*)" >&2
+fi
+
 # The vendored skill set - one name per line with its SDP stage, in lifecycle order
 # (TASK-CUO-209: reviewable data, not a drifting string; TASK-SKILL-116's chain-coverage
 # check runs at the end of this build and fails on any under-coverage).
@@ -80,6 +92,8 @@ nfr-certification-author                    # SDP 4  NFR (allowlisted unpaired)
 nfr-evaluator                               # SDP 4  NFR
 nfr-test-runner                             # SDP 4  NFR
 nfr-regression-handler                      # SDP 4  NFR
+plan-author                      # SDP 5  plan (front door: idea -> plan@1 -> create-tasks, TASK-IMP-111)
+plan-audit                       # SDP 5  plan
 task-author                      # SDP 5  task
 task-audit                       # SDP 5
 task-reconcile                   # SDP 5  reconcile drifted entry states (TASK-IMP-100)
