@@ -17,6 +17,15 @@ CY="$root/.cyberos"
 
 echo "cyberos uninstall: target=$root"
 
+# What THIS RUN removed (TASK-IMP-106 §1.1). Each removal appends here at the moment it happens,
+# beside the line that reports it - so a branch that did not run contributes nothing, and the
+# summary cannot claim an action the run did not take. Newline-delimited string rather than an
+# array on purpose: `set -u` plus an empty array is an error on bash < 4.4, and this script runs
+# on whatever bash the operator has (macOS ships 3.2).
+_removed_list=""
+_note_removed() { _removed_list="${_removed_list}$1
+"; }
+
 # Soft update check is irrelevant when removing — skip
 
 if [ ! -d "$CY" ]; then
@@ -63,11 +72,13 @@ if [ -f "$hk" ]; then
   if _cyberos_owns_hook "$hk"; then
     rm -f "$hk"
     echo "  removed managed pre-commit hook"
+    _note_removed "${hk#$root/} (managed pre-commit hook)"
   elif grep -q "cyberos-status-hook" "$hk" 2>/dev/null; then
     tmp="$hk.cyberos.tmp"
     sed '/# >>> cyberos-status-hook/,/# <<< cyberos-status-hook <<</d' "$hk" > "$tmp" && mv "$tmp" "$hk"
     chmod +x "$hk"
     echo "  stripped cyberos block from pre-commit"
+    _note_removed "${hk#$root/} (our block only - the hook itself is yours and stays)"
   fi
 fi
 
@@ -79,6 +90,7 @@ if [ -f "$gi" ] && grep -q 'cyberos' "$gi" 2>/dev/null; then
   if grep -q '>>> cyberos' "$gi" 2>/dev/null; then
     sed '/# >>> cyberos/,/# <<< cyberos <<</d' "$gi" > "$tmp" && mv "$tmp" "$gi"
     echo "  removed managed .gitignore block"
+    _note_removed ".gitignore (managed block only - your rules stay)"
   fi
 fi
 
@@ -96,10 +108,12 @@ for _sc in ship-tasks task-author task-audit; do
   if [ -L "$_p" ]; then
     case "$(readlink "$_p" 2>/dev/null)" in
       *".claude/skills/$_sc"|*".cyberos/plugin/skills/$_sc")
-        rm -f "$_p"; echo "  removed .agents/skills/$_sc (managed entry)";;
+        rm -f "$_p"; echo "  removed .agents/skills/$_sc (managed entry)"
+        _note_removed ".agents/skills/$_sc (managed entry)";;
     esac
   elif [ -d "$_p" ] && [ -f "$_p/.cyberos-owned" ]; then
     rm -rf "$_p"; echo "  removed .agents/skills/$_sc (installer copy)"
+    _note_removed ".agents/skills/$_sc (installer copy)"
   elif [ -d "$_p" ] && [ -f "$_p/SKILL.md" ]; then
     # A skill dir we did NOT mark: either an operator's own, or a copy from an install that
     # predates the marker (TASK-IMP-094 PR-review fix). Ambiguous ownership is not a licence
@@ -111,7 +125,9 @@ for _sc in ship-tasks task-author task-audit; do
   # .claude/skills/ship-tasks keeps today's leave-in-place behavior (section 6).
   if [ "$_sc" != "ship-tasks" ] && [ -L "$root/.claude/skills/$_sc" ]; then
     case "$(readlink "$root/.claude/skills/$_sc" 2>/dev/null)" in
-      *".cyberos/plugin/skills/$_sc") rm -f "$root/.claude/skills/$_sc"; echo "  removed .claude/skills/$_sc (managed entry)";;
+      *".cyberos/plugin/skills/$_sc")
+        rm -f "$root/.claude/skills/$_sc"; echo "  removed .claude/skills/$_sc (managed entry)"
+        _note_removed ".claude/skills/$_sc (managed entry)";;
     esac
   fi
 done
@@ -150,6 +166,7 @@ if [ -d "$_ul" ]; then
 fi
 rm -rf "$CY"
 echo "  removed .cyberos/"
+_note_removed ".cyberos/ (the vendored machine: workflows, skills, plugin, docs-tools)"
 
 # 5. optional restore brain only (minimal rehydrate)
 if [ -n "${KEEP_BRAIN_STASH:-}" ] && [ -d "$KEEP_BRAIN_STASH" ]; then
@@ -159,7 +176,55 @@ if [ -n "${KEEP_BRAIN_STASH:-}" ] && [ -d "$KEEP_BRAIN_STASH" ]; then
   echo "  restored BRAIN at .cyberos/memory/store/ (machine removed; re-install to restore workflow)"
 fi
 
-# 6. skill symlinks into .cyberos (dangling) — leave dirs; operator cleans
+# 6. summary — what went, what stayed and why, and how to finish the job by hand (TASK-IMP-106).
+#
+# This block REPORTS; it MUST NOT mutate. Everything above has already run, so a bug here can
+# never leave a half-removed machine — that is why the summary is last and why nothing follows it.
+#
+# The kept list is DERIVED from what is on disk right now, never recited from memory (§1.4). The
+# line this replaced read `kept: docs/tasks/, docs/status/, CHANGELOG.md, AGENTS.md / pointer
+# files` unconditionally — so it claimed docs/status/ on repos that had never rendered a page, and
+# told the operator their corpus was safe without ever looking for it. A summary that is right by
+# luck is wrong; it drifts the moment the state machine changes and nothing notices, because a
+# hard-coded list has no way to be wrong out loud.
+#
+# Skill symlinks into .cyberos/ are left dangling by design (dirs stay; the operator cleans).
 echo "cyberos uninstall: done."
-echo "  kept: docs/tasks/, docs/status/, CHANGELOG.md, AGENTS.md / pointer files"
+
+if [ -n "$_removed_list" ]; then
+  echo "  removed:"
+  # `|| continue`, not `&& echo`: an && list whose left side fails leaves a non-zero status as
+  # the loop body's last command, and `set -e` would abort the script HERE - after the machine
+  # is already gone. The summary must never be able to fail the run it is reporting on.
+  printf '%s' "$_removed_list" | while IFS= read -r _r; do
+    [ -n "$_r" ] || continue
+    echo "    $_r"
+  done
+fi
+
+# Kept paths: a present-tense probe of the tree we just finished editing. The four NAMES are
+# string literals here — the probe decides only WHETHER a literal prints, never what prints, so
+# nothing from the tree or from "$1" can reach the rm line below. Directories are probed with a
+# trailing slash: `[ -e docs/tasks/ ]` is false for a regular FILE of that name, so a stray file
+# is never announced as the operator's corpus.
+_kept_lines=""
+_kept_paths=""
+_keep() {   # $1 = path (as displayed, probed, and removed)   $2 = the one-line reason
+  [ -e "$root/$1" ] || return 0
+  _kept_lines="${_kept_lines}$(printf '    %-16s %s' "$1" "$2")
+"
+  _kept_paths="${_kept_paths:+$_kept_paths }$1"
+  return 0
+}
+_keep "docs/tasks/"     "your task corpus - specs, audits, the backlog"
+_keep "docs/status/"    "the rendered status page for that corpus"
+_keep "CHANGELOG.md"    "your release history"
+_keep ".cyberos/memory" "the BRAIN store - everything the machine remembered for you"
+
+if [ -n "$_kept_paths" ]; then
+  echo "  kept on purpose - this is your work, not the machine's, so uninstall never removes it:"
+  printf '%s' "$_kept_lines"
+  echo "  to remove the kept material yourself, run this from $root:"
+  echo "    rm -rf $_kept_paths"
+fi
 echo "  re-install: bash <payload>/install.sh $root"

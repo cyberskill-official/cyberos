@@ -27,6 +27,10 @@
 #   t09_nongit_summary_line (TASK-IMP-096) non-git installs get the one-line ship-tasks git
 #        requirement + verbatim remedy in the summary (git rev-parse semantics, so a stale
 #        .git FILE remnant is still non-git); git installs print nothing new.
+#   t20/t21/t22 (TASK-IMP-106) the uninstall summary names what it removed, names each kept
+#        path with a reason + the verbatim removal command, DERIVES the kept list from what is
+#        on disk after the run (t21 is the arm that fails on a hard-coded list - t20 cannot see
+#        the difference), and changes nothing about what uninstall removes or keeps (t22).
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../../.." && pwd)"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
@@ -439,6 +443,131 @@ t09_nongit_summary_line() {
   [ "$all" -eq 1 ] && ok t09_nongit_summary_line
 }
 
+# ---------------------------------------------------------------------------
+# t20/t21/t22 (TASK-IMP-106) - the uninstall summary names what it kept.
+#
+# The fixtures seed the four kept paths EXPLICITLY rather than letting install render them.
+# docs/status/ only exists when node is present, and an arm that quietly stops asserting §1.2
+# on a node-less runner is not an arm. Seeding makes presence the thing under test, which is
+# exactly what §1.4 is about. Speed flags for the same reason: nothing here needs
+# migrate/memory/MCP, because the fixture provides the state directly.
+# ---------------------------------------------------------------------------
+_t2x_fixture() {   # $1 = dir; installs, then seeds all four kept paths
+  mkrepo "$1"; _t06_install "$1" >/dev/null
+  mkdir -p "$1/docs/tasks" "$1/docs/status" "$1/.cyberos/memory/store"
+  printf 'corpus\n' > "$1/docs/tasks/TASK-X-001.md"
+  printf '<html></html>\n' > "$1/docs/status/index.html"
+  printf '# Changelog\n' > "$1/CHANGELOG.md"
+  # BRAIN seeded EMPTY on purpose (spec §3): an empty store is still the operator's, and its
+  # emptiness is not the uninstaller's judgment to make. If this ever starts failing because
+  # the store gained a file, the arm has stopped testing the edge it was written for.
+}
+
+# AC 1 (traces_to #1.1, #1.2, #1.3)
+t20_uninstall_summary_names_kept() {
+  local all=1 d="$TMP/u20"; _t2x_fixture "$d"
+  local out; out="$(bash "$d/.cyberos/uninstall.sh" "$d" 2>&1)"
+  # §1.1 - names what was removed, under a removed: heading
+  grep -qF '  removed:' <<<"$out" || { fail t20_uninstall_summary_names_kept "no removed: heading"; all=0; }
+  grep -qF '.cyberos/ (the vendored machine' <<<"$out" \
+    || { fail t20_uninstall_summary_names_kept "removed list does not name the vendored machine"; all=0; }
+  # §1.2 - every kept path named WITH its reason, on the same line. Path-only would pass a
+  # summary that listed four bare paths, which is the clause minus the half that helps anyone.
+  grep -qE '^ +docs/tasks/ +your task corpus' <<<"$out"    || { fail t20_uninstall_summary_names_kept "docs/tasks/ not named with a reason"; all=0; }
+  grep -qE '^ +docs/status/ +the rendered status page' <<<"$out" || { fail t20_uninstall_summary_names_kept "docs/status/ not named with a reason"; all=0; }
+  grep -qE '^ +CHANGELOG\.md +your release history' <<<"$out"    || { fail t20_uninstall_summary_names_kept "CHANGELOG.md not named with a reason"; all=0; }
+  grep -qE '^ +\.cyberos/memory +the BRAIN store' <<<"$out"      || { fail t20_uninstall_summary_names_kept "BRAIN not named with a reason"; all=0; }
+  # §1.3 - the removal command, verbatim and complete. Fixed-string exact: this literal IS the
+  # contract an operator copy-pastes, so a drifted or partial command must fail here.
+  grep -qF '    rm -rf docs/tasks/ docs/status/ CHANGELOG.md .cyberos/memory' <<<"$out" \
+    || { fail t20_uninstall_summary_names_kept "verbatim removal command absent or drifted"; all=0; }
+  # ...and it must be presented as something to run from the repo root, or it is a command
+  # whose meaning depends on a cwd the operator was never told.
+  grep -qF "run this from $d" <<<"$out" \
+    || { fail t20_uninstall_summary_names_kept "removal command does not name the directory to run it from"; all=0; }
+  # §1.5 guard rail at the cheapest possible price: the four are still on disk afterwards.
+  { [ -f "$d/docs/tasks/TASK-X-001.md" ] && [ -f "$d/docs/status/index.html" ] \
+    && [ -f "$d/CHANGELOG.md" ] && [ -d "$d/.cyberos/memory" ]; } \
+    || { fail t20_uninstall_summary_names_kept "summary named a path as kept and it is NOT on disk"; all=0; }
+  [ "$all" -eq 1 ] && ok t20_uninstall_summary_names_kept
+}
+
+# AC 2 (traces_to #1.4) - THE load-bearing arm. A hard-coded list passes t20 perfectly and
+# fails here. Every negative assertion below is paired with a positive one, because a summary
+# that printed NOTHING would satisfy every "MUST NOT name X" on its own (TASK-IMP-118's class).
+t21_uninstall_summary_derived_not_hardcoded() {
+  local all=1 out
+  # arm 1: the live defect - a repo that never rendered a page
+  local a="$TMP/u21-a"; _t2x_fixture "$a"; rm -rf "$a/docs/status"
+  out="$(bash "$a/.cyberos/uninstall.sh" "$a" 2>&1)"
+  grep -q 'docs/status' <<<"$out" \
+    && { fail t21_uninstall_summary_derived_not_hardcoded "claimed docs/status/ as kept when it does not exist (hard-coded list)"; all=0; }
+  grep -qE '^ +docs/tasks/ +your task corpus' <<<"$out" \
+    || { fail t21_uninstall_summary_derived_not_hardcoded "arm 1 vacuous: the summary named nothing at all, so the negative above proved nothing"; all=0; }
+  # arm 2: a SECOND path, so "only docs/status is conditional, the rest is recited" cannot pass
+  local b="$TMP/u21-b"; _t2x_fixture "$b"
+  out="$(CYBEROS_UNINSTALL_KEEP_BRAIN=0 bash "$b/.cyberos/uninstall.sh" "$b" 2>&1)"
+  [ -e "$b/.cyberos/memory" ] \
+    && { fail t21_uninstall_summary_derived_not_hardcoded "construction broken: KEEP_BRAIN=0 left .cyberos/memory on disk, so the arm cannot test absence"; all=0; }
+  grep -q '\.cyberos/memory' <<<"$out" \
+    && { fail t21_uninstall_summary_derived_not_hardcoded "claimed the BRAIN as kept after dropping it"; all=0; }
+  grep -qE '^ +CHANGELOG\.md +your release history' <<<"$out" \
+    || { fail t21_uninstall_summary_derived_not_hardcoded "arm 2 vacuous: the summary named nothing at all"; all=0; }
+  # arm 3 (§3): never installed - no machine, so no kept list. Nothing was kept BY US; claiming
+  # otherwise would take credit for a decision this run never made.
+  # (the payload's copy, not a vendored one - the whole point is that no machine was installed)
+  local c="$TMP/u21-c"; mkrepo "$c"; mkdir -p "$c/docs/tasks"
+  out="$(bash "$TMP/payload/uninstall.sh" "$c" 2>&1)"
+  grep -qF 'nothing to do (no .cyberos/)' <<<"$out" \
+    || { fail t21_uninstall_summary_derived_not_hardcoded "arm 3 precondition: expected the nothing-to-do guard"; all=0; }
+  grep -qi 'kept' <<<"$out" \
+    && { fail t21_uninstall_summary_derived_not_hardcoded "printed a kept list for a machine that was never there"; all=0; }
+  # arm 4: machine present, everything else absent -> a kept block would be an empty rm -rf
+  local e="$TMP/u21-e"; mkrepo "$e"; _t06_install "$e" >/dev/null
+  rm -rf "$e/docs" "$e/CHANGELOG.md"
+  out="$(CYBEROS_UNINSTALL_KEEP_BRAIN=0 bash "$e/.cyberos/uninstall.sh" "$e" 2>&1)"
+  grep -qF 'removed:' <<<"$out" \
+    || { fail t21_uninstall_summary_derived_not_hardcoded "arm 4 vacuous: not even the removed list printed"; all=0; }
+  grep -qE '^ +rm -rf *$' <<<"$out" \
+    && { fail t21_uninstall_summary_derived_not_hardcoded "printed a bare 'rm -rf' with no arguments"; all=0; }
+  grep -q 'kept on purpose' <<<"$out" \
+    && { fail t21_uninstall_summary_derived_not_hardcoded "printed a kept heading with nothing kept"; all=0; }
+  [ "$all" -eq 1 ] && ok t21_uninstall_summary_derived_not_hardcoded
+}
+
+# AC 3 (traces_to #1.5) - the summary changes nothing on disk.
+# Two identical fixtures: A runs the real vendored uninstall, B runs the SAME script with the
+# summary (section 6 to EOF) stripped out. Same state machine, minus the thing under test, so
+# any file the summary creates or removes shows up as a diff between the trees.
+# Why not diff against a pinned git baseline: a later task that legitimately changes what
+# uninstall removes would fail that arm for a reason with nothing to do with §1.5. Stripping
+# compares the script against itself, so both sides move together for ever.
+t22_uninstall_behavior_unchanged() {
+  local all=1 a="$TMP/u22-a" b="$TMP/u22-b"
+  _t2x_fixture "$a"; _t2x_fixture "$b"
+  local u="$a/.cyberos/uninstall.sh"
+  # construction check 1: the anchor exists, so the sed below is not a silent no-op that would
+  # make this arm compare two identical runs and always pass. (Also proves the payload carries
+  # the change - the vendored copy is what an operator actually runs.)
+  [ "$(grep -c '^# 6\. summary' "$u")" = 1 ] \
+    || { fail t22_uninstall_behavior_unchanged "construction broken: no unique '# 6. summary' anchor in the vendored uninstall.sh"; return; }
+  sed '/^# 6\. summary/,$d' "$u" > "$TMP/u22-nosummary.sh"
+  # construction check 2: the strip really removed the summary, not just a comment
+  grep -q 'kept on purpose' "$TMP/u22-nosummary.sh" \
+    && { fail t22_uninstall_behavior_unchanged "construction broken: stripped copy still prints the summary"; return; }
+  bash "$u" "$a" >/dev/null 2>&1               || { fail t22_uninstall_behavior_unchanged "real uninstall exited nonzero"; all=0; }
+  bash "$TMP/u22-nosummary.sh" "$b" >/dev/null 2>&1 || { fail t22_uninstall_behavior_unchanged "stripped uninstall exited nonzero"; all=0; }
+  # .git is excluded: git's own object/index churn differs run to run and is not our behavior.
+  ( cd "$a" && find . -path ./.git -prune -o -print | sort ) > "$TMP/u22-a.list"
+  ( cd "$b" && find . -path ./.git -prune -o -print | sort ) > "$TMP/u22-b.list"
+  cmp -s "$TMP/u22-a.list" "$TMP/u22-b.list" \
+    || { fail t22_uninstall_behavior_unchanged "the summary changed what uninstall removes or keeps: $(diff "$TMP/u22-a.list" "$TMP/u22-b.list" | tr '\n' ' ')"; all=0; }
+  # construction check 3: the trees are not trivially equal because both are empty
+  [ "$(wc -l < "$TMP/u22-a.list")" -gt 5 ] \
+    || { fail t22_uninstall_behavior_unchanged "construction broken: post-uninstall tree is near-empty, so the comparison proves nothing"; all=0; }
+  [ "$all" -eq 1 ] && ok t22_uninstall_behavior_unchanged
+}
+
 t01_gitignore_managed_block
 t02_changelog_once
 t03_root_task_migration
@@ -458,6 +587,9 @@ t06_existing_config_untouched
 t07_workflow_gitignore_patterns
 t08_gates_env_regen_notice
 t09_nongit_summary_line
+t20_uninstall_summary_names_kept
+t21_uninstall_summary_derived_not_hardcoded
+t22_uninstall_behavior_unchanged
 
 echo "install-hygiene: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
