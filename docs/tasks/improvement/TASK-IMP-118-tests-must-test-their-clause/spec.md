@@ -19,7 +19,6 @@ new_files:
 modified_files:
   - modules/skill/task-audit/RUBRIC.md
   - modules/skill/task-audit/SKILL.md
-  - tools/install/docs-tools/templates/task-audit/RUBRIC.md
 routed_back_count: 0
 awh: N/A
 ---
@@ -128,7 +127,7 @@ assertion, and why the assertion was weaker.
 Test: `t03_anti_example_is_present_and_specific`
 
 1.4 `task-audit/SKILL.md` MUST instruct the auditor to perform the comparison per clause and to
-record both halves in the audit body. Both vendored copies.
+record both halves in the audit body. The single source `modules/skill/task-audit/SKILL.md` carries the instruction; `build.sh` vendors it to every payload location.
 Test: `t04_skill_instructs_the_comparison`
 
 1.5 TRACE-006 MUST be judgment-family and MUST NOT be added to task-lint. A structural check that
@@ -162,7 +161,7 @@ See "## Scope -> ### Out of scope / Non-Goals" above.
   Test: `t02_verb_table_is_complete`.
 - AC3 (traces_to #1.3): 108 §1.7 is the worked anti-example, quoted. Test:
   `t03_anti_example_is_present_and_specific`.
-- AC4 (traces_to #1.4): both vendored task-audit SKILL.md copies instruct the comparison. Test:
+- AC4 (traces_to #1.4): the source task-audit SKILL.md instructs the comparison. Test:
   `t04_skill_instructs_the_comparison`.
 - AC5 (traces_to #1.5): TRACE-006 is absent from task-lint. Test: `t05_not_in_the_machine_floor`.
 - AC6: re-auditing 108 §1.7 against the amended rubric FAILS on the original test and PASSES on
