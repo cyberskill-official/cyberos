@@ -48,49 +48,48 @@ source_decisions:
   - DEC-1332 2026-05-17 — memory audit kinds: ten.bundle_export_initiated, ten.bundle_built, ten.bundle_delivered, ten.bundle_failed, ten.bundle_expired, ten.bundle_signature_generated
   - DEC-1333 2026-05-17 — Bundle SHA-256 anchored at TASK-OBS-009 chain-of-custody system for cross-system evidence; manifest signature verifiable years later via published Ed25519 public key
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/ten/
-  new_files:
-    - services/ten/migrations/0026_tenant_bundle_exports.sql
-    - services/ten/migrations/0027_tenant_signing_keys.sql
-    - services/ten/src/bundle/mod.rs
-    - services/ten/src/bundle/builder.rs
-    - services/ten/src/bundle/signer.rs
-    - services/ten/src/bundle/manifest.rs
-    - services/ten/src/bundle/deterministic_zip.rs
-    - services/ten/src/bundle/keygen.rs
-    - services/ten/src/bundle/delivery.rs
-    - services/ten/src/audit/bundle_events.rs
-    - services/ten/src/handlers/bundle_routes.rs
-    - services/ten/tests/bundle_deterministic_test.rs
-    - services/ten/tests/bundle_signature_verify_test.rs
-    - services/ten/tests/bundle_manifest_format_test.rs
-    - services/ten/tests/bundle_chain_anchor_test.rs
-    - services/ten/tests/bundle_status_enum_cardinality_test.rs
-    - services/ten/tests/bundle_rate_limit_3_per_year_test.rs
-    - services/ten/tests/bundle_delivery_30d_ttl_test.rs
-    - services/ten/tests/bundle_audit_chain_completeness_test.rs
-    - services/ten/tests/bundle_pre_deletion_gate_test.rs
-    - services/ten/tests/bundle_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/ten/
+new_files:
+  - services/ten/migrations/0026_tenant_bundle_exports.sql
+  - services/ten/migrations/0027_tenant_signing_keys.sql
+  - services/ten/src/bundle/mod.rs
+  - services/ten/src/bundle/builder.rs
+  - services/ten/src/bundle/signer.rs
+  - services/ten/src/bundle/manifest.rs
+  - services/ten/src/bundle/deterministic_zip.rs
+  - services/ten/src/bundle/keygen.rs
+  - services/ten/src/bundle/delivery.rs
+  - services/ten/src/audit/bundle_events.rs
+  - services/ten/src/handlers/bundle_routes.rs
+  - services/ten/tests/bundle_deterministic_test.rs
+  - services/ten/tests/bundle_signature_verify_test.rs
+  - services/ten/tests/bundle_manifest_format_test.rs
+  - services/ten/tests/bundle_chain_anchor_test.rs
+  - services/ten/tests/bundle_status_enum_cardinality_test.rs
+  - services/ten/tests/bundle_rate_limit_3_per_year_test.rs
+  - services/ten/tests/bundle_delivery_30d_ttl_test.rs
+  - services/ten/tests/bundle_audit_chain_completeness_test.rs
+  - services/ten/tests/bundle_pre_deletion_gate_test.rs
+  - services/ten/tests/bundle_audit_emission_test.rs
 
-  modified_files:
-    - services/ten/src/lib.rs
-    # generate Ed25519 keypair at provision
-    - services/ten/src/provisioning/orchestrator.rs
-    # +ed25519-dalek + zip + age
-    - services/ten/Cargo.toml
+modified_files:
+  - services/ten/src/lib.rs
+  # generate Ed25519 keypair at provision
+  - services/ten/src/provisioning/orchestrator.rs
+  # +ed25519-dalek + zip + age
+  - services/ten/Cargo.toml
 
-  allowed_tools:
-    - file_read: services/{ten,proj,inv,doc,chat,auth,memory}/**
-    - file_write: services/ten/{src,tests,migrations}/**
-    - bash: cd services/ten && cargo test bundle
+allowed_tools:
+  - file_read: services/{ten,proj,inv,doc,chat,auth,memory}/**
+  - file_write: services/ten/{src,tests,migrations}/**
+  - bash: cd services/ten && cargo test bundle
 
-  disallowed_tools:
-    - non-deterministic zip ordering (per DEC-1321)
-    - sign manifest with shared key (per DEC-1322 — per-tenant)
-    - allow > 3 bundle requests per year (per DEC-1329)
-    - allow permanent-delete without recent bundle (per DEC-1330)
+disallowed_tools:
+  - non-deterministic zip ordering (per DEC-1321)
+  - sign manifest with shared key (per DEC-1322 — per-tenant)
+  - allow > 3 bundle requests per year (per DEC-1329)
+  - allow permanent-delete without recent bundle (per DEC-1330)
 
 effort_hours: 8
 subtasks:

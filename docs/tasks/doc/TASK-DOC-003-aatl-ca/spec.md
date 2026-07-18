@@ -39,37 +39,36 @@ source_decisions:
   - DEC-1784 2026-05-17 — Returns PAdES-B-T signatures (similar to QTSP but US Adobe-trust chain); composes with TASK-DOC-011 LTV
   - DEC-1785 2026-05-17 — memory audit kinds: doc.aatl_signature_requested, doc.aatl_signature_received, doc.aatl_cert_validated, doc.aatl_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/doc/
-  new_files:
-    - services/doc/migrations/0009_aatl_signatures.sql
-    - services/doc/src/aatl/mod.rs
-    - services/doc/src/aatl/abstraction.rs
-    - services/doc/src/aatl/digicert_client.rs
-    - services/doc/src/aatl/entrust_client.rs
-    - services/doc/src/aatl/identrust_client.rs
-    - services/doc/src/aatl/aatl_root_validator.rs
-    - services/doc/src/handlers/aatl_routes.rs
-    - services/doc/src/audit/aatl_events.rs
-    - services/doc/tests/aatl_digicert_test.rs
-    - services/doc/tests/aatl_entrust_test.rs
-    - services/doc/tests/aatl_identrust_test.rs
-    - services/doc/tests/aatl_partner_enum_cardinality_test.rs
-    - services/doc/tests/aatl_request_kind_enum_cardinality_test.rs
-    - services/doc/tests/aatl_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/doc/
+new_files:
+  - services/doc/migrations/0009_aatl_signatures.sql
+  - services/doc/src/aatl/mod.rs
+  - services/doc/src/aatl/abstraction.rs
+  - services/doc/src/aatl/digicert_client.rs
+  - services/doc/src/aatl/entrust_client.rs
+  - services/doc/src/aatl/identrust_client.rs
+  - services/doc/src/aatl/aatl_root_validator.rs
+  - services/doc/src/handlers/aatl_routes.rs
+  - services/doc/src/audit/aatl_events.rs
+  - services/doc/tests/aatl_digicert_test.rs
+  - services/doc/tests/aatl_entrust_test.rs
+  - services/doc/tests/aatl_identrust_test.rs
+  - services/doc/tests/aatl_partner_enum_cardinality_test.rs
+  - services/doc/tests/aatl_request_kind_enum_cardinality_test.rs
+  - services/doc/tests/aatl_audit_emission_test.rs
 
-  modified_files:
-    - services/doc/src/lib.rs
+modified_files:
+  - services/doc/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{doc,auth}/**
-    - file_write: services/doc/{src,tests,migrations}/**
-    - bash: cd services/doc && cargo test aatl
+allowed_tools:
+  - file_read: services/{doc,auth}/**
+  - file_write: services/doc/{src,tests,migrations}/**
+  - bash: cd services/doc && cargo test aatl
 
-  disallowed_tools:
-    - non-CISO creds write (per DEC-1783)
-    - skip AATL root validation (per DEC-1780)
+disallowed_tools:
+  - non-CISO creds write (per DEC-1783)
+  - skip AATL root validation (per DEC-1780)
 
 effort_hours: 12
 subtasks:

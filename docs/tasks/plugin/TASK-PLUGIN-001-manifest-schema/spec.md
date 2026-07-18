@@ -43,41 +43,40 @@ source_decisions:
   - DEC-2408 2026-05-19 — Reference packer is Python (`modules/plugin/cyberos_plugin/`), Rust binary deferred to TASK-PLUGIN-007; Python first matches CUO/memory reference-impl convention
   - DEC-2409 2026-05-19 — Packer MUST be reproducible — same input → same SHA-256; timestamps and machine names MUST NOT leak into the bundle
 
-build_envelope:
-  language: python 3.10
-  service: modules/plugin/cyberos_plugin/
-  new_files:
-    - modules/plugin/cyberos_plugin/__init__.py
-    - modules/plugin/cyberos_plugin/packer.py
-    - modules/plugin/cyberos_plugin/validator.py
-    - modules/plugin/cyberos_plugin/cli.py
-    - modules/plugin/cyberos_plugin/reproducible.py
-    - modules/plugin/pyproject.toml
-    - modules/plugin/tests/test_schema_required_fields.py
-    - modules/plugin/tests/test_schema_tool_name_pattern.py
-    - modules/plugin/tests/test_schema_semver_pattern.py
-    - modules/plugin/tests/test_packer_reproducible.py
-    - modules/plugin/tests/test_packer_signature_required.py
-    - modules/plugin/tests/test_cli_pack_smoke.py
-    - modules/plugin/tests/fixtures/valid_minimal_plugin.json
-    - modules/plugin/tests/fixtures/valid_complete_plugin.json
-    - modules/plugin/tests/fixtures/invalid_missing_signature.json
-    - modules/plugin/tests/fixtures/invalid_tool_name.json
-    - modules/plugin/manifests/cyberos@1.0.0.plugin.json
+language: python 3.10
+service: modules/plugin/cyberos_plugin/
+new_files:
+  - modules/plugin/cyberos_plugin/__init__.py
+  - modules/plugin/cyberos_plugin/packer.py
+  - modules/plugin/cyberos_plugin/validator.py
+  - modules/plugin/cyberos_plugin/cli.py
+  - modules/plugin/cyberos_plugin/reproducible.py
+  - modules/plugin/pyproject.toml
+  - modules/plugin/tests/test_schema_required_fields.py
+  - modules/plugin/tests/test_schema_tool_name_pattern.py
+  - modules/plugin/tests/test_schema_semver_pattern.py
+  - modules/plugin/tests/test_packer_reproducible.py
+  - modules/plugin/tests/test_packer_signature_required.py
+  - modules/plugin/tests/test_cli_pack_smoke.py
+  - modules/plugin/tests/fixtures/valid_minimal_plugin.json
+  - modules/plugin/tests/fixtures/valid_complete_plugin.json
+  - modules/plugin/tests/fixtures/invalid_missing_signature.json
+  - modules/plugin/tests/fixtures/invalid_tool_name.json
+  - modules/plugin/manifests/cyberos@1.0.0.plugin.json
 
-  modified_files:
-    - modules/plugin/manifest.schema.json
-    - website docs (Plugin page)
+modified_files:
+  - modules/plugin/manifest.schema.json
+  - website docs (Plugin page)
 
-  allowed_tools:
-    - file_read: modules/plugin/**
-    - file_write: modules/plugin/{cyberos_plugin,tests,manifests}/**
-    - bash: cd modules/plugin && python -m pytest tests/
+allowed_tools:
+  - file_read: modules/plugin/**
+  - file_write: modules/plugin/{cyberos_plugin,tests,manifests}/**
+  - bash: cd modules/plugin && python -m pytest tests/
 
-  disallowed_tools:
-    - skip signature field (per DEC-2407)
-    - inject timestamps into bundle (per DEC-2409)
-    - hard-code rust language (per DEC-2408 — Python first)
+disallowed_tools:
+  - skip signature field (per DEC-2407)
+  - inject timestamps into bundle (per DEC-2409)
+  - hard-code rust language (per DEC-2408 — Python first)
 
 effort_hours: 8
 subtasks:

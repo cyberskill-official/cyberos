@@ -36,32 +36,31 @@ source_decisions:
   - DEC-2173 2026-05-17 — Trigger function checks new_amount >= old_amount on INSERT of new comp record for same member+p1_base; rejects if violated
   - DEC-2174 2026-05-17 — memory audit kinds: rew.p1_raise_committed, rew.p1_change_attempted_violation, rew.p1_demotion_consent_recorded
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/rew/
-  new_files:
-    - services/rew/migrations/0003_p1_protection.sql
-    - services/rew/src/p1_guard/mod.rs
-    - services/rew/src/p1_guard/validator.rs
-    - services/rew/src/p1_guard/demotion_consent.rs
-    - services/rew/src/audit/p1_events.rs
-    - services/rew/tests/p1_reduction_rejected_test.rs
-    - services/rew/tests/p1_change_kind_enum_cardinality_test.rs
-    - services/rew/tests/p1_demotion_consent_test.rs
-    - services/rew/tests/p1_db_trigger_test.rs
-    - services/rew/tests/p1_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/rew/
+new_files:
+  - services/rew/migrations/0003_p1_protection.sql
+  - services/rew/src/p1_guard/mod.rs
+  - services/rew/src/p1_guard/validator.rs
+  - services/rew/src/p1_guard/demotion_consent.rs
+  - services/rew/src/audit/p1_events.rs
+  - services/rew/tests/p1_reduction_rejected_test.rs
+  - services/rew/tests/p1_change_kind_enum_cardinality_test.rs
+  - services/rew/tests/p1_demotion_consent_test.rs
+  - services/rew/tests/p1_db_trigger_test.rs
+  - services/rew/tests/p1_audit_emission_test.rs
 
-  modified_files:
-    - services/rew/src/comp/mod.rs
+modified_files:
+  - services/rew/src/comp/mod.rs
 
-  allowed_tools:
-    - file_read: services/rew/**
-    - file_write: services/rew/{src,tests,migrations}/**
-    - bash: cd services/rew && cargo test p1_guard
+allowed_tools:
+  - file_read: services/rew/**
+  - file_write: services/rew/{src,tests,migrations}/**
+  - bash: cd services/rew && cargo test p1_guard
 
-  disallowed_tools:
-    - reduce P1 without consent (per DEC-2170)
-    - bypass DB trigger (per DEC-2173)
+disallowed_tools:
+  - reduce P1 without consent (per DEC-2170)
+  - bypass DB trigger (per DEC-2173)
 
 effort_hours: 4
 subtasks:

@@ -37,36 +37,35 @@ source_decisions:
   - DEC-1624 2026-05-17 — Cross-source dedup: same email_thread_id from inbound + convert-to-issue + reply does NOT produce 3 activities; one row per logical event
   - DEC-1625 2026-05-17 — memory audit kinds: crm.activity_logged, crm.activity_dedup_skipped, crm.activity_correction_added; PII scrub via TASK-MEMORY-111
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/crm/
-  new_files:
-    - services/crm/migrations/0002_activity_feed.sql
-    - services/crm/src/activity/mod.rs
-    - services/crm/src/activity/logger.rs
-    - services/crm/src/activity/dedup.rs
-    - services/crm/src/activity/event_subscribers.rs
-    - services/crm/src/handlers/activity_routes.rs
-    - services/crm/src/audit/activity_events.rs
-    - services/crm/tests/activity_email_logged_test.rs
-    - services/crm/tests/activity_chat_mention_test.rs
-    - services/crm/tests/activity_calendar_test.rs
-    - services/crm/tests/activity_dedup_test.rs
-    - services/crm/tests/activity_kind_enum_cardinality_test.rs
-    - services/crm/tests/activity_correction_test.rs
-    - services/crm/tests/activity_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/crm/
+new_files:
+  - services/crm/migrations/0002_activity_feed.sql
+  - services/crm/src/activity/mod.rs
+  - services/crm/src/activity/logger.rs
+  - services/crm/src/activity/dedup.rs
+  - services/crm/src/activity/event_subscribers.rs
+  - services/crm/src/handlers/activity_routes.rs
+  - services/crm/src/audit/activity_events.rs
+  - services/crm/tests/activity_email_logged_test.rs
+  - services/crm/tests/activity_chat_mention_test.rs
+  - services/crm/tests/activity_calendar_test.rs
+  - services/crm/tests/activity_dedup_test.rs
+  - services/crm/tests/activity_kind_enum_cardinality_test.rs
+  - services/crm/tests/activity_correction_test.rs
+  - services/crm/tests/activity_audit_emission_test.rs
 
-  modified_files:
-    - services/crm/src/lib.rs
+modified_files:
+  - services/crm/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{crm,email,chat}/**
-    - file_write: services/crm/{src,tests,migrations}/**
-    - bash: cd services/crm && cargo test activity
+allowed_tools:
+  - file_read: services/{crm,email,chat}/**
+  - file_write: services/crm/{src,tests,migrations}/**
+  - bash: cd services/crm && cargo test activity
 
-  disallowed_tools:
-    - mutate prior activity (per DEC-1621)
-    - log inactive contact without create (per DEC-1620 — contact must exist)
+disallowed_tools:
+  - mutate prior activity (per DEC-1621)
+  - log inactive contact without create (per DEC-1620 — contact must exist)
 
 effort_hours: 8
 subtasks:

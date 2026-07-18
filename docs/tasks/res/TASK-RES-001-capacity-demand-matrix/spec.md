@@ -36,33 +36,32 @@ source_decisions:
   - DEC-2033 2026-05-17 — Idempotent per (tenant_id, run_date); UNIQUE constraint
   - DEC-2034 2026-05-17 — memory audit kinds: res.matrix_run_started, res.matrix_member_computed, res.matrix_run_completed, res.matrix_run_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/res/
-  new_files:
-    - services/res/migrations/0001_capacity_demand_matrix.sql
-    - services/res/src/matrix/mod.rs
-    - services/res/src/matrix/computer.rs
-    - services/res/src/matrix/batch_runner.rs
-    - services/res/src/handlers/matrix_routes.rs
-    - services/res/src/audit/matrix_events.rs
-    - services/res/tests/matrix_computer_test.rs
-    - services/res/tests/matrix_run_status_enum_cardinality_test.rs
-    - services/res/tests/matrix_idempotent_test.rs
-    - services/res/tests/matrix_capacity_calc_test.rs
-    - services/res/tests/matrix_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/res/
+new_files:
+  - services/res/migrations/0001_capacity_demand_matrix.sql
+  - services/res/src/matrix/mod.rs
+  - services/res/src/matrix/computer.rs
+  - services/res/src/matrix/batch_runner.rs
+  - services/res/src/handlers/matrix_routes.rs
+  - services/res/src/audit/matrix_events.rs
+  - services/res/tests/matrix_computer_test.rs
+  - services/res/tests/matrix_run_status_enum_cardinality_test.rs
+  - services/res/tests/matrix_idempotent_test.rs
+  - services/res/tests/matrix_capacity_calc_test.rs
+  - services/res/tests/matrix_audit_emission_test.rs
 
-  modified_files:
-    - services/res/src/lib.rs
+modified_files:
+  - services/res/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{res,hr,proj,time,learn}/**
-    - file_write: services/res/{src,tests,migrations}/**
-    - bash: cd services/res && cargo test matrix
+allowed_tools:
+  - file_read: services/{res,hr,proj,time,learn}/**
+  - file_write: services/res/{src,tests,migrations}/**
+  - bash: cd services/res && cargo test matrix
 
-  disallowed_tools:
-    - mutate prior matrix run (per DEC-2030)
-    - duplicate run same date (per DEC-2033)
+disallowed_tools:
+  - mutate prior matrix run (per DEC-2030)
+  - duplicate run same date (per DEC-2033)
 
 effort_hours: 10
 subtasks:

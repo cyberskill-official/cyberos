@@ -37,33 +37,32 @@ source_decisions:
   - DEC-1644 2026-05-17 — Idempotency: deal can convert to engagement only ONCE; subsequent attempts return existing engagement_id
   - DEC-1645 2026-05-17 — memory audit kinds: crm.conversion_initiated, crm.engagement_created, crm.conversion_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/crm/
-  new_files:
-    - services/crm/migrations/0004_deal_conversion.sql
-    - services/crm/src/conversion/mod.rs
-    - services/crm/src/conversion/engagement_builder.rs
-    - services/crm/src/handlers/conversion_routes.rs
-    - services/crm/src/audit/conversion_events.rs
-    - services/crm/tests/conversion_auto_on_won_test.rs
-    - services/crm/tests/conversion_manual_test.rs
-    - services/crm/tests/conversion_idempotent_test.rs
-    - services/crm/tests/conversion_backlink_test.rs
-    - services/crm/tests/conversion_source_enum_cardinality_test.rs
-    - services/crm/tests/conversion_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/crm/
+new_files:
+  - services/crm/migrations/0004_deal_conversion.sql
+  - services/crm/src/conversion/mod.rs
+  - services/crm/src/conversion/engagement_builder.rs
+  - services/crm/src/handlers/conversion_routes.rs
+  - services/crm/src/audit/conversion_events.rs
+  - services/crm/tests/conversion_auto_on_won_test.rs
+  - services/crm/tests/conversion_manual_test.rs
+  - services/crm/tests/conversion_idempotent_test.rs
+  - services/crm/tests/conversion_backlink_test.rs
+  - services/crm/tests/conversion_source_enum_cardinality_test.rs
+  - services/crm/tests/conversion_audit_emission_test.rs
 
-  modified_files:
-    - services/crm/src/deals.rs
+modified_files:
+  - services/crm/src/deals.rs
 
-  allowed_tools:
-    - file_read: services/{crm,proj}/**
-    - file_write: services/crm/{src,tests,migrations}/**
-    - bash: cd services/crm && cargo test conversion
+allowed_tools:
+  - file_read: services/{crm,proj}/**
+  - file_write: services/crm/{src,tests,migrations}/**
+  - bash: cd services/crm && cargo test conversion
 
-  disallowed_tools:
-    - convert same deal twice (per DEC-1644)
-    - create engagement without rate_card (per DEC-1641)
+disallowed_tools:
+  - convert same deal twice (per DEC-1644)
+  - create engagement without rate_card (per DEC-1641)
 
 effort_hours: 6
 subtasks:

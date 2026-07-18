@@ -37,34 +37,33 @@ source_decisions:
   - DEC-1933 2026-05-17 — Per-tenant rerank query cache (5min TTL) — same query+source → cached
   - DEC-1934 2026-05-17 — memory audit kinds: kb.rerank_executed, kb.rerank_cache_hit, kb.rerank_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/kb/
-  new_files:
-    - services/kb/migrations/0006_rerank_cache.sql
-    - services/kb/src/rerank/mod.rs
-    - services/kb/src/rerank/bge_rerank_client.rs
-    - services/kb/src/rerank/hybrid_merger.rs
-    - services/kb/src/handlers/rerank_routes.rs
-    - services/kb/src/audit/rerank_events.rs
-    - services/kb/tests/rerank_lexical_only_test.rs
-    - services/kb/tests/rerank_semantic_only_test.rs
-    - services/kb/tests/rerank_hybrid_test.rs
-    - services/kb/tests/rerank_source_enum_cardinality_test.rs
-    - services/kb/tests/rerank_cache_test.rs
-    - services/kb/tests/rerank_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/kb/
+new_files:
+  - services/kb/migrations/0006_rerank_cache.sql
+  - services/kb/src/rerank/mod.rs
+  - services/kb/src/rerank/bge_rerank_client.rs
+  - services/kb/src/rerank/hybrid_merger.rs
+  - services/kb/src/handlers/rerank_routes.rs
+  - services/kb/src/audit/rerank_events.rs
+  - services/kb/tests/rerank_lexical_only_test.rs
+  - services/kb/tests/rerank_semantic_only_test.rs
+  - services/kb/tests/rerank_hybrid_test.rs
+  - services/kb/tests/rerank_source_enum_cardinality_test.rs
+  - services/kb/tests/rerank_cache_test.rs
+  - services/kb/tests/rerank_audit_emission_test.rs
 
-  modified_files:
-    - services/kb/src/lib.rs
+modified_files:
+  - services/kb/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{kb,ai}/**
-    - file_write: services/kb/{src,tests,migrations}/**
-    - bash: cd services/kb && cargo test rerank
+allowed_tools:
+  - file_read: services/{kb,ai}/**
+  - file_write: services/kb/{src,tests,migrations}/**
+  - bash: cd services/kb && cargo test rerank
 
-  disallowed_tools:
-    - return >10 rerank results (per DEC-1932)
-    - bypass cache (per DEC-1933 — perf)
+disallowed_tools:
+  - return >10 rerank results (per DEC-1932)
+  - bypass cache (per DEC-1933 — perf)
 
 effort_hours: 4
 subtasks:

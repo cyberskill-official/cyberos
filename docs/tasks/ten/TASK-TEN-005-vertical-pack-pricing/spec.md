@@ -42,48 +42,47 @@ source_decisions:
   - DEC-1308 2026-05-17 — memory audit kinds: ten.pack_installed, ten.pack_uninstalled, ten.pack_billing_failed, ten.pack_price_overridden, ten.pack_tier_blocked
   - DEC-1309 2026-05-17 — Pack price changes by publisher (CyberSkill) apply at next billing period; existing tenants grandfathered for 90 days
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/ten/
-  new_files:
-    - services/ten/migrations/0023_vertical_pack_installs.sql
-    - services/ten/migrations/0024_vertical_pack_price_catalog.sql
-    - services/ten/migrations/0025_vertical_pack_overrides.sql
-    - services/ten/src/packs/mod.rs
-    - services/ten/src/packs/install.rs
-    - services/ten/src/packs/uninstall.rs
-    - services/ten/src/packs/price_resolver.rs
-    - services/ten/src/packs/billing_push.rs
-    - services/ten/src/packs/tier_gate.rs
-    - services/ten/src/audit/pack_events.rs
-    - services/ten/src/handlers/pack_routes.rs
-    - services/ten/tests/pack_install_test.rs
-    - services/ten/tests/pack_uninstall_prorate_test.rs
-    - services/ten/tests/pack_tier_gate_test.rs
-    - services/ten/tests/pack_per_tenant_override_test.rs
-    - services/ten/tests/pack_install_status_enum_test.rs
-    - services/ten/tests/pack_50_install_limit_test.rs
-    - services/ten/tests/pack_soft_uninstall_14d_test.rs
-    - services/ten/tests/pack_billing_failed_suspends_test.rs
-    - services/ten/tests/pack_audit_emission_test.rs
-    - services/ten/tests/pack_grandfathered_pricing_test.rs
+language: rust 1.81
+service: cyberos/services/ten/
+new_files:
+  - services/ten/migrations/0023_vertical_pack_installs.sql
+  - services/ten/migrations/0024_vertical_pack_price_catalog.sql
+  - services/ten/migrations/0025_vertical_pack_overrides.sql
+  - services/ten/src/packs/mod.rs
+  - services/ten/src/packs/install.rs
+  - services/ten/src/packs/uninstall.rs
+  - services/ten/src/packs/price_resolver.rs
+  - services/ten/src/packs/billing_push.rs
+  - services/ten/src/packs/tier_gate.rs
+  - services/ten/src/audit/pack_events.rs
+  - services/ten/src/handlers/pack_routes.rs
+  - services/ten/tests/pack_install_test.rs
+  - services/ten/tests/pack_uninstall_prorate_test.rs
+  - services/ten/tests/pack_tier_gate_test.rs
+  - services/ten/tests/pack_per_tenant_override_test.rs
+  - services/ten/tests/pack_install_status_enum_test.rs
+  - services/ten/tests/pack_50_install_limit_test.rs
+  - services/ten/tests/pack_soft_uninstall_14d_test.rs
+  - services/ten/tests/pack_billing_failed_suspends_test.rs
+  - services/ten/tests/pack_audit_emission_test.rs
+  - services/ten/tests/pack_grandfathered_pricing_test.rs
 
-  modified_files:
-    - services/ten/src/lib.rs
-    # add active-pack lookup
-    - services/skill/src/registry.rs
+modified_files:
+  - services/ten/src/lib.rs
+  # add active-pack lookup
+  - services/skill/src/registry.rs
 
-  allowed_tools:
-    - file_read: services/{ten,skill,inv}/**
-    - file_write: services/ten/{src,tests,migrations}/**
-    - file_write: services/skill/src/registry.rs
-    - bash: cd services/ten && cargo test packs
+allowed_tools:
+  - file_read: services/{ten,skill,inv}/**
+  - file_write: services/ten/{src,tests,migrations}/**
+  - file_write: services/skill/src/registry.rs
+  - bash: cd services/ten && cargo test packs
 
-  disallowed_tools:
-    - per-seat pricing on packs (per DEC-1300 — flat-fee only)
-    - install pack below min_tier (per DEC-1306)
-    - exceed 50-pack limit without Enterprise override (per DEC-1307)
-    - apply publisher price change retroactively (per DEC-1309 — 90d grandfather)
+disallowed_tools:
+  - per-seat pricing on packs (per DEC-1300 — flat-fee only)
+  - install pack below min_tier (per DEC-1306)
+  - exceed 50-pack limit without Enterprise override (per DEC-1307)
+  - apply publisher price change retroactively (per DEC-1309 — 90d grandfather)
 
 effort_hours: 5
 subtasks:

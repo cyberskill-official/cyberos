@@ -39,34 +39,33 @@ source_decisions:
   - DEC-1874 2026-05-17 — On executed: cascade to TASK-ESOP-005 (vesting halt), TASK-AUTH-101 (deprovision), TASK-PORTAL-008 (DSAR offer), TASK-PROJ-013 (issue reassignment)
   - DEC-1875 2026-05-17 — memory audit kinds: hr.termination_initiated, hr.termination_signed, hr.termination_executed, hr.termination_disputed, hr.termination_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/hr/
-  new_files:
-    - services/hr/migrations/0008_terminations.sql
-    - services/hr/src/termination/mod.rs
-    - services/hr/src/termination/dual_sign_gate.rs
-    - services/hr/src/termination/cascade_executor.rs
-    - services/hr/src/handlers/termination_routes.rs
-    - services/hr/src/audit/termination_events.rs
-    - services/hr/tests/termination_kind_enum_cardinality_test.rs
-    - services/hr/tests/termination_stage_enum_cardinality_test.rs
-    - services/hr/tests/termination_dual_sign_required_test.rs
-    - services/hr/tests/termination_gl_bl_branch_test.rs
-    - services/hr/tests/termination_cascade_test.rs
-    - services/hr/tests/termination_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/hr/
+new_files:
+  - services/hr/migrations/0008_terminations.sql
+  - services/hr/src/termination/mod.rs
+  - services/hr/src/termination/dual_sign_gate.rs
+  - services/hr/src/termination/cascade_executor.rs
+  - services/hr/src/handlers/termination_routes.rs
+  - services/hr/src/audit/termination_events.rs
+  - services/hr/tests/termination_kind_enum_cardinality_test.rs
+  - services/hr/tests/termination_stage_enum_cardinality_test.rs
+  - services/hr/tests/termination_dual_sign_required_test.rs
+  - services/hr/tests/termination_gl_bl_branch_test.rs
+  - services/hr/tests/termination_cascade_test.rs
+  - services/hr/tests/termination_audit_emission_test.rs
 
-  modified_files:
-    - services/hr/src/members.rs
+modified_files:
+  - services/hr/src/members.rs
 
-  allowed_tools:
-    - file_read: services/{hr,esop,auth,portal,proj}/**
-    - file_write: services/hr/{src,tests,migrations}/**
-    - bash: cd services/hr && cargo test termination
+allowed_tools:
+  - file_read: services/{hr,esop,auth,portal,proj}/**
+  - file_write: services/hr/{src,tests,migrations}/**
+  - bash: cd services/hr && cargo test termination
 
-  disallowed_tools:
-    - execute without dual sign (per DEC-1873)
-    - skip cascade (per DEC-1874)
+disallowed_tools:
+  - execute without dual sign (per DEC-1873)
+  - skip cascade (per DEC-1874)
 
 effort_hours: 8
 subtasks:

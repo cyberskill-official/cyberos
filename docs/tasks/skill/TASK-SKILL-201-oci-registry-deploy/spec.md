@@ -38,37 +38,36 @@ source_decisions:
   - DEC-2424 2026-05-17 — Tenant-scoped pulls: bundle visibility per `tenant_acl` jsonb; pulls verify ACL match
   - DEC-2425 2026-05-17 — memory audit kinds: skill.bundle_pushed, skill.bundle_signed, skill.bundle_pulled, skill.bundle_yanked, skill.bundle_signature_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/skill/
-  new_files:
-    - services/skill/migrations/0010_oci_bundles.sql
-    - services/skill/src/oci/mod.rs
-    - services/skill/src/oci/push.rs
-    - services/skill/src/oci/pull.rs
-    - services/skill/src/oci/cosign_wrapper.rs
-    - services/skill/src/oci/acl_check.rs
-    - services/skill/src/handlers/oci_routes.rs
-    - services/skill/src/audit/oci_events.rs
-    - services/skill/tests/bundle_status_enum_cardinality_test.rs
-    - services/skill/tests/oci_push_signed_test.rs
-    - services/skill/tests/oci_tag_immutability_test.rs
-    - services/skill/tests/oci_pull_acl_test.rs
-    - services/skill/tests/oci_yank_test.rs
-    - services/skill/tests/oci_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/skill/
+new_files:
+  - services/skill/migrations/0010_oci_bundles.sql
+  - services/skill/src/oci/mod.rs
+  - services/skill/src/oci/push.rs
+  - services/skill/src/oci/pull.rs
+  - services/skill/src/oci/cosign_wrapper.rs
+  - services/skill/src/oci/acl_check.rs
+  - services/skill/src/handlers/oci_routes.rs
+  - services/skill/src/audit/oci_events.rs
+  - services/skill/tests/bundle_status_enum_cardinality_test.rs
+  - services/skill/tests/oci_push_signed_test.rs
+  - services/skill/tests/oci_tag_immutability_test.rs
+  - services/skill/tests/oci_pull_acl_test.rs
+  - services/skill/tests/oci_yank_test.rs
+  - services/skill/tests/oci_audit_emission_test.rs
 
-  modified_files:
-    - services/skill/src/lib.rs
+modified_files:
+  - services/skill/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{skill,auth}/**
-    - file_write: services/skill/{src,tests,migrations}/**
-    - bash: cd services/skill && cargo test oci
+allowed_tools:
+  - file_read: services/{skill,auth}/**
+  - file_write: services/skill/{src,tests,migrations}/**
+  - bash: cd services/skill && cargo test oci
 
-  disallowed_tools:
-    - overwrite existing tag (per DEC-2423)
-    - pull without signature verify (per DEC-2422)
-    - pull bypassing ACL (per DEC-2424)
+disallowed_tools:
+  - overwrite existing tag (per DEC-2423)
+  - pull without signature verify (per DEC-2422)
+  - pull bypassing ACL (per DEC-2424)
 
 effort_hours: 8
 subtasks:

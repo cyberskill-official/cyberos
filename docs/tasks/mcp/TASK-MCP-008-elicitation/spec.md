@@ -55,68 +55,67 @@ source_decisions:
   - DEC-1159 2026-05-17 — Cross-tenant elicitation read DENIED via RLS + explicit check; attempt = 403 + sev-1 audit
   - "DEC-1160 2026-05-17 — Single-choice + multi-choice elicitation_type have fixed schema with `choices: [{value, label}]` array"
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/mcp/
-  new_files:
-    # pending + completed elicitations
-    - services/mcp/migrations/0012_mcp_elicitations.sql
-    # orchestrator
-    - services/mcp/src/elicitation/mod.rs
-    # tool-side API to emit elicitation
-    - services/mcp/src/elicitation/request.rs
-    # caller-side response handler
-    - services/mcp/src/elicitation/response.rs
-    # caller polling endpoint
-    - services/mcp/src/elicitation/poll.rs
-    # cancellation handler
-    - services/mcp/src/elicitation/cancel.rs
-    # daily timeout sweep
-    - services/mcp/src/elicitation/timeout_job.rs
-    # JSON Schema response validation
-    - services/mcp/src/elicitation/validate.rs
-    # presigned S3 URL generation
-    - services/mcp/src/elicitation/file_upload.rs
-    # NATS publish for push transport
-    - services/mcp/src/elicitation/nats_push.rs
-    # 5 memory row builders
-    - services/mcp/src/audit/elicitation_events.rs
-    # REST routes
-    - services/mcp/src/handlers/elicitation_routes.rs
-    - services/mcp/tests/elicitation_request_response_test.rs
-    - services/mcp/tests/elicitation_timeout_test.rs
-    - services/mcp/tests/elicitation_cancellation_test.rs
-    - services/mcp/tests/elicitation_type_enum_cardinality_test.rs
-    - services/mcp/tests/elicitation_schema_validation_test.rs
-    - services/mcp/tests/elicitation_re_elicit_after_invalid_test.rs
-    - services/mcp/tests/elicitation_confirmation_integration_test.rs
-    - services/mcp/tests/elicitation_file_upload_test.rs
-    - services/mcp/tests/elicitation_idempotency_test.rs
-    - services/mcp/tests/elicitation_cross_tenant_denied_test.rs
-    - services/mcp/tests/elicitation_rate_limit_test.rs
-    - services/mcp/tests/elicitation_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/mcp/
+new_files:
+  # pending + completed elicitations
+  - services/mcp/migrations/0012_mcp_elicitations.sql
+  # orchestrator
+  - services/mcp/src/elicitation/mod.rs
+  # tool-side API to emit elicitation
+  - services/mcp/src/elicitation/request.rs
+  # caller-side response handler
+  - services/mcp/src/elicitation/response.rs
+  # caller polling endpoint
+  - services/mcp/src/elicitation/poll.rs
+  # cancellation handler
+  - services/mcp/src/elicitation/cancel.rs
+  # daily timeout sweep
+  - services/mcp/src/elicitation/timeout_job.rs
+  # JSON Schema response validation
+  - services/mcp/src/elicitation/validate.rs
+  # presigned S3 URL generation
+  - services/mcp/src/elicitation/file_upload.rs
+  # NATS publish for push transport
+  - services/mcp/src/elicitation/nats_push.rs
+  # 5 memory row builders
+  - services/mcp/src/audit/elicitation_events.rs
+  # REST routes
+  - services/mcp/src/handlers/elicitation_routes.rs
+  - services/mcp/tests/elicitation_request_response_test.rs
+  - services/mcp/tests/elicitation_timeout_test.rs
+  - services/mcp/tests/elicitation_cancellation_test.rs
+  - services/mcp/tests/elicitation_type_enum_cardinality_test.rs
+  - services/mcp/tests/elicitation_schema_validation_test.rs
+  - services/mcp/tests/elicitation_re_elicit_after_invalid_test.rs
+  - services/mcp/tests/elicitation_confirmation_integration_test.rs
+  - services/mcp/tests/elicitation_file_upload_test.rs
+  - services/mcp/tests/elicitation_idempotency_test.rs
+  - services/mcp/tests/elicitation_cross_tenant_denied_test.rs
+  - services/mcp/tests/elicitation_rate_limit_test.rs
+  - services/mcp/tests/elicitation_audit_emission_test.rs
 
-  modified_files:
-    # add supports_elicitation field
-    - services/mcp/src/server_registry.rs
-    # mount elicitation routes
-    - services/mcp/src/lib.rs
-    # de-stub the elicit mode placeholder from TASK-MCP-006
-    - services/mcp/src/gating/elicit.rs
-    # task ctx exposes elicit() API
-    - services/mcp/src/tasks/mod.rs
+modified_files:
+  # add supports_elicitation field
+  - services/mcp/src/server_registry.rs
+  # mount elicitation routes
+  - services/mcp/src/lib.rs
+  # de-stub the elicit mode placeholder from TASK-MCP-006
+  - services/mcp/src/gating/elicit.rs
+  # task ctx exposes elicit() API
+  - services/mcp/src/tasks/mod.rs
 
-  allowed_tools:
-    - file_read: services/mcp/**
-    - file_write: services/mcp/{src,tests,migrations}/**
-    - bash: cd services/mcp && cargo test elicitation
+allowed_tools:
+  - file_read: services/mcp/**
+  - file_write: services/mcp/{src,tests,migrations}/**
+  - bash: cd services/mcp && cargo test elicitation
 
-  disallowed_tools:
-    - allow elicitation from sync tools at slice 3 (per DEC-1147)
-    - skip schema validation on response (per DEC-1142 + DEC-1150)
-    - bypass rate limit on elicitation creation (per DEC-1154)
-    - persist file uploads cross-tenant (S3 keys scoped per tenant)
-    - allow re-elicitation > 3 retries on same prompt (per DEC-1150)
+disallowed_tools:
+  - allow elicitation from sync tools at slice 3 (per DEC-1147)
+  - skip schema validation on response (per DEC-1142 + DEC-1150)
+  - bypass rate limit on elicitation creation (per DEC-1154)
+  - persist file uploads cross-tenant (S3 keys scoped per tenant)
+  - allow re-elicitation > 3 retries on same prompt (per DEC-1150)
 
 effort_hours: 6
 subtasks:

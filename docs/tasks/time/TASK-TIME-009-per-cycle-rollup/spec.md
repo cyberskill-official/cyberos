@@ -36,35 +36,34 @@ source_decisions:
   - DEC-1433 2026-05-17 — Rate-card applied at rollup time; snapshot stored in result for TASK-INV-001 to copy
   - DEC-1434 2026-05-17 — memory audit kinds: time.rollup_started, time.rollup_completed, time.rollup_failed, time.rollup_idempotent_hit
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/time/
-  new_files:
-    - services/time/migrations/0007_rollup_cache.sql
-    - services/time/src/rollup/mod.rs
-    - services/time/src/rollup/aggregator.rs
-    - services/time/src/rollup/rate_card_apply.rs
-    - services/time/src/audit/rollup_events.rs
-    - services/time/src/handlers/rollup_routes.rs
-    - services/time/tests/rollup_aggregation_test.rs
-    - services/time/tests/rollup_idempotent_test.rs
-    - services/time/tests/rollup_billable_only_test.rs
-    - services/time/tests/rollup_locked_only_test.rs
-    - services/time/tests/rollup_rate_card_snapshot_test.rs
-    - services/time/tests/rollup_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/time/
+new_files:
+  - services/time/migrations/0007_rollup_cache.sql
+  - services/time/src/rollup/mod.rs
+  - services/time/src/rollup/aggregator.rs
+  - services/time/src/rollup/rate_card_apply.rs
+  - services/time/src/audit/rollup_events.rs
+  - services/time/src/handlers/rollup_routes.rs
+  - services/time/tests/rollup_aggregation_test.rs
+  - services/time/tests/rollup_idempotent_test.rs
+  - services/time/tests/rollup_billable_only_test.rs
+  - services/time/tests/rollup_locked_only_test.rs
+  - services/time/tests/rollup_rate_card_snapshot_test.rs
+  - services/time/tests/rollup_audit_emission_test.rs
 
-  modified_files:
-    - services/time/src/lib.rs
+modified_files:
+  - services/time/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/time/**
-    - file_write: services/time/{src,tests,migrations}/**
-    - bash: cd services/time && cargo test rollup
+allowed_tools:
+  - file_read: services/time/**
+  - file_write: services/time/{src,tests,migrations}/**
+  - bash: cd services/time && cargo test rollup
 
-  disallowed_tools:
-    - include non-billable entries (per DEC-1432)
-    - include unlocked timesheet entries (per DEC-1432)
-    - skip rate-card snapshot (per DEC-1433)
+disallowed_tools:
+  - include non-billable entries (per DEC-1432)
+  - include unlocked timesheet entries (per DEC-1432)
+  - skip rate-card snapshot (per DEC-1433)
 
 effort_hours: 6
 subtasks:

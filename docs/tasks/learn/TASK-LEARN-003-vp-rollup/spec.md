@@ -36,35 +36,34 @@ source_decisions:
   - DEC-2103 2026-05-17 — Deterministic — same inputs + same weights → same VP; weights versioned (CEO-configurable)
   - DEC-2104 2026-05-17 — memory audit kinds: learn.vp_rollup_started, learn.vp_snapshot_created, learn.vp_rollup_completed, learn.vp_rollup_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/learn/
-  new_files:
-    - services/learn/migrations/0003_vp_snapshots.sql
-    - services/learn/src/vp/mod.rs
-    - services/learn/src/vp/aggregator.rs
-    - services/learn/src/vp/weights_loader.rs
-    - services/learn/src/vp/nightly_batch.rs
-    - services/learn/src/handlers/vp_routes.rs
-    - services/learn/src/audit/vp_events.rs
-    - services/learn/tests/vp_aggregator_test.rs
-    - services/learn/tests/vp_component_enum_cardinality_test.rs
-    - services/learn/tests/vp_snapshot_immutable_test.rs
-    - services/learn/tests/vp_deterministic_test.rs
-    - services/learn/tests/vp_weights_version_test.rs
-    - services/learn/tests/vp_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/learn/
+new_files:
+  - services/learn/migrations/0003_vp_snapshots.sql
+  - services/learn/src/vp/mod.rs
+  - services/learn/src/vp/aggregator.rs
+  - services/learn/src/vp/weights_loader.rs
+  - services/learn/src/vp/nightly_batch.rs
+  - services/learn/src/handlers/vp_routes.rs
+  - services/learn/src/audit/vp_events.rs
+  - services/learn/tests/vp_aggregator_test.rs
+  - services/learn/tests/vp_component_enum_cardinality_test.rs
+  - services/learn/tests/vp_snapshot_immutable_test.rs
+  - services/learn/tests/vp_deterministic_test.rs
+  - services/learn/tests/vp_weights_version_test.rs
+  - services/learn/tests/vp_audit_emission_test.rs
 
-  modified_files:
-    - services/learn/src/lib.rs
+modified_files:
+  - services/learn/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{learn,proj,time,kb}/**
-    - file_write: services/learn/{src,tests,migrations}/**
-    - bash: cd services/learn && cargo test vp
+allowed_tools:
+  - file_read: services/{learn,proj,time,kb}/**
+  - file_write: services/learn/{src,tests,migrations}/**
+  - bash: cd services/learn && cargo test vp
 
-  disallowed_tools:
-    - mutate prior snapshot (per DEC-2102)
-    - non-deterministic computation (per DEC-2103)
+disallowed_tools:
+  - mutate prior snapshot (per DEC-2102)
+  - non-deterministic computation (per DEC-2103)
 
 effort_hours: 6
 subtasks:

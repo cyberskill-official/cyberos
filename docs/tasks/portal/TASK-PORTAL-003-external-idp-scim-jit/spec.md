@@ -71,92 +71,91 @@ source_decisions:
   - PDPL Law 91/2025 Art. 5 (data minimisation — only claims explicitly mapped to roles are persisted; unrecognised claims discarded at JIT)
   - GDPR Art. 28 (data processor — IdP acts as DPA-bound processor; PORTAL signs DPA template at IdP config time)
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/portal/
-  new_files:
-    # new crate
-    - services/portal/Cargo.toml
-    # per-Engagement IdP binding
-    - services/portal/migrations/0001_portal_idp_configs.sql
-    # append-only SCIM event journal
-    - services/portal/migrations/0002_portal_scim_audit_log.sql
-    # IdP groups → CyberOS roles map
-    - services/portal/migrations/0003_portal_idp_groups_map.sql
-    # per-Engagement SCIM bearer tokens
-    - services/portal/migrations/0004_portal_scim_tokens.sql
-    - services/portal/src/lib.rs
-    # IdP orchestrator
-    - services/portal/src/idp/mod.rs
-    # SAML 2.0 SP (response verify + JIT)
-    - services/portal/src/idp/saml.rs
-    # OIDC RP (per-Engagement metadata + JIT)
-    - services/portal/src/idp/oidc.rs
-    # email-domain → IdP hint
-    - services/portal/src/idp/discovery.rs
-    # claim → role resolver (closed enum)
-    - services/portal/src/idp/claim_mapping.rs
-    # AttributeStatement signature verify
-    - services/portal/src/idp/signed_attr.rs
-    # SCIM 2.0 endpoint
-    - services/portal/src/scim/mod.rs
-    # /scim/v2/{eng}/Users handlers
-    - services/portal/src/scim/users.rs
-    # /scim/v2/{eng}/Groups handlers
-    - services/portal/src/scim/groups.rs
-    # bearer-token middleware
-    - services/portal/src/scim/token_auth.rs
-    # externalId-based idempotency
-    - services/portal/src/scim/idempotency.rs
-    # IdP config CRUD (KMS-wrapped)
-    - services/portal/src/repo/idp_configs.rs
-    # SCIM audit log writer
-    - services/portal/src/repo/scim_audit.rs
-    # /saml/v2/{eng}/metadata
-    - services/portal/src/handlers/sp_metadata.rs
-    # /oidc/v1/{eng}/.well-known/openid-configuration
-    - services/portal/src/handlers/rp_discovery.rs
-    # POST /v1/admin/engagements/{id}/idp + rotation
-    - services/portal/src/handlers/idp_config_admin.rs
-    # 7 memory row builders
-    - services/portal/src/audit/portal_events.rs
-    - services/portal/tests/saml_happy_test.rs
-    - services/portal/tests/saml_replay_window_test.rs
-    - services/portal/tests/saml_unsigned_attr_dropped_test.rs
-    - services/portal/tests/oidc_happy_test.rs
-    - services/portal/tests/oidc_iat_skew_test.rs
-    - services/portal/tests/scim_create_idempotency_test.rs
-    - services/portal/tests/scim_token_rotation_test.rs
-    - services/portal/tests/claim_to_role_mapping_test.rs
-    - services/portal/tests/idp_kind_enum_cardinality_test.rs
-    - services/portal/tests/jit_provisioning_test.rs
-    - services/portal/tests/per_engagement_isolation_test.rs
-    - services/portal/tests/sso_enforcement_required_test.rs
-    - services/portal/tests/8h_re_auth_test.rs
-    - services/portal/tests/discovery_hint_test.rs
-    - services/portal/tests/audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/portal/
+new_files:
+  # new crate
+  - services/portal/Cargo.toml
+  # per-Engagement IdP binding
+  - services/portal/migrations/0001_portal_idp_configs.sql
+  # append-only SCIM event journal
+  - services/portal/migrations/0002_portal_scim_audit_log.sql
+  # IdP groups → CyberOS roles map
+  - services/portal/migrations/0003_portal_idp_groups_map.sql
+  # per-Engagement SCIM bearer tokens
+  - services/portal/migrations/0004_portal_scim_tokens.sql
+  - services/portal/src/lib.rs
+  # IdP orchestrator
+  - services/portal/src/idp/mod.rs
+  # SAML 2.0 SP (response verify + JIT)
+  - services/portal/src/idp/saml.rs
+  # OIDC RP (per-Engagement metadata + JIT)
+  - services/portal/src/idp/oidc.rs
+  # email-domain → IdP hint
+  - services/portal/src/idp/discovery.rs
+  # claim → role resolver (closed enum)
+  - services/portal/src/idp/claim_mapping.rs
+  # AttributeStatement signature verify
+  - services/portal/src/idp/signed_attr.rs
+  # SCIM 2.0 endpoint
+  - services/portal/src/scim/mod.rs
+  # /scim/v2/{eng}/Users handlers
+  - services/portal/src/scim/users.rs
+  # /scim/v2/{eng}/Groups handlers
+  - services/portal/src/scim/groups.rs
+  # bearer-token middleware
+  - services/portal/src/scim/token_auth.rs
+  # externalId-based idempotency
+  - services/portal/src/scim/idempotency.rs
+  # IdP config CRUD (KMS-wrapped)
+  - services/portal/src/repo/idp_configs.rs
+  # SCIM audit log writer
+  - services/portal/src/repo/scim_audit.rs
+  # /saml/v2/{eng}/metadata
+  - services/portal/src/handlers/sp_metadata.rs
+  # /oidc/v1/{eng}/.well-known/openid-configuration
+  - services/portal/src/handlers/rp_discovery.rs
+  # POST /v1/admin/engagements/{id}/idp + rotation
+  - services/portal/src/handlers/idp_config_admin.rs
+  # 7 memory row builders
+  - services/portal/src/audit/portal_events.rs
+  - services/portal/tests/saml_happy_test.rs
+  - services/portal/tests/saml_replay_window_test.rs
+  - services/portal/tests/saml_unsigned_attr_dropped_test.rs
+  - services/portal/tests/oidc_happy_test.rs
+  - services/portal/tests/oidc_iat_skew_test.rs
+  - services/portal/tests/scim_create_idempotency_test.rs
+  - services/portal/tests/scim_token_rotation_test.rs
+  - services/portal/tests/claim_to_role_mapping_test.rs
+  - services/portal/tests/idp_kind_enum_cardinality_test.rs
+  - services/portal/tests/jit_provisioning_test.rs
+  - services/portal/tests/per_engagement_isolation_test.rs
+  - services/portal/tests/sso_enforcement_required_test.rs
+  - services/portal/tests/8h_re_auth_test.rs
+  - services/portal/tests/discovery_hint_test.rs
+  - services/portal/tests/audit_emission_test.rs
 
-  modified_files:
-    # expose JIT helper consumed by PORTAL
-    - services/auth/src/admin/subjects.rs
-    # delegate to PORTAL when engagement_id present + IdP required
-    - services/auth/src/handlers/login.rs
+modified_files:
+  # expose JIT helper consumed by PORTAL
+  - services/auth/src/admin/subjects.rs
+  # delegate to PORTAL when engagement_id present + IdP required
+  - services/auth/src/handlers/login.rs
 
-  allowed_tools:
-    - file_read: services/portal/**
-    - file_read: services/auth/src/{admin,handlers}/**
-    - file_write: services/portal/{src,tests,migrations}/**
-    - file_write: services/auth/src/admin/subjects.rs
-    - file_write: services/auth/src/handlers/login.rs
-    - bash: cd services/portal && cargo test
+allowed_tools:
+  - file_read: services/portal/**
+  - file_read: services/auth/src/{admin,handlers}/**
+  - file_write: services/portal/{src,tests,migrations}/**
+  - file_write: services/auth/src/admin/subjects.rs
+  - file_write: services/auth/src/handlers/login.rs
+  - bash: cd services/portal && cargo test
 
-  disallowed_tools:
-    - honour SAML attributes without signature verification (per DEC-864)
-    - extend `portal_idp_kind` beyond {saml, oidc} without ADR (per DEC-869)
-    - allow SCIM token in URL path (must be Authorization header per RFC 6750)
-    - persist IdP private keys in plaintext (KMS-wrapped only per DEC-866)
-    - bypass per-Engagement RLS (per DEC-877)
-    - allow JIT-provisioned subject to elevate role beyond claim-mapped (per DEC-863)
+disallowed_tools:
+  - honour SAML attributes without signature verification (per DEC-864)
+  - extend `portal_idp_kind` beyond {saml, oidc} without ADR (per DEC-869)
+  - allow SCIM token in URL path (must be Authorization header per RFC 6750)
+  - persist IdP private keys in plaintext (KMS-wrapped only per DEC-866)
+  - bypass per-Engagement RLS (per DEC-877)
+  - allow JIT-provisioned subject to elevate role beyond claim-mapped (per DEC-863)
 
 effort_hours: 10
 subtasks:

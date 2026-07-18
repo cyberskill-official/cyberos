@@ -36,33 +36,32 @@ source_decisions:
   - DEC-2213 2026-05-17 — Ledger IMMUTABLE; corrections via debit_correction txn with explanatory reason
   - DEC-2214 2026-05-17 — memory audit kinds: rew.bp_credited, rew.bp_debited, rew.bp_interest_accrued, rew.bp_balance_query
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/rew/
-  new_files:
-    - services/rew/migrations/0007_bp_ledger.sql
-    - services/rew/src/bp/mod.rs
-    - services/rew/src/bp/interest_cron.rs
-    - services/rew/src/bp/balance_query.rs
-    - services/rew/src/handlers/bp_routes.rs
-    - services/rew/src/audit/bp_events.rs
-    - services/rew/tests/bp_txn_kind_enum_cardinality_test.rs
-    - services/rew/tests/bp_immutable_test.rs
-    - services/rew/tests/bp_interest_accrual_test.rs
-    - services/rew/tests/bp_balance_correctness_test.rs
-    - services/rew/tests/bp_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/rew/
+new_files:
+  - services/rew/migrations/0007_bp_ledger.sql
+  - services/rew/src/bp/mod.rs
+  - services/rew/src/bp/interest_cron.rs
+  - services/rew/src/bp/balance_query.rs
+  - services/rew/src/handlers/bp_routes.rs
+  - services/rew/src/audit/bp_events.rs
+  - services/rew/tests/bp_txn_kind_enum_cardinality_test.rs
+  - services/rew/tests/bp_immutable_test.rs
+  - services/rew/tests/bp_interest_accrual_test.rs
+  - services/rew/tests/bp_balance_correctness_test.rs
+  - services/rew/tests/bp_audit_emission_test.rs
 
-  modified_files:
-    - services/rew/src/lib.rs
+modified_files:
+  - services/rew/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{rew,hr}/**
-    - file_write: services/rew/{src,tests,migrations}/**
-    - bash: cd services/rew && cargo test bp
+allowed_tools:
+  - file_read: services/{rew,hr}/**
+  - file_write: services/rew/{src,tests,migrations}/**
+  - bash: cd services/rew && cargo test bp
 
-  disallowed_tools:
-    - mutate prior txn (per DEC-2213)
-    - skip interest accrual (per DEC-2212)
+disallowed_tools:
+  - mutate prior txn (per DEC-2213)
+  - skip interest accrual (per DEC-2212)
 
 effort_hours: 5
 subtasks:

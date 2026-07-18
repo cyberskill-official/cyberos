@@ -37,34 +37,33 @@ source_decisions:
   - DEC-1584 2026-05-17 — Project selection: user picks at convert; default to last-used-project per user
   - DEC-1585 2026-05-17 — memory audit kinds: email.convert_to_issue_initiated, email.convert_to_issue_completed, email.convert_to_issue_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/email/
-  new_files:
-    - services/email/src/convert/mod.rs
-    - services/email/src/convert/issue_builder.rs
-    - services/email/src/convert/ai_summarizer.rs
-    - services/email/src/handlers/convert_routes.rs
-    - services/email/src/audit/convert_events.rs
-    - services/email/migrations/0009_message_issue_link.sql
-    - services/email/tests/convert_single_message_test.rs
-    - services/email/tests/convert_full_thread_test.rs
-    - services/email/tests/convert_attachments_test.rs
-    - services/email/tests/convert_backlink_test.rs
-    - services/email/tests/convert_source_enum_cardinality_test.rs
-    - services/email/tests/convert_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/email/
+new_files:
+  - services/email/src/convert/mod.rs
+  - services/email/src/convert/issue_builder.rs
+  - services/email/src/convert/ai_summarizer.rs
+  - services/email/src/handlers/convert_routes.rs
+  - services/email/src/audit/convert_events.rs
+  - services/email/migrations/0009_message_issue_link.sql
+  - services/email/tests/convert_single_message_test.rs
+  - services/email/tests/convert_full_thread_test.rs
+  - services/email/tests/convert_attachments_test.rs
+  - services/email/tests/convert_backlink_test.rs
+  - services/email/tests/convert_source_enum_cardinality_test.rs
+  - services/email/tests/convert_audit_emission_test.rs
 
-  modified_files:
-    - services/email/src/lib.rs
+modified_files:
+  - services/email/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{email,proj,doc}/**
-    - file_write: services/email/{src,tests,migrations}/**
-    - bash: cd services/email && cargo test convert
+allowed_tools:
+  - file_read: services/{email,proj,doc}/**
+  - file_write: services/email/{src,tests,migrations}/**
+  - bash: cd services/email && cargo test convert
 
-  disallowed_tools:
-    - copy attachment bytes (per DEC-1583 — reference only)
-    - convert without project_id (per DEC-1584 — must select)
+disallowed_tools:
+  - copy attachment bytes (per DEC-1583 — reference only)
+  - convert without project_id (per DEC-1584 — must select)
 
 effort_hours: 6
 subtasks:

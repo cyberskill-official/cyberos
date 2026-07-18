@@ -57,79 +57,78 @@ source_decisions:
   - DEC-1097 2026-05-17 — Nightly reconciliation: compare tombstoned subjects vs active sessions; any active session for a tombstoned subject = sev-1 `portal.scim_orphan_session_detected`
   - "DEC-1098 2026-05-17 — IdP-side DELETE notification path: SCIM DELETE arrives via per-Engagement SCIM token (TASK-PORTAL-003); webhook-vs-SCIM-DELETE: SCIM DELETE is the canonical channel; webhook-based deprovision NOT supported at slice 2"
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/portal/
-  new_files:
-    # detailed deprovision event log
-    - services/portal/migrations/0009_portal_deprovision_log.sql
-    # JWT jti blacklist (also in Redis hot-path)
-    - services/portal/migrations/0010_portal_jwt_blacklist.sql
-    # admin restore endpoint requests
-    - services/portal/migrations/0011_portal_restore_requests.sql
-    # deprovision orchestrator
-    - services/portal/src/deprovision/mod.rs
-    # < 1s fast-path (tombstone + JWT blacklist)
-    - services/portal/src/deprovision/sync_phase.rs
-    # < 30s slow-path (cascade revocation)
-    - services/portal/src/deprovision/async_phase.rs
-    # Redis sorted-set + pub/sub
-    - services/portal/src/deprovision/jwt_blacklist.rs
-    # iterates active WS connections + sends close 4001
-    - services/portal/src/deprovision/websocket_killer.rs
-    # cascade to PORTAL-005 + PORTAL-001 + CHAT-005 + MCP-006
-    - services/portal/src/deprovision/cascade.rs
-    # admin restore handler
-    - services/portal/src/deprovision/restore.rs
-    # nightly orphan-session scan
-    - services/portal/src/deprovision/reconciliation.rs
-    # extends scim/users.rs from TASK-PORTAL-003
-    - services/portal/src/scim/user_delete.rs
-    # 7 memory row builders
-    - services/portal/src/audit/deprovision_events.rs
-    # POST restore endpoint
-    - services/portal/src/handlers/admin_restore.rs
-    - services/portal/tests/scim_delete_invalidates_jwt_test.rs
-    - services/portal/tests/scim_delete_closes_websocket_test.rs
-    - services/portal/tests/scim_delete_cascade_test.rs
-    - services/portal/tests/scim_delete_30s_sla_test.rs
-    - services/portal/tests/scim_delete_idempotent_test.rs
-    - services/portal/tests/scim_grace_period_undelete_test.rs
-    - services/portal/tests/scim_admin_restore_test.rs
-    - services/portal/tests/scim_per_engagement_isolation_test.rs
-    - services/portal/tests/scim_orphan_reconciliation_test.rs
-    - services/portal/tests/scim_rate_limit_test.rs
-    - services/portal/tests/scim_jwt_blacklist_propagation_test.rs
-    - services/portal/tests/scim_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/portal/
+new_files:
+  # detailed deprovision event log
+  - services/portal/migrations/0009_portal_deprovision_log.sql
+  # JWT jti blacklist (also in Redis hot-path)
+  - services/portal/migrations/0010_portal_jwt_blacklist.sql
+  # admin restore endpoint requests
+  - services/portal/migrations/0011_portal_restore_requests.sql
+  # deprovision orchestrator
+  - services/portal/src/deprovision/mod.rs
+  # < 1s fast-path (tombstone + JWT blacklist)
+  - services/portal/src/deprovision/sync_phase.rs
+  # < 30s slow-path (cascade revocation)
+  - services/portal/src/deprovision/async_phase.rs
+  # Redis sorted-set + pub/sub
+  - services/portal/src/deprovision/jwt_blacklist.rs
+  # iterates active WS connections + sends close 4001
+  - services/portal/src/deprovision/websocket_killer.rs
+  # cascade to PORTAL-005 + PORTAL-001 + CHAT-005 + MCP-006
+  - services/portal/src/deprovision/cascade.rs
+  # admin restore handler
+  - services/portal/src/deprovision/restore.rs
+  # nightly orphan-session scan
+  - services/portal/src/deprovision/reconciliation.rs
+  # extends scim/users.rs from TASK-PORTAL-003
+  - services/portal/src/scim/user_delete.rs
+  # 7 memory row builders
+  - services/portal/src/audit/deprovision_events.rs
+  # POST restore endpoint
+  - services/portal/src/handlers/admin_restore.rs
+  - services/portal/tests/scim_delete_invalidates_jwt_test.rs
+  - services/portal/tests/scim_delete_closes_websocket_test.rs
+  - services/portal/tests/scim_delete_cascade_test.rs
+  - services/portal/tests/scim_delete_30s_sla_test.rs
+  - services/portal/tests/scim_delete_idempotent_test.rs
+  - services/portal/tests/scim_grace_period_undelete_test.rs
+  - services/portal/tests/scim_admin_restore_test.rs
+  - services/portal/tests/scim_per_engagement_isolation_test.rs
+  - services/portal/tests/scim_orphan_reconciliation_test.rs
+  - services/portal/tests/scim_rate_limit_test.rs
+  - services/portal/tests/scim_jwt_blacklist_propagation_test.rs
+  - services/portal/tests/scim_audit_emission_test.rs
 
-  modified_files:
-    # add DELETE handler + tombstone semantics
-    - services/portal/src/scim/users.rs
-    # add DELETE route
-    - services/portal/src/scim/mod.rs
-    # consult blacklist on every JWT validate
-    - services/auth/src/jwt/validator.rs
-    # session tombstone semantics
-    - services/auth/src/sessions/store.rs
-    # +redis (already in workspace)
-    - services/portal/Cargo.toml
+modified_files:
+  # add DELETE handler + tombstone semantics
+  - services/portal/src/scim/users.rs
+  # add DELETE route
+  - services/portal/src/scim/mod.rs
+  # consult blacklist on every JWT validate
+  - services/auth/src/jwt/validator.rs
+  # session tombstone semantics
+  - services/auth/src/sessions/store.rs
+  # +redis (already in workspace)
+  - services/portal/Cargo.toml
 
-  allowed_tools:
-    - file_read: services/portal/**
-    - file_read: services/auth/src/{jwt,sessions}/**
-    - file_write: services/portal/{src,tests,migrations}/**
-    - file_write: services/auth/src/jwt/validator.rs
-    - file_write: services/auth/src/sessions/store.rs
-    - bash: cd services/portal && cargo test deprovision
+allowed_tools:
+  - file_read: services/portal/**
+  - file_read: services/auth/src/{jwt,sessions}/**
+  - file_write: services/portal/{src,tests,migrations}/**
+  - file_write: services/auth/src/jwt/validator.rs
+  - file_write: services/auth/src/sessions/store.rs
+  - bash: cd services/portal && cargo test deprovision
 
-  disallowed_tools:
-    - leak sessions past 30s SLO (per DEC-1080)
-    - permit cross-Engagement session revocation (per DEC-1086)
-    - hard-purge by default (per DEC-1082 — soft tombstone is default)
-    - allow engagement_admin to restore (per DEC-1092)
-    - block on async cascade phase (per DEC-1096 — sync phase < 1s)
-    - skip nightly reconciliation (per DEC-1097)
-    - allow webhook-based deprovision at slice 2 (per DEC-1098 — SCIM-only)
+disallowed_tools:
+  - leak sessions past 30s SLO (per DEC-1080)
+  - permit cross-Engagement session revocation (per DEC-1086)
+  - hard-purge by default (per DEC-1082 — soft tombstone is default)
+  - allow engagement_admin to restore (per DEC-1092)
+  - block on async cascade phase (per DEC-1096 — sync phase < 1s)
+  - skip nightly reconciliation (per DEC-1097)
+  - allow webhook-based deprovision at slice 2 (per DEC-1098 — SCIM-only)
 
 effort_hours: 8
 subtasks:

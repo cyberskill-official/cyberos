@@ -39,38 +39,37 @@ source_decisions:
   - DEC-1604 2026-05-17 — memory audit kinds: email.camel_plan_built, email.camel_quarantined_extracted, email.camel_executed, email.camel_blocked, email.camel_failed
   - DEC-1605 2026-05-17 — Tenant-configurable trust list: domain X may bypass Q-LLM for read-only ops; full bypass requires CISO sign-off
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/email/
-  new_files:
-    - services/email/migrations/0011_camel_audit.sql
-    - services/email/src/camel/mod.rs
-    - services/email/src/camel/privileged_llm.rs
-    - services/email/src/camel/quarantined_llm.rs
-    - services/email/src/camel/variable_store.rs
-    - services/email/src/camel/policy_checker.rs
-    - services/email/src/camel/trust_list.rs
-    - services/email/src/audit/camel_events.rs
-    - services/email/src/handlers/camel_routes.rs
-    - services/email/tests/camel_plan_isolated_test.rs
-    - services/email/tests/inbound_quarantine_test.rs
-    - services/email/tests/camel_injection_attempt_blocked_test.rs
-    - services/email/tests/camel_outcome_enum_cardinality_test.rs
-    - services/email/tests/camel_trust_list_bypass_test.rs
-    - services/email/tests/audit_row_test.rs
+language: rust 1.81
+service: cyberos/services/email/
+new_files:
+  - services/email/migrations/0011_camel_audit.sql
+  - services/email/src/camel/mod.rs
+  - services/email/src/camel/privileged_llm.rs
+  - services/email/src/camel/quarantined_llm.rs
+  - services/email/src/camel/variable_store.rs
+  - services/email/src/camel/policy_checker.rs
+  - services/email/src/camel/trust_list.rs
+  - services/email/src/audit/camel_events.rs
+  - services/email/src/handlers/camel_routes.rs
+  - services/email/tests/camel_plan_isolated_test.rs
+  - services/email/tests/inbound_quarantine_test.rs
+  - services/email/tests/camel_injection_attempt_blocked_test.rs
+  - services/email/tests/camel_outcome_enum_cardinality_test.rs
+  - services/email/tests/camel_trust_list_bypass_test.rs
+  - services/email/tests/audit_row_test.rs
 
-  modified_files:
-    - services/email/src/genie/portal_bridge.rs
+modified_files:
+  - services/email/src/genie/portal_bridge.rs
 
-  allowed_tools:
-    - file_read: services/{email,ai}/**
-    - file_write: services/email/{src,tests,migrations}/**
-    - bash: cd services/email && cargo test camel
+allowed_tools:
+  - file_read: services/{email,ai}/**
+  - file_write: services/email/{src,tests,migrations}/**
+  - bash: cd services/email && cargo test camel
 
-  disallowed_tools:
-    - inline Q-LLM output into P-LLM prompt (per DEC-1601)
-    - bypass Q-LLM for tool args (per DEC-1603)
-    - allow trust-list bypass without CISO audit (per DEC-1605)
+disallowed_tools:
+  - inline Q-LLM output into P-LLM prompt (per DEC-1601)
+  - bypass Q-LLM for tool args (per DEC-1603)
+  - allow trust-list bypass without CISO audit (per DEC-1605)
 
 effort_hours: 12
 subtasks:

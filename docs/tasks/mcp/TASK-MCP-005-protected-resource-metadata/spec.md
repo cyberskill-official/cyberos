@@ -49,53 +49,52 @@ source_decisions:
   - DEC-908 2026-05-17 — Rate limit: 600 req/min/IP on PRM endpoints (clients should cache; high-rate signals misbehaving client)
   - DEC-909 2026-05-17 — PRM endpoint MUST respond < 50 ms p95 (static content + cache); alarm sev-3 if p95 > 200 ms sustained 5 min
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/mcp/
-  new_files:
-    # aggregate-vs-module drift audit
-    - services/mcp/migrations/0005_prm_drift_log.sql
-    # PRM orchestrator
-    - services/mcp/src/prm/mod.rs
-    # gateway-aggregate PRM builder
-    - services/mcp/src/prm/gateway.rs
-    # per-module PRM builder
-    - services/mcp/src/prm/per_module.rs
-    # ETag + Cache-Control
-    - services/mcp/src/prm/cache.rs
-    # public route registration
-    - services/mcp/src/handlers/prm_routes.rs
-    # 3 memory row builders
-    - services/mcp/src/audit/prm_events.rs
-    - services/mcp/tests/prm_gateway_test.rs
-    - services/mcp/tests/prm_per_module_test.rs
-    - services/mcp/tests/prm_etag_cache_test.rs
-    - services/mcp/tests/prm_unknown_module_test.rs
-    - services/mcp/tests/prm_unauth_public_test.rs
-    - services/mcp/tests/prm_rate_limit_test.rs
-    - services/mcp/tests/prm_drift_detection_test.rs
-    - services/mcp/tests/prm_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/mcp/
+new_files:
+  # aggregate-vs-module drift audit
+  - services/mcp/migrations/0005_prm_drift_log.sql
+  # PRM orchestrator
+  - services/mcp/src/prm/mod.rs
+  # gateway-aggregate PRM builder
+  - services/mcp/src/prm/gateway.rs
+  # per-module PRM builder
+  - services/mcp/src/prm/per_module.rs
+  # ETag + Cache-Control
+  - services/mcp/src/prm/cache.rs
+  # public route registration
+  - services/mcp/src/handlers/prm_routes.rs
+  # 3 memory row builders
+  - services/mcp/src/audit/prm_events.rs
+  - services/mcp/tests/prm_gateway_test.rs
+  - services/mcp/tests/prm_per_module_test.rs
+  - services/mcp/tests/prm_etag_cache_test.rs
+  - services/mcp/tests/prm_unknown_module_test.rs
+  - services/mcp/tests/prm_unauth_public_test.rs
+  - services/mcp/tests/prm_rate_limit_test.rs
+  - services/mcp/tests/prm_drift_detection_test.rs
+  - services/mcp/tests/prm_audit_emission_test.rs
 
-  modified_files:
-    # mount prm_routes
-    - services/mcp/src/lib.rs
-    # add PRM-fields to ModuleRegistration
-    - services/mcp/src/server_registry.rs
-    # +etag
-    - services/mcp/Cargo.toml
+modified_files:
+  # mount prm_routes
+  - services/mcp/src/lib.rs
+  # add PRM-fields to ModuleRegistration
+  - services/mcp/src/server_registry.rs
+  # +etag
+  - services/mcp/Cargo.toml
 
-  allowed_tools:
-    - file_read: services/mcp/**
-    # to read JWT issuer / signing-alg metadata
-    - file_read: services/auth/src/**
-    - file_write: services/mcp/{src,tests,migrations}/**
-    - bash: cd services/mcp && cargo test prm
+allowed_tools:
+  - file_read: services/mcp/**
+  # to read JWT issuer / signing-alg metadata
+  - file_read: services/auth/src/**
+  - file_write: services/mcp/{src,tests,migrations}/**
+  - bash: cd services/mcp && cargo test prm
 
-  disallowed_tools:
-    - require auth on PRM endpoint (per RFC 9728 + DEC-896)
-    - include HS256 in resource_signing_alg_values_supported (per DEC-901)
-    - hand-write per-module PRM JSON (must derive from registration per DEC-907)
-    - allow `body` or `query` bearer method (per DEC-900)
+disallowed_tools:
+  - require auth on PRM endpoint (per RFC 9728 + DEC-896)
+  - include HS256 in resource_signing_alg_values_supported (per DEC-901)
+  - hand-write per-module PRM JSON (must derive from registration per DEC-907)
+  - allow `body` or `query` bearer method (per DEC-900)
 
 effort_hours: 3
 subtasks:

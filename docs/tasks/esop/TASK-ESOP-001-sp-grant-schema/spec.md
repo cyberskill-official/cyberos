@@ -36,32 +36,31 @@ source_decisions:
   - DEC-2253 2026-05-17 — Grant date locked at creation; vest_start_date may differ (e.g. start of employment, signed sheet)
   - DEC-2254 2026-05-17 — memory audit kinds: esop.grant_created, esop.grant_signed, esop.grant_cancelled, esop.grant_accelerated, esop.grant_fully_vested
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/esop/
-  new_files:
-    - services/esop/migrations/0001_sp_grants.sql
-    - services/esop/src/grant/mod.rs
-    - services/esop/src/grant/validator.rs
-    - services/esop/src/handlers/grant_routes.rs
-    - services/esop/src/audit/grant_events.rs
-    - services/esop/tests/grant_kind_enum_cardinality_test.rs
-    - services/esop/tests/grant_status_enum_cardinality_test.rs
-    - services/esop/tests/grant_immutability_test.rs
-    - services/esop/tests/grant_vesting_params_default_test.rs
-    - services/esop/tests/grant_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/esop/
+new_files:
+  - services/esop/migrations/0001_sp_grants.sql
+  - services/esop/src/grant/mod.rs
+  - services/esop/src/grant/validator.rs
+  - services/esop/src/handlers/grant_routes.rs
+  - services/esop/src/audit/grant_events.rs
+  - services/esop/tests/grant_kind_enum_cardinality_test.rs
+  - services/esop/tests/grant_status_enum_cardinality_test.rs
+  - services/esop/tests/grant_immutability_test.rs
+  - services/esop/tests/grant_vesting_params_default_test.rs
+  - services/esop/tests/grant_audit_emission_test.rs
 
-  modified_files:
-    - services/esop/src/lib.rs
+modified_files:
+  - services/esop/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{esop,hr}/**
-    - file_write: services/esop/{src,tests,migrations}/**
-    - bash: cd services/esop && cargo test grant
+allowed_tools:
+  - file_read: services/{esop,hr}/**
+  - file_write: services/esop/{src,tests,migrations}/**
+  - bash: cd services/esop && cargo test grant
 
-  disallowed_tools:
-    - mutate prior grant (per DEC-2250)
-    - skip CEO sign on creation
+disallowed_tools:
+  - mutate prior grant (per DEC-2250)
+  - skip CEO sign on creation
 
 effort_hours: 5
 subtasks:

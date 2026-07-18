@@ -37,33 +37,32 @@ source_decisions:
   - DEC-1664 2026-05-17 — Per-tenant scoring weights configurable; default ships proven defaults
   - DEC-1665 2026-05-17 — memory audit kinds: crm.lead_scored_initial, crm.lead_score_refreshed, crm.lead_score_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/crm/
-  new_files:
-    - services/crm/migrations/0006_lead_scoring.sql
-    - services/crm/src/scoring/mod.rs
-    - services/crm/src/scoring/signal_builder.rs
-    - services/crm/src/scoring/scorer.rs
-    - services/crm/src/scoring/nightly_refresh.rs
-    - services/crm/src/audit/scoring_events.rs
-    - services/crm/tests/scoring_initial_test.rs
-    - services/crm/tests/scoring_nightly_refresh_test.rs
-    - services/crm/tests/scoring_tier_enum_cardinality_test.rs
-    - services/crm/tests/scoring_snapshot_immutable_test.rs
-    - services/crm/tests/scoring_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/crm/
+new_files:
+  - services/crm/migrations/0006_lead_scoring.sql
+  - services/crm/src/scoring/mod.rs
+  - services/crm/src/scoring/signal_builder.rs
+  - services/crm/src/scoring/scorer.rs
+  - services/crm/src/scoring/nightly_refresh.rs
+  - services/crm/src/audit/scoring_events.rs
+  - services/crm/tests/scoring_initial_test.rs
+  - services/crm/tests/scoring_nightly_refresh_test.rs
+  - services/crm/tests/scoring_tier_enum_cardinality_test.rs
+  - services/crm/tests/scoring_snapshot_immutable_test.rs
+  - services/crm/tests/scoring_audit_emission_test.rs
 
-  modified_files:
-    - services/crm/src/contacts.rs
+modified_files:
+  - services/crm/src/contacts.rs
 
-  allowed_tools:
-    - file_read: services/{crm,cuo,ai}/**
-    - file_write: services/crm/{src,tests,migrations}/**
-    - bash: cd services/crm && cargo test scoring
+allowed_tools:
+  - file_read: services/{crm,cuo,ai}/**
+  - file_write: services/crm/{src,tests,migrations}/**
+  - bash: cd services/crm && cargo test scoring
 
-  disallowed_tools:
-    - mutate prior score snapshot (per DEC-1663)
-    - score without signals (per DEC-1662)
+disallowed_tools:
+  - mutate prior score snapshot (per DEC-1663)
+  - score without signals (per DEC-1662)
 
 effort_hours: 5
 subtasks:

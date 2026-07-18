@@ -36,36 +36,35 @@ source_decisions:
   - DEC-2393 2026-05-17 — All write actions thread through existing service endpoints (TASK-TEN-003/103/106); SPA is presentation only
   - DEC-2394 2026-05-17 — memory audit kinds: ten.admin_section_viewed, ten.admin_write_action_confirmed, ten.admin_write_action_executed, ten.admin_access_denied
 
-build_envelope:
-  language: typescript / react + rust 1.81
-  service: cyberos/services/{ten,portal-web}/
-  new_files:
-    - services/portal-web/src/ten/admin/AdminLayout.tsx
-    - services/portal-web/src/ten/admin/SeatsSection.tsx
-    - services/portal-web/src/ten/admin/BillingSection.tsx
-    - services/portal-web/src/ten/admin/AuditSection.tsx
-    - services/portal-web/src/ten/admin/ResidencySection.tsx
-    - services/portal-web/src/ten/admin/RetentionSection.tsx
-    - services/portal-web/src/ten/admin/DangerZoneSection.tsx
-    - services/portal-web/src/ten/admin/ConfirmDialog.tsx
-    - services/ten/src/handlers/admin_audit_routes.rs
-    - services/ten/src/audit/admin_events.rs
-    - services/portal-web/tests/admin-spa-sections.spec.ts
-    - services/ten/tests/admin_section_enum_cardinality_test.rs
-    - services/ten/tests/admin_write_confirm_required_test.rs
-    - services/ten/tests/admin_audit_emission_test.rs
+language: typescript / react + rust 1.81
+service: cyberos/services/{ten,portal-web}/
+new_files:
+  - services/portal-web/src/ten/admin/AdminLayout.tsx
+  - services/portal-web/src/ten/admin/SeatsSection.tsx
+  - services/portal-web/src/ten/admin/BillingSection.tsx
+  - services/portal-web/src/ten/admin/AuditSection.tsx
+  - services/portal-web/src/ten/admin/ResidencySection.tsx
+  - services/portal-web/src/ten/admin/RetentionSection.tsx
+  - services/portal-web/src/ten/admin/DangerZoneSection.tsx
+  - services/portal-web/src/ten/admin/ConfirmDialog.tsx
+  - services/ten/src/handlers/admin_audit_routes.rs
+  - services/ten/src/audit/admin_events.rs
+  - services/portal-web/tests/admin-spa-sections.spec.ts
+  - services/ten/tests/admin_section_enum_cardinality_test.rs
+  - services/ten/tests/admin_write_confirm_required_test.rs
+  - services/ten/tests/admin_audit_emission_test.rs
 
-  modified_files:
-    - services/portal-web/src/app/admin/page.tsx
+modified_files:
+  - services/portal-web/src/app/admin/page.tsx
 
-  allowed_tools:
-    - file_read: services/{ten,portal-web,auth}/**
-    - file_write: services/{ten,portal-web}/{src,tests}/**
-    - bash: cd services/portal-web && pnpm test; cd services/ten && cargo test admin
+allowed_tools:
+  - file_read: services/{ten,portal-web,auth}/**
+  - file_write: services/{ten,portal-web}/{src,tests}/**
+  - bash: cd services/portal-web && pnpm test; cd services/ten && cargo test admin
 
-  disallowed_tools:
-    - write actions without confirm (per DEC-2392)
-    - new write endpoints in TEN-107 (per DEC-2393 — read-only audit + presentation)
+disallowed_tools:
+  - write actions without confirm (per DEC-2392)
+  - new write endpoints in TEN-107 (per DEC-2393 — read-only audit + presentation)
 
 effort_hours: 16
 subtasks:

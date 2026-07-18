@@ -39,32 +39,31 @@ source_decisions:
   - DEC-1814 2026-05-17 — Per-type SI participation: indefinite/fixed_term/part_time/probation = required; contractor = exempt (per Decree 152)
   - DEC-1815 2026-05-17 — memory audit kinds: hr.contract_type_set, hr.contract_renewal_attempted, hr.contract_violation_detected
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/hr/
-  new_files:
-    - services/hr/migrations/0002_contract_types.sql
-    - services/hr/src/contract/mod.rs
-    - services/hr/src/contract/rules_enforcer.rs
-    - services/hr/src/audit/contract_events.rs
-    - services/hr/tests/contract_type_enum_cardinality_test.rs
-    - services/hr/tests/contract_probation_max_60d_test.rs
-    - services/hr/tests/contract_fixed_term_renewal_limit_test.rs
-    - services/hr/tests/contract_leave_per_type_test.rs
-    - services/hr/tests/contract_si_per_type_test.rs
-    - services/hr/tests/contract_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/hr/
+new_files:
+  - services/hr/migrations/0002_contract_types.sql
+  - services/hr/src/contract/mod.rs
+  - services/hr/src/contract/rules_enforcer.rs
+  - services/hr/src/audit/contract_events.rs
+  - services/hr/tests/contract_type_enum_cardinality_test.rs
+  - services/hr/tests/contract_probation_max_60d_test.rs
+  - services/hr/tests/contract_fixed_term_renewal_limit_test.rs
+  - services/hr/tests/contract_leave_per_type_test.rs
+  - services/hr/tests/contract_si_per_type_test.rs
+  - services/hr/tests/contract_audit_emission_test.rs
 
-  modified_files:
-    - services/hr/src/members.rs
+modified_files:
+  - services/hr/src/members.rs
 
-  allowed_tools:
-    - file_read: services/hr/**
-    - file_write: services/hr/{src,tests,migrations}/**
-    - bash: cd services/hr && cargo test contract
+allowed_tools:
+  - file_read: services/hr/**
+  - file_write: services/hr/{src,tests,migrations}/**
+  - bash: cd services/hr && cargo test contract
 
-  disallowed_tools:
-    - allow probation > 60d (per DEC-1812)
-    - allow >1 fixed_term renewal (per DEC-1812)
+disallowed_tools:
+  - allow probation > 60d (per DEC-1812)
+  - allow >1 fixed_term renewal (per DEC-1812)
 
 effort_hours: 4
 subtasks:

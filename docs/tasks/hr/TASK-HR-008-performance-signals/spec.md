@@ -36,33 +36,32 @@ source_decisions:
   - DEC-1863 2026-05-17 — Snapshots IMMUTABLE; corrections via prior-period adjustment row
   - DEC-1864 2026-05-17 — memory audit kinds: hr.perf_snapshot_taken, hr.perf_snapshot_failed (PII scrubbed)
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/hr/
-  new_files:
-    - services/hr/migrations/0007_perf_snapshots.sql
-    - services/hr/src/perf/mod.rs
-    - services/hr/src/perf/signal_aggregator.rs
-    - services/hr/src/perf/snapshot_cron.rs
-    - services/hr/src/handlers/perf_routes.rs
-    - services/hr/src/audit/perf_events.rs
-    - services/hr/tests/perf_aggregator_test.rs
-    - services/hr/tests/perf_signal_kind_enum_cardinality_test.rs
-    - services/hr/tests/perf_snapshot_immutable_test.rs
-    - services/hr/tests/perf_read_only_test.rs
-    - services/hr/tests/perf_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/hr/
+new_files:
+  - services/hr/migrations/0007_perf_snapshots.sql
+  - services/hr/src/perf/mod.rs
+  - services/hr/src/perf/signal_aggregator.rs
+  - services/hr/src/perf/snapshot_cron.rs
+  - services/hr/src/handlers/perf_routes.rs
+  - services/hr/src/audit/perf_events.rs
+  - services/hr/tests/perf_aggregator_test.rs
+  - services/hr/tests/perf_signal_kind_enum_cardinality_test.rs
+  - services/hr/tests/perf_snapshot_immutable_test.rs
+  - services/hr/tests/perf_read_only_test.rs
+  - services/hr/tests/perf_audit_emission_test.rs
 
-  modified_files:
-    - services/hr/src/lib.rs
+modified_files:
+  - services/hr/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{hr,proj,time,learn}/**
-    - file_write: services/hr/{src,tests,migrations}/**
-    - bash: cd services/hr && cargo test perf
+allowed_tools:
+  - file_read: services/{hr,proj,time,learn}/**
+  - file_write: services/hr/{src,tests,migrations}/**
+  - bash: cd services/hr && cargo test perf
 
-  disallowed_tools:
-    - write to source modules (per DEC-1860)
-    - mutate snapshots (per DEC-1863)
+disallowed_tools:
+  - write to source modules (per DEC-1860)
+  - mutate snapshots (per DEC-1863)
 
 effort_hours: 6
 subtasks:

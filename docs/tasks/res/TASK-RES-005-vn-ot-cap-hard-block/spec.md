@@ -38,32 +38,31 @@ source_decisions:
   - DEC-2063 2026-05-17 — Cap values read from TASK-HR-005 policy version (replay determinism)
   - DEC-2064 2026-05-17 — memory audit kinds: res.ot_check_passed, res.ot_blocked_weekly, res.ot_blocked_annual, res.ot_blocked_consent
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/res/
-  new_files:
-    - services/res/migrations/0005_ot_consent.sql
-    - services/res/src/ot_cap/mod.rs
-    - services/res/src/ot_cap/checker.rs
-    - services/res/src/handlers/ot_cap_routes.rs
-    - services/res/src/audit/ot_cap_events.rs
-    - services/res/tests/ot_cap_weekly_block_test.rs
-    - services/res/tests/ot_cap_annual_block_test.rs
-    - services/res/tests/ot_cap_consent_required_test.rs
-    - services/res/tests/ot_cap_decision_enum_cardinality_test.rs
-    - services/res/tests/ot_cap_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/res/
+new_files:
+  - services/res/migrations/0005_ot_consent.sql
+  - services/res/src/ot_cap/mod.rs
+  - services/res/src/ot_cap/checker.rs
+  - services/res/src/handlers/ot_cap_routes.rs
+  - services/res/src/audit/ot_cap_events.rs
+  - services/res/tests/ot_cap_weekly_block_test.rs
+  - services/res/tests/ot_cap_annual_block_test.rs
+  - services/res/tests/ot_cap_consent_required_test.rs
+  - services/res/tests/ot_cap_decision_enum_cardinality_test.rs
+  - services/res/tests/ot_cap_audit_emission_test.rs
 
-  modified_files:
-    - services/res/src/allocation/validator.rs
+modified_files:
+  - services/res/src/allocation/validator.rs
 
-  allowed_tools:
-    - file_read: services/{res,hr,time}/**
-    - file_write: services/res/{src,tests,migrations}/**
-    - bash: cd services/res && cargo test ot_cap
+allowed_tools:
+  - file_read: services/{res,hr,time}/**
+  - file_write: services/res/{src,tests,migrations}/**
+  - bash: cd services/res && cargo test ot_cap
 
-  disallowed_tools:
-    - bypass cap (per DEC-2060 — hard-block)
-    - allow >12h/wk without consent (per DEC-2062)
+disallowed_tools:
+  - bypass cap (per DEC-2060 — hard-block)
+  - allow >12h/wk without consent (per DEC-2062)
 
 effort_hours: 4
 subtasks:

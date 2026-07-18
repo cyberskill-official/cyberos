@@ -60,7 +60,8 @@ allowed_tools:
   - file_write: services/skill-broker/{src,tests}/**
   - bash: cd services/skill-broker && cargo test
 disallowed_tools:
-  - allow skill subprocess to inherit broker's file descriptors (per §1 #4 — seal stdin/stdout/stderr only)
+  #4 — seal stdin/stdout/stderr only)
+  - allow skill subprocess to inherit broker's file descriptors (per §1
   - dispatch a tool call without checking allowed_tools (per DEC-191)
   #5)
   - dispatch a MemoryRead with path outside allowed_memory_scopes (per §1

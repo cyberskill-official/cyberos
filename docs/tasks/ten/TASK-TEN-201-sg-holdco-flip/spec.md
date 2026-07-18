@@ -38,39 +38,38 @@ source_decisions:
   - DEC-2403 2026-05-17 — Requires CEO + CFO + CLO triple-sign at flip initiation; ACRA + shareholder docs need wet-signature (out of band, status tracked)
   - DEC-2404 2026-05-17 — memory audit kinds: ten.holdco_flip_initiated, ten.holdco_flip_step_completed, ten.holdco_flip_step_failed, ten.holdco_flip_completed
 
-build_envelope:
-  language: rust 1.81 + cli
-  service: cyberos/services/ten/
-  new_files:
-    - services/ten/migrations/0010_holdco_flips.sql
-    - services/ten/src/holdco/mod.rs
-    - services/ten/src/holdco/sg_entity_form.rs
-    - services/ten/src/holdco/acra_filings.rs
-    - services/ten/src/holdco/shareholder_migration.rs
-    - services/ten/src/holdco/esop_reissue.rs
-    - services/ten/src/holdco/residency_migrator.rs
-    - services/ten/src/holdco/triple_sign_gate.rs
-    - services/ten/src/cli/holdco_flip.rs
-    - services/ten/src/handlers/holdco_routes.rs
-    - services/ten/src/audit/holdco_events.rs
-    - services/ten/tests/holdco_flip_step_enum_cardinality_test.rs
-    - services/ten/tests/holdco_triple_sign_test.rs
-    - services/ten/tests/holdco_resume_from_step_test.rs
-    - services/ten/tests/holdco_immutable_test.rs
-    - services/ten/tests/holdco_esop_reissue_test.rs
-    - services/ten/tests/holdco_audit_emission_test.rs
+language: rust 1.81 + cli
+service: cyberos/services/ten/
+new_files:
+  - services/ten/migrations/0010_holdco_flips.sql
+  - services/ten/src/holdco/mod.rs
+  - services/ten/src/holdco/sg_entity_form.rs
+  - services/ten/src/holdco/acra_filings.rs
+  - services/ten/src/holdco/shareholder_migration.rs
+  - services/ten/src/holdco/esop_reissue.rs
+  - services/ten/src/holdco/residency_migrator.rs
+  - services/ten/src/holdco/triple_sign_gate.rs
+  - services/ten/src/cli/holdco_flip.rs
+  - services/ten/src/handlers/holdco_routes.rs
+  - services/ten/src/audit/holdco_events.rs
+  - services/ten/tests/holdco_flip_step_enum_cardinality_test.rs
+  - services/ten/tests/holdco_triple_sign_test.rs
+  - services/ten/tests/holdco_resume_from_step_test.rs
+  - services/ten/tests/holdco_immutable_test.rs
+  - services/ten/tests/holdco_esop_reissue_test.rs
+  - services/ten/tests/holdco_audit_emission_test.rs
 
-  modified_files:
-    - services/ten/src/lib.rs
+modified_files:
+  - services/ten/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{ten,esop,auth}/**
-    - file_write: services/ten/{src,tests,migrations}/**
-    - bash: cd services/ten && cargo test holdco
+allowed_tools:
+  - file_read: services/{ten,esop,auth}/**
+  - file_write: services/ten/{src,tests,migrations}/**
+  - bash: cd services/ten && cargo test holdco
 
-  disallowed_tools:
-    - initiate without triple-sign (per DEC-2403)
-    - mutate prior flip step (per DEC-2402)
+disallowed_tools:
+  - initiate without triple-sign (per DEC-2403)
+  - mutate prior flip step (per DEC-2402)
 
 effort_hours: 16
 subtasks:

@@ -37,32 +37,31 @@ source_decisions:
   - DEC-1714 2026-05-17 — Parent contract chain: amendments point to parent via parent_contract_id; UI shows tree
   - DEC-1715 2026-05-17 — memory audit kinds: doc.lifecycle_set, doc.lifecycle_status_computed, doc.parent_link_added
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/doc/
-  new_files:
-    - services/doc/migrations/0002_lifecycle_metadata.sql
-    - services/doc/src/lifecycle/mod.rs
-    - services/doc/src/lifecycle/status_computer.rs
-    - services/doc/src/handlers/lifecycle_routes.rs
-    - services/doc/src/audit/lifecycle_events.rs
-    - services/doc/tests/lifecycle_status_computed_test.rs
-    - services/doc/tests/lifecycle_parent_chain_test.rs
-    - services/doc/tests/lifecycle_status_enum_cardinality_test.rs
-    - services/doc/tests/lifecycle_parties_jsonb_test.rs
-    - services/doc/tests/lifecycle_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/doc/
+new_files:
+  - services/doc/migrations/0002_lifecycle_metadata.sql
+  - services/doc/src/lifecycle/mod.rs
+  - services/doc/src/lifecycle/status_computer.rs
+  - services/doc/src/handlers/lifecycle_routes.rs
+  - services/doc/src/audit/lifecycle_events.rs
+  - services/doc/tests/lifecycle_status_computed_test.rs
+  - services/doc/tests/lifecycle_parent_chain_test.rs
+  - services/doc/tests/lifecycle_status_enum_cardinality_test.rs
+  - services/doc/tests/lifecycle_parties_jsonb_test.rs
+  - services/doc/tests/lifecycle_audit_emission_test.rs
 
-  modified_files:
-    - services/doc/src/documents.rs
+modified_files:
+  - services/doc/src/documents.rs
 
-  allowed_tools:
-    - file_read: services/doc/**
-    - file_write: services/doc/{src,tests,migrations}/**
-    - bash: cd services/doc && cargo test lifecycle
+allowed_tools:
+  - file_read: services/doc/**
+  - file_write: services/doc/{src,tests,migrations}/**
+  - bash: cd services/doc && cargo test lifecycle
 
-  disallowed_tools:
-    - mutate prior parent link (per DEC-1714)
-    - skip status compute on lifecycle field change (per DEC-1712)
+disallowed_tools:
+  - mutate prior parent link (per DEC-1714)
+  - skip status compute on lifecycle field change (per DEC-1712)
 
 effort_hours: 5
 subtasks:

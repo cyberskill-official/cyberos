@@ -40,36 +40,35 @@ source_decisions:
   - DEC-2455 2026-05-19 — Audit row body MUST include: plugin_id, plugin_version, tenant_id, subject_id, trace_id, outcome (success / error_class); body MUST NOT include user data from tool input/output
   - DEC-2456 2026-05-19 — Audit-emission failures themselves MUST emit an OTel span tagged plugin.audit_emission_failed for TASK-OBS-001 observability
 
-build_envelope:
-  language: rust 1.81
-  service: services/plugin-host/
-  new_files:
-    - services/plugin-host/src/audit/mod.rs
-    - services/plugin-host/src/audit/emitter.rs
-    - services/plugin-host/src/audit/outbox.rs
-    - services/plugin-host/src/audit/idempotency.rs
-    - services/plugin-host/src/audit/retry.rs
-    - services/plugin-host/migrations/0002_audit_outbox.sql
-    - services/plugin-host/tests/audit_emission_happy_path_test.rs
-    - services/plugin-host/tests/audit_emission_outbox_durability_test.rs
-    - services/plugin-host/tests/audit_emission_idempotency_test.rs
-    - services/plugin-host/tests/audit_emission_no_user_data_leak_test.rs
-    - services/plugin-host/tests/audit_emission_retry_backoff_test.rs
+language: rust 1.81
+service: services/plugin-host/
+new_files:
+  - services/plugin-host/src/audit/mod.rs
+  - services/plugin-host/src/audit/emitter.rs
+  - services/plugin-host/src/audit/outbox.rs
+  - services/plugin-host/src/audit/idempotency.rs
+  - services/plugin-host/src/audit/retry.rs
+  - services/plugin-host/migrations/0002_audit_outbox.sql
+  - services/plugin-host/tests/audit_emission_happy_path_test.rs
+  - services/plugin-host/tests/audit_emission_outbox_durability_test.rs
+  - services/plugin-host/tests/audit_emission_idempotency_test.rs
+  - services/plugin-host/tests/audit_emission_no_user_data_leak_test.rs
+  - services/plugin-host/tests/audit_emission_retry_backoff_test.rs
 
-  modified_files:
-    - services/plugin-host/src/handlers/tools_call.rs (emit plugin.invoked)
-    - services/plugin-host/src/auth/refresh.rs (emit plugin.auth_refreshed)
-    - services/plugin-host/src/auth/scope_check.rs (emit plugin.scope_denied)
+modified_files:
+  - services/plugin-host/src/handlers/tools_call.rs (emit plugin.invoked)
+  - services/plugin-host/src/auth/refresh.rs (emit plugin.auth_refreshed)
+  - services/plugin-host/src/auth/scope_check.rs (emit plugin.scope_denied)
 
-  allowed_tools:
-    - file_read: services/plugin-host/**
-    - file_write: services/plugin-host/{src,tests,migrations}/**
-    - bash: cd services && cargo test -p cyberos-plugin-host audit
+allowed_tools:
+  - file_read: services/plugin-host/**
+  - file_write: services/plugin-host/{src,tests,migrations}/**
+  - bash: cd services && cargo test -p cyberos-plugin-host audit
 
-  disallowed_tools:
-    - drop audit row on emission failure (per DEC-2451)
-    - leak tool input/output into audit body (per DEC-2455)
-    - skip OTel emission on failure (per DEC-2456)
+disallowed_tools:
+  - drop audit row on emission failure (per DEC-2451)
+  - leak tool input/output into audit body (per DEC-2455)
+  - skip OTel emission on failure (per DEC-2456)
 
 effort_hours: 6
 subtasks:

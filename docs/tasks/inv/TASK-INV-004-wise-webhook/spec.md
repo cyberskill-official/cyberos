@@ -46,35 +46,34 @@ source_decisions:
   - DEC-852 2026-05-16 — Currency-mismatch receipt (e.g., USD wire to a VND-denominated invoice) is held in `unmatched_receipts` table for CFO review, NOT auto-matched
   - DEC-853 2026-05-16 — Closed 5-value `wise_receipt_state` enum (received, matched, currency_mismatch, dead_lettered, manually_resolved)
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/inv/
-  new_files:
-    - services/inv/src/wise/mod.rs
-    - services/inv/src/wise/handler.rs
-    - services/inv/src/wise/signature.rs
-    - services/inv/src/wise/parser.rs
-    - services/inv/src/wise/public_key.rs
-    - services/inv/src/wise/processor.rs
-    - services/inv/migrations/0020_wise_webhook_events.sql
-    - services/inv/migrations/0021_wise_unmatched_receipts.sql
-    - services/inv/tests/wise_signature_test.rs
-    - services/inv/tests/wise_idempotency_test.rs
-    - services/inv/tests/wise_currency_mismatch_test.rs
-    - services/inv/tests/wise_replay_test.rs
-    - services/inv/tests/wise_key_rotation_test.rs
-  modified_files:
-    - services/inv/src/lib.rs (mount /v1/webhooks/wise)
-  allowed_tools:
-    - file_read: services/inv/**
-    - file_write: services/inv/{src,tests,migrations}/**
-    - bash: cargo test -p cyberos-inv
-    - net: GET https://api.wise.com/v1/profiles/{id}/webhook-subscriptions/{sub}/public-key
-  disallowed_tools:
-    - hand-roll RSA-SHA256 verification (use ring or rsa crate)
-    - log full Wise event body at any level (carries customer transfer details)
-    - skip signature verification on any event
-    - auto-convert currency at receipt time (FX is TASK-INV-002 SBV authoritative)
+language: rust 1.81
+service: cyberos/services/inv/
+new_files:
+  - services/inv/src/wise/mod.rs
+  - services/inv/src/wise/handler.rs
+  - services/inv/src/wise/signature.rs
+  - services/inv/src/wise/parser.rs
+  - services/inv/src/wise/public_key.rs
+  - services/inv/src/wise/processor.rs
+  - services/inv/migrations/0020_wise_webhook_events.sql
+  - services/inv/migrations/0021_wise_unmatched_receipts.sql
+  - services/inv/tests/wise_signature_test.rs
+  - services/inv/tests/wise_idempotency_test.rs
+  - services/inv/tests/wise_currency_mismatch_test.rs
+  - services/inv/tests/wise_replay_test.rs
+  - services/inv/tests/wise_key_rotation_test.rs
+modified_files:
+  - services/inv/src/lib.rs (mount /v1/webhooks/wise)
+allowed_tools:
+  - file_read: services/inv/**
+  - file_write: services/inv/{src,tests,migrations}/**
+  - bash: cargo test -p cyberos-inv
+  - net: GET https://api.wise.com/v1/profiles/{id}/webhook-subscriptions/{sub}/public-key
+disallowed_tools:
+  - hand-roll RSA-SHA256 verification (use ring or rsa crate)
+  - log full Wise event body at any level (carries customer transfer details)
+  - skip signature verification on any event
+  - auto-convert currency at receipt time (FX is TASK-INV-002 SBV authoritative)
 
 effort_hours: 6
 subtasks:

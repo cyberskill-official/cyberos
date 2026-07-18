@@ -45,53 +45,52 @@ source_decisions:
   - DEC-1252 2026-05-17 — Email notification to submitter on every status change via TASK-EMAIL-001 (per-tenant template overrides per TASK-PORTAL-002)
   - DEC-1253 2026-05-17 — Internal workflow rules: tenant_admin configures via tenant config (slice 3 UI); slice 2 = YAML config
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/portal/
-  new_files:
-    - services/portal/migrations/0018_portal_workflow_submissions.sql
-    - services/portal/migrations/0019_portal_workflow_routing_rules.sql
-    - services/portal/src/workflows/mod.rs
-    - services/portal/src/workflows/submit.rs
-    - services/portal/src/workflows/router.rs
-    - services/portal/src/workflows/status_machine.rs
-    - services/portal/src/workflows/sla_monitor.rs
-    - services/portal/src/workflows/attachments.rs
-    - services/portal/src/workflows/auto_priority.rs
-    - services/portal/src/workflows/chat_bridge.rs
-    - services/portal/src/audit/workflow_events.rs
-    - services/portal/src/handlers/workflow_routes.rs
-    - services/portal/tests/workflow_submit_test.rs
-    - services/portal/tests/workflow_routing_test.rs
-    - services/portal/tests/workflow_chat_thread_created_test.rs
-    - services/portal/tests/workflow_sla_breach_test.rs
-    - services/portal/tests/workflow_auto_priority_test.rs
-    - services/portal/tests/workflow_attachments_test.rs
-    - services/portal/tests/workflow_client_reply_test.rs
-    - services/portal/tests/workflow_reopen_test.rs
-    - services/portal/tests/workflow_kind_enum_cardinality_test.rs
-    - services/portal/tests/workflow_status_enum_cardinality_test.rs
-    - services/portal/tests/workflow_rate_limit_test.rs
-    - services/portal/tests/workflow_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/portal/
+new_files:
+  - services/portal/migrations/0018_portal_workflow_submissions.sql
+  - services/portal/migrations/0019_portal_workflow_routing_rules.sql
+  - services/portal/src/workflows/mod.rs
+  - services/portal/src/workflows/submit.rs
+  - services/portal/src/workflows/router.rs
+  - services/portal/src/workflows/status_machine.rs
+  - services/portal/src/workflows/sla_monitor.rs
+  - services/portal/src/workflows/attachments.rs
+  - services/portal/src/workflows/auto_priority.rs
+  - services/portal/src/workflows/chat_bridge.rs
+  - services/portal/src/audit/workflow_events.rs
+  - services/portal/src/handlers/workflow_routes.rs
+  - services/portal/tests/workflow_submit_test.rs
+  - services/portal/tests/workflow_routing_test.rs
+  - services/portal/tests/workflow_chat_thread_created_test.rs
+  - services/portal/tests/workflow_sla_breach_test.rs
+  - services/portal/tests/workflow_auto_priority_test.rs
+  - services/portal/tests/workflow_attachments_test.rs
+  - services/portal/tests/workflow_client_reply_test.rs
+  - services/portal/tests/workflow_reopen_test.rs
+  - services/portal/tests/workflow_kind_enum_cardinality_test.rs
+  - services/portal/tests/workflow_status_enum_cardinality_test.rs
+  - services/portal/tests/workflow_rate_limit_test.rs
+  - services/portal/tests/workflow_audit_emission_test.rs
 
-  modified_files:
-    - services/portal/src/lib.rs
-    # add `client_workflow_id` to threads schema + `client_reply` message type
-    - services/chat/src/
-    - services/portal/Cargo.toml
+modified_files:
+  - services/portal/src/lib.rs
+  # add `client_workflow_id` to threads schema + `client_reply` message type
+  - services/chat/src/
+  - services/portal/Cargo.toml
 
-  allowed_tools:
-    - file_read: services/portal/**
-    - file_read: services/chat/src/**
-    - file_write: services/portal/{src,tests,migrations}/**
-    - file_write: services/chat/src/**
-    - bash: cd services/portal && cargo test workflows
+allowed_tools:
+  - file_read: services/portal/**
+  - file_read: services/chat/src/**
+  - file_write: services/portal/{src,tests,migrations}/**
+  - file_write: services/chat/src/**
+  - bash: cd services/portal && cargo test workflows
 
-  disallowed_tools:
-    - bypass auto-routing rules (per DEC-1242)
-    - expose internal CHAT messages to submitter (per DEC-1245)
-    - allow file attachment > 25 MiB or > 5 files (per DEC-1246)
-    - skip auto-priority on security keywords (per DEC-1247)
+disallowed_tools:
+  - bypass auto-routing rules (per DEC-1242)
+  - expose internal CHAT messages to submitter (per DEC-1245)
+  - allow file attachment > 25 MiB or > 5 files (per DEC-1246)
+  - skip auto-priority on security keywords (per DEC-1247)
 
 effort_hours: 6
 subtasks:

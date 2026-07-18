@@ -54,74 +54,73 @@ source_decisions:
   - DEC-1218 2026-05-17 — ETag: SHA-256-16 of canonical-JSON response body; clients use `If-None-Match` for 304 responses (reduces bandwidth)
   - DEC-1219 2026-05-17 — Cursor pagination uses base64(JSON{last_id, last_sort_value}); opaque to clients; stable across requests
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/portal/
-  new_files:
-    # SQL view DDL per view_kind
-    - services/portal/migrations/0014_portal_view_definitions.sql
-    # detail-row read audit log
-    - services/portal/migrations/0015_portal_view_read_log.sql
-    # orchestrator
-    - services/portal/src/views/mod.rs
-    # /views/projects + detail
-    - services/portal/src/views/projects.rs
-    # /views/invoices + detail
-    - services/portal/src/views/invoices.rs
-    # /views/documents + detail
-    - services/portal/src/views/documents.rs
-    # /views/channels + detail
-    - services/portal/src/views/channels.rs
-    # /views/calendar (slice-2 stub)
-    - services/portal/src/views/calendar.rs
-    # field-set projection (GraphQL-style)
-    - services/portal/src/views/projection.rs
-    # per-row redaction logic
-    - services/portal/src/views/redaction.rs
-    # tsvector search
-    - services/portal/src/views/search.rs
-    # cursor encode/decode
-    - services/portal/src/views/pagination.rs
-    # CSV + XLSX export
-    - services/portal/src/views/export.rs
-    # 6 memory row builders
-    - services/portal/src/audit/view_events.rs
-    # REST routes
-    - services/portal/src/handlers/view_routes.rs
-    - services/portal/tests/view_projects_list_test.rs
-    - services/portal/tests/view_projects_filtered_by_sync_class_test.rs
-    - services/portal/tests/view_engagement_isolation_test.rs
-    - services/portal/tests/view_field_projection_test.rs
-    - services/portal/tests/view_per_row_redaction_test.rs
-    - services/portal/tests/view_pagination_test.rs
-    - services/portal/tests/view_search_test.rs
-    - services/portal/tests/view_export_csv_test.rs
-    - services/portal/tests/view_export_size_cap_test.rs
-    - services/portal/tests/view_detail_with_subresources_test.rs
-    - services/portal/tests/view_etag_caching_test.rs
-    - services/portal/tests/view_rate_limit_test.rs
-    - services/portal/tests/view_kind_enum_cardinality_test.rs
-    - services/portal/tests/view_cross_engagement_blocked_test.rs
-    - services/portal/tests/view_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/portal/
+new_files:
+  # SQL view DDL per view_kind
+  - services/portal/migrations/0014_portal_view_definitions.sql
+  # detail-row read audit log
+  - services/portal/migrations/0015_portal_view_read_log.sql
+  # orchestrator
+  - services/portal/src/views/mod.rs
+  # /views/projects + detail
+  - services/portal/src/views/projects.rs
+  # /views/invoices + detail
+  - services/portal/src/views/invoices.rs
+  # /views/documents + detail
+  - services/portal/src/views/documents.rs
+  # /views/channels + detail
+  - services/portal/src/views/channels.rs
+  # /views/calendar (slice-2 stub)
+  - services/portal/src/views/calendar.rs
+  # field-set projection (GraphQL-style)
+  - services/portal/src/views/projection.rs
+  # per-row redaction logic
+  - services/portal/src/views/redaction.rs
+  # tsvector search
+  - services/portal/src/views/search.rs
+  # cursor encode/decode
+  - services/portal/src/views/pagination.rs
+  # CSV + XLSX export
+  - services/portal/src/views/export.rs
+  # 6 memory row builders
+  - services/portal/src/audit/view_events.rs
+  # REST routes
+  - services/portal/src/handlers/view_routes.rs
+  - services/portal/tests/view_projects_list_test.rs
+  - services/portal/tests/view_projects_filtered_by_sync_class_test.rs
+  - services/portal/tests/view_engagement_isolation_test.rs
+  - services/portal/tests/view_field_projection_test.rs
+  - services/portal/tests/view_per_row_redaction_test.rs
+  - services/portal/tests/view_pagination_test.rs
+  - services/portal/tests/view_search_test.rs
+  - services/portal/tests/view_export_csv_test.rs
+  - services/portal/tests/view_export_size_cap_test.rs
+  - services/portal/tests/view_detail_with_subresources_test.rs
+  - services/portal/tests/view_etag_caching_test.rs
+  - services/portal/tests/view_rate_limit_test.rs
+  - services/portal/tests/view_kind_enum_cardinality_test.rs
+  - services/portal/tests/view_cross_engagement_blocked_test.rs
+  - services/portal/tests/view_audit_emission_test.rs
 
-  modified_files:
-    # mount view routes
-    - services/portal/src/lib.rs
-    # +rust_xlsxwriter for export
-    - services/portal/Cargo.toml
+modified_files:
+  # mount view routes
+  - services/portal/src/lib.rs
+  # +rust_xlsxwriter for export
+  - services/portal/Cargo.toml
 
-  allowed_tools:
-    - file_read: services/portal/**
-    - file_read: services/{proj,inv,doc,chat}/src/**
-    - file_write: services/portal/{src,tests,migrations}/**
-    - bash: cd services/portal && cargo test views
+allowed_tools:
+  - file_read: services/portal/**
+  - file_read: services/{proj,inv,doc,chat}/src/**
+  - file_write: services/portal/{src,tests,migrations}/**
+  - bash: cd services/portal && cargo test views
 
-  disallowed_tools:
-    - allow writes through view endpoints (per DEC-1200 — read-only)
-    - return rows with sync_class!='client-visible' or 'client-visible-redacted' (per DEC-1200)
-    - auto-aggregate across Engagements (per DEC-1209)
-    - cache responses across users (per DEC-1217 — per-user only)
-    - export > 10k rows (per DEC-1213 — use DSAR)
+disallowed_tools:
+  - allow writes through view endpoints (per DEC-1200 — read-only)
+  - return rows with sync_class!='client-visible' or 'client-visible-redacted' (per DEC-1200)
+  - auto-aggregate across Engagements (per DEC-1209)
+  - cache responses across users (per DEC-1217 — per-user only)
+  - export > 10k rows (per DEC-1213 — use DSAR)
 
 effort_hours: 12
 subtasks:

@@ -38,41 +38,40 @@ source_decisions:
   - DEC-1755 2026-05-17 — Signing routes to CA per signer.region: VN → TASK-DOC-004 (VnPay/Viettel-CA), EU → TASK-DOC-002 (QTSP), other → TASK-DOC-003 (AATL)
   - DEC-1756 2026-05-17 — memory audit kinds: doc.signing_workflow_started, doc.signer_invited, doc.signer_signed, doc.signer_declined, doc.signing_workflow_completed, doc.signing_workflow_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/doc/
-  new_files:
-    - services/doc/migrations/0006_signing_workflows.sql
-    - services/doc/src/signing/mod.rs
-    - services/doc/src/signing/workflow_engine.rs
-    - services/doc/src/signing/ordered_runner.rs
-    - services/doc/src/signing/parallel_runner.rs
-    - services/doc/src/signing/counter_sign_runner.rs
-    - services/doc/src/signing/reminder_cron.rs
-    - services/doc/src/signing/ca_router.rs
-    - services/doc/src/handlers/signing_routes.rs
-    - services/doc/src/audit/signing_events.rs
-    - services/doc/tests/signing_ordered_test.rs
-    - services/doc/tests/signing_parallel_test.rs
-    - services/doc/tests/signing_counter_sign_test.rs
-    - services/doc/tests/signing_workflow_kind_enum_cardinality_test.rs
-    - services/doc/tests/signing_signature_status_enum_cardinality_test.rs
-    - services/doc/tests/signing_decline_blocks_others_test.rs
-    - services/doc/tests/signing_reminder_cadence_test.rs
-    - services/doc/tests/signing_ca_routing_test.rs
-    - services/doc/tests/signing_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/doc/
+new_files:
+  - services/doc/migrations/0006_signing_workflows.sql
+  - services/doc/src/signing/mod.rs
+  - services/doc/src/signing/workflow_engine.rs
+  - services/doc/src/signing/ordered_runner.rs
+  - services/doc/src/signing/parallel_runner.rs
+  - services/doc/src/signing/counter_sign_runner.rs
+  - services/doc/src/signing/reminder_cron.rs
+  - services/doc/src/signing/ca_router.rs
+  - services/doc/src/handlers/signing_routes.rs
+  - services/doc/src/audit/signing_events.rs
+  - services/doc/tests/signing_ordered_test.rs
+  - services/doc/tests/signing_parallel_test.rs
+  - services/doc/tests/signing_counter_sign_test.rs
+  - services/doc/tests/signing_workflow_kind_enum_cardinality_test.rs
+  - services/doc/tests/signing_signature_status_enum_cardinality_test.rs
+  - services/doc/tests/signing_decline_blocks_others_test.rs
+  - services/doc/tests/signing_reminder_cadence_test.rs
+  - services/doc/tests/signing_ca_routing_test.rs
+  - services/doc/tests/signing_audit_emission_test.rs
 
-  modified_files:
-    - services/doc/src/lib.rs
+modified_files:
+  - services/doc/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{doc,email,auth}/**
-    - file_write: services/doc/{src,tests,migrations}/**
-    - bash: cd services/doc && cargo test signing
+allowed_tools:
+  - file_read: services/{doc,email,auth}/**
+  - file_write: services/doc/{src,tests,migrations}/**
+  - bash: cd services/doc && cargo test signing
 
-  disallowed_tools:
-    - sign without verification (per DEC-1754)
-    - skip CA per region (per DEC-1755)
+disallowed_tools:
+  - sign without verification (per DEC-1754)
+  - skip CA per region (per DEC-1755)
 
 effort_hours: 10
 subtasks:

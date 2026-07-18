@@ -48,44 +48,43 @@ source_decisions:
   - DEC-714 2026-05-16 — PII-free metric rows (only counts + ids); memory audit chain through TASK-MEMORY-111 scrubs reason text
   - DEC-715 2026-05-16 — Idempotent metric_event via `idempotency_key` UNIQUE constraint (24h retention)
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/metering/
-  new_files:
-    - services/metering/src/lib.rs
-    - services/metering/src/recorder.rs
-    - services/metering/src/aggregator.rs
-    - services/metering/src/axes/seats.rs
-    - services/metering/src/axes/api_calls.rs
-    - services/metering/src/axes/ai_tokens.rs
-    - services/metering/src/axes/storage.rs
-    - services/metering/src/policy.rs
-    - services/metering/src/handlers/usage_query.rs
-    - services/metering/src/handlers/period_close.rs
-    - services/metering/src/wal_queue.rs
-    - services/metering/migrations/0001_metering_events.sql
-    - services/metering/migrations/0002_metering_holds_index.sql
-    - services/metering/migrations/0003_metering_aggregates_view.sql
-    - services/metering/tests/api_metering_test.rs
-    - services/metering/tests/ai_metering_test.rs
-    - services/metering/tests/seats_snapshot_test.rs
-    - services/metering/tests/storage_snapshot_test.rs
-    - services/metering/tests/append_only_test.rs
-    - services/metering/tests/overage_policy_test.rs
-    - services/metering/tests/wal_replay_test.rs
-  modified_files:
-    - services/ai-gateway/src/cost_ledger.rs (emit ai_tokens metric on postcall reconcile)
-    - services/auth/src/middleware.rs (emit api_calls metric per RLS-scoped request)
-  allowed_tools:
-    - file_read: services/metering/**
-    - file_write: services/metering/{src,tests,migrations}/**
-    - bash: cargo test -p cyberos-metering
-    - bash: cargo sqlx migrate run
-    - memory: write memories/decisions/metering-events/* via canonical Writer (NOT directly)
-  disallowed_tools:
-    - direct INSERT to metering_events from outside metering service
-    - UPDATE/DELETE of any metering_events row (append-only via SQL grant)
-    - skip memory audit emission (defense-in-depth pairing)
+language: rust 1.81
+service: cyberos/services/metering/
+new_files:
+  - services/metering/src/lib.rs
+  - services/metering/src/recorder.rs
+  - services/metering/src/aggregator.rs
+  - services/metering/src/axes/seats.rs
+  - services/metering/src/axes/api_calls.rs
+  - services/metering/src/axes/ai_tokens.rs
+  - services/metering/src/axes/storage.rs
+  - services/metering/src/policy.rs
+  - services/metering/src/handlers/usage_query.rs
+  - services/metering/src/handlers/period_close.rs
+  - services/metering/src/wal_queue.rs
+  - services/metering/migrations/0001_metering_events.sql
+  - services/metering/migrations/0002_metering_holds_index.sql
+  - services/metering/migrations/0003_metering_aggregates_view.sql
+  - services/metering/tests/api_metering_test.rs
+  - services/metering/tests/ai_metering_test.rs
+  - services/metering/tests/seats_snapshot_test.rs
+  - services/metering/tests/storage_snapshot_test.rs
+  - services/metering/tests/append_only_test.rs
+  - services/metering/tests/overage_policy_test.rs
+  - services/metering/tests/wal_replay_test.rs
+modified_files:
+  - services/ai-gateway/src/cost_ledger.rs (emit ai_tokens metric on postcall reconcile)
+  - services/auth/src/middleware.rs (emit api_calls metric per RLS-scoped request)
+allowed_tools:
+  - file_read: services/metering/**
+  - file_write: services/metering/{src,tests,migrations}/**
+  - bash: cargo test -p cyberos-metering
+  - bash: cargo sqlx migrate run
+  - memory: write memories/decisions/metering-events/* via canonical Writer (NOT directly)
+disallowed_tools:
+  - direct INSERT to metering_events from outside metering service
+  - UPDATE/DELETE of any metering_events row (append-only via SQL grant)
+  - skip memory audit emission (defense-in-depth pairing)
 
 effort_hours: 8
 subtasks:

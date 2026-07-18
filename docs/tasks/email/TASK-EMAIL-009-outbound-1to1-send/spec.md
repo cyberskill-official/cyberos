@@ -37,41 +37,40 @@ source_decisions:
   - DEC-1484 2026-05-17 — memory audit kinds: email.send_queued, email.send_delivered, email.send_bounced, email.send_complaint, email.send_suppressed
   - DEC-1485 2026-05-17 — Rate limit 100 sends/hour/Member (anti-abuse + spam-source prevention)
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/email/
-  new_files:
-    - services/email/migrations/0004_outbound_messages.sql
-    - services/email/migrations/0005_suppression_list.sql
-    - services/email/src/outbound/mod.rs
-    - services/email/src/outbound/compose.rs
-    - services/email/src/outbound/queue.rs
-    - services/email/src/outbound/bounce_handler.rs
-    - services/email/src/outbound/suppression.rs
-    - services/email/src/audit/outbound_events.rs
-    - services/email/src/handlers/outbound_routes.rs
-    - services/email/tests/inbound_quarantine_test.rs
-    - services/email/tests/outbound_confirm_token_test.rs
-    - services/email/tests/inbound_quarantine_test.rs
-    - services/email/tests/outbound_bounce_soft_retry_test.rs
-    - services/email/tests/outbound_complaint_suppresses_test.rs
-    - services/email/tests/inbound_quarantine_test.rs
-    - services/email/tests/inbound_quarantine_test.rs
-    - services/email/tests/outbound_status_enum_test.rs
-    - services/email/tests/audit_row_test.rs
+language: rust 1.81
+service: cyberos/services/email/
+new_files:
+  - services/email/migrations/0004_outbound_messages.sql
+  - services/email/migrations/0005_suppression_list.sql
+  - services/email/src/outbound/mod.rs
+  - services/email/src/outbound/compose.rs
+  - services/email/src/outbound/queue.rs
+  - services/email/src/outbound/bounce_handler.rs
+  - services/email/src/outbound/suppression.rs
+  - services/email/src/audit/outbound_events.rs
+  - services/email/src/handlers/outbound_routes.rs
+  - services/email/tests/inbound_quarantine_test.rs
+  - services/email/tests/outbound_confirm_token_test.rs
+  - services/email/tests/inbound_quarantine_test.rs
+  - services/email/tests/outbound_bounce_soft_retry_test.rs
+  - services/email/tests/outbound_complaint_suppresses_test.rs
+  - services/email/tests/inbound_quarantine_test.rs
+  - services/email/tests/inbound_quarantine_test.rs
+  - services/email/tests/outbound_status_enum_test.rs
+  - services/email/tests/audit_row_test.rs
 
-  modified_files:
-    - services/email/src/lib.rs
+modified_files:
+  - services/email/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/email/**
-    - file_write: services/email/{src,tests,migrations}/**
-    - bash: cd services/email && cargo test outbound
+allowed_tools:
+  - file_read: services/email/**
+  - file_write: services/email/{src,tests,migrations}/**
+  - bash: cd services/email && cargo test outbound
 
-  disallowed_tools:
-    - send without confirm_token (per DEC-1482)
-    - send to suppressed recipient (per DEC-1483)
-    - exceed 100/hour/Member (per DEC-1485)
+disallowed_tools:
+  - send without confirm_token (per DEC-1482)
+  - send to suppressed recipient (per DEC-1483)
+  - exceed 100/hour/Member (per DEC-1485)
 
 effort_hours: 4
 subtasks:

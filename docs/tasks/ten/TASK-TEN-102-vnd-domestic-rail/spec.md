@@ -73,122 +73,121 @@ source_decisions:
   - PCI DSS — out-of-scope at our endpoint (PSP-hosted card data)
   - SBV Circular 39/2014/TT-NHNN (e-payment service provider regulations — defines PSPs we can integrate)
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/ten/
-  new_files:
-    # per-tenant PSP token + status + KMS-wrapped
-    - services/ten/migrations/0018_vnd_payment_tokens.sql
-    # per-PSP API keys + rotation
-    - services/ten/migrations/0019_vnd_psp_credentials.sql
-    # Decree 123 hóa đơn store + signed XML + PDF link
-    - services/ten/migrations/0020_vnd_invoices.sql
-    # annual gap-free sequence
-    - services/ten/migrations/0021_vnd_invoice_sequence.sql
-    # inbound webhook dispatch idempotency
-    - services/ten/migrations/0022_vnd_event_dispatch_log.sql
-    # VND rail entry
-    - services/ten/src/billing/vnd/mod.rs
-    # VndPsp trait (3 impls)
-    - services/ten/src/billing/vnd/psp_trait.rs
-    # VnPay adapter
-    - services/ten/src/billing/vnd/vnpay.rs
-    # Momo adapter
-    - services/ten/src/billing/vnd/momo.rs
-    # ZaloPay adapter
-    - services/ten/src/billing/vnd/zalopay.rs
-    # token-bind flow orchestrator
-    - services/ten/src/billing/vnd/token_bind.rs
-    # monthly recurring charge
-    - services/ten/src/billing/vnd/subscription.rs
-    # period_close → one-off charge
-    - services/ten/src/billing/vnd/overage.rs
-    # CFO-gated refund
-    - services/ten/src/billing/vnd/refund.rs
-    # VND dunning state machine
-    - services/ten/src/billing/vnd/dunning.rs
-    # NATS consumer for ten.vnd.<psp>.*
-    - services/ten/src/billing/vnd/dispatch.rs
-    # per-PSP key adapter
-    - services/ten/src/billing/vnd/idempotency.rs
-    # hóa đơn issuance + eHĐĐT signing
-    - services/ten/src/billing/vnd/hoadon.rs
-    # annual gap-free numbering
-    - services/ten/src/billing/vnd/hoadon_seq.rs
-    - services/ten/src/repo/vnd_payment_tokens.rs
-    - services/ten/src/repo/vnd_psp_credentials.rs
-    - services/ten/src/repo/vnd_invoices.rs
-    # 12 memory row builders
-    - services/ten/src/audit/vnd_events.rs
-    # POST /v1/signup/vnd/token-bind-start
-    - services/ten/src/handlers/vnd_token_bind_start.rs
-    # GET callback from PSP
-    - services/ten/src/handlers/vnd_token_bind_return.rs
-    # POST /v1/admin/tenants/{id}/vnd/token/revoke
-    - services/ten/src/handlers/vnd_token_revoke.rs
-    # POST /v1/admin/tenants/{id}/vnd/refund (CFO)
-    - services/ten/src/handlers/vnd_billing_refund.rs
-    # GET /v1/admin/tenants/{id}/vnd/invoices/{id}
-    - services/ten/src/handlers/vnd_invoice_get.rs
-    - services/ten/tests/vnd_psp_enum_cardinality_test.rs
-    - services/ten/tests/vnd_token_bind_happy_test.rs
-    - services/ten/tests/vnd_token_bind_failure_test.rs
-    - services/ten/tests/vnd_subscription_charge_test.rs
-    - services/ten/tests/vnd_async_charge_resolution_test.rs
-    - services/ten/tests/vnd_overage_one_off_test.rs
-    - services/ten/tests/vnd_dunning_state_machine_test.rs
-    - services/ten/tests/vnd_refund_cfo_only_test.rs
-    - services/ten/tests/vnd_refund_amount_cap_test.rs
-    - services/ten/tests/vnd_token_revoke_test.rs
-    - services/ten/tests/vnd_cross_rail_rejection_test.rs
-    - services/ten/tests/vnd_founder_skip_test.rs
-    - services/ten/tests/vnd_hoadon_issuance_test.rs
-    - services/ten/tests/vnd_hoadon_seq_gap_free_test.rs
-    - services/ten/tests/vnd_psp_signature_verify_test.rs
-    - services/ten/tests/vnd_idempotency_key_per_psp_test.rs
-    - services/ten/tests/vnd_dispatcher_idempotency_test.rs
-    - services/ten/tests/vnd_residency_isolation_test.rs
-    - services/ten/tests/vnd_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/ten/
+new_files:
+  # per-tenant PSP token + status + KMS-wrapped
+  - services/ten/migrations/0018_vnd_payment_tokens.sql
+  # per-PSP API keys + rotation
+  - services/ten/migrations/0019_vnd_psp_credentials.sql
+  # Decree 123 hóa đơn store + signed XML + PDF link
+  - services/ten/migrations/0020_vnd_invoices.sql
+  # annual gap-free sequence
+  - services/ten/migrations/0021_vnd_invoice_sequence.sql
+  # inbound webhook dispatch idempotency
+  - services/ten/migrations/0022_vnd_event_dispatch_log.sql
+  # VND rail entry
+  - services/ten/src/billing/vnd/mod.rs
+  # VndPsp trait (3 impls)
+  - services/ten/src/billing/vnd/psp_trait.rs
+  # VnPay adapter
+  - services/ten/src/billing/vnd/vnpay.rs
+  # Momo adapter
+  - services/ten/src/billing/vnd/momo.rs
+  # ZaloPay adapter
+  - services/ten/src/billing/vnd/zalopay.rs
+  # token-bind flow orchestrator
+  - services/ten/src/billing/vnd/token_bind.rs
+  # monthly recurring charge
+  - services/ten/src/billing/vnd/subscription.rs
+  # period_close → one-off charge
+  - services/ten/src/billing/vnd/overage.rs
+  # CFO-gated refund
+  - services/ten/src/billing/vnd/refund.rs
+  # VND dunning state machine
+  - services/ten/src/billing/vnd/dunning.rs
+  # NATS consumer for ten.vnd.<psp>.*
+  - services/ten/src/billing/vnd/dispatch.rs
+  # per-PSP key adapter
+  - services/ten/src/billing/vnd/idempotency.rs
+  # hóa đơn issuance + eHĐĐT signing
+  - services/ten/src/billing/vnd/hoadon.rs
+  # annual gap-free numbering
+  - services/ten/src/billing/vnd/hoadon_seq.rs
+  - services/ten/src/repo/vnd_payment_tokens.rs
+  - services/ten/src/repo/vnd_psp_credentials.rs
+  - services/ten/src/repo/vnd_invoices.rs
+  # 12 memory row builders
+  - services/ten/src/audit/vnd_events.rs
+  # POST /v1/signup/vnd/token-bind-start
+  - services/ten/src/handlers/vnd_token_bind_start.rs
+  # GET callback from PSP
+  - services/ten/src/handlers/vnd_token_bind_return.rs
+  # POST /v1/admin/tenants/{id}/vnd/token/revoke
+  - services/ten/src/handlers/vnd_token_revoke.rs
+  # POST /v1/admin/tenants/{id}/vnd/refund (CFO)
+  - services/ten/src/handlers/vnd_billing_refund.rs
+  # GET /v1/admin/tenants/{id}/vnd/invoices/{id}
+  - services/ten/src/handlers/vnd_invoice_get.rs
+  - services/ten/tests/vnd_psp_enum_cardinality_test.rs
+  - services/ten/tests/vnd_token_bind_happy_test.rs
+  - services/ten/tests/vnd_token_bind_failure_test.rs
+  - services/ten/tests/vnd_subscription_charge_test.rs
+  - services/ten/tests/vnd_async_charge_resolution_test.rs
+  - services/ten/tests/vnd_overage_one_off_test.rs
+  - services/ten/tests/vnd_dunning_state_machine_test.rs
+  - services/ten/tests/vnd_refund_cfo_only_test.rs
+  - services/ten/tests/vnd_refund_amount_cap_test.rs
+  - services/ten/tests/vnd_token_revoke_test.rs
+  - services/ten/tests/vnd_cross_rail_rejection_test.rs
+  - services/ten/tests/vnd_founder_skip_test.rs
+  - services/ten/tests/vnd_hoadon_issuance_test.rs
+  - services/ten/tests/vnd_hoadon_seq_gap_free_test.rs
+  - services/ten/tests/vnd_psp_signature_verify_test.rs
+  - services/ten/tests/vnd_idempotency_key_per_psp_test.rs
+  - services/ten/tests/vnd_dispatcher_idempotency_test.rs
+  - services/ten/tests/vnd_residency_isolation_test.rs
+  - services/ten/tests/vnd_audit_emission_test.rs
 
-  modified_files:
-    # for VND tenants, push plan_change as charge-side adjustment (TASK-TEN-002 next period)
-    - services/ten/src/handlers/plan_change.rs
-    # require billing_contact_phone for VND tenants
-    - services/ten/src/handlers/tenant_create.rs
-    # +reqwest, +hmac, +sha2 (HMAC-SHA512 for VnPay)
-    - services/ten/Cargo.toml
-    # add momo.rs + zalopay.rs (VnPay covered in TASK-INV-005)
-    - services/inv/src/webhook/
-    # POST /v1/inv/webhooks/momo/{tenant_slug}
-    - services/inv/src/webhook/momo.rs
-    # POST /v1/inv/webhooks/zalopay/{tenant_slug}
-    - services/inv/src/webhook/zalopay.rs
-    # HMAC-SHA256 over JSON body
-    - services/inv/src/webhook/momo_signature.rs
-    # HMAC-SHA256 over key1
-    - services/inv/src/webhook/zalopay_signature.rs
-    # branch — VND rail invokes vnd::overage::charge_for_period
-    - services/metering/src/handlers/period_close.rs
+modified_files:
+  # for VND tenants, push plan_change as charge-side adjustment (TASK-TEN-002 next period)
+  - services/ten/src/handlers/plan_change.rs
+  # require billing_contact_phone for VND tenants
+  - services/ten/src/handlers/tenant_create.rs
+  # +reqwest, +hmac, +sha2 (HMAC-SHA512 for VnPay)
+  - services/ten/Cargo.toml
+  # add momo.rs + zalopay.rs (VnPay covered in TASK-INV-005)
+  - services/inv/src/webhook/
+  # POST /v1/inv/webhooks/momo/{tenant_slug}
+  - services/inv/src/webhook/momo.rs
+  # POST /v1/inv/webhooks/zalopay/{tenant_slug}
+  - services/inv/src/webhook/zalopay.rs
+  # HMAC-SHA256 over JSON body
+  - services/inv/src/webhook/momo_signature.rs
+  # HMAC-SHA256 over key1
+  - services/inv/src/webhook/zalopay_signature.rs
+  # branch — VND rail invokes vnd::overage::charge_for_period
+  - services/metering/src/handlers/period_close.rs
 
-  allowed_tools:
-    - file_read: services/ten/**
-    - file_read: services/inv/src/webhook/**
-    - file_read: services/metering/src/handlers/**
-    - file_write: services/ten/{src,tests,migrations}/**
-    - file_write: services/inv/src/webhook/{momo,zalopay}*.rs
-    - file_write: services/metering/src/handlers/period_close.rs
-    - bash: cd services/ten && cargo test vnd
-    - bash: cd services/ten && cargo run --bin cyberos-ten -- vnd-psp-status --residency vn-1
+allowed_tools:
+  - file_read: services/ten/**
+  - file_read: services/inv/src/webhook/**
+  - file_read: services/metering/src/handlers/**
+  - file_write: services/ten/{src,tests,migrations}/**
+  - file_write: services/inv/src/webhook/{momo,zalopay}*.rs
+  - file_write: services/metering/src/handlers/period_close.rs
+  - bash: cd services/ten && cargo test vnd
+  - bash: cd services/ten && cargo run --bin cyberos-ten -- vnd-psp-status --residency vn-1
 
-  disallowed_tools:
-    - charge a non-VND tenant via VND rail (per DEC-973 — symmetric to TASK-TEN-003 cross-rail block)
-    - charge the founder tenant via VND rail (per DEC-974)
-    - skip hóa đơn issuance on any successful charge (per DEC-968 — VN tax law)
-    - store PSP API keys in plaintext (KMS-wrapped only per DEC-969)
-    - store payment_token in plaintext (KMS-wrapped only per DEC-963)
-    - allow over-refund (per DEC-966 — max = original charge amount)
-    - skip per-PSP webhook signature verification (per DEC-971)
-    - allow hóa đơn sequence gap (per DEC-983 + Decree 123 §10)
+disallowed_tools:
+  - charge a non-VND tenant via VND rail (per DEC-973 — symmetric to TASK-TEN-003 cross-rail block)
+  - charge the founder tenant via VND rail (per DEC-974)
+  - skip hóa đơn issuance on any successful charge (per DEC-968 — VN tax law)
+  - store PSP API keys in plaintext (KMS-wrapped only per DEC-969)
+  - store payment_token in plaintext (KMS-wrapped only per DEC-963)
+  - allow over-refund (per DEC-966 — max = original charge amount)
+  - skip per-PSP webhook signature verification (per DEC-971)
+  - allow hóa đơn sequence gap (per DEC-983 + Decree 123 §10)
 
 effort_hours: 12
 subtasks:

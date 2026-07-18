@@ -37,37 +37,36 @@ source_decisions:
   - DEC-1504 2026-05-17 — Async via TASK-MCP-007 Tasks (large mailboxes ~100MB+ take minutes)
   - DEC-1505 2026-05-17 — memory audit kinds: email.dsar_export_started, email.dsar_export_completed, email.dsar_export_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/email/
-  new_files:
-    - services/email/migrations/0007_dsar_export_jobs.sql
-    - services/email/src/dsar/mod.rs
-    - services/email/src/dsar/aggregator.rs
-    - services/email/src/dsar/jsonl_writer.rs
-    - services/email/src/dsar/chain_anchor.rs
-    - services/email/src/audit/dsar_events.rs
-    - services/email/src/handlers/dsar_routes.rs
-    - services/email/tests/dsar_authored_messages_test.rs
-    - services/email/tests/dsar_received_messages_test.rs
-    - services/email/tests/dsar_cross_tenant_excluded_test.rs
-    - services/email/tests/dsar_attachments_referenced_test.rs
-    - services/email/tests/dsar_chain_hashes_test.rs
-    - services/email/tests/dsar_async_via_tasks_test.rs
-    - services/email/tests/audit_row_test.rs
+language: rust 1.81
+service: cyberos/services/email/
+new_files:
+  - services/email/migrations/0007_dsar_export_jobs.sql
+  - services/email/src/dsar/mod.rs
+  - services/email/src/dsar/aggregator.rs
+  - services/email/src/dsar/jsonl_writer.rs
+  - services/email/src/dsar/chain_anchor.rs
+  - services/email/src/audit/dsar_events.rs
+  - services/email/src/handlers/dsar_routes.rs
+  - services/email/tests/dsar_authored_messages_test.rs
+  - services/email/tests/dsar_received_messages_test.rs
+  - services/email/tests/dsar_cross_tenant_excluded_test.rs
+  - services/email/tests/dsar_attachments_referenced_test.rs
+  - services/email/tests/dsar_chain_hashes_test.rs
+  - services/email/tests/dsar_async_via_tasks_test.rs
+  - services/email/tests/audit_row_test.rs
 
-  modified_files:
-    - services/email/src/lib.rs
+modified_files:
+  - services/email/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{email,portal}/**
-    - file_write: services/email/{src,tests,migrations}/**
-    - bash: cd services/email && cargo test dsar
+allowed_tools:
+  - file_read: services/{email,portal}/**
+  - file_write: services/email/{src,tests,migrations}/**
+  - bash: cd services/email && cargo test dsar
 
-  disallowed_tools:
-    - include cross-tenant messages (per DEC-1503)
-    - inline attachment bytes (per DEC-1501 — reference only)
-    - skip chain anchors (per DEC-1502)
+disallowed_tools:
+  - include cross-tenant messages (per DEC-1503)
+  - inline attachment bytes (per DEC-1501 — reference only)
+  - skip chain anchors (per DEC-1502)
 
 effort_hours: 5
 subtasks:

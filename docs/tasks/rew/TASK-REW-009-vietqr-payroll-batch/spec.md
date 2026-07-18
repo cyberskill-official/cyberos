@@ -36,33 +36,32 @@ source_decisions:
   - DEC-2233 2026-05-17 — Reconciliation: TASK-INV-005 VietQR webhook acks individual member transfers; system matches by memo template
   - DEC-2234 2026-05-17 — memory audit kinds: rew.batch_generated, rew.batch_downloaded, rew.batch_cfo_confirmed, rew.batch_paid_acked, rew.batch_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/rew/
-  new_files:
-    - services/rew/migrations/0009_payroll_batches.sql
-    - services/rew/src/batch/mod.rs
-    - services/rew/src/batch/file_generator.rs
-    - services/rew/src/batch/reconciliation.rs
-    - services/rew/src/handlers/batch_routes.rs
-    - services/rew/src/audit/batch_events.rs
-    - services/rew/tests/batch_status_enum_cardinality_test.rs
-    - services/rew/tests/batch_file_format_test.rs
-    - services/rew/tests/batch_cfo_manual_confirm_test.rs
-    - services/rew/tests/batch_reconciliation_test.rs
-    - services/rew/tests/batch_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/rew/
+new_files:
+  - services/rew/migrations/0009_payroll_batches.sql
+  - services/rew/src/batch/mod.rs
+  - services/rew/src/batch/file_generator.rs
+  - services/rew/src/batch/reconciliation.rs
+  - services/rew/src/handlers/batch_routes.rs
+  - services/rew/src/audit/batch_events.rs
+  - services/rew/tests/batch_status_enum_cardinality_test.rs
+  - services/rew/tests/batch_file_format_test.rs
+  - services/rew/tests/batch_cfo_manual_confirm_test.rs
+  - services/rew/tests/batch_reconciliation_test.rs
+  - services/rew/tests/batch_audit_emission_test.rs
 
-  modified_files:
-    - services/rew/src/lib.rs
+modified_files:
+  - services/rew/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{rew,inv}/**
-    - file_write: services/rew/{src,tests,migrations}/**
-    - bash: cd services/rew && cargo test batch
+allowed_tools:
+  - file_read: services/{rew,inv}/**
+  - file_write: services/rew/{src,tests,migrations}/**
+  - bash: cd services/rew && cargo test batch
 
-  disallowed_tools:
-    - auto-submit to bank (per DEC-2232)
-    - skip CFO confirm (per DEC-2232)
+disallowed_tools:
+  - auto-submit to bank (per DEC-2232)
+  - skip CFO confirm (per DEC-2232)
 
 effort_hours: 5
 subtasks:

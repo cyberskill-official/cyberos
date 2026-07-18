@@ -39,36 +39,35 @@ source_decisions:
   - DEC-2465 2026-05-19 — Adapter MUST omit playbooks (skills/) from Cursor bundle per TASK-PLUGIN-004 clause 8 — Cursor's MCP integration does not render Skills
   - DEC-2466 2026-05-19 — Adapter MUST emit a per-target manifest format conforming to that target's published spec — adapters do NOT extend or proprietarily modify target formats
 
-build_envelope:
-  language: rust 1.81
-  service: services/plugin-host/
-  new_files:
-    - services/plugin-host/src/adapters/mod.rs
-    - services/plugin-host/src/adapters/claude_code.rs
-    - services/plugin-host/src/adapters/cursor.rs
-    - services/plugin-host/src/adapters/cowork.rs
-    - services/plugin-host/src/adapters/codex_cli.rs
-    - services/plugin-host/src/adapters/common.rs
-    - services/plugin-host/src/bin/cyberos-plugin.rs (extends Python CLI from TASK-PLUGIN-001 with Rust pack subcommand for multi-target)
-    - services/plugin-host/tests/adapter_claude_code_test.rs
-    - services/plugin-host/tests/adapter_cursor_test.rs
-    - services/plugin-host/tests/adapter_cowork_test.rs
-    - services/plugin-host/tests/adapter_codex_cli_test.rs
-    - services/plugin-host/tests/adapter_reproducibility_test.rs
+language: rust 1.81
+service: services/plugin-host/
+new_files:
+  - services/plugin-host/src/adapters/mod.rs
+  - services/plugin-host/src/adapters/claude_code.rs
+  - services/plugin-host/src/adapters/cursor.rs
+  - services/plugin-host/src/adapters/cowork.rs
+  - services/plugin-host/src/adapters/codex_cli.rs
+  - services/plugin-host/src/adapters/common.rs
+  - services/plugin-host/src/bin/cyberos-plugin.rs (extends Python CLI from TASK-PLUGIN-001 with Rust pack subcommand for multi-target)
+  - services/plugin-host/tests/adapter_claude_code_test.rs
+  - services/plugin-host/tests/adapter_cursor_test.rs
+  - services/plugin-host/tests/adapter_cowork_test.rs
+  - services/plugin-host/tests/adapter_codex_cli_test.rs
+  - services/plugin-host/tests/adapter_reproducibility_test.rs
 
-  modified_files:
-    - services/plugin-host/Cargo.toml (add binary entry for cyberos-plugin)
-    - modules/plugin/manifests/cyberos@1.0.0.plugin.json (targets array)
+modified_files:
+  - services/plugin-host/Cargo.toml (add binary entry for cyberos-plugin)
+  - modules/plugin/manifests/cyberos@1.0.0.plugin.json (targets array)
 
-  allowed_tools:
-    - file_read: services/plugin-host/**, modules/plugin/**
-    - file_write: services/plugin-host/**
-    - bash: cd services && cargo test -p cyberos-plugin-host adapter
+allowed_tools:
+  - file_read: services/plugin-host/**, modules/plugin/**
+  - file_write: services/plugin-host/**
+  - bash: cd services && cargo test -p cyberos-plugin-host adapter
 
-  disallowed_tools:
-    - per-target canonical manifests (per DEC-2462)
-    - extend target formats with proprietary fields (per DEC-2466)
-    - leak runtime context into bundle (per DEC-2463)
+disallowed_tools:
+  - per-target canonical manifests (per DEC-2462)
+  - extend target formats with proprietary fields (per DEC-2466)
+  - leak runtime context into bundle (per DEC-2463)
 
 effort_hours: 10
 subtasks:

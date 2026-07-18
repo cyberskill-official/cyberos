@@ -42,38 +42,37 @@ source_decisions:
   - DEC-1565 2026-05-17 — Recognition triggers memory audit: inv.revenue_recognized, inv.revenue_deferred, inv.revenue_rollforward_completed, inv.revenue_rollforward_failed; PII scrubbed (amount → SHA256)
   - DEC-1566 2026-05-17 — Snapshots: recognition rollforward at each EOM is IMMUTABLE — never re-computed (audit lineage); corrections via prior-period adjustment journal entry
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/invoicing/
-  new_files:
-    - services/invoicing/migrations/0010_recognition.sql
-    - services/invoicing/src/recognition/mod.rs
-    - services/invoicing/src/recognition/scheduler.rs
-    - services/invoicing/src/recognition/rollforward.rs
-    - services/invoicing/src/recognition/journal_entry.rs
-    - services/invoicing/src/handlers/recognition_routes.rs
-    - services/invoicing/src/audit/recognition_events.rs
-    - services/invoicing/tests/recognition_time_based_test.rs
-    - services/invoicing/tests/recognition_milestone_based_test.rs
-    - services/invoicing/tests/recognition_pct_completion_test.rs
-    - services/invoicing/tests/recognition_point_in_time_test.rs
-    - services/invoicing/tests/recognition_method_enum_cardinality_test.rs
-    - services/invoicing/tests/recognition_rollforward_immutable_test.rs
-    - services/invoicing/tests/recognition_journal_entry_test.rs
-    - services/invoicing/tests/recognition_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/invoicing/
+new_files:
+  - services/invoicing/migrations/0010_recognition.sql
+  - services/invoicing/src/recognition/mod.rs
+  - services/invoicing/src/recognition/scheduler.rs
+  - services/invoicing/src/recognition/rollforward.rs
+  - services/invoicing/src/recognition/journal_entry.rs
+  - services/invoicing/src/handlers/recognition_routes.rs
+  - services/invoicing/src/audit/recognition_events.rs
+  - services/invoicing/tests/recognition_time_based_test.rs
+  - services/invoicing/tests/recognition_milestone_based_test.rs
+  - services/invoicing/tests/recognition_pct_completion_test.rs
+  - services/invoicing/tests/recognition_point_in_time_test.rs
+  - services/invoicing/tests/recognition_method_enum_cardinality_test.rs
+  - services/invoicing/tests/recognition_rollforward_immutable_test.rs
+  - services/invoicing/tests/recognition_journal_entry_test.rs
+  - services/invoicing/tests/recognition_audit_emission_test.rs
 
-  modified_files:
-    - services/invoicing/src/lib.rs
+modified_files:
+  - services/invoicing/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/invoicing/**
-    - file_write: services/invoicing/{src,tests,migrations}/**
-    - bash: cd services/invoicing && cargo test recognition
+allowed_tools:
+  - file_read: services/invoicing/**
+  - file_write: services/invoicing/{src,tests,migrations}/**
+  - bash: cd services/invoicing && cargo test recognition
 
-  disallowed_tools:
-    - mutate prior-period rollforward (per DEC-1566)
-    - use float for amounts (rust_decimal only)
-    - skip journal entry on recognition (per DEC-1563)
+disallowed_tools:
+  - mutate prior-period rollforward (per DEC-1566)
+  - use float for amounts (rust_decimal only)
+  - skip journal entry on recognition (per DEC-1563)
 
 effort_hours: 5
 subtasks:

@@ -36,33 +36,32 @@ source_decisions:
   - DEC-2303 2026-05-17 — Acceleration cron processes all active grants → marks status=accelerated + sets shares_vested = total_shares
   - DEC-2304 2026-05-17 — memory audit kinds: esop.ma_event_declared, esop.ma_event_signed, esop.ma_event_accelerating, esop.ma_event_member_notified, esop.ma_event_completed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/esop/
-  new_files:
-    - services/esop/migrations/0006_ma_events.sql
-    - services/esop/src/ma/mod.rs
-    - services/esop/src/ma/acceleration_runner.rs
-    - services/esop/src/ma/member_notifier.rs
-    - services/esop/src/handlers/ma_routes.rs
-    - services/esop/src/audit/ma_events.rs
-    - services/esop/tests/ma_event_status_enum_cardinality_test.rs
-    - services/esop/tests/ma_board_threshold_test.rs
-    - services/esop/tests/ma_acceleration_full_vest_test.rs
-    - services/esop/tests/ma_member_notice_5bd_test.rs
-    - services/esop/tests/ma_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/esop/
+new_files:
+  - services/esop/migrations/0006_ma_events.sql
+  - services/esop/src/ma/mod.rs
+  - services/esop/src/ma/acceleration_runner.rs
+  - services/esop/src/ma/member_notifier.rs
+  - services/esop/src/handlers/ma_routes.rs
+  - services/esop/src/audit/ma_events.rs
+  - services/esop/tests/ma_event_status_enum_cardinality_test.rs
+  - services/esop/tests/ma_board_threshold_test.rs
+  - services/esop/tests/ma_acceleration_full_vest_test.rs
+  - services/esop/tests/ma_member_notice_5bd_test.rs
+  - services/esop/tests/ma_audit_emission_test.rs
 
-  modified_files:
-    - services/esop/src/lib.rs
+modified_files:
+  - services/esop/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{esop,email}/**
-    - file_write: services/esop/{src,tests,migrations}/**
-    - bash: cd services/esop && cargo test ma
+allowed_tools:
+  - file_read: services/{esop,email}/**
+  - file_write: services/esop/{src,tests,migrations}/**
+  - bash: cd services/esop && cargo test ma
 
-  disallowed_tools:
-    - accelerate without board threshold (per DEC-2302)
-    - skip member notice (per DEC-2300)
+disallowed_tools:
+  - accelerate without board threshold (per DEC-2302)
+  - skip member notice (per DEC-2300)
 
 effort_hours: 5
 subtasks:

@@ -71,103 +71,102 @@ source_decisions:
   - EU AI Act Art. 12 (audit trail — every Stripe state change emits a memory row with chain hash)
   - GDPR Art. 7 (consent — billing_contact_email collected at provisioning with explicit consent acknowledgement; not used for marketing without separate opt-in)
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/ten/
-  new_files:
-    # stripe_customer_id + stripe_subscription_id columns + dunning_state + billing_currency
-    - services/ten/migrations/0006_stripe_billing.sql
-    # idempotency cache + audit trail for outbound calls
-    - services/ten/migrations/0007_stripe_api_calls.sql
-    # inbound webhook dispatch log (idempotency on tenant_id × stripe_event_id)
-    - services/ten/migrations/0008_stripe_event_dispatch_log.sql
-    # closed enum (VND, USD, EUR, SGD, GBP)
-    - services/ten/migrations/0009_billing_currency_enum.sql
-    # rail-synced (currency × tier) → Stripe Price ID
-    - services/ten/migrations/0010_stripe_price_map.sql
-    # billing orchestrator + rail selector
-    - services/ten/src/billing/mod.rs
-    # Stripe rail entry
-    - services/ten/src/billing/stripe/mod.rs
-    # create_customer + idempotency
-    - services/ten/src/billing/stripe/customer.rs
-    # create_subscription + plan_change_push + cancel_at_period_end
-    - services/ten/src/billing/stripe/subscription.rs
-    # usage_record push at period close
-    - services/ten/src/billing/stripe/overage.rs
-    # refund handler (CFO-gated)
-    - services/ten/src/billing/stripe/refund.rs
-    # NATS consumer for ten.stripe.* events
-    - services/ten/src/billing/stripe/dispatch.rs
-    # idempotency-key builder + cache
-    - services/ten/src/billing/stripe/idempotency.rs
-    # async client + retry + Retry-After honour
-    - services/ten/src/billing/stripe/api_client.rs
-    # compile-time (currency × tier) → Price ID + amount
-    - services/ten/src/billing/stripe/price_catalog.rs
-    # dunning state machine + suspend trigger
-    - services/ten/src/billing/dunning.rs
-    # tenant.stripe_customer_id CRUD (partial-unique guarded)
-    - services/ten/src/repo/stripe_customers.rs
-    # idempotency cache repo
-    - services/ten/src/repo/stripe_api_calls.rs
-    # inbound dispatch idempotency repo
-    - services/ten/src/repo/stripe_event_dispatch_log.rs
-    # 11 memory row builders
-    - services/ten/src/audit/stripe_events.rs
-    # cyberos-ten stripe-sync-prices (deploy-time price sync)
-    - services/ten/src/cli/stripe_sync_prices.rs
-    # POST /v1/admin/tenants/{id}/billing/refund (CFO-only)
-    - services/ten/src/handlers/billing_refund.rs
-    # GET /v1/admin/tenants/{id}/billing (subscription state + dunning + history)
-    - services/ten/src/handlers/billing_show.rs
-    - services/ten/tests/stripe_customer_create_test.rs
-    - services/ten/tests/stripe_customer_idempotency_test.rs
-    - services/ten/tests/stripe_subscription_create_test.rs
-    - services/ten/tests/stripe_plan_upgrade_proration_test.rs
-    - services/ten/tests/stripe_plan_downgrade_defer_test.rs
-    - services/ten/tests/stripe_overage_push_test.rs
-    - services/ten/tests/stripe_dunning_state_machine_test.rs
-    - services/ten/tests/stripe_dispatcher_idempotency_test.rs
-    - services/ten/tests/stripe_refund_cfo_only_test.rs
-    - services/ten/tests/stripe_founder_skip_test.rs
-    - services/ten/tests/stripe_currency_lock_test.rs
-    - services/ten/tests/stripe_api_retry_test.rs
-    - services/ten/tests/stripe_price_catalog_cardinality_test.rs
-    - services/ten/tests/stripe_residency_apikey_routing_test.rs
-    - services/ten/tests/stripe_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/ten/
+new_files:
+  # stripe_customer_id + stripe_subscription_id columns + dunning_state + billing_currency
+  - services/ten/migrations/0006_stripe_billing.sql
+  # idempotency cache + audit trail for outbound calls
+  - services/ten/migrations/0007_stripe_api_calls.sql
+  # inbound webhook dispatch log (idempotency on tenant_id × stripe_event_id)
+  - services/ten/migrations/0008_stripe_event_dispatch_log.sql
+  # closed enum (VND, USD, EUR, SGD, GBP)
+  - services/ten/migrations/0009_billing_currency_enum.sql
+  # rail-synced (currency × tier) → Stripe Price ID
+  - services/ten/migrations/0010_stripe_price_map.sql
+  # billing orchestrator + rail selector
+  - services/ten/src/billing/mod.rs
+  # Stripe rail entry
+  - services/ten/src/billing/stripe/mod.rs
+  # create_customer + idempotency
+  - services/ten/src/billing/stripe/customer.rs
+  # create_subscription + plan_change_push + cancel_at_period_end
+  - services/ten/src/billing/stripe/subscription.rs
+  # usage_record push at period close
+  - services/ten/src/billing/stripe/overage.rs
+  # refund handler (CFO-gated)
+  - services/ten/src/billing/stripe/refund.rs
+  # NATS consumer for ten.stripe.* events
+  - services/ten/src/billing/stripe/dispatch.rs
+  # idempotency-key builder + cache
+  - services/ten/src/billing/stripe/idempotency.rs
+  # async client + retry + Retry-After honour
+  - services/ten/src/billing/stripe/api_client.rs
+  # compile-time (currency × tier) → Price ID + amount
+  - services/ten/src/billing/stripe/price_catalog.rs
+  # dunning state machine + suspend trigger
+  - services/ten/src/billing/dunning.rs
+  # tenant.stripe_customer_id CRUD (partial-unique guarded)
+  - services/ten/src/repo/stripe_customers.rs
+  # idempotency cache repo
+  - services/ten/src/repo/stripe_api_calls.rs
+  # inbound dispatch idempotency repo
+  - services/ten/src/repo/stripe_event_dispatch_log.rs
+  # 11 memory row builders
+  - services/ten/src/audit/stripe_events.rs
+  # cyberos-ten stripe-sync-prices (deploy-time price sync)
+  - services/ten/src/cli/stripe_sync_prices.rs
+  # POST /v1/admin/tenants/{id}/billing/refund (CFO-only)
+  - services/ten/src/handlers/billing_refund.rs
+  # GET /v1/admin/tenants/{id}/billing (subscription state + dunning + history)
+  - services/ten/src/handlers/billing_show.rs
+  - services/ten/tests/stripe_customer_create_test.rs
+  - services/ten/tests/stripe_customer_idempotency_test.rs
+  - services/ten/tests/stripe_subscription_create_test.rs
+  - services/ten/tests/stripe_plan_upgrade_proration_test.rs
+  - services/ten/tests/stripe_plan_downgrade_defer_test.rs
+  - services/ten/tests/stripe_overage_push_test.rs
+  - services/ten/tests/stripe_dunning_state_machine_test.rs
+  - services/ten/tests/stripe_dispatcher_idempotency_test.rs
+  - services/ten/tests/stripe_refund_cfo_only_test.rs
+  - services/ten/tests/stripe_founder_skip_test.rs
+  - services/ten/tests/stripe_currency_lock_test.rs
+  - services/ten/tests/stripe_api_retry_test.rs
+  - services/ten/tests/stripe_price_catalog_cardinality_test.rs
+  - services/ten/tests/stripe_residency_apikey_routing_test.rs
+  - services/ten/tests/stripe_audit_emission_test.rs
 
-  modified_files:
-    # plan_change handler invokes billing/stripe::push_plan_change after history write
-    - services/ten/src/handlers/plan_change.rs
-    # tenant_create accepts --billing-currency override (residency default applied)
-    - services/ten/src/handlers/tenant_create.rs
-    # +async-stripe = "0.39" (or rust-stripe equivalent), +backoff, +kms-aws
-    - services/ten/Cargo.toml
-    # bridge: relevant kinds NATS-publish to `tenant.<slug>.ten.stripe.<kind>`
-    - services/inv/src/webhook/stripe_event_dispatch.rs
-    # period_close hook invokes ten::billing::stripe::push_overage_for_period
-    - services/metering/src/handlers/period_close.rs
+modified_files:
+  # plan_change handler invokes billing/stripe::push_plan_change after history write
+  - services/ten/src/handlers/plan_change.rs
+  # tenant_create accepts --billing-currency override (residency default applied)
+  - services/ten/src/handlers/tenant_create.rs
+  # +async-stripe = "0.39" (or rust-stripe equivalent), +backoff, +kms-aws
+  - services/ten/Cargo.toml
+  # bridge: relevant kinds NATS-publish to `tenant.<slug>.ten.stripe.<kind>`
+  - services/inv/src/webhook/stripe_event_dispatch.rs
+  # period_close hook invokes ten::billing::stripe::push_overage_for_period
+  - services/metering/src/handlers/period_close.rs
 
-  allowed_tools:
-    - file_read: services/ten/**
-    - file_read: services/inv/src/webhook/**
-    - file_read: services/metering/src/handlers/**
-    - file_write: services/ten/{src,tests,migrations}/**
-    - file_write: services/inv/src/webhook/stripe_event_dispatch.rs
-    - file_write: services/metering/src/handlers/period_close.rs
-    - bash: cd services/ten && cargo test stripe
-    - bash: cd services/ten && cargo run --bin cyberos-ten -- stripe-sync-prices --dry-run
+allowed_tools:
+  - file_read: services/ten/**
+  - file_read: services/inv/src/webhook/**
+  - file_read: services/metering/src/handlers/**
+  - file_write: services/ten/{src,tests,migrations}/**
+  - file_write: services/inv/src/webhook/stripe_event_dispatch.rs
+  - file_write: services/metering/src/handlers/period_close.rs
+  - bash: cd services/ten && cargo test stripe
+  - bash: cd services/ten && cargo run --bin cyberos-ten -- stripe-sync-prices --dry-run
 
-  disallowed_tools:
-    - call Stripe API without an Idempotency-Key (per DEC-794)
-    - charge a VND tenant via Stripe (per DEC-784 — VND uses TASK-TEN-102 only)
-    - charge the founder tenant via Stripe (per DEC-805)
-    - mutate billing_currency on an existing tenant (per DEC-798)
-    - store Stripe API key in plaintext (KMS-encrypted only; per DEC-801)
-    - hardcode Stripe Price IDs in source (must round-trip through stripe_price_map per DEC-792)
-    - allow over-refund (per DEC-791 — max = original invoice amount)
-    - silently swallow Stripe 5xx after backoff exhausted (per DEC-795 — alert sev-2)
+disallowed_tools:
+  - call Stripe API without an Idempotency-Key (per DEC-794)
+  - charge a VND tenant via Stripe (per DEC-784 — VND uses TASK-TEN-102 only)
+  - charge the founder tenant via Stripe (per DEC-805)
+  - mutate billing_currency on an existing tenant (per DEC-798)
+  - store Stripe API key in plaintext (KMS-encrypted only; per DEC-801)
+  - hardcode Stripe Price IDs in source (must round-trip through stripe_price_map per DEC-792)
+  - allow over-refund (per DEC-791 — max = original invoice amount)
+  - silently swallow Stripe 5xx after backoff exhausted (per DEC-795 — alert sev-2)
 
 effort_hours: 8
 subtasks:

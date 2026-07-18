@@ -38,39 +38,38 @@ source_decisions:
   - DEC-1495 2026-05-17 — Each recipient gets own outbound_message row (per TASK-EMAIL-009) for tracking; bulk row aggregates status
   - DEC-1496 2026-05-17 — memory audit kinds: email.bulk_drafted, email.bulk_am_signed, email.bulk_cfo_signed, email.bulk_sending_started, email.bulk_completed, email.bulk_cancelled, email.bulk_recipient_suppressed_skipped
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/email/
-  new_files:
-    - services/email/migrations/0006_bulk_sends.sql
-    - services/email/src/bulk/mod.rs
-    - services/email/src/bulk/draft.rs
-    - services/email/src/bulk/sign.rs
-    - services/email/src/bulk/dispatch.rs
-    - services/email/src/bulk/rate_pacer.rs
-    - services/email/src/audit/bulk_events.rs
-    - services/email/src/handlers/bulk_routes.rs
-    - services/email/tests/bulk_threshold_test.rs
-    - services/email/tests/bulk_dual_sign_test.rs
-    - services/email/tests/bulk_same_person_blocked_test.rs
-    - services/email/tests/bulk_suppression_filter_test.rs
-    - services/email/tests/bulk_rate_pace_5000_per_hour_test.rs
-    - services/email/tests/bulk_status_enum_test.rs
-    - services/email/tests/bulk_cancellation_test.rs
-    - services/email/tests/bulk_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/email/
+new_files:
+  - services/email/migrations/0006_bulk_sends.sql
+  - services/email/src/bulk/mod.rs
+  - services/email/src/bulk/draft.rs
+  - services/email/src/bulk/sign.rs
+  - services/email/src/bulk/dispatch.rs
+  - services/email/src/bulk/rate_pacer.rs
+  - services/email/src/audit/bulk_events.rs
+  - services/email/src/handlers/bulk_routes.rs
+  - services/email/tests/bulk_threshold_test.rs
+  - services/email/tests/bulk_dual_sign_test.rs
+  - services/email/tests/bulk_same_person_blocked_test.rs
+  - services/email/tests/bulk_suppression_filter_test.rs
+  - services/email/tests/bulk_rate_pace_5000_per_hour_test.rs
+  - services/email/tests/bulk_status_enum_test.rs
+  - services/email/tests/bulk_cancellation_test.rs
+  - services/email/tests/bulk_audit_emission_test.rs
 
-  modified_files:
-    - services/email/src/lib.rs
+modified_files:
+  - services/email/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/email/**
-    - file_write: services/email/{src,tests,migrations}/**
-    - bash: cd services/email && cargo test bulk
+allowed_tools:
+  - file_read: services/email/**
+  - file_write: services/email/{src,tests,migrations}/**
+  - bash: cd services/email && cargo test bulk
 
-  disallowed_tools:
-    - skip dual-sign for ≥ 10 recipients (per DEC-1491)
-    - exceed 5000/hour (per DEC-1492)
-    - bypass suppression filter (per DEC-1493)
+disallowed_tools:
+  - skip dual-sign for ≥ 10 recipients (per DEC-1491)
+  - exceed 5000/hour (per DEC-1492)
+  - bypass suppression filter (per DEC-1493)
 
 effort_hours: 5
 subtasks:

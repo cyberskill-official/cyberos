@@ -36,33 +36,32 @@ source_decisions:
   - DEC-2363 2026-05-17 — Module name validated against active tenant modules list (TEN/HR/REW/EMAIL/etc.); unknown module → reject
   - DEC-2364 2026-05-17 — memory audit kinds: mcp.skill_name_validated, mcp.skill_name_rejected, mcp.naming_ci_check_passed, mcp.naming_ci_check_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/mcp/
-  new_files:
-    - services/mcp/src/naming/mod.rs
-    - services/mcp/src/naming/validator.rs
-    - services/mcp/src/naming/module_registry.rs
-    - services/mcp/src/audit/naming_events.rs
-    - scripts/check_sep986_naming.sh
-    - .github/workflows/mcp-sep986-check.yml
-    - services/mcp/tests/sep986_verb_enum_cardinality_test.rs
-    - services/mcp/tests/sep986_regex_test.rs
-    - services/mcp/tests/sep986_module_validation_test.rs
-    - services/mcp/tests/sep986_ci_grep_test.rs
-    - services/mcp/tests/sep986_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/mcp/
+new_files:
+  - services/mcp/src/naming/mod.rs
+  - services/mcp/src/naming/validator.rs
+  - services/mcp/src/naming/module_registry.rs
+  - services/mcp/src/audit/naming_events.rs
+  - scripts/check_sep986_naming.sh
+  - .github/workflows/mcp-sep986-check.yml
+  - services/mcp/tests/sep986_verb_enum_cardinality_test.rs
+  - services/mcp/tests/sep986_regex_test.rs
+  - services/mcp/tests/sep986_module_validation_test.rs
+  - services/mcp/tests/sep986_ci_grep_test.rs
+  - services/mcp/tests/sep986_audit_emission_test.rs
 
-  modified_files:
-    - services/mcp/src/lib.rs
+modified_files:
+  - services/mcp/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/mcp/**
-    - file_write: services/mcp/{src,tests}/**
-    - bash: cd services/mcp && cargo test naming
+allowed_tools:
+  - file_read: services/mcp/**
+  - file_write: services/mcp/{src,tests}/**
+  - bash: cd services/mcp && cargo test naming
 
-  disallowed_tools:
-    - register without validation (per DEC-2362)
-    - bypass CI gate (per DEC-2362)
+disallowed_tools:
+  - register without validation (per DEC-2362)
+  - bypass CI gate (per DEC-2362)
 
 effort_hours: 3
 subtasks:

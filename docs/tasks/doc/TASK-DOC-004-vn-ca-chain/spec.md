@@ -40,40 +40,39 @@ source_decisions:
   - DEC-1795 2026-05-17 — Returns signature in VN-compliant format (CMS + RootCA trust chain to VN National Root CA); composes with TASK-DOC-011
   - DEC-1796 2026-05-17 — memory audit kinds: doc.vn_ca_signature_requested, doc.vn_ca_signature_received, doc.vn_ca_vneid_linked, doc.vn_ca_cert_validated, doc.vn_ca_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/doc/
-  new_files:
-    - services/doc/migrations/0010_vn_ca_signatures.sql
-    - services/doc/src/vn_ca/mod.rs
-    - services/doc/src/vn_ca/abstraction.rs
-    - services/doc/src/vn_ca/vnpay_client.rs
-    - services/doc/src/vn_ca/mk_group_client.rs
-    - services/doc/src/vn_ca/viettel_ca_client.rs
-    - services/doc/src/vn_ca/vneid_linker.rs
-    - services/doc/src/vn_ca/vn_root_validator.rs
-    - services/doc/src/handlers/vn_ca_routes.rs
-    - services/doc/src/audit/vn_ca_events.rs
-    - services/doc/tests/vn_ca_vnpay_test.rs
-    - services/doc/tests/vn_ca_mk_group_test.rs
-    - services/doc/tests/vn_ca_viettel_test.rs
-    - services/doc/tests/vn_ca_vneid_linkage_test.rs
-    - services/doc/tests/vn_ca_root_validation_test.rs
-    - services/doc/tests/vn_ca_partner_enum_cardinality_test.rs
-    - services/doc/tests/vn_ca_request_kind_enum_cardinality_test.rs
-    - services/doc/tests/vn_ca_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/doc/
+new_files:
+  - services/doc/migrations/0010_vn_ca_signatures.sql
+  - services/doc/src/vn_ca/mod.rs
+  - services/doc/src/vn_ca/abstraction.rs
+  - services/doc/src/vn_ca/vnpay_client.rs
+  - services/doc/src/vn_ca/mk_group_client.rs
+  - services/doc/src/vn_ca/viettel_ca_client.rs
+  - services/doc/src/vn_ca/vneid_linker.rs
+  - services/doc/src/vn_ca/vn_root_validator.rs
+  - services/doc/src/handlers/vn_ca_routes.rs
+  - services/doc/src/audit/vn_ca_events.rs
+  - services/doc/tests/vn_ca_vnpay_test.rs
+  - services/doc/tests/vn_ca_mk_group_test.rs
+  - services/doc/tests/vn_ca_viettel_test.rs
+  - services/doc/tests/vn_ca_vneid_linkage_test.rs
+  - services/doc/tests/vn_ca_root_validation_test.rs
+  - services/doc/tests/vn_ca_partner_enum_cardinality_test.rs
+  - services/doc/tests/vn_ca_request_kind_enum_cardinality_test.rs
+  - services/doc/tests/vn_ca_audit_emission_test.rs
 
-  modified_files:
-    - services/doc/src/lib.rs
+modified_files:
+  - services/doc/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{doc,auth}/**
-    - file_write: services/doc/{src,tests,migrations}/**
-    - bash: cd services/doc && cargo test vn_ca
+allowed_tools:
+  - file_read: services/{doc,auth}/**
+  - file_write: services/doc/{src,tests,migrations}/**
+  - bash: cd services/doc && cargo test vn_ca
 
-  disallowed_tools:
-    - non-CISO creds write (per DEC-1794)
-    - skip VN Root CA validation (per DEC-1790)
+disallowed_tools:
+  - non-CISO creds write (per DEC-1794)
+  - skip VN Root CA validation (per DEC-1790)
 
 effort_hours: 16
 subtasks:

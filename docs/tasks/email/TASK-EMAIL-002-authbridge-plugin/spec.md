@@ -39,39 +39,38 @@ source_decisions:
   - DEC-1465 2026-05-17 — TASK-PORTAL-004 SCIM deprovision invalidates Redis cache + Stalwart connection rejected on next operation
   - DEC-1466 2026-05-17 — memory audit kinds: email.auth_success, email.auth_failed, email.mailbox_accessed, email.smtp_send_authorized
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/email/
-  new_files:
-    - services/email/migrations/0001_email_auth_log.sql
-    - services/email/src/authbridge/mod.rs
-    - services/email/src/authbridge/jwt_validator.rs
-    - services/email/src/authbridge/mailbox_resolver.rs
-    - services/email/src/authbridge/cache.rs
-    - services/email/src/authbridge/revocation_consumer.rs
-    - services/email/src/audit/auth_events.rs
-    - services/email/src/handlers/authbridge_routes.rs
-    - services/email/tests/auth_jwt_valid_test.rs
-    - services/email/tests/auth_jwt_expired_test.rs
-    - services/email/tests/auth_wrong_audience_test.rs
-    - services/email/tests/auth_cache_60s_test.rs
-    - services/email/tests/auth_scim_revoke_invalidates_test.rs
-    - services/email/tests/auth_outcome_enum_test.rs
-    - services/email/tests/auth_per_tenant_mailbox_test.rs
-    - services/email/tests/auth_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/email/
+new_files:
+  - services/email/migrations/0001_email_auth_log.sql
+  - services/email/src/authbridge/mod.rs
+  - services/email/src/authbridge/jwt_validator.rs
+  - services/email/src/authbridge/mailbox_resolver.rs
+  - services/email/src/authbridge/cache.rs
+  - services/email/src/authbridge/revocation_consumer.rs
+  - services/email/src/audit/auth_events.rs
+  - services/email/src/handlers/authbridge_routes.rs
+  - services/email/tests/auth_jwt_valid_test.rs
+  - services/email/tests/auth_jwt_expired_test.rs
+  - services/email/tests/auth_wrong_audience_test.rs
+  - services/email/tests/auth_cache_60s_test.rs
+  - services/email/tests/auth_scim_revoke_invalidates_test.rs
+  - services/email/tests/auth_outcome_enum_test.rs
+  - services/email/tests/auth_per_tenant_mailbox_test.rs
+  - services/email/tests/auth_audit_emission_test.rs
 
-  modified_files:
-    - services/email/src/lib.rs
+modified_files:
+  - services/email/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{email,auth}/**
-    - file_write: services/email/{src,tests,migrations}/**
-    - bash: cd services/email && cargo test authbridge
+allowed_tools:
+  - file_read: services/{email,auth}/**
+  - file_write: services/email/{src,tests,migrations}/**
+  - bash: cd services/email && cargo test authbridge
 
-  disallowed_tools:
-    - cache JWTs > 60s (per DEC-1464 — security boundary)
-    - allow cross-tenant mailbox access (per DEC-1462)
-    - bypass TASK-PORTAL-004 SCIM revoke cascade (per DEC-1465)
+disallowed_tools:
+  - cache JWTs > 60s (per DEC-1464 — security boundary)
+  - allow cross-tenant mailbox access (per DEC-1462)
+  - bypass TASK-PORTAL-004 SCIM revoke cascade (per DEC-1465)
 
 effort_hours: 6
 subtasks:

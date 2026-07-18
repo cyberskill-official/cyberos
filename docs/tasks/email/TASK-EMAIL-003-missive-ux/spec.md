@@ -40,42 +40,41 @@ source_decisions:
   - DEC-1615 2026-05-17 — Keyboard shortcuts: navigation (j/k), reply (r), forward (f), assign (a), snooze (z), close (e), Genie (g)
   - DEC-1616 2026-05-17 — memory audit kinds: email.thread_assigned, email.thread_state_changed, email.internal_comment_added, email.thread_snoozed, email.thread_closed
 
-build_envelope:
-  language: typescript / react
-  service: cyberos/services/portal-web/
-  new_files:
-    - services/email/migrations/0012_thread_state.sql
-    - services/email/src/threads/state.rs
-    - services/email/src/threads/internal_comments.rs
-    - services/email/src/handlers/thread_state_routes.rs
-    - services/email/src/handlers/comment_routes.rs
-    - services/email/src/audit/thread_events.rs
-    - services/portal-web/src/email/InboxView.tsx
-    - services/portal-web/src/email/ThreadView.tsx
-    - services/portal-web/src/email/AssignmentPicker.tsx
-    - services/portal-web/src/email/SnoozePicker.tsx
-    - services/portal-web/src/email/InternalCommentEditor.tsx
-    - services/portal-web/src/email/GenieActionsPanel.tsx
-    - services/portal-web/src/email/keyboard_shortcuts.ts
-    - services/email/tests/thread_assign_test.rs
-    - services/email/tests/thread_state_enum_cardinality_test.rs
-    - services/email/tests/internal_comment_not_in_reply_test.rs
-    - services/email/tests/thread_snooze_wake_test.rs
-    - services/email/tests/thread_audit_emission_test.rs
-    - services/portal-web/tests/inbox-keyboard.spec.ts
-    - services/portal-web/tests/thread-genie-panel.spec.ts
+language: typescript / react
+service: cyberos/services/portal-web/
+new_files:
+  - services/email/migrations/0012_thread_state.sql
+  - services/email/src/threads/state.rs
+  - services/email/src/threads/internal_comments.rs
+  - services/email/src/handlers/thread_state_routes.rs
+  - services/email/src/handlers/comment_routes.rs
+  - services/email/src/audit/thread_events.rs
+  - services/portal-web/src/email/InboxView.tsx
+  - services/portal-web/src/email/ThreadView.tsx
+  - services/portal-web/src/email/AssignmentPicker.tsx
+  - services/portal-web/src/email/SnoozePicker.tsx
+  - services/portal-web/src/email/InternalCommentEditor.tsx
+  - services/portal-web/src/email/GenieActionsPanel.tsx
+  - services/portal-web/src/email/keyboard_shortcuts.ts
+  - services/email/tests/thread_assign_test.rs
+  - services/email/tests/thread_state_enum_cardinality_test.rs
+  - services/email/tests/internal_comment_not_in_reply_test.rs
+  - services/email/tests/thread_snooze_wake_test.rs
+  - services/email/tests/thread_audit_emission_test.rs
+  - services/portal-web/tests/inbox-keyboard.spec.ts
+  - services/portal-web/tests/thread-genie-panel.spec.ts
 
-  modified_files:
-    - services/portal-web/src/app/email/page.tsx
+modified_files:
+  - services/portal-web/src/app/email/page.tsx
 
-  allowed_tools:
-    - file_read: services/{email,portal-web}/**
-    - file_write: services/{email,portal-web}/{src,tests,migrations}/**
-    - bash: cd services/email && cargo test thread; cd services/portal-web && pnpm test
+allowed_tools:
+  - file_read: services/{email,portal-web}/**
+  - file_write: services/{email,portal-web}/{src,tests,migrations}/**
+  - bash: cd services/email && cargo test thread; cd services/portal-web && pnpm test
 
-  disallowed_tools:
-    - include internal comments in email reply quote (per DEC-1612)
-    - email notification on assignment (per DEC-1611 — internal only)
+disallowed_tools:
+  - include internal comments in email reply quote (per DEC-1612)
+  - email notification on assignment (per DEC-1611 — internal only)
 
 effort_hours: 16
 subtasks:

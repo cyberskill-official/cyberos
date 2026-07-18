@@ -37,39 +37,38 @@ source_decisions:
   - DEC-1384 2026-05-17 — Logout auto-commits running timer (avoid orphan timers across sessions)
   - DEC-1385 2026-05-17 — memory audit kinds: time.timer_started, time.timer_stopped, time.timer_idle_paused, time.timer_committed, time.timer_abandoned
 
-build_envelope:
-  language: rust 1.81 + typescript 5.5
-  service: cyberos/services/time/
-  new_files:
-    - services/time/migrations/0002_timers.sql
-    - services/time/src/timer/mod.rs
-    - services/time/src/timer/start_stop.rs
-    - services/time/src/timer/idle_detector.rs
-    - services/time/src/timer/commit.rs
-    - services/time/src/audit/timer_events.rs
-    - services/time/src/handlers/timer_routes.rs
-    - services/time/web/timer-widget.ts
-    - services/time/tests/timer_single_active_test.rs
-    - services/time/tests/timer_idle_pause_test.rs
-    - services/time/tests/timer_15min_snap_test.rs
-    - services/time/tests/timer_logout_auto_commit_test.rs
-    - services/time/tests/timer_state_enum_cardinality_test.rs
-    - services/time/tests/timer_audit_emission_test.rs
+language: rust 1.81 + typescript 5.5
+service: cyberos/services/time/
+new_files:
+  - services/time/migrations/0002_timers.sql
+  - services/time/src/timer/mod.rs
+  - services/time/src/timer/start_stop.rs
+  - services/time/src/timer/idle_detector.rs
+  - services/time/src/timer/commit.rs
+  - services/time/src/audit/timer_events.rs
+  - services/time/src/handlers/timer_routes.rs
+  - services/time/web/timer-widget.ts
+  - services/time/tests/timer_single_active_test.rs
+  - services/time/tests/timer_idle_pause_test.rs
+  - services/time/tests/timer_15min_snap_test.rs
+  - services/time/tests/timer_logout_auto_commit_test.rs
+  - services/time/tests/timer_state_enum_cardinality_test.rs
+  - services/time/tests/timer_audit_emission_test.rs
 
-  modified_files:
-    - services/time/src/lib.rs
-    # invoke timer commit on logout
-    - services/auth/src/handlers/logout.rs
+modified_files:
+  - services/time/src/lib.rs
+  # invoke timer commit on logout
+  - services/auth/src/handlers/logout.rs
 
-  allowed_tools:
-    - file_read: services/{time,auth}/**
-    - file_write: services/time/{src,tests,migrations,web}/**
-    - bash: cd services/time && cargo test timer
+allowed_tools:
+  - file_read: services/{time,auth}/**
+  - file_write: services/time/{src,tests,migrations,web}/**
+  - bash: cd services/time && cargo test timer
 
-  disallowed_tools:
-    - allow multiple concurrent active timers per Member (per DEC-1380)
-    - skip 15-min snap (per DEC-1382)
-    - leave orphan timer on logout (per DEC-1384)
+disallowed_tools:
+  - allow multiple concurrent active timers per Member (per DEC-1380)
+  - skip 15-min snap (per DEC-1382)
+  - leave orphan timer on logout (per DEC-1384)
 
 effort_hours: 5
 subtasks:

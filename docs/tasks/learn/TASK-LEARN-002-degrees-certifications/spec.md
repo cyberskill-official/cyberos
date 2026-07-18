@@ -36,31 +36,30 @@ source_decisions:
   - DEC-2093 2026-05-17 — Expiry monitoring: nightly batch flags expired/expiring (30d) certifications; CHRO notification
   - DEC-2094 2026-05-17 — memory audit kinds: learn.evidence_added, learn.evidence_verified, learn.evidence_expired, learn.evidence_renewed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/learn/
-  new_files:
-    - services/learn/migrations/0002_evidence.sql
-    - services/learn/src/evidence/mod.rs
-    - services/learn/src/evidence/expiry_cron.rs
-    - services/learn/src/handlers/evidence_routes.rs
-    - services/learn/src/audit/evidence_events.rs
-    - services/learn/tests/evidence_kind_enum_cardinality_test.rs
-    - services/learn/tests/evidence_expiry_alert_test.rs
-    - services/learn/tests/evidence_skill_link_test.rs
-    - services/learn/tests/evidence_doc_ref_test.rs
-    - services/learn/tests/evidence_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/learn/
+new_files:
+  - services/learn/migrations/0002_evidence.sql
+  - services/learn/src/evidence/mod.rs
+  - services/learn/src/evidence/expiry_cron.rs
+  - services/learn/src/handlers/evidence_routes.rs
+  - services/learn/src/audit/evidence_events.rs
+  - services/learn/tests/evidence_kind_enum_cardinality_test.rs
+  - services/learn/tests/evidence_expiry_alert_test.rs
+  - services/learn/tests/evidence_skill_link_test.rs
+  - services/learn/tests/evidence_doc_ref_test.rs
+  - services/learn/tests/evidence_audit_emission_test.rs
 
-  modified_files:
-    - services/learn/src/lib.rs
+modified_files:
+  - services/learn/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{learn,doc}/**
-    - file_write: services/learn/{src,tests,migrations}/**
-    - bash: cd services/learn && cargo test evidence
+allowed_tools:
+  - file_read: services/{learn,doc}/**
+  - file_write: services/learn/{src,tests,migrations}/**
+  - bash: cd services/learn && cargo test evidence
 
-  disallowed_tools:
-    - mutate prior evidence (per DEC-2090 append-only)
+disallowed_tools:
+  - mutate prior evidence (per DEC-2090 append-only)
 
 effort_hours: 4
 subtasks:

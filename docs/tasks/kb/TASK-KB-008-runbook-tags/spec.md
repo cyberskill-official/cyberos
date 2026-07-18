@@ -37,32 +37,31 @@ source_decisions:
   - DEC-1954 2026-05-17 — Multi-tag match: OBS-007 surfaces runbooks matching incident's provider AND region AND severity (or ANY for global tag)
   - DEC-1955 2026-05-17 — memory audit kinds: kb.runbook_tagged, kb.runbook_matched_for_incident
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/kb/
-  new_files:
-    - services/kb/migrations/0008_runbook_tags.sql
-    - services/kb/src/runbook/mod.rs
-    - services/kb/src/runbook/tag_matcher.rs
-    - services/kb/src/handlers/runbook_routes.rs
-    - services/kb/src/audit/runbook_events.rs
-    - services/kb/tests/runbook_provider_enum_cardinality_test.rs
-    - services/kb/tests/runbook_region_enum_cardinality_test.rs
-    - services/kb/tests/runbook_severity_enum_cardinality_test.rs
-    - services/kb/tests/runbook_multi_tag_match_test.rs
-    - services/kb/tests/runbook_global_match_test.rs
-    - services/kb/tests/runbook_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/kb/
+new_files:
+  - services/kb/migrations/0008_runbook_tags.sql
+  - services/kb/src/runbook/mod.rs
+  - services/kb/src/runbook/tag_matcher.rs
+  - services/kb/src/handlers/runbook_routes.rs
+  - services/kb/src/audit/runbook_events.rs
+  - services/kb/tests/runbook_provider_enum_cardinality_test.rs
+  - services/kb/tests/runbook_region_enum_cardinality_test.rs
+  - services/kb/tests/runbook_severity_enum_cardinality_test.rs
+  - services/kb/tests/runbook_multi_tag_match_test.rs
+  - services/kb/tests/runbook_global_match_test.rs
+  - services/kb/tests/runbook_audit_emission_test.rs
 
-  modified_files:
-    - services/kb/src/lib.rs
+modified_files:
+  - services/kb/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{kb,obs}/**
-    - file_write: services/kb/{src,tests,migrations}/**
-    - bash: cd services/kb && cargo test runbook
+allowed_tools:
+  - file_read: services/{kb,obs}/**
+  - file_write: services/kb/{src,tests,migrations}/**
+  - bash: cd services/kb && cargo test runbook
 
-  disallowed_tools:
-    - tag without enum validation (per DEC-1951/1952/1953)
+disallowed_tools:
+  - tag without enum validation (per DEC-1951/1952/1953)
 
 effort_hours: 5
 subtasks:

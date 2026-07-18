@@ -36,33 +36,32 @@ source_decisions:
   - DEC-2153 2026-05-17 — Per-Member comp records IMMUTABLE; changes via new row + valid_from/valid_to
   - DEC-2154 2026-05-17 — memory audit kinds: rew.comp_set, rew.comp_corrected, rew.comp_decrypted, rew.comp_encryption_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/rew/
-  new_files:
-    - services/rew/migrations/0001_comp_schema.sql
-    - services/rew/src/comp/mod.rs
-    - services/rew/src/comp/encryption.rs
-    - services/rew/src/comp/access_gate.rs
-    - services/rew/src/handlers/comp_routes.rs
-    - services/rew/src/audit/comp_events.rs
-    - services/rew/tests/income_kind_enum_cardinality_test.rs
-    - services/rew/tests/comp_root_cfo_only_decrypt_test.rs
-    - services/rew/tests/comp_separate_keyspace_test.rs
-    - services/rew/tests/comp_immutable_test.rs
-    - services/rew/tests/comp_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/rew/
+new_files:
+  - services/rew/migrations/0001_comp_schema.sql
+  - services/rew/src/comp/mod.rs
+  - services/rew/src/comp/encryption.rs
+  - services/rew/src/comp/access_gate.rs
+  - services/rew/src/handlers/comp_routes.rs
+  - services/rew/src/audit/comp_events.rs
+  - services/rew/tests/income_kind_enum_cardinality_test.rs
+  - services/rew/tests/comp_root_cfo_only_decrypt_test.rs
+  - services/rew/tests/comp_separate_keyspace_test.rs
+  - services/rew/tests/comp_immutable_test.rs
+  - services/rew/tests/comp_audit_emission_test.rs
 
-  modified_files:
-    - services/rew/src/lib.rs
+modified_files:
+  - services/rew/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{rew,hr,auth}/**
-    - file_write: services/rew/{src,tests,migrations}/**
-    - bash: cd services/rew && cargo test comp
+allowed_tools:
+  - file_read: services/{rew,hr,auth}/**
+  - file_write: services/rew/{src,tests,migrations}/**
+  - bash: cd services/rew && cargo test comp
 
-  disallowed_tools:
-    - decrypt comp via non-CFO role (per DEC-2152)
-    - mutate prior comp row (per DEC-2153)
+disallowed_tools:
+  - decrypt comp via non-CFO role (per DEC-2152)
+  - mutate prior comp row (per DEC-2153)
 
 effort_hours: 6
 subtasks:

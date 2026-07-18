@@ -38,31 +38,30 @@ source_decisions:
   - DEC-1703 2026-05-17 — Delegates to TASK-INV-007 for actual GDT emit — this skill orchestrates: create invoice → set vn-residency → trigger emit → return status
   - DEC-1704 2026-05-17 — memory audit kinds: crm.vat_invoice_skill_invoked, crm.vat_invoice_invoice_created, crm.vat_invoice_emit_delegated, crm.vat_invoice_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/crm/
-  new_files:
-    - services/crm/migrations/0010_vat_invoice_emissions.sql
-    - services/crm/src/vn/vat_invoice_skill.rs
-    - services/crm/src/vn/invoice_orchestrator.rs
-    - services/crm/src/audit/vat_invoice_events.rs
-    - services/crm/tests/vat_invoice_auto_on_won_test.rs
-    - services/crm/tests/vat_invoice_idempotent_test.rs
-    - services/crm/tests/vat_invoice_non_vn_skipped_test.rs
-    - services/crm/tests/vat_invoice_trigger_enum_cardinality_test.rs
-    - services/crm/tests/vat_invoice_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/crm/
+new_files:
+  - services/crm/migrations/0010_vat_invoice_emissions.sql
+  - services/crm/src/vn/vat_invoice_skill.rs
+  - services/crm/src/vn/invoice_orchestrator.rs
+  - services/crm/src/audit/vat_invoice_events.rs
+  - services/crm/tests/vat_invoice_auto_on_won_test.rs
+  - services/crm/tests/vat_invoice_idempotent_test.rs
+  - services/crm/tests/vat_invoice_non_vn_skipped_test.rs
+  - services/crm/tests/vat_invoice_trigger_enum_cardinality_test.rs
+  - services/crm/tests/vat_invoice_audit_emission_test.rs
 
-  modified_files:
-    - services/crm/src/deals.rs
+modified_files:
+  - services/crm/src/deals.rs
 
-  allowed_tools:
-    - file_read: services/{crm,inv,skill}/**
-    - file_write: services/crm/{src,tests,migrations}/**
-    - bash: cd services/crm && cargo test vat_invoice
+allowed_tools:
+  - file_read: services/{crm,inv,skill}/**
+  - file_write: services/crm/{src,tests,migrations}/**
+  - bash: cd services/crm && cargo test vat_invoice
 
-  disallowed_tools:
-    - emit for non-VN tenant (per DEC-1700)
-    - duplicate emit per deal (per DEC-1702)
+disallowed_tools:
+  - emit for non-VN tenant (per DEC-1700)
+  - duplicate emit per deal (per DEC-1702)
 
 effort_hours: 5
 subtasks:

@@ -39,31 +39,30 @@ source_decisions:
   - DEC-1684 2026-05-17 — Cache: GDT lookup cached 30 days (TIN data rarely changes); per-tenant cache namespace
   - DEC-1685 2026-05-17 — memory audit kinds: crm.mst_validation_invoked, crm.mst_validation_confirmed, crm.mst_validation_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/crm/
-  new_files:
-    - services/crm/src/vn/mst_validate_skill.rs
-    - services/crm/src/vn/gdt_client.rs
-    - services/crm/src/audit/mst_validation_events.rs
-    - services/crm/tests/mst_validate_confirmed_test.rs
-    - services/crm/tests/mst_validate_name_mismatch_test.rs
-    - services/crm/tests/mst_validate_not_found_test.rs
-    - services/crm/tests/mst_validate_cache_test.rs
-    - services/crm/tests/mst_validate_enum_cardinality_test.rs
+language: rust 1.81
+service: cyberos/services/crm/
+new_files:
+  - services/crm/src/vn/mst_validate_skill.rs
+  - services/crm/src/vn/gdt_client.rs
+  - services/crm/src/audit/mst_validation_events.rs
+  - services/crm/tests/mst_validate_confirmed_test.rs
+  - services/crm/tests/mst_validate_name_mismatch_test.rs
+  - services/crm/tests/mst_validate_not_found_test.rs
+  - services/crm/tests/mst_validate_cache_test.rs
+  - services/crm/tests/mst_validate_enum_cardinality_test.rs
 
-  modified_files:
-    - services/crm/src/accounts.rs
-    - services/crm/migrations/0008_mst_validation.sql
+modified_files:
+  - services/crm/src/accounts.rs
+  - services/crm/migrations/0008_mst_validation.sql
 
-  allowed_tools:
-    - file_read: services/{crm,skill}/**
-    - file_write: services/crm/{src,tests,migrations}/**
-    - bash: cd services/crm && cargo test mst_validate
+allowed_tools:
+  - file_read: services/{crm,skill}/**
+  - file_write: services/crm/{src,tests,migrations}/**
+  - bash: cd services/crm && cargo test mst_validate
 
-  disallowed_tools:
-    - block account save on validation fail (per DEC-1683 — non-blocking)
-    - skip cache (per DEC-1684 — required to avoid GDT rate-limit)
+disallowed_tools:
+  - block account save on validation fail (per DEC-1683 — non-blocking)
+  - skip cache (per DEC-1684 — required to avoid GDT rate-limit)
 
 effort_hours: 3
 subtasks:

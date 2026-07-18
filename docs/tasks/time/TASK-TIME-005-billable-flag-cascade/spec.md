@@ -37,32 +37,31 @@ source_decisions:
   - DEC-1414 2026-05-17 — Snapshot principle: invoice-time queries use `entries.is_billable` directly; no live re-cascade; ensures invoice immutability
   - DEC-1415 2026-05-17 — memory audit kinds: time.billable_resolved, time.billable_overridden_at_entry, time.project_default_changed, time.engagement_policy_changed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/time/
-  new_files:
-    - services/time/migrations/0004_billable_defaults.sql
-    - services/time/src/billable/mod.rs
-    - services/time/src/billable/cascade.rs
-    - services/time/src/audit/billable_events.rs
-    - services/time/tests/billable_cascade_test.rs
-    - services/time/tests/billable_entry_override_test.rs
-    - services/time/tests/billable_snapshot_immutable_test.rs
-    - services/time/tests/billable_source_enum_test.rs
-    - services/time/tests/billable_engagement_default_test.rs
-    - services/time/tests/billable_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/time/
+new_files:
+  - services/time/migrations/0004_billable_defaults.sql
+  - services/time/src/billable/mod.rs
+  - services/time/src/billable/cascade.rs
+  - services/time/src/audit/billable_events.rs
+  - services/time/tests/billable_cascade_test.rs
+  - services/time/tests/billable_entry_override_test.rs
+  - services/time/tests/billable_snapshot_immutable_test.rs
+  - services/time/tests/billable_source_enum_test.rs
+  - services/time/tests/billable_engagement_default_test.rs
+  - services/time/tests/billable_audit_emission_test.rs
 
-  modified_files:
-    - services/time/src/entry/create.rs
+modified_files:
+  - services/time/src/entry/create.rs
 
-  allowed_tools:
-    - file_read: services/time/**
-    - file_write: services/time/{src,tests,migrations}/**
-    - bash: cd services/time && cargo test billable
+allowed_tools:
+  - file_read: services/time/**
+  - file_write: services/time/{src,tests,migrations}/**
+  - bash: cd services/time && cargo test billable
 
-  disallowed_tools:
-    - re-resolve billable flag post-entry-write (per DEC-1414 snapshot principle)
-    - skip cascade and assume tenant default (per DEC-1410)
+disallowed_tools:
+  - re-resolve billable flag post-entry-write (per DEC-1414 snapshot principle)
+  - skip cascade and assume tenant default (per DEC-1410)
 
 effort_hours: 5
 subtasks:

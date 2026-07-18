@@ -60,74 +60,73 @@ source_decisions:
   - DEC-1124 2026-05-17 — memory audit kinds: mcp.task_started, mcp.task_progress, mcp.task_completed, mcp.task_failed, mcp.task_cancelled, mcp.task_expired, mcp.task_resumed_after_reconnect, mcp.task_checkpoint_persisted
   - DEC-1125 2026-05-17 — PII scrub via TASK-MEMORY-111: task input + result payload hashes only in chain; raw payloads in `mcp_tasks` table (RLS-scoped, 30-day retention post-completion)
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/mcp/
-  new_files:
-    # task registry
-    - services/mcp/migrations/0009_mcp_tasks.sql
-    # intermediate state
-    - services/mcp/migrations/0010_mcp_task_checkpoints.sql
-    # progress event log
-    - services/mcp/migrations/0011_mcp_task_progress_events.sql
-    # tasks orchestrator
-    - services/mcp/src/tasks/mod.rs
-    # task creation (from tools/call with long_running)
-    - services/mcp/src/tasks/create.rs
-    # status poll handler
-    - services/mcp/src/tasks/status.rs
-    # cancellation handler
-    - services/mcp/src/tasks/cancel.rs
-    # list handler
-    - services/mcp/src/tasks/list.rs
-    # per-module pool + bounded concurrency
-    - services/mcp/src/tasks/worker_pool.rs
-    # save/restore intermediate state
-    - services/mcp/src/tasks/checkpoint.rs
-    # daily TTL expiry sweep
-    - services/mcp/src/tasks/expiry_job.rs
-    # progress NATS publish
-    - services/mcp/src/tasks/progress.rs
-    # task-creation idempotency cache
-    - services/mcp/src/tasks/idempotency.rs
-    # 8 memory row builders
-    - services/mcp/src/audit/task_events.rs
-    - services/mcp/tests/task_create_async_test.rs
-    - services/mcp/tests/task_status_poll_test.rs
-    - services/mcp/tests/task_resume_after_reconnect_test.rs
-    - services/mcp/tests/task_cancellation_test.rs
-    - services/mcp/tests/task_cancellation_race_test.rs
-    - services/mcp/tests/task_ttl_expiry_test.rs
-    - services/mcp/tests/task_status_enum_cardinality_test.rs
-    - services/mcp/tests/task_progress_unit_enum_cardinality_test.rs
-    - services/mcp/tests/task_oversized_result_test.rs
-    - services/mcp/tests/task_gating_integration_test.rs
-    - services/mcp/tests/task_idempotency_test.rs
-    - services/mcp/tests/task_worker_pool_isolation_test.rs
-    - services/mcp/tests/task_checkpoint_resume_test.rs
-    - services/mcp/tests/task_rate_limit_test.rs
-    - services/mcp/tests/task_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/mcp/
+new_files:
+  # task registry
+  - services/mcp/migrations/0009_mcp_tasks.sql
+  # intermediate state
+  - services/mcp/migrations/0010_mcp_task_checkpoints.sql
+  # progress event log
+  - services/mcp/migrations/0011_mcp_task_progress_events.sql
+  # tasks orchestrator
+  - services/mcp/src/tasks/mod.rs
+  # task creation (from tools/call with long_running)
+  - services/mcp/src/tasks/create.rs
+  # status poll handler
+  - services/mcp/src/tasks/status.rs
+  # cancellation handler
+  - services/mcp/src/tasks/cancel.rs
+  # list handler
+  - services/mcp/src/tasks/list.rs
+  # per-module pool + bounded concurrency
+  - services/mcp/src/tasks/worker_pool.rs
+  # save/restore intermediate state
+  - services/mcp/src/tasks/checkpoint.rs
+  # daily TTL expiry sweep
+  - services/mcp/src/tasks/expiry_job.rs
+  # progress NATS publish
+  - services/mcp/src/tasks/progress.rs
+  # task-creation idempotency cache
+  - services/mcp/src/tasks/idempotency.rs
+  # 8 memory row builders
+  - services/mcp/src/audit/task_events.rs
+  - services/mcp/tests/task_create_async_test.rs
+  - services/mcp/tests/task_status_poll_test.rs
+  - services/mcp/tests/task_resume_after_reconnect_test.rs
+  - services/mcp/tests/task_cancellation_test.rs
+  - services/mcp/tests/task_cancellation_race_test.rs
+  - services/mcp/tests/task_ttl_expiry_test.rs
+  - services/mcp/tests/task_status_enum_cardinality_test.rs
+  - services/mcp/tests/task_progress_unit_enum_cardinality_test.rs
+  - services/mcp/tests/task_oversized_result_test.rs
+  - services/mcp/tests/task_gating_integration_test.rs
+  - services/mcp/tests/task_idempotency_test.rs
+  - services/mcp/tests/task_worker_pool_isolation_test.rs
+  - services/mcp/tests/task_checkpoint_resume_test.rs
+  - services/mcp/tests/task_rate_limit_test.rs
+  - services/mcp/tests/task_audit_emission_test.rs
 
-  modified_files:
-    # branch sync vs task based on long_running annotation
-    - services/mcp/src/handlers/tools_call.rs
-    # add long_running, max_concurrent_tasks, task_ttl_seconds fields
-    - services/mcp/src/server_registry.rs
-    # mount task routes
-    - services/mcp/src/lib.rs
+modified_files:
+  # branch sync vs task based on long_running annotation
+  - services/mcp/src/handlers/tools_call.rs
+  # add long_running, max_concurrent_tasks, task_ttl_seconds fields
+  - services/mcp/src/server_registry.rs
+  # mount task routes
+  - services/mcp/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/mcp/**
-    - file_write: services/mcp/{src,tests,migrations}/**
-    - bash: cd services/mcp && cargo test tasks
+allowed_tools:
+  - file_read: services/mcp/**
+  - file_write: services/mcp/{src,tests,migrations}/**
+  - bash: cd services/mcp && cargo test tasks
 
-  disallowed_tools:
-    - block tools/call response on task completion (long_running tools MUST async-return)
-    - allow cancellation without per-tool support flag (per DEC-1107)
-    - return final result > 10 MiB inline (per DEC-1112)
-    - reuse expired task_id (UUIDv7 collision-free)
-    - allow worker pool to starve cross-module (per DEC-1108 + DEC-1120)
-    - skip checkpoint cancellation check (per DEC-1122)
+disallowed_tools:
+  - block tools/call response on task completion (long_running tools MUST async-return)
+  - allow cancellation without per-tool support flag (per DEC-1107)
+  - return final result > 10 MiB inline (per DEC-1112)
+  - reuse expired task_id (UUIDv7 collision-free)
+  - allow worker pool to starve cross-module (per DEC-1108 + DEC-1120)
+  - skip checkpoint cancellation check (per DEC-1122)
 
 effort_hours: 10
 subtasks:

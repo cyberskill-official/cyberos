@@ -39,35 +39,34 @@ source_decisions:
   - DEC-1924 2026-05-17 — Top-K=20 retrieval; results passed to TASK-KB-006 reranker for final ordering
   - DEC-1925 2026-05-17 — memory audit kinds: kb.semantic_ingest_started, kb.semantic_ingest_completed, kb.semantic_query_executed, kb.semantic_ingest_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/kb/
-  new_files:
-    - services/kb/migrations/0005_semantic_chunks.sql
-    - services/kb/src/semantic/mod.rs
-    - services/kb/src/semantic/chunker.rs
-    - services/kb/src/semantic/bge_m3_client.rs
-    - services/kb/src/semantic/vector_query.rs
-    - services/kb/src/handlers/semantic_routes.rs
-    - services/kb/src/audit/semantic_events.rs
-    - services/kb/tests/semantic_chunker_test.rs
-    - services/kb/tests/semantic_bge_m3_embed_test.rs
-    - services/kb/tests/semantic_query_top_k_test.rs
-    - services/kb/tests/semantic_invalidation_on_version_test.rs
-    - services/kb/tests/chunk_kind_enum_cardinality_test.rs
-    - services/kb/tests/semantic_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/kb/
+new_files:
+  - services/kb/migrations/0005_semantic_chunks.sql
+  - services/kb/src/semantic/mod.rs
+  - services/kb/src/semantic/chunker.rs
+  - services/kb/src/semantic/bge_m3_client.rs
+  - services/kb/src/semantic/vector_query.rs
+  - services/kb/src/handlers/semantic_routes.rs
+  - services/kb/src/audit/semantic_events.rs
+  - services/kb/tests/semantic_chunker_test.rs
+  - services/kb/tests/semantic_bge_m3_embed_test.rs
+  - services/kb/tests/semantic_query_top_k_test.rs
+  - services/kb/tests/semantic_invalidation_on_version_test.rs
+  - services/kb/tests/chunk_kind_enum_cardinality_test.rs
+  - services/kb/tests/semantic_audit_emission_test.rs
 
-  modified_files:
-    - services/kb/src/lib.rs
+modified_files:
+  - services/kb/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{kb,ai}/**
-    - file_write: services/kb/{src,tests,migrations}/**
-    - bash: cd services/kb && cargo test semantic
+allowed_tools:
+  - file_read: services/{kb,ai}/**
+  - file_write: services/kb/{src,tests,migrations}/**
+  - bash: cd services/kb && cargo test semantic
 
-  disallowed_tools:
-    - skip memory Layer 2 ingest (per DEC-1920)
-    - mid-sentence chunk splits (per DEC-1922)
+disallowed_tools:
+  - skip memory Layer 2 ingest (per DEC-1920)
+  - mid-sentence chunk splits (per DEC-1922)
 
 effort_hours: 6
 subtasks:

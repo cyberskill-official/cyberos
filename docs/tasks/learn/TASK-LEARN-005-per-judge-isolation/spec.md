@@ -36,32 +36,31 @@ source_decisions:
   - DEC-2123 2026-05-17 — HR + REW consumers receive aggregate_only; CEO/CHRO receive recommendation_only; CISO can audit who saw what
   - DEC-2124 2026-05-17 — memory audit kinds: learn.external_disclosure_requested, learn.disclosure_filtered, learn.disclosure_denied, learn.unauthorized_raw_access_attempt
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/learn/
-  new_files:
-    - services/learn/migrations/0005_disclosure_log.sql
-    - services/learn/src/disclosure/mod.rs
-    - services/learn/src/disclosure/filter.rs
-    - services/learn/src/disclosure/access_gate.rs
-    - services/learn/src/handlers/disclosure_routes.rs
-    - services/learn/src/audit/disclosure_events.rs
-    - services/learn/tests/disclosure_enum_cardinality_test.rs
-    - services/learn/tests/raw_scores_denied_outside_learn_test.rs
-    - services/learn/tests/hr_gets_aggregate_only_test.rs
-    - services/learn/tests/disclosure_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/learn/
+new_files:
+  - services/learn/migrations/0005_disclosure_log.sql
+  - services/learn/src/disclosure/mod.rs
+  - services/learn/src/disclosure/filter.rs
+  - services/learn/src/disclosure/access_gate.rs
+  - services/learn/src/handlers/disclosure_routes.rs
+  - services/learn/src/audit/disclosure_events.rs
+  - services/learn/tests/disclosure_enum_cardinality_test.rs
+  - services/learn/tests/raw_scores_denied_outside_learn_test.rs
+  - services/learn/tests/hr_gets_aggregate_only_test.rs
+  - services/learn/tests/disclosure_audit_emission_test.rs
 
-  modified_files:
-    - services/learn/src/handlers/council_routes.rs
+modified_files:
+  - services/learn/src/handlers/council_routes.rs
 
-  allowed_tools:
-    - file_read: services/{learn,auth,hr,rew}/**
-    - file_write: services/learn/{src,tests,migrations}/**
-    - bash: cd services/learn && cargo test disclosure
+allowed_tools:
+  - file_read: services/{learn,auth,hr,rew}/**
+  - file_write: services/learn/{src,tests,migrations}/**
+  - bash: cd services/learn && cargo test disclosure
 
-  disallowed_tools:
-    - expose raw per-judge scores via any cross-service API (per DEC-2120)
-    - bypass filter (per DEC-2122)
+disallowed_tools:
+  - expose raw per-judge scores via any cross-service API (per DEC-2120)
+  - bypass filter (per DEC-2122)
 
 effort_hours: 5
 subtasks:

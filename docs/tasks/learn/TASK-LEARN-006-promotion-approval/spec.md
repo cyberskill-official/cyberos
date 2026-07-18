@@ -36,33 +36,32 @@ source_decisions:
   - DEC-2133 2026-05-17 — Same-person dual-sign rejected (separation of duties)
   - DEC-2134 2026-05-17 — memory audit kinds: learn.promotion_initiated, learn.promotion_signed, learn.promotion_executed, learn.promotion_declined, learn.promotion_cascade_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/learn/
-  new_files:
-    - services/learn/migrations/0006_promotions.sql
-    - services/learn/src/promotion/mod.rs
-    - services/learn/src/promotion/dual_sign_gate.rs
-    - services/learn/src/promotion/cascade.rs
-    - services/learn/src/handlers/promotion_routes.rs
-    - services/learn/src/audit/promotion_events.rs
-    - services/learn/tests/promotion_status_enum_cardinality_test.rs
-    - services/learn/tests/promotion_dual_sign_test.rs
-    - services/learn/tests/promotion_same_person_rejected_test.rs
-    - services/learn/tests/promotion_cascade_test.rs
-    - services/learn/tests/promotion_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/learn/
+new_files:
+  - services/learn/migrations/0006_promotions.sql
+  - services/learn/src/promotion/mod.rs
+  - services/learn/src/promotion/dual_sign_gate.rs
+  - services/learn/src/promotion/cascade.rs
+  - services/learn/src/handlers/promotion_routes.rs
+  - services/learn/src/audit/promotion_events.rs
+  - services/learn/tests/promotion_status_enum_cardinality_test.rs
+  - services/learn/tests/promotion_dual_sign_test.rs
+  - services/learn/tests/promotion_same_person_rejected_test.rs
+  - services/learn/tests/promotion_cascade_test.rs
+  - services/learn/tests/promotion_audit_emission_test.rs
 
-  modified_files:
-    - services/learn/src/lib.rs
+modified_files:
+  - services/learn/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{learn,hr,rew,chat}/**
-    - file_write: services/learn/{src,tests,migrations}/**
-    - bash: cd services/learn && cargo test promotion
+allowed_tools:
+  - file_read: services/{learn,hr,rew,chat}/**
+  - file_write: services/learn/{src,tests,migrations}/**
+  - bash: cd services/learn && cargo test promotion
 
-  disallowed_tools:
-    - execute without dual-sign (per DEC-2130)
-    - skip cascade (per DEC-2132)
+disallowed_tools:
+  - execute without dual-sign (per DEC-2130)
+  - skip cascade (per DEC-2132)
 
 effort_hours: 5
 subtasks:

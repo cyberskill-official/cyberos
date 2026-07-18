@@ -39,39 +39,38 @@ source_decisions:
   - DEC-1514 2026-05-17 — Per-tenant base currency for financial reports (default = engagement's currency; tenant may set tenant-wide base)
   - DEC-1515 2026-05-17 — memory audit kinds: inv.fx_snapshot_recorded, inv.fx_snapshot_failed, inv.fx_manual_override, inv.report_currency_converted
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/inv/
-  new_files:
-    - services/inv/migrations/0006_fx_rates.sql
-    - services/inv/src/fx/mod.rs
-    - services/inv/src/fx/sbv_fetcher.rs
-    - services/inv/src/fx/ecb_fetcher.rs
-    - services/inv/src/fx/snapshot_job.rs
-    - services/inv/src/fx/converter.rs
-    - services/inv/src/fx/manual_override.rs
-    - services/inv/src/audit/fx_events.rs
-    - services/inv/src/handlers/fx_routes.rs
-    - services/inv/tests/fx_sbv_fetch_test.rs
-    - services/inv/tests/fx_daily_snapshot_test.rs
-    - services/inv/tests/fx_as_of_deterministic_test.rs
-    - services/inv/tests/fx_manual_override_test.rs
-    - services/inv/tests/fx_source_enum_test.rs
-    - services/inv/tests/fx_source_unavailable_test.rs
-    - services/inv/tests/fx_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/inv/
+new_files:
+  - services/inv/migrations/0006_fx_rates.sql
+  - services/inv/src/fx/mod.rs
+  - services/inv/src/fx/sbv_fetcher.rs
+  - services/inv/src/fx/ecb_fetcher.rs
+  - services/inv/src/fx/snapshot_job.rs
+  - services/inv/src/fx/converter.rs
+  - services/inv/src/fx/manual_override.rs
+  - services/inv/src/audit/fx_events.rs
+  - services/inv/src/handlers/fx_routes.rs
+  - services/inv/tests/fx_sbv_fetch_test.rs
+  - services/inv/tests/fx_daily_snapshot_test.rs
+  - services/inv/tests/fx_as_of_deterministic_test.rs
+  - services/inv/tests/fx_manual_override_test.rs
+  - services/inv/tests/fx_source_enum_test.rs
+  - services/inv/tests/fx_source_unavailable_test.rs
+  - services/inv/tests/fx_audit_emission_test.rs
 
-  modified_files:
-    - services/inv/src/lib.rs
+modified_files:
+  - services/inv/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/inv/**
-    - file_write: services/inv/{src,tests,migrations}/**
-    - bash: cd services/inv && cargo test fx
+allowed_tools:
+  - file_read: services/inv/**
+  - file_write: services/inv/{src,tests,migrations}/**
+  - bash: cd services/inv && cargo test fx
 
-  disallowed_tools:
-    - mutate invoice currency post-creation (per DEC-1510)
-    - skip daily snapshot (per DEC-1511)
-    - allow non-CFO manual override (per DEC-1512)
+disallowed_tools:
+  - mutate invoice currency post-creation (per DEC-1510)
+  - skip daily snapshot (per DEC-1511)
+  - allow non-CFO manual override (per DEC-1512)
 
 effort_hours: 6
 subtasks:

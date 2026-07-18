@@ -36,34 +36,33 @@ source_decisions:
   - DEC-2343 2026-05-17 — Sub-row immutable; chain composite row updated only via status transitions
   - DEC-2344 2026-05-17 — memory audit kinds: cuo.chain_planned, cuo.chain_step_started, cuo.chain_step_completed, cuo.chain_step_failed, cuo.chain_completed, cuo.chain_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/cuo/
-  new_files:
-    - services/cuo/migrations/0004_chain_walks.sql
-    - services/cuo/src/chain/mod.rs
-    - services/cuo/src/chain/topological_sorter.rs
-    - services/cuo/src/chain/walker.rs
-    - services/cuo/src/chain/cycle_detector.rs
-    - services/cuo/src/handlers/chain_routes.rs
-    - services/cuo/src/audit/chain_events.rs
-    - services/cuo/tests/chain_status_enum_cardinality_test.rs
-    - services/cuo/tests/topological_sort_test.rs
-    - services/cuo/tests/cycle_detection_test.rs
-    - services/cuo/tests/chain_step_failure_test.rs
-    - services/cuo/tests/chain_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/cuo/
+new_files:
+  - services/cuo/migrations/0004_chain_walks.sql
+  - services/cuo/src/chain/mod.rs
+  - services/cuo/src/chain/topological_sorter.rs
+  - services/cuo/src/chain/walker.rs
+  - services/cuo/src/chain/cycle_detector.rs
+  - services/cuo/src/handlers/chain_routes.rs
+  - services/cuo/src/audit/chain_events.rs
+  - services/cuo/tests/chain_status_enum_cardinality_test.rs
+  - services/cuo/tests/topological_sort_test.rs
+  - services/cuo/tests/cycle_detection_test.rs
+  - services/cuo/tests/chain_step_failure_test.rs
+  - services/cuo/tests/chain_audit_emission_test.rs
 
-  modified_files:
-    - services/cuo/src/supervisor.rs
+modified_files:
+  - services/cuo/src/supervisor.rs
 
-  allowed_tools:
-    - file_read: services/{cuo,skill}/**
-    - file_write: services/cuo/{src,tests,migrations}/**
-    - bash: cd services/cuo && cargo test chain
+allowed_tools:
+  - file_read: services/{cuo,skill}/**
+  - file_write: services/cuo/{src,tests,migrations}/**
+  - bash: cd services/cuo && cargo test chain
 
-  disallowed_tools:
-    - execute chain with cycle (per DEC-2342)
-    - mutate prior step row (per DEC-2343)
+disallowed_tools:
+  - execute chain with cycle (per DEC-2342)
+  - mutate prior step row (per DEC-2343)
 
 effort_hours: 10
 subtasks:

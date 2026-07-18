@@ -40,36 +40,35 @@ source_decisions:
   - DEC-2475 2026-05-19 — Publish validates 8 INTEROP invariants per modules/plugin/INTEROP.md + re-runs TASK-PLUGIN-001 validation; rejects on any failure
   - DEC-2476 2026-05-19 — Every publish emits memory audit row plugin.published with body containing version, sha256, signature anchor, visibility
 
-build_envelope:
-  language: rust 1.81
-  service: services/plugin-host/ (CLI side) + new services/plugin-marketplace/ (server side, scaffolded in this task; full server implementation deferred to task-PLUGIN-008a)
-  new_files:
-    - services/plugin-host/src/marketplace/mod.rs
-    - services/plugin-host/src/marketplace/publish.rs
-    - services/plugin-host/src/marketplace/mirror_agentskills.rs
-    - services/plugin-host/src/marketplace/badge_verify.rs
-    - services/plugin-host/src/bin/cyberos-plugin-publish.rs
-    - services/plugin-marketplace/Cargo.toml (scaffold only)
-    - services/plugin-marketplace/src/lib.rs (scaffold only)
-    - services/plugin-marketplace/migrations/0001_plugin_registry.sql
-    - services/plugin-host/tests/publish_invariant_check_test.rs
-    - services/plugin-host/tests/publish_mirrors_to_agentskills_test.rs
-    - services/plugin-host/tests/publish_emits_audit_test.rs
-    - services/plugin-host/tests/private_visibility_scoped_to_tenant_test.rs
+language: rust 1.81
+service: services/plugin-host/ (CLI side) + new services/plugin-marketplace/ (server side, scaffolded in this task; full server implementation deferred to task-PLUGIN-008a)
+new_files:
+  - services/plugin-host/src/marketplace/mod.rs
+  - services/plugin-host/src/marketplace/publish.rs
+  - services/plugin-host/src/marketplace/mirror_agentskills.rs
+  - services/plugin-host/src/marketplace/badge_verify.rs
+  - services/plugin-host/src/bin/cyberos-plugin-publish.rs
+  - services/plugin-marketplace/Cargo.toml (scaffold only)
+  - services/plugin-marketplace/src/lib.rs (scaffold only)
+  - services/plugin-marketplace/migrations/0001_plugin_registry.sql
+  - services/plugin-host/tests/publish_invariant_check_test.rs
+  - services/plugin-host/tests/publish_mirrors_to_agentskills_test.rs
+  - services/plugin-host/tests/publish_emits_audit_test.rs
+  - services/plugin-host/tests/private_visibility_scoped_to_tenant_test.rs
 
-  modified_files:
-    - services/Cargo.toml (workspace member plugin-marketplace)
-    - modules/plugin/manifest.schema.json (marketplace section finalised)
+modified_files:
+  - services/Cargo.toml (workspace member plugin-marketplace)
+  - modules/plugin/manifest.schema.json (marketplace section finalised)
 
-  allowed_tools:
-    - file_read: services/plugin-host/**, services/plugin-marketplace/**
-    - file_write: services/plugin-host/src/marketplace/**, services/plugin-marketplace/**
-    - bash: cd services && cargo test -p cyberos-plugin-host publish
+allowed_tools:
+  - file_read: services/plugin-host/**, services/plugin-marketplace/**
+  - file_write: services/plugin-host/src/marketplace/**, services/plugin-marketplace/**
+  - bash: cd services && cargo test -p cyberos-plugin-host publish
 
-  disallowed_tools:
-    - publish unsigned bundle (per DEC-2475)
-    - publish without re-validation (per DEC-2475)
-    - mirror private plugin to agentskills.io (per DEC-2472 — public only)
+disallowed_tools:
+  - publish unsigned bundle (per DEC-2475)
+  - publish without re-validation (per DEC-2475)
+  - mirror private plugin to agentskills.io (per DEC-2472 — public only)
 
 effort_hours: 6
 subtasks:

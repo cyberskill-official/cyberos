@@ -39,34 +39,33 @@ source_decisions:
   - DEC-1534 2026-05-17 — Original hóa đơn row updated to hoadon_status='cancelled' + replacement_hoadon_id pointer (if applicable); never deleted (audit trail)
   - DEC-1535 2026-05-17 — memory audit kinds: inv.hoadon_cancel_initiated, inv.hoadon_cancel_form_submitted, inv.hoadon_cancel_accepted, inv.hoadon_cancel_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/invoicing/
-  new_files:
-    - services/invoicing/migrations/0008_vn_hoadon_cancellation.sql
-    - services/invoicing/src/hoadon/cancel.rs
-    - services/invoicing/src/hoadon/form_04_builder.rs
-    - services/invoicing/src/handlers/hoadon_cancel_routes.rs
-    - services/invoicing/src/audit/hoadon_cancel_events.rs
-    - services/invoicing/tests/hoadon_replace_flow_test.rs
-    - services/invoicing/tests/hoadon_cancel_flow_test.rs
-    - services/invoicing/tests/hoadon_cancel_reason_enum_cardinality_test.rs
-    - services/invoicing/tests/hoadon_cancel_24h_window_test.rs
-    - services/invoicing/tests/hoadon_cancel_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/invoicing/
+new_files:
+  - services/invoicing/migrations/0008_vn_hoadon_cancellation.sql
+  - services/invoicing/src/hoadon/cancel.rs
+  - services/invoicing/src/hoadon/form_04_builder.rs
+  - services/invoicing/src/handlers/hoadon_cancel_routes.rs
+  - services/invoicing/src/audit/hoadon_cancel_events.rs
+  - services/invoicing/tests/hoadon_replace_flow_test.rs
+  - services/invoicing/tests/hoadon_cancel_flow_test.rs
+  - services/invoicing/tests/hoadon_cancel_reason_enum_cardinality_test.rs
+  - services/invoicing/tests/hoadon_cancel_24h_window_test.rs
+  - services/invoicing/tests/hoadon_cancel_audit_emission_test.rs
 
-  modified_files:
-    - services/invoicing/src/hoadon/mod.rs
-    - services/invoicing/src/handlers/hoadon_routes.rs
+modified_files:
+  - services/invoicing/src/hoadon/mod.rs
+  - services/invoicing/src/handlers/hoadon_routes.rs
 
-  allowed_tools:
-    - file_read: services/invoicing/**
-    - file_write: services/invoicing/{src,tests,migrations}/**
-    - bash: cd services/invoicing && cargo test cancel
+allowed_tools:
+  - file_read: services/invoicing/**
+  - file_write: services/invoicing/{src,tests,migrations}/**
+  - bash: cd services/invoicing && cargo test cancel
 
-  disallowed_tools:
-    - cancel without customer agreement upload (per DEC-1530)
-    - delete original hoadon row (per DEC-1534)
-    - skip form 04/SS-HDDT submission (per DEC-1533)
+disallowed_tools:
+  - cancel without customer agreement upload (per DEC-1530)
+  - delete original hoadon row (per DEC-1534)
+  - skip form 04/SS-HDDT submission (per DEC-1533)
 
 effort_hours: 5
 subtasks:

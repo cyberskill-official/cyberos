@@ -38,33 +38,32 @@ source_decisions:
   - DEC-2183 2026-05-17 — Contractor (per TASK-HR-002 contract_type) exempt from BHXH/BHYT/BHTN; still subject to PIT
   - DEC-2184 2026-05-17 — memory audit kinds: rew.deduction_computed, rew.deduction_skipped_contractor, rew.deduction_compute_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/rew/
-  new_files:
-    - services/rew/migrations/0004_deductions.sql
-    - services/rew/src/deductions/mod.rs
-    - services/rew/src/deductions/computer.rs
-    - services/rew/src/deductions/pit_progressive.rs
-    - services/rew/src/audit/deductions_events.rs
-    - services/rew/tests/deduction_kind_enum_cardinality_test.rs
-    - services/rew/tests/bhxh_8pct_test.rs
-    - services/rew/tests/pit_progressive_brackets_test.rs
-    - services/rew/tests/contractor_si_exempt_test.rs
-    - services/rew/tests/deduction_deterministic_test.rs
-    - services/rew/tests/deduction_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/rew/
+new_files:
+  - services/rew/migrations/0004_deductions.sql
+  - services/rew/src/deductions/mod.rs
+  - services/rew/src/deductions/computer.rs
+  - services/rew/src/deductions/pit_progressive.rs
+  - services/rew/src/audit/deductions_events.rs
+  - services/rew/tests/deduction_kind_enum_cardinality_test.rs
+  - services/rew/tests/bhxh_8pct_test.rs
+  - services/rew/tests/pit_progressive_brackets_test.rs
+  - services/rew/tests/contractor_si_exempt_test.rs
+  - services/rew/tests/deduction_deterministic_test.rs
+  - services/rew/tests/deduction_audit_emission_test.rs
 
-  modified_files:
-    - services/rew/src/lib.rs
+modified_files:
+  - services/rew/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{rew,hr}/**
-    - file_write: services/rew/{src,tests,migrations}/**
-    - bash: cd services/rew && cargo test deductions
+allowed_tools:
+  - file_read: services/{rew,hr}/**
+  - file_write: services/rew/{src,tests,migrations}/**
+  - bash: cd services/rew && cargo test deductions
 
-  disallowed_tools:
-    - deduct SI from contractors (per DEC-2183)
-    - use unversioned rates (per DEC-2182)
+disallowed_tools:
+  - deduct SI from contractors (per DEC-2183)
+  - use unversioned rates (per DEC-2182)
 
 effort_hours: 6
 subtasks:

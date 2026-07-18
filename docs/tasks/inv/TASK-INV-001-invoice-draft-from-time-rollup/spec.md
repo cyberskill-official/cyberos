@@ -49,57 +49,56 @@ source_decisions:
   - DEC-1373 2026-05-17 — Multi-currency support deferred to TASK-INV-002; slice 1 = engagement.billing_currency only (single-currency per invoice per DEC-1368 derivative)
   - DEC-1374 2026-05-17 — memory audit kinds: inv.draft_created, inv.lines_added, inv.status_transitioned, inv.approved, inv.sent, inv.paid, inv.void, inv.written_off, inv.correction_added
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/inv/
-  new_files:
-    - services/inv/migrations/0001_invoices.sql
-    - services/inv/migrations/0002_invoice_lines.sql
-    - services/inv/migrations/0003_invoice_status_history.sql
-    - services/inv/migrations/0004_invoice_number_sequence.sql
-    - services/inv/migrations/0005_rate_card_snapshot.sql
-    - services/inv/src/lib.rs
-    - services/inv/src/types.rs
-    - services/inv/src/draft/mod.rs
-    - services/inv/src/draft/builder.rs
-    - services/inv/src/draft/scheduler.rs
-    - services/inv/src/lines/mod.rs
-    - services/inv/src/lines/time_rollup.rs
-    - services/inv/src/lines/corrections.rs
-    - services/inv/src/status/mod.rs
-    - services/inv/src/status/state_machine.rs
-    - services/inv/src/numbering/mod.rs
-    - services/inv/src/snapshot/rate_card.rs
-    - services/inv/src/handlers/invoice_routes.rs
-    - services/inv/src/audit/invoice_events.rs
-    - services/inv/tests/invoice_draft_from_time_test.rs
-    - services/inv/tests/invoice_status_fsm_test.rs
-    - services/inv/tests/invoice_rate_card_snapshot_test.rs
-    - services/inv/tests/invoice_correction_appends_test.rs
-    - services/inv/tests/invoice_numbering_gap_free_test.rs
-    - services/inv/tests/invoice_status_enum_cardinality_test.rs
-    - services/inv/tests/invoice_line_kind_enum_cardinality_test.rs
-    - services/inv/tests/invoice_per_engagement_scope_test.rs
-    - services/inv/tests/invoice_approval_gate_test.rs
-    - services/inv/tests/invoice_write_off_cfo_only_test.rs
-    - services/inv/tests/invoice_amounts_bigint_minor_test.rs
-    - services/inv/tests/invoice_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/inv/
+new_files:
+  - services/inv/migrations/0001_invoices.sql
+  - services/inv/migrations/0002_invoice_lines.sql
+  - services/inv/migrations/0003_invoice_status_history.sql
+  - services/inv/migrations/0004_invoice_number_sequence.sql
+  - services/inv/migrations/0005_rate_card_snapshot.sql
+  - services/inv/src/lib.rs
+  - services/inv/src/types.rs
+  - services/inv/src/draft/mod.rs
+  - services/inv/src/draft/builder.rs
+  - services/inv/src/draft/scheduler.rs
+  - services/inv/src/lines/mod.rs
+  - services/inv/src/lines/time_rollup.rs
+  - services/inv/src/lines/corrections.rs
+  - services/inv/src/status/mod.rs
+  - services/inv/src/status/state_machine.rs
+  - services/inv/src/numbering/mod.rs
+  - services/inv/src/snapshot/rate_card.rs
+  - services/inv/src/handlers/invoice_routes.rs
+  - services/inv/src/audit/invoice_events.rs
+  - services/inv/tests/invoice_draft_from_time_test.rs
+  - services/inv/tests/invoice_status_fsm_test.rs
+  - services/inv/tests/invoice_rate_card_snapshot_test.rs
+  - services/inv/tests/invoice_correction_appends_test.rs
+  - services/inv/tests/invoice_numbering_gap_free_test.rs
+  - services/inv/tests/invoice_status_enum_cardinality_test.rs
+  - services/inv/tests/invoice_line_kind_enum_cardinality_test.rs
+  - services/inv/tests/invoice_per_engagement_scope_test.rs
+  - services/inv/tests/invoice_approval_gate_test.rs
+  - services/inv/tests/invoice_write_off_cfo_only_test.rs
+  - services/inv/tests/invoice_amounts_bigint_minor_test.rs
+  - services/inv/tests/invoice_audit_emission_test.rs
 
-  modified_files:
-    # add invoiced_at marker on TIME entries
-    - services/time/src/
+modified_files:
+  # add invoiced_at marker on TIME entries
+  - services/time/src/
 
-  allowed_tools:
-    - file_read: services/{inv,time}/**
-    - file_write: services/inv/{src,tests,migrations}/**
-    - bash: cd services/inv && cargo test
+allowed_tools:
+  - file_read: services/{inv,time}/**
+  - file_write: services/inv/{src,tests,migrations}/**
+  - bash: cd services/inv && cargo test
 
-  disallowed_tools:
-    - mutate invoice lines after approval (per DEC-1366 — append corrections only)
-    - reference rate-card live (per DEC-1363 — snapshot at creation)
-    - multi-engagement per invoice (per DEC-1368)
-    - allow gap in invoice numbering (per DEC-1367)
-    - write-off without CFO + reason (per DEC-1371)
+disallowed_tools:
+  - mutate invoice lines after approval (per DEC-1366 — append corrections only)
+  - reference rate-card live (per DEC-1363 — snapshot at creation)
+  - multi-engagement per invoice (per DEC-1368)
+  - allow gap in invoice numbering (per DEC-1367)
+  - write-off without CFO + reason (per DEC-1371)
 
 effort_hours: 8
 subtasks:

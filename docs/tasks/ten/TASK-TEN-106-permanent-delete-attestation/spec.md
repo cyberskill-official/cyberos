@@ -44,45 +44,44 @@ source_decisions:
   - DEC-1349 2026-05-17 — Per-target execution log persisted in `permanent_delete_cascade_log` with status (pending|executing|completed|failed); CSO can re-trigger failed targets
   - DEC-1350 2026-05-17 — memory audit kinds: ten.permanent_delete_attestation_initiated, ten.permanent_delete_cso_signed, ten.permanent_delete_clo_signed, ten.permanent_delete_executing, ten.permanent_delete_completed, ten.permanent_delete_cancelled, ten.permanent_delete_cascade_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/ten/
-  new_files:
-    - services/ten/migrations/0028_permanent_delete_attestations.sql
-    - services/ten/migrations/0029_permanent_delete_cascade_log.sql
-    - services/ten/src/permanent_delete/mod.rs
-    - services/ten/src/permanent_delete/initiate.rs
-    - services/ten/src/permanent_delete/sign.rs
-    - services/ten/src/permanent_delete/execute.rs
-    - services/ten/src/permanent_delete/cascade.rs
-    - services/ten/src/permanent_delete/audit_tombstone.rs
-    - services/ten/src/permanent_delete/verify.rs
-    - services/ten/src/audit/permanent_delete_events.rs
-    - services/ten/src/handlers/permanent_delete_routes.rs
-    - services/ten/tests/perm_delete_dual_sign_test.rs
-    - services/ten/tests/perm_delete_30d_cool_off_test.rs
-    - services/ten/tests/perm_delete_bundle_required_test.rs
-    - services/ten/tests/perm_delete_cascade_test.rs
-    - services/ten/tests/perm_delete_audit_tombstone_test.rs
-    - services/ten/tests/perm_delete_chain_integrity_test.rs
-    - services/ten/tests/perm_delete_cancel_test.rs
-    - services/ten/tests/perm_delete_cascade_failure_test.rs
-    - services/ten/tests/perm_delete_status_enum_test.rs
-    - services/ten/tests/perm_delete_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/ten/
+new_files:
+  - services/ten/migrations/0028_permanent_delete_attestations.sql
+  - services/ten/migrations/0029_permanent_delete_cascade_log.sql
+  - services/ten/src/permanent_delete/mod.rs
+  - services/ten/src/permanent_delete/initiate.rs
+  - services/ten/src/permanent_delete/sign.rs
+  - services/ten/src/permanent_delete/execute.rs
+  - services/ten/src/permanent_delete/cascade.rs
+  - services/ten/src/permanent_delete/audit_tombstone.rs
+  - services/ten/src/permanent_delete/verify.rs
+  - services/ten/src/audit/permanent_delete_events.rs
+  - services/ten/src/handlers/permanent_delete_routes.rs
+  - services/ten/tests/perm_delete_dual_sign_test.rs
+  - services/ten/tests/perm_delete_30d_cool_off_test.rs
+  - services/ten/tests/perm_delete_bundle_required_test.rs
+  - services/ten/tests/perm_delete_cascade_test.rs
+  - services/ten/tests/perm_delete_audit_tombstone_test.rs
+  - services/ten/tests/perm_delete_chain_integrity_test.rs
+  - services/ten/tests/perm_delete_cancel_test.rs
+  - services/ten/tests/perm_delete_cascade_failure_test.rs
+  - services/ten/tests/perm_delete_status_enum_test.rs
+  - services/ten/tests/perm_delete_audit_emission_test.rs
 
-  modified_files:
-    - services/ten/src/lib.rs
+modified_files:
+  - services/ten/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{ten,auth,memory}/**
-    - file_write: services/ten/{src,tests,migrations}/**
-    - bash: cd services/ten && cargo test permanent_delete
+allowed_tools:
+  - file_read: services/{ten,auth,memory}/**
+  - file_write: services/ten/{src,tests,migrations}/**
+  - bash: cd services/ten && cargo test permanent_delete
 
-  disallowed_tools:
-    - skip dual-sign (per DEC-1342)
-    - skip 30d cool-off (per DEC-1341)
-    - skip bundle precondition (per TASK-TEN-105 DEC-1330)
-    - delete audit chain rows (per DEC-1344 — tombstone only)
+disallowed_tools:
+  - skip dual-sign (per DEC-1342)
+  - skip 30d cool-off (per DEC-1341)
+  - skip bundle precondition (per TASK-TEN-105 DEC-1330)
+  - delete audit chain rows (per DEC-1344 — tombstone only)
 
 effort_hours: 5
 subtasks:

@@ -37,37 +37,36 @@ source_decisions:
   - DEC-1944 2026-05-17 — Rate limit: 50 questions/user/day per TASK-CUO-101 standard
   - DEC-1945 2026-05-17 — memory audit kinds: kb.qa_asked, kb.qa_answered, kb.qa_declined, kb.qa_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/kb/
-  new_files:
-    - services/kb/migrations/0007_qa_questions.sql
-    - services/kb/src/qa/mod.rs
-    - services/kb/src/qa/context_assembler.rs
-    - services/kb/src/qa/answer_generator.rs
-    - services/kb/src/qa/citation_extractor.rs
-    - services/kb/src/handlers/qa_routes.rs
-    - services/kb/src/audit/qa_events.rs
-    - services/kb/tests/qa_confident_with_citations_test.rs
-    - services/kb/tests/qa_decline_no_evidence_test.rs
-    - services/kb/tests/qa_decline_low_confidence_test.rs
-    - services/kb/tests/qa_answer_kind_enum_cardinality_test.rs
-    - services/kb/tests/qa_rate_limit_test.rs
-    - services/kb/tests/qa_citation_spans_test.rs
-    - services/kb/tests/qa_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/kb/
+new_files:
+  - services/kb/migrations/0007_qa_questions.sql
+  - services/kb/src/qa/mod.rs
+  - services/kb/src/qa/context_assembler.rs
+  - services/kb/src/qa/answer_generator.rs
+  - services/kb/src/qa/citation_extractor.rs
+  - services/kb/src/handlers/qa_routes.rs
+  - services/kb/src/audit/qa_events.rs
+  - services/kb/tests/qa_confident_with_citations_test.rs
+  - services/kb/tests/qa_decline_no_evidence_test.rs
+  - services/kb/tests/qa_decline_low_confidence_test.rs
+  - services/kb/tests/qa_answer_kind_enum_cardinality_test.rs
+  - services/kb/tests/qa_rate_limit_test.rs
+  - services/kb/tests/qa_citation_spans_test.rs
+  - services/kb/tests/qa_audit_emission_test.rs
 
-  modified_files:
-    - services/kb/src/lib.rs
+modified_files:
+  - services/kb/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{kb,cuo,ai}/**
-    - file_write: services/kb/{src,tests,migrations}/**
-    - bash: cd services/kb && cargo test qa
+allowed_tools:
+  - file_read: services/{kb,cuo,ai}/**
+  - file_write: services/kb/{src,tests,migrations}/**
+  - bash: cd services/kb && cargo test qa
 
-  disallowed_tools:
-    - answer without citation (per DEC-1942)
-    - search open world (per DEC-1940)
-    - answer below confidence threshold (per DEC-1943)
+disallowed_tools:
+  - answer without citation (per DEC-1942)
+  - search open world (per DEC-1940)
+  - answer below confidence threshold (per DEC-1943)
 
 effort_hours: 8
 subtasks:

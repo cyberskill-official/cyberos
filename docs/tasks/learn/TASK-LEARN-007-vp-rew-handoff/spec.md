@@ -36,33 +36,32 @@ source_decisions:
   - DEC-2143 2026-05-17 — Deterministic + idempotent per (tenant, quarter); UNIQUE constraint
   - DEC-2144 2026-05-17 — memory audit kinds: learn.vp_rew_handoff_started, learn.vp_rew_handoff_emitted, learn.vp_rew_handoff_acked, learn.vp_rew_handoff_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/learn/
-  new_files:
-    - services/learn/migrations/0007_vp_rew_handoffs.sql
-    - services/learn/src/handoff/mod.rs
-    - services/learn/src/handoff/aggregator.rs
-    - services/learn/src/handoff/rew_emitter.rs
-    - services/learn/src/handlers/handoff_routes.rs
-    - services/learn/src/audit/handoff_events.rs
-    - services/learn/tests/handoff_quarter_close_test.rs
-    - services/learn/tests/handoff_status_enum_cardinality_test.rs
-    - services/learn/tests/handoff_idempotent_test.rs
-    - services/learn/tests/handoff_share_sums_to_1_test.rs
-    - services/learn/tests/handoff_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/learn/
+new_files:
+  - services/learn/migrations/0007_vp_rew_handoffs.sql
+  - services/learn/src/handoff/mod.rs
+  - services/learn/src/handoff/aggregator.rs
+  - services/learn/src/handoff/rew_emitter.rs
+  - services/learn/src/handlers/handoff_routes.rs
+  - services/learn/src/audit/handoff_events.rs
+  - services/learn/tests/handoff_quarter_close_test.rs
+  - services/learn/tests/handoff_status_enum_cardinality_test.rs
+  - services/learn/tests/handoff_idempotent_test.rs
+  - services/learn/tests/handoff_share_sums_to_1_test.rs
+  - services/learn/tests/handoff_audit_emission_test.rs
 
-  modified_files:
-    - services/learn/src/lib.rs
+modified_files:
+  - services/learn/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{learn,rew}/**
-    - file_write: services/learn/{src,tests,migrations}/**
-    - bash: cd services/learn && cargo test handoff
+allowed_tools:
+  - file_read: services/{learn,rew}/**
+  - file_write: services/learn/{src,tests,migrations}/**
+  - bash: cd services/learn && cargo test handoff
 
-  disallowed_tools:
-    - mutate prior handoff (per DEC-2143)
-    - emit absolute amounts (per DEC-2142 — share only)
+disallowed_tools:
+  - mutate prior handoff (per DEC-2143)
+  - emit absolute amounts (per DEC-2142 — share only)
 
 effort_hours: 4
 subtasks:

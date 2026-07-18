@@ -38,33 +38,32 @@ source_decisions:
   - DEC-2383 2026-05-17 — Failover: if primary (Viettel) down, fall back to FPT; both down → return Vn1 refusal per TASK-AI-016 contract
   - DEC-2384 2026-05-17 — memory audit kinds: ai.vn_provider_invoked, ai.vn_provider_failover, ai.vn_provider_both_down, ai.vn_provider_creds_set
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/ai/
-  new_files:
-    - services/ai/migrations/0010_vn_provider_creds.sql
-    - services/ai/src/providers/vn/mod.rs
-    - services/ai/src/providers/vn/viettel_client.rs
-    - services/ai/src/providers/vn/fpt_client.rs
-    - services/ai/src/providers/vn/failover.rs
-    - services/ai/src/audit/vn_provider_events.rs
-    - services/ai/tests/vn_provider_enum_cardinality_test.rs
-    - services/ai/tests/viettel_invocation_test.rs
-    - services/ai/tests/fpt_failover_test.rs
-    - services/ai/tests/both_down_refusal_test.rs
-    - services/ai/tests/vn_provider_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/ai/
+new_files:
+  - services/ai/migrations/0010_vn_provider_creds.sql
+  - services/ai/src/providers/vn/mod.rs
+  - services/ai/src/providers/vn/viettel_client.rs
+  - services/ai/src/providers/vn/fpt_client.rs
+  - services/ai/src/providers/vn/failover.rs
+  - services/ai/src/audit/vn_provider_events.rs
+  - services/ai/tests/vn_provider_enum_cardinality_test.rs
+  - services/ai/tests/viettel_invocation_test.rs
+  - services/ai/tests/fpt_failover_test.rs
+  - services/ai/tests/both_down_refusal_test.rs
+  - services/ai/tests/vn_provider_audit_emission_test.rs
 
-  modified_files:
-    - services/ai/src/residency_resolver.rs
+modified_files:
+  - services/ai/src/residency_resolver.rs
 
-  allowed_tools:
-    - file_read: services/{ai,auth}/**
-    - file_write: services/ai/{src,tests,migrations}/**
-    - bash: cd services/ai && cargo test vn_provider
+allowed_tools:
+  - file_read: services/{ai,auth}/**
+  - file_write: services/ai/{src,tests,migrations}/**
+  - bash: cd services/ai && cargo test vn_provider
 
-  disallowed_tools:
-    - non-CTO creds write (per DEC-2382)
-    - silent fallback non-VN (per DEC-2380)
+disallowed_tools:
+  - non-CTO creds write (per DEC-2382)
+  - silent fallback non-VN (per DEC-2380)
 
 effort_hours: 12
 subtasks:

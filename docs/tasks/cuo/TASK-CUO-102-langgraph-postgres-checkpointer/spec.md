@@ -38,31 +38,30 @@ source_decisions:
   - DEC-2323 2026-05-17 — Append-only; 7-year retention per Art. 12; archive partition monthly
   - DEC-2324 2026-05-17 — memory audit kinds: cuo.checkpoint_written, cuo.checkpoint_replayed, cuo.checkpoint_archive_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/cuo/
-  new_files:
-    - services/cuo/migrations/0002_langgraph_checkpoints.sql
-    - services/cuo/src/checkpointer/mod.rs
-    - services/cuo/src/checkpointer/postgres_writer.rs
-    - services/cuo/src/checkpointer/state_serializer.rs
-    - services/cuo/src/audit/checkpoint_events.rs
-    - services/cuo/tests/checkpoint_kind_enum_cardinality_test.rs
-    - services/cuo/tests/checkpoint_immutable_test.rs
-    - services/cuo/tests/checkpoint_serialization_roundtrip_test.rs
-    - services/cuo/tests/checkpoint_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/cuo/
+new_files:
+  - services/cuo/migrations/0002_langgraph_checkpoints.sql
+  - services/cuo/src/checkpointer/mod.rs
+  - services/cuo/src/checkpointer/postgres_writer.rs
+  - services/cuo/src/checkpointer/state_serializer.rs
+  - services/cuo/src/audit/checkpoint_events.rs
+  - services/cuo/tests/checkpoint_kind_enum_cardinality_test.rs
+  - services/cuo/tests/checkpoint_immutable_test.rs
+  - services/cuo/tests/checkpoint_serialization_roundtrip_test.rs
+  - services/cuo/tests/checkpoint_audit_emission_test.rs
 
-  modified_files:
-    - services/cuo/src/supervisor.rs
+modified_files:
+  - services/cuo/src/supervisor.rs
 
-  allowed_tools:
-    - file_read: services/cuo/**
-    - file_write: services/cuo/{src,tests,migrations}/**
-    - bash: cd services/cuo && cargo test checkpoint
+allowed_tools:
+  - file_read: services/cuo/**
+  - file_write: services/cuo/{src,tests,migrations}/**
+  - bash: cd services/cuo && cargo test checkpoint
 
-  disallowed_tools:
-    - mutate prior checkpoint (per DEC-2323)
-    - skip persistence (per DEC-2320)
+disallowed_tools:
+  - mutate prior checkpoint (per DEC-2323)
+  - skip persistence (per DEC-2320)
 
 effort_hours: 5
 subtasks:

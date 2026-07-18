@@ -36,33 +36,32 @@ source_decisions:
   - DEC-2223 2026-05-17 — Idempotent per (tenant, quarter); UNIQUE
   - DEC-2224 2026-05-17 — memory audit kinds: rew.p3_distribution_drafted, rew.p3_distribution_signed, rew.p3_distribution_executed, rew.p3_distribution_paid, rew.p3_distribution_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/rew/
-  new_files:
-    - services/rew/migrations/0008_p3_distributions.sql
-    - services/rew/src/p3/mod.rs
-    - services/rew/src/p3/calculator.rs
-    - services/rew/src/p3/dual_sign_gate.rs
-    - services/rew/src/handlers/p3_routes.rs
-    - services/rew/src/audit/p3_events.rs
-    - services/rew/tests/p3_distribution_status_enum_cardinality_test.rs
-    - services/rew/tests/p3_dual_sign_test.rs
-    - services/rew/tests/p3_vp_share_application_test.rs
-    - services/rew/tests/p3_idempotent_test.rs
-    - services/rew/tests/p3_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/rew/
+new_files:
+  - services/rew/migrations/0008_p3_distributions.sql
+  - services/rew/src/p3/mod.rs
+  - services/rew/src/p3/calculator.rs
+  - services/rew/src/p3/dual_sign_gate.rs
+  - services/rew/src/handlers/p3_routes.rs
+  - services/rew/src/audit/p3_events.rs
+  - services/rew/tests/p3_distribution_status_enum_cardinality_test.rs
+  - services/rew/tests/p3_dual_sign_test.rs
+  - services/rew/tests/p3_vp_share_application_test.rs
+  - services/rew/tests/p3_idempotent_test.rs
+  - services/rew/tests/p3_audit_emission_test.rs
 
-  modified_files:
-    - services/rew/src/lib.rs
+modified_files:
+  - services/rew/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{rew,learn}/**
-    - file_write: services/rew/{src,tests,migrations}/**
-    - bash: cd services/rew && cargo test p3
+allowed_tools:
+  - file_read: services/{rew,learn}/**
+  - file_write: services/rew/{src,tests,migrations}/**
+  - bash: cd services/rew && cargo test p3
 
-  disallowed_tools:
-    - execute without dual-sign (per DEC-2222)
-    - duplicate quarter (per DEC-2223)
+disallowed_tools:
+  - execute without dual-sign (per DEC-2222)
+  - duplicate quarter (per DEC-2223)
 
 effort_hours: 6
 subtasks:

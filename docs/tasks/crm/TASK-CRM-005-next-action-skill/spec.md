@@ -37,33 +37,32 @@ source_decisions:
   - DEC-1654 2026-05-17 — Per-user rate limit: 100 calls/day to prevent runaway AI cost
   - DEC-1655 2026-05-17 — memory audit kinds: crm.next_action_suggested, crm.next_action_executed, crm.next_action_dismissed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/crm/
-  new_files:
-    - services/crm/migrations/0005_next_action_suggestions.sql
-    - services/crm/src/next_action/mod.rs
-    - services/crm/src/next_action/context_builder.rs
-    - services/crm/src/next_action/ranker.rs
-    - services/crm/src/next_action/skill_handler.rs
-    - services/crm/src/audit/next_action_events.rs
-    - services/crm/tests/next_action_returns_top_3_test.rs
-    - services/crm/tests/next_action_kind_enum_cardinality_test.rs
-    - services/crm/tests/next_action_rate_limit_test.rs
-    - services/crm/tests/next_action_dismiss_test.rs
-    - services/crm/tests/next_action_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/crm/
+new_files:
+  - services/crm/migrations/0005_next_action_suggestions.sql
+  - services/crm/src/next_action/mod.rs
+  - services/crm/src/next_action/context_builder.rs
+  - services/crm/src/next_action/ranker.rs
+  - services/crm/src/next_action/skill_handler.rs
+  - services/crm/src/audit/next_action_events.rs
+  - services/crm/tests/next_action_returns_top_3_test.rs
+  - services/crm/tests/next_action_kind_enum_cardinality_test.rs
+  - services/crm/tests/next_action_rate_limit_test.rs
+  - services/crm/tests/next_action_dismiss_test.rs
+  - services/crm/tests/next_action_audit_emission_test.rs
 
-  modified_files:
-    - services/crm/src/lib.rs
+modified_files:
+  - services/crm/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{crm,cuo,ai}/**
-    - file_write: services/crm/{src,tests,migrations}/**
-    - bash: cd services/crm && cargo test next_action
+allowed_tools:
+  - file_read: services/{crm,cuo,ai}/**
+  - file_write: services/crm/{src,tests,migrations}/**
+  - bash: cd services/crm && cargo test next_action
 
-  disallowed_tools:
-    - return >3 suggestions (per DEC-1650)
-    - exceed 100 calls/day per user (per DEC-1654)
+disallowed_tools:
+  - return >3 suggestions (per DEC-1650)
+  - exceed 100 calls/day per user (per DEC-1654)
 
 effort_hours: 6
 subtasks:

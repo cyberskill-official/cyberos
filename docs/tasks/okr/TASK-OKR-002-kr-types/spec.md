@@ -36,33 +36,32 @@ source_decisions:
   - DEC-1973 2026-05-17 — Per-type validation: hit_target requires target_value; improvement requires start/target; milestone requires checkpoint array
   - DEC-1974 2026-05-17 — memory audit kinds: okr.kr_type_set, okr.kr_progress_calculated, okr.kr_validation_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/okr/
-  new_files:
-    - services/okr/migrations/0002_kr_types.sql
-    - services/okr/src/kr_type/mod.rs
-    - services/okr/src/kr_type/progress_calc.rs
-    - services/okr/src/kr_type/validator.rs
-    - services/okr/src/audit/kr_type_events.rs
-    - services/okr/tests/kr_type_enum_cardinality_test.rs
-    - services/okr/tests/kr_hit_target_progress_test.rs
-    - services/okr/tests/kr_improvement_progress_test.rs
-    - services/okr/tests/kr_milestone_progress_test.rs
-    - services/okr/tests/kr_type_validation_test.rs
-    - services/okr/tests/kr_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/okr/
+new_files:
+  - services/okr/migrations/0002_kr_types.sql
+  - services/okr/src/kr_type/mod.rs
+  - services/okr/src/kr_type/progress_calc.rs
+  - services/okr/src/kr_type/validator.rs
+  - services/okr/src/audit/kr_type_events.rs
+  - services/okr/tests/kr_type_enum_cardinality_test.rs
+  - services/okr/tests/kr_hit_target_progress_test.rs
+  - services/okr/tests/kr_improvement_progress_test.rs
+  - services/okr/tests/kr_milestone_progress_test.rs
+  - services/okr/tests/kr_type_validation_test.rs
+  - services/okr/tests/kr_audit_emission_test.rs
 
-  modified_files:
-    - services/okr/src/krs.rs
+modified_files:
+  - services/okr/src/krs.rs
 
-  allowed_tools:
-    - file_read: services/okr/**
-    - file_write: services/okr/{src,tests,migrations}/**
-    - bash: cd services/okr && cargo test kr_type
+allowed_tools:
+  - file_read: services/okr/**
+  - file_write: services/okr/{src,tests,migrations}/**
+  - bash: cd services/okr && cargo test kr_type
 
-  disallowed_tools:
-    - skip type validation (per DEC-1973)
-    - non-deterministic progress calc (per DEC-1972)
+disallowed_tools:
+  - skip type validation (per DEC-1973)
+  - non-deterministic progress calc (per DEC-1972)
 
 effort_hours: 4
 subtasks:

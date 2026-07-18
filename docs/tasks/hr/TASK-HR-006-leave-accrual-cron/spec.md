@@ -39,34 +39,33 @@ source_decisions:
   - DEC-1854 2026-05-17 — Idempotency: one accrual row per (member_id, year_month, kind); UNIQUE constraint
   - DEC-1855 2026-05-17 — memory audit kinds: hr.accrual_batch_started, hr.accrual_added, hr.accrual_correction_added, hr.accrual_batch_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/hr/
-  new_files:
-    - services/hr/migrations/0006_leave_accrual_ledger.sql
-    - services/hr/src/accrual/mod.rs
-    - services/hr/src/accrual/monthly_batch.rs
-    - services/hr/src/accrual/correction_handler.rs
-    - services/hr/src/handlers/accrual_routes.rs
-    - services/hr/src/audit/accrual_events.rs
-    - services/hr/tests/accrual_monthly_test.rs
-    - services/hr/tests/accrual_seniority_bonus_test.rs
-    - services/hr/tests/accrual_idempotency_test.rs
-    - services/hr/tests/accrual_kind_enum_cardinality_test.rs
-    - services/hr/tests/accrual_correction_test.rs
-    - services/hr/tests/accrual_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/hr/
+new_files:
+  - services/hr/migrations/0006_leave_accrual_ledger.sql
+  - services/hr/src/accrual/mod.rs
+  - services/hr/src/accrual/monthly_batch.rs
+  - services/hr/src/accrual/correction_handler.rs
+  - services/hr/src/handlers/accrual_routes.rs
+  - services/hr/src/audit/accrual_events.rs
+  - services/hr/tests/accrual_monthly_test.rs
+  - services/hr/tests/accrual_seniority_bonus_test.rs
+  - services/hr/tests/accrual_idempotency_test.rs
+  - services/hr/tests/accrual_kind_enum_cardinality_test.rs
+  - services/hr/tests/accrual_correction_test.rs
+  - services/hr/tests/accrual_audit_emission_test.rs
 
-  modified_files:
-    - services/hr/src/lib.rs
+modified_files:
+  - services/hr/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/hr/**
-    - file_write: services/hr/{src,tests,migrations}/**
-    - bash: cd services/hr && cargo test accrual
+allowed_tools:
+  - file_read: services/hr/**
+  - file_write: services/hr/{src,tests,migrations}/**
+  - bash: cd services/hr && cargo test accrual
 
-  disallowed_tools:
-    - mutate prior accrual row (per DEC-1853)
-    - duplicate accrual per month (per DEC-1854)
+disallowed_tools:
+  - mutate prior accrual row (per DEC-1853)
+  - duplicate accrual per month (per DEC-1854)
 
 effort_hours: 4
 subtasks:

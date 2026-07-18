@@ -41,47 +41,46 @@ source_decisions:
   - DEC-2387 2026-05-18 — Handler dispatch happens BEFORE execute_chain(); the supervisor reads workflow.pattern frontmatter and picks the Handler subclass. Default pattern (linear) uses the existing execute_chain() unchanged
   - DEC-2388 2026-05-18 — memory audit kinds: cuo.handler_dispatched, cuo.time_critical_sla_breach, cuo.per_instance_iteration, cuo.per_instance_summary, cuo.multi_output_fanout, cuo.sequential_approval_halted, cuo.sequential_approval_resumed, cuo.persona_pair_handoff
 
-build_envelope:
-  language: python 3.10+
-  service: modules/cuo/cuo/core/
-  new_files:
-    - modules/cuo/cuo/core/handlers/__init__.py
-    - modules/cuo/cuo/core/handlers/base.py
-    - modules/cuo/cuo/core/handlers/time_critical.py
-    - modules/cuo/cuo/core/handlers/per_instance.py
-    - modules/cuo/cuo/core/handlers/multi_output.py
-    - modules/cuo/cuo/core/handlers/sequential_approval.py
-    - modules/cuo/cuo/core/handlers/persona_pair.py
-    - modules/cuo/cuo/core/handlers/dispatch.py
-    - modules/cuo/tests/test_applier_paths.py
-    - modules/cuo/tests/test_proposal_applier.py
-    - modules/cuo/tests/test_per_instance_handler.py
-    - modules/cuo/tests/test_multi_output_handler.py
-    - modules/cuo/tests/test_proposal_applier.py
-    - modules/cuo/tests/test_proposal_applier.py
+language: python 3.10+
+service: modules/cuo/cuo/core/
+new_files:
+  - modules/cuo/cuo/core/handlers/__init__.py
+  - modules/cuo/cuo/core/handlers/base.py
+  - modules/cuo/cuo/core/handlers/time_critical.py
+  - modules/cuo/cuo/core/handlers/per_instance.py
+  - modules/cuo/cuo/core/handlers/multi_output.py
+  - modules/cuo/cuo/core/handlers/sequential_approval.py
+  - modules/cuo/cuo/core/handlers/persona_pair.py
+  - modules/cuo/cuo/core/handlers/dispatch.py
+  - modules/cuo/tests/test_applier_paths.py
+  - modules/cuo/tests/test_proposal_applier.py
+  - modules/cuo/tests/test_per_instance_handler.py
+  - modules/cuo/tests/test_multi_output_handler.py
+  - modules/cuo/tests/test_proposal_applier.py
+  - modules/cuo/tests/test_proposal_applier.py
 
-  modified_files:
-    - modules/cuo/cuo/core/supervisor.py
-    - modules/cuo/cuo/core/memory_bridge.py
-    - modules/cuo/cuo/cli.py
-    - modules/cuo/cuo/__init__.py
-    - modules/cuo/pyproject.toml
-    - website docs (CUO appendices)
-    - "3 time-critical workflow YAML frontmatter (pattern: time_critical, sla_minutes: <N>)"
-    - chief-sales-officer/quarterly-account-plan.md (pattern: per_instance, instance_descriptor field)
-    - chief-legal-officer/quarterly-regulatory-cycle.md (pattern: multi_output, output_recipients field)
-    - "chief-ethics-officer/per-model-card-ethics-sign-off.md + chief-ai-officer/per-model-card-release.md (pattern: sequential_approval, gates: field)"
-    - 4 persona-pair workflow pairs (pattern: persona_pair, peer_persona + shared_artefact fields)
+modified_files:
+  - modules/cuo/cuo/core/supervisor.py
+  - modules/cuo/cuo/core/memory_bridge.py
+  - modules/cuo/cuo/cli.py
+  - modules/cuo/cuo/__init__.py
+  - modules/cuo/pyproject.toml
+  - website docs (CUO appendices)
+  - "3 time-critical workflow YAML frontmatter (pattern: time_critical, sla_minutes: <N>)"
+  - chief-sales-officer/quarterly-account-plan.md (pattern: per_instance, instance_descriptor field)
+  - chief-legal-officer/quarterly-regulatory-cycle.md (pattern: multi_output, output_recipients field)
+  - "chief-ethics-officer/per-model-card-ethics-sign-off.md + chief-ai-officer/per-model-card-release.md (pattern: sequential_approval, gates: field)"
+  - 4 persona-pair workflow pairs (pattern: persona_pair, peer_persona + shared_artefact fields)
 
-  allowed_tools:
-    - file_read: modules/cuo/**, modules/skill/**, modules/memory/**
-    - file_write: modules/cuo/cuo/core/handlers/**, modules/cuo/tests/**, modules/cuo/cuo/{supervisor.py,memory_bridge.py,cli.py,__init__.py}
-    - bash: cd modules/cuo && pytest tests/test_*handler* -v
+allowed_tools:
+  - file_read: modules/cuo/**, modules/skill/**, modules/memory/**
+  - file_write: modules/cuo/cuo/core/handlers/**, modules/cuo/tests/**, modules/cuo/cuo/{supervisor.py,memory_bridge.py,cli.py,__init__.py}
+  - bash: cd modules/cuo && pytest tests/test_*handler* -v
 
-  disallowed_tools:
-    - bypass HITL halt in sequential_approval handler (DEC-2385)
-    - skip SLA-breach logging when time_critical exceeds limit (DEC-2382)
-    - mutate workflow.skill_chain at runtime (forbidden by AGENTS.md §12)
+disallowed_tools:
+  - bypass HITL halt in sequential_approval handler (DEC-2385)
+  - skip SLA-breach logging when time_critical exceeds limit (DEC-2382)
+  - mutate workflow.skill_chain at runtime (forbidden by AGENTS.md §12)
 
 effort_hours: 30
 subtasks:

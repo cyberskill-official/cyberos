@@ -36,34 +36,33 @@ source_decisions:
   - DEC-1993 2026-05-17 — Per-KR failure isolated — one failure doesn't halt batch
   - DEC-1994 2026-05-17 — memory audit kinds: okr.batch_started, okr.batch_kr_resolved, okr.batch_kr_drift_alert, okr.batch_kr_failed, okr.batch_completed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/okr/
-  new_files:
-    - services/okr/migrations/0004_auto_progress_runs.sql
-    - services/okr/src/auto_progress/mod.rs
-    - services/okr/src/auto_progress/batch_runner.rs
-    - services/okr/src/auto_progress/drift_detector.rs
-    - services/okr/src/handlers/auto_progress_routes.rs
-    - services/okr/src/audit/auto_progress_events.rs
-    - services/okr/tests/batch_runs_all_active_test.rs
-    - services/okr/tests/batch_per_kr_isolation_test.rs
-    - services/okr/tests/batch_idempotent_test.rs
-    - services/okr/tests/batch_drift_alert_test.rs
-    - services/okr/tests/batch_status_enum_cardinality_test.rs
-    - services/okr/tests/batch_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/okr/
+new_files:
+  - services/okr/migrations/0004_auto_progress_runs.sql
+  - services/okr/src/auto_progress/mod.rs
+  - services/okr/src/auto_progress/batch_runner.rs
+  - services/okr/src/auto_progress/drift_detector.rs
+  - services/okr/src/handlers/auto_progress_routes.rs
+  - services/okr/src/audit/auto_progress_events.rs
+  - services/okr/tests/batch_runs_all_active_test.rs
+  - services/okr/tests/batch_per_kr_isolation_test.rs
+  - services/okr/tests/batch_idempotent_test.rs
+  - services/okr/tests/batch_drift_alert_test.rs
+  - services/okr/tests/batch_status_enum_cardinality_test.rs
+  - services/okr/tests/batch_audit_emission_test.rs
 
-  modified_files:
-    - services/okr/src/lib.rs
+modified_files:
+  - services/okr/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/okr/**
-    - file_write: services/okr/{src,tests,migrations}/**
-    - bash: cd services/okr && cargo test auto_progress
+allowed_tools:
+  - file_read: services/okr/**
+  - file_write: services/okr/{src,tests,migrations}/**
+  - bash: cd services/okr && cargo test auto_progress
 
-  disallowed_tools:
-    - mutate prior batch run (per DEC-1990)
-    - halt batch on single KR failure (per DEC-1993)
+disallowed_tools:
+  - mutate prior batch run (per DEC-1990)
+  - halt batch on single KR failure (per DEC-1993)
 
 effort_hours: 5
 subtasks:

@@ -39,34 +39,33 @@ source_decisions:
   - DEC-1804 2026-05-17 — Re-stamping uses an active TS authority — must re-fetch fresh timestamp; original signature stays intact
   - DEC-1805 2026-05-17 — memory audit kinds: doc.ltv_extend_initiated, doc.ltv_extend_completed, doc.ltv_restamp_completed, doc.ltv_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/doc/
-  new_files:
-    - services/doc/migrations/0011_ltv_operations.sql
-    - services/doc/src/ltv/mod.rs
-    - services/doc/src/ltv/extender.rs
-    - services/doc/src/ltv/restamp_cron.rs
-    - services/doc/src/ltv/validation_data_fetcher.rs
-    - services/doc/src/ltv/pades_writer.rs
-    - services/doc/src/audit/ltv_events.rs
-    - services/doc/tests/ltv_extend_bt_to_blt_test.rs
-    - services/doc/tests/ltv_year_9_restamp_test.rs
-    - services/doc/tests/ltv_operation_enum_cardinality_test.rs
-    - services/doc/tests/ltv_status_enum_cardinality_test.rs
-    - services/doc/tests/ltv_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/doc/
+new_files:
+  - services/doc/migrations/0011_ltv_operations.sql
+  - services/doc/src/ltv/mod.rs
+  - services/doc/src/ltv/extender.rs
+  - services/doc/src/ltv/restamp_cron.rs
+  - services/doc/src/ltv/validation_data_fetcher.rs
+  - services/doc/src/ltv/pades_writer.rs
+  - services/doc/src/audit/ltv_events.rs
+  - services/doc/tests/ltv_extend_bt_to_blt_test.rs
+  - services/doc/tests/ltv_year_9_restamp_test.rs
+  - services/doc/tests/ltv_operation_enum_cardinality_test.rs
+  - services/doc/tests/ltv_status_enum_cardinality_test.rs
+  - services/doc/tests/ltv_audit_emission_test.rs
 
-  modified_files:
-    - services/doc/src/lib.rs
+modified_files:
+  - services/doc/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/doc/**
-    - file_write: services/doc/{src,tests,migrations}/**
-    - bash: cd services/doc && cargo test ltv
+allowed_tools:
+  - file_read: services/doc/**
+  - file_write: services/doc/{src,tests,migrations}/**
+  - bash: cd services/doc && cargo test ltv
 
-  disallowed_tools:
-    - alter original signature (per DEC-1804 — only embed validation data + re-stamp)
-    - skip cert chain validation before restamp (per DEC-1800)
+disallowed_tools:
+  - alter original signature (per DEC-1804 — only embed validation data + re-stamp)
+  - skip cert chain validation before restamp (per DEC-1800)
 
 effort_hours: 8
 subtasks:

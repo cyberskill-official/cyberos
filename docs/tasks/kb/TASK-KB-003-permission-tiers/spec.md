@@ -36,35 +36,34 @@ source_decisions:
   - DEC-1903 2026-05-17 — Public docs may be served to unauthenticated browsers; org_only requires session; role_restricted requires role match
   - DEC-1904 2026-05-17 — memory audit kinds: kb.permission_set, kb.share_link_created, kb.share_link_used, kb.access_denied
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/kb/
-  new_files:
-    - services/kb/migrations/0003_permissions_share_links.sql
-    - services/kb/src/permission/mod.rs
-    - services/kb/src/permission/access_gate.rs
-    - services/kb/src/permission/share_link.rs
-    - services/kb/src/handlers/permission_routes.rs
-    - services/kb/src/audit/permission_events.rs
-    - services/kb/tests/permission_tier_enum_cardinality_test.rs
-    - services/kb/tests/permission_public_unauth_ok_test.rs
-    - services/kb/tests/permission_org_only_session_required_test.rs
-    - services/kb/tests/permission_role_restricted_test.rs
-    - services/kb/tests/share_link_expiry_test.rs
-    - services/kb/tests/share_link_max_uses_test.rs
-    - services/kb/tests/permission_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/kb/
+new_files:
+  - services/kb/migrations/0003_permissions_share_links.sql
+  - services/kb/src/permission/mod.rs
+  - services/kb/src/permission/access_gate.rs
+  - services/kb/src/permission/share_link.rs
+  - services/kb/src/handlers/permission_routes.rs
+  - services/kb/src/audit/permission_events.rs
+  - services/kb/tests/permission_tier_enum_cardinality_test.rs
+  - services/kb/tests/permission_public_unauth_ok_test.rs
+  - services/kb/tests/permission_org_only_session_required_test.rs
+  - services/kb/tests/permission_role_restricted_test.rs
+  - services/kb/tests/share_link_expiry_test.rs
+  - services/kb/tests/share_link_max_uses_test.rs
+  - services/kb/tests/permission_audit_emission_test.rs
 
-  modified_files:
-    - services/kb/src/lib.rs
+modified_files:
+  - services/kb/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{kb,auth}/**
-    - file_write: services/kb/{src,tests,migrations}/**
-    - bash: cd services/kb && cargo test permission
+allowed_tools:
+  - file_read: services/{kb,auth}/**
+  - file_write: services/kb/{src,tests,migrations}/**
+  - bash: cd services/kb && cargo test permission
 
-  disallowed_tools:
-    - serve role_restricted to wrong role (per DEC-1903)
-    - allow expired share-link (per DEC-1902)
+disallowed_tools:
+  - serve role_restricted to wrong role (per DEC-1903)
+  - allow expired share-link (per DEC-1902)
 
 effort_hours: 5
 subtasks:

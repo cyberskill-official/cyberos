@@ -37,39 +37,38 @@ source_decisions:
   - DEC-1404 2026-05-17 — Past 90 days requires `engagement_admin` approval; past 1 year requires `cfo` approval (older entries are usually corrections)
   - DEC-1405 2026-05-17 — memory audit kinds: time.manual_entry_created, time.manual_entry_blocked_24h_cap, time.manual_entry_overrode_16h_softblock, time.manual_entry_past_90d_approved, time.manual_entry_past_1y_approved
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/time/
-  new_files:
-    - services/time/src/manual_entry/mod.rs
-    - services/time/src/manual_entry/date_validator.rs
-    - services/time/src/manual_entry/per_day_cap.rs
-    - services/time/src/audit/manual_entry_events.rs
-    - services/time/src/handlers/manual_entry_routes.rs
-    - services/time/web/manual-entry-form.ts
-    - services/time/tests/manual_entry_happy_test.rs
-    - services/time/tests/manual_entry_30d_limit_test.rs
-    - services/time/tests/manual_entry_24h_per_day_test.rs
-    - services/time/tests/manual_entry_16h_softblock_test.rs
-    - services/time/tests/manual_entry_90d_admin_approval_test.rs
-    - services/time/tests/manual_entry_1y_cfo_approval_test.rs
-    - services/time/tests/manual_entry_vn_ot_integration_test.rs
-    - services/time/tests/manual_entry_reason_enum_cardinality_test.rs
-    - services/time/tests/manual_entry_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/time/
+new_files:
+  - services/time/src/manual_entry/mod.rs
+  - services/time/src/manual_entry/date_validator.rs
+  - services/time/src/manual_entry/per_day_cap.rs
+  - services/time/src/audit/manual_entry_events.rs
+  - services/time/src/handlers/manual_entry_routes.rs
+  - services/time/web/manual-entry-form.ts
+  - services/time/tests/manual_entry_happy_test.rs
+  - services/time/tests/manual_entry_30d_limit_test.rs
+  - services/time/tests/manual_entry_24h_per_day_test.rs
+  - services/time/tests/manual_entry_16h_softblock_test.rs
+  - services/time/tests/manual_entry_90d_admin_approval_test.rs
+  - services/time/tests/manual_entry_1y_cfo_approval_test.rs
+  - services/time/tests/manual_entry_vn_ot_integration_test.rs
+  - services/time/tests/manual_entry_reason_enum_cardinality_test.rs
+  - services/time/tests/manual_entry_audit_emission_test.rs
 
-  modified_files:
-    - services/time/src/lib.rs
+modified_files:
+  - services/time/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/time/**
-    - file_write: services/time/{src,tests,web}/**
-    - bash: cd services/time && cargo test manual_entry
+allowed_tools:
+  - file_read: services/time/**
+  - file_write: services/time/{src,tests,web}/**
+  - bash: cd services/time && cargo test manual_entry
 
-  disallowed_tools:
-    - allow date > 30d past without engagement_admin approval (per DEC-1404)
-    - allow past 1 year without cfo approval (per DEC-1404)
-    - bypass TASK-TIME-007 cap (per DEC-1402)
-    - exceed 24h per-day cap (per DEC-1401)
+disallowed_tools:
+  - allow date > 30d past without engagement_admin approval (per DEC-1404)
+  - allow past 1 year without cfo approval (per DEC-1404)
+  - bypass TASK-TIME-007 cap (per DEC-1402)
+  - exceed 24h per-day cap (per DEC-1401)
 
 effort_hours: 6
 subtasks:

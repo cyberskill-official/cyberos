@@ -56,67 +56,66 @@ source_decisions:
   - DEC-1059 2026-05-17 — Annotation drift detection runs nightly: compares registered annotations vs current tool-schema declared annotations; mismatch = sev-1 `mcp.tool_gating_annotation_drift`
   - DEC-1060 2026-05-17 — Audit-row payload PII-scrubbed via TASK-MEMORY-111: request_payload_sha256 only (raw payload retained in MCP gateway logs with RLS-scope, 7-day retention)
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/mcp/
-  new_files:
-    # per-tenant policy
-    - services/mcp/migrations/0006_mcp_gating_policy.sql
-    # confirm-mode ack store
-    - services/mcp/migrations/0007_mcp_pending_confirmations.sql
-    # full decision audit
-    - services/mcp/migrations/0008_mcp_gating_decisions_log.sql
-    # gating orchestrator
-    - services/mcp/src/gating/mod.rs
-    # per-call decision logic
-    - services/mcp/src/gating/decision.rs
-    # per-tenant policy loader
-    - services/mcp/src/gating/policy.rs
-    # confirm-mode ack store
-    - services/mcp/src/gating/confirm.rs
-    # elicit-mode delegator (TASK-MCP-008)
-    - services/mcp/src/gating/elicit.rs
-    # bypass-token check
-    - services/mcp/src/gating/bypass.rs
-    # nightly annotation drift job
-    - services/mcp/src/gating/drift_detector.rs
-    # POST /v1/mcp/tools/{tool_id}/confirm
-    - services/mcp/src/handlers/tool_confirm.rs
-    # tenant_admin policy CRUD
-    - services/mcp/src/handlers/gating_policy_admin.rs
-    # 5 memory row builders
-    - services/mcp/src/audit/gating_events.rs
-    - services/mcp/tests/gating_annotation_precedence_test.rs
-    - services/mcp/tests/gating_destructive_requires_confirm_test.rs
-    - services/mcp/tests/gating_readonly_fast_path_test.rs
-    - services/mcp/tests/gating_confirm_ttl_test.rs
-    - services/mcp/tests/gating_bypass_token_test.rs
-    - services/mcp/tests/gating_audit_only_mode_test.rs
-    - services/mcp/tests/gating_decision_enum_cardinality_test.rs
-    - services/mcp/tests/gating_policy_tenant_admin_only_test.rs
-    - services/mcp/tests/gating_drift_detection_test.rs
-    - services/mcp/tests/gating_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/mcp/
+new_files:
+  # per-tenant policy
+  - services/mcp/migrations/0006_mcp_gating_policy.sql
+  # confirm-mode ack store
+  - services/mcp/migrations/0007_mcp_pending_confirmations.sql
+  # full decision audit
+  - services/mcp/migrations/0008_mcp_gating_decisions_log.sql
+  # gating orchestrator
+  - services/mcp/src/gating/mod.rs
+  # per-call decision logic
+  - services/mcp/src/gating/decision.rs
+  # per-tenant policy loader
+  - services/mcp/src/gating/policy.rs
+  # confirm-mode ack store
+  - services/mcp/src/gating/confirm.rs
+  # elicit-mode delegator (TASK-MCP-008)
+  - services/mcp/src/gating/elicit.rs
+  # bypass-token check
+  - services/mcp/src/gating/bypass.rs
+  # nightly annotation drift job
+  - services/mcp/src/gating/drift_detector.rs
+  # POST /v1/mcp/tools/{tool_id}/confirm
+  - services/mcp/src/handlers/tool_confirm.rs
+  # tenant_admin policy CRUD
+  - services/mcp/src/handlers/gating_policy_admin.rs
+  # 5 memory row builders
+  - services/mcp/src/audit/gating_events.rs
+  - services/mcp/tests/gating_annotation_precedence_test.rs
+  - services/mcp/tests/gating_destructive_requires_confirm_test.rs
+  - services/mcp/tests/gating_readonly_fast_path_test.rs
+  - services/mcp/tests/gating_confirm_ttl_test.rs
+  - services/mcp/tests/gating_bypass_token_test.rs
+  - services/mcp/tests/gating_audit_only_mode_test.rs
+  - services/mcp/tests/gating_decision_enum_cardinality_test.rs
+  - services/mcp/tests/gating_policy_tenant_admin_only_test.rs
+  - services/mcp/tests/gating_drift_detection_test.rs
+  - services/mcp/tests/gating_audit_emission_test.rs
 
-  modified_files:
-    # invoke gating before dispatch
-    - services/mcp/src/handlers/tools_call.rs
-    # store + serve annotations from registration
-    - services/mcp/src/server_registry.rs
-    # mount confirm + policy admin routes
-    - services/mcp/src/lib.rs
+modified_files:
+  # invoke gating before dispatch
+  - services/mcp/src/handlers/tools_call.rs
+  # store + serve annotations from registration
+  - services/mcp/src/server_registry.rs
+  # mount confirm + policy admin routes
+  - services/mcp/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/mcp/**
-    - file_write: services/mcp/{src,tests,migrations}/**
-    - bash: cd services/mcp && cargo test gating
+allowed_tools:
+  - file_read: services/mcp/**
+  - file_write: services/mcp/{src,tests,migrations}/**
+  - bash: cd services/mcp && cargo test gating
 
-  disallowed_tools:
-    - dispatch tool call without gating decision (per DEC-1052)
-    - allow non-tenant_admin to update gating policy (per DEC-1058)
-    - bypass-token without sev-2 audit (per DEC-1057)
-    - skip annotation drift detection (per DEC-1059)
-    - cache gating decisions cross-tenant (each tenant has independent policy)
-    - allow elicit mode without TASK-MCP-008 (per DEC-1055 — return 503 placeholder)
+disallowed_tools:
+  - dispatch tool call without gating decision (per DEC-1052)
+  - allow non-tenant_admin to update gating policy (per DEC-1058)
+  - bypass-token without sev-2 audit (per DEC-1057)
+  - skip annotation drift detection (per DEC-1059)
+  - cache gating decisions cross-tenant (each tenant has independent policy)
+  - allow elicit mode without TASK-MCP-008 (per DEC-1055 — return 503 placeholder)
 
 effort_hours: 6
 subtasks:

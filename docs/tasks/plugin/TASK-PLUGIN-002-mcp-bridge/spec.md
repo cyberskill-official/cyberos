@@ -41,41 +41,40 @@ source_decisions:
   - DEC-2416 2026-05-19 — Tool errors MUST distinguish 4 classes (input_validation / authz_denied / upstream_unavailable / internal_error) for host-side UX
   - DEC-2417 2026-05-19 — Bridge MUST emit OpenTelemetry spans for every tool call with attributes plugin_id, tool_name, tenant_id, trace_id; goes to TASK-OBS-001 collector
 
-build_envelope:
-  language: rust 1.81
-  service: services/plugin-host/
-  new_files:
-    - services/plugin-host/Cargo.toml
-    - services/plugin-host/src/main.rs
-    - services/plugin-host/src/transport/mod.rs
-    - services/plugin-host/src/transport/stdio.rs
-    - services/plugin-host/src/transport/http.rs
-    - services/plugin-host/src/handlers/initialize.rs
-    - services/plugin-host/src/handlers/tools_list.rs
-    - services/plugin-host/src/handlers/tools_call.rs
-    - services/plugin-host/src/tools/cuo.rs
-    - services/plugin-host/src/tools/memory.rs
-    - services/plugin-host/src/tools/skill.rs
-    - services/plugin-host/src/error.rs
-    - services/plugin-host/src/otel.rs
-    - services/plugin-host/tests/initialize_handshake_test.rs
-    - services/plugin-host/tests/tools_list_returns_8_tools_test.rs
-    - services/plugin-host/tests/execute_workflow_as_task_test.rs
-    - services/plugin-host/tests/error_class_taxonomy_test.rs
-    - services/plugin-host/tests/cross_tenant_denied_test.rs
+language: rust 1.81
+service: services/plugin-host/
+new_files:
+  - services/plugin-host/Cargo.toml
+  - services/plugin-host/src/main.rs
+  - services/plugin-host/src/transport/mod.rs
+  - services/plugin-host/src/transport/stdio.rs
+  - services/plugin-host/src/transport/http.rs
+  - services/plugin-host/src/handlers/initialize.rs
+  - services/plugin-host/src/handlers/tools_list.rs
+  - services/plugin-host/src/handlers/tools_call.rs
+  - services/plugin-host/src/tools/cuo.rs
+  - services/plugin-host/src/tools/memory.rs
+  - services/plugin-host/src/tools/skill.rs
+  - services/plugin-host/src/error.rs
+  - services/plugin-host/src/otel.rs
+  - services/plugin-host/tests/initialize_handshake_test.rs
+  - services/plugin-host/tests/tools_list_returns_8_tools_test.rs
+  - services/plugin-host/tests/execute_workflow_as_task_test.rs
+  - services/plugin-host/tests/error_class_taxonomy_test.rs
+  - services/plugin-host/tests/cross_tenant_denied_test.rs
 
-  modified_files:
-    - services/Cargo.toml (add plugin-host as workspace member)
+modified_files:
+  - services/Cargo.toml (add plugin-host as workspace member)
 
-  allowed_tools:
-    - file_read: services/plugin-host/**
-    - file_write: services/plugin-host/{src,tests}/**
-    - bash: cd services && cargo test -p cyberos-plugin-host
+allowed_tools:
+  - file_read: services/plugin-host/**
+  - file_write: services/plugin-host/{src,tests}/**
+  - bash: cd services && cargo test -p cyberos-plugin-host
 
-  disallowed_tools:
-    - stateful session affinity (per DEC-2415)
-    - mix protocol versions in one binary (per DEC-2412 — single spec)
-    - call MCP gateway for own protocol (per architecture — bridge IS the MCP server-side)
+disallowed_tools:
+  - stateful session affinity (per DEC-2415)
+  - mix protocol versions in one binary (per DEC-2412 — single spec)
+  - call MCP gateway for own protocol (per architecture — bridge IS the MCP server-side)
 
 effort_hours: 10
 subtasks:

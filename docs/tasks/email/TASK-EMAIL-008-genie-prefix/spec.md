@@ -37,35 +37,34 @@ source_decisions:
   - DEC-1594 2026-05-17 — Genie context: tenant brand pack (TASK-PORTAL-002), CRM context (TASK-CRM-001), recent thread context (last 10 msgs), tenant tools (per TASK-MCP-006 gating)
   - DEC-1595 2026-05-17 — memory audit kinds: email.genie_triggered, email.genie_action_proposed, email.genie_action_approved, email.genie_action_executed, email.genie_action_dismissed, email.genie_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/email/
-  new_files:
-    - services/email/migrations/0010_genie_sessions.sql
-    - services/email/src/genie/mod.rs
-    - services/email/src/genie/prefix_router.rs
-    - services/email/src/genie/action_proposer.rs
-    - services/email/src/genie/portal_bridge.rs
-    - services/email/src/handlers/genie_routes.rs
-    - services/email/src/audit/genie_events.rs
-    - services/email/tests/genie_prefix_match_test.rs
-    - services/email/tests/genie_action_proposed_test.rs
-    - services/email/tests/genie_no_auto_execute_test.rs
-    - services/email/tests/genie_action_kind_enum_cardinality_test.rs
-    - services/email/tests/genie_context_loading_test.rs
-    - services/email/tests/genie_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/email/
+new_files:
+  - services/email/migrations/0010_genie_sessions.sql
+  - services/email/src/genie/mod.rs
+  - services/email/src/genie/prefix_router.rs
+  - services/email/src/genie/action_proposer.rs
+  - services/email/src/genie/portal_bridge.rs
+  - services/email/src/handlers/genie_routes.rs
+  - services/email/src/audit/genie_events.rs
+  - services/email/tests/genie_prefix_match_test.rs
+  - services/email/tests/genie_action_proposed_test.rs
+  - services/email/tests/genie_no_auto_execute_test.rs
+  - services/email/tests/genie_action_kind_enum_cardinality_test.rs
+  - services/email/tests/genie_context_loading_test.rs
+  - services/email/tests/genie_audit_emission_test.rs
 
-  modified_files:
-    - services/email/src/inbound_processor.rs
+modified_files:
+  - services/email/src/inbound_processor.rs
 
-  allowed_tools:
-    - file_read: services/{email,portal,crm}/**
-    - file_write: services/email/{src,tests,migrations}/**
-    - bash: cd services/email && cargo test genie
+allowed_tools:
+  - file_read: services/{email,portal,crm}/**
+  - file_write: services/email/{src,tests,migrations}/**
+  - bash: cd services/email && cargo test genie
 
-  disallowed_tools:
-    - auto-execute action without user approval (per DEC-1593)
-    - bypass tool gating from TASK-MCP-006
+disallowed_tools:
+  - auto-execute action without user approval (per DEC-1593)
+  - bypass tool gating from TASK-MCP-006
 
 effort_hours: 8
 subtasks:

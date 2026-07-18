@@ -43,33 +43,32 @@ source_decisions:
   - DEC-729 2026-05-16 — Rotation-time check returns 422 with explicit error_code so UI can prompt "this password appeared in breaches — choose another"
   - DEC-730 2026-05-16 — Network timeout 2000ms; one retry on connect-fail (not on 4xx/5xx); after retry treat as unreachable
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/auth/
-  new_files:
-    - services/auth/src/hibp/mod.rs
-    - services/auth/src/hibp/client.rs
-    - services/auth/src/hibp/cache.rs
-    - services/auth/src/hibp/local_dump.rs
-    - services/auth/src/hibp/policy.rs
-    - services/auth/migrations/0015_hibp_audit.sql
-    - services/auth/tests/geoip_test.rs
-    - services/auth/tests/rls_isolation_test.rs
-    - services/auth/tests/rbac_catalogue_test.rs
-    - services/auth/tests/rbac_catalogue_test.rs
-  modified_files:
-    - services/auth/src/handlers/signup.rs (call hibp::check before Argon2)
-    - services/auth/src/handlers/password_rotate.rs (call hibp::check before Argon2)
-    - services/auth/src/handlers/admin_set_password.rs (call hibp::check before Argon2)
-  allowed_tools:
-    - file_read: services/auth/**
-    - file_write: services/auth/{src,tests,migrations}/**
-    - bash: cargo test -p cyberos-auth
-    - net: GET https://api.pwnedpasswords.com/range/{prefix} (only this endpoint)
-  disallowed_tools:
-    - send full SHA-1 or plaintext password to any network endpoint
-    - log password plaintext or full hash at any level
-    - bypass hibp::check for any new password-setting code path
+language: rust 1.81
+service: cyberos/services/auth/
+new_files:
+  - services/auth/src/hibp/mod.rs
+  - services/auth/src/hibp/client.rs
+  - services/auth/src/hibp/cache.rs
+  - services/auth/src/hibp/local_dump.rs
+  - services/auth/src/hibp/policy.rs
+  - services/auth/migrations/0015_hibp_audit.sql
+  - services/auth/tests/geoip_test.rs
+  - services/auth/tests/rls_isolation_test.rs
+  - services/auth/tests/rbac_catalogue_test.rs
+  - services/auth/tests/rbac_catalogue_test.rs
+modified_files:
+  - services/auth/src/handlers/signup.rs (call hibp::check before Argon2)
+  - services/auth/src/handlers/password_rotate.rs (call hibp::check before Argon2)
+  - services/auth/src/handlers/admin_set_password.rs (call hibp::check before Argon2)
+allowed_tools:
+  - file_read: services/auth/**
+  - file_write: services/auth/{src,tests,migrations}/**
+  - bash: cargo test -p cyberos-auth
+  - net: GET https://api.pwnedpasswords.com/range/{prefix} (only this endpoint)
+disallowed_tools:
+  - send full SHA-1 or plaintext password to any network endpoint
+  - log password plaintext or full hash at any level
+  - bypass hibp::check for any new password-setting code path
 
 effort_hours: 4
 subtasks:

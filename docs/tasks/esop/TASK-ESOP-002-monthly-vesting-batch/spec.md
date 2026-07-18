@@ -36,33 +36,32 @@ source_decisions:
   - DEC-2263 2026-05-17 — Status auto-advance: if vested_shares >= total_shares, mark TASK-ESOP-001 grant.status = fully_vested
   - DEC-2264 2026-05-17 — memory audit kinds: esop.accrual_batch_started, esop.accrual_row_created, esop.accrual_grant_fully_vested, esop.accrual_batch_completed, esop.accrual_batch_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/esop/
-  new_files:
-    - services/esop/migrations/0002_vesting_accruals.sql
-    - services/esop/src/vesting/mod.rs
-    - services/esop/src/vesting/calculator.rs
-    - services/esop/src/vesting/batch_runner.rs
-    - services/esop/src/audit/vesting_events.rs
-    - services/esop/tests/vesting_pre_cliff_zero_test.rs
-    - services/esop/tests/vesting_post_cliff_linear_test.rs
-    - services/esop/tests/accrual_status_enum_cardinality_test.rs
-    - services/esop/tests/vesting_idempotent_test.rs
-    - services/esop/tests/vesting_fully_vested_transition_test.rs
-    - services/esop/tests/vesting_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/esop/
+new_files:
+  - services/esop/migrations/0002_vesting_accruals.sql
+  - services/esop/src/vesting/mod.rs
+  - services/esop/src/vesting/calculator.rs
+  - services/esop/src/vesting/batch_runner.rs
+  - services/esop/src/audit/vesting_events.rs
+  - services/esop/tests/vesting_pre_cliff_zero_test.rs
+  - services/esop/tests/vesting_post_cliff_linear_test.rs
+  - services/esop/tests/accrual_status_enum_cardinality_test.rs
+  - services/esop/tests/vesting_idempotent_test.rs
+  - services/esop/tests/vesting_fully_vested_transition_test.rs
+  - services/esop/tests/vesting_audit_emission_test.rs
 
-  modified_files:
-    - services/esop/src/lib.rs
+modified_files:
+  - services/esop/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/esop/**
-    - file_write: services/esop/{src,tests,migrations}/**
-    - bash: cd services/esop && cargo test vesting
+allowed_tools:
+  - file_read: services/esop/**
+  - file_write: services/esop/{src,tests,migrations}/**
+  - bash: cd services/esop && cargo test vesting
 
-  disallowed_tools:
-    - mutate prior accrual (per DEC-2262)
-    - non-deterministic calc (per DEC-2260)
+disallowed_tools:
+  - mutate prior accrual (per DEC-2262)
+  - non-deterministic calc (per DEC-2260)
 
 effort_hours: 4
 subtasks:

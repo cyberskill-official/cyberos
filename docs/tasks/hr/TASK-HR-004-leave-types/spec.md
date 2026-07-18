@@ -39,34 +39,33 @@ source_decisions:
   - DEC-1834 2026-05-17 — Per-type entitlement: annual=12d/yr (Art. 113), sick=30d/yr SI-funded (Decree 144), maternity=180d (Art. 139), paternity=14d (Art. 139), bereavement=3d (Art. 116), public_holiday=11d/yr (Art. 112), sabbatical+unpaid=on-request
   - DEC-1835 2026-05-17 — memory audit kinds: hr.leave_requested, hr.leave_approved, hr.leave_rejected, hr.leave_taken, hr.leave_cancelled
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/hr/
-  new_files:
-    - services/hr/migrations/0004_leave_requests.sql
-    - services/hr/src/leave/mod.rs
-    - services/hr/src/leave/entitlement_calc.rs
-    - services/hr/src/leave/approval_router.rs
-    - services/hr/src/handlers/leave_routes.rs
-    - services/hr/src/audit/leave_events.rs
-    - services/hr/tests/leave_type_enum_cardinality_test.rs
-    - services/hr/tests/leave_status_enum_cardinality_test.rs
-    - services/hr/tests/leave_entitlement_per_type_test.rs
-    - services/hr/tests/leave_approval_routing_test.rs
-    - services/hr/tests/leave_balance_deduction_test.rs
-    - services/hr/tests/leave_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/hr/
+new_files:
+  - services/hr/migrations/0004_leave_requests.sql
+  - services/hr/src/leave/mod.rs
+  - services/hr/src/leave/entitlement_calc.rs
+  - services/hr/src/leave/approval_router.rs
+  - services/hr/src/handlers/leave_routes.rs
+  - services/hr/src/audit/leave_events.rs
+  - services/hr/tests/leave_type_enum_cardinality_test.rs
+  - services/hr/tests/leave_status_enum_cardinality_test.rs
+  - services/hr/tests/leave_entitlement_per_type_test.rs
+  - services/hr/tests/leave_approval_routing_test.rs
+  - services/hr/tests/leave_balance_deduction_test.rs
+  - services/hr/tests/leave_audit_emission_test.rs
 
-  modified_files:
-    - services/hr/src/members.rs
+modified_files:
+  - services/hr/src/members.rs
 
-  allowed_tools:
-    - file_read: services/hr/**
-    - file_write: services/hr/{src,tests,migrations}/**
-    - bash: cd services/hr && cargo test leave
+allowed_tools:
+  - file_read: services/hr/**
+  - file_write: services/hr/{src,tests,migrations}/**
+  - bash: cd services/hr && cargo test leave
 
-  disallowed_tools:
-    - bypass approval gate (per DEC-1833)
-    - exceed type entitlement (per DEC-1834)
+disallowed_tools:
+  - bypass approval gate (per DEC-1833)
+  - exceed type entitlement (per DEC-1834)
 
 effort_hours: 5
 subtasks:
