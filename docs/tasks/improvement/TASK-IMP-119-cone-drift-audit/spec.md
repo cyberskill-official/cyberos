@@ -4,7 +4,7 @@ title: A declared cone is a promise nothing checks
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_review
+status: ready_to_test
 priority: p1
 author: "@stephencheng"
 department: engineering
