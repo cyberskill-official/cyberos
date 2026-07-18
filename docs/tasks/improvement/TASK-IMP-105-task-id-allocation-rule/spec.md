@@ -4,7 +4,7 @@ title: Task-id allocation rule + next-id helper
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_review
+status: ready_to_test
 priority: p2
 author: "@stephencheng"
 department: engineering
