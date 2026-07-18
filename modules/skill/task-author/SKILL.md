@@ -307,6 +307,14 @@ Pick the next artefact by topological order (`depends_on` resolved → leftmost 
 
 The audit step is OUT of this author skill. The author writes; the audit audits.
 
+### §4.1  Task-id allocation (TASK-IMP-105)
+
+A new task's id is **not** free-chosen and **not** carried over from PLAN time — it is allocated by scanning the module's existing tasks and taking the next free stem. This is a contract, not a convenience:
+
+- **The rule.** The next id for `<module>` is the **highest existing stem in `docs/tasks/<module>/` plus one** — never the lowest free number. Gaps stay gaps: if the module holds `001, 002, 004`, the next id is `005`, not `003`. Reusing a retired id makes two different tasks share a name in the corpus's history, and the id-ascending ordering is load-bearing for the backlog regenerator and for humans reading the backlog.
+- **Executable, not remembered.** The author MUST derive the stem from `backlog-mutate next-id <module>` — `node .cyberos/docs-tools/backlog-mutate.mjs next-id <module>` inside an installed repo, `node tools/install/docs-tools/backlog-mutate.mjs next-id <module>` inside the cyberos repo — rather than eyeballing the directory. It scans the same task-folder corpus the `insert` uniqueness gate reads, so an id it returns cannot be rejected by that gate for non-uniqueness in the same instant. An empty or not-yet-existent module is not an error: it returns that module's first stem (`...-001`).
+- **Re-scan immediately before writing (MUST).** The authoring frontier moves while you work — another batch, or another run against the same module, may land a task after your PLAN. The author **MUST re-run `next-id <module>` immediately before writing the spec folder** and write to *that* stem, never to an id chosen at PLAN time. Two interleaved runs that each fix an id at PLAN time can write two folders and collide; re-scanning at write time closes almost all of that window. The `backlog-mutate insert` uniqueness gate (exit 7) remains the sole authority on admission — this rule prevents the collision, the gate still catches the one it cannot.
+
 ## §5  RESUME phase
 
 When at least one artefact has `status = HITL_PAUSE` AND all of its `blocking_issues[].resolution` are non-null after parsing the human's reply, re-enter:

@@ -40,6 +40,15 @@
 //       auto-detected as the unique section already holding rows with the same
 //       `TASK-<MODULE>-` prefix (zero or many candidates = exit 2, pass --section).
 //       This tool never creates sections; regenerate the backlog for that.
+//   next-id <module>
+//       Print the module's next task stem and exit 0 (TASK-IMP-105). Scans the
+//       TASK-<PREFIX>-<NNN> task FOLDERS in docs/tasks/<module>/ and returns the
+//       HIGHEST plus one — gaps ignored (001,002,004 -> 005), never the lowest free
+//       number. An empty or not-yet-existent module returns its first stem (...-001);
+//       the prefix comes from the existing folders (improvement -> IMP) so no map is
+//       maintained. Reads the same folder corpus the insert gate's uniqueness check
+//       reads, so an id it returns cannot be rejected by that gate for non-uniqueness
+//       (spec §1.3). Strictly read-only: it never writes, moves, or flips anything.
 //
 // Exit codes:
 //   0  ok
@@ -60,7 +69,7 @@ import {
   openSync, fsyncSync, closeSync, readdirSync, statSync,
 } from "node:fs";
 import { randomBytes } from "node:crypto";
-import { join, resolve, dirname, relative } from "node:path";
+import { join, resolve, dirname, relative, isAbsolute } from "node:path";
 
 // STATUS-REFERENCE.md §1 enum; the first ten are regen_backlog()'s STATUS_ORDER —
 // header counts render in this order.
@@ -117,6 +126,16 @@ function findRoot(explicit) {
     d = parent;
   }
 }
+
+// CONFINE (TASK-IMP-105): the same relUnderRoot rule every repo-reading docs-tool carries
+// (task-reconcile, coverage-scope, verify-goals) — a value that resolves to the root itself,
+// escapes it with `..`, or is absolute is refused, never followed out of the corpus. Returns
+// the confined POSIX-relative path, or null when the argument walks out.
+const relUnderRoot = (root, p) => {
+  const abs = isAbsolute(p) ? p : resolve(root, p);
+  const rel = relative(root, abs).split("\\").join("/");
+  return (rel === "" || rel.startsWith("..") || isAbsolute(rel)) ? null : rel;
+};
 
 function readBacklog(root, opts) {
   const path = opts.backlog ? resolve(root, opts.backlog) : join(root, "docs", "tasks", "BACKLOG.md");
@@ -435,6 +454,75 @@ function cmdInsert(root, positionals, opts) {
   };
 }
 
+// ── next-id (TASK-IMP-105): allocate a module's next task stem ────────────────
+// The next id for a module is the HIGHEST existing stem in docs/tasks/<module>/ PLUS ONE
+// (spec §1.2, §1.5). The corpus scanned is the set of TASK-<PREFIX>-<NNN> task FOLDERS on
+// disk, not BACKLOG rows: the folder is the task, the row is only its index, so a half-landed
+// task that has a folder but no row is still counted — skipping it would hand out the colliding
+// id again (spec edge row 1). Every backlog row has a folder but not every folder has a row, so
+// the folder set is a superset of the row set and highest-folder+1 is free in BOTH: an id this
+// returns can never be rejected by the insert uniqueness gate for non-uniqueness in the same
+// instant (spec §1.3). GAPS ARE IGNORED — 001,002,004 -> 005, never the free 003 (§1.5) —
+// because reusing a retired id makes two different tasks share a name in the history.
+//
+// A populated module derives its PREFIX from the folders themselves (docs/tasks/improvement/
+// holds TASK-IMP-*, not TASK-IMPROVEMENT-*), so the live corpus's abbreviated modules
+// (improvement -> IMP, templates -> TPL) resolve with no hand-maintained map. An empty or
+// not-yet-existent module is NOT an error: it returns that module's first stem,
+// TASK-<MODULE-UPPERCASED>-001 (spec §1.4, edge row 4).
+//
+// Read-only and deterministic: reads directory names, prints one stem, writes nothing and
+// flips nothing (node stdlib only). The <module> argument is confined under docs/tasks/ by the
+// shared relUnderRoot rule (spec security-class edge row) so a crafted `../` cannot walk out.
+// A single TASK-prefixed folder that does not parse is skipped with a note on stderr — one bad
+// folder must not stop allocation (spec edge row 2).
+const STEM_RE = /^TASK-([A-Za-z0-9]+)-(\d+)(?:-.*)?$/;
+
+function cmdNextId(root, positionals) {
+  const [module] = positionals;
+  if (!module) throw new UsageError("next-id requires <module>");
+  if (!ID_RE.test(module)) throw new UsageError(`module must match ${ID_RE} (a single docs/tasks/<module> directory name)`);
+  const base = join(root, "docs", "tasks");
+  const rel = relUnderRoot(base, module);
+  if (rel === null || rel.includes("/")) {
+    throw new UsageError(`module '${module}' must be a single directory name directly under docs/tasks/`);
+  }
+  const moduleDir = join(base, module);
+
+  // Scan the module directory. A non-existent (or unreadable) directory is an EMPTY module,
+  // not an error (spec §1.4, edge row 4).
+  let names = [];
+  if (existsSync(moduleDir)) {
+    try { names = readdirSync(moduleDir); } catch { names = []; }
+  }
+
+  let best = null;                          // { prefix, num, width } of the highest parsed stem
+  for (const name of names) {
+    let st; try { st = statSync(join(moduleDir, name)); } catch { continue; }
+    if (!st.isDirectory()) continue;        // a task is a FOLDER; a stray MIGRATION-MAP.md etc. is not one
+    const m = STEM_RE.exec(name);
+    if (!m) {
+      // A folder that LOOKS like a task (TASK-*) but does not parse is malformed: note it and
+      // move on. A folder that is not TASK-* at all is simply not a task and is ignored silently.
+      if (/^TASK-/.test(name)) process.stderr.write(`next-id: skipping malformed task folder '${name}' under docs/tasks/${module}/\n`);
+      continue;
+    }
+    const num = parseInt(m[2], 10);
+    if (best === null || num > best.num) best = { prefix: m[1], num, width: m[2].length };
+  }
+
+  let stem;
+  if (best === null) {
+    // First stem for an empty/absent module. The prefix defaults to the uppercased module name;
+    // the corpus's populated modules never reach this branch, so their abbreviations are moot.
+    stem = `TASK-${module.toUpperCase()}-001`;
+  } else {
+    const next = String(best.num + 1).padStart(Math.max(3, best.width), "0");
+    stem = `TASK-${best.prefix}-${next}`;
+  }
+  return { code: 0, module, stem, message: stem };
+}
+
 // ── CLI shell ────────────────────────────────────────────────────────────────
 const HELP = `backlog-mutate.mjs - byte-discipline executor for backlog-state-update@2 writes (TASK-IMP-085)
 
@@ -455,6 +543,12 @@ commands
       target section's contiguous block; a '- (nothing remaining)' placeholder becomes
       the first row. Uniqueness is enforced across the WHOLE file. This tool never
       creates sections.
+  next-id <module>
+      print the module's next task stem to stdout and exit 0: the HIGHEST existing
+      TASK-<PREFIX>-<NNN> folder in docs/tasks/<module>/ PLUS ONE (gaps ignored -
+      001,002,004 -> 005). An empty or absent module returns its first stem
+      (...-001). Read-only: reads folder names, writes and flips nothing. The insert
+      uniqueness gate (exit 7) stays the authority on admission (TASK-IMP-105).
 
 exit codes
   0  ok
@@ -511,6 +605,7 @@ function main(argv) {
   try {
     if (command === "flip") return emit(cmdFlip(findRoot(opts.root), rest, opts));
     if (command === "insert") return emit(cmdInsert(findRoot(opts.root), rest, opts));
+    if (command === "next-id") return emit(cmdNextId(findRoot(opts.root), rest));
     throw new UsageError(command ? `unknown command '${command}'` : "no command given");
   } catch (e) {
     if (e instanceof Refusal || e instanceof UsageError) {

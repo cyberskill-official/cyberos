@@ -830,6 +830,72 @@ t19_replays_the_116_divergence() { # spec AC6 — the incident that motivated th
   ok t19_replays_the_116_divergence
 }
 
+# ── TASK-IMP-105: task-id allocation rule + `next-id <module>` ─────────────────
+# `next-id` scans the TASK-<PREFIX>-<NNN> task FOLDERS in docs/tasks/<module>/ and prints the
+# highest plus one. These scratch modules carry only empty task folders (no spec.md, no BACKLOG
+# row) on purpose: the folder IS the task for allocation (spec edge row 1), so a half-landed
+# folder must still be counted. t07_insert_uniqueness_refusal is AC4's named guardrail — the
+# exit-7 gate this task must NOT weaken; it coexists with t07_json_and_determinism under the t07
+# token, the same way IMP-120's spec-named tests coexist with the earlier same-numbered ones.
+t07_insert_uniqueness_refusal() { # spec §1.6 / AC4 — the exit-7 gate stays the authority, unchanged
+  local f="$TMP/t07u/BACKLOG.md"; emit_backlog "$f"
+  emit_backlog "$TMP/t07u/pre.md"
+  # a duplicate id anywhere in the file -> exit 7 (even in another section, another slug)
+  bm insert TASK-ALPHA-001 TASK-ALPHA-001-again "Duplicate id" draft --backlog "$f" --section gamma; local rc=$?
+  { [ "$rc" -eq 7 ] && grep -q "uniqueness" "$TMP/err"; } \
+    || { fail t07_insert_uniqueness_refusal "exit-7 uniqueness gate rc=$rc: $(cat "$TMP/err")"; return; }
+  # a refused insert writes NOTHING: the backlog is byte-identical to the fixture
+  cmp -s "$f" "$TMP/t07u/pre.md" || { fail t07_insert_uniqueness_refusal "refused insert still mutated the file"; return; }
+  ok t07_insert_uniqueness_refusal
+}
+
+t15_next_id_populated() { # spec §1.2/§1.3 / AC1 — highest existing stem + 1
+  local R="$TMP/t15n"
+  mkdir -p "$R/docs/tasks/widget/TASK-WIDGET-001-alpha" \
+           "$R/docs/tasks/widget/TASK-WIDGET-002-beta" \
+           "$R/docs/tasks/widget/TASK-WIDGET-003-gamma"
+  bm next-id widget --root "$R" || { fail t15_next_id_populated "next-id refused: $(cat "$TMP/err")"; return; }
+  [ "$(cat "$TMP/out")" = "TASK-WIDGET-004" ] \
+    || { fail t15_next_id_populated "want TASK-WIDGET-004, got '$(cat "$TMP/out")'"; return; }
+  # the same live corpus the insert gate reads: TASK-IMP-<highest>+1 on the real repo (AC1)
+  bm next-id improvement --root "$repo" || { fail t15_next_id_populated "live next-id refused: $(cat "$TMP/err")"; return; }
+  local live; live="$(cat "$TMP/out")"
+  local want; want="TASK-IMP-$(printf '%03d' "$(( $(ls "$repo/docs/tasks/improvement" | grep -oE 'TASK-IMP-[0-9]+' | sed 's/.*-//' | sort -n | tail -1) + 1 ))")"
+  [ "$live" = "$want" ] || { fail t15_next_id_populated "live improvement: want $want, got '$live'"; return; }
+  ok t15_next_id_populated
+}
+
+t16_next_id_empty_module() { # spec §1.4 / AC2 — an empty (or absent) module returns its first stem, exit 0
+  local R="$TMP/t16n"
+  mkdir -p "$R/docs/tasks/widget"          # the module directory exists but holds no task folders
+  bm next-id widget --root "$R" || { fail t16_next_id_empty_module "empty module treated as an error: $(cat "$TMP/err")"; return; }
+  [ "$(cat "$TMP/out")" = "TASK-WIDGET-001" ] \
+    || { fail t16_next_id_empty_module "empty module: want TASK-WIDGET-001, got '$(cat "$TMP/out")'"; return; }
+  # a module whose directory does not exist AT ALL is also empty, not an error (spec edge row 4)
+  bm next-id gadget --root "$R" || { fail t16_next_id_empty_module "absent module treated as an error: $(cat "$TMP/err")"; return; }
+  [ "$(cat "$TMP/out")" = "TASK-GADGET-001" ] \
+    || { fail t16_next_id_empty_module "absent module: want TASK-GADGET-001, got '$(cat "$TMP/out")'"; return; }
+  ok t16_next_id_empty_module
+}
+
+t17_next_id_ignores_gaps() { # spec §1.5 / AC3 — 001,002,004 -> 005 (highest+1), never the gap 003
+  local R="$TMP/t17n"
+  mkdir -p "$R/docs/tasks/widget/TASK-WIDGET-001-a" \
+           "$R/docs/tasks/widget/TASK-WIDGET-002-b" \
+           "$R/docs/tasks/widget/TASK-WIDGET-004-d"
+  bm next-id widget --root "$R" || { fail t17_next_id_ignores_gaps "next-id refused: $(cat "$TMP/err")"; return; }
+  [ "$(cat "$TMP/out")" = "TASK-WIDGET-005" ] \
+    || { fail t17_next_id_ignores_gaps "gap not ignored: want TASK-WIDGET-005, got '$(cat "$TMP/out")'"; return; }
+  # a malformed TASK- folder is skipped with a note on stderr — one bad folder must not stop
+  # allocation, nor change the result (spec edge row 2)
+  mkdir -p "$R/docs/tasks/widget/TASK-WIDGET-notanumber"
+  bm next-id widget --root "$R" || { fail t17_next_id_ignores_gaps "malformed folder stopped allocation: $(cat "$TMP/err")"; return; }
+  [ "$(cat "$TMP/out")" = "TASK-WIDGET-005" ] \
+    || { fail t17_next_id_ignores_gaps "malformed folder changed the result: got '$(cat "$TMP/out")'"; return; }
+  grep -qi "malformed" "$TMP/err" || { fail t17_next_id_ignores_gaps "malformed folder not noted on stderr: $(cat "$TMP/err")"; return; }
+  ok t17_next_id_ignores_gaps
+}
+
 want t01 && t01_manifest_lifecycle
 want t02 && t02_two_phase_atomic
 want t03 && t03_verify_staleness_exits
@@ -853,6 +919,11 @@ want t16 && t16_unreadable_spec_refuses
 want t17 && t17_insert_unchanged
 want t18 && t18_skill_states_the_order
 want t19 && t19_replays_the_116_divergence
+# TASK-IMP-105 (next-id allocation; full names coexist with the same-numbered tests above)
+want t07 && t07_insert_uniqueness_refusal
+want t15 && t15_next_id_populated
+want t16 && t16_next_id_empty_module
+want t17 && t17_next_id_ignores_gaps
 
 echo "test_workflow_helpers: pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]
