@@ -632,12 +632,16 @@ t_no_dangling_skill_links() {
       || { fail t_no_dangling_skill_links "managed skill entry survived uninstall: $p"; all=0; }
   done
   # ...and list-independent: NO symlink anywhere in the tree still resolves into .cyberos/plugin/skills.
-  local dangling
-  dangling="$(find "$d" -path "$d/.git" -prune -o -type l -print 2>/dev/null | while IFS= read -r l; do
-    case "$(readlink "$l" 2>/dev/null)" in *".cyberos/plugin/skills/"*) printf '%s\n' "$l";; esac
-  done)"
+  # bash 3.2 (macOS /bin/bash, the real install target) cannot parse a `case "$(...)"` nested inside a
+  # `$( ... | while ... )` command substitution, so build the list with a plain while over process
+  # substitution and resolve each link into a scalar first - portable to 3.2 and bash 5 alike.
+  local dangling="" _l _tgt
+  while IFS= read -r _l; do
+    _tgt="$(readlink "$_l" 2>/dev/null)"
+    case "$_tgt" in *".cyberos/plugin/skills/"*) dangling="$dangling $_l" ;; esac
+  done < <(find "$d" -path "$d/.git" -prune -o -type l -print 2>/dev/null)
   [ -z "$dangling" ] \
-    || { fail t_no_dangling_skill_links "links still resolve into removed machine: $(printf '%s' "$dangling" | tr '\n' ' ')"; all=0; }
+    || { fail t_no_dangling_skill_links "links still resolve into removed machine:$dangling"; all=0; }
   [ "$all" -eq 1 ] && ok t_no_dangling_skill_links
 }
 
