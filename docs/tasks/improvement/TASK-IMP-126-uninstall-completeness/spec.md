@@ -4,7 +4,7 @@ title: Uninstall completeness - MCP, dangling skill links, hook newline
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_review
+status: done
 priority: p2
 author: "@stephencheng"
 department: engineering
