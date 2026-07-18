@@ -180,6 +180,10 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   # batch-select: the maximal cone-independent batch, computed (v2.8.0). ship-tasks §11a runs it
   # before step 1, so a payload without it cannot obey the batch rule.
   [ -f "$here/docs-tools/batch-select.mjs" ] && cp "$here/docs-tools/batch-select.mjs" "$out/docs-tools/"
+  # cone-audit: reports a task's writes that escape its DECLARED cone (TASK-IMP-119), run at the
+  # implementing -> ready_to_review flip. It mirrors batch-select's containment + (none) filter
+  # verbatim; a payload without it ships batch-select's promise with nothing checking it.
+  [ -f "$here/docs-tools/cone-audit.mjs" ] && cp "$here/docs-tools/cone-audit.mjs" "$out/docs-tools/"
   # verify-goals: re-verifies what done claimed (TASK-IMP-109). ship-tasks §11c names the
   # vendored path, so a payload without it cannot obey the rule.
   [ -f "$here/docs-tools/verify-goals.mjs" ] && cp "$here/docs-tools/verify-goals.mjs" "$out/docs-tools/"
