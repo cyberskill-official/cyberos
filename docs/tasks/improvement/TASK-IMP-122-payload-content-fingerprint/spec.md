@@ -4,7 +4,7 @@ title: rules_sha must be recomputed, not recalled
 template: task@1
 type: improvement
 module: improvement
-status: draft
+status: on_hold
 priority: p1
 author: "@stephencheng"
 department: engineering
