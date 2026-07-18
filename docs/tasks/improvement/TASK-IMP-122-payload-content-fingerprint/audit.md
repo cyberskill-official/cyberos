@@ -9,7 +9,7 @@ issues_open: "NEW5-001, NEW5-002, NEW5-003, NEW5-004, NEW5-006 (four clause edit
 weak_acs: "0/15 at rewrite 5 (was 3/15 at rewrite 4, 4/12 at rewrite 3)"
 template: task@1
 audit_rubric_version: audit_rubric@2.0
-machine_floor: task-lint clean at every round measured. At rewrite 5: 15 clauses / 15 ACs / 20h.
+machine_floor: "task-lint clean at every round measured. At rewrite 5: 15 clauses / 15 ACs / 20h."
 auditor: "round 6: independent subagent; re-derived every originated number and found ZERO false - the first such round in six."
 reconstruction_notice: >
   Rounds 4, 5 and 6 were RECONSTRUCTED on 2026-07-18 from commit messages (7309cd80, 15894b1e,
