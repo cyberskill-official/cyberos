@@ -4,7 +4,7 @@ title: End-to-end mechanical smoke test
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_test
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
