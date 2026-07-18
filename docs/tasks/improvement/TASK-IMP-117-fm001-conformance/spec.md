@@ -45,7 +45,11 @@ corpus has the same disease. A migrator that lives only in this repo fixes one o
 ## Summary
 
 Fix `TASK-TEMPLATE.md` so specs are born FM-001 clean, ship a migrator in the payload so any
-installed repo can clean its own corpus, and migrate this repo's 501 non-conformant specs.
+installed repo can clean its own corpus, and migrate this repo's non-conformant specs. FM-001 has
+TWO structural classes: TRAILING COMMENTS (the template defect above) and NESTED MAPS (a top-level
+key whose value is an indented child map). The trailing-comment class was migrated corpus-wide at
+commit 4c02b556; this task's migrator carries a SECOND capability that clears the nested-map
+residual (4004 findings across 140 specs) plus one apostrophe edge, so FM-001 reaches 0 for real.
 
 ## Problem
 
@@ -54,12 +58,27 @@ two human gates while violating a machine-floor rule. The cause is line 2 of the
 Every spec inherits the violation by construction, and because the lint was never run corpus-wide,
 nobody found out. The template is vendored, so every consumer repo has the same disease.
 
+That framing is only the FIRST of FM-001's two structural classes. After the trailing-comment class
+was migrated corpus-wide (commit 4c02b556), a re-lint showed the count did NOT reach 0: a residual
+of 4004 findings across 140 specs remained, plus 1 residual trailing-comment. The 4004 are a SECOND
+class - nested-map frontmatter under a single top-level key, `build_envelope:`, whose indented
+children the strict task@1 reader flags one line at a time as "indented line outside a block list".
+No tool reads `build_envelope` (it is inert data), task-lint rejects nested maps by design, and a
+`done` sibling (`TASK-SKILL-104`) already carries the same envelope data FLAT at top level - the
+shape `batch-select` reads. The 1 residual is a defect in the migrator's own quote detector (a
+mid-value apostrophe in `broker's` read as an opening quote), not in the lint. The full evidence,
+with a command behind every number, is `docs/tasks/_audits/2026-07-18-fm001-nested-map-fork.md`.
+
 ## Proposed Solution
 
 Move every trailing frontmatter comment in the template to its own line above its field, keeping
 all guidance text. Ship `docs-tools/fm001-migrate.mjs` (stdlib, guarded, idempotent, `--check`) in
-the payload so consumers can run it themselves. Migrate this corpus. The body is never touched, so
-the 40 audit bindings survive.
+the payload so consumers can run it themselves. The migrator carries TWO capabilities: it moves
+trailing comments own-line (class 1), and it FLATTENS a nested-map key by hoisting its children to
+top-level keys (class 2), reconciling any collision by order-preserving union and halting on a
+genuine scalar conflict. Migrate this corpus with both. The body is never touched, so the audit
+bindings survive - and the bound specs carry neither class, so the migrator is a no-op on every one
+of them.
 
 ## Alternatives Considered
 
@@ -75,9 +94,14 @@ the 40 audit bindings survive.
 
 ## Success Metrics
 
-- FM-001 count across `docs/tasks/*/*/spec.md` goes 501 -> 0.
+- FM-001 count across `docs/tasks/*/*/spec.md` reaches 0 corpus-wide, across BOTH structural classes
+  (trailing comments AND nested maps). The trailing-comment class went first (commit 4c02b556); this
+  task's second capability clears the nested-map residual of 4004 findings across 140 specs plus the
+  one apostrophe edge.
 - A spec authored fresh from the template lints clean with no hand-editing.
-- All 40 `audited_body_sha256_prefix` values are unchanged after the migration.
+- All 40 `audited_body_sha256_prefix` values are unchanged after the migration. The mechanism is
+  §1.4 (body untouched) reinforced by disjointness: every audit-bound spec carries NEITHER class, so
+  the migrator is a byte-for-byte no-op on it.
 - `dist/cyberos/docs-tools/fm001-migrate.mjs` is present, so a consumer repo can do the same.
 
 ## AI Authorship Disclosure
@@ -131,11 +155,41 @@ guard as task-reconcile / coverage-scope / verify-goals: confine, exist, `git ls
 An untracked path is REFUSED, not migrated.
 Test: `t07_guard_refuses_untracked_and_escaping_paths`
 
+1.8 The migrator ALSO flattens a nested-map frontmatter key - a top-level key whose value is an
+indented child block (e.g. `build_envelope:` followed by `  language: rust 1.81`), which the strict
+task@1 reader rejects one line at a time as "indented line outside a block list". It hoists the
+children to top-level keys: the child block is dedented by its own base indent and the parent line
+dropped, so `  new_files:` / `    - x` become top-level `new_files:` / `  - x`. This is GENERAL to
+any nested-map key per FM-001's definition, not hard-coded to `build_envelope`. Each child value and
+its order are preserved byte-for-byte (only leading indentation changes); a child that is itself a
+block list (`new_files:` / `modified_files:` with `- item` lines) becomes a top-level block list. A
+child block that is ALREADY a plain block list (all `- item`, e.g. `source_pages:`) is not a nested
+map and is left untouched. When a hoisted key already exists at top level the migrator RECONCILES by
+order-preserving union - two block lists merge, exact-duplicate item values deduped, nothing unique
+dropped; two scalars of equal value dedupe to one - and NEVER silently drops or overwrites. A
+genuine scalar conflict, or a list/scalar kind mismatch, HALTS that file: it is named, and nothing
+in it is migrated.
+Test: `t09_flattens_nested_map`
+
+1.9 A quote is a string delimiter ONLY when it BEGINS the scalar value. In a PLAIN (unquoted) scalar
+a mid-token apostrophe is a literal character, so a block item such as `- allow ... broker's ... (per
+§1 #4 - seal stdin/stdout/stderr only)` correctly detects the ` #4` as a trailing comment and moves
+it own-line - matching task-lint, which reads `broker's` as a literal apostrophe and ` #` as a
+plain-scalar comment. A `#` inside a value that BEGINS with a quote (`label: 'issue # 42 stays'`,
+`title: "Fix the # bug"`) stays data. This corrects a defect in the 1.3 detector, which entered
+single-quote state on the mid-value apostrophe and so missed the comment
+(`docs/tasks/_audits/2026-07-18-fm001-nested-map-fork.md` §5: task-lint's quote model is right, the
+migrator's was wrong). No existing clause is weakened: 1.3's quoted-value protection (edges #5/#6) is
+preserved exactly - a value that BEGINS with a quote is still honoured.
+Test: `t10_apostrophe_then_hash_is_a_comment`
+
 ## Scope
 
-In scope: `TASK-TEMPLATE.md`, the new `docs-tools/fm001-migrate.mjs` + its suite, the build.sh
-vendor list, this repo's 544-spec corpus, and a note in the install summary telling a consumer repo
-the migrator exists.
+In scope: `TASK-TEMPLATE.md`, the new `docs-tools/fm001-migrate.mjs` (BOTH capabilities - the
+trailing-comment move and the nested-map flatten, plus the §1.9 quote fix) + its suite, the build.sh
+vendor list, this repo's corpus (trailing-comment class already migrated at 4c02b556; this task
+clears the nested-map residual across 140 specs and the one apostrophe edge), and a note in the
+install summary telling a consumer repo the migrator exists.
 
 ### Out of scope / Non-Goals
 
@@ -146,7 +200,12 @@ the migrator exists.
   human still has not confirmed `ai_authorship`. Clearing FM-112 is a human attestation and this
   task does not forge it.
 - The other 2 rules TASK-EVAL-001 trips (FM-004, FM-112). Out of cone.
-- Any change to FM-001 itself. The rule is right; the template was wrong.
+- Any change to FM-001 itself. The rule is right for BOTH classes; only the template (class 1) and
+  the specs (class 2) were wrong. Specifically, RELAXING FM-001 to accept nested maps (the
+  investigation's route b) is REJECTED: nested maps are outside the documented task@1 subset, no tool
+  reads `build_envelope`, and task-lint rejects them by design - accepting them would be a `task@2`
+  schema bump, not a lint fix. This task takes route (a): migrate the nested maps to the flat shape a
+  `done` sibling already uses. The lint is unchanged.
 
 ## 3. Edge case matrix
 
@@ -167,6 +226,12 @@ the migrator exists.
 | 13 | SECURITY | path exists but is untracked at HEAD | REFUSED - an untracked spec is not corpus | t07 |
 | 14 | DEGRADATION | git absent / not a repo | refuse and say so; never migrate unguarded | t07 |
 | 15 | DEGRADATION | file unreadable mid-run | report the file, exit non-zero, migrate nothing | t07 |
+| 16 | NESTED MAP | `build_envelope:` with 6 map children | 6 top-level keys; values + order preserved; FM-001 cleared | t09 |
+| 17 | NESTED MAP | top-level `new_files` + `build_envelope.new_files`, one item shared | order-preserving union; exact dup deduped; nothing dropped; no FM-003 | t09 |
+| 18 | NESTED MAP | a `done` spec carrying `build_envelope` | flattened; body untouched, so `audited_body_sha256_prefix` holds | t04, t09 |
+| 19 | MALFORMED | hoisted key collides as a scalar with a different value | HALT; name the file; migrate nothing in it | t09 |
+| 20 | MALFORMED | plain scalar `broker's ... #4` (apostrophe then ` #`) | ` #4` detected as a comment and moved own-line | t03, t10 |
+| 21 | NESTED MAP | flatten output re-run through the migrator | byte-identical no-op (idempotent across both passes) | t05, t09 |
 
 ## 4. Out of scope / non-goals
 
@@ -183,3 +248,10 @@ See "## Scope -> ### Out of scope / Non-Goals" above - this section is the engin
   migration. Cited: `t04_body_is_untouched_and_body_hash_holds`.
 - AC6: `dist/cyberos/docs-tools/fm001-migrate.mjs` exists and matches source. Cited:
   `t08_payload_carries_it`.
+- AC7: The 140 nested-map (`build_envelope`) specs are flattened - their children hoisted to
+  top-level keys, values and order preserved, collisions unioned - and the corpus FM-001 count is 0
+  INCLUDING them. Cited: `t09_flattens_nested_map` (capability, scratch corpus) plus a real-corpus
+  check: `node tools/install/docs-tools/task-lint.mjs --json docs/tasks`, parsing the JSON array and
+  filtering `rule_id === "FM-001"`, reports length 0 (before: 4005 = 4004 nested-map + 1 apostrophe).
+  AC4's "FM-001 = 0 corpus-wide" is now genuinely reachable because this second capability clears the
+  class AC1-AC6's trailing-comment migrator never modelled.
