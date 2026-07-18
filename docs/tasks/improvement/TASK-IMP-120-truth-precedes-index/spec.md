@@ -4,7 +4,7 @@ title: The index moves without the truth, in both directions
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_test
+status: testing
 priority: p1
 author: "@stephencheng"
 department: engineering
