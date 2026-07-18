@@ -18,6 +18,10 @@
 #        removed the MACHINE (default keeps the BRAIN) — otherwise "survives" is vacuous.
 #   t04_scratch_isolation                 (AC4, traces §1.1) a full mutating mini-spine in a
 #        scratch leaves the WORKING repo's tracked docs/tasks content byte-identical.
+#   t05_index_first_flip_refuses          (TASK-IMP-120 clause 1.6 / AC7 — this suite's cone) an
+#        index-first flip (the truth still lagging) REFUSES with exit 6 and does NOT move the row;
+#        the same flip proceeds once the truth is written first. Positively verifies the
+#        truth-precedes-index contract the spine's own flips (t01/t04) now depend on.
 #   (AC5 §1.6: run_all.sh discovers this file via its tools/install/tests/test_*.sh glob.)
 #
 # WHY BUILD A FRESH PAYLOAD (not dist/cyberos/install.sh). dist/ is gitignored
@@ -27,13 +31,16 @@
 # memory — not the install scripts). Building from source into $TMP is what the sibling suite
 # test_install_hygiene.sh does, tests CURRENT source every run, and never touches dist/.
 #
-# THE FLIP IS TWO WRITES (the crux). `backlog-mutate flip` rewrites ONLY the BACKLOG.md row —
-# it never touches the spec.md frontmatter status cell (index-only; verified inline below by
-# asserting the frontmatter still reads the OLD status immediately after the index flip). A
-# real lifecycle transition is TWO writes: the index (backlog-mutate) AND the truth
-# (frontmatter). Driving only one desyncs them (the TASK-IMP-120 class), and a faithful
-# reconcile/lint reads the truth. So this suite drives BOTH halves per flip and asserts they
-# agree at `done`; that is also what lets t01/t02's reconcile read the status the test intends.
+# THE FLIP IS TWO WRITES, TRUTH FIRST (the crux). `backlog-mutate flip` rewrites ONLY the
+# BACKLOG.md row — it never touches the spec.md frontmatter status cell (index-only; the truth is
+# the separate write, and having flip write the spec was explicitly rejected — see the
+# backlog-state-update-author SKILL and TASK-IMP-120's Alternatives). A real lifecycle transition
+# is TWO writes: the truth (frontmatter) AND the index (backlog-mutate). Since TASK-IMP-120 the
+# ORDER is enforced — flip reads the spec frontmatter FIRST and REFUSES (exit 6) unless it ALREADY
+# carries <to>: the index may only catch up to a truth that already moved, never lead it. So this
+# suite writes the truth FIRST (write_spec) then flips the index, per status, and asserts the two
+# AGREE after each flip and at `done`; t05 proves the forbidden order (index first, truth lagging)
+# refuses. Driving the truth first is also what lets t01/t02's reconcile read the status intended.
 #
 # SEAM DISCIPLINE. If a helper legitimately changes output shape, or STATUS-REFERENCE §1.1 grows
 # a lifecycle status, this suite WILL fail — deliberately (spec §3). The fix is to update the
@@ -164,15 +171,19 @@ t01_spine_green() {
   [ "$(row_status "$d/docs/tasks/BACKLOG.md")" = draft ] || { fail t01_spine_green "row not present at draft after insert"; all=0; }
 
   # §1.2 step 5 — a flip through EVERY lifecycle status (STATUS-REFERENCE §1.1), driving BOTH
-  # halves: the index via backlog-mutate flip, the truth via write_spec.
+  # halves in the order TASK-IMP-120 enforces: the truth (frontmatter, via write_spec) FIRST, THEN
+  # the index (backlog-mutate flip). The flip now SUCCEEDS precisely because the truth already
+  # carries <next> — the index catches up to a truth that already moved. (Index-first is the
+  # forbidden order the guard refuses; t05 proves that refusal directly.)
   local prev=draft next
   for next in $LIFECYCLE; do
+    write_spec "$spec" "$next"   # truth-half FIRST — the frontmatter now carries <next>
     node "$d/.cyberos/docs-tools/backlog-mutate.mjs" --root "$d" flip "$ID" "$prev" "$next" >/dev/null 2>&1 \
-      || { fail t01_spine_green "flip $prev -> $next exited nonzero"; all=0; break; }
-    # the crux, proven inline: flip is index-only — the frontmatter truth still reads $prev.
-    [ "$(spec_status "$spec")" = "$prev" ] \
-      || { fail t01_spine_green "flip $prev->$next also mutated the frontmatter (expected index-only)"; all=0; }
-    write_spec "$spec" "$next"   # drive the truth-half (the second write a real flip performs)
+      || { fail t01_spine_green "flip $prev -> $next exited nonzero (truth-first; the guard should permit it)"; all=0; break; }
+    # the crux, proven inline: after a truth-first flip the index has CAUGHT UP to the truth —
+    # both halves read <next> (flip moved the row; write_spec set the frontmatter; they agree).
+    { [ "$(row_status "$d/docs/tasks/BACKLOG.md")" = "$next" ] && [ "$(spec_status "$spec")" = "$next" ]; } \
+      || { fail t01_spine_green "flip $prev->$next left index/truth disagreeing (row=$(row_status "$d/docs/tasks/BACKLOG.md") truth=$(spec_status "$spec"))"; all=0; }
     prev="$next"
   done
   # both halves agree at the terminal status
@@ -303,8 +314,8 @@ t04_scratch_isolation() {
   local TD="$d/docs/tasks/smoke/$STEM"; mkdir -p "$TD"; write_spec "$TD/spec.md" draft
   seed_backlog "$d/docs/tasks/BACKLOG.md"
   node "$d/.cyberos/docs-tools/backlog-mutate.mjs" --root "$d" insert "$ID" "$STEM" "e2e mechanical smoke fixture" draft --section Smoke >/dev/null 2>&1
+  write_spec "$TD/spec.md" implementing   # truth FIRST (TASK-IMP-120): an index-first flip would refuse
   node "$d/.cyberos/docs-tools/backlog-mutate.mjs" --root "$d" flip "$ID" draft implementing >/dev/null 2>&1
-  write_spec "$TD/spec.md" implementing
   git -C "$d" add -A >/dev/null 2>&1; git -C "$d" commit -q --no-verify -m base >/dev/null 2>&1
   node "$d/.cyberos/docs-tools/task-reconcile.mjs" "$ID" --repo "$d" --json >/dev/null 2>&1
   bash "$d/.cyberos/uninstall.sh" "$d" >/dev/null 2>&1
@@ -317,10 +328,52 @@ t04_scratch_isolation() {
   [ "$all" -eq 1 ] && ok t04_scratch_isolation
 }
 
+# ── TASK-IMP-120 guard (this suite's cone, clause 1.6 / AC7): an index-first flip REFUSES ───────
+# The seam's flip is index-only — it never writes the spec frontmatter (that stays the truth-half;
+# having flip write the spec was explicitly rejected). Since TASK-IMP-120 the flip ALSO refuses to
+# move the index unless the frontmatter ALREADY carries <to>: the index may only catch up to the
+# truth, never lead it. This verifies that contract POSITIVELY — an index-first flip (truth still
+# lagging) exits 6, names the contract, and leaves the row unmoved; the SAME flip then proceeds once
+# the truth is written first. t01/t04 drive their flips truth-first (so they merely rely on the
+# guard's permit path); this test is where the suite asserts the guard actually BITES the forbidden
+# order — the exact index-first, truth-lagging shape TASK-IMP-120 exists to forbid.
+t05_index_first_flip_refuses() {
+  local all=1 d="$TMP/guard"; mkrepo "$d"
+  install_into "$d" || { fail t05_index_first_flip_refuses "install exited nonzero"; return; }
+  local TD="$d/docs/tasks/smoke/$STEM"; mkdir -p "$TD"; local spec="$TD/spec.md" bl="$d/docs/tasks/BACKLOG.md"
+  write_spec "$spec" draft                        # the truth sits at draft
+  seed_backlog "$bl"
+  node "$d/.cyberos/docs-tools/backlog-mutate.mjs" --root "$d" insert "$ID" "$STEM" "e2e mechanical smoke fixture" draft --section Smoke >/dev/null 2>&1 \
+    || { fail t05_index_first_flip_refuses "backlog insert exited nonzero"; return; }
+  [ "$(row_status "$bl")" = draft ] || { fail t05_index_first_flip_refuses "row not at draft after insert"; return; }
+
+  # INDEX-FIRST — the forbidden order: leave the truth at draft and try to move the index to
+  # ready_to_implement. The guard MUST refuse (exit 6), name the contract, and NOT move the row.
+  local out rc
+  out="$(node "$d/.cyberos/docs-tools/backlog-mutate.mjs" --root "$d" flip "$ID" draft ready_to_implement 2>&1)"; rc=$?
+  [ "$rc" -eq 6 ] \
+    || { fail t05_index_first_flip_refuses "index-first flip exit was $rc, expected 6 (truth-precedes-index refusal)"; all=0; }
+  grep -qE 'truth precedes index|TASK-IMP-120' <<<"$out" \
+    || { fail t05_index_first_flip_refuses "refusal did not name the truth-precedes-index contract: $(echo "$out" | head -1)"; all=0; }
+  [ "$(row_status "$bl")" = draft ] \
+    || { fail t05_index_first_flip_refuses "refused flip still moved the index row (now $(row_status "$bl"), expected draft)"; all=0; }
+
+  # TRUTH-FIRST — the sanctioned order: write the truth to ready_to_implement, THEN the same flip
+  # SUCCEEDS and the index catches up. Proves the refusal above was the guard, not a broken flip.
+  write_spec "$spec" ready_to_implement
+  node "$d/.cyberos/docs-tools/backlog-mutate.mjs" --root "$d" flip "$ID" draft ready_to_implement >/dev/null 2>&1 \
+    || { fail t05_index_first_flip_refuses "truth-first flip refused despite the truth agreeing"; all=0; }
+  [ "$(row_status "$bl")" = ready_to_implement ] \
+    || { fail t05_index_first_flip_refuses "truth-first flip did not move the index (now $(row_status "$bl"))"; all=0; }
+
+  [ "$all" -eq 1 ] && ok t05_index_first_flip_refuses
+}
+
 t01_spine_green
 t02_reconcile_recommendation_asserted
 t03_corpus_survives_uninstall
 t04_scratch_isolation
+t05_index_first_flip_refuses
 
 echo "e2e-skeleton: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
