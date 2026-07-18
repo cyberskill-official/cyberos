@@ -355,7 +355,7 @@ Totals: 339 draft, 6 ready_to_implement, 12 implementing, 192 done, 1 on_hold, 1
 - [done] TASK-IMP-109-standing-goals-done-reverification - Standing goals - re-verify done, forever
 - [done] TASK-IMP-110-outer-loop-skill-curation - Outer loop - propose skill amendments from run evidence
 - [done] TASK-IMP-111-plan-workflow - The plan workflow
-- [ready_to_review] TASK-IMP-112-structured-review-findings - Structured review findings alongside the prose packet
+- [ready_to_test] TASK-IMP-112-structured-review-findings - Structured review findings alongside the prose packet
 - [ready_to_implement] TASK-IMP-113-skill-trust-measurement - Skill trust measurement - pass rates as a report, not a gate
 - [done] TASK-IMP-114-cost-cycle-telemetry - Cost and cycle telemetry - make the loop's economics visible
 - [done] TASK-IMP-115-effort-tiering-advisory - Effort tiering - advisory judgment metadata on skill_chain steps
