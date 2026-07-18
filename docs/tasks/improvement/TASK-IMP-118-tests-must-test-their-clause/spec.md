@@ -4,7 +4,7 @@ title: A test that cites a clause must test that clause
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: ready_to_test
 priority: p1
 author: "@stephencheng"
 department: engineering
