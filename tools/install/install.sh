@@ -43,15 +43,24 @@ echo "cyberos install: target repo = $root (CyberOS $avail_ver)"
 mkdir -p "$CY" "$root/docs/tasks/_audits"
 mkdir -p "$root/docs/tasks/.workflow"
 # .workflow run state stays untracked: ship manifests (TASK-CUO-206) + task-author run
-# manifests (TASK-IMP-090). Fresh seed carries both patterns; an existing seed that
-# predates the manifest pattern gains it exactly once (append-once, idempotent across
-# re-installs; operator lines and everything else in the file are never touched).
+# manifests (TASK-IMP-090) + the skill-trust ledger (TASK-IMP-113, docs/tasks/.workflow/
+# skill-trust.tsv — append-only pass/fail measurement, never a gate). Fresh seed carries all
+# three patterns; an existing seed that predates a pattern gains exactly that one (append-once,
+# idempotent across re-installs; operator lines and everything else in the file are never touched).
 wf_ignore="$root/docs/tasks/.workflow/.gitignore"
 if [ ! -f "$wf_ignore" ]; then
-  printf '%s\n' '*.ship.json' '*.manifest.json' > "$wf_ignore"
-elif ! grep -qxF '*.manifest.json' "$wf_ignore"; then
-  [ -z "$(tail -c 1 "$wf_ignore")" ] || printf '\n' >> "$wf_ignore"   # heal a missing trailing newline so the pattern lands as its own line
-  printf '%s\n' '*.manifest.json' >> "$wf_ignore"
+  printf '%s\n' '*.ship.json' '*.manifest.json' 'skill-trust.tsv' > "$wf_ignore"
+else
+  # Each pattern is append-once and independent: a seed predating any one gains only that one,
+  # in the exact discipline TASK-IMP-090 established (grep -qxF guard + trailing-newline heal).
+  if ! grep -qxF '*.manifest.json' "$wf_ignore"; then
+    [ -z "$(tail -c 1 "$wf_ignore")" ] || printf '\n' >> "$wf_ignore"   # heal a missing trailing newline so the pattern lands as its own line
+    printf '%s\n' '*.manifest.json' >> "$wf_ignore"
+  fi
+  if ! grep -qxF 'skill-trust.tsv' "$wf_ignore"; then
+    [ -z "$(tail -c 1 "$wf_ignore")" ] || printf '\n' >> "$wf_ignore"   # heal a missing trailing newline (TASK-IMP-113 append-once)
+    printf '%s\n' 'skill-trust.tsv' >> "$wf_ignore"
+  fi
 fi
 
 # 0a. downgrade guard (TASK-IMP-104) -----------------------------------------
