@@ -362,7 +362,7 @@ Totals: 339 draft, 11 ready_to_implement, 12 implementing, 187 done, 1 on_hold, 
 - [done] TASK-IMP-116-totals-retally - Every mutation emits the whole file's truth, not just its section's
 - [done] TASK-IMP-117-fm001-conformance - The template teaches the violation it is linted for
 - [done] TASK-IMP-118-tests-must-test-their-clause - A test that cites a clause must test that clause
-- [testing] TASK-IMP-119-cone-drift-audit - A declared cone is a promise nothing checks
+- [done] TASK-IMP-119-cone-drift-audit - A declared cone is a promise nothing checks
 - [ready_to_implement] TASK-IMP-120-truth-precedes-index - The index moves without the truth, in both directions
 - [draft] TASK-IMP-121-uninstall-leaves-repo-as-found - Uninstall must leave the repo as it found it
 - [draft] TASK-IMP-122-payload-content-fingerprint - rules_sha must be recomputed, not recalled
