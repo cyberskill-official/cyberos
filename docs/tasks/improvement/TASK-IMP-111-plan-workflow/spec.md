@@ -4,7 +4,7 @@ title: The plan workflow
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_review
+status: ready_to_test
 priority: p2
 author: "@stephencheng"
 department: engineering
