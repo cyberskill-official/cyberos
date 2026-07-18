@@ -4,7 +4,7 @@ title: Effort tiering - advisory judgment metadata on skill_chain steps
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: ready_to_test
 priority: p3
 author: "@stephencheng"
 department: engineering
