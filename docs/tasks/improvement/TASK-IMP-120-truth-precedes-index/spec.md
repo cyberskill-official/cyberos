@@ -19,6 +19,7 @@ new_files:
 modified_files:
   - tools/install/docs-tools/backlog-mutate.mjs
   - tools/install/tests/test_workflow_helpers.sh
+  - tools/install/tests/test_e2e_skeleton.sh
   - modules/skill/backlog-state-update-author/SKILL.md
 routed_back_count: 0
 awh: N/A
@@ -96,8 +97,13 @@ who does it backwards gets a refusal, not a divergence.
 
 ## Dependencies
 
-None. `backlog-mutate` already parses frontmatter for the insert path and already has exit 6 for
-pre-image refusals. This adds a precondition, not a mechanism.
+None. `backlog-mutate` already has exit 6 for pre-image refusals, and `flip` already resolves and
+rewrites a single BACKLOG row. It did NOT previously parse spec frontmatter anywhere: `insert` reads
+only BACKLOG rows and never opens a spec, so before this task no command read a spec's `status:`.
+THIS task adds that frontmatter read to `flip` (`resolveSpecPaths` + `frontmatterStatus`, mirroring
+`task-reconcile`'s id->spec resolver) and gates the existing index write on it, reusing exit 6. A
+precondition on an existing refusal path, plus the small reader it needs - not a new writer, and not
+a new refusal code.
 
 ## Scope
 
@@ -133,6 +139,16 @@ Test: `t17_insert_unchanged`
 then the index; the tool enforces it. Both vendored copies.
 Test: `t18_skill_states_the_order`
 
+1.6 The seam test `tools/install/tests/test_e2e_skeleton.sh` - the end-to-end spine that drives
+flip -> coverage-scope -> reconcile -> uninstall - MUST exercise its lifecycle flips in the
+truth-first order this task mandates (the spec frontmatter `status` is written to `<to>` BEFORE the
+index flip), and MUST positively assert that an index-first flip (the truth still lagging) REFUSES
+with exit 6 and does NOT move the row. The guard's behaviour change broke this seam - it had encoded
+index-first, truth-lagging flips as correct, the exact shape 1.1 forbids - so the cone is grown to
+correct the seam to the new contract, never to weaken the guard.
+Test: `t05_index_first_flip_refuses` (index-first flip refuses exit 6, row unmoved; the truth-first
+flip then proceeds) and `t01_spine_green` (the full spine drives every lifecycle flip truth-first).
+
 ## 3. Edge case matrix
 
 | # | Category | Trigger | Expected | Test |
@@ -148,6 +164,7 @@ Test: `t18_skill_states_the_order`
 | 9 | SECURITY | id resolves to a spec outside docs/tasks | refuse - `relUnderRoot`, as everywhere else | t16 |
 | 10 | DEGRADATION | corpus has duplicate ids for `<id>` | refuse - existing duplicate-row refusal path | t16 |
 | 11 | DEGRADATION | a status not in STATUS_ORDER | refuse before touching the file | t14 |
+| 12 | CONCURRENT | seam driver moves the index before writing the truth (index-first) | refuse exit 6, row unmoved - truth precedes index, end to end | t05_index_first_flip_refuses (test_e2e_skeleton.sh) |
 
 ## 4. Out of scope / non-goals
 
@@ -166,3 +183,8 @@ See "## Scope -> ### Out of scope / Non-Goals" above.
 - AC6: replaying TASK-IMP-116's sequence (index flipped, frontmatter untouched) refuses at the FIRST
   flip. A fix that cannot stop the case that motivated it is decoration. Test:
   `t19_replays_the_116_divergence`.
+- AC7 (traces_to #1.6): the seam test `test_e2e_skeleton.sh` drives its lifecycle flips truth-first
+  and positively asserts an index-first flip refuses (exit 6) without moving the row - the guard's
+  behaviour change is covered by the seam it broke, not merely tolerated. The operator-approved cone
+  expansion (the fix belongs in this task's cone, not a separate one). Test:
+  `t05_index_first_flip_refuses`, `t01_spine_green`.
