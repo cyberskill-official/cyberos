@@ -17,6 +17,14 @@
 #                                501-spec repo run is deferred to the operator's review gate - preview)
 #   t07 -> clause 1.7 / AC3      guard: untracked / escaping / no-frontmatter / not-a-repo are REFUSED
 #   t08 -> AC6                   build.sh vendors the migrator byte-identical and the payload copy runs
+#   t09 -> clause 1.8 / AC7      nested-map flatten: children hoisted to top-level keys with values +
+#                                order preserved; whole scratch corpus (build_envelope + done +
+#                                collision) goes FM-001-clean; collision -> order-preserving union
+#                                (exact dup deduped, nothing dropped, no FM-003); done spec migrated +
+#                                body held; scalar conflict HALTS and names the file; idempotent
+#   t10 -> clause 1.9 / AC3      a mid-value apostrophe in a PLAIN scalar is literal, so `broker's ...
+#                                #4` detects ` #4` as a comment and moves it own-line; a value that
+#                                BEGINS with a quote keeps its '#' as data (1.3 preserved by 1.9)
 #
 # run_all.sh discovers this file via its tools/install/tests/test_*.sh glob.
 set -uo pipefail
@@ -31,6 +39,8 @@ fail() { FAIL=$((FAIL+1)); echo "  FAIL $1: $2"; }
 
 # FM-001 finding count for one spec file (0 = clean).
 fm001() { node "$LINT" --json "$1" 2>/dev/null | node -e 'const d=JSON.parse(require("fs").readFileSync(0,"utf8"));process.stdout.write(String(d.filter(x=>x.rule_id==="FM-001").length))'; }
+# FM-003 (duplicate frontmatter key) count for one spec file — a naive nested-map hoist would trip it.
+fm003() { node "$LINT" --json "$1" 2>/dev/null | node -e 'const d=JSON.parse(require("fs").readFileSync(0,"utf8"));process.stdout.write(String(d.filter(x=>x.rule_id==="FM-003").length))'; }
 # Parsed frontmatter (own-line comments dropped, trailing comments stripped, sorted) - for the
 # field-preservation compare. NOT quote-aware, so fixtures that use it carry no quoted '#' in values.
 fmparse() { node -e '
@@ -252,6 +262,164 @@ t08_payload_carries_it() {
   ok t08_payload_carries_it
 }
 
+# ── t09: nested-map flatten; corpus clean; collision union; done-spec; conflict halts ─────────
+t09_flattens_nested_map() {
+  local d="$TMP/t09"
+  mkdir -p "$d/docs/tasks/demo/BE" "$d/docs/tasks/demo/DONE" "$d/docs/tasks/demo/COL"
+  # a build_envelope nested map with 6 map children: 2 scalars + 4 block lists (one item carries a ':')
+  cat > "$d/docs/tasks/demo/BE/spec.md" <<'SPEC'
+---
+id: TASK-DEMO-010
+title: nested map
+template: task@1
+status: draft
+build_envelope:
+  language: rust 1.81
+  service: cyberos/services/ai/
+  new_files:
+    - services/ai/a.rs
+    - services/ai/b.rs
+  modified_files:
+    - services/ai/c.rs
+  allowed_tools:
+    - file_read: services/ai/**
+  disallowed_tools:
+    - non-CTO creds write
+effort_hours: 12
+---
+
+# body stays put
+
+- normative clause
+SPEC
+  # a done spec carrying build_envelope (edge #18: migrated, body held)
+  cat > "$d/docs/tasks/demo/DONE/spec.md" <<'SPEC'
+---
+id: TASK-DEMO-011
+title: done envelope
+template: task@1
+status: done
+build_envelope:
+  language: markdown
+  service: modules/x/
+  new_files:
+    - modules/x/a.md
+---
+
+# done body
+SPEC
+  # collision: top-level new_files + build_envelope.new_files sharing one exact item (edge #17)
+  cat > "$d/docs/tasks/demo/COL/spec.md" <<'SPEC'
+---
+id: TASK-DEMO-012
+title: collision
+template: task@1
+status: draft
+new_files:
+  - modules/y/SHARED.md
+build_envelope:
+  language: python
+  new_files:
+    - modules/y/a.py
+    - modules/y/SHARED.md
+---
+
+# body
+SPEC
+  ( cd "$d" && git init -qb main . && git config user.email t@t && git config user.name t && git add -A && git commit -qm init ) >/dev/null 2>&1
+  local be="$d/docs/tasks/demo/BE/spec.md"
+  [ "$(fm001 "$be")" -gt 0 ] || { fail t09 "build_envelope fixture not dirty to begin with"; return; }
+  # body (everything from the 2nd '---') hash before, to prove flatten never touches it (edge #18)
+  local be_body; be_body="$(awk 'c>=2{print} /^---$/{c++}' "$be" | sha256sum)"
+  # migrate the whole scratch corpus in one invocation
+  ( cd "$d" && node "$MIG" --repo "$d" docs/tasks/demo/*/spec.md >/dev/null 2>&1 )
+  # (b) whole corpus FM-001-clean, INCLUDING build_envelope + done + collision (AC7 capability)
+  local after=0; for s in "$d"/docs/tasks/demo/*/spec.md; do after=$((after + $(fm001 "$s"))); done
+  [ "$after" = "0" ] || { fail t09 "scratch corpus still has $after FM-001 after flatten"; return; }
+  # (c) build_envelope key GONE; all 6 children hoisted to top-level with byte-identical values + order
+  grep -q '^build_envelope:' "$be" && { fail t09 "build_envelope parent key survived the flatten"; return; }
+  grep -qxF 'language: rust 1.81' "$be" && grep -qxF 'service: cyberos/services/ai/' "$be" \
+    || { fail t09 "scalar children not hoisted to top-level with their values"; return; }
+  grep -qxF 'new_files:' "$be" && grep -qxF '  - services/ai/a.rs' "$be" && grep -qxF '  - services/ai/b.rs' "$be" \
+    || { fail t09 "block-list child new_files not hoisted as a top-level block list (indent/order)"; return; }
+  grep -qxF 'modified_files:' "$be" && grep -qxF '  - services/ai/c.rs' "$be" \
+    || { fail t09 "modified_files not hoisted"; return; }
+  grep -qxF 'allowed_tools:' "$be" && grep -qxF '  - file_read: services/ai/**' "$be" \
+    || { fail t09 "allowed_tools (value carrying a ':') not hoisted intact"; return; }
+  grep -qxF 'disallowed_tools:' "$be" && grep -qxF '  - non-CTO creds write' "$be" \
+    || { fail t09 "disallowed_tools not hoisted"; return; }
+  # (d) body byte-identical — the mechanism that holds audited_body_sha256_prefix on a bound spec
+  [ "$(awk 'c>=2{print} /^---$/{c++}' "$be" | sha256sum)" = "$be_body" ] \
+    || { fail t09 "flatten changed the body (bytes below the frontmatter)"; return; }
+  # (e) the done spec was migrated too
+  [ "$(fm001 "$d/docs/tasks/demo/DONE/spec.md")" = "0" ] || { fail t09 "done spec not cleaned"; return; }
+  # (f) collision reconciled: no FM-003 duplicate key; union keeps SHARED.md ONCE and a.py — nothing dropped
+  local col="$d/docs/tasks/demo/COL/spec.md"
+  [ "$(fm003 "$col")" = "0" ] || { fail t09 "flatten produced a duplicate key (FM-003) on collision"; return; }
+  local nshared; nshared="$(grep -cxF '  - modules/y/SHARED.md' "$col")"
+  [ "$nshared" = "1" ] || { fail t09 "SHARED.md appears $nshared times after union (want 1: exact dup deduped, not dropped)"; return; }
+  grep -qxF '  - modules/y/a.py' "$col" || { fail t09 "union dropped the unique item a.py"; return; }
+  # (g) idempotent across BOTH passes (edge #21): a second run is byte-identical
+  cp "$be" "$TMP/t09.once"
+  node "$MIG" --repo "$d" docs/tasks/demo/BE/spec.md >/dev/null 2>&1
+  cmp -s "$TMP/t09.once" "$be" || { fail t09 "second run not byte-identical (flatten not idempotent)"; return; }
+  # (h) a genuine scalar conflict HALTS, names the key, migrates nothing (edge #19)
+  mkdir -p "$d/docs/tasks/demo/CONF"; local conf="$d/docs/tasks/demo/CONF/spec.md"
+  cat > "$conf" <<'SPEC'
+---
+id: TASK-DEMO-013
+title: scalar conflict
+template: task@1
+status: draft
+service: top-level-value
+build_envelope:
+  service: envelope-value
+---
+
+# body
+SPEC
+  ( cd "$d" && git add -A && git commit -qm conf ) >/dev/null 2>&1
+  local cpre; cpre="$(sha256sum "$conf")"
+  local out; out="$(node "$MIG" --repo "$d" docs/tasks/demo/CONF/spec.md 2>&1)"; local rc=$?
+  { [ "$rc" -eq 2 ] && grep -q "collides on scalar key 'service'" <<<"$out"; } \
+    || { fail t09 "scalar conflict not refused + named (rc=$rc): $out"; return; }
+  [ "$(sha256sum "$conf")" = "$cpre" ] || { fail t09 "a scalar-conflict spec was MIGRATED (must halt, touch nothing)"; return; }
+  ok t09_flattens_nested_map
+}
+
+# ── t10: a mid-value apostrophe is literal; ` #` after it is a comment; quoted '#' stays data ─
+t10_apostrophe_then_hash_is_a_comment() {
+  local d="$TMP/t10"; mkdir -p "$d/docs/tasks/demo/AP"; local s="$d/docs/tasks/demo/AP/spec.md"
+  cat > "$s" <<'SPEC'
+---
+id: TASK-DEMO-020
+title: apostrophe
+template: task@1
+status: draft
+disallowed_tools:
+  - allow subprocess to inherit broker's descriptors (per note #4 - seal stdio only)
+  - dispatch without checking allowed_tools (per DEC-191)
+label: 'issue # 42 stays'
+title2: "Fix the # bug"
+---
+
+# body
+SPEC
+  ( cd "$d" && git init -qb main . && git config user.email t@t && git config user.name t && git add -A && git commit -qm init ) >/dev/null 2>&1
+  # task-lint flags the ' #4' as a trailing comment; the OLD quote model missed it (broker's apostrophe)
+  [ "$(fm001 "$s")" -gt 0 ] || { fail t10 "apostrophe fixture not dirty (task-lint should flag the ' #4' trailing comment)"; return; }
+  node "$MIG" --repo "$d" docs/tasks/demo/AP/spec.md >/dev/null 2>&1
+  [ "$(fm001 "$s")" = "0" ] || { fail t10 "apostrophe line not cleaned — ' #4' was not detected as a comment"; return; }
+  # the ' #4 ...' moved to its own line above, indent preserved; the value line keeps everything left of it
+  grep -qxF '  #4 - seal stdio only)' "$s" || { fail t10 "the ' #4' comment did not move to its own line"; return; }
+  grep -qxF "  - allow subprocess to inherit broker's descriptors (per note" "$s" \
+    || { fail t10 "the value line (with the literal mid-value apostrophe) was not preserved"; return; }
+  # a value that BEGINS with a quote keeps its '#' as data — 1.3's protection preserved by 1.9
+  grep -qxF "label: 'issue # 42 stays'" "$s" || { fail t10 "single-quoted value with '#' was altered"; return; }
+  grep -qxF 'title2: "Fix the # bug"' "$s" || { fail t10 "double-quoted value with '#' was altered"; return; }
+  ok t10_apostrophe_then_hash_is_a_comment
+}
+
 echo "fm001-migrate suite (TASK-IMP-117):"
 t01_template_is_clean
 t02_migrator_moves_trailing_comments
@@ -261,5 +429,7 @@ t05_idempotent
 t06_corpus_is_fm001_clean
 t07_guard_refuses_untracked_and_escaping_paths
 t08_payload_carries_it
+t09_flattens_nested_map
+t10_apostrophe_then_hash_is_a_comment
 echo "test_fm001_migrate: pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ] || exit 1
