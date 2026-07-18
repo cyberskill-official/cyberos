@@ -99,7 +99,7 @@ of them.
   task's second capability clears the nested-map residual of 4004 findings across 140 specs plus the
   one apostrophe edge.
 - A spec authored fresh from the template lints clean with no hand-editing.
-- All 40 `audited_body_sha256_prefix` values are unchanged after the migration. The mechanism is
+- All 19 `audited_body_sha256_prefix` values are unchanged after the migration. The mechanism is
   §1.4 (body untouched) reinforced by disjointness: every audit-bound spec carries NEITHER class, so
   the migrator is a byte-for-byte no-op on it.
 - `dist/cyberos/docs-tools/fm001-migrate.mjs` is present, so a consumer repo can do the same.
@@ -138,7 +138,7 @@ left byte-identical. A `#` that is not preceded by whitespace is not a comment.
 Test: `t03_hash_inside_value_is_not_a_comment`
 
 1.4 The migrator NEVER touches the body. Only the frontmatter block between the first two `---`
-lines is in scope. This is what preserves `audited_body_sha256_prefix` on the 40 bound specs -
+lines is in scope. This is what preserves `audited_body_sha256_prefix` on the 19 bound specs -
 proven live twice this session: a status edit moves the file hash and leaves the body hash fixed.
 Test: `t04_body_is_untouched_and_body_hash_holds`
 
@@ -244,7 +244,7 @@ See "## Scope -> ### Out of scope / Non-Goals" above - this section is the engin
   `t01_template_is_clean`.
 - AC3: The migrator satisfies 1.2-1.5 and 1.7. Cited: `t02`..`t05`, `t07`.
 - AC4: `docs/tasks/*/*/spec.md` reports zero FM-001 corpus-wide. Cited: `t06_corpus_is_fm001_clean`.
-- AC5: The 40 audit-bound specs keep their `audited_body_sha256_prefix` byte-for-byte across the
+- AC5: The 19 audit-bound specs keep their `audited_body_sha256_prefix` byte-for-byte across the
   migration. Cited: `t04_body_is_untouched_and_body_hash_holds`.
 - AC6: `dist/cyberos/docs-tools/fm001-migrate.mjs` exists and matches source. Cited:
   `t08_payload_carries_it`.
