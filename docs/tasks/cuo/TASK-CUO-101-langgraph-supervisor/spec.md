@@ -1,8 +1,10 @@
 ---
 id: TASK-CUO-101
 title: "CUO Phase 2 — LangGraph supervisor + LiteLLM cascade + confidence-band escalation + persona-aware routing + memory audit per decision"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -22,7 +24,8 @@ shipped: null
 memory_chain_hash: null
 related_tasks: [TASK-AI-006, TASK-AI-007, TASK-AI-008, TASK-AI-014, TASK-AI-022, TASK-AUTH-004, TASK-AUTH-101, TASK-MEMORY-101, TASK-AI-003, TASK-CUO-102, TASK-CUO-103, TASK-CUO-104, TASK-CUO-105, TASK-SKILL-112]
 depends_on: [TASK-AI-008]
-blocks: [TASK-CUO-102, TASK-CUO-103, TASK-CUO-104, TASK-CRM-005, TASK-CRM-006, TASK-CRM-007, TASK-DOC-009, TASK-EMAIL-008, TASK-INV-010, TASK-KB-007, TASK-OKR-006, TASK-OKR-007, TASK-PORTAL-005, TASK-PROJ-011, TASK-PROJ-012, TASK-RES-004, TASK-SKILL-112]   # 16 downstream consumers of CUO
+# 16 downstream consumers of CUO
+blocks: [TASK-CUO-102, TASK-CUO-103, TASK-CUO-104, TASK-CRM-005, TASK-CRM-006, TASK-CRM-007, TASK-DOC-009, TASK-EMAIL-008, TASK-INV-010, TASK-KB-007, TASK-OKR-006, TASK-OKR-007, TASK-PORTAL-005, TASK-PROJ-011, TASK-PROJ-012, TASK-RES-004, TASK-SKILL-112]
 
 source_pages:
   - website/docs/modules/cuo.html#what
@@ -48,44 +51,81 @@ source_decisions:
 language: python 3.12 + rust 1.81 (shared exit-code crate)
 service: cyberos/cuo/
 new_files:
-  - cuo/cuo/supervisor/__init__.py                    # public API: Supervisor, run_supervisor, RoutingDecision
-  - cuo/cuo/supervisor/graph.py                       # LangGraph StateGraph definition (5 nodes; closed transitions)
-  - cuo/cuo/supervisor/state.py                       # CuoState TypedDict (versioned: cuo_state_v=1)
-  - cuo/cuo/supervisor/nodes/parse.py                 # parse node — NFC + query envelope
-  - cuo/cuo/supervisor/nodes/rule_score.py            # rule-based scorer — wraps existing Phase 1 router.py
-  - cuo/cuo/supervisor/nodes/branch.py                # confidence-band branching (≥0.70 / 0.50-0.70 / 0.10-0.50 / <0.10)
-  - cuo/cuo/supervisor/nodes/llm_cascade.py           # LLM cascade — LiteLLM call via AI Gateway TASK-AI-008
-  - cuo/cuo/supervisor/nodes/invoke.py                # invoke node — delegates to skill module CLI; capture stdout/stderr
-  - cuo/cuo/supervisor/nodes/record.py                # record node — emit cuo.routing_decision memory row + persona stamp
-  - cuo/cuo/supervisor/litellm_proxy.py               # LiteLLM-shaped client that routes through TASK-AI-008 (never direct provider call)
-  - cuo/cuo/supervisor/persona.py                     # 11-persona catalogue (Genie + 10 C-level); defer-to-human matrix
-  - cuo/cuo/supervisor/checkpointer.py                # Postgres checkpointer (in-memory at slice 2; Postgres ships in TASK-CUO-102)
-  - cuo/cuo/supervisor/transparency.py                # EU AI Act Art. 13 end-of-response disclosure builder
-  - cuo/cuo/supervisor/audit.py                       # canonical cuo.routing_decision row builder (kind, payload, chain)
-  - cuo/cuo/supervisor/errors.py                      # ExitCode re-export from cyberos-cli-exit + supervisor-specific codes
-  - cuo/cuo/cli/supervisor.py                         # `cyberos-cuo supervisor route --query "..." [--invoke] [--record]`
-  - cuo/tests/test_supervisor_graph.py                # graph topology — exactly 5 nodes, closed transitions
-  - cuo/modules/cuo/tests/test_applier_paths.py            # confidence ≥ 0.70 → auto-invoke, no LLM
-  - cuo/modules/cuo/tests/test_applier_paths.py             # confidence 0.50–0.70 → clarification with top 3
-  - cuo/modules/cuo/tests/test_applier_paths.py         # confidence 0.10–0.50 → LLM cascade, structured pick validation
-  - cuo/modules/cuo/tests/test_applier_paths.py           # confidence < 0.10 → defer-to-human, no invocation
-  - cuo/tests/test_supervisor_persona_defer_matrix.py # destructive op never auto-invoked regardless of confidence
-  - cuo/tests/test_supervisor_audit_row.py            # every path emits exactly one cuo.routing_decision row
-  - cuo/tests/test_supervisor_litellm_routes_via_gateway.py  # litellm_proxy MUST call AI Gateway, MUST NOT direct provider
-  - cuo/tests/test_supervisor_llm_cascade_timeout.py  # 3s budget — fall through to clarification
-  - cuo/tests/test_supervisor_freeform_rejection.py   # LLM response without structured shape → rejected, fall through
-  - cuo/tests/test_supervisor_state_version.py        # cuo_state_v=1 in state; replay tolerates ±2 versions
-  - cuo/tests/test_supervisor_persona_jwt.py          # rejects requests with mismatched agent_persona JWT
-  - cuo/tests/test_supervisor_transparency.py         # end-of-response includes skill + confidence + alternatives
-  - cuo/tests/test_supervisor_idempotency.py          # same query + same catalog snapshot → same decision (replay-equivalence)
-  - cuo/tests/fixtures/golden_queries.jsonl          # 15 golden fixtures — extends Phase 1's set with 10 ambiguous-tail queries
+  # public API: Supervisor, run_supervisor, RoutingDecision
+  - cuo/cuo/supervisor/__init__.py
+  # LangGraph StateGraph definition (5 nodes; closed transitions)
+  - cuo/cuo/supervisor/graph.py
+  # CuoState TypedDict (versioned: cuo_state_v=1)
+  - cuo/cuo/supervisor/state.py
+  # parse node — NFC + query envelope
+  - cuo/cuo/supervisor/nodes/parse.py
+  # rule-based scorer — wraps existing Phase 1 router.py
+  - cuo/cuo/supervisor/nodes/rule_score.py
+  # confidence-band branching (≥0.70 / 0.50-0.70 / 0.10-0.50 / <0.10)
+  - cuo/cuo/supervisor/nodes/branch.py
+  # LLM cascade — LiteLLM call via AI Gateway TASK-AI-008
+  - cuo/cuo/supervisor/nodes/llm_cascade.py
+  # invoke node — delegates to skill module CLI; capture stdout/stderr
+  - cuo/cuo/supervisor/nodes/invoke.py
+  # record node — emit cuo.routing_decision memory row + persona stamp
+  - cuo/cuo/supervisor/nodes/record.py
+  # LiteLLM-shaped client that routes through TASK-AI-008 (never direct provider call)
+  - cuo/cuo/supervisor/litellm_proxy.py
+  # 11-persona catalogue (Genie + 10 C-level); defer-to-human matrix
+  - cuo/cuo/supervisor/persona.py
+  # Postgres checkpointer (in-memory at slice 2; Postgres ships in TASK-CUO-102)
+  - cuo/cuo/supervisor/checkpointer.py
+  # EU AI Act Art. 13 end-of-response disclosure builder
+  - cuo/cuo/supervisor/transparency.py
+  # canonical cuo.routing_decision row builder (kind, payload, chain)
+  - cuo/cuo/supervisor/audit.py
+  # ExitCode re-export from cyberos-cli-exit + supervisor-specific codes
+  - cuo/cuo/supervisor/errors.py
+  # `cyberos-cuo supervisor route --query "..." [--invoke] [--record]`
+  - cuo/cuo/cli/supervisor.py
+  # graph topology — exactly 5 nodes, closed transitions
+  - cuo/tests/test_supervisor_graph.py
+  # confidence ≥ 0.70 → auto-invoke, no LLM
+  - cuo/modules/cuo/tests/test_applier_paths.py
+  # confidence 0.50–0.70 → clarification with top 3
+  - cuo/modules/cuo/tests/test_applier_paths.py
+  # confidence 0.10–0.50 → LLM cascade, structured pick validation
+  - cuo/modules/cuo/tests/test_applier_paths.py
+  # confidence < 0.10 → defer-to-human, no invocation
+  - cuo/modules/cuo/tests/test_applier_paths.py
+  # destructive op never auto-invoked regardless of confidence
+  - cuo/tests/test_supervisor_persona_defer_matrix.py
+  # every path emits exactly one cuo.routing_decision row
+  - cuo/tests/test_supervisor_audit_row.py
+  # litellm_proxy MUST call AI Gateway, MUST NOT direct provider
+  - cuo/tests/test_supervisor_litellm_routes_via_gateway.py
+  # 3s budget — fall through to clarification
+  - cuo/tests/test_supervisor_llm_cascade_timeout.py
+  # LLM response without structured shape → rejected, fall through
+  - cuo/tests/test_supervisor_freeform_rejection.py
+  # cuo_state_v=1 in state; replay tolerates ±2 versions
+  - cuo/tests/test_supervisor_state_version.py
+  # rejects requests with mismatched agent_persona JWT
+  - cuo/tests/test_supervisor_persona_jwt.py
+  # end-of-response includes skill + confidence + alternatives
+  - cuo/tests/test_supervisor_transparency.py
+  # same query + same catalog snapshot → same decision (replay-equivalence)
+  - cuo/tests/test_supervisor_idempotency.py
+  # 15 golden fixtures — extends Phase 1's set with 10 ambiguous-tail queries
+  - cuo/tests/fixtures/golden_queries.jsonl
 modified_files:
-  - cuo/cuo/core/router.py                            # expose score_one_off() for supervisor's rule_score node to reuse
-  - cuo/cuo/core/__init__.py                          # re-export Supervisor for top-level import
-  - cuo/cuo/cli/__init__.py                           # mount `cyberos-cuo supervisor` subcommand
-  - cuo/pyproject.toml                                # +langgraph ==0.2.*, +litellm ==1.52.*, +pydantic >=2.7, +httpx, +psycopg[binary] (for checkpointer scaffolding)
-  - cuo/docs/AGENTS.md                                # §3.2 Phase 2 normative — replace "(pending)" with this task's contract
-  - services/ai-gateway/src/handlers/chat.rs          # accept `X-CUO-Decision-Id` header so the supervisor's row chains to the AI Gateway row
+  # expose score_one_off() for supervisor's rule_score node to reuse
+  - cuo/cuo/core/router.py
+  # re-export Supervisor for top-level import
+  - cuo/cuo/core/__init__.py
+  # mount `cyberos-cuo supervisor` subcommand
+  - cuo/cuo/cli/__init__.py
+  # +langgraph ==0.2.*, +litellm ==1.52.*, +pydantic >=2.7, +httpx, +psycopg[binary] (for checkpointer scaffolding)
+  - cuo/pyproject.toml
+  # §3.2 Phase 2 normative — replace "(pending)" with this task's contract
+  - cuo/docs/AGENTS.md
+  # accept `X-CUO-Decision-Id` header so the supervisor's row chains to the AI Gateway row
+  - services/ai-gateway/src/handlers/chat.rs
 
 allowed_tools:
   - file_read: cuo/**

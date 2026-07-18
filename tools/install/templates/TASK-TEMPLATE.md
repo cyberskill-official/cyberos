@@ -1,28 +1,41 @@
 ---
-id: TASK-<MODULE>-<NNN>  # module-scoped, e.g. TASK-AUTH-001. Not a bare TASK-001.
+# Every comment here is OWN-LINE, above the field it documents. A trailing comment after a
+# value (`id: TASK-001  # note`) is FM-001: it parses INTO the value for any reader that does
+# not strip comments. The migrator .cyberos/docs-tools/fm001-migrate.mjs enforces this shape;
+# a spec authored from this template is born FM-001-clean. (TASK-IMP-117)
+# module-scoped, e.g. TASK-AUTH-001. Not a bare TASK-001.
+id: TASK-<MODULE>-<NNN>
 title: Short imperative title
 template: task@1
-type: feature            # FM-108, REQUIRED: feature | bug | improvement | chore
-                         #   feature     net-new capability
-                         #   bug         something is broken (adds severity: below)
-                         #   improvement hardening / refactor / audit-remediation
-                         #   chore       maintenance, no behaviour change
+# FM-108, REQUIRED: feature | bug | improvement | chore
+#   feature     net-new capability
+#   bug         something is broken (adds severity: below)
+#   improvement hardening / refactor / audit-remediation
+#   chore       maintenance, no behaviour change
+type: feature
 module: <module>
-status: draft            # draft | ready_to_implement | implementing | ready_to_review | reviewing | ready_to_test | testing | done | on_hold | closed (see cuo/STATUS-REFERENCE.md)
-priority: p2             # p0 | p1 | p2 | p3
-# severity: sev2         # BUG ONLY. Impact if left unfixed — distinct from priority.
-author: "@your-handle"   # quote it: a bare @ is a reserved YAML indicator
+# draft | ready_to_implement | implementing | ready_to_review | reviewing | ready_to_test | testing | done | on_hold | closed (see cuo/STATUS-REFERENCE.md)
+status: draft
+# p0 | p1 | p2 | p3
+priority: p2
+# severity: sev2  (BUG ONLY — impact if left unfixed, distinct from priority)
+# quote the author value: a bare @ is a reserved YAML indicator
+author: "@your-handle"
 department: engineering
 created_at: <ISO 8601 with timezone>
-ai_authorship: none      # none | assisted | co_authored | generated_then_reviewed
-eu_ai_act_risk_class: not_ai   # not_ai | minimal | limited | high
+# none | assisted | co_authored | generated_then_reviewed
+ai_authorship: none
+# not_ai | minimal | limited | high
+eu_ai_act_risk_class: not_ai
 client_visible: false
-depends_on: []           # ids that must be done first
+# ids that must be done first
+depends_on: []
 routed_back_count: 0
 # draft_reason (optional, drafts only): authoring | migrated_stub | needs_spec | parked_idea
 # entered_via (optional): audit | rework | spec_rejected
 
-awh: N/A                 # N/A unless this repo has a sealed goldenset for the touched area
+# N/A unless this repo has a sealed goldenset for the touched area
+awh: N/A
 ---
 
 <!-- Until 2026-07-15 this template shipped `class: product` and `priority: SHOULD` — a

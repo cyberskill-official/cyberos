@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-018
 title: "Cross-tenant cache leak property-test (hard zero) — 200K random ops + 7 regression scenarios + adversarial inputs"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -45,7 +47,8 @@ new_files:
   - services/ai-gateway/tests/cache_isolation_concurrent_test.rs
   - services/ai-gateway/tests/support/redis_isolation_helper.rs
   - services/ai-gateway/tests/support/proptest_strategies.rs
-  - .github/workflows/cache-isolation-gate.yml                     # dedicated CI workflow with non-skip enforcement
+  # dedicated CI workflow with non-skip enforcement
+  - .github/workflows/cache-isolation-gate.yml
 modified_files: []
 allowed_tools:
   - file_read: services/ai-gateway/**
@@ -55,9 +58,11 @@ allowed_tools:
   - bash: docker run -d --name test-redis -p 6379:6379 redis:7
 disallowed_tools:
   - skip the property test in CI under any condition (NO `pytest.skip` analogue, no `#[ignore]` on the property body)
-  - lower the case count below the §1 #2 floor without explicit task amendment
+  #2 floor without explicit task amendment
+  - lower the case count below the §1
   - omit any of the 7 enumerated regression scenarios (deletion = silent test-coverage drop)
-  - share Redis state between test cases (per-case isolation prefix MUST be used; §1 #11)
+  #11)
+  - share Redis state between test cases (per-case isolation prefix MUST be used; §1
 
 # ───── Estimated work ─────
 effort_hours: 6

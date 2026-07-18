@@ -192,6 +192,10 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   [ -f "$here/docs-tools/coverage-scope.mjs" ] && cp "$here/docs-tools/coverage-scope.mjs" "$out/docs-tools/"
   # TASK-IMP-100: reconcile the third state - work this workflow did not perform.
   [ -f "$here/docs-tools/task-reconcile.mjs" ] && cp "$here/docs-tools/task-reconcile.mjs" "$out/docs-tools/"
+  # fm001-migrate: clean a repo's task corpus of FM-001 trailing frontmatter comments (TASK-IMP-117).
+  # Vendored so any installed repo can run it against its OWN specs - the TASK-TEMPLATE.md that taught
+  # the trailing-comment shape is itself vendored, so every consumer corpus inherited the violation.
+  [ -f "$here/docs-tools/fm001-migrate.mjs" ] && cp "$here/docs-tools/fm001-migrate.mjs" "$out/docs-tools/"
   # workflow-improve: the outer loop's machine floor (TASK-IMP-110). The workflow-improver skill
   # and the /improve command both name `.cyberos/docs-tools/workflow-improve.mjs`, so a payload
   # without it ships a skill that cannot reach its own floor.

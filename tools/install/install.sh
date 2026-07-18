@@ -985,6 +985,12 @@ Next:
         gates. repo_root is this repo."
   3. Run the machine gates any time:
        bash .cyberos/cuo/gates/run-gates.sh
+  4. Clean your task corpus of FM-001 trailing frontmatter comments (older specs, and any born
+     from a pre-2026-07 template, carry them). Preview first, then rewrite in place:
+       node .cyberos/docs-tools/fm001-migrate.mjs --check docs/tasks/*/*/spec.md   # report only
+       node .cyberos/docs-tools/fm001-migrate.mjs docs/tasks/*/*/spec.md           # rewrite
+     It only moves trailing comments to their own line, never touches the body, is idempotent,
+     and refuses any path not tracked at HEAD.
 
 Every popular agent is wired: AGENTS.md is the cross-agent spine, and Claude Code, Codex,
 Cursor, Gemini, Antigravity, Grok CLI, zcode, Command Code, Copilot, Windsurf & Devin each get the
