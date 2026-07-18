@@ -75,7 +75,22 @@ if [ -f "$hk" ]; then
     _note_removed "${hk#$root/} (managed pre-commit hook)"
   elif grep -q "cyberos-status-hook" "$hk" 2>/dev/null; then
     tmp="$hk.cyberos.tmp"
-    sed '/# >>> cyberos-status-hook/,/# <<< cyberos-status-hook <<</d' "$hk" > "$tmp" && mv "$tmp" "$hk"
+    # Strip the managed block AND the single blank separator install writes immediately BEFORE our
+    # `# >>> cyberos-status-hook` marker (install.sh appends the block via a heredoc whose first line
+    # is that blank - TASK-IMP-126 §1.3). The old strip deleted only the >>>..<<< range inclusive, so
+    # the separator survived and every install/uninstall cycle on a foreign hook accumulated one blank
+    # line. awk, not sed, because the fix needs one line of look-behind: hold a pending blank and drop
+    # it ONLY when the very next line is our marker - so an operator's own blank line anywhere else in
+    # the hook is never touched (§1.4). The start pattern is the shared `# >>> cyberos-status-hook`
+    # prefix, exactly as the old strip matched, so a v1 leftover (install.sh:856 upgrade shares the
+    # shape) is healed the same as a v2 block.
+    awk '
+      inblk { if ($0 ~ /# <<< cyberos-status-hook <<</) inblk=0; next }
+      /# >>> cyberos-status-hook/ { inblk=1; held=0; next }
+      /^[[:space:]]*$/ { if (held) print sep; sep=$0; held=1; next }
+      { if (held) { print sep; held=0 } print }
+      END { if (held) print sep }
+    ' "$hk" > "$tmp" && mv "$tmp" "$hk"
     chmod +x "$hk"
     echo "  stripped cyberos block from pre-commit"
     _note_removed "${hk#$root/} (our block only - the hook itself is yours and stays)"
@@ -94,8 +109,9 @@ if [ -f "$gi" ] && grep -q 'cyberos' "$gi" 2>/dev/null; then
   fi
 fi
 
-# 2b. shared .agents/skills entries + the /create-tasks pair's .claude/skills counterparts
-# (TASK-IMP-094). Removed only when OURS by construction: a symlink whose target is the
+# 2b. managed skill entries install writes - the shared .agents/skills entries (TASK-IMP-094) in the
+# loop here, then every per-agent family link in the loop below (extended by TASK-IMP-126 §1.2).
+# Removed only when OURS by construction: a symlink whose target is the
 # vendored machine (directly, or chained via .claude/skills/<cmd>), or the installer's
 # copy-fallback (a dir carrying our .cyberos-owned marker). A dir with only a SKILL.md is
 # NOT proof of ownership - the installer's copy is byte-indistinguishable from an operator's,
@@ -121,18 +137,53 @@ for _sc in ship-tasks task-author task-audit; do
     echo "  kept .agents/skills/$_sc (unmarked skill dir - not an installer copy we can prove;"
     echo "       remove it by hand if it is a leftover from a pre-marker install)"
   fi
-  # the pair under .claude/skills is machine-pointing and new with TASK-IMP-094;
-  # .claude/skills/ship-tasks keeps today's leave-in-place behavior (section 6).
-  if [ "$_sc" != "ship-tasks" ] && [ -L "$root/.claude/skills/$_sc" ]; then
-    case "$(readlink "$root/.claude/skills/$_sc" 2>/dev/null)" in
-      *".cyberos/plugin/skills/$_sc")
-        rm -f "$root/.claude/skills/$_sc"; echo "  removed .claude/skills/$_sc (managed entry)"
-        _note_removed ".claude/skills/$_sc (managed entry)";;
-    esac
-  fi
 done
 rmdir "$root/.agents/skills" 2>/dev/null || true
 rmdir "$root/.agents" 2>/dev/null || true
+
+# Then the per-agent native skill entries install writes (install.sh install_skill calls, ~L632-641):
+# claude-code gets ship-tasks + the /create-tasks pair (task-author, task-audit); grok, command-code,
+# codex and opencode each get ship-tasks. Each is a relative symlink into .cyberos/plugin/skills/<skill>
+# (a copy-fallback lands only where a link cannot be made). Before TASK-IMP-126, uninstall touched only
+# the .claude/skills create-tasks pair and LEFT .claude/skills/ship-tasks plus the grok/command-code/
+# codex/opencode entries pointing into the machine it was about to remove - every one a dangling link
+# (§1.2). The family/skill list below mirrors install.sh exactly; do not invent names here.
+for _fs in ".claude/skills:ship-tasks" ".claude/skills:task-author" ".claude/skills:task-audit" \
+           ".grok/skills:ship-tasks" ".commandcode/skills:ship-tasks" \
+           ".codex/skills:ship-tasks" ".opencode/skill:ship-tasks"; do
+  _sd="${_fs%%:*}"; _sk="${_fs##*:}"; _p="$root/$_sd/$_sk"
+  if [ -L "$_p" ]; then
+    case "$(readlink "$_p" 2>/dev/null)" in
+      *".cyberos/plugin/skills/$_sk")
+        rm -f "$_p"; echo "  removed $_sd/$_sk (managed skill link)"
+        _note_removed "$_sd/$_sk (managed skill link)";;
+    esac
+  elif [ -d "$_p" ] && [ -f "$_p/.cyberos-owned" ]; then
+    rm -rf "$_p"; echo "  removed $_sd/$_sk (installer skill copy)"
+    _note_removed "$_sd/$_sk (installer skill copy)"
+  fi
+  rmdir "$root/$_sd" 2>/dev/null || true
+done
+
+# 2c. MCP registration files (TASK-IMP-126 §1.1). install.sh writes .mcp.json (always) and, when
+# the cursor agent was selected, .cursor/mcp.json - each a FIXED JSON string emitted by mcp_json(),
+# pointing at .cyberos/mcp/cyberos-mcp.mjs, the entry point this run is about to remove. Remove each
+# ONLY when its content byte-matches what install writes (recreate the string, cmp -s) - the same
+# ownership-by-construction the skill and hook sections use. An operator's own file of either name,
+# any other content, STAYS (§1.4). Absent files are not an error (§3: the cursor file exists only
+# when the cursor agent was selected at install). Never rmdir .cursor/: its rules/ pointer is tracked
+# agent surface and is kept.
+mcp_json() { printf '{\n  "mcpServers": {\n    "cyberos": { "command": "node", "args": [".cyberos/mcp/cyberos-mcp.mjs"] }\n  }\n}\n'; }
+_mcp_ours="$(mktemp "${TMPDIR:-/tmp}/cyberos-mcp.XXXXXX")"
+mcp_json > "$_mcp_ours"
+for _mf in .mcp.json .cursor/mcp.json; do
+  _mp="$root/$_mf"
+  if [ -f "$_mp" ] && cmp -s "$_mp" "$_mcp_ours"; then
+    rm -f "$_mp"; echo "  removed $_mf (cyberos MCP registration)"
+    _note_removed "$_mf (cyberos MCP registration)"
+  fi
+done
+rm -f "$_mcp_ours"
 
 # 3. BRAIN store
 brain="$CY/memory/store"
@@ -188,7 +239,8 @@ fi
 # luck is wrong; it drifts the moment the state machine changes and nothing notices, because a
 # hard-coded list has no way to be wrong out loud.
 #
-# Skill symlinks into .cyberos/ are left dangling by design (dirs stay; the operator cleans).
+# Managed skill links into .cyberos/plugin/skills are removed above (§1.2, every family install
+# writes); an unmarked operator skill dir is left in place and is the operator's to clean.
 echo "cyberos uninstall: done."
 
 if [ -n "$_removed_list" ]; then

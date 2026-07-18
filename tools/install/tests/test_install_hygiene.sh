@@ -568,6 +568,132 @@ t22_uninstall_behavior_unchanged() {
   [ "$all" -eq 1 ] && ok t22_uninstall_behavior_unchanged
 }
 
+# ---------------------------------------------------------------------------
+# TASK-IMP-126 - uninstall is the inverse of install for three artifacts install writes and the
+# pre-126 uninstall left behind: the MCP registration files, the per-agent skill links, and the
+# hook's leading blank separator. Each arm installs then uninstalls a scratch repo (reusing the
+# harness helpers) and asserts the tree is clean, while an operator's own files of the same names
+# stay untouched (§1.4). The MCP arms run install WITHOUT CYBEROS_NO_MCP so .mcp.json is actually
+# written (the speed helpers set NO_MCP); skills and the hook install under the speed flags.
+# ---------------------------------------------------------------------------
+
+# AC 1 (traces_to #1.1) - install writes the MCP registration; uninstall removes it (byte-match to
+# what install writes) including the cursor limb, and an operator's own .mcp.json (different
+# content) is never touched.
+t_mcp_registration_removed() {
+  local all=1
+  # scenario A: install writes .mcp.json + .cursor/mcp.json; uninstall removes BOTH; the cursor
+  # rules pointer (tracked agent surface) survives - uninstall removes the file, never rmdir .cursor/.
+  local a="$TMP/mcp-rm"; mkrepo "$a"
+  CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 bash "$TMP/payload/install.sh" "$a" >/dev/null 2>&1
+  [ -f "$a/.mcp.json" ] \
+    || { fail t_mcp_registration_removed "precondition: install wrote no .mcp.json (MCP registration)"; return; }
+  grep -q '\.cyberos/mcp/cyberos-mcp\.mjs' "$a/.mcp.json" \
+    || { fail t_mcp_registration_removed "installed .mcp.json is not the cyberos form"; all=0; }
+  [ -f "$a/.cursor/mcp.json" ] \
+    || { fail t_mcp_registration_removed "precondition: install wrote no .cursor/mcp.json (cursor limb)"; all=0; }
+  bash "$a/.cyberos/uninstall.sh" "$a" >/dev/null 2>&1
+  [ ! -e "$a/.mcp.json" ]        || { fail t_mcp_registration_removed "uninstall left the cyberos .mcp.json behind"; all=0; }
+  [ ! -e "$a/.cursor/mcp.json" ] || { fail t_mcp_registration_removed "uninstall left the cyberos .cursor/mcp.json behind"; all=0; }
+  [ -f "$a/.cursor/rules/cyberos.mdc" ] \
+    || { fail t_mcp_registration_removed "uninstall removed the .cursor rules pointer (agent surface must stay)"; all=0; }
+  # scenario B: an operator's own .mcp.json (different content) survives install (create-if-absent)
+  # AND uninstall (content does not byte-match what install writes).
+  local b="$TMP/mcp-op"; mkrepo "$b"
+  printf '{ "mcpServers": { "operator-server": { "command": "node", "args": ["ops.mjs"] } } }\n' > "$b/.mcp.json"
+  cp "$b/.mcp.json" "$TMP/mcp-op.want"
+  CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 bash "$TMP/payload/install.sh" "$b" >/dev/null 2>&1
+  bash "$b/.cyberos/uninstall.sh" "$b" >/dev/null 2>&1
+  { [ -f "$b/.mcp.json" ] && cmp -s "$b/.mcp.json" "$TMP/mcp-op.want"; } \
+    || { fail t_mcp_registration_removed "operator .mcp.json (different content) was modified or removed"; all=0; }
+  [ "$all" -eq 1 ] && ok t_mcp_registration_removed
+}
+
+# AC 2 (traces_to #1.2) - after install then uninstall, ZERO skill links resolve into the removed
+# .cyberos/plugin/skills, checked across every family install writes (claude-code incl. the
+# create-tasks pair, grok, command-code, codex, opencode) plus the shared .agents/skills entries.
+t_no_dangling_skill_links() {
+  local all=1 d="$TMP/skill-links" p; mkrepo "$d"
+  _t06_install "$d" >/dev/null                       # skills install regardless of the speed flags
+  local managed=".claude/skills/ship-tasks .claude/skills/task-author .claude/skills/task-audit
+.grok/skills/ship-tasks .commandcode/skills/ship-tasks .codex/skills/ship-tasks .opencode/skill/ship-tasks
+.agents/skills/ship-tasks .agents/skills/task-author .agents/skills/task-audit"
+  # precondition: install actually created the managed entries as symlinks (the fix is meaningless
+  # if they landed as unmanaged copies - the 7 direct family links point into .cyberos/plugin/skills).
+  local pre=0
+  for p in $managed; do [ -L "$d/$p" ] && pre=$((pre+1)); done
+  [ "$pre" -ge 7 ] \
+    || { fail t_no_dangling_skill_links "precondition: expected managed skill symlinks, saw $pre (install did not symlink - fix untestable)"; return; }
+  bash "$d/.cyberos/uninstall.sh" "$d" >/dev/null 2>&1
+  # every named managed entry is gone - the pre-126 gap left .claude/skills/ship-tasks and the
+  # grok/command-code/codex/opencode entries pointing into the now-removed machine.
+  for p in $managed; do
+    { [ ! -L "$d/$p" ] && [ ! -e "$d/$p" ]; } \
+      || { fail t_no_dangling_skill_links "managed skill entry survived uninstall: $p"; all=0; }
+  done
+  # ...and list-independent: NO symlink anywhere in the tree still resolves into .cyberos/plugin/skills.
+  local dangling
+  dangling="$(find "$d" -path "$d/.git" -prune -o -type l -print 2>/dev/null | while IFS= read -r l; do
+    case "$(readlink "$l" 2>/dev/null)" in *".cyberos/plugin/skills/"*) printf '%s\n' "$l";; esac
+  done)"
+  [ -z "$dangling" ] \
+    || { fail t_no_dangling_skill_links "links still resolve into removed machine: $(printf '%s' "$dangling" | tr '\n' ' ')"; all=0; }
+  [ "$all" -eq 1 ] && ok t_no_dangling_skill_links
+}
+
+# AC 3 (traces_to #1.3) - a foreign pre-commit hook is byte-identical to its pre-install content
+# after install/uninstall and STAYS byte-identical across repeated cycles (no accumulated blank
+# separator). Two cycles is a sufficient witness: the buggy strip leaves 2 stray blanks, the fix 0.
+t_hook_strip_byte_identical_across_cycles() {
+  local all=1 d="$TMP/hook-cycles" i; mkrepo "$d"
+  mkdir -p "$d/.git/hooks"
+  printf '#!/bin/sh\necho foreign-lint\nfalse\n' > "$d/.git/hooks/pre-commit"; chmod +x "$d/.git/hooks/pre-commit"
+  cp "$d/.git/hooks/pre-commit" "$TMP/hook-cycles.want"
+  for i in 1 2; do
+    CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 CYBEROS_NO_MCP=1 bash "$TMP/payload/install.sh" "$d" >/dev/null 2>&1
+    # precondition each cycle: the block WAS appended (with its leading blank separator), so the
+    # strip has something to undo - otherwise the byte-identity below could pass vacuously.
+    grep -q '>>> cyberos-status-hook' "$d/.git/hooks/pre-commit" \
+      || { fail t_hook_strip_byte_identical_across_cycles "cycle $i: install did not append the managed block"; return; }
+    bash "$TMP/payload/uninstall.sh" "$d" >/dev/null 2>&1
+  done
+  cmp -s "$d/.git/hooks/pre-commit" "$TMP/hook-cycles.want" \
+    || { fail t_hook_strip_byte_identical_across_cycles "hook not byte-identical after 2 cycles (accumulated separator): $(diff "$TMP/hook-cycles.want" "$d/.git/hooks/pre-commit" | tr '\n' '|')"; all=0; }
+  grep -q 'cyberos-status-hook' "$d/.git/hooks/pre-commit" \
+    && { fail t_hook_strip_byte_identical_across_cycles "cyberos block remnant left in the hook"; all=0; }
+  # the stripped hook still runs and preserves the foreign failing exit code (1)
+  ( cd "$d" && sh .git/hooks/pre-commit >/dev/null 2>&1 ); [ "$?" = 1 ] \
+    || { fail t_hook_strip_byte_identical_across_cycles "stripped hook lost its foreign exit code"; all=0; }
+  [ "$all" -eq 1 ] && ok t_hook_strip_byte_identical_across_cycles
+}
+
+# AC 4 (traces_to #1.4) - the guardrail: an operator .mcp.json (different content), an UNMARKED
+# .agents/skills/<cmd> dir, and a foreign hook's own lines all survive uninstall untouched.
+t_operator_files_preserved() {
+  local all=1 d="$TMP/op-preserve"; mkrepo "$d"
+  mkdir -p "$d/.git/hooks"
+  printf '#!/bin/sh\necho foreign-lint\nfalse\n' > "$d/.git/hooks/pre-commit"; chmod +x "$d/.git/hooks/pre-commit"
+  cp "$d/.git/hooks/pre-commit" "$TMP/op-preserve-hook.want"
+  # operator's own .mcp.json, planted BEFORE install (install is create-if-absent, so it stays)
+  printf '{ "mcpServers": { "operator-owned": { "command": "deno", "args": ["mine.ts"] } } }\n' > "$d/.mcp.json"
+  cp "$d/.mcp.json" "$TMP/op-preserve-mcp.want"
+  CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 bash "$TMP/payload/install.sh" "$d" >/dev/null 2>&1
+  # replace a managed .agents/skills entry with an UNMARKED operator dir (no .cyberos-owned marker):
+  # ownership-by-construction must leave it in place even though the NAME is one uninstall manages.
+  rm -rf "$d/.agents/skills/ship-tasks"
+  mkdir -p "$d/.agents/skills/ship-tasks"
+  printf -- '---\nname: ship-tasks\n---\nmy own skill\n' > "$d/.agents/skills/ship-tasks/SKILL.md"
+  cp "$d/.agents/skills/ship-tasks/SKILL.md" "$TMP/op-preserve-skill.want"
+  bash "$d/.cyberos/uninstall.sh" "$d" >/dev/null 2>&1
+  { [ -f "$d/.mcp.json" ] && cmp -s "$d/.mcp.json" "$TMP/op-preserve-mcp.want"; } \
+    || { fail t_operator_files_preserved "operator .mcp.json (different content) not preserved"; all=0; }
+  { [ -f "$d/.agents/skills/ship-tasks/SKILL.md" ] && cmp -s "$d/.agents/skills/ship-tasks/SKILL.md" "$TMP/op-preserve-skill.want"; } \
+    || { fail t_operator_files_preserved "unmarked operator .agents/skills/ship-tasks dir was removed or altered"; all=0; }
+  { [ -f "$d/.git/hooks/pre-commit" ] && cmp -s "$d/.git/hooks/pre-commit" "$TMP/op-preserve-hook.want"; } \
+    || { fail t_operator_files_preserved "foreign hook not restored to its own bytes"; all=0; }
+  [ "$all" -eq 1 ] && ok t_operator_files_preserved
+}
+
 t01_gitignore_managed_block
 t02_changelog_once
 t03_root_task_migration
@@ -590,6 +716,10 @@ t09_nongit_summary_line
 t20_uninstall_summary_names_kept
 t21_uninstall_summary_derived_not_hardcoded
 t22_uninstall_behavior_unchanged
+t_mcp_registration_removed
+t_no_dangling_skill_links
+t_hook_strip_byte_identical_across_cycles
+t_operator_files_preserved
 
 echo "install-hygiene: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
