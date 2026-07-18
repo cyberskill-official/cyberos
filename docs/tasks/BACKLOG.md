@@ -360,7 +360,7 @@ Totals: 339 draft, 11 ready_to_implement, 12 implementing, 187 done, 1 on_hold, 
 - [done] TASK-IMP-114-cost-cycle-telemetry - Cost and cycle telemetry - make the loop's economics visible
 - [done] TASK-IMP-115-effort-tiering-advisory - Effort tiering - advisory judgment metadata on skill_chain steps
 - [done] TASK-IMP-116-totals-retally - Every mutation emits the whole file's truth, not just its section's
-- [testing] TASK-IMP-117-fm001-conformance - The template teaches the violation it is linted for
+- [done] TASK-IMP-117-fm001-conformance - The template teaches the violation it is linted for
 - [done] TASK-IMP-118-tests-must-test-their-clause - A test that cites a clause must test that clause
 - [ready_to_implement] TASK-IMP-119-cone-drift-audit - A declared cone is a promise nothing checks
 - [ready_to_implement] TASK-IMP-120-truth-precedes-index - The index moves without the truth, in both directions

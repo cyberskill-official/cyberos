@@ -4,7 +4,7 @@ title: The template teaches the violation it is linted for
 template: task@1
 type: improvement
 module: improvement
-status: testing
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
