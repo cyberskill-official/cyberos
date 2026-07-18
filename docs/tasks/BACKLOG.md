@@ -348,7 +348,7 @@ Totals: 339 draft, 8 ready_to_implement, 12 implementing, 190 done, 1 on_hold, 1
 - [done] TASK-IMP-102-audit-binding-normative-half - Audits bind the normative half, not bytes the workflow rewrites
 - [done] TASK-IMP-103-install-concurrency-lock - Install concurrency lock
 - [done] TASK-IMP-104-refuse-older-payload-downgrade - Refuse an older payload over a newer .cyberos
-- [ready_to_test] TASK-IMP-105-task-id-allocation-rule - Task-id allocation rule + next-id helper
+- [testing] TASK-IMP-105-task-id-allocation-rule - Task-id allocation rule + next-id helper
 - [done] TASK-IMP-106-uninstall-summary-names-kept - Uninstall summary names what it kept
 - [done] TASK-IMP-107-e2e-mechanical-smoke-test - End-to-end mechanical smoke test
 - [done] TASK-IMP-108-split-statuses-doing-two-jobs - Split the statuses doing two jobs
