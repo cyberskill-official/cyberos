@@ -40,6 +40,12 @@ else TO=""; fi
 SKIP=""
 
 pass=0; fail=0; skip=0; failed=""
+# TASK-IMP-107 wires the end-to-end MECHANICAL spine suite in here — through the glob below, NOT
+# a hand-list. The glob IS the registration (see the header); a second place to name suites is
+# the exact failure mode it exists to avoid. tools/install/tests/test_e2e_skeleton.sh builds a
+# scratch payload and drives install -> lint -> insert -> every lifecycle flip -> coverage-scope
+# -> reconcile -> uninstall on a throwaway repo, offline (no model/network/credentials),
+# self-budgeted under 30s (spec §1.5) so it stays inside the per-suite timeout above.
 for t in scripts/tests/test_*.sh tools/docs-site/tests/test_*.sh tools/install/tests/test_*.sh; do
   [ -e "$t" ] || continue
   b="$(basename "$t")"
