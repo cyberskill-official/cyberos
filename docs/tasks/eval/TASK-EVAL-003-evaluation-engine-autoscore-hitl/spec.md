@@ -42,17 +42,28 @@ new_files:
   - services/eval/migrations/0003_assessment_state_events.sql
   - services/eval/migrations/0004_assessment_rebuttals.sql
   - services/eval/src/lib.rs
-  - services/eval/src/state.rs                  # AssessmentState machine: draft → pending_review → approved|changed|rejected
-  - services/eval/src/scoring/mod.rs            # ScoreRow, EvidenceRef, citation-coverage invariant
-  - services/eval/src/scoring/citation.rs       # every score cites ≥1 evidence event + exactly 1 rubric clause
-  - services/eval/src/hitl.rs                   # mandatory-reviewer gate + consequential-outcome hard gate
-  - services/eval/src/access.rs                 # TASK-EVAL-001 consent check + RLS visibility (founder|manager|self)
-  - services/eval/src/audit.rs                  # l1_audit_log emit per state change (eval.* kinds)
-  - services/eval/src/handlers.rs               # HTTP: draft / review / approve / change / reject / rebut / get
-  - services/eval/src/metrics.rs               # OTel: drafted, approval/override/reject rate, citation coverage, fallback rate
-  - services/eval/genie/score_subject.py        # GENIE orchestration: recall → map-to-rubric → draft scores (via ai-gateway)
-  - services/eval/genie/prompts/score_v1.md     # the scoring prompt (evidence-grounded, refuse-if-unsupported)
-  - services/eval/genie/fairness.py             # protected-attribute blinding + group-disparity check
+  # AssessmentState machine: draft → pending_review → approved|changed|rejected
+  - services/eval/src/state.rs
+  # ScoreRow, EvidenceRef, citation-coverage invariant
+  - services/eval/src/scoring/mod.rs
+  # every score cites ≥1 evidence event + exactly 1 rubric clause
+  - services/eval/src/scoring/citation.rs
+  # mandatory-reviewer gate + consequential-outcome hard gate
+  - services/eval/src/hitl.rs
+  # TASK-EVAL-001 consent check + RLS visibility (founder|manager|self)
+  - services/eval/src/access.rs
+  # l1_audit_log emit per state change (eval.* kinds)
+  - services/eval/src/audit.rs
+  # HTTP: draft / review / approve / change / reject / rebut / get
+  - services/eval/src/handlers.rs
+  # OTel: drafted, approval/override/reject rate, citation coverage, fallback rate
+  - services/eval/src/metrics.rs
+  # GENIE orchestration: recall → map-to-rubric → draft scores (via ai-gateway)
+  - services/eval/genie/score_subject.py
+  # the scoring prompt (evidence-grounded, refuse-if-unsupported)
+  - services/eval/genie/prompts/score_v1.md
+  # protected-attribute blinding + group-disparity check
+  - services/eval/genie/fairness.py
   - services/eval/tests/state_machine_test.rs
   - services/eval/tests/citation_coverage_test.rs
   - services/eval/tests/hitl_gate_test.rs
@@ -62,8 +73,10 @@ new_files:
   - services/eval/genie/tests/test_fallback_no_score.py
   - services/eval/genie/tests/test_fairness_blinding.py
 modified_files:
-  - services/ai-gateway/src/policy.rs           # register the `eval.score` route: spend cap, residency, ZDR=on, fallback=no-score
-  - deploy/vps/docker-compose.yml               # add the eval service (single-origin, behind AUTH)
+  # register the `eval.score` route: spend cap, residency, ZDR=on, fallback=no-score
+  - services/ai-gateway/src/policy.rs
+  # add the eval service (single-origin, behind AUTH)
+  - deploy/vps/docker-compose.yml
 allowed_tools:
   - file_read: services/eval/**
   - file_read: services/ai-gateway/src/policy.rs

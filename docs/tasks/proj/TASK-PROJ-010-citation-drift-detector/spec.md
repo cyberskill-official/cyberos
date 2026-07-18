@@ -1,8 +1,10 @@
 ---
 id: TASK-PROJ-010
 title: "Citation drift detector — nightly sweep flags stale MEMORY_LINKs (deleted target, superseded chain, broken memory_row_id) with operator notification"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -38,8 +40,10 @@ new_files:
   - services/proj-sync/src/drift/sweep.rs
   - services/proj/tests/audit_row_test.rs
 modified_files:
-  - services/proj-sync/src/main.rs                    # spawn nightly cron task
-  - services/proj-sync/migrations/0010_drift_state.sql # last-sweep-at, last-known-target-version cache
+  # spawn nightly cron task
+  - services/proj-sync/src/main.rs
+  # last-sweep-at, last-known-target-version cache
+  - services/proj-sync/migrations/0010_drift_state.sql
 allowed_tools:
   - file_read: services/proj-sync/**, services/memory/**
   - file_write: services/proj-sync/{src,tests,migrations}/**

@@ -1,8 +1,10 @@
 ---
 id: TASK-SKILL-111
 title: "SKILL.md `description:` field — mandated trigger-phrase enrichment + 1024-char budget for host-portable triggering"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -44,20 +46,30 @@ new_files:
   - services/skill-broker/tests/fixtures/description-too-short/SKILL.md
   - services/skill-broker/tests/fixtures/description-too-long/SKILL.md
 modified_files:
-  - services/skill-broker/src/frontmatter/schema.rs                    # raise max description length 200 → 1024
-  - services/skill-broker/src/frontmatter/validators.rs                # call description_validator
-  - services/skill-broker/skill.schema.json                            # JSONSchema mirror — description maxLength: 1024
-  - modules/skill/_template/author/SKILL.md                            # description block carries trigger phrases per FM-112
-  - modules/skill/_template/audit/SKILL.md                             # description block carries trigger phrases per FM-112
-  - modules/skill/task-audit/RUBRIC.md                      # add FM-112 (description-format)
-  - Task-audit skill        # §3.13 mentions description-format rule
-  - website docs (SKILL appendices)                                    # Part 2.1 description field row updates; Part 18 anti-pattern entry added
-  - website docs (SKILL Appendix J)                                    # §6.1 status badge updates when task ships
+  # raise max description length 200 → 1024
+  - services/skill-broker/src/frontmatter/schema.rs
+  # call description_validator
+  - services/skill-broker/src/frontmatter/validators.rs
+  # JSONSchema mirror — description maxLength: 1024
+  - services/skill-broker/skill.schema.json
+  # description block carries trigger phrases per FM-112
+  - modules/skill/_template/author/SKILL.md
+  # description block carries trigger phrases per FM-112
+  - modules/skill/_template/audit/SKILL.md
+  # add FM-112 (description-format)
+  - modules/skill/task-audit/RUBRIC.md
+  # §3.13 mentions description-format rule
+  - Task-audit skill
+  # Part 2.1 description field row updates; Part 18 anti-pattern entry added
+  - website docs (SKILL appendices)
+  # §6.1 status badge updates when task ships
+  - website docs (SKILL Appendix J)
 allowed_tools:
   - file_read: modules/skill/**, services/skill-broker/**, docs/tasks/skill/**
   - file_write: services/skill-broker/{src,tests,fixtures}/**, modules/skill/{_template,task-audit}, docs/tasks/skill/**
   - bash: cd services/skill-broker && cargo test description_validator
-  - bash: cd modules/skill && grep -l 'description:' */SKILL.md  | wc -l   # sweep precondition
+  # sweep precondition
+  - bash: cd modules/skill && grep -l 'description:' */SKILL.md  | wc -l
 disallowed_tools:
   - regenerate descriptions for all 104 pairs automatically without operator review (each must be hand-edited because triggers reflect human intent)
   - downgrade max description length below 1024 in v1 schema (DEC-182 — would break newly-conforming skills)

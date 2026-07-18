@@ -1,8 +1,10 @@
 ---
 id: TASK-INV-005
 title: "INV VietQR / Napas247 webhook handler — HMAC-SHA256 signature + idempotent receipt insert + reference memo parsing + append-only ledger + memory audit"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -48,29 +50,51 @@ source_decisions:
 language: rust 1.81 + sql
 service: cyberos/services/inv/
 new_files:
-  - services/inv/migrations/0010_payment_receipts.sql           # payment_receipts table + bank_code enum + RLS + REVOKE writes
-  - services/inv/migrations/0011_webhook_secrets.sql            # per-tenant HMAC secret with rotation history
-  - services/inv/src/webhook/vietqr.rs                          # POST /v1/inv/webhooks/vietqr/{tenant_slug} handler
-  - services/inv/src/webhook/hmac.rs                            # HMAC-SHA256 verify + timestamp window check
-  - services/inv/src/webhook/idempotency.rs                     # Napas247 transaction_reference idempotency cache (Postgres-backed)
-  - services/inv/src/parser/memo.rs                             # transfer_memo → invoice_id parser (regex)
-  - services/inv/src/repo/payment_receipts.rs                   # append-only writer
-  - services/inv/src/repo/webhook_secrets.rs                    # secret CRUD + rotation
-  - services/inv/src/audit/inv_events.rs                        # canonical inv.* memory row builders (5 kinds for this task)
-  - services/inv/src/types.rs                                   # PaymentReceipt, BankCode (15) enum, ReceiptSource enum
-  - services/inv/tests/vietqr_webhook_happy_test.rs             # valid HMAC + new TXN → 200 + payment_receipts row + memory row
-  - services/inv/tests/vietqr_webhook_hmac_test.rs              # invalid signature → 401 + inv.webhook_rejected
-  - services/inv/tests/vietqr_webhook_idempotent_test.rs        # duplicate TXN ref → 200 + no duplicate row
-  - services/inv/tests/vietqr_webhook_replay_test.rs            # ts > 5min old → 401
-  - services/inv/tests/memo_parser_test.rs                      # HD123 / INV456 / unparseable cases
-  - services/inv/tests/bank_code_closed_test.rs                 # 15 banks; 16th rejected
-  - services/inv/tests/append_only_receipts_test.rs             # UPDATE/DELETE rejected from cyberos_app
-  - services/inv/tests/per_tenant_url_test.rs                   # wrong tenant_slug → 404
-  - services/inv/tests/vnd_only_test.rs                         # non-VND currency → 400 currency_unsupported
-  - services/inv/tests/webhook_perf_test.rs                     # ack within 5s p95
-  - services/inv/tests/audit_emission_test.rs                   # every path emits correct memory kind
+  # payment_receipts table + bank_code enum + RLS + REVOKE writes
+  - services/inv/migrations/0010_payment_receipts.sql
+  # per-tenant HMAC secret with rotation history
+  - services/inv/migrations/0011_webhook_secrets.sql
+  # POST /v1/inv/webhooks/vietqr/{tenant_slug} handler
+  - services/inv/src/webhook/vietqr.rs
+  # HMAC-SHA256 verify + timestamp window check
+  - services/inv/src/webhook/hmac.rs
+  # Napas247 transaction_reference idempotency cache (Postgres-backed)
+  - services/inv/src/webhook/idempotency.rs
+  # transfer_memo → invoice_id parser (regex)
+  - services/inv/src/parser/memo.rs
+  # append-only writer
+  - services/inv/src/repo/payment_receipts.rs
+  # secret CRUD + rotation
+  - services/inv/src/repo/webhook_secrets.rs
+  # canonical inv.* memory row builders (5 kinds for this task)
+  - services/inv/src/audit/inv_events.rs
+  # PaymentReceipt, BankCode (15) enum, ReceiptSource enum
+  - services/inv/src/types.rs
+  # valid HMAC + new TXN → 200 + payment_receipts row + memory row
+  - services/inv/tests/vietqr_webhook_happy_test.rs
+  # invalid signature → 401 + inv.webhook_rejected
+  - services/inv/tests/vietqr_webhook_hmac_test.rs
+  # duplicate TXN ref → 200 + no duplicate row
+  - services/inv/tests/vietqr_webhook_idempotent_test.rs
+  # ts > 5min old → 401
+  - services/inv/tests/vietqr_webhook_replay_test.rs
+  # HD123 / INV456 / unparseable cases
+  - services/inv/tests/memo_parser_test.rs
+  # 15 banks; 16th rejected
+  - services/inv/tests/bank_code_closed_test.rs
+  # UPDATE/DELETE rejected from cyberos_app
+  - services/inv/tests/append_only_receipts_test.rs
+  # wrong tenant_slug → 404
+  - services/inv/tests/per_tenant_url_test.rs
+  # non-VND currency → 400 currency_unsupported
+  - services/inv/tests/vnd_only_test.rs
+  # ack within 5s p95
+  - services/inv/tests/webhook_perf_test.rs
+  # every path emits correct memory kind
+  - services/inv/tests/audit_emission_test.rs
 modified_files:
-  - services/auth/src/rls/templates.rs                          # add payment_receipts + webhook_secrets to TENANT_SCOPED_TABLES
+  # add payment_receipts + webhook_secrets to TENANT_SCOPED_TABLES
+  - services/auth/src/rls/templates.rs
 
 allowed_tools:
   - file_read: services/inv/**

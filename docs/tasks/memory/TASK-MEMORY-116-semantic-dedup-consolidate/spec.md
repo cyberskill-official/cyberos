@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-116
 title: "memory consolidate — semantic-dedup phase (Walk → Compact → Sign → Publish → SemanticDedup); shares duplicates detector with TASK-MEMORY-115; opt-in via --semantic-dedup; dry-run by default"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -25,7 +27,8 @@ depends_on: [TASK-MEMORY-115]
 blocks: []
 
 source_pages:
-  - playground/extracts/agentic-memory.article.txt  # "Periodic consolidation" / `consolidate_memories()` reference
+  # "Periodic consolidation" / `consolidate_memories()` reference
+  - playground/extracts/agentic-memory.article.txt
 source_decisions:
   - DEC-220 (Reuse `cyberos.core.dream.detectors.duplicates` verbatim; semantic-dedup is the duplicates-only subset of dreaming gated to run inside the existing consolidation pipeline)
   - DEC-221 (Default = `--dry-run`; operator must explicitly pass `--apply` to merge proposals. Mirrors TASK-MEMORY-115's operator-review gate)
@@ -36,15 +39,18 @@ service: modules/memory/cyberos/
 new_files:
   - modules/memory/tests/test_consolidate_semantic_dedup.py
 modified_files:
-  - modules/memory/cyberos/core/consolidate.py    # add SemanticDedup phase after Publish; gated on --semantic-dedup flag
-  - modules/memory/cyberos/__main__.py            # wire `--semantic-dedup` + `--apply` flags on `cyberos consolidate`
+  # add SemanticDedup phase after Publish; gated on --semantic-dedup flag
+  - modules/memory/cyberos/core/consolidate.py
+  # wire `--semantic-dedup` + `--apply` flags on `cyberos consolidate`
+  - modules/memory/cyberos/__main__.py
 allowed_tools:
   - file_read: modules/memory/**
   - file_write: modules/memory/cyberos/core/consolidate.py, modules/memory/cyberos/__main__.py, modules/memory/tests/**
   - bash: cd modules/memory && python -m pytest tests/test_consolidate_semantic_dedup.py -v
   - bash: cd modules/memory && python -m cyberos consolidate --semantic-dedup --dry-run
 disallowed_tools:
-  - apply semantic-dedup proposals without explicit `--apply` flag (per §1 #2, DEC-221)
+  #2, DEC-221)
+  - apply semantic-dedup proposals without explicit `--apply` flag (per §1
   - bypass the TASK-MEMORY-115 protocol-amendment §7.7 anchor check when `--apply` is used (the same anchor check applies)
   - introduce a new audit kind for this phase (per DEC-222 — reuse `dream.*`)
 

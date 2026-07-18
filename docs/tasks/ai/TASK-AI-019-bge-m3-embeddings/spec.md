@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-019
 title: "Self-hosted BGE-M3 embeddings (single L4 GPU sidecar) + ONNX-CPU fallback + adaptive batching"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -53,10 +55,14 @@ new_files:
   - services/ai-gateway/tests/cache_test.rs
   - services/ai-gateway/tests/rerank_test.rs
 modified_files:
-  - services/ai-gateway/src/router/mod.rs               # add BgeProvider variant
-  - services/ai-gateway/src/router/provider.rs          # Provider trait covers call_embed
-  - services/ai-gateway/config/cost_rates.yaml          # add bge-m3 entries (cost = 0)
-  - services/ai-gateway/Cargo.toml                      # add reqwest, tokio
+  # add BgeProvider variant
+  - services/ai-gateway/src/router/mod.rs
+  # Provider trait covers call_embed
+  - services/ai-gateway/src/router/provider.rs
+  # add bge-m3 entries (cost = 0)
+  - services/ai-gateway/config/cost_rates.yaml
+  # add reqwest, tokio
+  - services/ai-gateway/Cargo.toml
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests,embeddings}/**
@@ -65,8 +71,10 @@ allowed_tools:
 disallowed_tools:
   - send embeddings to managed APIs when bge sidecar is healthy (router prefers self-hosted per cost rule)
   - bypass tenant residency on BGE inference (sidecar deployment is per-region; TASK-AI-016 enforces)
-  - load the BGE-M3 model without verifying checksum at startup (per §1 #11)
-  - hardcode sidecar URL (use config-driven discovery per §1 #14)
+  #11)
+  - load the BGE-M3 model without verifying checksum at startup (per §1
+  #14)
+  - hardcode sidecar URL (use config-driven discovery per §1
   - emit cost > 0 in `ai.invocation` rows for BGE calls (the marginal cost IS zero; amortised infra cost is tracked separately)
 
 # ───── Estimated work ─────

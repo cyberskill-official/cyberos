@@ -1,8 +1,10 @@
 ---
 id: TASK-CRM-008
 title: "CRM vietnam-mst-validate skill — synchronous GDT lookup on Account write to confirm MST format + entity name match"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/crm.html#mst-validate
-  - https://gdt.gov.vn/  # GDT TIN lookup API
+  # GDT TIN lookup API
+  - https://gdt.gov.vn/
 
 source_decisions:
   - DEC-1680 2026-05-17 — Skill name: vietnam-mst-validate@1; called on Account create/update when vn_account_type set and residency=vn-1

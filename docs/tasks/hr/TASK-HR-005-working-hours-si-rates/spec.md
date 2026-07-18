@@ -1,8 +1,10 @@
 ---
 id: TASK-HR-005
 title: "HR Decree 145/2020 working-hour caps + Decree 152/2020 SI rates — version-pinned policy constants with annual refresh + tenant override"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-RES-005, TASK-REW-004]
 
 source_pages:
   - website/docs/modules/hr.html#policy-constants
-  - https://thuvienphapluat.vn/  # Decree 145/2020 (working hours) + Decree 152/2020 (SI rates)
+  # Decree 145/2020 (working hours) + Decree 152/2020 (SI rates)
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-1840 2026-05-17 — Version-pinned policy table: working-hour caps (48h/wk regular, +12h OT/wk, +200h OT/yr — Art. 107), SI rates (BHXH 17.5%, BHYT 4.5%, BHTN 2% employer-side per Decree 152)

@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter ─────
 id: TASK-AI-004
 title: "Cost-hold expiry cleanup job — refund unsettled holds + emit audit"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -39,12 +41,16 @@ source_decisions:
 language: rust 1.81
 service: cyberos/services/ai-gateway/
 new_files:
-  - services/ai-gateway/src/bin/cost_hold_expiry.rs    # standalone tokio binary
-  - services/ai-gateway/src/cost_hold_expiry.rs        # library code (testable)
+  # standalone tokio binary
+  - services/ai-gateway/src/bin/cost_hold_expiry.rs
+  # library code (testable)
+  - services/ai-gateway/src/cost_hold_expiry.rs
   - services/ai-gateway/tests/cost_hold_expiry_test.rs
-  - deploy/systemd/cyberos-ai-gateway-expiry.service   # systemd unit
+  # systemd unit
+  - deploy/systemd/cyberos-ai-gateway-expiry.service
 modified_files:
-  - services/ai-gateway/Cargo.toml   # add binary target
+  # add binary target
+  - services/ai-gateway/Cargo.toml
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests}/**

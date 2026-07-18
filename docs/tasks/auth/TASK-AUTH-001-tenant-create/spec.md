@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AUTH-001
 title: "Tenant create — root-admin in tenant 0 calls POST /v1/admin/tenants with idempotency + RLS provisioning"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -59,10 +61,14 @@ allowed_tools:
   - bash: cd services/auth && cargo test
   - bash: cd services/auth && sqlx migrate run
 disallowed_tools:
-  - create tenant 0 via this endpoint (bootstrap is TASK-AUTH-006 CLI per §1 #14)
-  - allow non-root-admin to create tenants (per §1 #1)
-  - skip RLS policy application on success path (per §1 #7)
-  - skip memory audit row emission (audit-before-commit per §1 #6)
+  #14)
+  - create tenant 0 via this endpoint (bootstrap is TASK-AUTH-006 CLI per §1
+  #1)
+  - allow non-root-admin to create tenants (per §1
+  #7)
+  - skip RLS policy application on success path (per §1
+  #6)
+  - skip memory audit row emission (audit-before-commit per §1
   - bypass slug regex validation in API layer (defence in depth with DB CHECK)
 
 # ───── Estimated work ─────

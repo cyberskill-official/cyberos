@@ -1,8 +1,10 @@
 ---
 id: TASK-RES-005
 title: "RES VN Labour Code Art. 107 OT cap hard-block — propose-time validation gate preventing weekly + annual OT overflow"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/res.html#ot-cap
-  - https://thuvienphapluat.vn/  # Decree 145/2020 Art. 107
+  # Decree 145/2020 Art. 107
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-2060 2026-05-17 — Hard-block at TASK-RES-002 propose-time: weekly OT cap (12h regular / 30h with consent) + annual OT cap (200h / 300h industry-specific)

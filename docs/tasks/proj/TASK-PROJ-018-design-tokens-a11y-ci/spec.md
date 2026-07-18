@@ -1,8 +1,10 @@
 ---
 id: TASK-PROJ-018
 title: "Liquid-Glass design tokens (tokens.proj.css) + axe-core CI accessibility gate + Storybook visual regression"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -38,13 +40,16 @@ new_files:
   - web/proj-client/src/styles/tokens.proj.css
   - web/proj-client/.storybook/main.ts
   - web/proj-client/.storybook/preview.tsx
-  - web/proj-client/src/components/*.stories.tsx           # one story per component
+  # one story per component
+  - web/proj-client/src/components/*.stories.tsx
   - web/proj-client/playwright/a11y.spec.ts
   - .github/workflows/proj-a11y-gate.yml
   - .github/workflows/proj-storybook-chromatic.yml
 modified_files:
-  - web/proj-client/src/styles/global.css                  # import tokens.proj.css
-  - web/proj-client/package.json                           # axe-core/playwright, @storybook/react-vite, chromatic
+  # import tokens.proj.css
+  - web/proj-client/src/styles/global.css
+  # axe-core/playwright, @storybook/react-vite, chromatic
+  - web/proj-client/package.json
 allowed_tools:
   - file_read: web/proj-client/**, design-system/**
   - file_write: web/proj-client/src/**, web/proj-client/.storybook/**, web/proj-client/playwright/**, .github/workflows/**

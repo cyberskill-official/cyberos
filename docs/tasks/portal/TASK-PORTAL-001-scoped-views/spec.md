@@ -1,8 +1,10 @@
 ---
 id: TASK-PORTAL-001
 title: "PORTAL scoped read-only views — PROJ/INV/DOC/CHAT filtered by Engagement membership + sync_class=client-visible + per-row redaction + GraphQL-style projection"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -27,7 +29,8 @@ blocks: [TASK-PORTAL-007, TASK-PORTAL-008]
 source_pages:
   - website/docs/modules/portal.html#scoped-views
   - https://gdpr.eu/article-25-data-protection-by-design/
-  - https://datatracker.ietf.org/doc/html/rfc7235  # HTTP auth framework
+  # HTTP auth framework
+  - https://datatracker.ietf.org/doc/html/rfc7235
 
 source_decisions:
   - DEC-1200 2026-05-17 — Client tenants see read-only projection of 4 module surfaces (PROJ, INV, DOC, CHAT) filtered by Engagement membership AND sync_class='client-visible' per TASK-MEMORY-106; never write through PORTAL views (writes go through dedicated TASK-PORTAL-006 workflows)
@@ -55,21 +58,36 @@ build_envelope:
   language: rust 1.81
   service: cyberos/services/portal/
   new_files:
-    - services/portal/migrations/0014_portal_view_definitions.sql      # SQL view DDL per view_kind
-    - services/portal/migrations/0015_portal_view_read_log.sql         # detail-row read audit log
-    - services/portal/src/views/mod.rs                                 # orchestrator
-    - services/portal/src/views/projects.rs                            # /views/projects + detail
-    - services/portal/src/views/invoices.rs                            # /views/invoices + detail
-    - services/portal/src/views/documents.rs                           # /views/documents + detail
-    - services/portal/src/views/channels.rs                            # /views/channels + detail
-    - services/portal/src/views/calendar.rs                            # /views/calendar (slice-2 stub)
-    - services/portal/src/views/projection.rs                          # field-set projection (GraphQL-style)
-    - services/portal/src/views/redaction.rs                           # per-row redaction logic
-    - services/portal/src/views/search.rs                              # tsvector search
-    - services/portal/src/views/pagination.rs                          # cursor encode/decode
-    - services/portal/src/views/export.rs                              # CSV + XLSX export
-    - services/portal/src/audit/view_events.rs                         # 6 memory row builders
-    - services/portal/src/handlers/view_routes.rs                      # REST routes
+    # SQL view DDL per view_kind
+    - services/portal/migrations/0014_portal_view_definitions.sql
+    # detail-row read audit log
+    - services/portal/migrations/0015_portal_view_read_log.sql
+    # orchestrator
+    - services/portal/src/views/mod.rs
+    # /views/projects + detail
+    - services/portal/src/views/projects.rs
+    # /views/invoices + detail
+    - services/portal/src/views/invoices.rs
+    # /views/documents + detail
+    - services/portal/src/views/documents.rs
+    # /views/channels + detail
+    - services/portal/src/views/channels.rs
+    # /views/calendar (slice-2 stub)
+    - services/portal/src/views/calendar.rs
+    # field-set projection (GraphQL-style)
+    - services/portal/src/views/projection.rs
+    # per-row redaction logic
+    - services/portal/src/views/redaction.rs
+    # tsvector search
+    - services/portal/src/views/search.rs
+    # cursor encode/decode
+    - services/portal/src/views/pagination.rs
+    # CSV + XLSX export
+    - services/portal/src/views/export.rs
+    # 6 memory row builders
+    - services/portal/src/audit/view_events.rs
+    # REST routes
+    - services/portal/src/handlers/view_routes.rs
     - services/portal/tests/view_projects_list_test.rs
     - services/portal/tests/view_projects_filtered_by_sync_class_test.rs
     - services/portal/tests/view_engagement_isolation_test.rs
@@ -87,8 +105,10 @@ build_envelope:
     - services/portal/tests/view_audit_emission_test.rs
 
   modified_files:
-    - services/portal/src/lib.rs                                       # mount view routes
-    - services/portal/Cargo.toml                                       # +rust_xlsxwriter for export
+    # mount view routes
+    - services/portal/src/lib.rs
+    # +rust_xlsxwriter for export
+    - services/portal/Cargo.toml
 
   allowed_tools:
     - file_read: services/portal/**

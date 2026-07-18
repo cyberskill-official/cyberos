@@ -1,7 +1,8 @@
 ---
 id: TASK-EVAL-001
 title: "governance, consent, access-control + retention layer — versioned monitoring notice + per-subject acknowledgment gate + data-category/purpose registry + per-category retention sweeper + manager/self access grants (tenant RLS + audit row per read) + data-subject rights — the Phase-0 gate every BRAIN/EVAL capture and evaluation depends on"
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-06-29T00:00:00+07:00
@@ -10,7 +11,8 @@ author: "@stephencheng"
 template: task@1
 module: EVAL
 priority: p0
-status: on_hold   # was "blocked" (not a valid status per STATUS-REFERENCE §1); deferred pending TASK-AUTH-003
+# was "blocked" (not a valid status per STATUS-REFERENCE §1); deferred pending TASK-AUTH-003
+status: on_hold
 verify: T
 phase: P0
 milestone: BRAIN/EVAL · Phase 0 (governance first)
@@ -40,19 +42,28 @@ service: cyberos/services/eval/
 new_files:
   - services/eval/migrations/0001_governance.sql
   - services/eval/src/lib.rs
-  - services/eval/src/notice/mod.rs            # versioned monitoring notice + acknowledgment gate
-  - services/eval/src/registry/mod.rs          # data-category + purpose + lawful-basis registry
-  - services/eval/src/access/mod.rs            # access-grant resolution (founder + manager-of + self) + read audit
-  - services/eval/src/retention/mod.rs         # per-category retention policy + erasure sweeper
-  - services/eval/src/rights/mod.rs            # data-subject self-read + rectification/objection requests
-  - services/eval/src/audit.rs                 # l1_audit_log emit (reuses cyberos-audit-chain::chain_anchor)
-  - services/eval/src/handlers.rs              # REST surface
+  # versioned monitoring notice + acknowledgment gate
+  - services/eval/src/notice/mod.rs
+  # data-category + purpose + lawful-basis registry
+  - services/eval/src/registry/mod.rs
+  # access-grant resolution (founder + manager-of + self) + read audit
+  - services/eval/src/access/mod.rs
+  # per-category retention policy + erasure sweeper
+  - services/eval/src/retention/mod.rs
+  # data-subject self-read + rectification/objection requests
+  - services/eval/src/rights/mod.rs
+  # l1_audit_log emit (reuses cyberos-audit-chain::chain_anchor)
+  - services/eval/src/audit.rs
+  # REST surface
+  - services/eval/src/handlers.rs
   - services/eval/tests/governance_gate_test.rs
   - services/eval/tests/access_control_test.rs
   - services/eval/tests/retention_sweep_test.rs
 modified_files:
-  - services/eval/Cargo.toml                   # depend on shared cyberos-audit-chain
-  - docs/tasks/eval/README.md       # new EVAL module index (created with this task)
+  # depend on shared cyberos-audit-chain
+  - services/eval/Cargo.toml
+  # new EVAL module index (created with this task)
+  - docs/tasks/eval/README.md
 allowed_tools:
   - file_read: services/eval/**
   - file_write: services/eval/{src,tests,migrations}/**

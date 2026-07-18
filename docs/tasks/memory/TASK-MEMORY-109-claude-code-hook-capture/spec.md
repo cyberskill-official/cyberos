@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-109
 title: "Claude Code hook capture — UserPromptSubmit + PostToolUse + Stop hooks emit memory memories with prompt + diff + trace correlation"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -46,8 +48,10 @@ new_files:
   - services/memory/tests/ingest_test.rs
   - services/memory-claude-hook/tests/redact_test.rs
 modified_files:
-  - services/memory/manifest.json                        # add `claude_hooks` section with opt-in per-project list
-  - services/memory/src/cli/hook.rs                      # `cyberos memory hook claude install <path>`
+  # add `claude_hooks` section with opt-in per-project list
+  - services/memory/manifest.json
+  # `cyberos memory hook claude install <path>`
+  - services/memory/src/cli/hook.rs
 allowed_tools:
   - file_read: services/memory-claude-hook/**, services/memory/**, ~/.claude/**
   - file_write: services/memory-claude-hook/{src,tests,install}/**

@@ -1,8 +1,10 @@
 ---
 id: TASK-CHAT-101
 title: "CyberOS-native chat - slice 1 (skeleton: channels, messages, live delivery, CyberOS-token auth)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-06-29T00:00:00+07:00
@@ -26,18 +28,29 @@ blocks: []
 language: Rust (axum + sqlx + tokio)
 service: cyberos/services/chat
 new_files:
-  - services/chat/Cargo.toml                       # new workspace member, package cyberos-chat
-  - services/chat/src/main.rs                       # bin entrypoint (bind, load JWKS, run)
-  - services/chat/src/lib.rs                        # router + state
-  - services/chat/src/auth.rs                       # CyberOS-token verifier (RS256 JWKS, HS256 for tests)
-  - services/chat/src/channels.rs                   # create/list channels + membership
-  - services/chat/src/messages.rs                   # post/list messages
-  - services/chat/src/realtime.rs                   # per-channel broadcast + websocket handler
-  - services/chat/src/db.rs                          # pool + tenant-GUC helper
-  - services/chat/migrations/0001_chat_core.sql      # channels, messages, channel_members (+ RLS)
+  # new workspace member, package cyberos-chat
+  - services/chat/Cargo.toml
+  # bin entrypoint (bind, load JWKS, run)
+  - services/chat/src/main.rs
+  # router + state
+  - services/chat/src/lib.rs
+  # CyberOS-token verifier (RS256 JWKS, HS256 for tests)
+  - services/chat/src/auth.rs
+  # create/list channels + membership
+  - services/chat/src/channels.rs
+  # post/list messages
+  - services/chat/src/messages.rs
+  # per-channel broadcast + websocket handler
+  - services/chat/src/realtime.rs
+  # pool + tenant-GUC helper
+  - services/chat/src/db.rs
+  # channels, messages, channel_members (+ RLS)
+  - services/chat/migrations/0001_chat_core.sql
 modified_files:
-  - services/Cargo.toml                              # add "chat" to workspace members
-  - docs/tasks/chat/README.md             # retire TASK-CHAT-001..013, point at the native series
+  # add "chat" to workspace members
+  - services/Cargo.toml
+  # retire TASK-CHAT-001..013, point at the native series
+  - docs/tasks/chat/README.md
 
 retires:
   - "The Mattermost-fork CHAT module (TASK-CHAT-001..012) and its OIDC config (TASK-CHAT-013). services/chat is repurposed from the Mattermost fork to the native cyberos-chat crate; the old Mattermost scaffolding is archived, not built."

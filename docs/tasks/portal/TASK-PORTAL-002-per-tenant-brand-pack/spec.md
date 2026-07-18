@@ -1,8 +1,10 @@
 ---
 id: TASK-PORTAL-002
 title: "PORTAL per-tenant brand pack — logo + colour palette + custom CNAME + email template overrides + ACME-issued TLS cert + brand-asset versioning"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,8 +28,10 @@ blocks: []
 
 source_pages:
   - website/docs/modules/portal.html#brand-pack
-  - https://datatracker.ietf.org/doc/html/rfc8555    # ACME (TLS cert issuance)
-  - https://www.w3.org/TR/WCAG21/#contrast-minimum   # contrast accessibility
+  # ACME (TLS cert issuance)
+  - https://datatracker.ietf.org/doc/html/rfc8555
+  # contrast accessibility
+  - https://www.w3.org/TR/WCAG21/#contrast-minimum
   - https://html.spec.whatwg.org/multipage/links.html#sec-link-types
 
 source_decisions:
@@ -60,24 +64,42 @@ build_envelope:
   language: rust 1.81 + typescript 5.5 (UI)
   service: cyberos/services/portal/
   new_files:
-    - services/portal/migrations/0005_portal_brand_packs.sql           # versioned brand pack store
-    - services/portal/migrations/0006_portal_brand_pack_active.sql      # activation pointer (one per tenant)
-    - services/portal/migrations/0007_portal_brand_assets.sql           # KMS-wrapped asset binaries + variants
-    - services/portal/migrations/0008_portal_cname_configs.sql          # custom CNAME + DNS verify + TLS cert lifecycle
-    - services/portal/src/brand/mod.rs                                  # brand orchestrator
-    - services/portal/src/brand/validate.rs                             # WCAG contrast + magic-bytes + size checks
-    - services/portal/src/brand/image_pipeline.rs                       # logo → 3 variants via vips
-    - services/portal/src/brand/email_overrides.rs                      # Tera fragment loader + sandbox
-    - services/portal/src/brand/version.rs                              # version + activate + rollback
-    - services/portal/src/brand/cdn.rs                                  # CDN URL builder + ETag
-    - services/portal/src/cname/mod.rs                                  # CNAME orchestrator
-    - services/portal/src/cname/dns_verify.rs                           # TXT-record verification
-    - services/portal/src/cname/acme.rs                                 # ACME TLS issuance + renewal
-    - services/portal/src/handlers/brand_pack_routes.rs                 # POST/PATCH/GET tenant brand pack
-    - services/portal/src/handlers/brand_asset_serve.rs                 # public CDN-origin asset serve
-    - services/portal/src/handlers/cname_admin.rs                       # POST CNAME / verify / activate
-    - services/portal/src/cli/cname_renewal_job.rs                      # daily ACME renewal
-    - services/portal/src/audit/brand_events.rs                         # 8 memory row builders
+    # versioned brand pack store
+    - services/portal/migrations/0005_portal_brand_packs.sql
+    # activation pointer (one per tenant)
+    - services/portal/migrations/0006_portal_brand_pack_active.sql
+    # KMS-wrapped asset binaries + variants
+    - services/portal/migrations/0007_portal_brand_assets.sql
+    # custom CNAME + DNS verify + TLS cert lifecycle
+    - services/portal/migrations/0008_portal_cname_configs.sql
+    # brand orchestrator
+    - services/portal/src/brand/mod.rs
+    # WCAG contrast + magic-bytes + size checks
+    - services/portal/src/brand/validate.rs
+    # logo → 3 variants via vips
+    - services/portal/src/brand/image_pipeline.rs
+    # Tera fragment loader + sandbox
+    - services/portal/src/brand/email_overrides.rs
+    # version + activate + rollback
+    - services/portal/src/brand/version.rs
+    # CDN URL builder + ETag
+    - services/portal/src/brand/cdn.rs
+    # CNAME orchestrator
+    - services/portal/src/cname/mod.rs
+    # TXT-record verification
+    - services/portal/src/cname/dns_verify.rs
+    # ACME TLS issuance + renewal
+    - services/portal/src/cname/acme.rs
+    # POST/PATCH/GET tenant brand pack
+    - services/portal/src/handlers/brand_pack_routes.rs
+    # public CDN-origin asset serve
+    - services/portal/src/handlers/brand_asset_serve.rs
+    # POST CNAME / verify / activate
+    - services/portal/src/handlers/cname_admin.rs
+    # daily ACME renewal
+    - services/portal/src/cli/cname_renewal_job.rs
+    # 8 memory row builders
+    - services/portal/src/audit/brand_events.rs
     - services/portal/tests/brand_pack_create_test.rs
     - services/portal/tests/brand_pack_version_test.rs
     - services/portal/tests/brand_pack_rollback_test.rs
@@ -95,9 +117,12 @@ build_envelope:
     - services/portal/tests/brand_pack_rls_isolation_test.rs
 
   modified_files:
-    - services/portal/src/lib.rs                                          # mount brand routes
-    - services/portal/Cargo.toml                                          # +libvips, +instant-acme, +csscolorparser
-    - services/email/src/templates/                                       # fallback-chain consumer for tenant overrides
+    # mount brand routes
+    - services/portal/src/lib.rs
+    # +libvips, +instant-acme, +csscolorparser
+    - services/portal/Cargo.toml
+    # fallback-chain consumer for tenant overrides
+    - services/email/src/templates/
 
   allowed_tools:
     - file_read: services/portal/**

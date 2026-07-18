@@ -1,8 +1,10 @@
 ---
 id: TASK-HR-002
 title: "HR 5 contract types — indefinite + fixed_term + probation + part_time + contractor with per-type leave + benefit rules"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/hr.html#contract-types
-  - https://thuvienphapluat.vn/  # VN Labour Code 45/2019 Art. 20
+  # VN Labour Code 45/2019 Art. 20
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-1810 2026-05-17 — 5 contract types per VN Labour Code 45/2019 Art. 20 + business need: indefinite, fixed_term, probation, part_time, contractor

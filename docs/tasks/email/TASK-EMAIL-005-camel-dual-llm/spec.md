@@ -1,8 +1,10 @@
 ---
 id: TASK-EMAIL-005
 title: "EMAIL CaMeL dual-LLM security layer — Privileged-LLM plans, Quarantined-LLM parses untrusted email content (prompt-injection defense)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-EMAIL-008]
 
 source_pages:
   - website/docs/modules/email.html#camel
-  - https://arxiv.org/abs/2503.18813  # CaMeL paper (Google DeepMind 2025)
+  # CaMeL paper (Google DeepMind 2025)
+  - https://arxiv.org/abs/2503.18813
 
 source_decisions:
   - DEC-1600 2026-05-17 — Dual-LLM split: P-LLM (Privileged, sees tools+plans) NEVER reads untrusted inputs; Q-LLM (Quarantined) reads inputs, returns ONLY structured data (no tool calls)

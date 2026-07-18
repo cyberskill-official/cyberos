@@ -1,8 +1,10 @@
 ---
 id: TASK-AUTH-110
 title: "AUTH OIDC Provider - first-party authorization server (OIDC Core + RFC 8414 discovery, authorize with SSO-session / upstream-IdP brokering, token + id_token, userinfo, first-party RP client registry, PKCE S256, JWKS reuse, revoke-gated authorize)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-06-29T00:00:00+07:00
@@ -52,24 +54,40 @@ source_decisions:
 language: rust 1.81 + sql
 service: cyberos/services/auth/
 new_files:
-  - services/auth/migrations/0027_oidc_rp_clients.sql      # renumbered off existing 0013-0026
-  - services/auth/migrations/0028_oidc_auth_codes.sql      # + auth_oidc_code_consumptions single-use guard (ADR OPEN-001 #1)
+  # renumbered off existing 0013-0026
+  - services/auth/migrations/0027_oidc_rp_clients.sql
+  # + auth_oidc_code_consumptions single-use guard (ADR OPEN-001 #1)
+  - services/auth/migrations/0028_oidc_auth_codes.sql
   - services/auth/migrations/0029_sso_sessions.sql
   - services/auth/migrations/0030_op_login_history.sql
-  - services/auth/src/op/mod.rs                            # [slice 1a DONE] module wiring + slice/ADR notes
-  - services/auth/src/op/discovery.rs                      # [slice 1a DONE] OIDC + RFC 8414 well-known document
-  - services/auth/src/op/pkce.rs                           # [slice 1a DONE] PKCE S256 verify (RFC 7636)
-  - services/auth/src/op/redirect.rs                       # [slice 1a DONE] exact redirect_uri match (DEC-2491)
-  - services/auth/src/op/authorize.rs                      # [slice 1b] /authorize: SSO-session or upstream-IdP broker → code
-  - services/auth/src/op/token.rs                          # /token: code → id_token + access_token (+ optional refresh)
-  - services/auth/src/op/userinfo.rs                       # /userinfo: bearer access_token → identity claims
-  - services/auth/src/op/id_token.rs                       # [slice 1a DONE] id_token builder (claims + RS256 sign via auth_signing_keys)
-  - services/auth/src/op/rp_client.rs                      # first-party RP client registry CRUD + redirect_uri match
-  - services/auth/src/op/code_store.rs                     # single-use, 60s TTL, PKCE-bound auth codes
-  - services/auth/src/op/sso_session.rs                    # AUTH SSO browser session (cookie + table) for silent SSO
-  - services/auth/src/op/audit.rs                          # 7 memory row builders
-  - services/auth/src/op/errors.rs                         # [slice 1a DONE] closed RFC 6749/OIDC error enum
-  - services/auth/src/handlers/op.rs                       # the provider REST surface (authorize/token/userinfo/discovery/rp-clients)
+  # [slice 1a DONE] module wiring + slice/ADR notes
+  - services/auth/src/op/mod.rs
+  # [slice 1a DONE] OIDC + RFC 8414 well-known document
+  - services/auth/src/op/discovery.rs
+  # [slice 1a DONE] PKCE S256 verify (RFC 7636)
+  - services/auth/src/op/pkce.rs
+  # [slice 1a DONE] exact redirect_uri match (DEC-2491)
+  - services/auth/src/op/redirect.rs
+  # [slice 1b] /authorize: SSO-session or upstream-IdP broker → code
+  - services/auth/src/op/authorize.rs
+  # /token: code → id_token + access_token (+ optional refresh)
+  - services/auth/src/op/token.rs
+  # /userinfo: bearer access_token → identity claims
+  - services/auth/src/op/userinfo.rs
+  # [slice 1a DONE] id_token builder (claims + RS256 sign via auth_signing_keys)
+  - services/auth/src/op/id_token.rs
+  # first-party RP client registry CRUD + redirect_uri match
+  - services/auth/src/op/rp_client.rs
+  # single-use, 60s TTL, PKCE-bound auth codes
+  - services/auth/src/op/code_store.rs
+  # AUTH SSO browser session (cookie + table) for silent SSO
+  - services/auth/src/op/sso_session.rs
+  # 7 memory row builders
+  - services/auth/src/op/audit.rs
+  # [slice 1a DONE] closed RFC 6749/OIDC error enum
+  - services/auth/src/op/errors.rs
+  # the provider REST surface (authorize/token/userinfo/discovery/rp-clients)
+  - services/auth/src/handlers/op.rs
   - services/auth/tests/op_authorize_pkce_test.rs
   - services/auth/tests/op_authorize_revoke_gate_test.rs
   - services/auth/tests/op_token_exchange_test.rs
@@ -82,12 +100,15 @@ new_files:
   - services/auth/tests/op_rp_client_admin_test.rs
   - services/auth/tests/op_audit_emission_test.rs
 modified_files:
-  - services/auth/src/lib.rs                               # pub mod op
-  - services/auth/src/handlers.rs                          # mount the provider routes
+  # pub mod op
+  - services/auth/src/lib.rs
+  # mount the provider routes
+  - services/auth/src/handlers.rs
 
 allowed_tools:
   - file_read: services/auth/**
-  - file_read: services/mcp-gateway/src/oauth/**          # reuse reference
+  # reuse reference
+  - file_read: services/mcp-gateway/src/oauth/**
   - file_write: services/auth/{src,tests,migrations}/**
   - bash: cd services/auth && cargo test op
 

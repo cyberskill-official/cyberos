@@ -1,8 +1,10 @@
 ---
 id: TASK-SKILL-112
 title: "`acceptance/TRIGGER_TESTS.md` convention — positive + negative trigger phrases verified against the supervisor classifier"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -45,20 +47,29 @@ new_files:
   - modules/cuo/cuo/trigger_tests.py
   - modules/cuo/tests/test_trigger_tests.py
 modified_files:
-  - modules/skill/_template/author/acceptance/README.md                # cross-link to TRIGGER_TESTS.md
-  - modules/skill/_template/audit/acceptance/README.md                 # cross-link to TRIGGER_TESTS.md
-  - modules/skill/task-audit/RUBRIC.md                      # add FM-113 (trigger-tests-present)
-  - Task-audit skill        # §3.10 mentions trigger-tests rule
-  - website docs (SKILL appendices)                                    # Part 13.2 validation pyramid grows a new tier (Layer 1.5: triggering tests); Part 24.1 self-test checklist adds row
-  - website docs (SKILL Appendix J)                                    # §6.2 status badge updates when task ships
-  - website docs (CUO appendices)                                      # documents the trigger-tests smoke test path
+  # cross-link to TRIGGER_TESTS.md
+  - modules/skill/_template/author/acceptance/README.md
+  # cross-link to TRIGGER_TESTS.md
+  - modules/skill/_template/audit/acceptance/README.md
+  # add FM-113 (trigger-tests-present)
+  - modules/skill/task-audit/RUBRIC.md
+  # §3.10 mentions trigger-tests rule
+  - Task-audit skill
+  # Part 13.2 validation pyramid grows a new tier (Layer 1.5: triggering tests); Part 24.1 self-test checklist adds row
+  - website docs (SKILL appendices)
+  # §6.2 status badge updates when task ships
+  - website docs (SKILL Appendix J)
+  # documents the trigger-tests smoke test path
+  - website docs (CUO appendices)
 allowed_tools:
   - file_read: modules/**, docs/tasks/skill/**
   - file_write: modules/skill/{_template,task-audit,task-author/acceptance,task-audit/acceptance,product-requirements-document-author/acceptance}, modules/cuo/{cuo,tests}, docs/tasks/skill/**
   - bash: cd modules/cuo && python -m pytest tests/test_trigger_tests.py
 disallowed_tools:
-  - require backfill of TRIGGER_TESTS.md across all 104 pairs in one commit batch (lazy backfill per §1 #11)
-  - block CUO supervisor from booting if a skill lacks TRIGGER_TESTS.md (graceful degradation per §1 #9)
+  #11)
+  - require backfill of TRIGGER_TESTS.md across all 104 pairs in one commit batch (lazy backfill per §1
+  #9)
+  - block CUO supervisor from booting if a skill lacks TRIGGER_TESTS.md (graceful degradation per §1
   - auto-generate trigger phrases by inferring from the description (TASK-SKILL-111 covers description; this task validates separately)
 
 effort_hours: 10

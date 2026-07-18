@@ -1,8 +1,10 @@
 ---
 id: TASK-SKILL-101
 title: "Skill memory integration — skill.invoked_started + skill.invoked_completed audit rows (skill.* namespace) + args_hash + trace_id propagation + panic-recovery"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -43,16 +45,21 @@ new_files:
   - services/skill-host/tests/memory_audit_concurrent_test.rs
   - services/skill-host/tests/memory_audit_trace_propagation_test.rs
 modified_files:
-  - services/skill-host/src/supervisor.rs                  # call invoke_with_audit
+  # call invoke_with_audit
+  - services/skill-host/src/supervisor.rs
 allowed_tools:
   - file_read: services/skill-host/**
   - file_write: services/skill-host/**
   - bash: cd services/skill-host && cargo test memory_audit
 disallowed_tools:
-  - emit raw args in memory row (per §1 #3 — args_hash only)
-  - skip start OR completed row (per §1 #1 + #2 — both required)
-  - silent panic (per §1 #5 — panic emits completed row)
-  - bypass TASK-AI-003 memory_writer (per §1 #6)
+  #3 — args_hash only)
+  - emit raw args in memory row (per §1
+  #1 + #2 — both required)
+  - skip start OR completed row (per §1
+  #5 — panic emits completed row)
+  - silent panic (per §1
+  #6)
+  - bypass TASK-AI-003 memory_writer (per §1
 
 effort_hours: 6
 subtasks:

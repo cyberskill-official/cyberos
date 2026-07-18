@@ -1,8 +1,10 @@
 ---
 id: TASK-OBS-005
 title: "W3C TraceContext correlation across logs/metrics/traces/AI-traces — propagate, embed, exemplar, end-to-end CI test"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -43,19 +45,24 @@ new_files:
   - crates/cyberos-obs-sdk/tests/end_to_end_correlation_test.rs
   - .github/workflows/obs-correlation-gate.yml
 modified_files:
-  - services/ai-gateway/**                                # use with_trace_context wrapper
+  # use with_trace_context wrapper
+  - services/ai-gateway/**
   - services/auth/**
   - services/chat/**
   - services/memory/**
-  - crates/cyberos-obs-sdk/src/red.rs                     # exemplar emission
+  # exemplar emission
+  - crates/cyberos-obs-sdk/src/red.rs
 allowed_tools:
   - file_read: services/**, crates/cyberos-obs-sdk/**
   - file_write: services/**, crates/cyberos-obs-sdk/**
   - bash: cargo test -p cyberos-obs-sdk tracecontext
 disallowed_tools:
-  - strip trace_id from any structured log line (per §1 #2)
-  - emit metric without trace_id exemplar where supported (per §1 #3)
-  - generate trace_id at internal services without checking incoming header (per §1 #1)
+  #2)
+  - strip trace_id from any structured log line (per §1
+  #3)
+  - emit metric without trace_id exemplar where supported (per §1
+  #1)
+  - generate trace_id at internal services without checking incoming header (per §1
   - use B3 or Jaeger-native propagation (per DEC-160)
 
 effort_hours: 8

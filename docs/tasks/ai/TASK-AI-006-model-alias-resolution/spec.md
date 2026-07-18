@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-006
 title: "Model-alias resolution (chat.smart → bedrock:claude-3.5-sonnet) with per-tenant override"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -45,9 +47,12 @@ new_files:
   - services/ai-gateway/tests/fixtures/alias/policy_bedrock_primary.yaml
   - services/ai-gateway/tests/fixtures/alias/policy_with_override.yaml
 modified_files:
-  - services/ai-gateway/src/cost_ledger.rs   # use alias::resolve() instead of inline logic
-  - services/ai-gateway/src/lib.rs           # export alias module
-  - services/ai-gateway/src/policy/schema.rs # add AliasOverrides field if not in TASK-AI-005
+  # use alias::resolve() instead of inline logic
+  - services/ai-gateway/src/cost_ledger.rs
+  # export alias module
+  - services/ai-gateway/src/lib.rs
+  # add AliasOverrides field if not in TASK-AI-005
+  - services/ai-gateway/src/policy/schema.rs
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests}/**

@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-103
 title: "memory-sync daemon — laptop A ↔ Cloud memory ↔ laptop B with sync_class gating + CRDT conflict + 10K offline buffer + device-id stamp"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -58,9 +60,12 @@ allowed_tools:
   - bash: cd services/memory-sync && cargo test
 disallowed_tools:
   - sync compensation/equity data (per DEC-036 — compensation_guard rejects at sync boundary)
-  - sync without sync_class permission check (per §1 #3)
-  - bypass CRDT conflict detection (per §1 #4 — silent overwrite forbidden)
-  - drop offline-buffered rows without sev-2 alert (per §1 #7)
+  #3)
+  - sync without sync_class permission check (per §1
+  #4 — silent overwrite forbidden)
+  - bypass CRDT conflict detection (per §1
+  #7)
+  - drop offline-buffered rows without sev-2 alert (per §1
 
 effort_hours: 18
 subtasks:

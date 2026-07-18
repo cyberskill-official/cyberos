@@ -1,8 +1,10 @@
 ---
 id: TASK-CRM-009
 title: "CRM vietnam-bank-transfer skill — VietQR payment image generation for deal collection with embedded amount + memo + bank routing"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/crm.html#vietqr
-  - https://vietqr.io/  # VietQR spec reference
+  # VietQR spec reference
+  - https://vietqr.io/
 
 source_decisions:
   - DEC-1690 2026-05-17 — Skill name: vietnam-bank-transfer@1; generates VietQR PNG with embedded payment metadata

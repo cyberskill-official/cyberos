@@ -1,8 +1,10 @@
 ---
 id: TASK-TIME-001
 title: "TIME TimeEntry append-only schema — correction_to link semantics + tenant-scoped RLS + invoice-grade integrity"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -22,7 +24,8 @@ shipped: null
 memory_chain_hash: null
 related_tasks: [TASK-AUTH-003, TASK-AUTH-101, TASK-AI-003, TASK-MEMORY-101, TASK-PROJ-001, TASK-TIME-002, TASK-TIME-003, TASK-TIME-005, TASK-TIME-006, TASK-TIME-007, TASK-TIME-009, TASK-HR-001, TASK-HR-008]
 depends_on: [TASK-AUTH-003, TASK-AUTH-101]
-blocks: [TASK-TIME-002, TASK-TIME-003, TASK-TIME-005, TASK-TIME-006, TASK-TIME-007, TASK-TIME-009, TASK-HR-008, TASK-LEARN-003, TASK-RES-001]   # 9 downstream consumers
+# 9 downstream consumers
+blocks: [TASK-TIME-002, TASK-TIME-003, TASK-TIME-005, TASK-TIME-006, TASK-TIME-007, TASK-TIME-009, TASK-HR-008, TASK-LEARN-003, TASK-RES-001]
 
 source_pages:
   - website/docs/modules/time.html#what
@@ -49,29 +52,51 @@ source_decisions:
 language: rust 1.81 + sql
 service: cyberos/services/time/
 new_files:
-  - services/time/migrations/0001_time_entries.sql                 # time_entries table + ENUM kind + RLS + correction_to FK + REVOKE writes + duration CHECK
-  - services/time/migrations/0002_time_entries_view.sql            # current_time_entries_view (effective rows = no superseder) + entry_chain_walker function
-  - services/time/src/lib.rs                                       # crate root
-  - services/time/src/types.rs                                     # TimeEntry struct + EntryKind enum (regular | overtime | weekend | holiday) + EntryStatus (draft | submitted | approved | reverted)
-  - services/time/src/repo/entries.rs                              # repository — create + get + list + correct_via_new_row
-  - services/time/src/chain.rs                                     # correction-chain walker; detect cycles; return head + tail
-  - services/time/src/validation.rs                                # duration bounds (1 ≤ minutes ≤ 1440); ts_end > ts_start; correction_to references same engagement
-  - services/time/src/audit/entry_events.rs                        # canonical time.entry_recorded + time.entry_corrected memory row builders
-  - services/time/src/handlers/entries.rs                          # POST/GET /v1/time/entries + POST /v1/time/entries/{id}/correct
-  - services/time/Cargo.toml                                       # +sqlx, +uuid, +serde, +chrono, +rust_decimal, +async-trait, +cyberos-cli-exit
-  - services/time/tests/entries_create_test.rs                     # happy + invalid duration + invalid kind + cross-tenant + idempotent
-  - services/time/tests/entries_correct_test.rs                    # correction creates new row pointing at prior; original kept
-  - services/time/tests/correction_chain_test.rs                   # chain walks; tree-form (two correctors of same parent) rejected
-  - services/time/tests/correction_acyclic_test.rs                 # A → B → A cycle rejected at trigger
-  - services/time/tests/append_only_test.rs                        # UPDATE/DELETE rejected by SQL grant
-  - services/time/tests/rls_isolation_test.rs                      # tenant-A cannot see tenant-B entries
-  - services/time/tests/duration_bounds_test.rs                    # < 1 minute and > 1440 minutes rejected
-  - services/time/tests/current_view_test.rs                       # superseded rows omitted; corrections visible
-  - services/time/tests/rate_card_snapshot_test.rs                 # rate-card change does not retroactively alter past entries
-  - services/time/tests/audit_row_test.rs                          # every create/correct emits exactly one memory row
-  - services/time/tests/billable_default_test.rs                   # slice-1 default is false; TASK-TIME-005 will set via cascade
+  # time_entries table + ENUM kind + RLS + correction_to FK + REVOKE writes + duration CHECK
+  - services/time/migrations/0001_time_entries.sql
+  # current_time_entries_view (effective rows = no superseder) + entry_chain_walker function
+  - services/time/migrations/0002_time_entries_view.sql
+  # crate root
+  - services/time/src/lib.rs
+  # TimeEntry struct + EntryKind enum (regular | overtime | weekend | holiday) + EntryStatus (draft | submitted | approved | reverted)
+  - services/time/src/types.rs
+  # repository — create + get + list + correct_via_new_row
+  - services/time/src/repo/entries.rs
+  # correction-chain walker; detect cycles; return head + tail
+  - services/time/src/chain.rs
+  # duration bounds (1 ≤ minutes ≤ 1440); ts_end > ts_start; correction_to references same engagement
+  - services/time/src/validation.rs
+  # canonical time.entry_recorded + time.entry_corrected memory row builders
+  - services/time/src/audit/entry_events.rs
+  # POST/GET /v1/time/entries + POST /v1/time/entries/{id}/correct
+  - services/time/src/handlers/entries.rs
+  # +sqlx, +uuid, +serde, +chrono, +rust_decimal, +async-trait, +cyberos-cli-exit
+  - services/time/Cargo.toml
+  # happy + invalid duration + invalid kind + cross-tenant + idempotent
+  - services/time/tests/entries_create_test.rs
+  # correction creates new row pointing at prior; original kept
+  - services/time/tests/entries_correct_test.rs
+  # chain walks; tree-form (two correctors of same parent) rejected
+  - services/time/tests/correction_chain_test.rs
+  # A → B → A cycle rejected at trigger
+  - services/time/tests/correction_acyclic_test.rs
+  # UPDATE/DELETE rejected by SQL grant
+  - services/time/tests/append_only_test.rs
+  # tenant-A cannot see tenant-B entries
+  - services/time/tests/rls_isolation_test.rs
+  # < 1 minute and > 1440 minutes rejected
+  - services/time/tests/duration_bounds_test.rs
+  # superseded rows omitted; corrections visible
+  - services/time/tests/current_view_test.rs
+  # rate-card change does not retroactively alter past entries
+  - services/time/tests/rate_card_snapshot_test.rs
+  # every create/correct emits exactly one memory row
+  - services/time/tests/audit_row_test.rs
+  # slice-1 default is false; TASK-TIME-005 will set via cascade
+  - services/time/tests/billable_default_test.rs
 modified_files:
-  - services/proj/migrations/0010_issues_addendum.sql              # add `(engagement_id, issue_id)` GIN index to support TIME entry FK joins (read-only join target)
+  # add `(engagement_id, issue_id)` GIN index to support TIME entry FK joins (read-only join target)
+  - services/proj/migrations/0010_issues_addendum.sql
 
 allowed_tools:
   - file_read: services/time/**
@@ -82,7 +107,8 @@ allowed_tools:
 
 disallowed_tools:
   - allow UPDATE or DELETE on time_entries (per DEC-230 — append-only is SQL-grant-enforced)
-  - allow correction_to pointing at an entry in a different tenant or different engagement (per §1 #11)
+  #11)
+  - allow correction_to pointing at an entry in a different tenant or different engagement (per §1
   - allow correction creating a tree (two rows correcting the same parent) — chain only (per DEC-226)
   - allow durations < 1 minute or > 1440 minutes per row (per DEC-227 + DEC-228)
   - hard-code billable cascade logic in this task — that is TASK-TIME-005's responsibility (per DEC-223)

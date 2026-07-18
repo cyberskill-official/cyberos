@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-017
 title: "Per-tenant Redis response cache keyed by (tenant × redacted-prompt × model × persona); ≥30% hit-rate P0 target"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -48,24 +50,34 @@ new_files:
   - services/ai-gateway/tests/cache_ttl_test.rs
   - services/ai-gateway/tests/cache_ttl_test.rs
   - services/ai-gateway/tests/cache_isolation_property_test.rs
-  - services/ai-gateway/docker/redis/redis.conf                      # production-tuned config (maxmemory + LRU policy)
+  # production-tuned config (maxmemory + LRU policy)
+  - services/ai-gateway/docker/redis/redis.conf
 modified_files:
-  - services/ai-gateway/src/handlers/chat.rs                         # check cache before router::call_provider
-  - services/ai-gateway/src/cost_ledger.rs                           # precheck reads cache_state to decide audit-row payload
-  - services/ai-gateway/src/memory_writer.rs                          # canonical builders include cache_state field
-  - services/ai-gateway/Cargo.toml                                   # redis@0.24, hex@0.4
+  # check cache before router::call_provider
+  - services/ai-gateway/src/handlers/chat.rs
+  # precheck reads cache_state to decide audit-row payload
+  - services/ai-gateway/src/cost_ledger.rs
+  # canonical builders include cache_state field
+  - services/ai-gateway/src/memory_writer.rs
+  # redis@0.24, hex@0.4
+  - services/ai-gateway/Cargo.toml
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests,docker}/**
   - bash: cd services/ai-gateway && cargo test cache
   - bash: docker run -d --name test-redis -p 6379:6379 redis:7
 disallowed_tools:
-  - cache across tenants (cache key MUST start with tenant_id; cross-tenant reads are correctness-load-bearing per §1 #2 and exhaustively tested in TASK-AI-018)
+  #2 and exhaustively tested in TASK-AI-018)
+  - cache across tenants (cache key MUST start with tenant_id; cross-tenant reads are correctness-load-bearing per §1
   - cache the RAW (un-redacted) prompt anywhere — the redacted prompt is the only legitimate cache key
-  - cache streaming responses (TASK-AI-010 streaming defeats caching anyway; §1 #5)
-  - cache failed responses (any non-200 from provider; §1 #6)
-  - hardcode TTL values inside `redis_backend.rs` (TTLs live in `ttl.rs` — single source of truth per §1 #4)
-  - bypass `cost_ledger::precheck` even on cache hits (audit-before-action invariant from TASK-AI-001 §1 #6)
+  #5)
+  - cache streaming responses (TASK-AI-010 streaming defeats caching anyway; §1
+  #6)
+  - cache failed responses (any non-200 from provider; §1
+  #4)
+  - hardcode TTL values inside `redis_backend.rs` (TTLs live in `ttl.rs` — single source of truth per §1
+  #6)
+  - bypass `cost_ledger::precheck` even on cache hits (audit-before-action invariant from TASK-AI-001 §1
 
 # ───── Estimated work ─────
 effort_hours: 8

@@ -1,8 +1,10 @@
 ---
 id: TASK-HR-004
 title: "HR 8 leave types — annual/sick/maternity/paternity/sabbatical/unpaid/bereavement/public_holiday with per-type accrual + approval rules"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-HR-006]
 
 source_pages:
   - website/docs/modules/hr.html#leave-types
-  - https://thuvienphapluat.vn/  # VN Labour Code 45/2019 + Decree 145/2020
+  # VN Labour Code 45/2019 + Decree 145/2020
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-1830 2026-05-17 — 8 leave types per VN Labour Code + sabbatical (business-defined); each with distinct accrual + approval rules

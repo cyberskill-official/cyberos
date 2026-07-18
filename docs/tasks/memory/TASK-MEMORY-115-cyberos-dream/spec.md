@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-115
 title: "memory dreaming — `cyberos dream` out-of-band batch reflection that mines transcripts + episode rows for cross-session patterns; produces reviewable diffs that consolidate / mark-stale / verify / propose-new memories under explicit operator gate"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-MEMORY-116]
 protocol_amendment_required: "AGENTS.md §7.7 (new) — dreaming-applied audit rows MUST carry extra.dream_id + extra.proposal_id provenance; approval phrase: APPROVE protocol change P19 §7.7"
 
 source_pages:
-  - playground/extracts/memory-and-dreaming.transcript.txt  # see talk segments at [681:39 - 1419:04]
+  # see talk segments at [681:39 - 1419:04]
+  - playground/extracts/memory-and-dreaming.transcript.txt
 source_decisions:
   - DEC-210 (Dreaming is OUT-OF-BAND — runs separately from any agent session; never adds latency to the hot path; per Anthropic talk "design perspective" segment)
   - DEC-211 (Dreaming produces a DIFF that requires explicit `cyberos dream apply` to merge into the chain; mirrors the talk's "operator review gate" design; no auto-apply by default)
@@ -52,21 +55,29 @@ new_files:
   - modules/memory/tests/core/test_dream.py
   - modules/memory/tests/fixtures/dream_inputs/
 modified_files:
-  - modules/memory/cyberos/__main__.py                  # wire `cyberos dream` + `cyberos dream apply` subcommands
-  - modules/memory/cyberos/core/writer.py               # accept `extra` fields on `put`/`delete` rows; validate `extra.dream_id`/`extra.proposal_id` form
-  - modules/memory/cyberos/core/walker.py               # invariant: every dream-applied row has well-formed extras
-  - modules/memory/memory.schema.json                   # `DreamDiff`, `DreamProposal`, `DreamProposalKind` definitions
-  - modules/memory/memory.invariants.yaml               # `dream-applied-row-has-provenance` + `dream-diff-schema-valid`
-  - AGENTS.md                                            # add §7.7 Dreaming (REQUIRES amendment via APPROVE chat-turn P19 §7.7)
+  # wire `cyberos dream` + `cyberos dream apply` subcommands
+  - modules/memory/cyberos/__main__.py
+  # accept `extra` fields on `put`/`delete` rows; validate `extra.dream_id`/`extra.proposal_id` form
+  - modules/memory/cyberos/core/writer.py
+  # invariant: every dream-applied row has well-formed extras
+  - modules/memory/cyberos/core/walker.py
+  # `DreamDiff`, `DreamProposal`, `DreamProposalKind` definitions
+  - modules/memory/memory.schema.json
+  # `dream-applied-row-has-provenance` + `dream-diff-schema-valid`
+  - modules/memory/memory.invariants.yaml
+  # add §7.7 Dreaming (REQUIRES amendment via APPROVE chat-turn P19 §7.7)
+  - AGENTS.md
 allowed_tools:
   - file_read: modules/memory/**, playground/extracts/**
   - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, AGENTS.md
   - bash: cd modules/memory && python -m pytest tests/test_dream_*.py -v
   - bash: cd modules/memory && python -m cyberos dream --since 24h --scope memories/facts --dry-run
 disallowed_tools:
-  - auto-apply dream proposals without explicit `dream apply` invocation (per §1 #4, DEC-211)
+  #4, DEC-211)
+  - auto-apply dream proposals without explicit `dream apply` invocation (per §1
   - mutate AGENTS.md §7.7 without an APPROVE protocol change P19 §7.7 chat-turn (per §0.2 of the protocol itself)
-  - emit `put`/`delete` rows without `extra.dream_id` if the call originated from `cyberos.core.dream.runner` (per §1 #11)
+  #11)
+  - emit `put`/`delete` rows without `extra.dream_id` if the call originated from `cyberos.core.dream.runner` (per §1
   - hit the production Anthropic API in unit tests (use MockInvoker — same DEC-201 pattern as TASK-MEMORY-114)
 
 effort_hours: 32

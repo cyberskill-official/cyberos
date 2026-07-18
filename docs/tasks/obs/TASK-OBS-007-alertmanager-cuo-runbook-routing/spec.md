@@ -1,8 +1,10 @@
 ---
 id: TASK-OBS-007
 title: "obs-router: Alertmanager → CUO obs.triage-alert@1 skill → CHAT (≥0.70 conf) OR PagerDuty + sev-1 always pages + ack-button + audit"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -51,16 +53,21 @@ new_files:
   - skills/obs.triage-alert/SKILL.md
   - skills/obs.triage-alert/runbooks-corpus/.keep
 modified_files:
-  - deploy/obs/alertmanager-config.yaml                   # webhook → obs-router:7777
+  # webhook → obs-router:7777
+  - deploy/obs/alertmanager-config.yaml
 allowed_tools:
   - file_read: services/obs-router/**, skills/obs.triage-alert/**
   - file_write: services/obs-router/**, skills/obs.triage-alert/**
   - bash: cd services/obs-router && cargo test
 disallowed_tools:
-  - auto-resolve a sev-1 alert without human confirmation (per §1 #5)
-  - bypass PagerDuty fallback on CUO failure (per §1 #11)
-  - skip memory audit row (per §1 #6)
-  - silent-drop alert (per §1 #11 — every alert MUST route somewhere)
+  #5)
+  - auto-resolve a sev-1 alert without human confirmation (per §1
+  #11)
+  - bypass PagerDuty fallback on CUO failure (per §1
+  #6)
+  - skip memory audit row (per §1
+  #11 — every alert MUST route somewhere)
+  - silent-drop alert (per §1
 
 effort_hours: 10
 subtasks:

@@ -1,8 +1,10 @@
 ---
 id: TASK-PORTAL-008
 title: "PORTAL DSAR self-service — GDPR Art. 15 + PDPL Art. 17 client-initiated data subject access request with 30-day SLA + async export bundle + redaction audit"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -72,7 +74,8 @@ build_envelope:
 
   modified_files:
     - services/portal/src/lib.rs
-    - services/portal/Cargo.toml                                       # +zip + age (encryption)
+    # +zip + age (encryption)
+    - services/portal/Cargo.toml
 
   allowed_tools:
     - file_read: services/portal/**

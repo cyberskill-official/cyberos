@@ -1,8 +1,10 @@
 ---
 id: TASK-PROJ-016
 title: "Gantt view with dependency arrows — issue-to-issue precedence + critical path highlighting + roll-up to parent issue"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -43,7 +45,8 @@ new_files:
   - services/proj-sync/src/dependencies/mod.rs
   - services/proj-sync/tests/dependencies_test.rs
 modified_files:
-  - web/proj-client/src/router.tsx                  # /proj/gantt/:cycle_id
+  # /proj/gantt/:cycle_id
+  - web/proj-client/src/router.tsx
 allowed_tools:
   - file_read: web/proj-client/**, services/proj-sync/**
   - file_write: web/proj-client/src/views/Gantt/**, services/proj-sync/{src,tests,migrations}/**

@@ -1,8 +1,10 @@
 ---
 id: TASK-INV-001
 title: "INV invoice substrate — draft invoices from TIME per-cycle rollup with rate-card snapshot preservation + closed enums + lifecycle FSM + per-line traceability"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -21,8 +23,10 @@ created: 2026-05-17
 shipped: null
 memory_chain_hash: null
 related_tasks: [TASK-INV-002, TASK-INV-003, TASK-INV-005, TASK-INV-006, TASK-INV-007, TASK-TIME-009, TASK-TEN-003, TASK-TEN-102, TASK-PORTAL-001, TASK-PORTAL-006, TASK-CRM-001, TASK-AUTH-101, TASK-AI-003, TASK-MEMORY-111, TASK-OBS-007]
-depends_on: [TASK-TIME-009]   # TASK-TIME-009 placeholder — not yet specified
-blocks: [TASK-INV-002, TASK-INV-007, TASK-INV-009, TASK-INV-011]   # INV-009/011 use INV-001 invoice substrate; INV-003/005/006 already shipped + depend on AUTH-101 instead of this task
+# TASK-TIME-009 placeholder — not yet specified
+depends_on: [TASK-TIME-009]
+# INV-009/011 use INV-001 invoice substrate; INV-003/005/006 already shipped + depend on AUTH-101 instead of this task
+blocks: [TASK-INV-002, TASK-INV-007, TASK-INV-009, TASK-INV-011]
 
 source_pages:
   - website/docs/modules/inv.html
@@ -82,7 +86,8 @@ build_envelope:
     - services/inv/tests/invoice_audit_emission_test.rs
 
   modified_files:
-    - services/time/src/                                              # add invoiced_at marker on TIME entries
+    # add invoiced_at marker on TIME entries
+    - services/time/src/
 
   allowed_tools:
     - file_read: services/{inv,time}/**

@@ -1,8 +1,10 @@
 ---
 id: TASK-PROJ-017
 title: "Brief Modal — issue deep-view with Yjs description editor + threaded comments + LWW meta sidebar + presence cursors"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -42,8 +44,10 @@ new_files:
   - web/proj-client/src/views/BriefModal/HistoryDrawer.tsx
   - web/proj-client/tests/brief_modal_test.tsx
 modified_files:
-  - web/proj-client/src/router.tsx                  # /proj/issues/:id/brief deep-link
-  - web/proj-client/package.json                    # @tiptap/react, @tiptap/extension-collaboration
+  # /proj/issues/:id/brief deep-link
+  - web/proj-client/src/router.tsx
+  # @tiptap/react, @tiptap/extension-collaboration
+  - web/proj-client/package.json
 allowed_tools:
   - file_read: web/proj-client/**
   - file_write: web/proj-client/src/views/BriefModal/**, web/proj-client/tests/**

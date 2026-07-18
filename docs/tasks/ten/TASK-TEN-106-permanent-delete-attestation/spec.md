@@ -1,8 +1,10 @@
 ---
 id: TASK-TEN-106
 title: "TEN permanent-delete attestation — CSO + CLO dual-sign + chain-anchored evidence + cascade hard-purge across all tenant data with verification"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -30,7 +32,8 @@ source_pages:
 
 source_decisions:
   - DEC-1340 2026-05-17 — Permanent-delete attestation = the final, irreversible step in tenant lifecycle; transitions tenant from `terminating` (TASK-TEN-104) to fully hard-purged; dual-sign (CSO + CLO) required because the action is unrecoverable
-  - DEC-1341 2026-05-17 — Pre-conditions: tenant.status='terminating'; recent bundle export within 90d (TASK-TEN-105 §1 #14); 30-day cool-off since tenant.status flipped to terminating
+  #14); 30-day cool-off since tenant.status flipped to terminating
+  - DEC-1341 2026-05-17 — Pre-conditions: tenant.status='terminating'; recent bundle export within 90d (TASK-TEN-105 §1
   - DEC-1342 2026-05-17 — CSO + CLO dual-signature (distinct subjects per CHECK constraint mirror of TASK-PORTAL-008 DEC denial pattern)
   - DEC-1343 2026-05-17 — Cascade hard-purge across: tenant Postgres schema (DROP CASCADE), tenant S3 prefix (recursive delete + lifecycle policy), KMS keys (schedule deletion 30d), NATS subject namespace (purge JetStream), audit chain (TOMBSTONE entries — chain integrity preserved)
   - DEC-1344 2026-05-17 — Chain integrity: audit rows for the deleted tenant remain in memory chain (cannot be deleted — chain integrity property); replaced with tombstone records containing only `(tenant_id, deleted_at, attestation_id)` — original content scrubbed

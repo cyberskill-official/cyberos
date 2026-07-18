@@ -1,8 +1,10 @@
 ---
 id: TASK-PROJ-012
 title: "Cycle-review draft generator — CUO/COO-persona LLM compose at cycle close with completion stats, blocker recap, and editable memory draft"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -39,7 +41,8 @@ new_files:
   - services/proj-sync/src/cycle_review/stats.rs
   - services/proj-sync/tests/cycle_review_test.rs
 modified_files:
-  - services/proj-sync/src/main.rs                    # spawn cycle-close scheduler
+  # spawn cycle-close scheduler
+  - services/proj-sync/src/main.rs
 allowed_tools:
   - file_read: services/proj-sync/**
   - file_write: services/proj-sync/{src,tests}/**

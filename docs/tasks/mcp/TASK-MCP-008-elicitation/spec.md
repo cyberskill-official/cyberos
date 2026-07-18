@@ -1,8 +1,10 @@
 ---
 id: TASK-MCP-008
 title: "MCP Elicitation — server-initiated structured prompts for mid-call user input (clarifications, confirmations, missing args) with timeout + cancellation"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -27,7 +29,8 @@ blocks: []
 source_pages:
   - website/docs/modules/mcp.html#elicitation
   - https://modelcontextprotocol.io/specification/2025-11-25/server/utilities/elicitation
-  - https://datatracker.ietf.org/doc/html/rfc8259  # JSON
+  # JSON
+  - https://datatracker.ietf.org/doc/html/rfc8259
 
 source_decisions:
   - DEC-1140 2026-05-17 — Elicitation per MCP 2025-11-25 spec: tool invoked → mid-execution server emits structured `elicitation/request` to caller → caller responds with `elicitation/response` → tool resumes with the answer; alternative to "fail with missing-arg-error and have caller retry"
@@ -56,18 +59,30 @@ build_envelope:
   language: rust 1.81
   service: cyberos/services/mcp/
   new_files:
-    - services/mcp/migrations/0012_mcp_elicitations.sql               # pending + completed elicitations
-    - services/mcp/src/elicitation/mod.rs                             # orchestrator
-    - services/mcp/src/elicitation/request.rs                         # tool-side API to emit elicitation
-    - services/mcp/src/elicitation/response.rs                        # caller-side response handler
-    - services/mcp/src/elicitation/poll.rs                            # caller polling endpoint
-    - services/mcp/src/elicitation/cancel.rs                          # cancellation handler
-    - services/mcp/src/elicitation/timeout_job.rs                     # daily timeout sweep
-    - services/mcp/src/elicitation/validate.rs                        # JSON Schema response validation
-    - services/mcp/src/elicitation/file_upload.rs                     # presigned S3 URL generation
-    - services/mcp/src/elicitation/nats_push.rs                       # NATS publish for push transport
-    - services/mcp/src/audit/elicitation_events.rs                    # 5 memory row builders
-    - services/mcp/src/handlers/elicitation_routes.rs                 # REST routes
+    # pending + completed elicitations
+    - services/mcp/migrations/0012_mcp_elicitations.sql
+    # orchestrator
+    - services/mcp/src/elicitation/mod.rs
+    # tool-side API to emit elicitation
+    - services/mcp/src/elicitation/request.rs
+    # caller-side response handler
+    - services/mcp/src/elicitation/response.rs
+    # caller polling endpoint
+    - services/mcp/src/elicitation/poll.rs
+    # cancellation handler
+    - services/mcp/src/elicitation/cancel.rs
+    # daily timeout sweep
+    - services/mcp/src/elicitation/timeout_job.rs
+    # JSON Schema response validation
+    - services/mcp/src/elicitation/validate.rs
+    # presigned S3 URL generation
+    - services/mcp/src/elicitation/file_upload.rs
+    # NATS publish for push transport
+    - services/mcp/src/elicitation/nats_push.rs
+    # 5 memory row builders
+    - services/mcp/src/audit/elicitation_events.rs
+    # REST routes
+    - services/mcp/src/handlers/elicitation_routes.rs
     - services/mcp/tests/elicitation_request_response_test.rs
     - services/mcp/tests/elicitation_timeout_test.rs
     - services/mcp/tests/elicitation_cancellation_test.rs
@@ -82,10 +97,14 @@ build_envelope:
     - services/mcp/tests/elicitation_audit_emission_test.rs
 
   modified_files:
-    - services/mcp/src/server_registry.rs                              # add supports_elicitation field
-    - services/mcp/src/lib.rs                                          # mount elicitation routes
-    - services/mcp/src/gating/elicit.rs                                # de-stub the elicit mode placeholder from TASK-MCP-006
-    - services/mcp/src/tasks/mod.rs                                    # task ctx exposes elicit() API
+    # add supports_elicitation field
+    - services/mcp/src/server_registry.rs
+    # mount elicitation routes
+    - services/mcp/src/lib.rs
+    # de-stub the elicit mode placeholder from TASK-MCP-006
+    - services/mcp/src/gating/elicit.rs
+    # task ctx exposes elicit() API
+    - services/mcp/src/tasks/mod.rs
 
   allowed_tools:
     - file_read: services/mcp/**

@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-022
 title: "OpenTelemetry trace + span emission for every call (caller → router → provider → response) with W3C TraceContext + PII-safe attributes"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -42,35 +44,52 @@ service: cyberos/services/ai-gateway/
 new_files:
   - services/ai-gateway/src/otel/mod.rs
   - services/ai-gateway/src/otel/init.rs
-  - services/ai-gateway/src/otel/attributes.rs                 # typed attribute-key constants
-  - services/ai-gateway/src/otel/propagation.rs                # W3C extract + inject
-  - services/ai-gateway/src/otel/pii_lint.rs                   # AST-walk gate against PII attribute keys
+  # typed attribute-key constants
+  - services/ai-gateway/src/otel/attributes.rs
+  # W3C extract + inject
+  - services/ai-gateway/src/otel/propagation.rs
+  # AST-walk gate against PII attribute keys
+  - services/ai-gateway/src/otel/pii_lint.rs
   - services/ai-gateway/tests/otel_test.rs
   - services/ai-gateway/tests/otel_propagation_test.rs
   - services/ai-gateway/tests/otel_test.rs
   - services/ai-gateway/tests/policy_loader_test.rs
-  - services/ai-gateway/docs/span-names.md                     # span/attribute naming reference
+  # span/attribute naming reference
+  - services/ai-gateway/docs/span-names.md
 modified_files:
-  - services/ai-gateway/src/handlers/chat.rs                   # #[instrument] on handler
-  - services/ai-gateway/src/cost_ledger.rs                     # #[instrument] on precheck/reconcile
-  - services/ai-gateway/src/router/mod.rs                      # #[instrument] on call_provider
-  - services/ai-gateway/src/persona/mod.rs                     # #[instrument] on load
-  - services/ai-gateway/src/cache/mod.rs                       # #[instrument] on lookup/insert
-  - services/ai-gateway/src/zdr/mod.rs                         # #[instrument] on is_zdr
-  - services/ai-gateway/src/residency/mod.rs                   # #[instrument] on matches
-  - services/ai-gateway/src/lib.rs                             # otel::init at boot
-  - services/ai-gateway/Cargo.toml                             # opentelemetry@0.21, opentelemetry-otlp, tracing-opentelemetry
+  # #[instrument] on handler
+  - services/ai-gateway/src/handlers/chat.rs
+  # #[instrument] on precheck/reconcile
+  - services/ai-gateway/src/cost_ledger.rs
+  # #[instrument] on call_provider
+  - services/ai-gateway/src/router/mod.rs
+  # #[instrument] on load
+  - services/ai-gateway/src/persona/mod.rs
+  # #[instrument] on lookup/insert
+  - services/ai-gateway/src/cache/mod.rs
+  # #[instrument] on is_zdr
+  - services/ai-gateway/src/zdr/mod.rs
+  # #[instrument] on matches
+  - services/ai-gateway/src/residency/mod.rs
+  # otel::init at boot
+  - services/ai-gateway/src/lib.rs
+  # opentelemetry@0.21, opentelemetry-otlp, tracing-opentelemetry
+  - services/ai-gateway/Cargo.toml
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests,docs}/**
   - bash: docker run -d --name otel-collector -p 4317:4317 otel/opentelemetry-collector
   - bash: cargo test -p cyberos-ai-gateway otel
 disallowed_tools:
-  - emit PII in span attributes (per §1 #6 — typed attribute keys forbid this; AST lint enforces)
-  - skip span emission on any code path (per §1 #1 — every request emits a root span)
+  #6 — typed attribute keys forbid this; AST lint enforces)
+  - emit PII in span attributes (per §1
+  #1 — every request emits a root span)
+  - skip span emission on any code path (per §1
   - use B3 or Jaeger-native propagation (per DEC-103 — W3C only)
-  - encode full prompts or response text in attributes (per §1 #6 — token counts only)
-  - drop trace context from incoming caller HTTP without preserving (per §1 #2 — propagate or generate new)
+  #6 — token counts only)
+  - encode full prompts or response text in attributes (per §1
+  #2 — propagate or generate new)
+  - drop trace context from incoming caller HTTP without preserving (per §1
 
 # ───── Estimated work ─────
 effort_hours: 8

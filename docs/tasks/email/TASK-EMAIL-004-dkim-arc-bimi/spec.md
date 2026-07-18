@@ -1,8 +1,10 @@
 ---
 id: TASK-EMAIL-004
 title: "EMAIL DKIM signing + ARC chain forward + BIMI brand indicator — RFC 6376 + RFC 8617 + BIMI 1.0 per-tenant outbound auth"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -25,8 +27,10 @@ depends_on: [TASK-EMAIL-001]
 blocks: [TASK-EMAIL-009]
 
 source_pages:
-  - https://datatracker.ietf.org/doc/html/rfc6376  # DKIM
-  - https://datatracker.ietf.org/doc/html/rfc8617  # ARC
+  # DKIM
+  - https://datatracker.ietf.org/doc/html/rfc6376
+  # ARC
+  - https://datatracker.ietf.org/doc/html/rfc8617
   - https://bimigroup.org/
 
 source_decisions:
@@ -66,7 +70,8 @@ build_envelope:
 
   modified_files:
     - services/email/src/lib.rs
-    - services/ten/src/provisioning/orchestrator.rs                   # generate DKIM keypair at tenant provisioning
+    # generate DKIM keypair at tenant provisioning
+    - services/ten/src/provisioning/orchestrator.rs
 
   allowed_tools:
     - file_read: services/{email,ten}/**

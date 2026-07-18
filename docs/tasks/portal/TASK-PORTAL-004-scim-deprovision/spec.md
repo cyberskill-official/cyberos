@@ -1,8 +1,10 @@
 ---
 id: TASK-PORTAL-004
 title: "PORTAL SCIM deprovision — session invalidation ≤ 30 s on IdP user removal + grace period + cascade revocation + dual-channel kill (JWT blacklist + WebSocket close)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,10 +28,13 @@ blocks: []
 
 source_pages:
   - website/docs/modules/portal.html#scim-deprovision
-  - https://datatracker.ietf.org/doc/html/rfc7644#section-3.6  # SCIM delete + soft-delete
-  - https://datatracker.ietf.org/doc/html/rfc7519              # JWT
+  # SCIM delete + soft-delete
+  - https://datatracker.ietf.org/doc/html/rfc7644#section-3.6
+  # JWT
+  - https://datatracker.ietf.org/doc/html/rfc7519
   - https://gdpr.eu/article-17-right-to-be-forgotten/
-  - https://datatracker.ietf.org/doc/html/rfc7009              # OAuth 2.0 token revocation
+  # OAuth 2.0 token revocation
+  - https://datatracker.ietf.org/doc/html/rfc7009
 
 source_decisions:
   - DEC-1080 2026-05-17 — SCIM DELETE on a user MUST invalidate all active sessions for that user within 30 seconds (p99 SLO); this is the contractual security commitment that enterprise tenants demand for "user-removed-from-AD" workflows
@@ -56,20 +61,34 @@ build_envelope:
   language: rust 1.81
   service: cyberos/services/portal/
   new_files:
-    - services/portal/migrations/0009_portal_deprovision_log.sql       # detailed deprovision event log
-    - services/portal/migrations/0010_portal_jwt_blacklist.sql          # JWT jti blacklist (also in Redis hot-path)
-    - services/portal/migrations/0011_portal_restore_requests.sql        # admin restore endpoint requests
-    - services/portal/src/deprovision/mod.rs                            # deprovision orchestrator
-    - services/portal/src/deprovision/sync_phase.rs                     # < 1s fast-path (tombstone + JWT blacklist)
-    - services/portal/src/deprovision/async_phase.rs                    # < 30s slow-path (cascade revocation)
-    - services/portal/src/deprovision/jwt_blacklist.rs                  # Redis sorted-set + pub/sub
-    - services/portal/src/deprovision/websocket_killer.rs               # iterates active WS connections + sends close 4001
-    - services/portal/src/deprovision/cascade.rs                        # cascade to PORTAL-005 + PORTAL-001 + CHAT-005 + MCP-006
-    - services/portal/src/deprovision/restore.rs                        # admin restore handler
-    - services/portal/src/deprovision/reconciliation.rs                 # nightly orphan-session scan
-    - services/portal/src/scim/user_delete.rs                           # extends scim/users.rs from TASK-PORTAL-003
-    - services/portal/src/audit/deprovision_events.rs                   # 7 memory row builders
-    - services/portal/src/handlers/admin_restore.rs                     # POST restore endpoint
+    # detailed deprovision event log
+    - services/portal/migrations/0009_portal_deprovision_log.sql
+    # JWT jti blacklist (also in Redis hot-path)
+    - services/portal/migrations/0010_portal_jwt_blacklist.sql
+    # admin restore endpoint requests
+    - services/portal/migrations/0011_portal_restore_requests.sql
+    # deprovision orchestrator
+    - services/portal/src/deprovision/mod.rs
+    # < 1s fast-path (tombstone + JWT blacklist)
+    - services/portal/src/deprovision/sync_phase.rs
+    # < 30s slow-path (cascade revocation)
+    - services/portal/src/deprovision/async_phase.rs
+    # Redis sorted-set + pub/sub
+    - services/portal/src/deprovision/jwt_blacklist.rs
+    # iterates active WS connections + sends close 4001
+    - services/portal/src/deprovision/websocket_killer.rs
+    # cascade to PORTAL-005 + PORTAL-001 + CHAT-005 + MCP-006
+    - services/portal/src/deprovision/cascade.rs
+    # admin restore handler
+    - services/portal/src/deprovision/restore.rs
+    # nightly orphan-session scan
+    - services/portal/src/deprovision/reconciliation.rs
+    # extends scim/users.rs from TASK-PORTAL-003
+    - services/portal/src/scim/user_delete.rs
+    # 7 memory row builders
+    - services/portal/src/audit/deprovision_events.rs
+    # POST restore endpoint
+    - services/portal/src/handlers/admin_restore.rs
     - services/portal/tests/scim_delete_invalidates_jwt_test.rs
     - services/portal/tests/scim_delete_closes_websocket_test.rs
     - services/portal/tests/scim_delete_cascade_test.rs
@@ -84,11 +103,16 @@ build_envelope:
     - services/portal/tests/scim_audit_emission_test.rs
 
   modified_files:
-    - services/portal/src/scim/users.rs                                 # add DELETE handler + tombstone semantics
-    - services/portal/src/scim/mod.rs                                   # add DELETE route
-    - services/auth/src/jwt/validator.rs                                # consult blacklist on every JWT validate
-    - services/auth/src/sessions/store.rs                               # session tombstone semantics
-    - services/portal/Cargo.toml                                        # +redis (already in workspace)
+    # add DELETE handler + tombstone semantics
+    - services/portal/src/scim/users.rs
+    # add DELETE route
+    - services/portal/src/scim/mod.rs
+    # consult blacklist on every JWT validate
+    - services/auth/src/jwt/validator.rs
+    # session tombstone semantics
+    - services/auth/src/sessions/store.rs
+    # +redis (already in workspace)
+    - services/portal/Cargo.toml
 
   allowed_tools:
     - file_read: services/portal/**

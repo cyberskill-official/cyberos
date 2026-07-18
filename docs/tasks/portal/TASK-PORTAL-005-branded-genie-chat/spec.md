@@ -1,8 +1,10 @@
 ---
 id: TASK-PORTAL-005
 title: "PORTAL branded Genie chat — CUO scope-narrowed by JWT scope_grants + per-Engagement brand pack + IdP-auth session integration + cross-tenant boundary enforcement"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -49,16 +51,26 @@ build_envelope:
   language: rust 1.81
   service: cyberos/services/portal/
   new_files:
-    - services/portal/migrations/0012_portal_genie_sessions.sql        # session per (engagement, caller)
-    - services/portal/migrations/0013_portal_genie_messages.sql        # message log with raw text
-    - services/portal/src/genie/mod.rs                                 # orchestrator
-    - services/portal/src/genie/query_handler.rs                       # POST /v1/portal/genie/query
-    - services/portal/src/genie/scope_narrowing.rs                     # JWT scope_grants → CUO context filter
-    - services/portal/src/genie/boundary_check.rs                      # cross-tenant + out-of-scope detection
-    - services/portal/src/genie/sse_stream.rs                          # SSE response streaming
-    - services/portal/src/genie/session.rs                             # session create/archive
-    - services/portal/src/genie/persona.rs                             # per-Engagement persona resolver
-    - services/portal/src/audit/genie_events.rs                        # 5 memory row builders
+    # session per (engagement, caller)
+    - services/portal/migrations/0012_portal_genie_sessions.sql
+    # message log with raw text
+    - services/portal/migrations/0013_portal_genie_messages.sql
+    # orchestrator
+    - services/portal/src/genie/mod.rs
+    # POST /v1/portal/genie/query
+    - services/portal/src/genie/query_handler.rs
+    # JWT scope_grants → CUO context filter
+    - services/portal/src/genie/scope_narrowing.rs
+    # cross-tenant + out-of-scope detection
+    - services/portal/src/genie/boundary_check.rs
+    # SSE response streaming
+    - services/portal/src/genie/sse_stream.rs
+    # session create/archive
+    - services/portal/src/genie/session.rs
+    # per-Engagement persona resolver
+    - services/portal/src/genie/persona.rs
+    # 5 memory row builders
+    - services/portal/src/audit/genie_events.rs
     - services/portal/src/handlers/genie_routes.rs
     - services/portal/tests/genie_query_happy_test.rs
     - services/portal/tests/genie_scope_narrowing_test.rs
@@ -74,9 +86,12 @@ build_envelope:
     - services/portal/tests/genie_audit_emission_test.rs
 
   modified_files:
-    - services/portal/src/lib.rs                                       # mount genie routes
-    - services/auth/src/jwt/mint.rs                                    # add scope_grants claim to JWT mint
-    - services/cuo/src/orchestrator.rs                                 # accept scope_grants context + enforce boundary
+    # mount genie routes
+    - services/portal/src/lib.rs
+    # add scope_grants claim to JWT mint
+    - services/auth/src/jwt/mint.rs
+    # accept scope_grants context + enforce boundary
+    - services/cuo/src/orchestrator.rs
 
   allowed_tools:
     - file_read: services/portal/**

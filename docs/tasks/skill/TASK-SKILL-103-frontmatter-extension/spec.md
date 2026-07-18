@@ -1,8 +1,10 @@
 ---
 id: TASK-SKILL-103
 title: "SKILL.md frontmatter extension — allowed_memory_scopes + allowed_tools + version + signature enforced by capability broker"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -46,9 +48,12 @@ new_files:
   - services/skill-broker/tests/fixtures/skill-invalid-bad-glob/SKILL.md
   - services/skill-broker/tests/fixtures/skill-invalid-unknown-tool/SKILL.md
 modified_files:
-  - services/skill-broker/src/lib.rs                    # re-export frontmatter module
-  - services/skill-broker/src/invoke.rs                 # call frontmatter::load_and_validate before dispatch
-  - cyberos/AGENTS.md                                   # add §17 note on SKILL.md schema (referenced by skills using memory scopes)
+  # re-export frontmatter module
+  - services/skill-broker/src/lib.rs
+  # call frontmatter::load_and_validate before dispatch
+  - services/skill-broker/src/invoke.rs
+  # add §17 note on SKILL.md schema (referenced by skills using memory scopes)
+  - cyberos/AGENTS.md
 allowed_tools:
   - file_read: services/skill-broker/**, services/skill/**
   - file_write: services/skill-broker/{src,tests}/**
@@ -56,7 +61,8 @@ allowed_tools:
 disallowed_tools:
   - invoke a skill whose frontmatter fails to parse or validate (per DEC-181)
   - extend the v1 schema in place (per DEC-182 — schema is frozen; new fields require v2)
-  - downgrade signature verification (per §1 #9 — signed bundles MUST be verified before frontmatter is trusted)
+  #9 — signed bundles MUST be verified before frontmatter is trusted)
+  - downgrade signature verification (per §1
 
 effort_hours: 7
 subtasks:

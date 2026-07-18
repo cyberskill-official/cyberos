@@ -1,8 +1,10 @@
 ---
 id: TASK-SKILL-108
 title: "vietnam-mst-validate@1 skill — Vietnamese Tax ID (MST) validation against General Department of Taxation (GDT) public registry"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -45,7 +47,8 @@ new_files:
   - skills/vietnam-mst-validate/tests/checksum_test.rs
   - skills/vietnam-mst-validate/services/skill-broker/tests/integration.rs
 modified_files:
-  - cyberos/Cargo.toml                                  # workspace member
+  # workspace member
+  - cyberos/Cargo.toml
 allowed_tools:
   - file_read: skills/vietnam-mst-validate/**
   - file_write: skills/vietnam-mst-validate/**

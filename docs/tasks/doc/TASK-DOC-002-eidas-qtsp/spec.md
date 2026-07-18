@@ -1,8 +1,10 @@
 ---
 id: TASK-DOC-002
 title: "DOC eIDAS QTSP integration — GlobalSign or Cryptomathic partner for EU residency qualified signatures"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-DOC-011]
 
 source_pages:
   - website/docs/modules/doc.html#eidas-qtsp
-  - https://eur-lex.europa.eu/eli/reg/2014/910/oj  # eIDAS Regulation 910/2014
+  # eIDAS Regulation 910/2014
+  - https://eur-lex.europa.eu/eli/reg/2014/910/oj
 
 source_decisions:
   - DEC-1770 2026-05-17 — Partner with QTSP (GlobalSign or Cryptomathic — vendor selection per CLO/CISO); abstraction layer hides specifics

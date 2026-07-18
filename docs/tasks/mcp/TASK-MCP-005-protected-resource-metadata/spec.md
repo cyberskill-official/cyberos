@@ -1,8 +1,10 @@
 ---
 id: TASK-MCP-005
 title: "MCP Protected Resource Metadata (RFC 9728) at `/.well-known/oauth-protected-resource` — closed audience-binding advertisement for federated MCP clients"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -51,13 +53,20 @@ build_envelope:
   language: rust 1.81
   service: cyberos/services/mcp/
   new_files:
-    - services/mcp/migrations/0005_prm_drift_log.sql                  # aggregate-vs-module drift audit
-    - services/mcp/src/prm/mod.rs                                     # PRM orchestrator
-    - services/mcp/src/prm/gateway.rs                                 # gateway-aggregate PRM builder
-    - services/mcp/src/prm/per_module.rs                              # per-module PRM builder
-    - services/mcp/src/prm/cache.rs                                   # ETag + Cache-Control
-    - services/mcp/src/handlers/prm_routes.rs                         # public route registration
-    - services/mcp/src/audit/prm_events.rs                            # 3 memory row builders
+    # aggregate-vs-module drift audit
+    - services/mcp/migrations/0005_prm_drift_log.sql
+    # PRM orchestrator
+    - services/mcp/src/prm/mod.rs
+    # gateway-aggregate PRM builder
+    - services/mcp/src/prm/gateway.rs
+    # per-module PRM builder
+    - services/mcp/src/prm/per_module.rs
+    # ETag + Cache-Control
+    - services/mcp/src/prm/cache.rs
+    # public route registration
+    - services/mcp/src/handlers/prm_routes.rs
+    # 3 memory row builders
+    - services/mcp/src/audit/prm_events.rs
     - services/mcp/tests/prm_gateway_test.rs
     - services/mcp/tests/prm_per_module_test.rs
     - services/mcp/tests/prm_etag_cache_test.rs
@@ -68,13 +77,17 @@ build_envelope:
     - services/mcp/tests/prm_audit_emission_test.rs
 
   modified_files:
-    - services/mcp/src/lib.rs                                          # mount prm_routes
-    - services/mcp/src/server_registry.rs                              # add PRM-fields to ModuleRegistration
-    - services/mcp/Cargo.toml                                          # +etag
+    # mount prm_routes
+    - services/mcp/src/lib.rs
+    # add PRM-fields to ModuleRegistration
+    - services/mcp/src/server_registry.rs
+    # +etag
+    - services/mcp/Cargo.toml
 
   allowed_tools:
     - file_read: services/mcp/**
-    - file_read: services/auth/src/**                                  # to read JWT issuer / signing-alg metadata
+    # to read JWT issuer / signing-alg metadata
+    - file_read: services/auth/src/**
     - file_write: services/mcp/{src,tests,migrations}/**
     - bash: cd services/mcp && cargo test prm
 

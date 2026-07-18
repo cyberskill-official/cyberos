@@ -1,8 +1,10 @@
 ---
 id: TASK-INV-002
 title: "INV multi-currency support — VND/USD/SGD/EUR/GBP with daily SBV FX snapshot + per-invoice currency lock + cross-currency reporting"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/inv.html#fx
-  - https://sbv.gov.vn/  # State Bank of Vietnam reference rates
+  # State Bank of Vietnam reference rates
+  - https://sbv.gov.vn/
 
 source_decisions:
   - DEC-1510 2026-05-17 — Per-invoice currency locked at creation (matches engagement.billing_currency); cross-currency conversion ONLY for reporting (not invoice mutation)

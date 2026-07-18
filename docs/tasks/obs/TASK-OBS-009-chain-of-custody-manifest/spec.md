@@ -1,8 +1,10 @@
 ---
 id: TASK-OBS-009
 title: "Chain-of-custody manifest with Ed25519 signature on every compliance export — PDF cover + JSON sidecar + audit row + verifier CLI"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -38,22 +40,28 @@ new_files:
   - services/obs-compliance-view/src/manifest.rs
   - services/obs-compliance-view/src/manifest_signing.rs
   - services/obs-compliance-view/src/manifest_pdf.rs
-  - services/obs-compliance-view/src/bin/verify_manifest.rs       # standalone verifier
+  # standalone verifier
+  - services/obs-compliance-view/src/bin/verify_manifest.rs
   - services/obs-compliance-view/tests/manifest_test.rs
   - services/obs-compliance-view/tests/manifest_verify_test.rs
   - services/obs-compliance-view/tests/manifest_interrupted_test.rs
   - services/obs-compliance-view/docs/manifest-format.md
 modified_files:
-  - services/obs-compliance-view/src/views/{eu_ai_act,pdpl,soc2,iso27001}.rs   # call manifest::sign() on export
-  - services/obs-compliance-view/src/export/{pdf,json}.rs                       # attach manifest to output
+  # call manifest::sign() on export
+  - services/obs-compliance-view/src/views/{eu_ai_act,pdpl,soc2,iso27001}.rs
+  # attach manifest to output
+  - services/obs-compliance-view/src/export/{pdf,json}.rs
 allowed_tools:
   - file_read: services/obs-compliance-view/**
   - file_write: services/obs-compliance-view/**
   - bash: cd services/obs-compliance-view && cargo test manifest && cargo build --bin verify_manifest
 disallowed_tools:
-  - export compliance data without manifest (per §1 #1)
-  - skip memory audit row on export (per §1 #5)
-  - silently truncate exports (per §1 #6 — must mark state: incomplete)
+  #1)
+  - export compliance data without manifest (per §1
+  #5)
+  - skip memory audit row on export (per §1
+  #6 — must mark state: incomplete)
+  - silently truncate exports (per §1
   - sign with anything other than Ed25519 (per DEC-180)
 
 effort_hours: 8

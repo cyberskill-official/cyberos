@@ -1,8 +1,10 @@
 ---
 id: TASK-SKILL-114
 title: "BASELINE.md artefact at v0.x → v1.0 promotion — design-time performance baseline + with/without-skill comparison + token-budget transparency"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -43,10 +45,14 @@ new_files:
   - modules/cuo/tests/fixtures/baseline-missing-section.md
   - modules/cuo/tests/fixtures/baseline-numeric-out-of-range.md
 modified_files:
-  - modules/skill/task-audit/RUBRIC.md                      # add FM-114 (baseline-present-at-v1)
-  - Task-audit skill        # §3.11 adds promotion-readiness rule
-  - website docs (SKILL appendices)                                    # Recipe 11 expanded; Part 13 validation pyramid mentions baseline
-  - website docs (SKILL Appendix J)                                    # §6.4 status update + path
+  # add FM-114 (baseline-present-at-v1)
+  - modules/skill/task-audit/RUBRIC.md
+  # §3.11 adds promotion-readiness rule
+  - Task-audit skill
+  # Recipe 11 expanded; Part 13 validation pyramid mentions baseline
+  - website docs (SKILL appendices)
+  # §6.4 status update + path
+  - website docs (SKILL Appendix J)
 
 allowed_tools:
   - file_read: modules/**, docs/tasks/skill/**
@@ -55,8 +61,10 @@ allowed_tools:
 
 disallowed_tools:
   - block v0.x → v1.0 promotion at v0.x stage (BASELINE.md is required AT promotion time, not before — drafts and v0.x skills are exempt)
-  - auto-generate baseline numbers (numbers must come from real measurements per §1 #5)
-  - bypass the operator-attestation requirement (the `attested_by` field requires a human signoff per §1 #8)
+  #5)
+  - auto-generate baseline numbers (numbers must come from real measurements per §1
+  #8)
+  - bypass the operator-attestation requirement (the `attested_by` field requires a human signoff per §1
 
 effort_hours: 8
 subtasks:

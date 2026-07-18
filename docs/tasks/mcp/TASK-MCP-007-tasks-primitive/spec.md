@@ -1,8 +1,10 @@
 ---
 id: TASK-MCP-007
 title: "MCP Tasks primitive — long-running tool calls with status polling + resume-on-reconnect + cancellation + per-task memory audit chain"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -27,7 +29,8 @@ blocks: []
 source_pages:
   - website/docs/modules/mcp.html#tasks
   - https://modelcontextprotocol.io/specification/2025-11-25/server/tools#long-running
-  - https://datatracker.ietf.org/doc/html/rfc7240  # Prefer header (respond-async)
+  # Prefer header (respond-async)
+  - https://datatracker.ietf.org/doc/html/rfc7240
 
 source_decisions:
   - DEC-1100 2026-05-17 — Tasks primitive per MCP 2025-11-25 spec: long-running tool calls return `task_id` immediately + status polling endpoint + final-result-on-completion; alternative to synchronous tool-call response for work > 5s wall-clock
@@ -61,20 +64,34 @@ build_envelope:
   language: rust 1.81
   service: cyberos/services/mcp/
   new_files:
-    - services/mcp/migrations/0009_mcp_tasks.sql                       # task registry
-    - services/mcp/migrations/0010_mcp_task_checkpoints.sql            # intermediate state
-    - services/mcp/migrations/0011_mcp_task_progress_events.sql        # progress event log
-    - services/mcp/src/tasks/mod.rs                                    # tasks orchestrator
-    - services/mcp/src/tasks/create.rs                                 # task creation (from tools/call with long_running)
-    - services/mcp/src/tasks/status.rs                                 # status poll handler
-    - services/mcp/src/tasks/cancel.rs                                 # cancellation handler
-    - services/mcp/src/tasks/list.rs                                   # list handler
-    - services/mcp/src/tasks/worker_pool.rs                            # per-module pool + bounded concurrency
-    - services/mcp/src/tasks/checkpoint.rs                             # save/restore intermediate state
-    - services/mcp/src/tasks/expiry_job.rs                             # daily TTL expiry sweep
-    - services/mcp/src/tasks/progress.rs                               # progress NATS publish
-    - services/mcp/src/tasks/idempotency.rs                            # task-creation idempotency cache
-    - services/mcp/src/audit/task_events.rs                            # 8 memory row builders
+    # task registry
+    - services/mcp/migrations/0009_mcp_tasks.sql
+    # intermediate state
+    - services/mcp/migrations/0010_mcp_task_checkpoints.sql
+    # progress event log
+    - services/mcp/migrations/0011_mcp_task_progress_events.sql
+    # tasks orchestrator
+    - services/mcp/src/tasks/mod.rs
+    # task creation (from tools/call with long_running)
+    - services/mcp/src/tasks/create.rs
+    # status poll handler
+    - services/mcp/src/tasks/status.rs
+    # cancellation handler
+    - services/mcp/src/tasks/cancel.rs
+    # list handler
+    - services/mcp/src/tasks/list.rs
+    # per-module pool + bounded concurrency
+    - services/mcp/src/tasks/worker_pool.rs
+    # save/restore intermediate state
+    - services/mcp/src/tasks/checkpoint.rs
+    # daily TTL expiry sweep
+    - services/mcp/src/tasks/expiry_job.rs
+    # progress NATS publish
+    - services/mcp/src/tasks/progress.rs
+    # task-creation idempotency cache
+    - services/mcp/src/tasks/idempotency.rs
+    # 8 memory row builders
+    - services/mcp/src/audit/task_events.rs
     - services/mcp/tests/task_create_async_test.rs
     - services/mcp/tests/task_status_poll_test.rs
     - services/mcp/tests/task_resume_after_reconnect_test.rs
@@ -92,9 +109,12 @@ build_envelope:
     - services/mcp/tests/task_audit_emission_test.rs
 
   modified_files:
-    - services/mcp/src/handlers/tools_call.rs                          # branch sync vs task based on long_running annotation
-    - services/mcp/src/server_registry.rs                              # add long_running, max_concurrent_tasks, task_ttl_seconds fields
-    - services/mcp/src/lib.rs                                          # mount task routes
+    # branch sync vs task based on long_running annotation
+    - services/mcp/src/handlers/tools_call.rs
+    # add long_running, max_concurrent_tasks, task_ttl_seconds fields
+    - services/mcp/src/server_registry.rs
+    # mount task routes
+    - services/mcp/src/lib.rs
 
   allowed_tools:
     - file_read: services/mcp/**

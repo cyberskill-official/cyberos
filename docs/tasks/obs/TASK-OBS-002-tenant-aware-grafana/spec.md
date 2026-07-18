@@ -1,8 +1,10 @@
 ---
 id: TASK-OBS-002
 title: "Tenant-aware Grafana proxy (Rust) — AST-injects tenant_id into PromQL/LogQL/TraceQL with anti-bypass + property test + audit log"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -51,8 +53,10 @@ new_files:
   - services/obs-proxy/tests/cross_tenant_property_test.rs
   - services/obs-proxy/tests/audit_log_test.rs
 modified_files:
-  - deploy/obs/grafana/datasources.yaml                     # point datasources at obs-proxy
-  - deploy/obs/docker-compose.yml                          # add obs-proxy service
+  # point datasources at obs-proxy
+  - deploy/obs/grafana/datasources.yaml
+  # add obs-proxy service
+  - deploy/obs/docker-compose.yml
 allowed_tools:
   - file_read: services/obs-proxy/**
   - file_write: services/obs-proxy/{src,tests}/**
@@ -60,10 +64,13 @@ allowed_tools:
   - file_write: deploy/obs/docker-compose.yml
   - bash: cd services/obs-proxy && cargo test
 disallowed_tools:
-  - bypass tenant_id label injection on any query path (per §1 #2 — every query injected)
+  #2 — every query injected)
+  - bypass tenant_id label injection on any query path (per §1
   - use string concat for label injection (per DEC-146 — AST only)
-  - allow user-supplied tenant_id label (per §1 #4 — bypass attempt; 400 + sev-1)
-  - skip audit log on any query (per §1 #9 — every query is auditable)
+  #4 — bypass attempt; 400 + sev-1)
+  - allow user-supplied tenant_id label (per §1
+  #9 — every query is auditable)
+  - skip audit log on any query (per §1
 
 effort_hours: 12
 subtasks:

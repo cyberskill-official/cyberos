@@ -1,8 +1,10 @@
 ---
 id: TASK-AUTH-104
 title: "AUTH OIDC SSO — RFC 8414 discovery + RFC 7517 JWKS rotation + per-tenant IdP config + PKCE + JIT subject provisioning + claim → role mapping"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -50,17 +52,28 @@ new_files:
   - services/auth/migrations/0011_oidc_login_history.sql
   - services/auth/migrations/0012_oidc_subject_link.sql
   - services/auth/src/oidc/mod.rs
-  - services/auth/src/oidc/discovery.rs                    # RFC 8414 well-known fetch + cache
-  - services/auth/src/oidc/jwks.rs                          # RFC 7517 JWKS fetch + rotation + 24h overlap
-  - services/auth/src/oidc/flow.rs                          # initiate + callback (PKCE Authorisation Code)
-  - services/auth/src/oidc/state.rs                         # state + nonce generation + TTL store
-  - services/auth/src/oidc/id_token.rs                      # signature verify + claim validation
-  - services/auth/src/oidc/claim_mapper.rs                  # claim → AUTH role mapping per tenant config
-  - services/auth/src/oidc/jit_provision.rs                 # first-login JIT subject creation
-  - services/auth/src/oidc/repo.rs                          # idp_configs + login_history + subject_link CRUD
-  - services/auth/src/oidc/audit.rs                         # 6 memory row builders
-  - services/auth/src/oidc/errors.rs                        # closed error enum
-  - services/auth/src/handlers/oidc.rs                      # GET /v1/auth/oidc/initiate + GET /v1/auth/oidc/callback + POST /v1/auth/oidc/idp-configs
+  # RFC 8414 well-known fetch + cache
+  - services/auth/src/oidc/discovery.rs
+  # RFC 7517 JWKS fetch + rotation + 24h overlap
+  - services/auth/src/oidc/jwks.rs
+  # initiate + callback (PKCE Authorisation Code)
+  - services/auth/src/oidc/flow.rs
+  # state + nonce generation + TTL store
+  - services/auth/src/oidc/state.rs
+  # signature verify + claim validation
+  - services/auth/src/oidc/id_token.rs
+  # claim → AUTH role mapping per tenant config
+  - services/auth/src/oidc/claim_mapper.rs
+  # first-login JIT subject creation
+  - services/auth/src/oidc/jit_provision.rs
+  # idp_configs + login_history + subject_link CRUD
+  - services/auth/src/oidc/repo.rs
+  # 6 memory row builders
+  - services/auth/src/oidc/audit.rs
+  # closed error enum
+  - services/auth/src/oidc/errors.rs
+  # GET /v1/auth/oidc/initiate + GET /v1/auth/oidc/callback + POST /v1/auth/oidc/idp-configs
+  - services/auth/src/handlers/oidc.rs
   - services/auth/tests/middleware_test.rs
   - services/auth/tests/rls_isolation_test.rs
   - services/auth/tests/geoip_test.rs
@@ -74,7 +87,8 @@ new_files:
   - services/auth/tests/oidc_replay_attack_test.rs
   - services/auth/tests/geoip_test.rs
 modified_files:
-  - services/auth/src/lib.rs                                # pub mod oidc
+  # pub mod oidc
+  - services/auth/src/lib.rs
 
 allowed_tools:
   - file_read: services/auth/**

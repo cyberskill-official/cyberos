@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-113
 title: "memory recall ranking — Park-et-al combined score (relevance · 0.4 + importance · 0.3 + recency · 0.3) with configurable Ebbinghaus decay; MARS-aligned forgetting curve"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -25,7 +27,8 @@ depends_on: [TASK-MEMORY-108, TASK-MEMORY-112]
 blocks: [TASK-MEMORY-115, TASK-MEMORY-120]
 
 source_pages:
-  - playground/extracts/agentic-memory.article.txt  # see "Memory management" / "Time-based decay" sections
+  # see "Memory management" / "Time-based decay" sections
+  - playground/extracts/agentic-memory.article.txt
 source_decisions:
   - DEC-190 (Recall combined score is `relevance · w_r + importance · w_i + recency · w_t` with default weights 0.4 / 0.3 / 0.3 per Park et al. 2023 "Generative Agents"; configurable per-store via `manifest.recall_weights`)
   - DEC-191 (Recency decay follows the form `recency = decay_factor^hours_old` with default decay_factor=0.995 ⇒ ~4-day half-life; MARS framework's Ebbinghaus selection is supported as an alternative profile)
@@ -41,22 +44,31 @@ new_files:
   - modules/memory/tests/core/test_digest.py
   - modules/memory/bench/bench_recall_latency.py
 modified_files:
-  - modules/memory/cyberos/core/semantic.py            # delegate ranking to ranking.score_hits()
-  - modules/memory/cyberos/core/reader.py              # same delegation for FTS5 path
-  - modules/memory/cyberos/cli/recall.py               # TASK-MEMORY-112 stub replaced with real `combined_score` from ranking.py
-  - modules/memory/cyberos/core/frontmatter.py         # accept optional `meta.importance: float ∈ [0.0, 1.0]` on every kind (not just episode)
-  - modules/memory/memory.schema.json                  # add `Importance` definition + `importance` field on `MemoryFrontmatter`
-  - modules/memory/memory.invariants.yaml              # add `manifest-recall-weights-valid` + `importance-range`
-  - modules/memory/cyberos/core/writer.py              # validate `manifest.recall_weights` at writer construction (fail-fast, see §1 #11)
+  # delegate ranking to ranking.score_hits()
+  - modules/memory/cyberos/core/semantic.py
+  # same delegation for FTS5 path
+  - modules/memory/cyberos/core/reader.py
+  # TASK-MEMORY-112 stub replaced with real `combined_score` from ranking.py
+  - modules/memory/cyberos/cli/recall.py
+  # accept optional `meta.importance: float ∈ [0.0, 1.0]` on every kind (not just episode)
+  - modules/memory/cyberos/core/frontmatter.py
+  # add `Importance` definition + `importance` field on `MemoryFrontmatter`
+  - modules/memory/memory.schema.json
+  # add `manifest-recall-weights-valid` + `importance-range`
+  - modules/memory/memory.invariants.yaml
+  # validate `manifest.recall_weights` at writer construction (fail-fast, see §1 #11)
+  - modules/memory/cyberos/core/writer.py
 allowed_tools:
   - file_read: modules/memory/**
   - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/bench/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml
   - bash: cd modules/memory && python -m pytest modules/memory/tests/core/test_ranking_and_decay.py modules/memory/tests/core/test_digest.py -v
   - bash: cd modules/memory && python bench/bench_recall_latency.py --episodes 10000 --trials 100
 disallowed_tools:
-  - silently swallow malformed `manifest.recall_weights` (per §1 #11 — fail-fast at writer construction)
+  #11 — fail-fast at writer construction)
+  - silently swallow malformed `manifest.recall_weights` (per §1
   - default `meta.importance` to anything other than literal 0.5 in the ranking maths (per DEC-192)
-  - apply recency decay to results that have no `last_seen_at` (per §1 #6 — fall back to 1.0 ≡ "as-fresh-as-possible")
+  #6 — fall back to 1.0 ≡ "as-fresh-as-possible")
+  - apply recency decay to results that have no `last_seen_at` (per §1
 
 effort_hours: 8
 subtasks:

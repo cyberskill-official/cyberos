@@ -1,8 +1,10 @@
 ---
 id: TASK-OBS-003
 title: "Per-service RED metrics (rate/errors/duration) via cyberos-obs-sdk shared crate with macro + CI lint + standardised buckets"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -46,11 +48,13 @@ new_files:
   - crates/cyberos-obs-sdk/tests/cardinality_test.rs
   - crates/cyberos-obs-sdk/tests/instrument_completeness_test.rs
 modified_files:
-  - services/ai-gateway/src/handlers/*.rs                 # apply #[red_instrument]
+  # apply #[red_instrument]
+  - services/ai-gateway/src/handlers/*.rs
   - services/auth/src/admin/*.rs
   - services/chat/src/*
   - services/memory/src/*
-  - services/ai-gateway/Cargo.toml                        # add cyberos-obs-sdk dep
+  # add cyberos-obs-sdk dep
+  - services/ai-gateway/Cargo.toml
   - services/auth/Cargo.toml
   - services/chat/Cargo.toml
   - services/memory/Cargo.toml
@@ -59,10 +63,12 @@ allowed_tools:
   - file_write: crates/cyberos-obs-sdk/**, services/**
   - bash: cargo test -p cyberos-obs-sdk
 disallowed_tools:
-  - emit RED without tenant_id label (per §1 #2 — required for TASK-OBS-002 tenant filtering)
+  #2 — required for TASK-OBS-002 tenant filtering)
+  - emit RED without tenant_id label (per §1
   - use raw status (e.g., 200 vs 201 distinct) (per DEC-152 — cardinality explosion)
   - hand-roll metrics in services (per DEC-151 — use the shared crate)
-  - skip the CI completeness lint (per §1 #11 — every handler MUST be instrumented)
+  #11 — every handler MUST be instrumented)
+  - skip the CI completeness lint (per §1
 
 effort_hours: 8
 subtasks:

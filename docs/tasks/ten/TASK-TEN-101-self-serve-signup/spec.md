@@ -1,8 +1,10 @@
 ---
 id: TASK-TEN-101
 title: "Self-serve signup form ≤ 30 s end-to-end — email OTP + slug + plan + currency + payment + provisioning + root-admin + first-login JWT in one orchestrated flow"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -27,10 +29,12 @@ blocks: [TASK-TEN-107, TASK-PORTAL-001, TASK-PORTAL-002]
 source_pages:
   - website/docs/modules/ten.html#signup
   - website/docs/modules/ten.html#self-serve
-  - https://nordpass.com/blog/disposable-email/  # blocklist reference
+  # blocklist reference
+  - https://nordpass.com/blog/disposable-email/
   - https://challenges.cloudflare.com/turnstile/v0/api.js
   - https://gdpr.eu/article-7-conditions-for-consent/
-  - https://www.iso.org/standard/82875.html  # PDPL Law 91/2025 reference text
+  # PDPL Law 91/2025 reference text
+  - https://www.iso.org/standard/82875.html
 
 source_decisions:
   - DEC-820 2026-05-17 — Public signup endpoint is unauthenticated; rate-limited by IP + per-email + per-email-domain; protected by Cloudflare Turnstile (or reCAPTCHA v3) at every public mutation
@@ -68,48 +72,88 @@ build_envelope:
   language: rust 1.81 + typescript 5.5 (frontend)
   service: cyberos/services/ten/
   new_files:
-    - services/ten/migrations/0011_signup_sessions.sql                 # 1h-TTL signup session state
-    - services/ten/migrations/0012_tenant_consents.sql                 # ToS / Privacy / Marketing / PDPL version pins
-    - services/ten/migrations/0013_signup_rate_limits.sql              # per-IP / per-email sliding-window counters
-    - services/ten/migrations/0014_disposable_email_domains.sql        # 10k-entry blocklist + monthly refresh ledger
-    - services/ten/src/signup/mod.rs                                   # signup orchestrator
-    - services/ten/src/signup/start.rs                                 # POST /v1/signup/start
-    - services/ten/src/signup/otp.rs                                   # send_otp + verify_otp
-    - services/ten/src/signup/slug_check.rs                            # GET /v1/signup/slug-available + suggestions
-    - services/ten/src/signup/payment_intent.rs                        # Stripe SetupIntent + VnPay redirect builder
-    - services/ten/src/signup/complete.rs                              # POST /v1/signup/complete (commit-or-rollback orchestrator)
-    - services/ten/src/signup/oidc_callback.rs                         # TASK-AUTH-104 OIDC return → tenant create
-    - services/ten/src/signup/consent.rs                               # ToS/Privacy/Marketing/PDPL versioned acceptance
-    - services/ten/src/signup/rate_limit.rs                            # sliding-window via Redis
-    - services/ten/src/signup/disposable_email.rs                      # blocklist loader + check
-    - services/ten/src/signup/geoip.rs                                 # MaxMind GeoLite2 lookup → currency/residency hint
-    - services/ten/src/signup/abuse_guard.rs                           # squatting / abandonment detector
-    - services/ten/src/signup/welcome_email.rs                         # delegates to TASK-EMAIL-001
-    - services/ten/src/audit/signup_events.rs                          # 9 memory row builders
-    - services/ten/src/handlers/signup_routes.rs                       # axum route registration
-    - services/ten/web/signup/index.html                               # static single-page signup form
-    - services/ten/web/signup/signup.ts                                # progressive form (5 steps, ≤ 30 s)
-    - services/ten/web/signup/turnstile.ts                             # Cloudflare Turnstile widget
-    - services/ten/web/signup/stripe_elements.ts                       # Stripe Elements card capture
-    - services/ten/tests/signup_happy_test.rs                          # full 30-s flow end-to-end
-    - services/ten/tests/signup_otp_test.rs                            # OTP gen + verify + expiry + max-attempts
-    - services/ten/tests/signup_slug_test.rs                           # uniqueness + suggestions
-    - services/ten/tests/signup_disposable_email_test.rs               # blocklist enforcement
-    - services/ten/tests/signup_rate_limit_test.rs                     # 4 rate-limit guards
-    - services/ten/tests/signup_consent_versioning_test.rs             # ToS/Privacy version pinned in row
-    - services/ten/tests/signup_geoip_currency_test.rs                 # IP→currency derivation + override
-    - services/ten/tests/signup_oidc_path_test.rs                      # Google/Microsoft OIDC flow
-    - services/ten/tests/signup_stripe_rollback_test.rs                # Stripe failure → tenant not created
-    - services/ten/tests/signup_30s_sla_test.rs                        # end-to-end < 30 s on test fixture
-    - services/ten/tests/signup_squatting_test.rs                      # 5 abandoned signups → IP block
-    - services/ten/tests/signup_duplicate_email_test.rs                # 2nd signup same email → 409 + magic link
-    - services/ten/tests/signup_audit_emission_test.rs                 # 9 memory kinds emitted
+    # 1h-TTL signup session state
+    - services/ten/migrations/0011_signup_sessions.sql
+    # ToS / Privacy / Marketing / PDPL version pins
+    - services/ten/migrations/0012_tenant_consents.sql
+    # per-IP / per-email sliding-window counters
+    - services/ten/migrations/0013_signup_rate_limits.sql
+    # 10k-entry blocklist + monthly refresh ledger
+    - services/ten/migrations/0014_disposable_email_domains.sql
+    # signup orchestrator
+    - services/ten/src/signup/mod.rs
+    # POST /v1/signup/start
+    - services/ten/src/signup/start.rs
+    # send_otp + verify_otp
+    - services/ten/src/signup/otp.rs
+    # GET /v1/signup/slug-available + suggestions
+    - services/ten/src/signup/slug_check.rs
+    # Stripe SetupIntent + VnPay redirect builder
+    - services/ten/src/signup/payment_intent.rs
+    # POST /v1/signup/complete (commit-or-rollback orchestrator)
+    - services/ten/src/signup/complete.rs
+    # TASK-AUTH-104 OIDC return → tenant create
+    - services/ten/src/signup/oidc_callback.rs
+    # ToS/Privacy/Marketing/PDPL versioned acceptance
+    - services/ten/src/signup/consent.rs
+    # sliding-window via Redis
+    - services/ten/src/signup/rate_limit.rs
+    # blocklist loader + check
+    - services/ten/src/signup/disposable_email.rs
+    # MaxMind GeoLite2 lookup → currency/residency hint
+    - services/ten/src/signup/geoip.rs
+    # squatting / abandonment detector
+    - services/ten/src/signup/abuse_guard.rs
+    # delegates to TASK-EMAIL-001
+    - services/ten/src/signup/welcome_email.rs
+    # 9 memory row builders
+    - services/ten/src/audit/signup_events.rs
+    # axum route registration
+    - services/ten/src/handlers/signup_routes.rs
+    # static single-page signup form
+    - services/ten/web/signup/index.html
+    # progressive form (5 steps, ≤ 30 s)
+    - services/ten/web/signup/signup.ts
+    # Cloudflare Turnstile widget
+    - services/ten/web/signup/turnstile.ts
+    # Stripe Elements card capture
+    - services/ten/web/signup/stripe_elements.ts
+    # full 30-s flow end-to-end
+    - services/ten/tests/signup_happy_test.rs
+    # OTP gen + verify + expiry + max-attempts
+    - services/ten/tests/signup_otp_test.rs
+    # uniqueness + suggestions
+    - services/ten/tests/signup_slug_test.rs
+    # blocklist enforcement
+    - services/ten/tests/signup_disposable_email_test.rs
+    # 4 rate-limit guards
+    - services/ten/tests/signup_rate_limit_test.rs
+    # ToS/Privacy version pinned in row
+    - services/ten/tests/signup_consent_versioning_test.rs
+    # IP→currency derivation + override
+    - services/ten/tests/signup_geoip_currency_test.rs
+    # Google/Microsoft OIDC flow
+    - services/ten/tests/signup_oidc_path_test.rs
+    # Stripe failure → tenant not created
+    - services/ten/tests/signup_stripe_rollback_test.rs
+    # end-to-end < 30 s on test fixture
+    - services/ten/tests/signup_30s_sla_test.rs
+    # 5 abandoned signups → IP block
+    - services/ten/tests/signup_squatting_test.rs
+    # 2nd signup same email → 409 + magic link
+    - services/ten/tests/signup_duplicate_email_test.rs
+    # 9 memory kinds emitted
+    - services/ten/tests/signup_audit_emission_test.rs
 
   modified_files:
-    - services/ten/src/lib.rs                                          # mount signup_routes
-    - services/ten/Cargo.toml                                          # +redis, +maxminddb, +zxcvbn, +rand for OTP
-    - services/auth/src/admin/subjects.rs                              # expose helper for signup root-admin create
-    - services/email/src/templates/welcome_signup.tera                 # new email template + i18n EN/VI
+    # mount signup_routes
+    - services/ten/src/lib.rs
+    # +redis, +maxminddb, +zxcvbn, +rand for OTP
+    - services/ten/Cargo.toml
+    # expose helper for signup root-admin create
+    - services/auth/src/admin/subjects.rs
+    # new email template + i18n EN/VI
+    - services/email/src/templates/welcome_signup.tera
 
   allowed_tools:
     - file_read: services/ten/**

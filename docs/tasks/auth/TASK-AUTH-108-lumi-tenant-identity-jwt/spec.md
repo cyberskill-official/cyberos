@@ -1,8 +1,10 @@
 ---
 id: TASK-AUTH-108
 title: "AUTH Lumi tenant-identity JWT shape — agent_persona + tenant_residency + lumi_org_tenant claims + persona-version stamping + cross-tenant sync identity"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -50,15 +52,24 @@ language: rust 1.81 + sql
 service: cyberos/services/auth/
 new_files:
   - services/auth/migrations/0013_lumi_token_issuance_log.sql
-  - services/auth/src/lumi/mod.rs                              # public API
-  - services/auth/src/lumi/issuer.rs                           # token issuance (extends TASK-AUTH-004 issuer)
-  - services/auth/src/lumi/verifier.rs                         # token verification with Lumi-specific checks
-  - services/auth/src/lumi/claims.rs                           # LumiClaims struct (extends Claims)
-  - services/auth/src/lumi/persona_version.rs                  # version-stale-check (consumes TASK-AI-014)
-  - services/auth/src/lumi/sync_class.rs                       # SyncClass enum + closed-set validator
-  - services/auth/src/lumi/repo.rs                             # issuance log writer
-  - services/auth/src/lumi/audit.rs                            # 4 memory row builders
-  - services/auth/src/handlers/lumi.rs                         # POST /v1/auth/lumi/issue + GET /v1/auth/lumi/verify
+  # public API
+  - services/auth/src/lumi/mod.rs
+  # token issuance (extends TASK-AUTH-004 issuer)
+  - services/auth/src/lumi/issuer.rs
+  # token verification with Lumi-specific checks
+  - services/auth/src/lumi/verifier.rs
+  # LumiClaims struct (extends Claims)
+  - services/auth/src/lumi/claims.rs
+  # version-stale-check (consumes TASK-AI-014)
+  - services/auth/src/lumi/persona_version.rs
+  # SyncClass enum + closed-set validator
+  - services/auth/src/lumi/sync_class.rs
+  # issuance log writer
+  - services/auth/src/lumi/repo.rs
+  # 4 memory row builders
+  - services/auth/src/lumi/audit.rs
+  # POST /v1/auth/lumi/issue + GET /v1/auth/lumi/verify
+  - services/auth/src/handlers/lumi.rs
   - services/auth/tests/admin_list_test.rs
   - services/auth/tests/admin_list_test.rs
   - services/auth/tests/middleware_test.rs
@@ -70,8 +81,10 @@ new_files:
   - services/auth/tests/admin_deny_list_test.rs
   - services/auth/tests/rls_isolation_test.rs
 modified_files:
-  - services/auth/src/jwt.rs                                   # add Lumi-claim deserialisation paths
-  - services/auth/src/lib.rs                                   # pub mod lumi
+  # add Lumi-claim deserialisation paths
+  - services/auth/src/jwt.rs
+  # pub mod lumi
+  - services/auth/src/lib.rs
 
 allowed_tools:
   - file_read: services/auth/**

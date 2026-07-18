@@ -1,8 +1,10 @@
 ---
 id: TASK-MCP-001
 title: "MCP Gateway 2025-11-25 spec compliance — initialize + tools/list + tools/call + capabilities negotiation + Streamable HTTP transport + tool annotations"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -48,38 +50,68 @@ source_decisions:
 language: rust 1.81
 service: cyberos/services/mcp-gateway/
 new_files:
-  - services/mcp-gateway/src/lib.rs                                    # crate root
-  - services/mcp-gateway/src/transport/http.rs                         # Streamable HTTP + SSE transport per spec
-  - services/mcp-gateway/src/transport/sse.rs                          # Server-Sent Events writer
-  - services/mcp-gateway/src/protocol/jsonrpc.rs                       # JSON-RPC 2.0 request/response/error/batch parser
-  - services/mcp-gateway/src/protocol/initialize.rs                    # initialize handshake + capabilities negotiation
-  - services/mcp-gateway/src/protocol/capabilities.rs                  # capabilities advertisement struct (closed shape)
-  - services/mcp-gateway/src/protocol/tools_list.rs                    # tools/list handler — returns federated catalog
-  - services/mcp-gateway/src/protocol/tools_call.rs                    # tools/call handler — dispatches to module server
-  - services/mcp-gateway/src/protocol/errors.rs                        # JSON-RPC error code mapping + spec-defined -32001..-32099
-  - services/mcp-gateway/src/federation/registry.rs                    # in-memory federated tool catalog (modules register via TASK-MCP-002)
-  - services/mcp-gateway/src/federation/dispatch.rs                    # routes tools/call to the owning module's MCP server endpoint
-  - services/mcp-gateway/src/auth.rs                                   # JWT verification per TASK-AUTH-004; scope_grants extraction
-  - services/mcp-gateway/src/ratelimit.rs                              # per-(tenant, tool) sliding-window rate limiter
-  - services/mcp-gateway/src/annotations.rs                            # ToolAnnotations struct: destructive | readOnly | idempotent | openWorld
-  - services/mcp-gateway/src/audit/mcp_events.rs                       # canonical mcp.tool_call_{started,completed} memory row builders
-  - services/mcp-gateway/src/handlers/router.rs                        # axum router mounting /mcp endpoint
-  - services/mcp-gateway/Cargo.toml                                    # +axum, +tokio, +serde, +serde_json, +futures, +tracing, +reqwest, +tower-http, +cyberos-cli-exit
-  - services/mcp-gateway/tests/initialize_test.rs                      # initialize handshake; protocol version match + mismatch
-  - services/mcp-gateway/tests/tools_list_test.rs                      # returns federated catalog; pagination via cursor
-  - services/mcp-gateway/tests/tools_call_test.rs                      # dispatches to module; returns result + isError
-  - services/mcp-gateway/tests/jsonrpc_batch_test.rs                   # batch request returns batch response
-  - services/mcp-gateway/tests/transport_http_test.rs                  # Streamable HTTP POST + SSE GET
-  - services/mcp-gateway/tests/error_codes_test.rs                     # JSON-RPC errors -32600..-32099 covered
-  - services/mcp-gateway/tests/tool_annotations_test.rs                # annotations present in tools/list response
-  - services/mcp-gateway/tests/jwt_verification_test.rs                # missing JWT → -32001; invalid JWT → -32001
-  - services/mcp-gateway/tests/scope_check_test.rs                     # tool without scope → -32001
-  - services/mcp-gateway/tests/rate_limit_test.rs                      # 101st call in 1min → -32002
-  - services/mcp-gateway/tests/audit_emission_test.rs                  # every call emits started + completed
-  - services/mcp-gateway/tests/spec_conformance_test.rs                # full spec conformance test against modelcontextprotocol/inspector
+  # crate root
+  - services/mcp-gateway/src/lib.rs
+  # Streamable HTTP + SSE transport per spec
+  - services/mcp-gateway/src/transport/http.rs
+  # Server-Sent Events writer
+  - services/mcp-gateway/src/transport/sse.rs
+  # JSON-RPC 2.0 request/response/error/batch parser
+  - services/mcp-gateway/src/protocol/jsonrpc.rs
+  # initialize handshake + capabilities negotiation
+  - services/mcp-gateway/src/protocol/initialize.rs
+  # capabilities advertisement struct (closed shape)
+  - services/mcp-gateway/src/protocol/capabilities.rs
+  # tools/list handler — returns federated catalog
+  - services/mcp-gateway/src/protocol/tools_list.rs
+  # tools/call handler — dispatches to module server
+  - services/mcp-gateway/src/protocol/tools_call.rs
+  # JSON-RPC error code mapping + spec-defined -32001..-32099
+  - services/mcp-gateway/src/protocol/errors.rs
+  # in-memory federated tool catalog (modules register via TASK-MCP-002)
+  - services/mcp-gateway/src/federation/registry.rs
+  # routes tools/call to the owning module's MCP server endpoint
+  - services/mcp-gateway/src/federation/dispatch.rs
+  # JWT verification per TASK-AUTH-004; scope_grants extraction
+  - services/mcp-gateway/src/auth.rs
+  # per-(tenant, tool) sliding-window rate limiter
+  - services/mcp-gateway/src/ratelimit.rs
+  # ToolAnnotations struct: destructive | readOnly | idempotent | openWorld
+  - services/mcp-gateway/src/annotations.rs
+  # canonical mcp.tool_call_{started,completed} memory row builders
+  - services/mcp-gateway/src/audit/mcp_events.rs
+  # axum router mounting /mcp endpoint
+  - services/mcp-gateway/src/handlers/router.rs
+  # +axum, +tokio, +serde, +serde_json, +futures, +tracing, +reqwest, +tower-http, +cyberos-cli-exit
+  - services/mcp-gateway/Cargo.toml
+  # initialize handshake; protocol version match + mismatch
+  - services/mcp-gateway/tests/initialize_test.rs
+  # returns federated catalog; pagination via cursor
+  - services/mcp-gateway/tests/tools_list_test.rs
+  # dispatches to module; returns result + isError
+  - services/mcp-gateway/tests/tools_call_test.rs
+  # batch request returns batch response
+  - services/mcp-gateway/tests/jsonrpc_batch_test.rs
+  # Streamable HTTP POST + SSE GET
+  - services/mcp-gateway/tests/transport_http_test.rs
+  # JSON-RPC errors -32600..-32099 covered
+  - services/mcp-gateway/tests/error_codes_test.rs
+  # annotations present in tools/list response
+  - services/mcp-gateway/tests/tool_annotations_test.rs
+  # missing JWT → -32001; invalid JWT → -32001
+  - services/mcp-gateway/tests/jwt_verification_test.rs
+  # tool without scope → -32001
+  - services/mcp-gateway/tests/scope_check_test.rs
+  # 101st call in 1min → -32002
+  - services/mcp-gateway/tests/rate_limit_test.rs
+  # every call emits started + completed
+  - services/mcp-gateway/tests/audit_emission_test.rs
+  # full spec conformance test against modelcontextprotocol/inspector
+  - services/mcp-gateway/tests/spec_conformance_test.rs
 
 modified_files:
-  - services/auth/src/jwt.rs                                           # expose `Claims::scope_grants()` accessor for MCP gateway use
+  # expose `Claims::scope_grants()` accessor for MCP gateway use
+  - services/auth/src/jwt.rs
 
 allowed_tools:
   - file_read: services/mcp-gateway/**
@@ -90,7 +122,8 @@ allowed_tools:
 
 disallowed_tools:
   - implement legacy HTTP+SSE transport (deprecated in 2025-11-25; per DEC-261)
-  - bypass JWT verification on tools/call (per §1 #11)
+  #11)
+  - bypass JWT verification on tools/call (per §1
   - introduce a 6th capability beyond {tools, prompts, resources, logging} at slice 4 (per DEC-266)
   - direct provider/skill invocation in the gateway (per DEC-262 — gateway routes, never executes)
   - hold session state in process (per DEC-271 — Tasks store at TASK-MCP-007)

@@ -1,8 +1,10 @@
 ---
 id: TASK-HR-003
 title: "HR CCCD photo KMS — separate keyspace for VN citizen ID photos with sev-1 access audit + ROOT-CHRO-only key access"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/hr.html#cccd-kms
-  - https://thuvienphapluat.vn/  # Law 91/2025 PDPL Art. 23 (sensitive personal data)
+  # Law 91/2025 PDPL Art. 23 (sensitive personal data)
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-1820 2026-05-17 — CCCD photo encrypted with separate KMS key per-tenant; key access ROOT-CHRO only; no system service has decrypt grant

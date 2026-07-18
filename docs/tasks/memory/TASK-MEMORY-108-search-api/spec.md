@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-108
 title: "memory search — vector + graph + full-text in parallel + RRF fusion + BGE-rerank + RLS + ACL + chain_anchor verify + 250ms p95"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -22,7 +24,8 @@ shipped: 2026-05-23
 memory_chain_hash: null
 related_tasks: [TASK-MEMORY-101, TASK-MEMORY-106, TASK-AI-019, TASK-AI-020, TASK-AUTH-003, TASK-AUTH-004]
 depends_on: [TASK-MEMORY-101, TASK-MEMORY-107]
-blocks: [TASK-KB-007]   # placeholder — "Ask this page" KB Q&A task, not yet specified (downstream consumer)
+# placeholder — "Ask this page" KB Q&A task, not yet specified (downstream consumer)
+blocks: [TASK-KB-007]
 
 source_pages:
   - website/docs/modules/memory.html#search
@@ -52,16 +55,21 @@ new_files:
   - services/memory/tests/chain_anchor_test.rs
   - services/memory/tests/chain_anchor_test.rs
 modified_files:
-  - services/memory/src/handlers/mod.rs                   # add search route
+  # add search route
+  - services/memory/src/handlers/mod.rs
 allowed_tools:
   - file_read: services/memory/**
   - file_write: services/memory/{src,tests,migrations}/**
   - bash: cd services/memory && cargo test search
 disallowed_tools:
-  - return search results without RLS scoping (per §1 #4)
-  - skip ACL filter (per §1 #5)
-  - skip chain_anchor verification (per §1 #11)
-  - hard-fail on BGE down (per §1 #8 — graceful degrade)
+  #4)
+  - return search results without RLS scoping (per §1
+  #5)
+  - skip ACL filter (per §1
+  #11)
+  - skip chain_anchor verification (per §1
+  #8 — graceful degrade)
+  - hard-fail on BGE down (per §1
 
 effort_hours: 12
 subtasks:

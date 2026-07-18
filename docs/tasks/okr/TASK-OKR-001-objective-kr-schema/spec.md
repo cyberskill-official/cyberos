@@ -1,8 +1,10 @@
 ---
 id: TASK-OKR-001
 title: "OKR Objective × Key Result schema — Company → Team → Member cascade + quarterly Cycle + closed alignment FSM + RLS + face-saving status enum"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -22,7 +24,8 @@ shipped: now()
 memory_chain_hash: null
 related_tasks: [TASK-AUTH-003, TASK-AUTH-101, TASK-AI-003, TASK-MEMORY-101, TASK-OKR-002, TASK-OKR-003, TASK-OKR-004, TASK-OKR-005, TASK-OKR-006, TASK-OKR-007, TASK-HR-001]
 depends_on: [TASK-AUTH-003, TASK-AUTH-101]
-blocks: [TASK-OKR-002, TASK-OKR-003, TASK-OKR-005, TASK-OKR-007]   # 4 downstream consumers
+# 4 downstream consumers
+blocks: [TASK-OKR-002, TASK-OKR-003, TASK-OKR-005, TASK-OKR-007]
 
 source_pages:
   - website/docs/modules/okr.html#what
@@ -48,42 +51,63 @@ source_decisions:
 language: rust 1.81 + sql
 service: cyberos/services/okr/
 new_files:
-  - services/okr/migrations/0001_cycles.sql                      # cycles table + cycle_kind + cycle_status enums + RLS
-  - services/okr/migrations/0002_teams.sql                       # tenant-local teams (task-HR ships members; OKR ships team primitive)
-  - services/okr/migrations/0003_objectives.sql                  # objectives + scope enum + alignment FK + RLS
-  - services/okr/migrations/0004_key_results.sql                 # key_results + kr_type + kr_status enums + RLS
-  - services/okr/migrations/0005_progress_log.sql                # append-only KR progress recordings (consumed by TASK-OKR-005 check-ins)
-  - services/okr/migrations/0006_objective_status_history.sql    # append-only status transitions
-  - services/okr/src/lib.rs                                      # crate root
-  - services/okr/src/types.rs                                    # Cycle, Team, Objective, KeyResult + 5 enums
-  - services/okr/src/fsm/kr_status.rs                            # closed transition matrix
-  - services/okr/src/fsm/cycle_status.rs                         # planning → active → closing → closed (unidirectional)
-  - services/okr/src/alignment/validator.rs                      # tree-invariant validator (Company/Team/Member parent rules)
+  # cycles table + cycle_kind + cycle_status enums + RLS
+  - services/okr/migrations/0001_cycles.sql
+  # tenant-local teams (task-HR ships members; OKR ships team primitive)
+  - services/okr/migrations/0002_teams.sql
+  # objectives + scope enum + alignment FK + RLS
+  - services/okr/migrations/0003_objectives.sql
+  # key_results + kr_type + kr_status enums + RLS
+  - services/okr/migrations/0004_key_results.sql
+  # append-only KR progress recordings (consumed by TASK-OKR-005 check-ins)
+  - services/okr/migrations/0005_progress_log.sql
+  # append-only status transitions
+  - services/okr/migrations/0006_objective_status_history.sql
+  # crate root
+  - services/okr/src/lib.rs
+  # Cycle, Team, Objective, KeyResult + 5 enums
+  - services/okr/src/types.rs
+  # closed transition matrix
+  - services/okr/src/fsm/kr_status.rs
+  # planning → active → closing → closed (unidirectional)
+  - services/okr/src/fsm/cycle_status.rs
+  # tree-invariant validator (Company/Team/Member parent rules)
+  - services/okr/src/alignment/validator.rs
   - services/okr/src/repo/cycles.rs
   - services/okr/src/repo/teams.rs
   - services/okr/src/repo/objectives.rs
   - services/okr/src/repo/key_results.rs
   - services/okr/src/repo/progress_log.rs
-  - services/okr/src/audit/okr_events.rs                         # 8 memory row builders
+  # 8 memory row builders
+  - services/okr/src/audit/okr_events.rs
   - services/okr/src/handlers/cycles.rs
   - services/okr/src/handlers/teams.rs
   - services/okr/src/handlers/objectives.rs
   - services/okr/src/handlers/key_results.rs
   - services/okr/src/handlers/progress.rs
-  - services/okr/Cargo.toml                                      # +sqlx, +uuid, +serde, +chrono, +cyberos-cli-exit
+  # +sqlx, +uuid, +serde, +chrono, +cyberos-cli-exit
+  - services/okr/Cargo.toml
   - services/okr/tests/cycles_test.rs
   - services/okr/tests/teams_test.rs
   - services/okr/tests/objectives_create_test.rs
-  - services/okr/tests/kr_count_bounds_test.rs                   # 3-5 KRs per Objective enforced
-  - services/okr/tests/alignment_tree_test.rs                    # Company/Team/Member parent rules
-  - services/okr/tests/kr_status_fsm_test.rs                     # face-saving status transitions
-  - services/okr/tests/cycle_status_fsm_test.rs                  # unidirectional cycle flow
-  - services/okr/tests/append_only_progress_test.rs              # progress_log immutable
-  - services/okr/tests/rls_isolation_test.rs                     # tenant isolation
-  - services/okr/tests/face_saving_terminology_test.rs           # no "miss" / "fail" in enum values; CI lint
+  # 3-5 KRs per Objective enforced
+  - services/okr/tests/kr_count_bounds_test.rs
+  # Company/Team/Member parent rules
+  - services/okr/tests/alignment_tree_test.rs
+  # face-saving status transitions
+  - services/okr/tests/kr_status_fsm_test.rs
+  # unidirectional cycle flow
+  - services/okr/tests/cycle_status_fsm_test.rs
+  # progress_log immutable
+  - services/okr/tests/append_only_progress_test.rs
+  # tenant isolation
+  - services/okr/tests/rls_isolation_test.rs
+  # no "miss" / "fail" in enum values; CI lint
+  - services/okr/tests/face_saving_terminology_test.rs
   - services/okr/tests/audit_emission_test.rs
 modified_files:
-  - services/auth/src/rls/templates.rs                           # add OKR tables to TENANT_SCOPED_TABLES
+  # add OKR tables to TENANT_SCOPED_TABLES
+  - services/auth/src/rls/templates.rs
 
 allowed_tools:
   - file_read: services/okr/**

@@ -1,8 +1,10 @@
 ---
 id: TASK-INV-007
 title: "INV VN hóa đơn auto-emit on AM-send — Decree 123/2020 GDT XML signing + idempotent transmission + verification code retrieval for VN tenants"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,8 +28,10 @@ blocks: [TASK-INV-008, TASK-CRM-010]
 
 source_pages:
   - website/docs/modules/inv.html#hoadon
-  - https://gdt.gov.vn/  # General Department of Taxation Vietnam
-  - https://thuvienphapluat.vn/van-ban/Thue-Phi-Le-Phi/Nghi-dinh-123-2020-ND-CP  # Decree 123/2020 reference
+  # General Department of Taxation Vietnam
+  - https://gdt.gov.vn/
+  # Decree 123/2020 reference
+  - https://thuvienphapluat.vn/van-ban/Thue-Phi-Le-Phi/Nghi-dinh-123-2020-ND-CP
 
 source_decisions:
   - DEC-1520 2026-05-17 — Auto-emit triggered ONLY on first AM-send for VN tenants (residency=vn-1) with engagement.billing_currency=VND; non-VN tenants skipped

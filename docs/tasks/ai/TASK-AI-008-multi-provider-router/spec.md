@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-008
 title: "LiteLLM-derived multi-provider router with retry + 30s failover SLA"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -48,9 +50,12 @@ new_files:
   - services/ai-gateway/tests/router_test.rs
   - services/ai-gateway/tests/router_proptest.rs
 modified_files:
-  - services/ai-gateway/src/handlers/chat.rs   # plug router::call_provider between precheck and reconcile
-  - services/ai-gateway/src/lib.rs             # export router module
-  - services/ai-gateway/Cargo.toml             # aws-sdk-bedrockruntime, reqwest, async-openai, async-trait, rand
+  # plug router::call_provider between precheck and reconcile
+  - services/ai-gateway/src/handlers/chat.rs
+  # export router module
+  - services/ai-gateway/src/lib.rs
+  # aws-sdk-bedrockruntime, reqwest, async-openai, async-trait, rand
+  - services/ai-gateway/Cargo.toml
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests}/**

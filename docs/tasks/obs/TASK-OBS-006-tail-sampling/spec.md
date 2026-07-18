@@ -1,8 +1,10 @@
 ---
 id: TASK-OBS-006
 title: "Tail-based sampling at OTel collector — 100% errors/5xx/slow/flagged + 10% normal + decision_wait + flagged-tenants config"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -39,16 +41,20 @@ new_files:
   - deploy/obs/tests/sampling_test.sh
 modified_files:
   - deploy/obs/otel-collector-config.yaml
-  - services/ai-gateway/src/cli/flag_tenant.rs                  # TASK-AI-021 hook
+  # TASK-AI-021 hook
+  - services/ai-gateway/src/cli/flag_tenant.rs
 allowed_tools:
   - file_read: deploy/obs/**
   - file_write: deploy/obs/**, services/ai-gateway/src/cli/**
   - bash: docker compose restart collector
   - bash: ./deploy/obs/tests/sampling_test.sh
 disallowed_tools:
-  - sample error traces below 100% (per §1 #1)
-  - sample 5xx traces below 100% (per §1 #2)
-  - reduce decision_wait below 20s (per §1 #8 — slow traces won't complete in time)
+  #1)
+  - sample error traces below 100% (per §1
+  #2)
+  - sample 5xx traces below 100% (per §1
+  #8 — slow traces won't complete in time)
+  - reduce decision_wait below 20s (per §1
 
 effort_hours: 6
 subtasks:

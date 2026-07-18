@@ -1,8 +1,10 @@
 ---
 id: TASK-OBS-001
 title: "OTel Collector + LGTM stack (Loki + Prometheus + Tempo + Grafana) with mTLS ingress + per-service tokens + retention + file-buffer"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -31,7 +33,8 @@ source_decisions:
   - DEC-140 (LGTM self-hosted; data-residency for PDPL/GDPR; no SaaS Datadog)
   - DEC-141 (per-service bearer tokens at ingress; rotation 90d via TASK-AUTH-006-style sweeper)
   - DEC-142 (retention slice-1: 30d logs / 90d metrics / 7d traces; P2 extends with S3 backend)
-  - DEC-143 (PII-scrub at collector pipeline as defence-in-depth — caller-side typed attrs is primary per TASK-AI-022 §1 #15)
+  #15)
+  - DEC-143 (PII-scrub at collector pipeline as defence-in-depth — caller-side typed attrs is primary per TASK-AI-022 §1
 
 language: yaml + docker-compose (P0); helm charts (P2)
 service: cyberos/deploy/obs/
@@ -58,9 +61,12 @@ allowed_tools:
   - bash: ./deploy/obs/tests/smoke_test.sh
 disallowed_tools:
   - route OTel data to non-CyberOS endpoints (per DEC-140 — self-hosted only)
-  - skip auth on collector ingress (per §1 #2 — anonymous emit forbidden)
-  - omit PII-scrub processor from collector pipeline (per §1 #11 defence-in-depth)
-  - hardcode bearer tokens in committed YAML (per §1 #2 — tokens via mounted file)
+  #2 — anonymous emit forbidden)
+  - skip auth on collector ingress (per §1
+  #11 defence-in-depth)
+  - omit PII-scrub processor from collector pipeline (per §1
+  #2 — tokens via mounted file)
+  - hardcode bearer tokens in committed YAML (per §1
 
 effort_hours: 10
 subtasks:

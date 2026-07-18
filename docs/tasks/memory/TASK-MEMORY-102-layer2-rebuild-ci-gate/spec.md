@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-102
 title: "Layer-2 rebuild-from-Layer-1 CI gate — deterministic rebuild + spot-check + 30min budget + mid-rebuild resume + multi-tenant"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -45,17 +47,21 @@ new_files:
   - services/memory/tests/ingest_test.rs
   - .github/workflows/memory-rebuild.yml
 modified_files:
-  - services/memory/src/layer2/ingest.rs                    # add `run_one_pass` for rebuild
+  # add `run_one_pass` for rebuild
+  - services/memory/src/layer2/ingest.rs
 allowed_tools:
   - file_read: services/memory/**
   - file_write: services/memory/{src,tests}/**, .github/workflows/memory-rebuild.yml
   - bash: cd services/memory && cargo build --bin rebuild_layer2
   - bash: cd services/memory && cargo test rebuild
 disallowed_tools:
-  - run rebuild against production Layer 2 without explicit `--prod-confirmed-aware` (per §1 #11)
-  - skip spot-check verification (per §1 #4)
+  #11)
+  - run rebuild against production Layer 2 without explicit `--prod-confirmed-aware` (per §1
+  #4)
+  - skip spot-check verification (per §1
   - lower 30min CI budget without explicit task amendment (per DEC-185)
-  - skip determinism check on rebuild output (per §1 #6)
+  #6)
+  - skip determinism check on rebuild output (per §1
 
 effort_hours: 10
 subtasks:

@@ -1,8 +1,10 @@
 ---
 id: TASK-AUTH-103
 title: "AUTH SAML 2.0 SSO — SP-initiated flow + per-tenant IdP config + XML signature verification + assertion validation + JIT provisioning + attribute → role mapping + replay defense"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -59,15 +61,24 @@ new_files:
   - services/auth/migrations/0023_saml_authn_request_log.sql
   - services/auth/migrations/0024_saml_subject_link.sql
   - services/auth/src/saml/mod.rs
-  - services/auth/src/saml/metadata.rs                       # IdP metadata fetch + cache + cert rotation
-  - services/auth/src/saml/authn_request.rs                  # SP-initiated request builder + ID + TTL
-  - services/auth/src/saml/response_verifier.rs              # signature + assertion validation
-  - services/auth/src/saml/xml_signature.rs                  # exc-c14n + transforms + XSW defense
-  - services/auth/src/saml/attribute_mapper.rs               # AttributeStatement → role mapping (reuses TASK-AUTH-104 YAML shape)
-  - services/auth/src/saml/jit_provision.rs                  # first-login JIT subject creation
-  - services/auth/src/saml/repo.rs                           # CRUD across 4 SAML tables
-  - services/auth/src/saml/audit.rs                          # 7 memory row builders
-  - services/auth/src/handlers/saml.rs                       # GET /v1/auth/saml/initiate + POST /v1/auth/saml/acs + POST /v1/auth/saml/idp-configs
+  # IdP metadata fetch + cache + cert rotation
+  - services/auth/src/saml/metadata.rs
+  # SP-initiated request builder + ID + TTL
+  - services/auth/src/saml/authn_request.rs
+  # signature + assertion validation
+  - services/auth/src/saml/response_verifier.rs
+  # exc-c14n + transforms + XSW defense
+  - services/auth/src/saml/xml_signature.rs
+  # AttributeStatement → role mapping (reuses TASK-AUTH-104 YAML shape)
+  - services/auth/src/saml/attribute_mapper.rs
+  # first-login JIT subject creation
+  - services/auth/src/saml/jit_provision.rs
+  # CRUD across 4 SAML tables
+  - services/auth/src/saml/repo.rs
+  # 7 memory row builders
+  - services/auth/src/saml/audit.rs
+  # GET /v1/auth/saml/initiate + POST /v1/auth/saml/acs + POST /v1/auth/saml/idp-configs
+  - services/auth/src/handlers/saml.rs
   - services/auth/tests/rbac_adr_gate_test.rs
   - services/auth/tests/saml_sp_initiated_flow_test.rs
   - services/auth/tests/saml_idp_initiated_rejected_test.rs
@@ -85,7 +96,8 @@ new_files:
   - services/auth/tests/admin_deny_list_test.rs
   - services/auth/tests/rls_isolation_test.rs
 modified_files:
-  - services/auth/src/lib.rs                                 # pub mod saml
+  # pub mod saml
+  - services/auth/src/lib.rs
 
 allowed_tools:
   - file_read: services/auth/**

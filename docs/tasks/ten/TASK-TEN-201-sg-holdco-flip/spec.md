@@ -1,8 +1,10 @@
 ---
 id: TASK-TEN-201
 title: "TEN Singapore HoldCo flip CLI — `cyberos-ten holdco-flip` orchestrates ACRA filings + shareholder migration + ESOP transfer for VN → SG corporate restructure"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/ten.html#sg-holdco-flip
-  - https://www.acra.gov.sg/  # ACRA Singapore
+  # ACRA Singapore
+  - https://www.acra.gov.sg/
 
 source_decisions:
   - DEC-2400 2026-05-17 — CLI `cyberos-ten holdco-flip` orchestrates the multi-step corporate restructure: (1) form SG HoldCo, (2) prepare ACRA filings, (3) shareholder migration agreements, (4) ESOP grant re-issuance under SG entity, (5) update TASK-TEN-103 residency to sg-1

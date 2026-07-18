@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-007
 title: "Provider cost-table loader — YAML-backed, hot-reloadable rate table"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -30,9 +32,11 @@ source_pages:
   - website/docs/modules/ai.html#cost-gate
   - website/docs/modules/ai.html#multi-provider
 source_decisions:
-  - docs/tasks/ai/TASK-AI-001-cost-ledger-precheck/spec.md §1 #8 (YAML config promoted to normative)
+  #8 (YAML config promoted to normative)
+  - docs/tasks/ai/TASK-AI-001-cost-ledger-precheck/spec.md §1
   - docs/tasks/ai/TASK-AI-005-tenant-policy-yaml-loader/spec.md (loader pattern reuse)
-  - docs/tasks/ai/TASK-AI-006-model-alias-resolution/spec.md §1 #5 (cost-entry validation)
+  #5 (cost-entry validation)
+  - docs/tasks/ai/TASK-AI-006-model-alias-resolution/spec.md §1
   - archive/2026-05-14/RESEARCH_REVIEW.md §2.4 (cost-of-everything invariant)
 
 # ───── Build envelope ─────
@@ -42,15 +46,19 @@ new_files:
   - services/ai-gateway/src/cost_table.rs
   - services/ai-gateway/src/cost_table/loader.rs
   - services/ai-gateway/src/cost_table/schema.rs
-  - services/ai-gateway/config/cost_rates.yaml          # initial seed data
+  # initial seed data
+  - services/ai-gateway/config/cost_rates.yaml
   - services/ai-gateway/tests/cost_table_test.rs
   - services/ai-gateway/tests/fixtures/cost_table/valid_rates.yaml
   - services/ai-gateway/tests/fixtures/cost_table/negative_rate.yaml
   - services/ai-gateway/tests/fixtures/cost_table/missing_field.yaml
 modified_files:
-  - services/ai-gateway/src/cost_ledger.rs   # use cost_table::lookup in precheck
-  - services/ai-gateway/src/alias.rs         # TASK-AI-006 cost-entry check uses this
-  - services/ai-gateway/src/lib.rs            # export cost_table module
+  # use cost_table::lookup in precheck
+  - services/ai-gateway/src/cost_ledger.rs
+  # TASK-AI-006 cost-entry check uses this
+  - services/ai-gateway/src/alias.rs
+  # export cost_table module
+  - services/ai-gateway/src/lib.rs
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests,config}/**

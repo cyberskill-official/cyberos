@@ -1,8 +1,10 @@
 ---
 id: TASK-SKILL-102
 title: "Self-hosted OCI registry for .skill bundles — cosign signing + tenant-scoped + immutable tags + 100MB cap + audit"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -22,7 +24,8 @@ shipped: null
 memory_chain_hash: null
 related_tasks: [TASK-SKILL-101, TASK-AUTH-004, TASK-AUTH-003]
 depends_on: [TASK-SKILL-101]
-blocks: [TASK-SKILL-201]   # placeholder — OCI registry deploy task (R3 stage), not yet specified
+# placeholder — OCI registry deploy task (R3 stage), not yet specified
+blocks: [TASK-SKILL-201]
 
 source_pages:
   - website/docs/modules/skill.html#oci-registry
@@ -58,11 +61,16 @@ allowed_tools:
   - bash: cd services/skill-registry && cargo test
   - bash: cosign sign-blob bundle.tar.zst
 disallowed_tools:
-  - allow push without cosign signature (per §1 #2)
-  - allow tag overwrite (per §1 #5 immutable)
-  - cross-tenant push/pull (per §1 #4)
-  - skip memory audit on push or pull (per §1 #3)
-  - bypass 100MB bundle size cap (per §1 #11)
+  #2)
+  - allow push without cosign signature (per §1
+  #5 immutable)
+  - allow tag overwrite (per §1
+  #4)
+  - cross-tenant push/pull (per §1
+  #3)
+  - skip memory audit on push or pull (per §1
+  #11)
+  - bypass 100MB bundle size cap (per §1
 
 effort_hours: 10
 subtasks:

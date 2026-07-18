@@ -1,8 +1,10 @@
 ---
 id: TASK-KB-005
 title: "KB BGE-M3 semantic search — memory Layer 2 vector ingest + dense embedding query with chunk-level retrieval"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-KB-006]
 
 source_pages:
   - website/docs/modules/kb.html#semantic-search
-  - https://huggingface.co/BAAI/bge-m3  # BGE-M3 multilingual embedding model
+  # BGE-M3 multilingual embedding model
+  - https://huggingface.co/BAAI/bge-m3
 
 source_decisions:
   - DEC-1920 2026-05-17 — BGE-M3 multilingual dense embedding (1024-dim) — strong VN + English; ingested via TASK-AI-019 memory Layer 2

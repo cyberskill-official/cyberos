@@ -1,8 +1,10 @@
 ---
 id: TASK-DOCS-001
 title: "Server-render NFR catalog + Risk Register + task catalog at build time — Pagefind-indexed + crawler-visible + deterministic + Alpine reactive coexistence"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -29,7 +31,8 @@ source_pages:
   - website/docs/reference/risk-register.html
   - website/docs/reference/task-catalog.html
 source_decisions:
-  - docs/archive/2026-05-14/RESEARCH_REVIEW.md §4 (UX defects #1, #2)
+  #1, #2)
+  - docs/archive/2026-05-14/RESEARCH_REVIEW.md §4 (UX defects
   - docs/archive/2026-05-14/RESEARCH_REVIEW.md §5.4 (reference-page weighting)
   - DEC-220 (deterministic build; CI drift detection)
   - DEC-221 (single source of truth in JSON; HTML pages consume; Alpine reactive uses same data)
@@ -51,12 +54,16 @@ new_files:
   - website/build/tests/pagefind_index_test.mjs
   - .github/workflows/docs-prerender-gate.yml
 modified_files:
-  - website/docs/reference/nfr-catalog.html              # gain server-rendered <section> blocks
+  # gain server-rendered <section> blocks
+  - website/docs/reference/nfr-catalog.html
   - website/docs/reference/risk-register.html
   - website/docs/reference/task-catalog.html
-  - website/docs/reference/_alpine-init.js               # use JSON data; hide prerendered post-hydrate
-  - .github/workflows/deploy.yml                         # add `node build/render-reference-pages.mjs` step
-  - website/package.json                                 # cheerio, handlebars deps
+  # use JSON data; hide prerendered post-hydrate
+  - website/docs/reference/_alpine-init.js
+  # add `node build/render-reference-pages.mjs` step
+  - .github/workflows/deploy.yml
+  # cheerio, handlebars deps
+  - website/package.json
 allowed_tools:
   - file_read: website/**
   - file_write: website/build/**, website/docs/reference/**, .github/workflows/**
@@ -65,7 +72,8 @@ allowed_tools:
 disallowed_tools:
   - mutating data inline in HTML (per DEC-221 — JSON is source of truth)
   - introducing non-deterministic build steps (per DEC-220)
-  - removing Alpine reactive (per §1 #4 — UX preserved)
+  #4 — UX preserved)
+  - removing Alpine reactive (per §1
 
 effort_hours: 14
 subtasks:

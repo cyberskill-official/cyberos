@@ -1,8 +1,10 @@
 ---
 id: TASK-DOC-003
 title: "DOC AATL CA integration — Adobe Approved Trust List CA partner (DigiCert / Entrust / IdenTrust) for US/non-EU/non-VN residency"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/doc.html#aatl-ca
-  - https://helpx.adobe.com/acrobat/kb/approved-trust-list1.html  # AATL membership
+  # AATL membership
+  - https://helpx.adobe.com/acrobat/kb/approved-trust-list1.html
 
 source_decisions:
   - DEC-1780 2026-05-17 — Partner with AATL-listed CA (DigiCert / Entrust / IdenTrust — selection per CLO); abstraction layer hides specifics

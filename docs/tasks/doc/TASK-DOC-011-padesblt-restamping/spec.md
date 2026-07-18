@@ -1,8 +1,10 @@
 ---
 id: TASK-DOC-011
 title: "DOC PAdES-B-LT format + year-9 LTV re-stamping — extend B-T signatures with validation data + re-timestamp before signature/TS authority expires"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/doc.html#padesblt-ltv
-  - https://www.etsi.org/deliver/etsi_en/319100_319199/31914201/  # ETSI EN 319 142-1 PAdES
+  # ETSI EN 319 142-1 PAdES
+  - https://www.etsi.org/deliver/etsi_en/319100_319199/31914201/
 
 source_decisions:
   - DEC-1800 2026-05-17 — Extend any B-T (timestamp-only) signature to B-LT by embedding cert chain + OCSP/CRL responses + validation data per ETSI EN 319 142-1

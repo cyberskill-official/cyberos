@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-021
 title: "cyberos-ai operator CLI (usage · models · policy · failover · invoice · breaker · expiry · memory) with --confirm + --json + audit"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -58,19 +60,26 @@ new_files:
   - services/ai-gateway/tests/cache_test.rs
   - services/ai-gateway/docs/cli-reference.md
 modified_files:
-  - services/ai-gateway/Cargo.toml                                # clap@4, comfy-table@7, jsonschema@0.18
-  - services/ai-gateway/src/memory_writer.rs                       # add canonical::cli_* row builders
+  # clap@4, comfy-table@7, jsonschema@0.18
+  - services/ai-gateway/Cargo.toml
+  # add canonical::cli_* row builders
+  - services/ai-gateway/src/memory_writer.rs
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests,docs}/**
   - bash: cargo build --bin cyberos-ai --release
   - bash: cargo test -p cyberos-ai-gateway cli
 disallowed_tools:
-  - skip memory audit row when CLI mutates tenant policy or breaker state (per §1 #4)
-  - allow destructive operations without `--confirm` (per §1 #5)
-  - emit unstable JSON shape (per §1 #8 — JSON schema is a versioned contract)
-  - bypass operator authentication (per §1 #6 — every mutating call requires `CYBEROS_AI_OPERATOR_TOKEN`)
-  - run `failover drill` against production traffic without safety guard (per §1 #11)
+  #4)
+  - skip memory audit row when CLI mutates tenant policy or breaker state (per §1
+  #5)
+  - allow destructive operations without `--confirm` (per §1
+  #8 — JSON schema is a versioned contract)
+  - emit unstable JSON shape (per §1
+  #6 — every mutating call requires `CYBEROS_AI_OPERATOR_TOKEN`)
+  - bypass operator authentication (per §1
+  #11)
+  - run `failover drill` against production traffic without safety guard (per §1
 
 # ───── Estimated work ─────
 effort_hours: 14

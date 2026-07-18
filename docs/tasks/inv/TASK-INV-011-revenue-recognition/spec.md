@@ -1,8 +1,10 @@
 ---
 id: TASK-INV-011
 title: "INV revenue recognition — ASC 606 / IFRS 15 compliant deferred-revenue rollforward with monthly journal entries + per-engagement schedule"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,8 +28,10 @@ blocks: []
 
 source_pages:
   - website/docs/modules/inv.html#revenue
-  - https://asc.fasb.org/topic&trid=49044639  # ASC 606
-  - https://www.ifrs.org/issued-standards/list-of-standards/ifrs-15-revenue/  # IFRS 15
+  # ASC 606
+  - https://asc.fasb.org/topic&trid=49044639
+  # IFRS 15
+  - https://www.ifrs.org/issued-standards/list-of-standards/ifrs-15-revenue/
 
 source_decisions:
   - "DEC-1560 2026-05-17 — Revenue recognition method per engagement: {time-based (subscription), milestone-based (project), pct-completion (consulting), point-in-time (one-off)}; closed enum cardinality 4"

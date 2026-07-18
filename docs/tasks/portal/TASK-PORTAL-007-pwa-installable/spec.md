@@ -1,8 +1,10 @@
 ---
 id: TASK-PORTAL-007
 title: "PORTAL PWA installable — mobile-first Progressive Web App with offline-capable view cache + push notifications + per-tenant manifest"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -73,7 +75,8 @@ build_envelope:
 
   modified_files:
     - services/portal/src/lib.rs
-    - services/portal/Cargo.toml                                       # +web-push crate
+    # +web-push crate
+    - services/portal/Cargo.toml
 
   allowed_tools:
     - file_read: services/portal/**

@@ -1,8 +1,10 @@
 ---
 id: TASK-AUTH-002
 title: "Subject create — POST /v1/admin/subjects with bcrypt + role allow-list + idempotency + RLS-enforced cross-tenant blocking"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -44,7 +46,8 @@ new_files:
   - services/auth/tests/admin_subject_create_test.rs
   - services/auth/tests/admin_subject_create_test.rs
 modified_files:
-  - services/auth/src/rls/templates.rs                   # add subjects to TENANT_SCOPED_TABLES
+  # add subjects to TENANT_SCOPED_TABLES
+  - services/auth/src/rls/templates.rs
 allowed_tools:
   - file_read: services/auth/**
   - file_write: services/auth/{src,tests,migrations}/**
@@ -52,9 +55,12 @@ allowed_tools:
 disallowed_tools:
   - echo `password` in any response, log, or audit row
   - lower bcrypt cost below 12 (per DEC-115)
-  - allow roles outside the slice-1 allow-list (per §1 #5; TASK-AUTH-101 expands)
-  - allow cross-tenant creation by any role (per §1 #1; root-admin must switch tenant context)
-  - skip idempotency support (per §1 #6)
+  #5; TASK-AUTH-101 expands)
+  - allow roles outside the slice-1 allow-list (per §1
+  #1; root-admin must switch tenant context)
+  - allow cross-tenant creation by any role (per §1
+  #6)
+  - skip idempotency support (per §1
 
 effort_hours: 6
 subtasks:

@@ -1,8 +1,10 @@
 ---
 id: TASK-TEN-105
 title: "TEN signed-bundle export — deterministic zip + Ed25519 signature + memory audit anchor + chain-of-custody manifest for tenant offboarding"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-TEN-106]
 
 source_pages:
   - website/docs/modules/ten.html#offboarding
-  - https://datatracker.ietf.org/doc/html/rfc8032  # Ed25519
+  # Ed25519
+  - https://datatracker.ietf.org/doc/html/rfc8032
   - https://en.wikipedia.org/wiki/Chain_of_custody
 
 source_decisions:
@@ -73,8 +76,10 @@ build_envelope:
 
   modified_files:
     - services/ten/src/lib.rs
-    - services/ten/src/provisioning/orchestrator.rs                    # generate Ed25519 keypair at provision
-    - services/ten/Cargo.toml                                          # +ed25519-dalek + zip + age
+    # generate Ed25519 keypair at provision
+    - services/ten/src/provisioning/orchestrator.rs
+    # +ed25519-dalek + zip + age
+    - services/ten/Cargo.toml
 
   allowed_tools:
     - file_read: services/{ten,proj,inv,doc,chat,auth,memory}/**

@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-120
 title: "memory history — `cyberos history <path>` surfaces per-file version + attribution from the audit chain; REST `/api/v2/memories/<path>/history`; dream-applied + session_id annotations rendered inline"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -25,7 +27,8 @@ depends_on: []
 blocks: []
 
 source_pages:
-  - playground/extracts/memory-and-dreaming.transcript.txt  # see "version history" segment [499..540]
+  # see "version history" segment [499..540]
+  - playground/extracts/memory-and-dreaming.transcript.txt
 source_decisions:
   - DEC-260 (history is read-only — pure projection over existing audit-chain rows; no new audit rows emitted by history operations)
   - DEC-261 (Default rendering is the most-recent-first chronology; older-first available via --chronological; both render the SAME data, different orders)
@@ -40,16 +43,20 @@ new_files:
   - modules/memory/tests/core/test_history.py
   - modules/memory/tests/core/test_history.py
 modified_files:
-  - modules/memory/cyberos/__main__.py            # wire `cyberos history <path>` subcommand
-  - modules/memory/cyberos/core/serve.py          # add GET /api/v2/memories/<path>/history endpoint
+  # wire `cyberos history <path>` subcommand
+  - modules/memory/cyberos/__main__.py
+  # add GET /api/v2/memories/<path>/history endpoint
+  - modules/memory/cyberos/core/serve.py
 allowed_tools:
   - file_read: modules/memory/**
   - file_write: modules/memory/cyberos/**, modules/memory/tests/**
   - bash: cd modules/memory && python -m pytest tests/test_history_*.py -v
   - bash: cd modules/memory && python -m cyberos history memories/facts/x.md
 disallowed_tools:
-  - emit any new audit row from history operations (per §1 #1, DEC-260 — pure read-only projection)
-  - modify any memory file as a side-effect of history rendering (per §1 #1)
+  #1, DEC-260 — pure read-only projection)
+  - emit any new audit row from history operations (per §1
+  #1)
+  - modify any memory file as a side-effect of history rendering (per §1
 
 effort_hours: 8
 subtasks:

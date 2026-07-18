@@ -1,8 +1,10 @@
 ---
 id: TASK-TEN-001
 title: "TEN tenant provisioning CLI — `cyberos-ten provision` ops-driven flow with schema namespace + NATS subject + S3 prefix + initial root-admin subject + memory audit"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -48,33 +50,59 @@ source_decisions:
 language: rust 1.81
 service: cyberos/services/ten/
 new_files:
-  - services/ten/migrations/0001_tenants.sql                          # tenants table + tenant_status enum + RLS + REVOKE writes
-  - services/ten/migrations/0002_tenant_status_history.sql            # append-only status transition log
-  - services/ten/migrations/0003_tenant_residency_map.sql             # per-tenant residency tag (consumed by TASK-AI-016 + TASK-DOC-001 + TASK-EMAIL-001)
-  - services/ten/src/lib.rs                                           # crate root
-  - services/ten/src/types.rs                                         # Tenant struct, TenantStatus enum (5), Residency enum (4 placeholders for full TASK-TEN-103)
-  - services/ten/src/repo/tenants.rs                                  # CRUD: create, get, list, update_status
-  - services/ten/src/repo/status_history.rs                           # append-only writer
-  - services/ten/src/provisioning/orchestrator.rs                     # the provision flow: schema → NATS → S3 → AUTH tenant + root-admin
-  - services/ten/src/provisioning/schema_namespace.rs                 # Postgres schema namespace creator
-  - services/ten/src/provisioning/nats_namespace.rs                   # NATS subject namespace + permission ACL writer
-  - services/ten/src/provisioning/s3_prefix.rs                        # S3 bucket prefix initialiser (creates tenant marker object)
-  - services/ten/src/provisioning/auth_bootstrap.rs                   # delegates to TASK-AUTH-001 POST /v1/admin/tenants + creates initial root-admin
-  - services/ten/src/audit/tenant_events.rs                           # canonical ten.tenant_* memory row builders
-  - services/ten/src/cli/provision.rs                                 # cyberos-ten provision command
-  - services/ten/src/cli/mod.rs                                       # CLI scaffold + subcommand registry
-  - services/ten/Cargo.toml                                           # +sqlx, +uuid, +serde, +clap, +zeroize, +rand, +cyberos-cli-exit
-  - services/ten/tests/provision_happy_test.rs                        # happy + idempotent + namespace creation
-  - services/ten/tests/provision_slug_validation_test.rs              # invalid slugs rejected
-  - services/ten/tests/provision_idempotency_test.rs                  # same slug + same residency → existing tenant; different residency → 409
-  - services/ten/tests/provision_memory_audit_test.rs                  # ten.tenant_provisioned memory row emitted; carries tenant_id + slug + residency + provisioned_by
-  - services/ten/tests/provision_root_admin_test.rs                   # root-admin subject created with tenant-admin role; password printed once
-  - services/ten/tests/provision_namespace_isolation_test.rs          # provisioning produces distinct schema/NATS/S3 prefixes per tenant
-  - services/ten/tests/provision_residency_default_test.rs            # default residency = vn-1; --residency flag overrides
-  - services/ten/tests/append_only_test.rs                            # UPDATE/DELETE rejected on tenants + tenant_status_history
-  - services/ten/tests/exit_codes_test.rs                             # 0/1/64/65/73/75/77 codes correct
+  # tenants table + tenant_status enum + RLS + REVOKE writes
+  - services/ten/migrations/0001_tenants.sql
+  # append-only status transition log
+  - services/ten/migrations/0002_tenant_status_history.sql
+  # per-tenant residency tag (consumed by TASK-AI-016 + TASK-DOC-001 + TASK-EMAIL-001)
+  - services/ten/migrations/0003_tenant_residency_map.sql
+  # crate root
+  - services/ten/src/lib.rs
+  # Tenant struct, TenantStatus enum (5), Residency enum (4 placeholders for full TASK-TEN-103)
+  - services/ten/src/types.rs
+  # CRUD: create, get, list, update_status
+  - services/ten/src/repo/tenants.rs
+  # append-only writer
+  - services/ten/src/repo/status_history.rs
+  # the provision flow: schema → NATS → S3 → AUTH tenant + root-admin
+  - services/ten/src/provisioning/orchestrator.rs
+  # Postgres schema namespace creator
+  - services/ten/src/provisioning/schema_namespace.rs
+  # NATS subject namespace + permission ACL writer
+  - services/ten/src/provisioning/nats_namespace.rs
+  # S3 bucket prefix initialiser (creates tenant marker object)
+  - services/ten/src/provisioning/s3_prefix.rs
+  # delegates to TASK-AUTH-001 POST /v1/admin/tenants + creates initial root-admin
+  - services/ten/src/provisioning/auth_bootstrap.rs
+  # canonical ten.tenant_* memory row builders
+  - services/ten/src/audit/tenant_events.rs
+  # cyberos-ten provision command
+  - services/ten/src/cli/provision.rs
+  # CLI scaffold + subcommand registry
+  - services/ten/src/cli/mod.rs
+  # +sqlx, +uuid, +serde, +clap, +zeroize, +rand, +cyberos-cli-exit
+  - services/ten/Cargo.toml
+  # happy + idempotent + namespace creation
+  - services/ten/tests/provision_happy_test.rs
+  # invalid slugs rejected
+  - services/ten/tests/provision_slug_validation_test.rs
+  # same slug + same residency → existing tenant; different residency → 409
+  - services/ten/tests/provision_idempotency_test.rs
+  # ten.tenant_provisioned memory row emitted; carries tenant_id + slug + residency + provisioned_by
+  - services/ten/tests/provision_memory_audit_test.rs
+  # root-admin subject created with tenant-admin role; password printed once
+  - services/ten/tests/provision_root_admin_test.rs
+  # provisioning produces distinct schema/NATS/S3 prefixes per tenant
+  - services/ten/tests/provision_namespace_isolation_test.rs
+  # default residency = vn-1; --residency flag overrides
+  - services/ten/tests/provision_residency_default_test.rs
+  # UPDATE/DELETE rejected on tenants + tenant_status_history
+  - services/ten/tests/append_only_test.rs
+  # 0/1/64/65/73/75/77 codes correct
+  - services/ten/tests/exit_codes_test.rs
 modified_files:
-  - services/auth/src/admin/tenants.rs                                # expose internal helper for TASK-TEN-001 to drive tenant + root-admin in one tx
+  # expose internal helper for TASK-TEN-001 to drive tenant + root-admin in one tx
+  - services/auth/src/admin/tenants.rs
 
 allowed_tools:
   - file_read: services/ten/**

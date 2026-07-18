@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-015
 title: "ZDR (Zero Data Retention) attestation table + enforcement when tenant policy requires"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -44,27 +46,35 @@ new_files:
   - services/ai-gateway/src/zdr/parse.rs
   - services/ai-gateway/src/zdr/watch.rs
   - services/ai-gateway/src/zdr/staleness.rs
-  - services/ai-gateway/config/zdr_attestations.yaml          # provider × model ZDR status
+  # provider × model ZDR status
+  - services/ai-gateway/config/zdr_attestations.yaml
   - services/ai-gateway/tests/zdr_test.rs
   - services/ai-gateway/tests/alias_resolution_test.rs
   - services/ai-gateway/tests/zdr_test.rs
   - services/ai-gateway/tests/otel_propagation_test.rs
-  - .github/workflows/zdr-staleness-check.yml                 # weekly cron: warn if attestations >90d old
+  # weekly cron: warn if attestations >90d old
+  - .github/workflows/zdr-staleness-check.yml
 modified_files:
-  - services/ai-gateway/src/alias.rs                          # TASK-AI-006 §1 #6 invokes zdr::is_zdr
-  - services/ai-gateway/src/handlers/chat.rs                  # emit ai.zdr_violation memory row on refusal
-  - services/ai-gateway/src/memory_writer.rs                   # add canonical::zdr_violation builder
-  - services/ai-gateway/Cargo.toml                            # url crate for source_url validation
+  # TASK-AI-006 §1 #6 invokes zdr::is_zdr
+  - services/ai-gateway/src/alias.rs
+  # emit ai.zdr_violation memory row on refusal
+  - services/ai-gateway/src/handlers/chat.rs
+  # add canonical::zdr_violation builder
+  - services/ai-gateway/src/memory_writer.rs
+  # url crate for source_url validation
+  - services/ai-gateway/Cargo.toml
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests,config}/**
   - file_write: .github/workflows/zdr-staleness-check.yml
   - bash: cargo test -p cyberos-ai-gateway zdr
 disallowed_tools:
-  - self-attest ZDR for any provider (every entry MUST cite a published source URL per §1 #4)
+  #4)
+  - self-attest ZDR for any provider (every entry MUST cite a published source URL per §1
   - bypass `policy.ai_policy.zdr_required` from any code path
   - inline ZDR booleans in alias map or cost table (single source of truth: zdr_attestations.yaml)
-  - ship an entry without `attested_by` (attribution is the audit primitive per §1 #4)
+  #4)
+  - ship an entry without `attested_by` (attribution is the audit primitive per §1
 
 # ───── Estimated work ─────
 effort_hours: 6

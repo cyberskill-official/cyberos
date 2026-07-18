@@ -1,8 +1,10 @@
 ---
 id: TASK-MCP-006
 title: "MCP tool-annotation gating — destructive / write / external-effect tools require explicit confirm or Elicitation pre-execution per MCP 2025-11-25 spec"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -28,7 +30,8 @@ source_pages:
   - website/docs/modules/mcp.html#tool-annotations
   - https://modelcontextprotocol.io/specification/2025-11-25/server/tools#tool-annotations
   - https://modelcontextprotocol.io/specification/2025-11-25/server/utilities/elicitation
-  - https://datatracker.ietf.org/doc/html/rfc6750  # bearer-token authorisation
+  # bearer-token authorisation
+  - https://datatracker.ietf.org/doc/html/rfc6750
 
 source_decisions:
   - "DEC-1040 2026-05-17 — MCP 2025-11-25 spec defines 5 tool annotations: `title`, `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`; this task enforces gating on the latter 4 hints"
@@ -57,19 +60,32 @@ build_envelope:
   language: rust 1.81
   service: cyberos/services/mcp/
   new_files:
-    - services/mcp/migrations/0006_mcp_gating_policy.sql                # per-tenant policy
-    - services/mcp/migrations/0007_mcp_pending_confirmations.sql        # confirm-mode ack store
-    - services/mcp/migrations/0008_mcp_gating_decisions_log.sql         # full decision audit
-    - services/mcp/src/gating/mod.rs                                    # gating orchestrator
-    - services/mcp/src/gating/decision.rs                               # per-call decision logic
-    - services/mcp/src/gating/policy.rs                                 # per-tenant policy loader
-    - services/mcp/src/gating/confirm.rs                                # confirm-mode ack store
-    - services/mcp/src/gating/elicit.rs                                 # elicit-mode delegator (TASK-MCP-008)
-    - services/mcp/src/gating/bypass.rs                                 # bypass-token check
-    - services/mcp/src/gating/drift_detector.rs                         # nightly annotation drift job
-    - services/mcp/src/handlers/tool_confirm.rs                         # POST /v1/mcp/tools/{tool_id}/confirm
-    - services/mcp/src/handlers/gating_policy_admin.rs                  # tenant_admin policy CRUD
-    - services/mcp/src/audit/gating_events.rs                           # 5 memory row builders
+    # per-tenant policy
+    - services/mcp/migrations/0006_mcp_gating_policy.sql
+    # confirm-mode ack store
+    - services/mcp/migrations/0007_mcp_pending_confirmations.sql
+    # full decision audit
+    - services/mcp/migrations/0008_mcp_gating_decisions_log.sql
+    # gating orchestrator
+    - services/mcp/src/gating/mod.rs
+    # per-call decision logic
+    - services/mcp/src/gating/decision.rs
+    # per-tenant policy loader
+    - services/mcp/src/gating/policy.rs
+    # confirm-mode ack store
+    - services/mcp/src/gating/confirm.rs
+    # elicit-mode delegator (TASK-MCP-008)
+    - services/mcp/src/gating/elicit.rs
+    # bypass-token check
+    - services/mcp/src/gating/bypass.rs
+    # nightly annotation drift job
+    - services/mcp/src/gating/drift_detector.rs
+    # POST /v1/mcp/tools/{tool_id}/confirm
+    - services/mcp/src/handlers/tool_confirm.rs
+    # tenant_admin policy CRUD
+    - services/mcp/src/handlers/gating_policy_admin.rs
+    # 5 memory row builders
+    - services/mcp/src/audit/gating_events.rs
     - services/mcp/tests/gating_annotation_precedence_test.rs
     - services/mcp/tests/gating_destructive_requires_confirm_test.rs
     - services/mcp/tests/gating_readonly_fast_path_test.rs
@@ -82,9 +98,12 @@ build_envelope:
     - services/mcp/tests/gating_audit_emission_test.rs
 
   modified_files:
-    - services/mcp/src/handlers/tools_call.rs                            # invoke gating before dispatch
-    - services/mcp/src/server_registry.rs                                # store + serve annotations from registration
-    - services/mcp/src/lib.rs                                            # mount confirm + policy admin routes
+    # invoke gating before dispatch
+    - services/mcp/src/handlers/tools_call.rs
+    # store + serve annotations from registration
+    - services/mcp/src/server_registry.rs
+    # mount confirm + policy admin routes
+    - services/mcp/src/lib.rs
 
   allowed_tools:
     - file_read: services/mcp/**

@@ -46,15 +46,24 @@ new_files:
   - services/chat/tests/smoke_capture.py
   - services/memory/tests/interaction_backfill_test.rs
 modified_files:
-  - services/auth/src/handlers.rs                 # emit auth.signed_in / auth.sign_in_failed next to emit_token_issued/_failed
-  - services/auth/src/lib.rs                       # hold the capture audit pool in AppState
-  - services/chat/src/messages.rs                  # emit chat.message_created/_edited/_deleted via capture
-  - services/chat/src/channels.rs                  # emit chat.channel_created/_joined/_left
-  - services/chat/src/realtime.rs                  # emit chat.presence_changed on join/leave
-  - services/chat/src/audit.rs                     # route interaction-events through cyberos-capture (keep best-effort)
-  - services/chat/src/main.rs                      # CHAT_AUDIT_DATABASE_URL is now the brain link (DEC-2713) — warn->info, document required-in-prod
-  - deploy/vps/docker-compose.yml                  # set CHAT_AUDIT_DATABASE_URL on the chat service (Supabase audit DB)
-  - docs/deploy/p0-google-chat-runbook.md          # document the chat→brain link is ON + how to verify
+  # emit auth.signed_in / auth.sign_in_failed next to emit_token_issued/_failed
+  - services/auth/src/handlers.rs
+  # hold the capture audit pool in AppState
+  - services/auth/src/lib.rs
+  # emit chat.message_created/_edited/_deleted via capture
+  - services/chat/src/messages.rs
+  # emit chat.channel_created/_joined/_left
+  - services/chat/src/channels.rs
+  # emit chat.presence_changed on join/leave
+  - services/chat/src/realtime.rs
+  # route interaction-events through cyberos-capture (keep best-effort)
+  - services/chat/src/audit.rs
+  # CHAT_AUDIT_DATABASE_URL is now the brain link (DEC-2713) — warn->info, document required-in-prod
+  - services/chat/src/main.rs
+  # set CHAT_AUDIT_DATABASE_URL on the chat service (Supabase audit DB)
+  - deploy/vps/docker-compose.yml
+  # document the chat→brain link is ON + how to verify
+  - docs/deploy/p0-google-chat-runbook.md
 allowed_tools:
   - file_read: services/{auth,chat,memory,shared}/**
   - file_write: services/shared/cyberos-capture/**
@@ -70,7 +79,8 @@ disallowed_tools:
   - emit an interaction-event by hand-building an l1_audit_log row instead of calling TASK-MEMORY-121 emit() (bypasses the consent gate + validation + schema)
   - inline a raw chat message body / document text in any emitter payload (per DEC-2711 — use content_ref::pointer to the owning store)
   - capture a subject who has not acknowledged the notice (per DEC-2712 — guaranteed by routing through emit(), never around it)
-  - block or fail the underlying interaction (sign-in, message send) on a capture error (capture is best-effort, per TASK-MEMORY-121 §1 #7)
+  #7)
+  - block or fail the underlying interaction (sign-in, message send) on a capture error (capture is best-effort, per TASK-MEMORY-121 §1
 
 effort_hours: 10
 subtasks:

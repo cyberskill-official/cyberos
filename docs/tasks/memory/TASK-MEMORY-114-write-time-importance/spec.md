@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-114
 title: "memory write-time importance scoring — cuo-Phase-3-pattern Invoker (mock-llm + anthropic); haiku-rated `meta.importance` filters noise at the source; opt-in via `cyberos put --score-importance`"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -25,7 +27,8 @@ depends_on: [TASK-MEMORY-113]
 blocks: [TASK-MEMORY-115]
 
 source_pages:
-  - playground/extracts/agentic-memory.article.txt  # see "Memory management" / "Importance scoring at write time"
+  # see "Memory management" / "Importance scoring at write time"
+  - playground/extracts/agentic-memory.article.txt
 source_decisions:
   - DEC-200 (Write-time importance is OPTIONAL — `--score-importance` flag opts in; default writes never call an LLM)
   - DEC-201 (Importance Invoker mirrors `modules/cuo/cuo/invokers.py` Phase-3 pattern — `MockInvoker` for tests/dev, `AnthropicInvoker` for prod; selection via `CYBEROS_IMPORTANCE_INVOKER` env or `manifest.importance.invoker`)
@@ -45,19 +48,25 @@ new_files:
   - modules/memory/tests/core/test_importance.py
   - modules/memory/tests/core/test_importance.py
 modified_files:
-  - modules/memory/cyberos/__main__.py       # add `--score-importance` flag to `put` subcommand
-  - modules/memory/cyberos/core/writer.py    # if --score-importance, route through importance.score() before put; merge into frontmatter
-  - modules/memory/memory.schema.json        # `manifest.importance` schema fragment
-  - modules/memory/memory.invariants.yaml    # `importance-cache-valid-sha256` rule
+  # add `--score-importance` flag to `put` subcommand
+  - modules/memory/cyberos/__main__.py
+  # if --score-importance, route through importance.score() before put; merge into frontmatter
+  - modules/memory/cyberos/core/writer.py
+  # `manifest.importance` schema fragment
+  - modules/memory/memory.schema.json
+  # `importance-cache-valid-sha256` rule
+  - modules/memory/memory.invariants.yaml
 allowed_tools:
   - file_read: modules/memory/**, modules/cuo/cuo/invokers.py
   - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml
   - bash: cd modules/memory && python -m pytest tests/test_importance_*.py -v
   - bash: cd modules/memory && python -m cyberos put memories/facts/test.md - --score-importance --dry-run < /tmp/sample.md
 disallowed_tools:
-  - silently emit `meta.importance` without an audit row (per §1 #8)
+  #8)
+  - silently emit `meta.importance` without an audit row (per §1
   - call the production Anthropic API in unit tests (per DEC-201 — tests use MockInvoker; CI without API key must pass)
-  - cache misses without re-scoring on next call (per §1 #6)
+  #6)
+  - cache misses without re-scoring on next call (per §1
 
 effort_hours: 8
 subtasks:

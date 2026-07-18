@@ -1,8 +1,10 @@
 ---
 id: TASK-HR-009
 title: "HR termination workflow — Good-Leaver / Bad-Leaver branch with CFO+CEO co-sign + ESOP forfeiture + access revocation cascade"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-ESOP-005]
 
 source_pages:
   - website/docs/modules/hr.html#termination
-  - https://thuvienphapluat.vn/  # VN Labour Code Art. 34-37
+  # VN Labour Code Art. 34-37
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-1870 2026-05-17 — GL/BL branch determines ESOP forfeiture rate, severance computation, references — per board policy + VN Labour Code Art. 36

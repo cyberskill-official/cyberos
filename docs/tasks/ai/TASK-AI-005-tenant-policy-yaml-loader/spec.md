@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter ─────
 id: TASK-AI-005
 title: "Tenant-policy YAML loader — per-tenant cap + warn + override + residency"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -40,19 +42,24 @@ source_decisions:
 language: rust 1.81
 service: cyberos/services/ai-gateway/
 new_files:
-  - services/ai-gateway/src/policy.rs                         # already declared in TASK-AI-001; this task populates it
+  # already declared in TASK-AI-001; this task populates it
+  - services/ai-gateway/src/policy.rs
   - services/ai-gateway/src/policy/loader.rs
   - services/ai-gateway/src/policy/schema.rs
   - services/ai-gateway/src/policy/cache.rs
-  - services/ai-gateway/config/tenants/.gitkeep               # directory placeholder
-  - services/ai-gateway/config/tenants/EXAMPLE.tenant.yaml    # documented example
+  # directory placeholder
+  - services/ai-gateway/config/tenants/.gitkeep
+  # documented example
+  - services/ai-gateway/config/tenants/EXAMPLE.tenant.yaml
   - services/ai-gateway/tests/policy_loader_test.rs
   - services/ai-gateway/tests/fixtures/policy/valid.yaml
   - services/ai-gateway/tests/fixtures/policy/invalid-schema.yaml
   - services/ai-gateway/tests/fixtures/policy/missing-required.yaml
 modified_files:
-  - services/ai-gateway/Cargo.toml   # add serde_yaml, notify (file-watch), schemars
-  - services/ai-gateway/src/lib.rs   # export policy module
+  # add serde_yaml, notify (file-watch), schemars
+  - services/ai-gateway/Cargo.toml
+  # export policy module
+  - services/ai-gateway/src/lib.rs
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests,config}/**

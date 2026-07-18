@@ -1,8 +1,10 @@
 ---
 id: TASK-PROJ-014
 title: "Kanban Board view — drag/drop status transition + keyboard-first navigation + 60fps virtualised list rendering"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -42,8 +44,10 @@ new_files:
   - web/proj-client/tests/kanban_test.tsx
   - web/proj-client/tests/kanban_a11y_test.tsx
 modified_files:
-  - web/proj-client/src/router.tsx                  # /proj/board/:cycle_id route
-  - web/proj-client/package.json                    # react-window, @dnd-kit/core
+  # /proj/board/:cycle_id route
+  - web/proj-client/src/router.tsx
+  # react-window, @dnd-kit/core
+  - web/proj-client/package.json
 allowed_tools:
   - file_read: web/proj-client/**
   - file_write: web/proj-client/src/views/Kanban/**, web/proj-client/tests/**

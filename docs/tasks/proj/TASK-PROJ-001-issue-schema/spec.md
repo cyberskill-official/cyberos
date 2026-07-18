@@ -1,8 +1,10 @@
 ---
 id: TASK-PROJ-001
 title: "PROJ Issue + Cycle + Engagement schema — RLS + cross-module linkable + status FSM + audit + assignee validation"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -53,7 +55,8 @@ new_files:
   - services/proj/tests/status_fsm_test.rs
   - services/proj/tests/status_fsm_test.rs
 modified_files:
-  - services/auth/src/rls/templates.rs                    # add engagements/cycles/issues/issue_links to TENANT_SCOPED_TABLES
+  # add engagements/cycles/issues/issue_links to TENANT_SCOPED_TABLES
+  - services/auth/src/rls/templates.rs
 allowed_tools:
   - file_read: services/proj/**, services/auth/src/rls/**
   - file_write: services/proj/**
@@ -61,8 +64,10 @@ allowed_tools:
 disallowed_tools:
   - allow custom statuses outside the 5-status FSM (per DEC-210)
   - allow orphan issues (no engagement) (per DEC-213)
-  - skip memory audit on issue mutations (per §1 #6)
-  - bypass RLS (per §1 #8)
+  #6)
+  - skip memory audit on issue mutations (per §1
+  #8)
+  - bypass RLS (per §1
 
 effort_hours: 12
 subtasks:

@@ -1,8 +1,10 @@
 ---
 id: TASK-TIME-007
 title: "TIME VN Labour Code Art. 107 OT cap — hard-block at entry write when monthly OT > 40h or yearly OT > 200h (300h with regulator approval)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/time.html#vn-labour-code
-  - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Bo-luat-lao-dong-2019-333670.aspx  # Art. 107
+  # Art. 107
+  - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Bo-luat-lao-dong-2019-333670.aspx
 
 source_decisions:
   - DEC-1390 2026-05-17 — VN Labour Code Art. 107: OT capped at 40h/month + 200h/year (300h/year with regulator approval); standard workday 8h; OT = hours beyond 8/day or 48/week
@@ -57,7 +60,8 @@ build_envelope:
     - services/time/tests/vn_ot_audit_emission_test.rs
 
   modified_files:
-    - services/time/src/entry/create.rs                               # invoke cap_check pre-write
+    # invoke cap_check pre-write
+    - services/time/src/entry/create.rs
 
   allowed_tools:
     - file_read: services/{time,hr}/**

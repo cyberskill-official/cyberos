@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-002
 title: "AI Gateway cost-ledger post-call reconcile"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -43,7 +45,8 @@ new_files:
   - services/ai-gateway/tests/cost_reconcile_test.rs
 modified_files:
   - services/ai-gateway/src/handlers/chat.rs
-  - services/ai-gateway/src/cost_ledger.rs   # add reconcile() alongside precheck()
+  # add reconcile() alongside precheck()
+  - services/ai-gateway/src/cost_ledger.rs
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests}/**

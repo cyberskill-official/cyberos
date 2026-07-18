@@ -1,7 +1,8 @@
 ---
 id: TASK-EVAL-004
 title: "manager + employee evaluation views — access-restricted console panel over the eval service; founder/manager-of-report/self-only reads, the auto-score shown as a clearly-marked DRAFT requiring human approval before it is final, and the employee's right to see + respond to their own record; every cross-person read audited"
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-06-29T00:00:00+07:00
@@ -52,9 +53,12 @@ new_files:
   - apps/console/tests/eval_api_client.test.ts
   - apps/console/tests/eval_draft_badge_render.test.ts
 modified_files:
-  - services/eval/src/lib.rs                 # mount the views routes
-  - services/eval/src/audit.rs               # add eval.assessment_read / _approved / _overridden / _response_recorded kinds
-  - apps/console/src/main.ts                 # register the eval panel in the TASK-APP-001 shell nav (access-gated)
+  # mount the views routes
+  - services/eval/src/lib.rs
+  # add eval.assessment_read / _approved / _overridden / _response_recorded kinds
+  - services/eval/src/audit.rs
+  # register the eval panel in the TASK-APP-001 shell nav (access-gated)
+  - apps/console/src/main.ts
 allowed_tools:
   - file_read: services/eval/**
   - file_read: apps/console/**
