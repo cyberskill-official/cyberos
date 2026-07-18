@@ -70,6 +70,19 @@ insert -> 1 added row + 2 changed lines. A file with no `Totals:` line is legal 
 - any-stage → `ready_to_implement` (failure/blocker rework path, increments `routed_back_count`, sets `entered_via: rework`)
 - any-stage → `draft` (SPEC-rejected path, TASK-IMP-108 §1.5: increments `routed_back_count`, sets `entered_via: spec_rejected`). Use when the failure is the spec, not the code - re-authoring and re-auditing is the remedy, and `ready_to_implement` would hand an unchanged wrong spec back to an implementer.
 
+### Ordering contract — write the truth first, then the index (TASK-IMP-120)
+
+The frontmatter `status` is the record of truth; `docs/tasks/BACKLOG.md` is only its index
+(`STATUS-REFERENCE.md` §1). The two writes are ORDERED, and the order is now ENFORCED rather than
+advised: **write the truth first, then the index** — set the task spec.md frontmatter `status` to
+the target FIRST, and only THEN run `backlog-mutate flip` to move the index cell to match. `flip`
+reads the task's spec frontmatter before it writes the index and REFUSES (exit 6, naming both the
+frontmatter's current status and the requested target) unless the frontmatter already carries that
+target; an unfindable, unreadable, or ambiguous truth refuses the same way. The index can only ever
+catch up to the truth, never lead it — so a caller who moves the index first (the TASK-IMP-116
+divergence: two index flips ran while the frontmatter still said `reviewing`) gets a refusal, not a
+silent disagreement. Do it out of order and the tool stops you.
+
 ## 2. Output schema
 
 ```yaml
