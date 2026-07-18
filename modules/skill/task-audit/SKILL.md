@@ -276,6 +276,30 @@ See `cyberos/skill/docs/AUDIT_LOOP.md` for the canonical 8-step algorithm. Summa
 7. **Termination check** — PASS / HITL_PAUSE / EXHAUSTED / NO_PROGRESS.
 8. **Write audit report** — always, even on HITL pause.
 
+### TRACE-006 semantic sufficiency — the cited test must exercise its clause's verb
+
+Part of the model auditor's "TRACE semantic sufficiency" work (the machine floor does the structural
+halves TRACE-001..003 only, per the "Machine floor first" note above; TRACE-006 is judgment and ABSENT
+from `task-lint`). For EVERY §1 clause that cites a test, perform TRACE-006 as a per-clause comparison
+(RUBRIC.md §9):
+
+1. Read the clause and name its VERB — the observable evidence the verb demands. Use RUBRIC.md §9's
+   verb→evidence table (render / reject / refuse / halt / emit / preserve, and the same standard for any
+   other verb).
+2. Read the cited test and name what it actually ASSERTS.
+3. Compare. If the assertion is weaker than the verb demands, raise a TRACE-006 finding
+   (`error → needs_human`, `clause_verb_untested`) and route the task back. A clause with two verbs is
+   compared against each separately — either one weaker fails. A test that asserts MORE than the verb is
+   never a finding.
+
+RECORD BOTH HALVES in the audit body — the clause's verb-demand AND the test's actual assertion — in the
+ISSUE block (`evidence` / `description`, per `REPORT_FORMAT.md`) for every clause you compare, PASS or
+FAIL, so the comparison is auditable by the next reader and not merely its verdict. A passing cited test
+is necessary but not sufficient: TRACE-004 says the test is green; TRACE-006 says it is green FOR THIS
+CLAUSE. This is judgment, not a lint — a structural "the clause's words appear in the test" check would
+pass TASK-IMP-108 §1.7's original present-in-payload assertion (RUBRIC.md §9), which is why it is absent
+from `task-lint` and is yours to perform on every audit.
+
 ## §4  Mode B aggregation
 
 After looping over every `artefact_path`, emit `AUDIT_BATCH_SUMMARY` (output envelope above). If any artefact is `needs_human`, emit `HITL_BATCH_REQUEST` (per `references/HITL_PROTOCOL.md`) AFTER the summary, aggregating issues across all paused artefacts.
