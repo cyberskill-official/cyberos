@@ -1,8 +1,10 @@
 ---
 id: TASK-CRM-001
 title: "CRM Account/Contact/Deal Postgres schema — closed entity primitives + custom pipelines + closed stage-template enum + RLS + deal status FSM"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -49,25 +51,44 @@ source_decisions:
 language: rust 1.81 + sql
 service: cyberos/services/crm/
 new_files:
-  - services/crm/migrations/0001_accounts.sql                  # accounts table + account_type enum stub + RLS + comp-exclusion
-  - services/crm/migrations/0002_contacts.sql                  # contacts table + contact_account_membership join + RLS
-  - services/crm/migrations/0003_pipelines_stages.sql          # pipelines + pipeline_stages tables + 4-shape closed enum
-  - services/crm/migrations/0004_deals.sql                     # deals table + deal_status enum + RLS + status FSM trigger
-  - services/crm/migrations/0005_deal_status_history.sql       # append-only deal status transitions
-  - services/crm/migrations/0006_seed_pipelines.sql            # seed 4 default pipelines per tenant on creation (run via TASK-TEN-001 hook)
-  - services/crm/src/lib.rs                                    # crate root
-  - services/crm/src/types.rs                                  # Account, Contact, Deal, Pipeline, PipelineStage, DealStatus, PipelineShape enums
-  - services/crm/src/fsm/deal_status.rs                        # closed FSM transition matrix
-  - services/crm/src/repo/accounts.rs                          # CRUD
-  - services/crm/src/repo/contacts.rs                          # CRUD + membership management
-  - services/crm/src/repo/deals.rs                             # CRUD + stage transition + status transition
-  - services/crm/src/repo/pipelines.rs                         # pipeline + stage CRUD
-  - services/crm/src/audit/crm_events.rs                       # canonical crm.* memory row builders (8 kinds)
-  - services/crm/src/handlers/accounts.rs                      # POST/GET/PATCH /v1/crm/accounts
-  - services/crm/src/handlers/contacts.rs                      # POST/GET/PATCH /v1/crm/contacts + membership endpoints
-  - services/crm/src/handlers/deals.rs                         # POST/GET/PATCH /v1/crm/deals + transition handlers
-  - services/crm/src/handlers/pipelines.rs                     # POST/GET /v1/crm/pipelines + stage management
-  - services/crm/Cargo.toml                                    # +sqlx, +uuid, +serde, +chrono, +rust_decimal, +cyberos-cli-exit
+  # accounts table + account_type enum stub + RLS + comp-exclusion
+  - services/crm/migrations/0001_accounts.sql
+  # contacts table + contact_account_membership join + RLS
+  - services/crm/migrations/0002_contacts.sql
+  # pipelines + pipeline_stages tables + 4-shape closed enum
+  - services/crm/migrations/0003_pipelines_stages.sql
+  # deals table + deal_status enum + RLS + status FSM trigger
+  - services/crm/migrations/0004_deals.sql
+  # append-only deal status transitions
+  - services/crm/migrations/0005_deal_status_history.sql
+  # seed 4 default pipelines per tenant on creation (run via TASK-TEN-001 hook)
+  - services/crm/migrations/0006_seed_pipelines.sql
+  # crate root
+  - services/crm/src/lib.rs
+  # Account, Contact, Deal, Pipeline, PipelineStage, DealStatus, PipelineShape enums
+  - services/crm/src/types.rs
+  # closed FSM transition matrix
+  - services/crm/src/fsm/deal_status.rs
+  # CRUD
+  - services/crm/src/repo/accounts.rs
+  # CRUD + membership management
+  - services/crm/src/repo/contacts.rs
+  # CRUD + stage transition + status transition
+  - services/crm/src/repo/deals.rs
+  # pipeline + stage CRUD
+  - services/crm/src/repo/pipelines.rs
+  # canonical crm.* memory row builders (8 kinds)
+  - services/crm/src/audit/crm_events.rs
+  # POST/GET/PATCH /v1/crm/accounts
+  - services/crm/src/handlers/accounts.rs
+  # POST/GET/PATCH /v1/crm/contacts + membership endpoints
+  - services/crm/src/handlers/contacts.rs
+  # POST/GET/PATCH /v1/crm/deals + transition handlers
+  - services/crm/src/handlers/deals.rs
+  # POST/GET /v1/crm/pipelines + stage management
+  - services/crm/src/handlers/pipelines.rs
+  # +sqlx, +uuid, +serde, +chrono, +rust_decimal, +cyberos-cli-exit
+  - services/crm/Cargo.toml
   - services/crm/tests/accounts_test.rs
   - services/crm/tests/contacts_membership_test.rs
   - services/crm/tests/deals_create_test.rs
@@ -80,7 +101,8 @@ new_files:
   - services/crm/tests/money_stored_minor_test.rs
   - services/crm/tests/audit_emission_test.rs
 modified_files:
-  - services/auth/src/rls/templates.rs                         # add accounts, contacts, deals, pipelines to TENANT_SCOPED_TABLES
+  # add accounts, contacts, deals, pipelines to TENANT_SCOPED_TABLES
+  - services/auth/src/rls/templates.rs
 
 allowed_tools:
   - file_read: services/crm/**

@@ -1,8 +1,10 @@
 ---
 id: TASK-CUO-103
 title: "CUO Phase 2 trace rows include prompt + model + temperature + seed for deterministic replay"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,33 +36,32 @@ source_decisions:
   - "DEC-2333 2026-05-17 — Replay test: re-run with same seed + prompt; expect identical output (caveat: vendor model may drift; mark drift as sev-2)"
   - DEC-2334 2026-05-17 — memory audit kinds: cuo.trace_row_added, cuo.trace_replay_match, cuo.trace_replay_drift, cuo.trace_replay_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/cuo/
-  new_files:
-    - services/cuo/migrations/0003_trace_rows.sql
-    - services/cuo/src/trace/mod.rs
-    - services/cuo/src/trace/writer.rs
-    - services/cuo/src/trace/replay.rs
-    - services/cuo/src/handlers/trace_routes.rs
-    - services/cuo/src/audit/trace_events.rs
-    - services/cuo/tests/trace_call_kind_enum_cardinality_test.rs
-    - services/cuo/tests/trace_replay_byte_identical_test.rs
-    - services/cuo/tests/trace_replay_drift_detection_test.rs
-    - services/cuo/tests/trace_immutable_test.rs
-    - services/cuo/tests/trace_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/cuo/
+new_files:
+  - services/cuo/migrations/0003_trace_rows.sql
+  - services/cuo/src/trace/mod.rs
+  - services/cuo/src/trace/writer.rs
+  - services/cuo/src/trace/replay.rs
+  - services/cuo/src/handlers/trace_routes.rs
+  - services/cuo/src/audit/trace_events.rs
+  - services/cuo/tests/trace_call_kind_enum_cardinality_test.rs
+  - services/cuo/tests/trace_replay_byte_identical_test.rs
+  - services/cuo/tests/trace_replay_drift_detection_test.rs
+  - services/cuo/tests/trace_immutable_test.rs
+  - services/cuo/tests/trace_audit_emission_test.rs
 
-  modified_files:
-    - services/cuo/src/supervisor.rs
+modified_files:
+  - services/cuo/src/supervisor.rs
 
-  allowed_tools:
-    - file_read: services/{cuo,ai}/**
-    - file_write: services/cuo/{src,tests,migrations}/**
-    - bash: cd services/cuo && cargo test trace
+allowed_tools:
+  - file_read: services/{cuo,ai}/**
+  - file_write: services/cuo/{src,tests,migrations}/**
+  - bash: cd services/cuo && cargo test trace
 
-  disallowed_tools:
-    - mutate prior trace (per DEC-2332)
-    - skip seed capture (per DEC-2330)
+disallowed_tools:
+  - mutate prior trace (per DEC-2332)
+  - skip seed capture (per DEC-2330)
 
 effort_hours: 4
 subtasks:

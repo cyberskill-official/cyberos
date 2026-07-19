@@ -1,8 +1,10 @@
 ---
 id: TASK-SKILL-110
 title: "vietnam-vat-invoice@1 skill — Vietnamese e-invoice (hóa đơn) Decree 123 XML emitter with GDT submission, digital signature, and per-invoice audit trail"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -48,14 +50,16 @@ new_files:
   - skills/vietnam-vat-invoice/tests/xml_schema_test.rs
   - skills/vietnam-vat-invoice/tests/signer_test.rs
   - skills/vietnam-vat-invoice/services/skill-broker/tests/integration.rs
-  - skills/vietnam-vat-invoice/schemas/HDDT_v123_2020.xsd      # Decree 123 schema
+  # Decree 123 schema
+  - skills/vietnam-vat-invoice/schemas/HDDT_v123_2020.xsd
 allowed_tools:
   - file_read: skills/vietnam-vat-invoice/**
   - file_write: skills/vietnam-vat-invoice/**
   - bash: cd skills/vietnam-vat-invoice && cargo test
 disallowed_tools:
   - emit invoice without GDT submission (per DEC-232; receipt code is legally required)
-  - reuse invoice numbers (per §1 #6 — strictly monotonic per tenant)
+  #6 — strictly monotonic per tenant)
+  - reuse invoice numbers (per §1
   - log raw buyer info (per DEC-233; redact tax_id, address, phone)
 
 effort_hours: 11

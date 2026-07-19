@@ -1,8 +1,10 @@
 ---
 id: TASK-ESOP-007
 title: "ESOP Member dashboard — personal view only (own grants + vesting + estimated value); cross-Member access requires CFO audit"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,34 +36,33 @@ source_decisions:
   - DEC-2313 2026-05-17 — Cross-Member access logged with audit reason + accessor + accessed_member; sev-2 audit
   - DEC-2314 2026-05-17 — memory audit kinds: esop.dashboard_self_view, esop.dashboard_cfo_audit_view, esop.dashboard_access_denied, esop.dashboard_estimated_value_computed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/esop/
-  new_files:
-    - services/esop/migrations/0007_dashboard_access_log.sql
-    - services/esop/src/dashboard/mod.rs
-    - services/esop/src/dashboard/access_gate.rs
-    - services/esop/src/dashboard/value_calculator.rs
-    - services/esop/src/handlers/dashboard_routes.rs
-    - services/esop/src/audit/dashboard_events.rs
-    - services/esop/tests/dashboard_self_view_test.rs
-    - services/esop/tests/dashboard_cross_member_denied_test.rs
-    - services/esop/tests/dashboard_cfo_audit_access_test.rs
-    - services/esop/tests/dashboard_access_kind_enum_cardinality_test.rs
-    - services/esop/tests/dashboard_estimated_value_test.rs
-    - services/esop/tests/dashboard_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/esop/
+new_files:
+  - services/esop/migrations/0007_dashboard_access_log.sql
+  - services/esop/src/dashboard/mod.rs
+  - services/esop/src/dashboard/access_gate.rs
+  - services/esop/src/dashboard/value_calculator.rs
+  - services/esop/src/handlers/dashboard_routes.rs
+  - services/esop/src/audit/dashboard_events.rs
+  - services/esop/tests/dashboard_self_view_test.rs
+  - services/esop/tests/dashboard_cross_member_denied_test.rs
+  - services/esop/tests/dashboard_cfo_audit_access_test.rs
+  - services/esop/tests/dashboard_access_kind_enum_cardinality_test.rs
+  - services/esop/tests/dashboard_estimated_value_test.rs
+  - services/esop/tests/dashboard_audit_emission_test.rs
 
-  modified_files:
-    - services/esop/src/lib.rs
+modified_files:
+  - services/esop/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{esop,auth}/**
-    - file_write: services/esop/{src,tests,migrations}/**
-    - bash: cd services/esop && cargo test dashboard
+allowed_tools:
+  - file_read: services/{esop,auth}/**
+  - file_write: services/esop/{src,tests,migrations}/**
+  - bash: cd services/esop && cargo test dashboard
 
-  disallowed_tools:
-    - cross-member without audit (per DEC-2310)
-    - silent cross-member view (per DEC-2313)
+disallowed_tools:
+  - cross-member without audit (per DEC-2310)
+  - silent cross-member view (per DEC-2313)
 
 effort_hours: 6
 subtasks:

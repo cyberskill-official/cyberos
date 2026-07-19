@@ -1,8 +1,10 @@
 ---
 id: TASK-HR-004
 title: "HR 8 leave types — annual/sick/maternity/paternity/sabbatical/unpaid/bereavement/public_holiday with per-type accrual + approval rules"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-HR-006]
 
 source_pages:
   - website/docs/modules/hr.html#leave-types
-  - https://thuvienphapluat.vn/  # VN Labour Code 45/2019 + Decree 145/2020
+  # VN Labour Code 45/2019 + Decree 145/2020
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-1830 2026-05-17 — 8 leave types per VN Labour Code + sabbatical (business-defined); each with distinct accrual + approval rules
@@ -36,34 +39,33 @@ source_decisions:
   - DEC-1834 2026-05-17 — Per-type entitlement: annual=12d/yr (Art. 113), sick=30d/yr SI-funded (Decree 144), maternity=180d (Art. 139), paternity=14d (Art. 139), bereavement=3d (Art. 116), public_holiday=11d/yr (Art. 112), sabbatical+unpaid=on-request
   - DEC-1835 2026-05-17 — memory audit kinds: hr.leave_requested, hr.leave_approved, hr.leave_rejected, hr.leave_taken, hr.leave_cancelled
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/hr/
-  new_files:
-    - services/hr/migrations/0004_leave_requests.sql
-    - services/hr/src/leave/mod.rs
-    - services/hr/src/leave/entitlement_calc.rs
-    - services/hr/src/leave/approval_router.rs
-    - services/hr/src/handlers/leave_routes.rs
-    - services/hr/src/audit/leave_events.rs
-    - services/hr/tests/leave_type_enum_cardinality_test.rs
-    - services/hr/tests/leave_status_enum_cardinality_test.rs
-    - services/hr/tests/leave_entitlement_per_type_test.rs
-    - services/hr/tests/leave_approval_routing_test.rs
-    - services/hr/tests/leave_balance_deduction_test.rs
-    - services/hr/tests/leave_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/hr/
+new_files:
+  - services/hr/migrations/0004_leave_requests.sql
+  - services/hr/src/leave/mod.rs
+  - services/hr/src/leave/entitlement_calc.rs
+  - services/hr/src/leave/approval_router.rs
+  - services/hr/src/handlers/leave_routes.rs
+  - services/hr/src/audit/leave_events.rs
+  - services/hr/tests/leave_type_enum_cardinality_test.rs
+  - services/hr/tests/leave_status_enum_cardinality_test.rs
+  - services/hr/tests/leave_entitlement_per_type_test.rs
+  - services/hr/tests/leave_approval_routing_test.rs
+  - services/hr/tests/leave_balance_deduction_test.rs
+  - services/hr/tests/leave_audit_emission_test.rs
 
-  modified_files:
-    - services/hr/src/members.rs
+modified_files:
+  - services/hr/src/members.rs
 
-  allowed_tools:
-    - file_read: services/hr/**
-    - file_write: services/hr/{src,tests,migrations}/**
-    - bash: cd services/hr && cargo test leave
+allowed_tools:
+  - file_read: services/hr/**
+  - file_write: services/hr/{src,tests,migrations}/**
+  - bash: cd services/hr && cargo test leave
 
-  disallowed_tools:
-    - bypass approval gate (per DEC-1833)
-    - exceed type entitlement (per DEC-1834)
+disallowed_tools:
+  - bypass approval gate (per DEC-1833)
+  - exceed type entitlement (per DEC-1834)
 
 effort_hours: 5
 subtasks:

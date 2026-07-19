@@ -120,6 +120,37 @@ EOF
 
 bm() { node "$BM" "$@" > "$TMP/out" 2> "$TMP/err"; }
 
+# ── TASK-IMP-120 fixtures ─────────────────────────────────────────────────────
+# flip now reads the task's spec.md frontmatter and REFUSES unless it already carries <to>
+# (truth precedes index). A SUCCESS flip therefore needs a spec whose frontmatter status == the
+# flip's target, resolved under --root the way the whole toolchain resolves a task id:
+# docs/tasks/<module>/<id-or-stem>/spec.md (task-reconcile.mjs findTask). A FAILING flip (missing
+# row / duplicate / cell drift / old-line drift) still refuses BEFORE the guard, so it needs no spec.
+emit_spec() { # $1=root  $2=task-id-or-stem  $3=status
+  local dir="$1/docs/tasks/improvement/$2"
+  mkdir -p "$dir"
+  printf -- '---\nid: %s\nstatus: %s\n---\n# %s\n' "$2" "$3" "$2" > "$dir/spec.md"
+}
+
+# A minimal regenerated-shape backlog carrying ONE counted row for TASK-GUARD-001 at <row_status>,
+# plus (unless <spec_status> is the literal MISSING) a spec whose frontmatter carries <spec_status>.
+# Lets a guard test set the INDEX (row) and the TRUTH (frontmatter) independently — the whole point
+# of TASK-IMP-120. The backlog lands at the default location so a flip needs only --root.
+emit_guard_fixture() { # $1=root  $2=row_status  $3=spec_status|MISSING
+  local root="$1"
+  mkdir -p "$root/docs/tasks"
+  cat > "$root/docs/tasks/BACKLOG.md" <<EOF
+# CyberOS task backlog (regenerated 2026-07-09)
+
+Totals: 1 $2
+
+## improvement  (1 $2)
+
+- [$2] TASK-GUARD-001-truth-index - Truth precedes index (improvement)
+EOF
+  [ "$3" = "MISSING" ] || emit_spec "$root" "TASK-GUARD-001-truth-index" "$3"
+}
+
 t01_manifest_lifecycle() {
   local d="$TMP/t01/repo"; emit_manifest_repo "$d"
   sm --root "$d" init TASK-T-001 --task-file docs/tasks/improvement/TASK-T-001-fixture/spec.md --workflow-version 9.9.9 \
@@ -237,16 +268,21 @@ t03_verify_staleness_exits() {
 
 t04_flip_and_drift_refusal() {
   local f="$TMP/t04/BACKLOG.md"; emit_backlog "$f"
+  # TASK-IMP-120: every SUCCESS flip needs the truth (spec frontmatter) already at its target
+  local R="$TMP/t04"
+  emit_spec "$R" TASK-ALPHA-001 implementing
+  emit_spec "$R" TASK-ALPHA-003 implementing
+  emit_spec "$R" TASK-ALPHA-005 ready_to_implement
   # green flip rewrites exactly the located cell; line count unchanged
   local before; before="$(wc -l < "$f")"
-  bm flip TASK-ALPHA-001 ready_to_implement implementing --backlog "$f" \
+  bm flip TASK-ALPHA-001 ready_to_implement implementing --root "$R" --backlog "$f" \
     || { fail t04 "green flip failed: $(cat "$TMP/err")"; return; }
   grep -q '^- \[implementing\] TASK-ALPHA-001-login-rate-limit - Login rate limiting$' "$f" \
     || { fail t04 "flipped row wrong"; return; }
   grep -q '^- \[ready_to_implement\] TASK-ALPHA-001' "$f" && { fail t04 "old row survived"; return; }
   [ "$(wc -l < "$f")" -eq "$before" ] || { fail t04 "line count changed on flip"; return; }
   # the (improvement) suffix is preserved bytes, not grammar the flip re-renders
-  bm flip TASK-ALPHA-003 ready_to_implement implementing --backlog "$f" || { fail t04 "flip 003 failed"; return; }
+  bm flip TASK-ALPHA-003 ready_to_implement implementing --root "$R" --backlog "$f" || { fail t04 "flip 003 failed"; return; }
   grep -q '^- \[implementing\] TASK-ALPHA-003-token-rotation - Token rotation (improvement)$' "$f" \
     || { fail t04 "improvement tag not preserved"; return; }
   # drift: status cell no longer matches the pre-image -> exit 6
@@ -257,7 +293,7 @@ t04_flip_and_drift_refusal() {
     --old-line '- [draft] TASK-ALPHA-005-cache-layer - Cache Layer'; rc=$?
   { [ "$rc" -eq 6 ] && grep -q "byte-for-byte" "$TMP/err"; } || { fail t04 "old-line drift rc=$rc"; return; }
   # the matching --old-line passes
-  bm flip TASK-ALPHA-005 draft ready_to_implement --backlog "$f" \
+  bm flip TASK-ALPHA-005 draft ready_to_implement --root "$R" --backlog "$f" \
     --old-line '- [draft] TASK-ALPHA-005-cache-layer - Cache layer' \
     || { fail t04 "matching old-line refused: $(cat "$TMP/err")"; return; }
   # missing row -> exit 6
@@ -326,13 +362,16 @@ bm_expected_totals() {
 
 t06_counts_maintained() {
   local f="$TMP/t06/BACKLOG.md"; emit_backlog "$f"
+  local R="$TMP/t06"                         # TASK-IMP-120: truth in place for the success flips
+  emit_spec "$R" TASK-ALPHA-001 implementing
+  emit_spec "$R" TASK-ALPHA-003 implementing
   # flip: the header is retallied from the section's rows (TASK-IMP-092) — the fixture's
   # alpha header claims '2 done' over zero done rows, so the first mutation corrects it away
-  bm flip TASK-ALPHA-001 ready_to_implement implementing --backlog "$f" || { fail t06 "flip 1 failed"; return; }
+  bm flip TASK-ALPHA-001 ready_to_implement implementing --root "$R" --backlog "$f" || { fail t06 "flip 1 failed"; return; }
   grep -q '^## alpha  (1 draft, 1 ready_to_implement, 1 implementing)$' "$f" \
     || { fail t06 "header after flip 1: $(grep '^## alpha' "$f")"; return; }
   # flip the last ready_to_implement away: the zero count is dropped from the header
-  bm flip TASK-ALPHA-003 ready_to_implement implementing --backlog "$f" || { fail t06 "flip 2 failed"; return; }
+  bm flip TASK-ALPHA-003 ready_to_implement implementing --root "$R" --backlog "$f" || { fail t06 "flip 2 failed"; return; }
   grep -q '^## alpha  (1 draft, 2 implementing)$' "$f" \
     || { fail t06 "zero count not dropped: $(grep '^## alpha' "$f")"; return; }
   # insert: the retally counts the new row
@@ -384,9 +423,10 @@ t07_json_and_determinism() {
     || { fail t07 "verify --json envelope invalid"; return; }
   # backlog-mutate determinism + whole-file discipline: diff = 1 row + 1 header line
   emit_backlog "$d/c1/BACKLOG.md"; emit_backlog "$d/c2/BACKLOG.md"; emit_backlog "$d/pre.md"
-  (cd "$d/c1" && node "$BM" --json flip TASK-ALPHA-001 ready_to_implement implementing --backlog BACKLOG.md > "$d/f1.json" 2>&1) \
+  emit_spec "$d/c1" TASK-ALPHA-001 implementing; emit_spec "$d/c2" TASK-ALPHA-001 implementing   # TASK-IMP-120 truth
+  (cd "$d/c1" && node "$BM" --json flip TASK-ALPHA-001 ready_to_implement implementing --root "$d/c1" --backlog BACKLOG.md > "$d/f1.json" 2>&1) \
     || { fail t07 "json flip failed: $(cat "$d/f1.json")"; return; }
-  (cd "$d/c2" && node "$BM" --json flip TASK-ALPHA-001 ready_to_implement implementing --backlog BACKLOG.md > "$d/f2.json" 2>&1)
+  (cd "$d/c2" && node "$BM" --json flip TASK-ALPHA-001 ready_to_implement implementing --root "$d/c2" --backlog BACKLOG.md > "$d/f2.json" 2>&1)
   cmp -s "$d/f1.json" "$d/f2.json" || { fail t07 "flip --json reruns differ"; return; }
   cmp -s "$d/c1/BACKLOG.md" "$d/c2/BACKLOG.md" || { fail t07 "mutated backlogs differ across identical runs"; return; }
   node -e 'const j=JSON.parse(require("node:fs").readFileSync(process.argv[1],"utf8")); if (j.ok!==true||!j.old_line||!j.new_line||!j.new_header) process.exit(1)' "$d/f1.json" \
@@ -409,14 +449,15 @@ t07_json_and_determinism() {
   # no-counts flip footprint (TASK-IMP-116): a BARE header carries no counts and stays untouched,
   # so the mutation is the row + the file Totals = 2/2. Three footprint shapes, all deliberate:
   #   counted header -> 3/3   bare header -> 2/2   insert -> 2/3 (the row is new)
-  emit_backlog "$d/c4/BACKLOG.md"
-  bm flip TASK-GAMMA-001 implementing ready_to_review --backlog "$d/c4/BACKLOG.md" || { fail t07 "gamma flip failed"; return; }
+  emit_backlog "$d/c4/BACKLOG.md"; emit_spec "$d/c4" TASK-GAMMA-001 ready_to_review   # TASK-IMP-120 truth
+  bm flip TASK-GAMMA-001 implementing ready_to_review --root "$d/c4" --backlog "$d/c4/BACKLOG.md" || { fail t07 "gamma flip failed"; return; }
   removed="$(diff "$d/pre.md" "$d/c4/BACKLOG.md" | grep -c '^<')"; added="$(diff "$d/pre.md" "$d/c4/BACKLOG.md" | grep -c '^>')"
   { [ "$removed" -eq 2 ] && [ "$added" -eq 2 ]; } || { fail t07 "no-counts flip footprint not 1 row + Totals (removed=$removed added=$added)"; return; }
   # CRLF: bytes preserved outside the mutated line; no line-ending drift anywhere
-  emit_backlog "$d/crlf.md"; sed 's/$/\r/' "$d/crlf.md" > "$d/crlf2.md"; mv "$d/crlf2.md" "$d/crlf.md"
+  emit_backlog "$d/crlf.md"; emit_spec "$d" TASK-ALPHA-001 implementing   # TASK-IMP-120 truth (root=$d)
+  sed 's/$/\r/' "$d/crlf.md" > "$d/crlf2.md"; mv "$d/crlf2.md" "$d/crlf.md"
   local crlf_before; crlf_before="$(grep -c $'\r$' "$d/crlf.md")"
-  bm flip TASK-ALPHA-001 ready_to_implement implementing --backlog "$d/crlf.md" || { fail t07 "CRLF flip failed"; return; }
+  bm flip TASK-ALPHA-001 ready_to_implement implementing --root "$d" --backlog "$d/crlf.md" || { fail t07 "CRLF flip failed"; return; }
   [ "$(grep -c $'\r$' "$d/crlf.md")" -eq "$crlf_before" ] || { fail t07 "CRLF endings drifted"; return; }
   grep -q $'^- \\[implementing\\] TASK-ALPHA-001-login-rate-limit - Login rate limiting\r$' "$d/crlf.md" \
     || { fail t07 "CRLF flipped row lost its ending"; return; }
@@ -518,7 +559,8 @@ t10_retally_corrects_lying_header() {
   # statuses the header never listed (implementing, ready_to_review) join in
   # lifecycle order and the inherited '34 done' collapses to the real 2
   local f="$TMP/t10/flip.md"; emit_lying_backlog "$f"
-  bm flip TASK-ALPHA-001 draft ready_to_review --backlog "$f" || { fail t10 "flip failed: $(cat "$TMP/err")"; return; }
+  local R="$TMP/t10"; emit_spec "$R" TASK-ALPHA-001 ready_to_review; emit_spec "$R" TASK-ALPHA-002 done   # TASK-IMP-120 truth
+  bm flip TASK-ALPHA-001 draft ready_to_review --root "$R" --backlog "$f" || { fail t10 "flip failed: $(cat "$TMP/err")"; return; }
   grep -q '^## alpha  (1 implementing, 1 ready_to_review, 2 done)$' "$f" \
     || { fail t10 "flip did not retally: $(grep '^## alpha' "$f")"; return; }
   # insert corrects the same lie (fresh fixture — ANY mutation, not just flip)
@@ -533,7 +575,7 @@ t10_retally_corrects_lying_header() {
     || { fail t10 "omega insert failed: $(cat "$TMP/err")"; return; }
   grep -q '^## omega  (1 done)$' "$g" || { fail t10 "omega header: $(grep '^## omega' "$g")"; return; }
   # the --json envelope names the correction, so a caller SEES the lie it just fixed
-  node "$BM" --json flip TASK-ALPHA-002 implementing done --backlog "$g" > "$TMP/t10/j.json" 2>&1 \
+  node "$BM" --json flip TASK-ALPHA-002 implementing done --root "$R" --backlog "$g" > "$TMP/t10/j.json" 2>&1 \
     || { fail t10 "json flip failed: $(cat "$TMP/t10/j.json")"; return; }
   node -e '
     const j=JSON.parse(require("node:fs").readFileSync(process.argv[1],"utf8"));
@@ -547,7 +589,8 @@ t11_footprint_holds_with_retally() {
   # even a LARGE header correction stays inside the whole-file discipline: the diff is
   # exactly the mutated row + the one header line the mutation was allowed to touch
   local d="$TMP/t11"; emit_lying_backlog "$d/pre.md"; emit_lying_backlog "$d/flip.md"
-  bm flip TASK-ALPHA-001 draft ready_to_review --backlog "$d/flip.md" || { fail t11 "flip failed"; return; }
+  emit_spec "$d" TASK-ALPHA-001 ready_to_review; emit_spec "$d" TASK-GAMMA-001 ready_to_review   # TASK-IMP-120 truth
+  bm flip TASK-ALPHA-001 draft ready_to_review --root "$d" --backlog "$d/flip.md" || { fail t11 "flip failed"; return; }
   diff "$d/pre.md" "$d/flip.md" | sed -n 's/^< //p' > "$d/removed"
   diff "$d/pre.md" "$d/flip.md" | sed -n 's/^> //p' > "$d/added"
   # TASK-IMP-116: row + section header + Totals = 3.
@@ -571,7 +614,7 @@ t11_footprint_holds_with_retally() {
   # 'at most one' (TASK-IMP-116): a BARE header carries no counts and stays untouched, so the
   # mutation is the row + the file Totals. The header rule is unchanged; Totals is now declared.
   emit_backlog "$d/bare-pre.md"; emit_backlog "$d/bare.md"
-  bm flip TASK-GAMMA-001 implementing ready_to_review --backlog "$d/bare.md" || { fail t11 "bare flip failed"; return; }
+  bm flip TASK-GAMMA-001 implementing ready_to_review --root "$d" --backlog "$d/bare.md" || { fail t11 "bare flip failed"; return; }
   removed="$(diff "$d/bare-pre.md" "$d/bare.md" | grep -c '^<')"; added="$(diff "$d/bare-pre.md" "$d/bare.md" | grep -c '^>')"
   { [ "$removed" -eq 2 ] && [ "$added" -eq 2 ]; } \
     || { fail t11 "bare-header footprint not 1 row + Totals, 0 header (removed=$removed added=$added)"; return; }
@@ -685,6 +728,174 @@ t19_spec_rejected_lands_draft() {
   ok t19_spec_rejected_lands_draft
 }
 
+# ── TASK-IMP-120: truth precedes index — flip refuses unless the frontmatter already carries <to> ──
+# NOTE (implementer finding): the spec named these t14/t15/t16/t17/t18/t19, but the suite ALREADY
+# had a t14 (IMP-101), t18 (IMP-108) and t19 (§1.5). These six coexist under their spec-mandated
+# names — the full function names are unique, and the numeric `want` tokens simply dispatch both
+# same-numbered functions (all green). The collision is a slot-numbering artefact of the spec being
+# written against an earlier view of the suite, reported rather than silently renamed.
+t14_flip_refuses_when_truth_disagrees() { # spec §1.1 / AC1
+  local d="$TMP/t14g"; emit_guard_fixture "$d" reviewing reviewing   # index=reviewing, truth=reviewing
+  bm flip TASK-GUARD-001 reviewing ready_to_test --root "$d"; local rc=$?
+  # exit 6, and the refusal NAMES BOTH the frontmatter's current status and the requested target
+  { [ "$rc" -eq 6 ] && grep -q "reviewing" "$TMP/err" && grep -q "ready_to_test" "$TMP/err"; } \
+    || { fail t14_flip_refuses_when_truth_disagrees "rc=$rc err=$(cat "$TMP/err")"; return; }
+  # the index did NOT move — the truth must lead
+  grep -q '^- \[reviewing\] TASK-GUARD-001-truth-index' "$d/docs/tasks/BACKLOG.md" \
+    || { fail t14_flip_refuses_when_truth_disagrees "index moved despite refusal"; return; }
+  ok t14_flip_refuses_when_truth_disagrees
+}
+
+t15_flip_proceeds_when_truth_agrees() { # spec §1.2 / AC2
+  local d="$TMP/t15g"; emit_guard_fixture "$d" reviewing ready_to_test   # the truth already moved
+  bm flip TASK-GUARD-001 reviewing ready_to_test --root "$d" \
+    || { fail t15_flip_proceeds_when_truth_agrees "flip refused despite agreeing truth: $(cat "$TMP/err")"; return; }
+  grep -q '^- \[ready_to_test\] TASK-GUARD-001-truth-index' "$d/docs/tasks/BACKLOG.md" \
+    || { fail t15_flip_proceeds_when_truth_agrees "index did not move"; return; }
+  # the happy path is UNCHANGED: section header AND file Totals retallied exactly as before (§1.2)
+  grep -q '^## improvement  (1 ready_to_test)$' "$d/docs/tasks/BACKLOG.md" \
+    || { fail t15_flip_proceeds_when_truth_agrees "header not retallied: $(grep '^## improvement' "$d/docs/tasks/BACKLOG.md")"; return; }
+  grep -q '^Totals: 1 ready_to_test$' "$d/docs/tasks/BACKLOG.md" \
+    || { fail t15_flip_proceeds_when_truth_agrees "Totals not retallied: $(grep '^Totals:' "$d/docs/tasks/BACKLOG.md")"; return; }
+  ok t15_flip_proceeds_when_truth_agrees
+}
+
+t16_unreadable_spec_refuses() { # spec §1.3 / AC3 (edge rows 1,2,6)
+  # (a) spec MISSING entirely -> refuse, naming the file/path
+  local a="$TMP/t16a"; emit_guard_fixture "$a" reviewing MISSING
+  bm flip TASK-GUARD-001 reviewing ready_to_test --root "$a"; local rc=$?
+  { [ "$rc" -eq 6 ] && grep -qi "spec" "$TMP/err"; } \
+    || { fail t16_unreadable_spec_refuses "missing spec rc=$rc: $(cat "$TMP/err")"; return; }
+  grep -q '^- \[reviewing\]' "$a/docs/tasks/BACKLOG.md" || { fail t16_unreadable_spec_refuses "index moved on missing spec"; return; }
+  # (b) spec present but NO status field -> absent is not agreement
+  local b="$TMP/t16b"; emit_guard_fixture "$b" reviewing MISSING
+  mkdir -p "$b/docs/tasks/improvement/TASK-GUARD-001-truth-index"
+  printf -- '---\nid: TASK-GUARD-001\ntitle: no status here\n---\n# body\n' > "$b/docs/tasks/improvement/TASK-GUARD-001-truth-index/spec.md"
+  bm flip TASK-GUARD-001 reviewing ready_to_test --root "$b"; rc=$?
+  { [ "$rc" -eq 6 ] && grep -qi "status" "$TMP/err"; } \
+    || { fail t16_unreadable_spec_refuses "no-status rc=$rc: $(cat "$TMP/err")"; return; }
+  # (c) TWO status: lines -> ambiguous truth is not truth (even though one of them equals <to>)
+  local c="$TMP/t16c"; emit_guard_fixture "$c" reviewing MISSING
+  mkdir -p "$c/docs/tasks/improvement/TASK-GUARD-001-truth-index"
+  printf -- '---\nstatus: reviewing\nstatus: ready_to_test\n---\n# body\n' > "$c/docs/tasks/improvement/TASK-GUARD-001-truth-index/spec.md"
+  bm flip TASK-GUARD-001 reviewing ready_to_test --root "$c"; rc=$?
+  { [ "$rc" -eq 6 ] && grep -qi "ambiguous" "$TMP/err"; } \
+    || { fail t16_unreadable_spec_refuses "two-status rc=$rc: $(cat "$TMP/err")"; return; }
+  ok t16_unreadable_spec_refuses
+}
+
+t17_insert_unchanged() { # spec §1.4 / AC4 — the guard is a FLIP precondition; insert never consults a spec
+  local f="$TMP/t17/BACKLOG.md"; emit_backlog "$f"
+  # run insert with NO docs/tasks tree at all (exactly as t05 does): identical grammar/placement/exit
+  bm insert TASK-ALPHA-002 TASK-ALPHA-002-token-scope "Token scoping" ready_to_implement --backlog "$f" \
+    || { fail t17_insert_unchanged "insert refused — guard leaked into insert? $(cat "$TMP/err")"; return; }
+  grep -q '^- \[ready_to_implement\] TASK-ALPHA-002-token-scope - Token scoping$' "$f" \
+    || { fail t17_insert_unchanged "insert grammar changed"; return; }
+  awk '/TASK-ALPHA-001/{a=NR} /TASK-ALPHA-002/{b=NR} /TASK-ALPHA-003/{c=NR} END{exit !(a<b && b<c)}' "$f" \
+    || { fail t17_insert_unchanged "insert placement changed"; return; }
+  # uniqueness gate still exit 7, still no spec consulted
+  bm insert TASK-ALPHA-002 TASK-ALPHA-002-dup "Dup" draft --backlog "$f" --section gamma; local rc=$?
+  { [ "$rc" -eq 7 ] && grep -q "uniqueness" "$TMP/err"; } \
+    || { fail t17_insert_unchanged "insert uniqueness gate changed rc=$rc"; return; }
+  ok t17_insert_unchanged
+}
+
+t18_skill_states_the_order() { # spec §1.5 / AC5 — the ordering contract, in the SOURCE and the vendored copy
+  ensure_payload || { fail t18_skill_states_the_order "build.sh failed"; return; }
+  local f
+  for f in "$repo/modules/skill/backlog-state-update-author/SKILL.md" \
+           "$TMP/payload/cuo/skills/backlog-state-update-author/SKILL.md"; do
+    [ -s "$f" ] || { fail t18_skill_states_the_order "missing $f"; return; }
+    grep -qi 'write the truth' "$f" || { fail t18_skill_states_the_order "$f: 'write the truth' contract missing"; return; }
+    grep -qi 'then.*index'     "$f" || { fail t18_skill_states_the_order "$f: 'then the index' ordering missing"; return; }
+    grep -q  'TASK-IMP-120'    "$f" || { fail t18_skill_states_the_order "$f: TASK-IMP-120 provenance missing"; return; }
+    grep -qi 'refus'           "$f" || { fail t18_skill_states_the_order "$f: does not say flip refuses out of order"; return; }
+  done
+  ok t18_skill_states_the_order
+}
+
+t19_replays_the_116_divergence() { # spec AC6 — the incident that motivated the guard
+  # docs/goals/TASK-IMP-116.md: the BACKLOG row was flipped reviewing -> ready_to_test -> testing
+  # (index moved TWICE) while the spec frontmatter still said 'reviewing'. The guard must stop the
+  # FIRST flip (exit 6) — "a guard that cannot stop the incident that motivated it is decoration."
+  local d="$TMP/t19g"; emit_guard_fixture "$d" reviewing reviewing
+  bm flip TASK-GUARD-001 reviewing ready_to_test --root "$d"; local rc=$?
+  { [ "$rc" -eq 6 ] && grep -q "reviewing" "$TMP/err" && grep -q "ready_to_test" "$TMP/err"; } \
+    || { fail t19_replays_the_116_divergence "first flip did not refuse: rc=$rc $(cat "$TMP/err")"; return; }
+  # the index never moved, so the SECOND flip (ready_to_test -> testing) can never even be reached
+  grep -q '^- \[reviewing\] TASK-GUARD-001-truth-index' "$d/docs/tasks/BACKLOG.md" \
+    || { fail t19_replays_the_116_divergence "index moved on the first flip"; return; }
+  bm flip TASK-GUARD-001 ready_to_test testing --root "$d"; rc=$?
+  [ "$rc" -eq 6 ] || { fail t19_replays_the_116_divergence "second flip did not also refuse (rc=$rc)"; return; }
+  ok t19_replays_the_116_divergence
+}
+
+# ── TASK-IMP-105: task-id allocation rule + `next-id <module>` ─────────────────
+# `next-id` scans the TASK-<PREFIX>-<NNN> task FOLDERS in docs/tasks/<module>/ and prints the
+# highest plus one. These scratch modules carry only empty task folders (no spec.md, no BACKLOG
+# row) on purpose: the folder IS the task for allocation (spec edge row 1), so a half-landed
+# folder must still be counted. t07_insert_uniqueness_refusal is AC4's named guardrail — the
+# exit-7 gate this task must NOT weaken; it coexists with t07_json_and_determinism under the t07
+# token, the same way IMP-120's spec-named tests coexist with the earlier same-numbered ones.
+t07_insert_uniqueness_refusal() { # spec §1.6 / AC4 — the exit-7 gate stays the authority, unchanged
+  local f="$TMP/t07u/BACKLOG.md"; emit_backlog "$f"
+  emit_backlog "$TMP/t07u/pre.md"
+  # a duplicate id anywhere in the file -> exit 7 (even in another section, another slug)
+  bm insert TASK-ALPHA-001 TASK-ALPHA-001-again "Duplicate id" draft --backlog "$f" --section gamma; local rc=$?
+  { [ "$rc" -eq 7 ] && grep -q "uniqueness" "$TMP/err"; } \
+    || { fail t07_insert_uniqueness_refusal "exit-7 uniqueness gate rc=$rc: $(cat "$TMP/err")"; return; }
+  # a refused insert writes NOTHING: the backlog is byte-identical to the fixture
+  cmp -s "$f" "$TMP/t07u/pre.md" || { fail t07_insert_uniqueness_refusal "refused insert still mutated the file"; return; }
+  ok t07_insert_uniqueness_refusal
+}
+
+t15_next_id_populated() { # spec §1.2/§1.3 / AC1 — highest existing stem + 1
+  local R="$TMP/t15n"
+  mkdir -p "$R/docs/tasks/widget/TASK-WIDGET-001-alpha" \
+           "$R/docs/tasks/widget/TASK-WIDGET-002-beta" \
+           "$R/docs/tasks/widget/TASK-WIDGET-003-gamma"
+  bm next-id widget --root "$R" || { fail t15_next_id_populated "next-id refused: $(cat "$TMP/err")"; return; }
+  [ "$(cat "$TMP/out")" = "TASK-WIDGET-004" ] \
+    || { fail t15_next_id_populated "want TASK-WIDGET-004, got '$(cat "$TMP/out")'"; return; }
+  # the same live corpus the insert gate reads: TASK-IMP-<highest>+1 on the real repo (AC1)
+  bm next-id improvement --root "$repo" || { fail t15_next_id_populated "live next-id refused: $(cat "$TMP/err")"; return; }
+  local live; live="$(cat "$TMP/out")"
+  local want; want="TASK-IMP-$(printf '%03d' "$(( $(ls "$repo/docs/tasks/improvement" | grep -oE 'TASK-IMP-[0-9]+' | sed 's/.*-//' | sort -n | tail -1) + 1 ))")"
+  [ "$live" = "$want" ] || { fail t15_next_id_populated "live improvement: want $want, got '$live'"; return; }
+  ok t15_next_id_populated
+}
+
+t16_next_id_empty_module() { # spec §1.4 / AC2 — an empty (or absent) module returns its first stem, exit 0
+  local R="$TMP/t16n"
+  mkdir -p "$R/docs/tasks/widget"          # the module directory exists but holds no task folders
+  bm next-id widget --root "$R" || { fail t16_next_id_empty_module "empty module treated as an error: $(cat "$TMP/err")"; return; }
+  [ "$(cat "$TMP/out")" = "TASK-WIDGET-001" ] \
+    || { fail t16_next_id_empty_module "empty module: want TASK-WIDGET-001, got '$(cat "$TMP/out")'"; return; }
+  # a module whose directory does not exist AT ALL is also empty, not an error (spec edge row 4)
+  bm next-id gadget --root "$R" || { fail t16_next_id_empty_module "absent module treated as an error: $(cat "$TMP/err")"; return; }
+  [ "$(cat "$TMP/out")" = "TASK-GADGET-001" ] \
+    || { fail t16_next_id_empty_module "absent module: want TASK-GADGET-001, got '$(cat "$TMP/out")'"; return; }
+  ok t16_next_id_empty_module
+}
+
+t17_next_id_ignores_gaps() { # spec §1.5 / AC3 — 001,002,004 -> 005 (highest+1), never the gap 003
+  local R="$TMP/t17n"
+  mkdir -p "$R/docs/tasks/widget/TASK-WIDGET-001-a" \
+           "$R/docs/tasks/widget/TASK-WIDGET-002-b" \
+           "$R/docs/tasks/widget/TASK-WIDGET-004-d"
+  bm next-id widget --root "$R" || { fail t17_next_id_ignores_gaps "next-id refused: $(cat "$TMP/err")"; return; }
+  [ "$(cat "$TMP/out")" = "TASK-WIDGET-005" ] \
+    || { fail t17_next_id_ignores_gaps "gap not ignored: want TASK-WIDGET-005, got '$(cat "$TMP/out")'"; return; }
+  # a malformed TASK- folder is skipped with a note on stderr — one bad folder must not stop
+  # allocation, nor change the result (spec edge row 2)
+  mkdir -p "$R/docs/tasks/widget/TASK-WIDGET-notanumber"
+  bm next-id widget --root "$R" || { fail t17_next_id_ignores_gaps "malformed folder stopped allocation: $(cat "$TMP/err")"; return; }
+  [ "$(cat "$TMP/out")" = "TASK-WIDGET-005" ] \
+    || { fail t17_next_id_ignores_gaps "malformed folder changed the result: got '$(cat "$TMP/out")'"; return; }
+  grep -qi "malformed" "$TMP/err" || { fail t17_next_id_ignores_gaps "malformed folder not noted on stderr: $(cat "$TMP/err")"; return; }
+  ok t17_next_id_ignores_gaps
+}
+
 want t01 && t01_manifest_lifecycle
 want t02 && t02_two_phase_atomic
 want t03 && t03_verify_staleness_exits
@@ -701,6 +912,18 @@ want t13 && t13_queue_rule_p0_p3
 want t14 && t14_reconcile_entry_and_deps_gate
 want t18 && t18_entered_via_contract
 want t19 && t19_spec_rejected_lands_draft
+# TASK-IMP-120 (spec-mandated names; coexist with the same-numbered tests above)
+want t14 && t14_flip_refuses_when_truth_disagrees
+want t15 && t15_flip_proceeds_when_truth_agrees
+want t16 && t16_unreadable_spec_refuses
+want t17 && t17_insert_unchanged
+want t18 && t18_skill_states_the_order
+want t19 && t19_replays_the_116_divergence
+# TASK-IMP-105 (next-id allocation; full names coexist with the same-numbered tests above)
+want t07 && t07_insert_uniqueness_refusal
+want t15 && t15_next_id_populated
+want t16 && t16_next_id_empty_module
+want t17 && t17_next_id_ignores_gaps
 
 echo "test_workflow_helpers: pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

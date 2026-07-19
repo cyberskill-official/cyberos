@@ -1,8 +1,10 @@
 ---
 id: TASK-SKILL-113
 title: "SKILL.md frontmatter — replace XML-bracket sentinel `wrap_in: <untrusted_content/>` with string-form `wrap_in_marker: \"untrusted_content\"` for host-portable load"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -46,23 +48,37 @@ new_files:
   - tools/migrate-wrap-in/migrate.sh
   - tools/migrate-wrap-in/verify.sh
 modified_files:
-  - services/skill-broker/src/frontmatter/schema.rs                    # rename wrap_in → wrap_in_marker; type changes from string-with-XML to plain string
-  - services/skill-broker/src/frontmatter/validators.rs                # call marker_validator
-  - services/skill-broker/skill.schema.json                            # JSONSchema mirror
-  - modules/skill/_template/author/SKILL.md                            # wrap_in: <untrusted_content/> → wrap_in_marker: "untrusted_content"
-  - modules/skill/_template/audit/SKILL.md                             # same
-  - modules/skill/_template/author/references/UNTRUSTED_CONTENT.md     # clarify: body XML form remains; frontmatter is string-form sentinel
-  - modules/skill/_template/audit/references/UNTRUSTED_CONTENT.md      # same
-  - modules/skill/task-audit/RUBRIC.md                      # add FM-115 (no-xml-in-frontmatter) + FM-116 (wrap_in_marker-form)
-  - Task-audit skill        # §3.13 mentions new rules
-  - website docs (SKILL appendices)                                    # Part 2.1 frontmatter row updates; Part 18 anti-pattern entry
-  - website docs (SKILL Appendix J)                                    # §6.3 status update + decision recorded (option A)
-  - <ALL 104 production SKILL.md files in modules/skill/>               # mechanical sweep
+  # rename wrap_in → wrap_in_marker; type changes from string-with-XML to plain string
+  - services/skill-broker/src/frontmatter/schema.rs
+  # call marker_validator
+  - services/skill-broker/src/frontmatter/validators.rs
+  # JSONSchema mirror
+  - services/skill-broker/skill.schema.json
+  # wrap_in: <untrusted_content/> → wrap_in_marker: "untrusted_content"
+  - modules/skill/_template/author/SKILL.md
+  # same
+  - modules/skill/_template/audit/SKILL.md
+  # clarify: body XML form remains; frontmatter is string-form sentinel
+  - modules/skill/_template/author/references/UNTRUSTED_CONTENT.md
+  # same
+  - modules/skill/_template/audit/references/UNTRUSTED_CONTENT.md
+  # add FM-115 (no-xml-in-frontmatter) + FM-116 (wrap_in_marker-form)
+  - modules/skill/task-audit/RUBRIC.md
+  # §3.13 mentions new rules
+  - Task-audit skill
+  # Part 2.1 frontmatter row updates; Part 18 anti-pattern entry
+  - website docs (SKILL appendices)
+  # §6.3 status update + decision recorded (option A)
+  - website docs (SKILL Appendix J)
+  # mechanical sweep
+  - <ALL 104 production SKILL.md files in modules/skill/>
 allowed_tools:
   - file_read: modules/skill/**, services/skill-broker/**, docs/tasks/skill/**
   - file_write: modules/skill/**, services/skill-broker/**, tools/migrate-wrap-in/**, docs/tasks/skill/**
-  - bash: cd tools/migrate-wrap-in && bash migrate.sh --dry-run    # preview before commit
-  - bash: cd tools/migrate-wrap-in && bash verify.sh                # post-sweep verification
+  # preview before commit
+  - bash: cd tools/migrate-wrap-in && bash migrate.sh --dry-run
+  # post-sweep verification
+  - bash: cd tools/migrate-wrap-in && bash verify.sh
   - bash: cd services/skill-broker && cargo test marker_validator
 disallowed_tools:
   - touch the body XML form (`<untrusted_content source="...">…</untrusted_content>`) in any SKILL.md body or in references/UNTRUSTED_CONTENT.md prose — the body XML form is the actual runtime wrapper and stays unchanged

@@ -1,8 +1,10 @@
 ---
 id: TASK-KB-009
 title: "KB dual-language `translation_of` link — vi/en pairing with locale-aware reader display and translation parity audit"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,32 +36,31 @@ source_decisions:
   - DEC-1963 2026-05-17 — Both sides indexed independently (TASK-KB-004 + TASK-KB-005); search returns whichever locale matches; reader auto-switches if pair exists
   - DEC-1964 2026-05-17 — memory audit kinds: kb.translation_linked, kb.translation_parity_alert, kb.translation_display_switched
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/kb/
-  new_files:
-    - services/kb/migrations/0009_translation_link.sql
-    - services/kb/src/translation/mod.rs
-    - services/kb/src/translation/parity_checker.rs
-    - services/kb/src/translation/locale_router.rs
-    - services/kb/src/handlers/translation_routes.rs
-    - services/kb/src/audit/translation_events.rs
-    - services/kb/tests/translation_link_bidirectional_test.rs
-    - services/kb/tests/translation_locale_enum_cardinality_test.rs
-    - services/kb/tests/translation_parity_alert_test.rs
-    - services/kb/tests/translation_locale_aware_display_test.rs
-    - services/kb/tests/translation_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/kb/
+new_files:
+  - services/kb/migrations/0009_translation_link.sql
+  - services/kb/src/translation/mod.rs
+  - services/kb/src/translation/parity_checker.rs
+  - services/kb/src/translation/locale_router.rs
+  - services/kb/src/handlers/translation_routes.rs
+  - services/kb/src/audit/translation_events.rs
+  - services/kb/tests/translation_link_bidirectional_test.rs
+  - services/kb/tests/translation_locale_enum_cardinality_test.rs
+  - services/kb/tests/translation_parity_alert_test.rs
+  - services/kb/tests/translation_locale_aware_display_test.rs
+  - services/kb/tests/translation_audit_emission_test.rs
 
-  modified_files:
-    - services/kb/src/lib.rs
+modified_files:
+  - services/kb/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{kb,ai}/**
-    - file_write: services/kb/{src,tests,migrations}/**
-    - bash: cd services/kb && cargo test translation
+allowed_tools:
+  - file_read: services/{kb,ai}/**
+  - file_write: services/kb/{src,tests,migrations}/**
+  - bash: cd services/kb && cargo test translation
 
-  disallowed_tools:
-    - asymmetric link (per DEC-1960 — must be bi-dir)
+disallowed_tools:
+  - asymmetric link (per DEC-1960 — must be bi-dir)
 
 effort_hours: 4
 subtasks:

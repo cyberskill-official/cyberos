@@ -1,8 +1,10 @@
 ---
 id: TASK-AUTH-106
 title: "Impossible-travel detection + adaptive MFA challenge"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -46,35 +48,34 @@ source_decisions:
   - DEC-754 2026-05-16 — 6 memory audit kinds + each carries scrubbed reason via TASK-MEMORY-111
   - DEC-755 2026-05-16 — IP allowlist per-tenant bypasses impossible-travel for office IPs (CIDR list, validated at policy save)
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/auth/
-  new_files:
-    - services/auth/src/travel/mod.rs
-    - services/auth/src/travel/geoip.rs
-    - services/auth/src/travel/detector.rs
-    - services/auth/src/travel/policy.rs
-    - services/auth/src/travel/asn_bypass.rs
-    - services/auth/src/travel/anonymous_ip.rs
-    - services/auth/migrations/0016_login_history_geo.sql
-    - services/auth/migrations/0017_travel_audit.sql
-    - services/auth/tests/rls_isolation_test.rs
-    - services/auth/tests/rls_isolation_test.rs
-    - services/auth/tests/geoip_test.rs
-    - services/auth/tests/admin_list_test.rs
-    - services/auth/tests/rls_property_test.rs
-  modified_files:
-    - services/auth/src/handlers/login.rs (invoke travel::evaluate after successful credential check)
-    - services/auth/src/handlers/mfa_challenge.rs (mark challenge as travel-driven for audit linkage)
-  allowed_tools:
-    - file_read: services/auth/**
-    - file_write: services/auth/{src,tests,migrations}/**
-    - bash: cargo test -p cyberos-auth
-    - file_read: vendor/maxmind/GeoLite2-City.mmdb (read-only)
-  disallowed_tools:
-    - send IP address to any external geolocation API
-    - bypass travel::evaluate for any login code path
-    - block login outright on travel detection (must use challenge, not block, by default)
+language: rust 1.81
+service: cyberos/services/auth/
+new_files:
+  - services/auth/src/travel/mod.rs
+  - services/auth/src/travel/geoip.rs
+  - services/auth/src/travel/detector.rs
+  - services/auth/src/travel/policy.rs
+  - services/auth/src/travel/asn_bypass.rs
+  - services/auth/src/travel/anonymous_ip.rs
+  - services/auth/migrations/0016_login_history_geo.sql
+  - services/auth/migrations/0017_travel_audit.sql
+  - services/auth/tests/rls_isolation_test.rs
+  - services/auth/tests/rls_isolation_test.rs
+  - services/auth/tests/geoip_test.rs
+  - services/auth/tests/admin_list_test.rs
+  - services/auth/tests/rls_property_test.rs
+modified_files:
+  - services/auth/src/handlers/login.rs (invoke travel::evaluate after successful credential check)
+  - services/auth/src/handlers/mfa_challenge.rs (mark challenge as travel-driven for audit linkage)
+allowed_tools:
+  - file_read: services/auth/**
+  - file_write: services/auth/{src,tests,migrations}/**
+  - bash: cargo test -p cyberos-auth
+  - file_read: vendor/maxmind/GeoLite2-City.mmdb (read-only)
+disallowed_tools:
+  - send IP address to any external geolocation API
+  - bypass travel::evaluate for any login code path
+  - block login outright on travel detection (must use challenge, not block, by default)
 
 effort_hours: 8
 subtasks:

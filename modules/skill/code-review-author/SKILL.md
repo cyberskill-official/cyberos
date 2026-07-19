@@ -223,6 +223,33 @@ phase:                           <PLAN | WORKER | RESUME>   (computed per §3 be
 }
 ```
 
+### Structured findings sidecar (`review-findings@1`)
+
+Every `code-review.md` the WORKER writes is accompanied by a sibling
+`review-findings.json` in the same directory — the machine-readable twin of the
+prose packet (schema: `envelopes/review-findings.schema.json`). The markdown stays
+exactly as it is and remains the artefact a human reads (§1.5); the JSON is what a
+future CI step, the reconcile ladder, or the outer loop counts and routes. Adding
+it is *additive* — you emit a sibling artefact, you do not reformat the human one.
+
+- **One record per finding.** Each record carries `file`, `line`, `severity`
+  (`severe | important | nit`), `clause_ref`, `summary`, and `suggested_fix`
+  (§1.2). `severity` uses the three-value taxonomy, never the High/Medium/Low prose.
+- **`clause_ref` names a real clause or is `null`.** Set it to the reviewed task's
+  §1 clause the finding bears on (e.g. `"§1.3"`); set it to `null` when the finding
+  is outside the spec's clauses (§1.3). A finding outside the clauses is a real
+  category — do NOT fabricate a reference to keep the field non-null.
+- **`file`/`line` describe the diff.** `file` is the path as it appeared in the diff
+  (for a deleted file, the path as it was in the diff); `line` is the first line the
+  finding bears on, with any range described in `summary`.
+- **A zero-finding review emits `[]`.** An empty array is the correct output for a
+  clean review — the file is present and empty-valued, never absent (§1.6).
+- **Paths are data.** Serialise with a real JSON encoder; never string-concatenate.
+  A `file` containing a quote or backslash MUST round-trip unchanged.
+
+The record count MUST equal the markdown's finding count — the two artefacts
+describe one review (§1.4); `code-review-audit` reds on any mismatch.
+
 ## §2  Phase computation
 
 | Manifest state | Phase |
@@ -253,7 +280,7 @@ Pick the next artefact by topological order (`depends_on` resolved → leftmost 
 
 - **W1 CLAIM** — set `artefacts[X].status = DRAFTING`. Write manifest.
 - **W2 GENERATE** — render the artefact by adapting the template loaded from `cyberos/skill/contracts/code-review/template.md` (declared via `depends_on_contracts:`) to this artefact's source_refs, applying anti-fabrication rules (`references/ANTI_FABRICATION.md`).
-- **W3 WRITE** — `write_file(artefact.file_path, body)`. Compute `artefact_hash`. Append one `artefact_write` row to `genie.action_log`.
+- **W3 WRITE** — `write_file(artefact.file_path, body)`. Compute `artefact_hash`. Also write the sibling `review-findings.json` beside it — one record per finding, valid against `review-findings@1`, `[]` for a clean review — per §1's *Structured findings sidecar*. Append one `artefact_write` row to `genie.action_log`.
 - **W4 EMIT EVENT** — publish a NATS subject `code-review_author.code-review_written` carrying `(artefact_id, artefact_path, artefact_hash)`.
 - **W5 ROUTE** — depending on whether the chained audit is wired:
   - If chained to `code-review-audit`: invoke it with the just-written artefact's path. Forward its `overall_status` into `artefacts[X].status`.
@@ -288,6 +315,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
 - Cite memory source for every claim that didn't come from the source files.
+- Emit a sibling `review-findings.json` beside every `code-review.md`, valid against `review-findings@1` (`envelopes/review-findings.schema.json`): one record per finding, `clause_ref` a real §1 clause or `null` (never fabricated), `[]` for a clean review. Adding it MUST NOT change `code-review.md`'s shape.
 
 ### MUST NOT
 

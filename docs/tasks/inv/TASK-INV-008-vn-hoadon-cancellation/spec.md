@@ -1,8 +1,10 @@
 ---
 id: TASK-INV-008
 title: "INV VN hóa đơn cancellation flow — Decree 123 Art. 19 replacement-or-cancellation protocol with GDT 1-1 mapping + amendment audit"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/inv.html#hoadon-cancel
-  - https://gdt.gov.vn/  # Decree 123 Art. 19 reference
+  # Decree 123 Art. 19 reference
+  - https://gdt.gov.vn/
 
 source_decisions:
   - DEC-1530 2026-05-17 — Decree 123 Art. 19: cancel hóa đơn requires customer agreement letter (biên bản) + GDT cancellation form 04/SS-HDDT
@@ -36,34 +39,33 @@ source_decisions:
   - DEC-1534 2026-05-17 — Original hóa đơn row updated to hoadon_status='cancelled' + replacement_hoadon_id pointer (if applicable); never deleted (audit trail)
   - DEC-1535 2026-05-17 — memory audit kinds: inv.hoadon_cancel_initiated, inv.hoadon_cancel_form_submitted, inv.hoadon_cancel_accepted, inv.hoadon_cancel_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/invoicing/
-  new_files:
-    - services/invoicing/migrations/0008_vn_hoadon_cancellation.sql
-    - services/invoicing/src/hoadon/cancel.rs
-    - services/invoicing/src/hoadon/form_04_builder.rs
-    - services/invoicing/src/handlers/hoadon_cancel_routes.rs
-    - services/invoicing/src/audit/hoadon_cancel_events.rs
-    - services/invoicing/tests/hoadon_replace_flow_test.rs
-    - services/invoicing/tests/hoadon_cancel_flow_test.rs
-    - services/invoicing/tests/hoadon_cancel_reason_enum_cardinality_test.rs
-    - services/invoicing/tests/hoadon_cancel_24h_window_test.rs
-    - services/invoicing/tests/hoadon_cancel_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/invoicing/
+new_files:
+  - services/invoicing/migrations/0008_vn_hoadon_cancellation.sql
+  - services/invoicing/src/hoadon/cancel.rs
+  - services/invoicing/src/hoadon/form_04_builder.rs
+  - services/invoicing/src/handlers/hoadon_cancel_routes.rs
+  - services/invoicing/src/audit/hoadon_cancel_events.rs
+  - services/invoicing/tests/hoadon_replace_flow_test.rs
+  - services/invoicing/tests/hoadon_cancel_flow_test.rs
+  - services/invoicing/tests/hoadon_cancel_reason_enum_cardinality_test.rs
+  - services/invoicing/tests/hoadon_cancel_24h_window_test.rs
+  - services/invoicing/tests/hoadon_cancel_audit_emission_test.rs
 
-  modified_files:
-    - services/invoicing/src/hoadon/mod.rs
-    - services/invoicing/src/handlers/hoadon_routes.rs
+modified_files:
+  - services/invoicing/src/hoadon/mod.rs
+  - services/invoicing/src/handlers/hoadon_routes.rs
 
-  allowed_tools:
-    - file_read: services/invoicing/**
-    - file_write: services/invoicing/{src,tests,migrations}/**
-    - bash: cd services/invoicing && cargo test cancel
+allowed_tools:
+  - file_read: services/invoicing/**
+  - file_write: services/invoicing/{src,tests,migrations}/**
+  - bash: cd services/invoicing && cargo test cancel
 
-  disallowed_tools:
-    - cancel without customer agreement upload (per DEC-1530)
-    - delete original hoadon row (per DEC-1534)
-    - skip form 04/SS-HDDT submission (per DEC-1533)
+disallowed_tools:
+  - cancel without customer agreement upload (per DEC-1530)
+  - delete original hoadon row (per DEC-1534)
+  - skip form 04/SS-HDDT submission (per DEC-1533)
 
 effort_hours: 5
 subtasks:

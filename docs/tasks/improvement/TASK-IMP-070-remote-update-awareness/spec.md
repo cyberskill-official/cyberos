@@ -1,8 +1,10 @@
 ---
 id: TASK-IMP-070
 title: "Remote update awareness - /update and install.sh --check compare installed vs latest published release, not the local payload"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: improvement
 created_at: 2026-07-12T00:00:00+07:00
@@ -34,7 +36,8 @@ new_files:
   - tools/install/check-latest.sh
   - tools/install/tests/test_check_latest.sh
 modified_files:
-  - tools/install/build.sh   # deviation, recorded in review packet: vendor check-latest.sh beside install.sh
+  # deviation, recorded in review packet: vendor check-latest.sh beside install.sh
+  - tools/install/build.sh
   - tools/install/install.sh
   - tools/install/plugin/commands/update.md
   - tools/install/plugin/commands/changelog.md

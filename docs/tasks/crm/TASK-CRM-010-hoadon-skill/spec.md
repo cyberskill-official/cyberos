@@ -1,8 +1,10 @@
 ---
 id: TASK-CRM-010
 title: "CRM vietnam-vat-invoice skill — Decree 123 hóa đơn auto-emit on deal.stage=won + invoice issuance + verification code retrieval"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-TIME-008]
 
 source_pages:
   - website/docs/modules/crm.html#hoadon
-  - https://gdt.gov.vn/  # Decree 123/2020
+  # Decree 123/2020
+  - https://gdt.gov.vn/
 
 source_decisions:
   - DEC-1700 2026-05-17 — Skill name: vietnam-vat-invoice@1; triggered on deal.stage=won for VN tenants; creates invoice via TASK-INV-001 + emits hóa đơn via TASK-INV-007
@@ -35,31 +38,30 @@ source_decisions:
   - DEC-1703 2026-05-17 — Delegates to TASK-INV-007 for actual GDT emit — this skill orchestrates: create invoice → set vn-residency → trigger emit → return status
   - DEC-1704 2026-05-17 — memory audit kinds: crm.vat_invoice_skill_invoked, crm.vat_invoice_invoice_created, crm.vat_invoice_emit_delegated, crm.vat_invoice_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/crm/
-  new_files:
-    - services/crm/migrations/0010_vat_invoice_emissions.sql
-    - services/crm/src/vn/vat_invoice_skill.rs
-    - services/crm/src/vn/invoice_orchestrator.rs
-    - services/crm/src/audit/vat_invoice_events.rs
-    - services/crm/tests/vat_invoice_auto_on_won_test.rs
-    - services/crm/tests/vat_invoice_idempotent_test.rs
-    - services/crm/tests/vat_invoice_non_vn_skipped_test.rs
-    - services/crm/tests/vat_invoice_trigger_enum_cardinality_test.rs
-    - services/crm/tests/vat_invoice_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/crm/
+new_files:
+  - services/crm/migrations/0010_vat_invoice_emissions.sql
+  - services/crm/src/vn/vat_invoice_skill.rs
+  - services/crm/src/vn/invoice_orchestrator.rs
+  - services/crm/src/audit/vat_invoice_events.rs
+  - services/crm/tests/vat_invoice_auto_on_won_test.rs
+  - services/crm/tests/vat_invoice_idempotent_test.rs
+  - services/crm/tests/vat_invoice_non_vn_skipped_test.rs
+  - services/crm/tests/vat_invoice_trigger_enum_cardinality_test.rs
+  - services/crm/tests/vat_invoice_audit_emission_test.rs
 
-  modified_files:
-    - services/crm/src/deals.rs
+modified_files:
+  - services/crm/src/deals.rs
 
-  allowed_tools:
-    - file_read: services/{crm,inv,skill}/**
-    - file_write: services/crm/{src,tests,migrations}/**
-    - bash: cd services/crm && cargo test vat_invoice
+allowed_tools:
+  - file_read: services/{crm,inv,skill}/**
+  - file_write: services/crm/{src,tests,migrations}/**
+  - bash: cd services/crm && cargo test vat_invoice
 
-  disallowed_tools:
-    - emit for non-VN tenant (per DEC-1700)
-    - duplicate emit per deal (per DEC-1702)
+disallowed_tools:
+  - emit for non-VN tenant (per DEC-1700)
+  - duplicate emit per deal (per DEC-1702)
 
 effort_hours: 5
 subtasks:

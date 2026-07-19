@@ -1,8 +1,10 @@
 ---
 id: TASK-AUTH-006
 title: "cyberos-auth bootstrap CLI: tenant 0 + root-admin + initial signing key + sweepers + idempotency-table cleanup"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -50,10 +52,14 @@ allowed_tools:
   - bash: cd services/auth && cargo build --bin cyberos-auth
   - bash: cd services/auth && cargo test bootstrap
 disallowed_tools:
-  - allow `--reset` in production environment without `--force-prod-reset` (per §1 #11)
-  - emit plaintext password in CLI output OR audit row (per §1 #5)
-  - skip memory audit row on bootstrap success (per §1 #4)
-  - skip initial signing key creation on bootstrap (per §1 #6 — without it, TASK-AUTH-004 can't issue tokens)
+  #11)
+  - allow `--reset` in production environment without `--force-prod-reset` (per §1
+  #5)
+  - emit plaintext password in CLI output OR audit row (per §1
+  #4)
+  - skip memory audit row on bootstrap success (per §1
+  #6 — without it, TASK-AUTH-004 can't issue tokens)
+  - skip initial signing key creation on bootstrap (per §1
 
 effort_hours: 6
 subtasks:

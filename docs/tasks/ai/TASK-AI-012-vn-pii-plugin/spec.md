@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-012
 title: "VN-PII Presidio plugin (CCCD · MST · VN phone · NĐD · VN address · bank account)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -52,16 +54,20 @@ new_files:
   - services/ai-gateway/pii/test_vn_no_false_positives.py
   - services/ai-gateway/pii/fixtures/vn_pii_200_samples.yaml
 modified_files:
-  - services/ai-gateway/pii/presidio_sidecar.py    # register VN recognizers at sidecar startup
-  - services/ai-gateway/src/redact/types.rs        # PiiType already includes VN variants from TASK-AI-011 §3
+  # register VN recognizers at sidecar startup
+  - services/ai-gateway/pii/presidio_sidecar.py
+  # PiiType already includes VN variants from TASK-AI-011 §3
+  - services/ai-gateway/src/redact/types.rs
 allowed_tools:
   - file_read: services/ai-gateway/pii/**
   - file_write: services/ai-gateway/pii/**
   - bash: cd services/ai-gateway/pii && pytest -v
   - bash: docker compose up -d presidio
 disallowed_tools:
-  - send VN-PII to any non-localhost service (recognizers run inside the loopback-bound sidecar from TASK-AI-011 §1 #15)
-  - persist raw VN-PII anywhere (RestorationMap zeroize semantics from TASK-AI-011 §1 #4 apply)
+  #15)
+  - send VN-PII to any non-localhost service (recognizers run inside the loopback-bound sidecar from TASK-AI-011 §1
+  #4 apply)
+  - persist raw VN-PII anywhere (RestorationMap zeroize semantics from TASK-AI-011 §1
   - hardcode confidence scores in recognizer classes (define in `confidence.py`; recognizers import)
   - duplicate the province-code list across recognizers (single source in `province_codes.py`)
   - skip the negative-fixture test (every recognizer MUST be checked for false positives on plain VN text)

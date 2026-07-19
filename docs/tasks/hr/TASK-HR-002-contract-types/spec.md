@@ -1,8 +1,10 @@
 ---
 id: TASK-HR-002
 title: "HR 5 contract types — indefinite + fixed_term + probation + part_time + contractor with per-type leave + benefit rules"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/hr.html#contract-types
-  - https://thuvienphapluat.vn/  # VN Labour Code 45/2019 Art. 20
+  # VN Labour Code 45/2019 Art. 20
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-1810 2026-05-17 — 5 contract types per VN Labour Code 45/2019 Art. 20 + business need: indefinite, fixed_term, probation, part_time, contractor
@@ -36,32 +39,31 @@ source_decisions:
   - DEC-1814 2026-05-17 — Per-type SI participation: indefinite/fixed_term/part_time/probation = required; contractor = exempt (per Decree 152)
   - DEC-1815 2026-05-17 — memory audit kinds: hr.contract_type_set, hr.contract_renewal_attempted, hr.contract_violation_detected
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/hr/
-  new_files:
-    - services/hr/migrations/0002_contract_types.sql
-    - services/hr/src/contract/mod.rs
-    - services/hr/src/contract/rules_enforcer.rs
-    - services/hr/src/audit/contract_events.rs
-    - services/hr/tests/contract_type_enum_cardinality_test.rs
-    - services/hr/tests/contract_probation_max_60d_test.rs
-    - services/hr/tests/contract_fixed_term_renewal_limit_test.rs
-    - services/hr/tests/contract_leave_per_type_test.rs
-    - services/hr/tests/contract_si_per_type_test.rs
-    - services/hr/tests/contract_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/hr/
+new_files:
+  - services/hr/migrations/0002_contract_types.sql
+  - services/hr/src/contract/mod.rs
+  - services/hr/src/contract/rules_enforcer.rs
+  - services/hr/src/audit/contract_events.rs
+  - services/hr/tests/contract_type_enum_cardinality_test.rs
+  - services/hr/tests/contract_probation_max_60d_test.rs
+  - services/hr/tests/contract_fixed_term_renewal_limit_test.rs
+  - services/hr/tests/contract_leave_per_type_test.rs
+  - services/hr/tests/contract_si_per_type_test.rs
+  - services/hr/tests/contract_audit_emission_test.rs
 
-  modified_files:
-    - services/hr/src/members.rs
+modified_files:
+  - services/hr/src/members.rs
 
-  allowed_tools:
-    - file_read: services/hr/**
-    - file_write: services/hr/{src,tests,migrations}/**
-    - bash: cd services/hr && cargo test contract
+allowed_tools:
+  - file_read: services/hr/**
+  - file_write: services/hr/{src,tests,migrations}/**
+  - bash: cd services/hr && cargo test contract
 
-  disallowed_tools:
-    - allow probation > 60d (per DEC-1812)
-    - allow >1 fixed_term renewal (per DEC-1812)
+disallowed_tools:
+  - allow probation > 60d (per DEC-1812)
+  - allow >1 fixed_term renewal (per DEC-1812)
 
 effort_hours: 4
 subtasks:

@@ -1,8 +1,10 @@
 ---
 id: TASK-DOC-008
 title: "DOC expiry alert cascade — 90/30/7-day notifications to parties + CLO with deduplication and snooze support"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -35,33 +37,32 @@ source_decisions:
   - DEC-1724 2026-05-17 — CLO can snooze alerts per-document (postpones all remaining thresholds until snooze expires)
   - DEC-1725 2026-05-17 — memory audit kinds: doc.expiry_alert_scheduled, doc.expiry_alert_sent, doc.expiry_alert_snoozed, doc.expiry_alert_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/doc/
-  new_files:
-    - services/doc/migrations/0003_expiry_alerts.sql
-    - services/doc/src/expiry/mod.rs
-    - services/doc/src/expiry/scanner.rs
-    - services/doc/src/expiry/notifier.rs
-    - services/doc/src/handlers/expiry_routes.rs
-    - services/doc/src/audit/expiry_events.rs
-    - services/doc/tests/expiry_90_30_7_thresholds_test.rs
-    - services/doc/tests/expiry_dedup_test.rs
-    - services/doc/tests/expiry_snooze_test.rs
-    - services/doc/tests/expiry_threshold_enum_cardinality_test.rs
-    - services/doc/tests/expiry_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/doc/
+new_files:
+  - services/doc/migrations/0003_expiry_alerts.sql
+  - services/doc/src/expiry/mod.rs
+  - services/doc/src/expiry/scanner.rs
+  - services/doc/src/expiry/notifier.rs
+  - services/doc/src/handlers/expiry_routes.rs
+  - services/doc/src/audit/expiry_events.rs
+  - services/doc/tests/expiry_90_30_7_thresholds_test.rs
+  - services/doc/tests/expiry_dedup_test.rs
+  - services/doc/tests/expiry_snooze_test.rs
+  - services/doc/tests/expiry_threshold_enum_cardinality_test.rs
+  - services/doc/tests/expiry_audit_emission_test.rs
 
-  modified_files:
-    - services/doc/src/lib.rs
+modified_files:
+  - services/doc/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{doc,email,chat}/**
-    - file_write: services/doc/{src,tests,migrations}/**
-    - bash: cd services/doc && cargo test expiry
+allowed_tools:
+  - file_read: services/{doc,email,chat}/**
+  - file_write: services/doc/{src,tests,migrations}/**
+  - bash: cd services/doc && cargo test expiry
 
-  disallowed_tools:
-    - send duplicate alert (per DEC-1722)
-    - ignore snooze (per DEC-1724)
+disallowed_tools:
+  - send duplicate alert (per DEC-1722)
+  - ignore snooze (per DEC-1724)
 
 effort_hours: 4
 subtasks:

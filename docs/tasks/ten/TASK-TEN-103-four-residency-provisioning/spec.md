@@ -1,8 +1,10 @@
 ---
 id: TASK-TEN-103
 title: "4-residency provisioning — sg-1 / eu-1 / us-1 / vn-1 region pinning across Postgres + S3 + NATS + Stripe + KMS with cross-residency-write trip-wire"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -27,8 +29,10 @@ blocks: []
 source_pages:
   - website/docs/modules/ten.html#residency
   - https://gdpr.eu/article-44-transfers-of-personal-data/
-  - https://www.iso.org/standard/82875.html               # PDPL Law 91/2025
-  - https://www.aicpa.org/soc                              # SOC 2 cross-border
+  # PDPL Law 91/2025
+  - https://www.iso.org/standard/82875.html
+  # SOC 2 cross-border
+  - https://www.aicpa.org/soc
   - https://www.imda.gov.sg/regulations-and-licensing-listing/data-protection-act
 
 source_decisions:
@@ -64,74 +68,100 @@ source_decisions:
   - SOC 2 CC6.1 (residency boundary as a security boundary)
   - ISO 27001 A.13.2 (data classification + residency control)
 
-build_envelope:
-  language: rust 1.81 + sql + terraform
-  service: cyberos/services/ten/ + cyberos/infra/
-  new_files:
-    - services/ten/migrations/0015_residency_enum.sql               # closed 4-value enum
-    - services/ten/migrations/0016_residency_trip_wire.sql           # cross-residency-write trigger on every tenant table
-    - services/ten/migrations/0017_residency_health_log.sql          # per-residency health snapshot log
-    - services/ten/src/residency/mod.rs                              # residency orchestrator
-    - services/ten/src/residency/pool_router.rs                      # Map<Residency, PgPool>
-    - services/ten/src/residency/s3_router.rs                        # Map<Residency, S3Client>
-    - services/ten/src/residency/nats_router.rs                      # Map<Residency, NatsClient>
-    - services/ten/src/residency/kms_router.rs                       # Map<Residency, KmsClient>
-    - services/ten/src/residency/health.rs                           # 6-component health check
-    - services/ten/src/residency/trip_wire.rs                        # cross-residency intercept
-    - services/ten/src/residency/issuer_map.rs                       # AUTH issuer per residency
-    - services/ten/src/cli/residency_status.rs                       # cyberos-ten residency-status
-    - services/ten/src/audit/residency_events.rs                     # 8 memory row builders
-    - infra/terraform/residency/sg-1/main.tf                         # SG VPC + Aurora + S3 + NATS + KMS
-    - infra/terraform/residency/eu-1/main.tf                         # EU equivalent
-    - infra/terraform/residency/us-1/main.tf                         # US equivalent
-    - infra/terraform/residency/vn-1/main.tf                         # VN (physically ap-southeast-1 per DEC-930)
-    - infra/terraform/residency/_shared/modules/aurora-residency-cluster
-    - infra/terraform/residency/_shared/modules/s3-residency-bucket
-    - infra/terraform/residency/_shared/modules/nats-residency-cluster
-    - infra/terraform/residency/_shared/modules/kms-residency-key
-    - services/ten/tests/residency_enum_cardinality_test.rs
-    - services/ten/tests/residency_currency_mapping_test.rs
-    - services/ten/tests/residency_trip_wire_test.rs
-    - services/ten/tests/residency_immutable_test.rs
-    - services/ten/tests/residency_pool_routing_test.rs
-    - services/ten/tests/residency_pool_misroute_test.rs
-    - services/ten/tests/residency_jwt_cross_rejection_test.rs
-    - services/ten/tests/residency_atomic_provisioning_test.rs
-    - services/ten/tests/residency_health_check_test.rs
-    - services/ten/tests/residency_memory_chain_partitioning_test.rs
-    - services/ten/tests/residency_kms_unavailable_test.rs
-    - services/ten/tests/residency_audit_emission_test.rs
+language: rust 1.81 + sql + terraform
+service: cyberos/services/ten/ + cyberos/infra/
+new_files:
+  # closed 4-value enum
+  - services/ten/migrations/0015_residency_enum.sql
+  # cross-residency-write trigger on every tenant table
+  - services/ten/migrations/0016_residency_trip_wire.sql
+  # per-residency health snapshot log
+  - services/ten/migrations/0017_residency_health_log.sql
+  # residency orchestrator
+  - services/ten/src/residency/mod.rs
+  # Map<Residency, PgPool>
+  - services/ten/src/residency/pool_router.rs
+  # Map<Residency, S3Client>
+  - services/ten/src/residency/s3_router.rs
+  # Map<Residency, NatsClient>
+  - services/ten/src/residency/nats_router.rs
+  # Map<Residency, KmsClient>
+  - services/ten/src/residency/kms_router.rs
+  # 6-component health check
+  - services/ten/src/residency/health.rs
+  # cross-residency intercept
+  - services/ten/src/residency/trip_wire.rs
+  # AUTH issuer per residency
+  - services/ten/src/residency/issuer_map.rs
+  # cyberos-ten residency-status
+  - services/ten/src/cli/residency_status.rs
+  # 8 memory row builders
+  - services/ten/src/audit/residency_events.rs
+  # SG VPC + Aurora + S3 + NATS + KMS
+  - infra/terraform/residency/sg-1/main.tf
+  # EU equivalent
+  - infra/terraform/residency/eu-1/main.tf
+  # US equivalent
+  - infra/terraform/residency/us-1/main.tf
+  # VN (physically ap-southeast-1 per DEC-930)
+  - infra/terraform/residency/vn-1/main.tf
+  - infra/terraform/residency/_shared/modules/aurora-residency-cluster
+  - infra/terraform/residency/_shared/modules/s3-residency-bucket
+  - infra/terraform/residency/_shared/modules/nats-residency-cluster
+  - infra/terraform/residency/_shared/modules/kms-residency-key
+  - services/ten/tests/residency_enum_cardinality_test.rs
+  - services/ten/tests/residency_currency_mapping_test.rs
+  - services/ten/tests/residency_trip_wire_test.rs
+  - services/ten/tests/residency_immutable_test.rs
+  - services/ten/tests/residency_pool_routing_test.rs
+  - services/ten/tests/residency_pool_misroute_test.rs
+  - services/ten/tests/residency_jwt_cross_rejection_test.rs
+  - services/ten/tests/residency_atomic_provisioning_test.rs
+  - services/ten/tests/residency_health_check_test.rs
+  - services/ten/tests/residency_memory_chain_partitioning_test.rs
+  - services/ten/tests/residency_kms_unavailable_test.rs
+  - services/ten/tests/residency_audit_emission_test.rs
 
-  modified_files:
-    - services/ten/src/lib.rs                                          # mount residency_router
-    - services/ten/src/provisioning/orchestrator.rs                    # consume residency router
-    - services/ten/migrations/0003_tenant_residency_map.sql            # change residency column type from TEXT to residency_enum
-    - services/ten/Cargo.toml                                          # +aws-sdk-kms, +aws-sdk-s3
-    - services/auth/src/handlers/login.rs                              # set auth.residency session-local on JWT validate
-    - services/inv/src/lib.rs                                          # consume residency router for cross-residency-INSERT trip
-    - services/metering/src/recorder.rs                                # consume residency router
-    - services/email/src/sender.rs                                     # consume residency router for SES region selection
-    - services/doc/src/lib.rs                                          # consume residency router for S3 region
+modified_files:
+  # mount residency_router
+  - services/ten/src/lib.rs
+  # consume residency router
+  - services/ten/src/provisioning/orchestrator.rs
+  # change residency column type from TEXT to residency_enum
+  - services/ten/migrations/0003_tenant_residency_map.sql
+  # +aws-sdk-kms, +aws-sdk-s3
+  - services/ten/Cargo.toml
+  # set auth.residency session-local on JWT validate
+  - services/auth/src/handlers/login.rs
+  # consume residency router for cross-residency-INSERT trip
+  - services/inv/src/lib.rs
+  # consume residency router
+  - services/metering/src/recorder.rs
+  # consume residency router for SES region selection
+  - services/email/src/sender.rs
+  # consume residency router for S3 region
+  - services/doc/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/**
-    - file_read: infra/terraform/**
-    - file_write: services/ten/{src,tests,migrations}/**
-    - file_write: infra/terraform/residency/**
-    - file_write: services/{auth,inv,metering,email,doc}/src/**       # residency-aware handler wiring
-    - bash: cd services/ten && cargo test residency
-    - bash: cd infra/terraform/residency/sg-1 && terraform plan
-    - bash: cd infra/terraform/residency/sg-1 && terraform apply
+allowed_tools:
+  - file_read: services/**
+  - file_read: infra/terraform/**
+  - file_write: services/ten/{src,tests,migrations}/**
+  - file_write: infra/terraform/residency/**
+  # residency-aware handler wiring
+  - file_write: services/{auth,inv,metering,email,doc}/src/**
+  - bash: cd services/ten && cargo test residency
+  - bash: cd infra/terraform/residency/sg-1 && terraform plan
+  - bash: cd infra/terraform/residency/sg-1 && terraform apply
 
-  disallowed_tools:
-    - extend `residency` enum beyond {sg-1, eu-1, us-1, vn-1} without ADR (per DEC-920)
-    - allow cross-residency read (per DEC-923)
-    - allow cross-residency write (per DEC-924)
-    - share KMS key across residencies (per DEC-929)
-    - share Aurora cluster across residencies (per DEC-921)
-    - mutate tenant.residency on existing tenant (per DEC-925)
-    - hardcode residency-to-region mapping outside of `residency/mod.rs` (single source of truth)
-    - skip the cross-residency-write trip-wire trigger on any tenant-scoped table (per DEC-924 + DEC-939)
+disallowed_tools:
+  - extend `residency` enum beyond {sg-1, eu-1, us-1, vn-1} without ADR (per DEC-920)
+  - allow cross-residency read (per DEC-923)
+  - allow cross-residency write (per DEC-924)
+  - share KMS key across residencies (per DEC-929)
+  - share Aurora cluster across residencies (per DEC-921)
+  - mutate tenant.residency on existing tenant (per DEC-925)
+  - hardcode residency-to-region mapping outside of `residency/mod.rs` (single source of truth)
+  - skip the cross-residency-write trip-wire trigger on any tenant-scoped table (per DEC-924 + DEC-939)
 
 effort_hours: 10
 subtasks:

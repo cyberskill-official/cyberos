@@ -1,8 +1,10 @@
 ---
 id: TASK-REW-005
 title: "REW monthly payroll compute + CFO+CHRO co-sign commit gate — orchestrates 3P + deductions + net pay with dual-sign before bank send"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,34 +36,33 @@ source_decisions:
   - DEC-2193 2026-05-17 — Compute IMMUTABLE after committed; corrections via new payroll run (prior-period adjustment)
   - DEC-2194 2026-05-17 — memory audit kinds: rew.payroll_drafted, rew.payroll_computed, rew.payroll_signed, rew.payroll_committed, rew.payroll_paid, rew.payroll_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/rew/
-  new_files:
-    - services/rew/migrations/0005_payroll_runs.sql
-    - services/rew/src/payroll/mod.rs
-    - services/rew/src/payroll/compute.rs
-    - services/rew/src/payroll/dual_sign_gate.rs
-    - services/rew/src/handlers/payroll_routes.rs
-    - services/rew/src/audit/payroll_events.rs
-    - services/rew/tests/payroll_status_enum_cardinality_test.rs
-    - services/rew/tests/payroll_compute_3p_test.rs
-    - services/rew/tests/payroll_dual_sign_test.rs
-    - services/rew/tests/payroll_same_person_rejected_test.rs
-    - services/rew/tests/payroll_immutable_post_commit_test.rs
-    - services/rew/tests/payroll_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/rew/
+new_files:
+  - services/rew/migrations/0005_payroll_runs.sql
+  - services/rew/src/payroll/mod.rs
+  - services/rew/src/payroll/compute.rs
+  - services/rew/src/payroll/dual_sign_gate.rs
+  - services/rew/src/handlers/payroll_routes.rs
+  - services/rew/src/audit/payroll_events.rs
+  - services/rew/tests/payroll_status_enum_cardinality_test.rs
+  - services/rew/tests/payroll_compute_3p_test.rs
+  - services/rew/tests/payroll_dual_sign_test.rs
+  - services/rew/tests/payroll_same_person_rejected_test.rs
+  - services/rew/tests/payroll_immutable_post_commit_test.rs
+  - services/rew/tests/payroll_audit_emission_test.rs
 
-  modified_files:
-    - services/rew/src/lib.rs
+modified_files:
+  - services/rew/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{rew,hr}/**
-    - file_write: services/rew/{src,tests,migrations}/**
-    - bash: cd services/rew && cargo test payroll
+allowed_tools:
+  - file_read: services/{rew,hr}/**
+  - file_write: services/rew/{src,tests,migrations}/**
+  - bash: cd services/rew && cargo test payroll
 
-  disallowed_tools:
-    - commit without dual-sign (per DEC-2192)
-    - mutate committed payroll (per DEC-2193)
+disallowed_tools:
+  - commit without dual-sign (per DEC-2192)
+  - mutate committed payroll (per DEC-2193)
 
 effort_hours: 8
 subtasks:

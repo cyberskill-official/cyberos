@@ -4,8 +4,8 @@ title: The plan workflow
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
-priority: p1
+status: done
+priority: p2
 author: "@stephencheng"
 department: engineering
 created_at: 2026-07-17T14:00:00Z
@@ -33,6 +33,7 @@ new_files:
 modified_files:
   - modules/skill/repo-context-map-author/SKILL.md
   - tools/install/build.sh
+  - tools/install/tests/test_full_sdp_payload.sh
 source_pages:
   - "IMPROVEMENT_HANDOFF.md §12 (findings + proposed implementation, written after checking create-tasks for reuse as instructed)"
   - "modules/skill/task-author/STANDALONE_INTERVIEW.md (required field source_files: 'Which source file(s) should I read' - file plumbing, not elicitation)"
@@ -91,7 +92,7 @@ In scope: `plan-author`, `plan-audit`, `plan_rubric@1.0`, the `scope` input on r
 
 None blocking. Reuses skills that exist.
 
-**Serialisation note:** touches `build.sh` (shared with TASK-IMP-110 - both add a vendored skill to VENDORED_SKILLS, and chain-coverage fails closed if either lands half-applied). Parent-serialised per §11a.
+**Serialisation note:** touches `build.sh` (shared with TASK-IMP-110 - both add a vendored skill to VENDORED_SKILLS, and chain-coverage fails closed if either lands half-applied). Parent-serialised per §11a. Adding plan-author + plan-audit takes the vendored census 54 -> 56, so `tools/install/tests/test_full_sdp_payload.sh`'s expected count is bumped in this same change (per its own bump-and-say-why comment); that test is in the cone for exactly that reason.
 
 ## AI Authorship Disclosure
 

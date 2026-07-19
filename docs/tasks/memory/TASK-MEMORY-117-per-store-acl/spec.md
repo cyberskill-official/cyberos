@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-117
 title: "memory per-store ACL — `STORE.yaml` per top-level subtree (memories/ meta/ company/ client/ project/ persona/ episodes/) auto-generated on migration; writer enforces ACL on every put/move/delete; reads remain unrestricted to local processes"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-MEMORY-118]
 protocol_amendment_required: "AGENTS.md §14.4 (new) — store-level ACL via STORE.yaml; consumer writers MUST honour acl; approval phrase: APPROVE protocol change P20 §14.4"
 
 source_pages:
-  - playground/extracts/memory-and-dreaming.transcript.txt  # see "permission scopes" segment [435..464]
+  # see "permission scopes" segment [435..464]
+  - playground/extracts/memory-and-dreaming.transcript.txt
 source_decisions:
   - DEC-230 (One STORE.yaml per existing top-level dir auto-generated on first run after upgrade; operator can edit thereafter; missing STORE.yaml ≡ permissive default — back-compat preserved)
   - "DEC-231 (ACL grammar: `{actor: <glob>, mode: \"read\" | \"read-write\" | \"deny\"}`; first-match-wins; explicit `deny` overrides upstream allow)"
@@ -41,18 +44,24 @@ new_files:
   - modules/memory/tests/core/test_store_acl.py
   - modules/memory/scripts/migrate-store-acl.py
 modified_files:
-  - modules/memory/cyberos/core/writer.py        # enforce ACL on every put/move/delete; lazy-load STORE.yaml per top-level dir
-  - modules/memory/cyberos/core/walker.py        # invariant `store-yaml-acl-valid` rule
-  - modules/memory/memory.schema.json            # `StoreAcl` + `StoreAclEntry` definitions
-  - modules/memory/memory.invariants.yaml        # `store-yaml-acl-valid` (error)
-  - AGENTS.md                                     # add §14.4 — store-level ACL (REQUIRES amendment via APPROVE chat-turn P20 §14.4)
+  # enforce ACL on every put/move/delete; lazy-load STORE.yaml per top-level dir
+  - modules/memory/cyberos/core/writer.py
+  # invariant `store-yaml-acl-valid` rule
+  - modules/memory/cyberos/core/walker.py
+  # `StoreAcl` + `StoreAclEntry` definitions
+  - modules/memory/memory.schema.json
+  # `store-yaml-acl-valid` (error)
+  - modules/memory/memory.invariants.yaml
+  # add §14.4 — store-level ACL (REQUIRES amendment via APPROVE chat-turn P20 §14.4)
+  - AGENTS.md
 allowed_tools:
   - file_read: modules/memory/**
   - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/scripts/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, AGENTS.md
   - bash: cd modules/memory && python -m pytest tests/test_store_acl_*.py -v
   - bash: cd modules/memory && python scripts/migrate-store-acl.py --store /tmp/memory --dry-run
 disallowed_tools:
-  - bypass ACL check on writes that originate from `cyberos.core.writer.Writer` (per §1 #1)
+  #1)
+  - bypass ACL check on writes that originate from `cyberos.core.writer.Writer` (per §1
   - mutate AGENTS.md §14.4 without an APPROVE protocol change P20 §14.4 chat-turn
   - enforce ACL on reads (per DEC-232 — write-side only)
 

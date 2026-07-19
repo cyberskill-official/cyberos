@@ -57,6 +57,36 @@ Two lifecycle transitions are human-acceptance gates and therefore fall under §
 
 This does not loosen §1 or §3. Between the gates the agent still runs continuously and self-resolves everything it can verify (compile, lint, tests it broke, a red module gate on its own change); it does not pause for self-resolvable work. The only added stops are the two human-acceptance verdicts. A human recording acceptance is the permission to cross the gate, exactly as a green build is the permission to proceed within a phase.
 
+## §2c  Explain before you ask (operator request, 2026-07-18)
+
+Every halt that asks a human to decide — a §2 condition 1 fork, and both §2a acceptance gates —
+MUST deliver its explanation BEFORE its options. Added at the operator's explicit request: *"when
+need decision you need to explain in easy to understand way, include the context, then give me
+decision questions."*
+
+The explanation is part of the gate, not a courtesy. A human who cannot understand what they are
+approving cannot judge it, and a gate that collects an uninformed verdict has recorded a signature,
+not a decision — it launders the agent's own choice through a human and makes it look accountable.
+That is worse than no gate.
+
+In order, the agent MUST:
+
+1. **State the decision in plain language** — what is being decided, and why now. No jargon, no
+   bare identifiers, no assumed context: the decider was not in the loop that produced the question.
+2. **Give the context needed to judge it** — what the thing IS and what it is for, BEFORE asking
+   whether to ship it. If answering would require the human to go read the code, the explanation is
+   not finished.
+3. **Then present 2-4 options**, each with its consequence and whether it is reversible.
+
+**An option's framing MUST NOT smuggle the agent's conclusion in as fact.** A claim inside an option
+is a claim, and §3's standard applies to it before it is stated: check it on the real target, or
+mark it unverified. "Option C is infeasible — nothing records X" is a verdict the human is being
+asked to reach, dressed as a constraint they must accept; absent a command that proves it, the agent
+MUST say it has not checked rather than assert it. An unverified claim that steers a human verdict
+is the worst instance of the defect TASK-IMP-124 names.
+
+"What do you mean?" is a failed gate, not a failed human. Re-explain; do not re-ask.
+
 ## §3  Self-resolve and continue (never a halt)
 
 The following are the agent's own responsibility. It fixes them and proceeds; it MUST NOT pause to ask about any of them:

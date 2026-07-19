@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.code-review-author.review-findings/v1",
+  "title": "review-findings@1 — structured code-review findings",
+  "description": "TASK-IMP-112. One record per finding, emitted as review-findings.json beside code-review.md. The markdown stays the human artefact (§1.5); this array is what a machine counts, routes, and acts on. An empty array is valid and is exactly what a zero-finding review emits (§1.6).",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["file", "line", "severity", "clause_ref", "summary", "suggested_fix"],
+    "properties": {
+      "file": {
+        "type": "string",
+        "description": "Path as it appeared in the reviewed diff. For a deleted file, the path as it was in the diff — the record is about the diff, not the tree. Recorded as data; never interpolated or executed."
+      },
+      "line": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "The first line the finding bears on. A finding spanning a range records the first line here and describes the range in `summary` (a schema that models ranges before anyone needs them is gold-plating)."
+      },
+      "severity": {
+        "type": "string",
+        "enum": ["severe", "important", "nit"],
+        "description": "Three-value taxonomy (§1.2). Not the High/Medium/Low prose — a nit and a severe finding are different kinds of thing, and a reviewer who cannot say 'this is a nit' says nothing instead."
+      },
+      "clause_ref": {
+        "type": ["string", "null"],
+        "description": "Names the reviewed task's §1 clause the finding bears on (e.g. \"§1.3\"), or null when the finding is outside the spec's clauses (§1.3). null is a real category; a fabricated reference is never a substitute for it."
+      },
+      "summary": {
+        "type": "string",
+        "description": "What the finding is — the same issue the prose packet describes."
+      },
+      "suggested_fix": {
+        "type": "string",
+        "description": "The concrete change proposed to resolve the finding."
+      }
+    }
+  }
+}

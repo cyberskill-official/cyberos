@@ -1,8 +1,10 @@
 ---
 id: TASK-SKILL-115
 title: "Sweep stale `<placeholder>` syntax in 134 production SKILL.md files (metadata.stage + description + allowed_memory_scopes)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -37,13 +39,17 @@ service: modules/skill/  (134 production SKILL.md sweep) + modules/cuo/cuo/  (pl
 new_files:
   - tools/sweep-placeholders/detect.py
   - tools/sweep-placeholders/suggest.py
-  - tools/sweep-placeholders/report.md         # auto-generated catalog of stale placeholders + suggested fix per skill
+  # auto-generated catalog of stale placeholders + suggested fix per skill
+  - tools/sweep-placeholders/report.md
   - modules/cuo/cuo/placeholder_check.py
   - modules/cuo/tests/test_placeholder_check.py
 modified_files:
-  - website docs (SKILL Appendix L)                        # add SKB-030 placeholder-free-frontmatter rule
-  - Task-audit skill  # §3.13 38f mentions placeholder rule
-  - modules/skill/<each of 134 production SKILL.md files>        # operator-attested per-skill substitution
+  # add SKB-030 placeholder-free-frontmatter rule
+  - website docs (SKILL Appendix L)
+  # §3.13 38f mentions placeholder rule
+  - Task-audit skill
+  # operator-attested per-skill substitution
+  - modules/skill/<each of 134 production SKILL.md files>
 allowed_tools:
   - file_read: modules/skill/**, tools/sweep-placeholders/**, docs/tasks/skill/**
   - file_write: modules/skill/**, tools/sweep-placeholders/**, modules/cuo/{cuo,tests}/**, docs/tasks/skill/**

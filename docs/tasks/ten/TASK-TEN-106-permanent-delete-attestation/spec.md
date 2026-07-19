@@ -1,8 +1,10 @@
 ---
 id: TASK-TEN-106
 title: "TEN permanent-delete attestation — CSO + CLO dual-sign + chain-anchored evidence + cascade hard-purge across all tenant data with verification"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -30,7 +32,8 @@ source_pages:
 
 source_decisions:
   - DEC-1340 2026-05-17 — Permanent-delete attestation = the final, irreversible step in tenant lifecycle; transitions tenant from `terminating` (TASK-TEN-104) to fully hard-purged; dual-sign (CSO + CLO) required because the action is unrecoverable
-  - DEC-1341 2026-05-17 — Pre-conditions: tenant.status='terminating'; recent bundle export within 90d (TASK-TEN-105 §1 #14); 30-day cool-off since tenant.status flipped to terminating
+  #14); 30-day cool-off since tenant.status flipped to terminating
+  - DEC-1341 2026-05-17 — Pre-conditions: tenant.status='terminating'; recent bundle export within 90d (TASK-TEN-105 §1
   - DEC-1342 2026-05-17 — CSO + CLO dual-signature (distinct subjects per CHECK constraint mirror of TASK-PORTAL-008 DEC denial pattern)
   - DEC-1343 2026-05-17 — Cascade hard-purge across: tenant Postgres schema (DROP CASCADE), tenant S3 prefix (recursive delete + lifecycle policy), KMS keys (schedule deletion 30d), NATS subject namespace (purge JetStream), audit chain (TOMBSTONE entries — chain integrity preserved)
   - DEC-1344 2026-05-17 — Chain integrity: audit rows for the deleted tenant remain in memory chain (cannot be deleted — chain integrity property); replaced with tombstone records containing only `(tenant_id, deleted_at, attestation_id)` — original content scrubbed
@@ -41,45 +44,44 @@ source_decisions:
   - DEC-1349 2026-05-17 — Per-target execution log persisted in `permanent_delete_cascade_log` with status (pending|executing|completed|failed); CSO can re-trigger failed targets
   - DEC-1350 2026-05-17 — memory audit kinds: ten.permanent_delete_attestation_initiated, ten.permanent_delete_cso_signed, ten.permanent_delete_clo_signed, ten.permanent_delete_executing, ten.permanent_delete_completed, ten.permanent_delete_cancelled, ten.permanent_delete_cascade_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/ten/
-  new_files:
-    - services/ten/migrations/0028_permanent_delete_attestations.sql
-    - services/ten/migrations/0029_permanent_delete_cascade_log.sql
-    - services/ten/src/permanent_delete/mod.rs
-    - services/ten/src/permanent_delete/initiate.rs
-    - services/ten/src/permanent_delete/sign.rs
-    - services/ten/src/permanent_delete/execute.rs
-    - services/ten/src/permanent_delete/cascade.rs
-    - services/ten/src/permanent_delete/audit_tombstone.rs
-    - services/ten/src/permanent_delete/verify.rs
-    - services/ten/src/audit/permanent_delete_events.rs
-    - services/ten/src/handlers/permanent_delete_routes.rs
-    - services/ten/tests/perm_delete_dual_sign_test.rs
-    - services/ten/tests/perm_delete_30d_cool_off_test.rs
-    - services/ten/tests/perm_delete_bundle_required_test.rs
-    - services/ten/tests/perm_delete_cascade_test.rs
-    - services/ten/tests/perm_delete_audit_tombstone_test.rs
-    - services/ten/tests/perm_delete_chain_integrity_test.rs
-    - services/ten/tests/perm_delete_cancel_test.rs
-    - services/ten/tests/perm_delete_cascade_failure_test.rs
-    - services/ten/tests/perm_delete_status_enum_test.rs
-    - services/ten/tests/perm_delete_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/ten/
+new_files:
+  - services/ten/migrations/0028_permanent_delete_attestations.sql
+  - services/ten/migrations/0029_permanent_delete_cascade_log.sql
+  - services/ten/src/permanent_delete/mod.rs
+  - services/ten/src/permanent_delete/initiate.rs
+  - services/ten/src/permanent_delete/sign.rs
+  - services/ten/src/permanent_delete/execute.rs
+  - services/ten/src/permanent_delete/cascade.rs
+  - services/ten/src/permanent_delete/audit_tombstone.rs
+  - services/ten/src/permanent_delete/verify.rs
+  - services/ten/src/audit/permanent_delete_events.rs
+  - services/ten/src/handlers/permanent_delete_routes.rs
+  - services/ten/tests/perm_delete_dual_sign_test.rs
+  - services/ten/tests/perm_delete_30d_cool_off_test.rs
+  - services/ten/tests/perm_delete_bundle_required_test.rs
+  - services/ten/tests/perm_delete_cascade_test.rs
+  - services/ten/tests/perm_delete_audit_tombstone_test.rs
+  - services/ten/tests/perm_delete_chain_integrity_test.rs
+  - services/ten/tests/perm_delete_cancel_test.rs
+  - services/ten/tests/perm_delete_cascade_failure_test.rs
+  - services/ten/tests/perm_delete_status_enum_test.rs
+  - services/ten/tests/perm_delete_audit_emission_test.rs
 
-  modified_files:
-    - services/ten/src/lib.rs
+modified_files:
+  - services/ten/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{ten,auth,memory}/**
-    - file_write: services/ten/{src,tests,migrations}/**
-    - bash: cd services/ten && cargo test permanent_delete
+allowed_tools:
+  - file_read: services/{ten,auth,memory}/**
+  - file_write: services/ten/{src,tests,migrations}/**
+  - bash: cd services/ten && cargo test permanent_delete
 
-  disallowed_tools:
-    - skip dual-sign (per DEC-1342)
-    - skip 30d cool-off (per DEC-1341)
-    - skip bundle precondition (per TASK-TEN-105 DEC-1330)
-    - delete audit chain rows (per DEC-1344 — tombstone only)
+disallowed_tools:
+  - skip dual-sign (per DEC-1342)
+  - skip 30d cool-off (per DEC-1341)
+  - skip bundle precondition (per TASK-TEN-105 DEC-1330)
+  - delete audit chain rows (per DEC-1344 — tombstone only)
 
 effort_hours: 5
 subtasks:

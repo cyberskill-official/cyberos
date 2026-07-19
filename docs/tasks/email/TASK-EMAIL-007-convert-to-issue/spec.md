@@ -1,8 +1,10 @@
 ---
 id: TASK-EMAIL-007
 title: "EMAIL convert-to-issue — one-click create task-PROJ issue from message with thread backlink + attachment carry-over + AI summary"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -35,34 +37,33 @@ source_decisions:
   - DEC-1584 2026-05-17 — Project selection: user picks at convert; default to last-used-project per user
   - DEC-1585 2026-05-17 — memory audit kinds: email.convert_to_issue_initiated, email.convert_to_issue_completed, email.convert_to_issue_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/email/
-  new_files:
-    - services/email/src/convert/mod.rs
-    - services/email/src/convert/issue_builder.rs
-    - services/email/src/convert/ai_summarizer.rs
-    - services/email/src/handlers/convert_routes.rs
-    - services/email/src/audit/convert_events.rs
-    - services/email/migrations/0009_message_issue_link.sql
-    - services/email/tests/convert_single_message_test.rs
-    - services/email/tests/convert_full_thread_test.rs
-    - services/email/tests/convert_attachments_test.rs
-    - services/email/tests/convert_backlink_test.rs
-    - services/email/tests/convert_source_enum_cardinality_test.rs
-    - services/email/tests/convert_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/email/
+new_files:
+  - services/email/src/convert/mod.rs
+  - services/email/src/convert/issue_builder.rs
+  - services/email/src/convert/ai_summarizer.rs
+  - services/email/src/handlers/convert_routes.rs
+  - services/email/src/audit/convert_events.rs
+  - services/email/migrations/0009_message_issue_link.sql
+  - services/email/tests/convert_single_message_test.rs
+  - services/email/tests/convert_full_thread_test.rs
+  - services/email/tests/convert_attachments_test.rs
+  - services/email/tests/convert_backlink_test.rs
+  - services/email/tests/convert_source_enum_cardinality_test.rs
+  - services/email/tests/convert_audit_emission_test.rs
 
-  modified_files:
-    - services/email/src/lib.rs
+modified_files:
+  - services/email/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{email,proj,doc}/**
-    - file_write: services/email/{src,tests,migrations}/**
-    - bash: cd services/email && cargo test convert
+allowed_tools:
+  - file_read: services/{email,proj,doc}/**
+  - file_write: services/email/{src,tests,migrations}/**
+  - bash: cd services/email && cargo test convert
 
-  disallowed_tools:
-    - copy attachment bytes (per DEC-1583 — reference only)
-    - convert without project_id (per DEC-1584 — must select)
+disallowed_tools:
+  - copy attachment bytes (per DEC-1583 — reference only)
+  - convert without project_id (per DEC-1584 — must select)
 
 effort_hours: 6
 subtasks:

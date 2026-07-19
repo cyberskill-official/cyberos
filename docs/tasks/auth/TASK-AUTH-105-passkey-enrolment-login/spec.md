@@ -1,8 +1,10 @@
 ---
 id: TASK-AUTH-105
 title: "AUTH Passkey enrolment + login — discoverable credentials (resident keys) + autofill UI + cross-platform sync + closed enrolment FSM + downgrade-resistance + memory audit per lifecycle event"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -51,14 +53,22 @@ new_files:
   - services/auth/migrations/0025_passkey_enrolment_state.sql
   - services/auth/migrations/0026_passkey_lifecycle_log.sql
   - services/auth/src/passkey/mod.rs
-  - services/auth/src/passkey/enrolment.rs                       # enrolment FSM (requested → confirmed | abandoned)
-  - services/auth/src/passkey/login.rs                           # discoverable credential login flow
-  - services/auth/src/passkey/autofill.rs                        # conditional-mediation flow
-  - services/auth/src/passkey/downgrade_gate.rs                  # password-login block when passkey enrolled
-  - services/auth/src/passkey/origin.rs                          # passkey_origin enum + AAGUID lookup
-  - services/auth/src/passkey/audit.rs                           # 8 memory row builders
-  - services/auth/src/passkey/repo.rs                            # CRUD
-  - services/auth/src/handlers/passkey.rs                        # enrol/login/list/remove + autofill
+  # enrolment FSM (requested → confirmed | abandoned)
+  - services/auth/src/passkey/enrolment.rs
+  # discoverable credential login flow
+  - services/auth/src/passkey/login.rs
+  # conditional-mediation flow
+  - services/auth/src/passkey/autofill.rs
+  # password-login block when passkey enrolled
+  - services/auth/src/passkey/downgrade_gate.rs
+  # passkey_origin enum + AAGUID lookup
+  - services/auth/src/passkey/origin.rs
+  # 8 memory row builders
+  - services/auth/src/passkey/audit.rs
+  # CRUD
+  - services/auth/src/passkey/repo.rs
+  # enrol/login/list/remove + autofill
+  - services/auth/src/handlers/passkey.rs
   - services/auth/tests/passkey_enrolment_fsm_test.rs
   - services/auth/tests/passkey_login_discoverable_test.rs
   - services/auth/tests/passkey_autofill_conditional_test.rs
@@ -71,9 +81,12 @@ new_files:
   - services/auth/tests/passkey_append_only_log_test.rs
   - services/auth/tests/passkey_audit_emission_test.rs
 modified_files:
-  - services/auth/src/mfa/factor_kind.rs                         # cross-reference passkey factor with WebAuthn family from TASK-AUTH-102
-  - services/auth/src/lib.rs                                     # pub mod passkey
-  - services/auth/src/jwt/issuer.rs                              # downgrade-gate hook at password login
+  # cross-reference passkey factor with WebAuthn family from TASK-AUTH-102
+  - services/auth/src/mfa/factor_kind.rs
+  # pub mod passkey
+  - services/auth/src/lib.rs
+  # downgrade-gate hook at password login
+  - services/auth/src/jwt/issuer.rs
 
 allowed_tools:
   - file_read: services/auth/**

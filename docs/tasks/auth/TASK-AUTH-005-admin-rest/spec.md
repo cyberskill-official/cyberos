@@ -1,8 +1,10 @@
 ---
 id: TASK-AUTH-005
 title: "Admin REST: list tenants + list subjects + revoke subject + unrevoke + cursor pagination + jti deny-list"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -44,18 +46,24 @@ new_files:
   - services/auth/tests/admin_cursor_pagination_test.rs
   - services/auth/tests/admin_deny_list_test.rs
 modified_files:
-  - services/auth/src/jwt/verify.rs                 # consult deny-list during verify
-  - services/auth/src/jwt/issue.rs                  # insert into sessions table
-  - services/auth/src/rls/registry.rs               # add `sessions` to TENANT_SCOPED_TABLES
+  # consult deny-list during verify
+  - services/auth/src/jwt/verify.rs
+  # insert into sessions table
+  - services/auth/src/jwt/issue.rs
+  # add `sessions` to TENANT_SCOPED_TABLES
+  - services/auth/src/rls/registry.rs
 allowed_tools:
   - file_read: services/auth/**
   - file_write: services/auth/{src,tests,migrations}/**
   - bash: cd services/auth && cargo test admin
 disallowed_tools:
-  - allow tenant-admin to list/revoke OUT-OF-tenant subjects (per §1 #2 + #3 — RLS blocks too)
+  #2 + #3 — RLS blocks too)
+  - allow tenant-admin to list/revoke OUT-OF-tenant subjects (per §1
   - allow offset-based pagination (per DEC-125 — cursor only; offset bleeds duplicates on concurrent insert)
-  - skip memory audit row on revoke OR unrevoke (per §1 #5 — both are auditable mutations)
-  - return password_hash in subject list responses (per §1 #2 — never expose hash)
+  #5 — both are auditable mutations)
+  - skip memory audit row on revoke OR unrevoke (per §1
+  #2 — never expose hash)
+  - return password_hash in subject list responses (per §1
 
 effort_hours: 8
 subtasks:

@@ -1,8 +1,10 @@
 ---
 id: TASK-SKILL-104
 title: "Capability broker — subprocess sandbox enforces allowed_tools + allowed_memory_scopes at invoke time; tool-name allowlist + path-glob allowlist + timeout enforcement"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -49,16 +51,20 @@ new_files:
   - services/skill-broker/tests/enforce_test.rs
   - services/skill-broker/tests/timeout_test.rs
 modified_files:
-  - services/skill-broker/src/lib.rs                    # re-export broker + dispatcher
-  - services/skill-broker/src/main.rs                   # spawn broker daemon listening on Unix socket
+  # re-export broker + dispatcher
+  - services/skill-broker/src/lib.rs
+  # spawn broker daemon listening on Unix socket
+  - services/skill-broker/src/main.rs
 allowed_tools:
   - file_read: services/skill-broker/**
   - file_write: services/skill-broker/{src,tests}/**
   - bash: cd services/skill-broker && cargo test
 disallowed_tools:
-  - allow skill subprocess to inherit broker's file descriptors (per §1 #4 — seal stdin/stdout/stderr only)
+  #4 — seal stdin/stdout/stderr only)
+  - allow skill subprocess to inherit broker's file descriptors (per §1
   - dispatch a tool call without checking allowed_tools (per DEC-191)
-  - dispatch a MemoryRead with path outside allowed_memory_scopes (per §1 #5)
+  #5)
+  - dispatch a MemoryRead with path outside allowed_memory_scopes (per §1
 
 effort_hours: 12
 subtasks:

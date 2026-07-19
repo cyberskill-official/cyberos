@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-118
 title: "memory put_if — optimistic-concurrency primitive with content-hash preconditions; many-agent contention without clobbering; canonical-ops extension §3.1"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 protocol_amendment_required: "AGENTS.md §3.1 (extend canonical-op list) — `put_if(path, body, meta, precondition_body_hash)` added; approval phrase: APPROVE protocol change P21 §3.1"
 
 source_pages:
-  - playground/extracts/memory-and-dreaming.transcript.txt  # see "optimistic concurrency" segment [468..493]
+  # see "optimistic concurrency" segment [468..493]
+  - playground/extracts/memory-and-dreaming.transcript.txt
 source_decisions:
   - DEC-240 (put_if is an ADDITIVE primitive; existing `put` keeps unchanged semantics — back-compat preserved by construction)
   - DEC-241 (Precondition is the SHA-256 body_hash of the existing memory file as observed by the caller; `None` ≡ "must not exist" — the create-only variant)
@@ -38,11 +41,16 @@ service: modules/memory/cyberos/
 new_files:
   - modules/memory/tests/test_put_if_optimistic_concurrency.py
 modified_files:
-  - modules/memory/cyberos/core/writer.py        # add `put_if(path, body, meta, precondition_body_hash)` method
-  - modules/memory/cyberos/__main__.py           # add `cyberos put-if <path> --precondition <hash>` CLI
-  - modules/memory/memory.schema.json            # add `put_if` to canonical-op enum + payload shape
-  - modules/memory/memory.invariants.yaml        # `put-if-precondition-form` (error)
-  - AGENTS.md                                     # §3.1 amendment (extend canonical-op list)
+  # add `put_if(path, body, meta, precondition_body_hash)` method
+  - modules/memory/cyberos/core/writer.py
+  # add `cyberos put-if <path> --precondition <hash>` CLI
+  - modules/memory/cyberos/__main__.py
+  # add `put_if` to canonical-op enum + payload shape
+  - modules/memory/memory.schema.json
+  # `put-if-precondition-form` (error)
+  - modules/memory/memory.invariants.yaml
+  # §3.1 amendment (extend canonical-op list)
+  - AGENTS.md
 allowed_tools:
   - file_read: modules/memory/**
   - file_write: modules/memory/cyberos/core/writer.py, modules/memory/cyberos/__main__.py, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, AGENTS.md
@@ -50,7 +58,8 @@ allowed_tools:
   - bash: cd modules/memory && python -m cyberos put-if memories/facts/x.md - --precondition <hex> < body.md
 disallowed_tools:
   - mutate AGENTS.md §3.1 canonical-op list without APPROVE protocol change P21 §3.1 chat-turn
-  - bypass the TASK-MEMORY-117 ACL check for put_if (per §1 #5)
+  #5)
+  - bypass the TASK-MEMORY-117 ACL check for put_if (per §1
 
 effort_hours: 8
 subtasks:

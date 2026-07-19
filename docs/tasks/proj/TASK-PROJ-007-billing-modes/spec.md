@@ -1,8 +1,10 @@
 ---
 id: TASK-PROJ-007
 title: "Three billing modes — Time & Materials, Fixed-Fee, Retainer — with mode-aware rollups and per-mode invoice generation hooks"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -41,7 +43,8 @@ new_files:
   - services/proj-sync/src/billing_mode/retainer.rs
   - services/proj/tests/link_types_test.rs
 modified_files:
-  - services/proj-sync/src/engagement.rs              # billing_mode_id FK
+  # billing_mode_id FK
+  - services/proj-sync/src/engagement.rs
 allowed_tools:
   - file_read: services/proj-sync/**
   - file_write: services/proj-sync/{src,tests,migrations}/**

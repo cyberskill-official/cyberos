@@ -1,8 +1,10 @@
 ---
 id: TASK-DOC-011
 title: "DOC PAdES-B-LT format + year-9 LTV re-stamping — extend B-T signatures with validation data + re-timestamp before signature/TS authority expires"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/doc.html#padesblt-ltv
-  - https://www.etsi.org/deliver/etsi_en/319100_319199/31914201/  # ETSI EN 319 142-1 PAdES
+  # ETSI EN 319 142-1 PAdES
+  - https://www.etsi.org/deliver/etsi_en/319100_319199/31914201/
 
 source_decisions:
   - DEC-1800 2026-05-17 — Extend any B-T (timestamp-only) signature to B-LT by embedding cert chain + OCSP/CRL responses + validation data per ETSI EN 319 142-1
@@ -36,34 +39,33 @@ source_decisions:
   - DEC-1804 2026-05-17 — Re-stamping uses an active TS authority — must re-fetch fresh timestamp; original signature stays intact
   - DEC-1805 2026-05-17 — memory audit kinds: doc.ltv_extend_initiated, doc.ltv_extend_completed, doc.ltv_restamp_completed, doc.ltv_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/doc/
-  new_files:
-    - services/doc/migrations/0011_ltv_operations.sql
-    - services/doc/src/ltv/mod.rs
-    - services/doc/src/ltv/extender.rs
-    - services/doc/src/ltv/restamp_cron.rs
-    - services/doc/src/ltv/validation_data_fetcher.rs
-    - services/doc/src/ltv/pades_writer.rs
-    - services/doc/src/audit/ltv_events.rs
-    - services/doc/tests/ltv_extend_bt_to_blt_test.rs
-    - services/doc/tests/ltv_year_9_restamp_test.rs
-    - services/doc/tests/ltv_operation_enum_cardinality_test.rs
-    - services/doc/tests/ltv_status_enum_cardinality_test.rs
-    - services/doc/tests/ltv_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/doc/
+new_files:
+  - services/doc/migrations/0011_ltv_operations.sql
+  - services/doc/src/ltv/mod.rs
+  - services/doc/src/ltv/extender.rs
+  - services/doc/src/ltv/restamp_cron.rs
+  - services/doc/src/ltv/validation_data_fetcher.rs
+  - services/doc/src/ltv/pades_writer.rs
+  - services/doc/src/audit/ltv_events.rs
+  - services/doc/tests/ltv_extend_bt_to_blt_test.rs
+  - services/doc/tests/ltv_year_9_restamp_test.rs
+  - services/doc/tests/ltv_operation_enum_cardinality_test.rs
+  - services/doc/tests/ltv_status_enum_cardinality_test.rs
+  - services/doc/tests/ltv_audit_emission_test.rs
 
-  modified_files:
-    - services/doc/src/lib.rs
+modified_files:
+  - services/doc/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/doc/**
-    - file_write: services/doc/{src,tests,migrations}/**
-    - bash: cd services/doc && cargo test ltv
+allowed_tools:
+  - file_read: services/doc/**
+  - file_write: services/doc/{src,tests,migrations}/**
+  - bash: cd services/doc && cargo test ltv
 
-  disallowed_tools:
-    - alter original signature (per DEC-1804 — only embed validation data + re-stamp)
-    - skip cert chain validation before restamp (per DEC-1800)
+disallowed_tools:
+  - alter original signature (per DEC-1804 — only embed validation data + re-stamp)
+  - skip cert chain validation before restamp (per DEC-1800)
 
 effort_hours: 8
 subtasks:

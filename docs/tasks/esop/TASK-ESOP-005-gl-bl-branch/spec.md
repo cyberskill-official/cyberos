@@ -1,8 +1,10 @@
 ---
 id: TASK-ESOP-005
 title: "ESOP Good/Bad Leaver branch on HR offboarding — CFO+CEO co-sign to apply forfeiture/acceleration per termination_kind"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,33 +36,32 @@ source_decisions:
   - DEC-2293 2026-05-17 — Outcome IMMUTABLE post-committed; corrections require board sign + new outcome row
   - DEC-2294 2026-05-17 — memory audit kinds: esop.leaver_outcome_drafted, esop.leaver_outcome_signed, esop.leaver_outcome_committed, esop.leaver_forfeiture_applied, esop.leaver_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/esop/
-  new_files:
-    - services/esop/migrations/0005_leaver_outcomes.sql
-    - services/esop/src/leaver/mod.rs
-    - services/esop/src/leaver/dual_sign_gate.rs
-    - services/esop/src/leaver/forfeiture_executor.rs
-    - services/esop/src/handlers/leaver_routes.rs
-    - services/esop/src/audit/leaver_events.rs
-    - services/esop/tests/leaver_outcome_enum_cardinality_test.rs
-    - services/esop/tests/leaver_dual_sign_test.rs
-    - services/esop/tests/leaver_gl_full_vest_test.rs
-    - services/esop/tests/leaver_bl_forfeiture_test.rs
-    - services/esop/tests/leaver_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/esop/
+new_files:
+  - services/esop/migrations/0005_leaver_outcomes.sql
+  - services/esop/src/leaver/mod.rs
+  - services/esop/src/leaver/dual_sign_gate.rs
+  - services/esop/src/leaver/forfeiture_executor.rs
+  - services/esop/src/handlers/leaver_routes.rs
+  - services/esop/src/audit/leaver_events.rs
+  - services/esop/tests/leaver_outcome_enum_cardinality_test.rs
+  - services/esop/tests/leaver_dual_sign_test.rs
+  - services/esop/tests/leaver_gl_full_vest_test.rs
+  - services/esop/tests/leaver_bl_forfeiture_test.rs
+  - services/esop/tests/leaver_audit_emission_test.rs
 
-  modified_files:
-    - services/esop/src/lib.rs
+modified_files:
+  - services/esop/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{esop,hr}/**
-    - file_write: services/esop/{src,tests,migrations}/**
-    - bash: cd services/esop && cargo test leaver
+allowed_tools:
+  - file_read: services/{esop,hr}/**
+  - file_write: services/esop/{src,tests,migrations}/**
+  - bash: cd services/esop && cargo test leaver
 
-  disallowed_tools:
-    - commit without dual-sign (per DEC-2292)
-    - mutate prior outcome without board sign (per DEC-2293)
+disallowed_tools:
+  - commit without dual-sign (per DEC-2292)
+  - mutate prior outcome without board sign (per DEC-2293)
 
 effort_hours: 5
 subtasks:

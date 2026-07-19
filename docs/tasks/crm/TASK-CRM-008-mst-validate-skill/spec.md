@@ -1,8 +1,10 @@
 ---
 id: TASK-CRM-008
 title: "CRM vietnam-mst-validate skill — synchronous GDT lookup on Account write to confirm MST format + entity name match"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/crm.html#mst-validate
-  - https://gdt.gov.vn/  # GDT TIN lookup API
+  # GDT TIN lookup API
+  - https://gdt.gov.vn/
 
 source_decisions:
   - DEC-1680 2026-05-17 — Skill name: vietnam-mst-validate@1; called on Account create/update when vn_account_type set and residency=vn-1
@@ -36,31 +39,30 @@ source_decisions:
   - DEC-1684 2026-05-17 — Cache: GDT lookup cached 30 days (TIN data rarely changes); per-tenant cache namespace
   - DEC-1685 2026-05-17 — memory audit kinds: crm.mst_validation_invoked, crm.mst_validation_confirmed, crm.mst_validation_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/crm/
-  new_files:
-    - services/crm/src/vn/mst_validate_skill.rs
-    - services/crm/src/vn/gdt_client.rs
-    - services/crm/src/audit/mst_validation_events.rs
-    - services/crm/tests/mst_validate_confirmed_test.rs
-    - services/crm/tests/mst_validate_name_mismatch_test.rs
-    - services/crm/tests/mst_validate_not_found_test.rs
-    - services/crm/tests/mst_validate_cache_test.rs
-    - services/crm/tests/mst_validate_enum_cardinality_test.rs
+language: rust 1.81
+service: cyberos/services/crm/
+new_files:
+  - services/crm/src/vn/mst_validate_skill.rs
+  - services/crm/src/vn/gdt_client.rs
+  - services/crm/src/audit/mst_validation_events.rs
+  - services/crm/tests/mst_validate_confirmed_test.rs
+  - services/crm/tests/mst_validate_name_mismatch_test.rs
+  - services/crm/tests/mst_validate_not_found_test.rs
+  - services/crm/tests/mst_validate_cache_test.rs
+  - services/crm/tests/mst_validate_enum_cardinality_test.rs
 
-  modified_files:
-    - services/crm/src/accounts.rs
-    - services/crm/migrations/0008_mst_validation.sql
+modified_files:
+  - services/crm/src/accounts.rs
+  - services/crm/migrations/0008_mst_validation.sql
 
-  allowed_tools:
-    - file_read: services/{crm,skill}/**
-    - file_write: services/crm/{src,tests,migrations}/**
-    - bash: cd services/crm && cargo test mst_validate
+allowed_tools:
+  - file_read: services/{crm,skill}/**
+  - file_write: services/crm/{src,tests,migrations}/**
+  - bash: cd services/crm && cargo test mst_validate
 
-  disallowed_tools:
-    - block account save on validation fail (per DEC-1683 — non-blocking)
-    - skip cache (per DEC-1684 — required to avoid GDT rate-limit)
+disallowed_tools:
+  - block account save on validation fail (per DEC-1683 — non-blocking)
+  - skip cache (per DEC-1684 — required to avoid GDT rate-limit)
 
 effort_hours: 3
 subtasks:

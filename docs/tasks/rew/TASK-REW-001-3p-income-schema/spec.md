@@ -1,8 +1,10 @@
 ---
 id: TASK-REW-001
 title: "REW 3P income schema — P1 Base + P2 Allowance + P3 Performance with separate encrypted comp keyspace isolated from HR"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,33 +36,32 @@ source_decisions:
   - DEC-2153 2026-05-17 — Per-Member comp records IMMUTABLE; changes via new row + valid_from/valid_to
   - DEC-2154 2026-05-17 — memory audit kinds: rew.comp_set, rew.comp_corrected, rew.comp_decrypted, rew.comp_encryption_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/rew/
-  new_files:
-    - services/rew/migrations/0001_comp_schema.sql
-    - services/rew/src/comp/mod.rs
-    - services/rew/src/comp/encryption.rs
-    - services/rew/src/comp/access_gate.rs
-    - services/rew/src/handlers/comp_routes.rs
-    - services/rew/src/audit/comp_events.rs
-    - services/rew/tests/income_kind_enum_cardinality_test.rs
-    - services/rew/tests/comp_root_cfo_only_decrypt_test.rs
-    - services/rew/tests/comp_separate_keyspace_test.rs
-    - services/rew/tests/comp_immutable_test.rs
-    - services/rew/tests/comp_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/rew/
+new_files:
+  - services/rew/migrations/0001_comp_schema.sql
+  - services/rew/src/comp/mod.rs
+  - services/rew/src/comp/encryption.rs
+  - services/rew/src/comp/access_gate.rs
+  - services/rew/src/handlers/comp_routes.rs
+  - services/rew/src/audit/comp_events.rs
+  - services/rew/tests/income_kind_enum_cardinality_test.rs
+  - services/rew/tests/comp_root_cfo_only_decrypt_test.rs
+  - services/rew/tests/comp_separate_keyspace_test.rs
+  - services/rew/tests/comp_immutable_test.rs
+  - services/rew/tests/comp_audit_emission_test.rs
 
-  modified_files:
-    - services/rew/src/lib.rs
+modified_files:
+  - services/rew/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{rew,hr,auth}/**
-    - file_write: services/rew/{src,tests,migrations}/**
-    - bash: cd services/rew && cargo test comp
+allowed_tools:
+  - file_read: services/{rew,hr,auth}/**
+  - file_write: services/rew/{src,tests,migrations}/**
+  - bash: cd services/rew && cargo test comp
 
-  disallowed_tools:
-    - decrypt comp via non-CFO role (per DEC-2152)
-    - mutate prior comp row (per DEC-2153)
+disallowed_tools:
+  - decrypt comp via non-CFO role (per DEC-2152)
+  - mutate prior comp row (per DEC-2153)
 
 effort_hours: 6
 subtasks:

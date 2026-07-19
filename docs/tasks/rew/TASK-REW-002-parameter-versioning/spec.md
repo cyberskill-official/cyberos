@@ -1,8 +1,10 @@
 ---
 id: TASK-REW-002
 title: "REW parameter versioning — immutable versioned formula parameters with 100% replay-equivalence on prior payslips"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,32 +36,31 @@ source_decisions:
   - DEC-2163 2026-05-17 — Replay-equivalence test: monthly CI job replays last 12 months of payslips with current params; expect 100% match for prior periods (using their version), 0% match if forced to current
   - DEC-2164 2026-05-17 — memory audit kinds: rew.param_version_added, rew.param_lookup_executed, rew.replay_test_passed, rew.replay_test_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/rew/
-  new_files:
-    - services/rew/migrations/0002_param_versions.sql
-    - services/rew/src/params/mod.rs
-    - services/rew/src/params/loader.rs
-    - services/rew/src/params/replay_test.rs
-    - services/rew/src/audit/params_events.rs
-    - services/rew/tests/param_kind_enum_cardinality_test.rs
-    - services/rew/tests/param_immutability_test.rs
-    - services/rew/tests/param_version_lookup_test.rs
-    - services/rew/tests/replay_equivalence_test.rs
-    - services/rew/tests/param_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/rew/
+new_files:
+  - services/rew/migrations/0002_param_versions.sql
+  - services/rew/src/params/mod.rs
+  - services/rew/src/params/loader.rs
+  - services/rew/src/params/replay_test.rs
+  - services/rew/src/audit/params_events.rs
+  - services/rew/tests/param_kind_enum_cardinality_test.rs
+  - services/rew/tests/param_immutability_test.rs
+  - services/rew/tests/param_version_lookup_test.rs
+  - services/rew/tests/replay_equivalence_test.rs
+  - services/rew/tests/param_audit_emission_test.rs
 
-  modified_files:
-    - services/rew/src/lib.rs
+modified_files:
+  - services/rew/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{rew,hr}/**
-    - file_write: services/rew/{src,tests,migrations}/**
-    - bash: cd services/rew && cargo test params
+allowed_tools:
+  - file_read: services/{rew,hr}/**
+  - file_write: services/rew/{src,tests,migrations}/**
+  - bash: cd services/rew && cargo test params
 
-  disallowed_tools:
-    - mutate prior version (per DEC-2162)
-    - non-deterministic params (per DEC-2163)
+disallowed_tools:
+  - mutate prior version (per DEC-2162)
+  - non-deterministic params (per DEC-2163)
 
 effort_hours: 6
 subtasks:

@@ -1,8 +1,10 @@
 ---
 id: TASK-HR-007
 title: "HR onboarding saga — orchestrates AUTH + TIME + LEARN + KB + CHAT + REW provisioning on member.active transition with compensating rollback"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -35,35 +37,34 @@ source_decisions:
   - DEC-1884 2026-05-17 — Compensation: each step has reverse op (auth_deprovision, etc.); compensation runs in REVERSE order on failure
   - DEC-1885 2026-05-17 — memory audit kinds: hr.onboarding_saga_started, hr.onboarding_step_completed, hr.onboarding_step_failed, hr.onboarding_compensation_started, hr.onboarding_saga_completed, hr.onboarding_saga_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/hr/
-  new_files:
-    - services/hr/migrations/0009_onboarding_sagas.sql
-    - services/hr/src/onboarding/mod.rs
-    - services/hr/src/onboarding/saga_orchestrator.rs
-    - services/hr/src/onboarding/step_handlers.rs
-    - services/hr/src/onboarding/compensation.rs
-    - services/hr/src/handlers/onboarding_routes.rs
-    - services/hr/src/audit/onboarding_events.rs
-    - services/hr/tests/onboarding_full_flow_test.rs
-    - services/hr/tests/onboarding_step_failure_rollback_test.rs
-    - services/hr/tests/onboarding_step_enum_cardinality_test.rs
-    - services/hr/tests/onboarding_status_enum_cardinality_test.rs
-    - services/hr/tests/onboarding_idempotent_test.rs
-    - services/hr/tests/onboarding_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/hr/
+new_files:
+  - services/hr/migrations/0009_onboarding_sagas.sql
+  - services/hr/src/onboarding/mod.rs
+  - services/hr/src/onboarding/saga_orchestrator.rs
+  - services/hr/src/onboarding/step_handlers.rs
+  - services/hr/src/onboarding/compensation.rs
+  - services/hr/src/handlers/onboarding_routes.rs
+  - services/hr/src/audit/onboarding_events.rs
+  - services/hr/tests/onboarding_full_flow_test.rs
+  - services/hr/tests/onboarding_step_failure_rollback_test.rs
+  - services/hr/tests/onboarding_step_enum_cardinality_test.rs
+  - services/hr/tests/onboarding_status_enum_cardinality_test.rs
+  - services/hr/tests/onboarding_idempotent_test.rs
+  - services/hr/tests/onboarding_audit_emission_test.rs
 
-  modified_files:
-    - services/hr/src/members.rs
+modified_files:
+  - services/hr/src/members.rs
 
-  allowed_tools:
-    - file_read: services/{hr,auth,time,learn,kb,chat,rew}/**
-    - file_write: services/hr/{src,tests,migrations}/**
-    - bash: cd services/hr && cargo test onboarding
+allowed_tools:
+  - file_read: services/{hr,auth,time,learn,kb,chat,rew}/**
+  - file_write: services/hr/{src,tests,migrations}/**
+  - bash: cd services/hr && cargo test onboarding
 
-  disallowed_tools:
-    - skip compensation on failure (per DEC-1884)
-    - skip steps (per DEC-1880)
+disallowed_tools:
+  - skip compensation on failure (per DEC-1884)
+  - skip steps (per DEC-1880)
 
 effort_hours: 10
 subtasks:

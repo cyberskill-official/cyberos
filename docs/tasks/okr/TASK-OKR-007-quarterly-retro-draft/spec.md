@@ -1,8 +1,10 @@
 ---
 id: TASK-OKR-007
 title: "OKR quarterly retro CUO draft — auto-generated retro with face-saving Vietnamese framing for honest reflection"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -35,34 +37,33 @@ source_decisions:
   - DEC-2024 2026-05-17 — Draft requires CEO review before memory persistence — never auto-persist (TASK-CRM-007 pattern)
   - DEC-2025 2026-05-17 — memory audit kinds: okr.retro_drafted, okr.retro_approved, okr.retro_dismissed, okr.retro_persisted
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/okr/
-  new_files:
-    - services/okr/migrations/0007_quarterly_retros.sql
-    - services/okr/src/retro/mod.rs
-    - services/okr/src/retro/draft_generator.rs
-    - services/okr/src/retro/framing_picker.rs
-    - services/okr/src/retro/memory_persister.rs
-    - services/okr/src/handlers/retro_routes.rs
-    - services/okr/src/audit/retro_events.rs
-    - services/okr/tests/retro_auto_on_q_end_test.rs
-    - services/okr/tests/retro_framing_enum_cardinality_test.rs
-    - services/okr/tests/retro_vn_framing_test.rs
-    - services/okr/tests/retro_no_auto_persist_test.rs
-    - services/okr/tests/retro_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/okr/
+new_files:
+  - services/okr/migrations/0007_quarterly_retros.sql
+  - services/okr/src/retro/mod.rs
+  - services/okr/src/retro/draft_generator.rs
+  - services/okr/src/retro/framing_picker.rs
+  - services/okr/src/retro/memory_persister.rs
+  - services/okr/src/handlers/retro_routes.rs
+  - services/okr/src/audit/retro_events.rs
+  - services/okr/tests/retro_auto_on_q_end_test.rs
+  - services/okr/tests/retro_framing_enum_cardinality_test.rs
+  - services/okr/tests/retro_vn_framing_test.rs
+  - services/okr/tests/retro_no_auto_persist_test.rs
+  - services/okr/tests/retro_audit_emission_test.rs
 
-  modified_files:
-    - services/okr/src/lib.rs
+modified_files:
+  - services/okr/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{okr,cuo,memory,ai}/**
-    - file_write: services/okr/{src,tests,migrations}/**
-    - bash: cd services/okr && cargo test retro
+allowed_tools:
+  - file_read: services/{okr,cuo,memory,ai}/**
+  - file_write: services/okr/{src,tests,migrations}/**
+  - bash: cd services/okr && cargo test retro
 
-  disallowed_tools:
-    - auto-persist memory memory (per DEC-2024)
-    - blame-heavy framing for VN tenants (per DEC-2022)
+disallowed_tools:
+  - auto-persist memory memory (per DEC-2024)
+  - blame-heavy framing for VN tenants (per DEC-2022)
 
 effort_hours: 6
 subtasks:

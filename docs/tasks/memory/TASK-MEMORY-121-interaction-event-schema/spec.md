@@ -47,8 +47,10 @@ new_files:
   - services/memory/tests/interaction_event_rls_test.rs
   - services/memory/tests/interaction_event_contract_test.rs
 modified_files:
-  - services/memory/src/lib.rs                       # pub mod interaction
-  - services/shared/cyberos-audit-chain/src/lib.rs   # emit_genesis_with_op: allow op='view' for read-only interaction events
+  # pub mod interaction
+  - services/memory/src/lib.rs
+  # emit_genesis_with_op: allow op='view' for read-only interaction events
+  - services/shared/cyberos-audit-chain/src/lib.rs
 allowed_tools:
   - file_read: services/memory/**
   - file_read: services/shared/cyberos-audit-chain/**

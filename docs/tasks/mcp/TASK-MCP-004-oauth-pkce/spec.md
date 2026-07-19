@@ -1,8 +1,10 @@
 ---
 id: TASK-MCP-004
 title: "OAuth 2.1 PKCE authorization-code flow with audience-bound tokens for MCP servers"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -51,47 +53,46 @@ source_decisions:
   - DEC-819 2026-05-16 — Discovery via RFC 8414 `/.well-known/oauth-authorization-server` — separate from TASK-MCP-005 Protected Resource Metadata (PRM)
   - DEC-820 2026-05-16 — Closed 6-value error enum (invalid_request, invalid_client, invalid_grant, unauthorized_client, unsupported_grant_type, invalid_scope) — per RFC 6749 §5.2 + MCP profile
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/mcp-gateway/
-  new_files:
-    - services/mcp-gateway/src/oauth/mod.rs
-    - services/mcp-gateway/src/oauth/authorize.rs
-    - services/mcp-gateway/src/oauth/token.rs
-    - services/mcp-gateway/src/oauth/pkce.rs
-    - services/mcp-gateway/src/oauth/refresh.rs
-    - services/mcp-gateway/src/oauth/dcr.rs
-    - services/mcp-gateway/src/oauth/revoke.rs
-    - services/mcp-gateway/src/oauth/introspect.rs
-    - services/mcp-gateway/src/oauth/discovery.rs
-    - services/mcp-gateway/src/oauth/audience.rs
-    - services/mcp-gateway/src/oauth/scope.rs
-    - services/mcp-gateway/src/oauth/enums.rs
-    - services/mcp-gateway/src/oauth/error.rs
-    # migrations renumbered 0010-0012 -> 0013-0015 (0010-0012 reserved for TASK-MCP-007/008 per BACKLOG)
-    - services/mcp-gateway/migrations/0013_oauth_clients.sql
-    - services/mcp-gateway/migrations/0014_oauth_codes.sql
-    - services/mcp-gateway/migrations/0015_oauth_refresh_families.sql
-    - services/mcp-gateway/tests/oauth_authorize_test.rs
-    - services/mcp-gateway/tests/oauth_token_test.rs
-    - services/mcp-gateway/tests/oauth_refresh_rotation_test.rs
-    - services/mcp-gateway/tests/oauth_pkce_test.rs
-    - services/mcp-gateway/tests/oauth_audience_test.rs
-    - services/mcp-gateway/tests/oauth_dcr_test.rs
-    - services/mcp-gateway/tests/oauth_revoke_test.rs
-    - services/mcp-gateway/tests/oauth_discovery_test.rs
-  modified_files:
-    - services/mcp-gateway/src/handlers/tools_call.rs (assert audience-bound token before tool dispatch)
-  allowed_tools:
-    - file_read: services/mcp-gateway/**
-    - file_write: services/mcp-gateway/{src,tests,migrations}/**
-    - bash: cargo test -p cyberos-mcp-gateway
-  disallowed_tools:
-    - implement implicit flow (OAuth 2.1 §10.5 prohibits)
-    - implement resource-owner-password grant
-    - accept code_challenge_method=plain
-    - issue tokens without aud claim
-    - bypass PKCE on public clients
+language: rust 1.81
+service: cyberos/services/mcp-gateway/
+new_files:
+  - services/mcp-gateway/src/oauth/mod.rs
+  - services/mcp-gateway/src/oauth/authorize.rs
+  - services/mcp-gateway/src/oauth/token.rs
+  - services/mcp-gateway/src/oauth/pkce.rs
+  - services/mcp-gateway/src/oauth/refresh.rs
+  - services/mcp-gateway/src/oauth/dcr.rs
+  - services/mcp-gateway/src/oauth/revoke.rs
+  - services/mcp-gateway/src/oauth/introspect.rs
+  - services/mcp-gateway/src/oauth/discovery.rs
+  - services/mcp-gateway/src/oauth/audience.rs
+  - services/mcp-gateway/src/oauth/scope.rs
+  - services/mcp-gateway/src/oauth/enums.rs
+  - services/mcp-gateway/src/oauth/error.rs
+  # migrations renumbered 0010-0012 -> 0013-0015 (0010-0012 reserved for TASK-MCP-007/008 per BACKLOG)
+  - services/mcp-gateway/migrations/0013_oauth_clients.sql
+  - services/mcp-gateway/migrations/0014_oauth_codes.sql
+  - services/mcp-gateway/migrations/0015_oauth_refresh_families.sql
+  - services/mcp-gateway/tests/oauth_authorize_test.rs
+  - services/mcp-gateway/tests/oauth_token_test.rs
+  - services/mcp-gateway/tests/oauth_refresh_rotation_test.rs
+  - services/mcp-gateway/tests/oauth_pkce_test.rs
+  - services/mcp-gateway/tests/oauth_audience_test.rs
+  - services/mcp-gateway/tests/oauth_dcr_test.rs
+  - services/mcp-gateway/tests/oauth_revoke_test.rs
+  - services/mcp-gateway/tests/oauth_discovery_test.rs
+modified_files:
+  - services/mcp-gateway/src/handlers/tools_call.rs (assert audience-bound token before tool dispatch)
+allowed_tools:
+  - file_read: services/mcp-gateway/**
+  - file_write: services/mcp-gateway/{src,tests,migrations}/**
+  - bash: cargo test -p cyberos-mcp-gateway
+disallowed_tools:
+  - implement implicit flow (OAuth 2.1 §10.5 prohibits)
+  - implement resource-owner-password grant
+  - accept code_challenge_method=plain
+  - issue tokens without aud claim
+  - bypass PKCE on public clients
 
 effort_hours: 10
 subtasks:

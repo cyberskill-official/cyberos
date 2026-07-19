@@ -1,8 +1,10 @@
 ---
 id: TASK-HR-001
 title: "HR Member schema — profile + role + level + contract type + leave balance + sabbatical accrual + status FSM + comp-exclusion CI gate"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -22,7 +24,8 @@ shipped: null
 memory_chain_hash: null
 related_tasks: [TASK-AUTH-001, TASK-AUTH-002, TASK-AUTH-003, TASK-AUTH-101, TASK-AI-003, TASK-MEMORY-101, TASK-HR-002, TASK-HR-003, TASK-HR-004, TASK-HR-005, TASK-HR-007, TASK-HR-009, TASK-LEARN-001, TASK-REW-001, TASK-ESOP-001]
 depends_on: [TASK-AUTH-003, TASK-AUTH-101]
-blocks: [TASK-HR-002, TASK-HR-003, TASK-HR-004, TASK-HR-005, TASK-HR-007, TASK-HR-009, TASK-LEARN-001, TASK-REW-001, TASK-ESOP-001, TASK-RES-001]   # all 10 entries are placeholders — not yet specified (downstream consumers)
+# all 10 entries are placeholders — not yet specified (downstream consumers)
+blocks: [TASK-HR-002, TASK-HR-003, TASK-HR-004, TASK-HR-005, TASK-HR-007, TASK-HR-009, TASK-LEARN-001, TASK-REW-001, TASK-ESOP-001, TASK-RES-001]
 
 source_pages:
   - website/docs/modules/hr.html#what
@@ -49,32 +52,57 @@ source_decisions:
 language: rust 1.81 + sql
 service: cyberos/services/hr/
 new_files:
-  - services/hr/migrations/0001_members.sql                         # members table + RLS + comp-exclusion CHECK + level enum + status enum
-  - services/hr/migrations/0002_member_status_history.sql           # append-only history table + REVOKE UPDATE/DELETE
-  - services/hr/migrations/0003_member_view.sql                     # member_active_view (live members only) + sabbatical_eligible_view
-  - services/hr/src/lib.rs                                          # crate root
-  - services/hr/src/types.rs                                        # Member struct, MemberStatus enum, MemberLevel enum, ContractType enum
-  - services/hr/src/repo/members.rs                                 # CRUD repository — create, get, update, list (tenant-scoped via RLS)
-  - services/hr/src/repo/status_history.rs                          # append-only writes; never UPDATE/DELETE
-  - services/hr/src/fsm/status.rs                                   # status FSM transition validator (closed state machine, BCP-14 transitions)
-  - services/hr/src/sabbatical.rs                                   # accrual calculator — years_of_service → eligible_days (max 30)
-  - services/hr/src/anniversary.rs                                  # immutable computation from start_date
-  - services/hr/src/comp_exclusion.rs                               # runtime + CI guard ensuring forbidden columns never appear
-  - services/hr/src/audit/member_events.rs                          # canonical hr.member_* memory row builders (created/updated/status_changed/cccd_accessed)
-  - services/hr/src/handlers/admin_members.rs                       # POST/GET/PATCH /v1/admin/members (tenant-scoped)
-  - services/hr/Cargo.toml                                          # +sqlx, +uuid, +serde, +chrono, +async-trait, +cyberos-cli-exit
-  - services/hr/tests/members_test.rs                               # create + get + list + RLS isolation + idempotency
-  - services/hr/tests/status_fsm_test.rs                            # all valid transitions, all forbidden transitions rejected
-  - services/hr/tests/sabbatical_test.rs                            # accrual at year 0/1/4/5/10/30/40 (calibration)
-  - services/hr/tests/comp_exclusion_test.rs                        # CI gate — table DDL never contains comp-named columns
-  - services/hr/tests/anniversary_test.rs                           # immutable post-active; mutating raises error
-  - services/hr/tests/rls_isolation_test.rs                         # tenant-A cannot read tenant-B members
-  - services/hr/tests/audit_row_test.rs                             # every create/update/status-change emits exactly one memory row
-  - services/hr/tests/level_enum_closed_test.rs                     # adding L8 in code without ADR fails CI
-  - services/hr/tests/cccd_field_encrypted_test.rs                  # cccd_encrypted column type is BYTEA, raw cccd_id column never present
-  - services/hr/tests/leave_balance_readonly_test.rs                # direct UPDATE to leave_balance is forbidden (materialised view rule)
+  # members table + RLS + comp-exclusion CHECK + level enum + status enum
+  - services/hr/migrations/0001_members.sql
+  # append-only history table + REVOKE UPDATE/DELETE
+  - services/hr/migrations/0002_member_status_history.sql
+  # member_active_view (live members only) + sabbatical_eligible_view
+  - services/hr/migrations/0003_member_view.sql
+  # crate root
+  - services/hr/src/lib.rs
+  # Member struct, MemberStatus enum, MemberLevel enum, ContractType enum
+  - services/hr/src/types.rs
+  # CRUD repository — create, get, update, list (tenant-scoped via RLS)
+  - services/hr/src/repo/members.rs
+  # append-only writes; never UPDATE/DELETE
+  - services/hr/src/repo/status_history.rs
+  # status FSM transition validator (closed state machine, BCP-14 transitions)
+  - services/hr/src/fsm/status.rs
+  # accrual calculator — years_of_service → eligible_days (max 30)
+  - services/hr/src/sabbatical.rs
+  # immutable computation from start_date
+  - services/hr/src/anniversary.rs
+  # runtime + CI guard ensuring forbidden columns never appear
+  - services/hr/src/comp_exclusion.rs
+  # canonical hr.member_* memory row builders (created/updated/status_changed/cccd_accessed)
+  - services/hr/src/audit/member_events.rs
+  # POST/GET/PATCH /v1/admin/members (tenant-scoped)
+  - services/hr/src/handlers/admin_members.rs
+  # +sqlx, +uuid, +serde, +chrono, +async-trait, +cyberos-cli-exit
+  - services/hr/Cargo.toml
+  # create + get + list + RLS isolation + idempotency
+  - services/hr/tests/members_test.rs
+  # all valid transitions, all forbidden transitions rejected
+  - services/hr/tests/status_fsm_test.rs
+  # accrual at year 0/1/4/5/10/30/40 (calibration)
+  - services/hr/tests/sabbatical_test.rs
+  # CI gate — table DDL never contains comp-named columns
+  - services/hr/tests/comp_exclusion_test.rs
+  # immutable post-active; mutating raises error
+  - services/hr/tests/anniversary_test.rs
+  # tenant-A cannot read tenant-B members
+  - services/hr/tests/rls_isolation_test.rs
+  # every create/update/status-change emits exactly one memory row
+  - services/hr/tests/audit_row_test.rs
+  # adding L8 in code without ADR fails CI
+  - services/hr/tests/level_enum_closed_test.rs
+  # cccd_encrypted column type is BYTEA, raw cccd_id column never present
+  - services/hr/tests/cccd_field_encrypted_test.rs
+  # direct UPDATE to leave_balance is forbidden (materialised view rule)
+  - services/hr/tests/leave_balance_readonly_test.rs
 modified_files:
-  - services/auth/src/admin/subjects.rs                             # on subject create with hr-employee flag, trigger member_create stub (see §1 #25)
+  # on subject create with hr-employee flag, trigger member_create stub (see §1 #25)
+  - services/auth/src/admin/subjects.rs
 
 allowed_tools:
   - file_read: services/hr/**

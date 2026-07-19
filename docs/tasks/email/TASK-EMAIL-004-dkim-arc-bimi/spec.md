@@ -1,8 +1,10 @@
 ---
 id: TASK-EMAIL-004
 title: "EMAIL DKIM signing + ARC chain forward + BIMI brand indicator — RFC 6376 + RFC 8617 + BIMI 1.0 per-tenant outbound auth"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -25,8 +27,10 @@ depends_on: [TASK-EMAIL-001]
 blocks: [TASK-EMAIL-009]
 
 source_pages:
-  - https://datatracker.ietf.org/doc/html/rfc6376  # DKIM
-  - https://datatracker.ietf.org/doc/html/rfc8617  # ARC
+  # DKIM
+  - https://datatracker.ietf.org/doc/html/rfc6376
+  # ARC
+  - https://datatracker.ietf.org/doc/html/rfc8617
   - https://bimigroup.org/
 
 source_decisions:
@@ -37,47 +41,47 @@ source_decisions:
   - DEC-1474 2026-05-17 — DNS setup wizard: tenant_admin guided through DKIM/SPF/DMARC/BIMI TXT records at signup or per-CNAME setup
   - DEC-1475 2026-05-17 — memory audit kinds: email.dkim_signed, email.arc_chain_extended, email.bimi_indicator_attached, email.dns_verification_passed, email.dns_verification_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/email/
-  new_files:
-    - services/email/migrations/0002_tenant_dkim_keys.sql
-    - services/email/migrations/0003_tenant_dns_setup.sql
-    - services/email/src/dkim/mod.rs
-    - services/email/src/dkim/signer.rs
-    - services/email/src/dkim/keygen.rs
-    - services/email/src/arc/mod.rs
-    - services/email/src/arc/chain_forward.rs
-    - services/email/src/bimi/mod.rs
-    - services/email/src/bimi/svg_tinifier.rs
-    - services/email/src/dns/setup_wizard.rs
-    - services/email/src/dns/verifier.rs
-    - services/email/src/audit/dkim_events.rs
-    - services/email/src/handlers/dkim_routes.rs
-    - services/email/tests/dkim_ed25519_sign_test.rs
-    - services/email/tests/dkim_rsa_fallback_test.rs
-    - services/email/tests/residency_pin_test.rs
-    - services/email/tests/bimi_svg_tinify_test.rs
-    - services/email/tests/dns_setup_wizard_test.rs
-    - services/email/tests/subject_normalisation_test.rs
-    - services/email/tests/dkim_outcome_enum_test.rs
-    - services/email/tests/dkim_per_tenant_isolation_test.rs
-    - services/email/tests/audit_row_test.rs
+language: rust 1.81
+service: cyberos/services/email/
+new_files:
+  - services/email/migrations/0002_tenant_dkim_keys.sql
+  - services/email/migrations/0003_tenant_dns_setup.sql
+  - services/email/src/dkim/mod.rs
+  - services/email/src/dkim/signer.rs
+  - services/email/src/dkim/keygen.rs
+  - services/email/src/arc/mod.rs
+  - services/email/src/arc/chain_forward.rs
+  - services/email/src/bimi/mod.rs
+  - services/email/src/bimi/svg_tinifier.rs
+  - services/email/src/dns/setup_wizard.rs
+  - services/email/src/dns/verifier.rs
+  - services/email/src/audit/dkim_events.rs
+  - services/email/src/handlers/dkim_routes.rs
+  - services/email/tests/dkim_ed25519_sign_test.rs
+  - services/email/tests/dkim_rsa_fallback_test.rs
+  - services/email/tests/residency_pin_test.rs
+  - services/email/tests/bimi_svg_tinify_test.rs
+  - services/email/tests/dns_setup_wizard_test.rs
+  - services/email/tests/subject_normalisation_test.rs
+  - services/email/tests/dkim_outcome_enum_test.rs
+  - services/email/tests/dkim_per_tenant_isolation_test.rs
+  - services/email/tests/audit_row_test.rs
 
-  modified_files:
-    - services/email/src/lib.rs
-    - services/ten/src/provisioning/orchestrator.rs                   # generate DKIM keypair at tenant provisioning
+modified_files:
+  - services/email/src/lib.rs
+  # generate DKIM keypair at tenant provisioning
+  - services/ten/src/provisioning/orchestrator.rs
 
-  allowed_tools:
-    - file_read: services/{email,ten}/**
-    - file_write: services/email/{src,tests,migrations}/**
-    - file_write: services/ten/src/provisioning/orchestrator.rs
-    - bash: cd services/email && cargo test dkim
+allowed_tools:
+  - file_read: services/{email,ten}/**
+  - file_write: services/email/{src,tests,migrations}/**
+  - file_write: services/ten/src/provisioning/orchestrator.rs
+  - bash: cd services/email && cargo test dkim
 
-  disallowed_tools:
-    - share DKIM keys across tenants (per DEC-1470)
-    - skip ARC verification on inbound forwards (per DEC-1471)
-    - attach BIMI without DMARC enforcement (per DEC-1472)
+disallowed_tools:
+  - share DKIM keys across tenants (per DEC-1470)
+  - skip ARC verification on inbound forwards (per DEC-1471)
+  - attach BIMI without DMARC enforcement (per DEC-1472)
 
 effort_hours: 6
 subtasks:

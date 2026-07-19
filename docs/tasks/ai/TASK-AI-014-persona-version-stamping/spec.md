@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-014
 title: "Persona-version system-prompt injection from memory memories/personas/<handle>.md"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -48,14 +50,21 @@ new_files:
   - services/ai-gateway/tests/persona_test.rs
   - services/ai-gateway/tests/persona_test.rs
   - services/ai-gateway/tests/cache_isolation_concurrent_test.rs
-  - <memory-root>/memories/personas/cuo-cpo@0.4.1.md       # seed: chief-of-product persona
-  - <memory-root>/memories/personas/cuo-cfo@0.4.1.md       # seed: chief-of-finance persona
-  - <memory-root>/memories/personas/cuo-cto@0.4.1.md       # seed: chief-of-technology persona
+  # seed: chief-of-product persona
+  - <memory-root>/memories/personas/cuo-cpo@0.4.1.md
+  # seed: chief-of-finance persona
+  - <memory-root>/memories/personas/cuo-cfo@0.4.1.md
+  # seed: chief-of-technology persona
+  - <memory-root>/memories/personas/cuo-cto@0.4.1.md
 modified_files:
-  - services/ai-gateway/src/handlers/chat.rs           # persona injection at message[0] system role
-  - services/ai-gateway/src/lib.rs                     # boot order: init_persona_registry before bind
-  - services/ai-gateway/src/memory_writer.rs            # add canonical::persona_loaded builder (TASK-AI-003 §3 declared kind)
-  - services/ai-gateway/Cargo.toml                     # arc_swap, notify, sha2, semver, once_cell
+  # persona injection at message[0] system role
+  - services/ai-gateway/src/handlers/chat.rs
+  # boot order: init_persona_registry before bind
+  - services/ai-gateway/src/lib.rs
+  # add canonical::persona_loaded builder (TASK-AI-003 §3 declared kind)
+  - services/ai-gateway/src/memory_writer.rs
+  # arc_swap, notify, sha2, semver, once_cell
+  - services/ai-gateway/Cargo.toml
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests}/**
@@ -66,7 +75,8 @@ disallowed_tools:
   - hardcode persona content inline in src/persona/* (must load from memory)
   - write to memories/personas/* outside the canonical Writer (§0.3 immutability invariant)
   - skip tamper verification on cache-hit path (cheap check; security-load-bearing)
-  - cache persona by id alone (must key by full handle `<id>@<version>` per §1 #4)
+  #4)
+  - cache persona by id alone (must key by full handle `<id>@<version>` per §1
   - emit `ai.persona_loaded` audit row through any path other than `canonical::persona_loaded` (TASK-AI-003)
 
 # ───── Estimated work ─────

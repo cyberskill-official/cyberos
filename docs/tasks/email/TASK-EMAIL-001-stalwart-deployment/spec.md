@@ -1,8 +1,10 @@
 ---
 id: TASK-EMAIL-001
 title: "EMAIL Stalwart Rust mail server deployment — JMAP + IMAP + SMTP + ManageSieve + MTA-STS + DANE + per-tenant residency + S3+KMS body storage + Postgres metadata"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -22,7 +24,8 @@ shipped: 2026-05-19
 memory_chain_hash: pending
 related_tasks: [TASK-AI-016, TASK-AI-003, TASK-MEMORY-101, TASK-OBS-001, TASK-EMAIL-002, TASK-EMAIL-003, TASK-EMAIL-004, TASK-EMAIL-005, TASK-EMAIL-006, TASK-EMAIL-007, TASK-EMAIL-009, TASK-EMAIL-011]
 depends_on: []
-blocks: [TASK-EMAIL-002, TASK-EMAIL-003, TASK-EMAIL-004, TASK-EMAIL-005, TASK-EMAIL-006, TASK-EMAIL-007, TASK-EMAIL-008, TASK-EMAIL-011]   # 8 downstream consumers of substrate
+# 8 downstream consumers of substrate
+blocks: [TASK-EMAIL-002, TASK-EMAIL-003, TASK-EMAIL-004, TASK-EMAIL-005, TASK-EMAIL-006, TASK-EMAIL-007, TASK-EMAIL-008, TASK-EMAIL-011]
 
 source_pages:
   - website/docs/modules/email.html#what
@@ -51,38 +54,69 @@ source_decisions:
 language: rust 1.81 + sql + docker
 service: cyberos/services/email/
 new_files:
-  - services/email/docker/Dockerfile                                  # Stalwart container image (FROM stalwartlabs/mail-server:0.10)
-  - services/email/docker/stalwart.toml                               # Stalwart config — data store, blob store, network listeners, DKIM, MTA-STS
-  - services/email/docker/compose.yml                                 # local-dev compose; Postgres + Stalwart + minio for S3
-  - services/email/migrations/0001_messages.sql                       # message_metadata + thread_metadata + message_envelope tables (gateway-side mirror)
-  - services/email/migrations/0002_bounce_log.sql                     # append-only bounce + reputation log
-  - services/email/migrations/0003_dkim_keys.sql                      # per-tenant DKIM key registry + rotation history
-  - services/email/migrations/0004_residency_routing.sql              # per-tenant residency → S3 bucket + KMS key + Postgres schema mapping
-  - services/email/src/lib.rs                                         # crate root
-  - services/email/src/types.rs                                       # EmailMessage, EmailThread, BounceEvent, DkimKey, MessageStatus enum
-  - services/email/src/stalwart_adapter/mod.rs                        # Stalwart HTTP API client; sync metadata into our Postgres
-  - services/email/src/stalwart_adapter/inbound.rs                    # consume Stalwart inbound events → write metadata + emit memory row
-  - services/email/src/stalwart_adapter/outbound.rs                   # outbound send via Stalwart SMTP queue; tracks delivery state
-  - services/email/src/dkim/keystore.rs                               # per-tenant DKIM key generation + rotation + Stalwart sync
-  - services/email/src/residency.rs                                   # per-tenant residency lookup (TASK-AI-016 contract)
-  - services/email/src/repo/messages.rs                               # message metadata CRUD + thread linkage
-  - services/email/src/repo/bounce_log.rs                             # append-only bounce writer
-  - services/email/src/audit/email_events.rs                          # canonical email.* memory row builders (5 kinds per DEC-310)
-  - services/email/src/handlers/status.rs                             # GET /v1/email/healthz + GET /v1/email/messages/{id}/status
-  - services/email/src/cli/provision.rs                               # cyberos-email-cli provision (slice-1 user provisioning until TASK-EMAIL-002 ships)
-  - services/email/Cargo.toml                                         # +tokio, +sqlx, +uuid, +serde, +reqwest, +aws-sdk-s3, +cyberos-cli-exit
-  - services/email/tests/inbound_quarantine_test.rs                     # mock Stalwart inbound; verify metadata + memory row
-  - services/email/tests/stalwart_outbound_test.rs                    # mock SMTP queue; verify DKIM applied
-  - services/email/tests/residency_pin_test.rs                        # VN tenant → vn-1 storage; EU → eu-1; assert no cross-region leakage
-  - services/email/tests/dkim_per_tenant_test.rs                      # each tenant has its own key; rotation produces new key + new row
-  - services/email/tests/bounce_log_append_only_test.rs               # UPDATE/DELETE rejected by SQL grant
-  - services/email/tests/inbound_quarantine_test.rs                      # known-spam patterns → Trash; memory row email.message_quarantined
-  - services/email/tests/protocol_endpoints_test.rs                   # SMTP 25/465/587 + IMAP 143/993 + JMAP 443 + ManageSieve 4190 all listening
-  - services/email/tests/mta_sts_dane_test.rs                         # outbound peer with MTA-STS policy → enforces TLS; peer with DANE TLSA → uses certificate pin
-  - services/email/tests/audit_row_test.rs                           # per-subject message list returns all messages where subject was sender or recipient
-  - services/email/tests/audit_row_test.rs                       # received + sent + bounced + quarantined each emit exactly one memory row
+  # Stalwart container image (FROM stalwartlabs/mail-server:0.10)
+  - services/email/docker/Dockerfile
+  # Stalwart config — data store, blob store, network listeners, DKIM, MTA-STS
+  - services/email/docker/stalwart.toml
+  # local-dev compose; Postgres + Stalwart + minio for S3
+  - services/email/docker/compose.yml
+  # message_metadata + thread_metadata + message_envelope tables (gateway-side mirror)
+  - services/email/migrations/0001_messages.sql
+  # append-only bounce + reputation log
+  - services/email/migrations/0002_bounce_log.sql
+  # per-tenant DKIM key registry + rotation history
+  - services/email/migrations/0003_dkim_keys.sql
+  # per-tenant residency → S3 bucket + KMS key + Postgres schema mapping
+  - services/email/migrations/0004_residency_routing.sql
+  # crate root
+  - services/email/src/lib.rs
+  # EmailMessage, EmailThread, BounceEvent, DkimKey, MessageStatus enum
+  - services/email/src/types.rs
+  # Stalwart HTTP API client; sync metadata into our Postgres
+  - services/email/src/stalwart_adapter/mod.rs
+  # consume Stalwart inbound events → write metadata + emit memory row
+  - services/email/src/stalwart_adapter/inbound.rs
+  # outbound send via Stalwart SMTP queue; tracks delivery state
+  - services/email/src/stalwart_adapter/outbound.rs
+  # per-tenant DKIM key generation + rotation + Stalwart sync
+  - services/email/src/dkim/keystore.rs
+  # per-tenant residency lookup (TASK-AI-016 contract)
+  - services/email/src/residency.rs
+  # message metadata CRUD + thread linkage
+  - services/email/src/repo/messages.rs
+  # append-only bounce writer
+  - services/email/src/repo/bounce_log.rs
+  # canonical email.* memory row builders (5 kinds per DEC-310)
+  - services/email/src/audit/email_events.rs
+  # GET /v1/email/healthz + GET /v1/email/messages/{id}/status
+  - services/email/src/handlers/status.rs
+  # cyberos-email-cli provision (slice-1 user provisioning until TASK-EMAIL-002 ships)
+  - services/email/src/cli/provision.rs
+  # +tokio, +sqlx, +uuid, +serde, +reqwest, +aws-sdk-s3, +cyberos-cli-exit
+  - services/email/Cargo.toml
+  # mock Stalwart inbound; verify metadata + memory row
+  - services/email/tests/inbound_quarantine_test.rs
+  # mock SMTP queue; verify DKIM applied
+  - services/email/tests/stalwart_outbound_test.rs
+  # VN tenant → vn-1 storage; EU → eu-1; assert no cross-region leakage
+  - services/email/tests/residency_pin_test.rs
+  # each tenant has its own key; rotation produces new key + new row
+  - services/email/tests/dkim_per_tenant_test.rs
+  # UPDATE/DELETE rejected by SQL grant
+  - services/email/tests/bounce_log_append_only_test.rs
+  # known-spam patterns → Trash; memory row email.message_quarantined
+  - services/email/tests/inbound_quarantine_test.rs
+  # SMTP 25/465/587 + IMAP 143/993 + JMAP 443 + ManageSieve 4190 all listening
+  - services/email/tests/protocol_endpoints_test.rs
+  # outbound peer with MTA-STS policy → enforces TLS; peer with DANE TLSA → uses certificate pin
+  - services/email/tests/mta_sts_dane_test.rs
+  # per-subject message list returns all messages where subject was sender or recipient
+  - services/email/tests/audit_row_test.rs
+  # received + sent + bounced + quarantined each emit exactly one memory row
+  - services/email/tests/audit_row_test.rs
 modified_files:
-  - services/auth/src/rls/templates.rs                                # add message_metadata, thread_metadata, bounce_log, dkim_keys to TENANT_SCOPED_TABLES
+  # add message_metadata, thread_metadata, bounce_log, dkim_keys to TENANT_SCOPED_TABLES
+  - services/auth/src/rls/templates.rs
 
 allowed_tools:
   - file_read: services/email/**

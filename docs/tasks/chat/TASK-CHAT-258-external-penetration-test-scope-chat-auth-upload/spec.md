@@ -1,8 +1,10 @@
 ---
 id: TASK-CHAT-258
 title: "External penetration test (scope: chat + auth + uploads + ws)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: improvement
 created_at: 2026-07-08T00:00:00+07:00
@@ -16,7 +18,8 @@ phase: Phase 4 - product depth, ecosystem, scale
 refs: [C57]
 depends_on: [TASK-CHAT-257]
 created: 2026-07-08
-verify: N   # awh N/A until a goldenset is sealed for this area
+# awh N/A until a goldenset is sealed for this area
+verify: N
 ---
 # TASK-CHAT-258: External penetration test (scope: chat + auth + uploads + ws)
 

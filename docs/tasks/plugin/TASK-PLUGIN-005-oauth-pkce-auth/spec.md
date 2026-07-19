@@ -1,8 +1,10 @@
 ---
 id: TASK-PLUGIN-005
 title: "Plugin OAuth-PKCE authentication — install-time authorize + 24h refresh-token rotation against auth.cyberskill.world"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -38,36 +40,35 @@ source_decisions:
   - DEC-2445 2026-05-19 — Token storage on host filesystem MUST use the host's secret store (Keychain on macOS, Credential Manager on Windows, Secret Service on Linux) — fall back to encrypted file with restrictive perms
   - DEC-2446 2026-05-19 — Token theft mitigation: refresh tokens are rotated on every use; tenant admin MAY revoke at AUTH service; revocation propagates within 60 seconds via cache TTL
 
-build_envelope:
-  language: rust 1.81
-  service: services/plugin-host/
-  new_files:
-    - services/plugin-host/src/auth/mod.rs
-    - services/plugin-host/src/auth/pkce.rs
-    - services/plugin-host/src/auth/token_store.rs
-    - services/plugin-host/src/auth/refresh.rs
-    - services/plugin-host/src/auth/scope_check.rs
-    - services/plugin-host/migrations/0001_plugin_auth_grants.sql
-    - services/plugin-host/tests/pkce_handshake_test.rs
-    - services/plugin-host/tests/jwt_audience_binding_test.rs
-    - services/plugin-host/tests/refresh_token_rotation_test.rs
-    - services/plugin-host/tests/scope_denial_test.rs
-    - services/plugin-host/tests/revocation_propagation_test.rs
+language: rust 1.81
+service: services/plugin-host/
+new_files:
+  - services/plugin-host/src/auth/mod.rs
+  - services/plugin-host/src/auth/pkce.rs
+  - services/plugin-host/src/auth/token_store.rs
+  - services/plugin-host/src/auth/refresh.rs
+  - services/plugin-host/src/auth/scope_check.rs
+  - services/plugin-host/migrations/0001_plugin_auth_grants.sql
+  - services/plugin-host/tests/pkce_handshake_test.rs
+  - services/plugin-host/tests/jwt_audience_binding_test.rs
+  - services/plugin-host/tests/refresh_token_rotation_test.rs
+  - services/plugin-host/tests/scope_denial_test.rs
+  - services/plugin-host/tests/revocation_propagation_test.rs
 
-  modified_files:
-    - services/plugin-host/src/handlers/tools_call.rs (add scope guards)
-    - services/plugin-host/src/transport/http.rs (add /oauth/callback redirect handler)
-    - services/auth/src/routes.rs (add /oauth/authorize + /oauth/token endpoints — placeholder until TASK-AUTH-007 lands)
+modified_files:
+  - services/plugin-host/src/handlers/tools_call.rs (add scope guards)
+  - services/plugin-host/src/transport/http.rs (add /oauth/callback redirect handler)
+  - services/auth/src/routes.rs (add /oauth/authorize + /oauth/token endpoints — placeholder until TASK-AUTH-007 lands)
 
-  allowed_tools:
-    - file_read: services/plugin-host/**
-    - file_write: services/plugin-host/{src,tests,migrations}/**
-    - bash: cd services && cargo test -p cyberos-plugin-host auth
+allowed_tools:
+  - file_read: services/plugin-host/**
+  - file_write: services/plugin-host/{src,tests,migrations}/**
+  - bash: cd services && cargo test -p cyberos-plugin-host auth
 
-  disallowed_tools:
-    - api-key or basic auth (per DEC-2440)
-    - tokens in plaintext on disk (per DEC-2445)
-    - cross-plugin audience reuse (per DEC-2441)
+disallowed_tools:
+  - api-key or basic auth (per DEC-2440)
+  - tokens in plaintext on disk (per DEC-2445)
+  - cross-plugin audience reuse (per DEC-2441)
 
 effort_hours: 8
 subtasks:

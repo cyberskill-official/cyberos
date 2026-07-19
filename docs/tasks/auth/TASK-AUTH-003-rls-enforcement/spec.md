@@ -1,8 +1,10 @@
 ---
 id: TASK-AUTH-003
 title: "RLS enforcement at every tenant-scoped table — USING + WITH CHECK + per-connection app.tenant_id + property test"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -48,7 +50,8 @@ new_files:
   - services/auth/tests/rls_registry_completeness_test.rs
   - .github/workflows/rls-property-gate.yml
 modified_files:
-  - services/auth/src/rls/templates.rs                       # canonical policy template
+  # canonical policy template
+  - services/auth/src/rls/templates.rs
 allowed_tools:
   - file_read: services/auth/**
   - file_write: services/auth/{src,tests,migrations}/**
@@ -56,9 +59,12 @@ allowed_tools:
   - bash: cd services/auth && cargo test rls
 disallowed_tools:
   - use parameter interpolation in SET LOCAL (must use SET LOCAL with sqlx bind, NOT format!)
-  - run application queries as `postgres` superuser (per §1 #4 — superuser bypasses RLS)
-  - omit WITH CHECK on policies (per §1 #2 — silent wrong-tenant inserts must be blocked)
-  - skip the rls-property-gate CI workflow (per §1 #11)
+  #4 — superuser bypasses RLS)
+  - run application queries as `postgres` superuser (per §1
+  #2 — silent wrong-tenant inserts must be blocked)
+  - omit WITH CHECK on policies (per §1
+  #11)
+  - skip the rls-property-gate CI workflow (per §1
 
 effort_hours: 12
 subtasks:

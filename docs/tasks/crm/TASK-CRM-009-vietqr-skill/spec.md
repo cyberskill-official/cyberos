@@ -1,8 +1,10 @@
 ---
 id: TASK-CRM-009
 title: "CRM vietnam-bank-transfer skill — VietQR payment image generation for deal collection with embedded amount + memo + bank routing"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/crm.html#vietqr
-  - https://vietqr.io/  # VietQR spec reference
+  # VietQR spec reference
+  - https://vietqr.io/
 
 source_decisions:
   - DEC-1690 2026-05-17 — Skill name: vietnam-bank-transfer@1; generates VietQR PNG with embedded payment metadata
@@ -36,32 +39,31 @@ source_decisions:
   - "DEC-1694 2026-05-17 — Memo template: `{tenant_short}-{deal_id_8char}` — unique per QR; matches TASK-INV-005 reconciliation pattern"
   - DEC-1695 2026-05-17 — memory audit kinds: crm.vietqr_generated, crm.vietqr_config_set, crm.vietqr_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/crm/
-  new_files:
-    - services/crm/migrations/0009_tenant_bank_config.sql
-    - services/crm/src/vn/vietqr_skill.rs
-    - services/crm/src/vn/qr_generator.rs
-    - services/crm/src/handlers/bank_config_routes.rs
-    - services/crm/src/audit/vietqr_events.rs
-    - services/crm/tests/vietqr_generation_test.rs
-    - services/crm/tests/vietqr_memo_unique_test.rs
-    - services/crm/tests/vietqr_purpose_enum_cardinality_test.rs
-    - services/crm/tests/vietqr_bank_config_cfo_only_test.rs
-    - services/crm/tests/vietqr_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/crm/
+new_files:
+  - services/crm/migrations/0009_tenant_bank_config.sql
+  - services/crm/src/vn/vietqr_skill.rs
+  - services/crm/src/vn/qr_generator.rs
+  - services/crm/src/handlers/bank_config_routes.rs
+  - services/crm/src/audit/vietqr_events.rs
+  - services/crm/tests/vietqr_generation_test.rs
+  - services/crm/tests/vietqr_memo_unique_test.rs
+  - services/crm/tests/vietqr_purpose_enum_cardinality_test.rs
+  - services/crm/tests/vietqr_bank_config_cfo_only_test.rs
+  - services/crm/tests/vietqr_audit_emission_test.rs
 
-  modified_files:
-    - services/crm/src/lib.rs
+modified_files:
+  - services/crm/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{crm,inv}/**
-    - file_write: services/crm/{src,tests,migrations}/**
-    - bash: cd services/crm && cargo test vietqr
+allowed_tools:
+  - file_read: services/{crm,inv}/**
+  - file_write: services/crm/{src,tests,migrations}/**
+  - bash: cd services/crm && cargo test vietqr
 
-  disallowed_tools:
-    - generate QR without bank config (per DEC-1693)
-    - allow non-CFO bank config write (per DEC-1693)
+disallowed_tools:
+  - generate QR without bank config (per DEC-1693)
+  - allow non-CFO bank config write (per DEC-1693)
 
 effort_hours: 4
 subtasks:

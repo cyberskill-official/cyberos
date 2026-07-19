@@ -27,6 +27,10 @@
 #   t09_nongit_summary_line (TASK-IMP-096) non-git installs get the one-line ship-tasks git
 #        requirement + verbatim remedy in the summary (git rev-parse semantics, so a stale
 #        .git FILE remnant is still non-git); git installs print nothing new.
+#   t20/t21/t22 (TASK-IMP-106) the uninstall summary names what it removed, names each kept
+#        path with a reason + the verbatim removal command, DERIVES the kept list from what is
+#        on disk after the run (t21 is the arm that fails on a hard-coded list - t20 cannot see
+#        the difference), and changes nothing about what uninstall removes or keeps (t22).
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../../.." && pwd)"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
@@ -439,6 +443,435 @@ t09_nongit_summary_line() {
   [ "$all" -eq 1 ] && ok t09_nongit_summary_line
 }
 
+# ---------------------------------------------------------------------------
+# t20/t21/t22 (TASK-IMP-106) - the uninstall summary names what it kept.
+#
+# The fixtures seed the four kept paths EXPLICITLY rather than letting install render them.
+# docs/status/ only exists when node is present, and an arm that quietly stops asserting §1.2
+# on a node-less runner is not an arm. Seeding makes presence the thing under test, which is
+# exactly what §1.4 is about. Speed flags for the same reason: nothing here needs
+# migrate/memory/MCP, because the fixture provides the state directly.
+# ---------------------------------------------------------------------------
+_t2x_fixture() {   # $1 = dir; installs, then seeds all four kept paths
+  mkrepo "$1"; _t06_install "$1" >/dev/null
+  mkdir -p "$1/docs/tasks" "$1/docs/status" "$1/.cyberos/memory/store"
+  printf 'corpus\n' > "$1/docs/tasks/TASK-X-001.md"
+  printf '<html></html>\n' > "$1/docs/status/index.html"
+  printf '# Changelog\n' > "$1/CHANGELOG.md"
+  # BRAIN seeded EMPTY on purpose (spec §3): an empty store is still the operator's, and its
+  # emptiness is not the uninstaller's judgment to make. If this ever starts failing because
+  # the store gained a file, the arm has stopped testing the edge it was written for.
+}
+
+# AC 1 (traces_to #1.1, #1.2, #1.3)
+t20_uninstall_summary_names_kept() {
+  local all=1 d="$TMP/u20"; _t2x_fixture "$d"
+  local out; out="$(bash "$d/.cyberos/uninstall.sh" "$d" 2>&1)"
+  # §1.1 - names what was removed, under a removed: heading
+  grep -qF '  removed:' <<<"$out" || { fail t20_uninstall_summary_names_kept "no removed: heading"; all=0; }
+  grep -qF '.cyberos/ (the vendored machine' <<<"$out" \
+    || { fail t20_uninstall_summary_names_kept "removed list does not name the vendored machine"; all=0; }
+  # §1.2 - every kept path named WITH its reason, on the same line. Path-only would pass a
+  # summary that listed four bare paths, which is the clause minus the half that helps anyone.
+  grep -qE '^ +docs/tasks/ +your task corpus' <<<"$out"    || { fail t20_uninstall_summary_names_kept "docs/tasks/ not named with a reason"; all=0; }
+  grep -qE '^ +docs/status/ +the rendered status page' <<<"$out" || { fail t20_uninstall_summary_names_kept "docs/status/ not named with a reason"; all=0; }
+  grep -qE '^ +CHANGELOG\.md +your release history' <<<"$out"    || { fail t20_uninstall_summary_names_kept "CHANGELOG.md not named with a reason"; all=0; }
+  grep -qE '^ +\.cyberos/memory +the BRAIN store' <<<"$out"      || { fail t20_uninstall_summary_names_kept "BRAIN not named with a reason"; all=0; }
+  # §1.3 - the removal command, verbatim and complete. Fixed-string exact: this literal IS the
+  # contract an operator copy-pastes, so a drifted or partial command must fail here.
+  grep -qF '    rm -rf docs/tasks/ docs/status/ CHANGELOG.md .cyberos/memory' <<<"$out" \
+    || { fail t20_uninstall_summary_names_kept "verbatim removal command absent or drifted"; all=0; }
+  # ...and it must be presented as something to run from the repo root, or it is a command
+  # whose meaning depends on a cwd the operator was never told.
+  # uninstall.sh resolves the root via `git rev-parse --show-toplevel`, which returns the
+  # PHYSICAL path; on macOS /var is a symlink to /private/var so the logical $d from mktemp
+  # never matches. Canonicalize our side (a no-op on Linux, where logical == physical).
+  local dphys; dphys="$(cd "$d" && pwd -P)"
+  grep -qF "run this from $dphys" <<<"$out" \
+    || { fail t20_uninstall_summary_names_kept "removal command does not name the directory to run it from"; all=0; }
+  # §1.5 guard rail at the cheapest possible price: the four are still on disk afterwards.
+  { [ -f "$d/docs/tasks/TASK-X-001.md" ] && [ -f "$d/docs/status/index.html" ] \
+    && [ -f "$d/CHANGELOG.md" ] && [ -d "$d/.cyberos/memory" ]; } \
+    || { fail t20_uninstall_summary_names_kept "summary named a path as kept and it is NOT on disk"; all=0; }
+  [ "$all" -eq 1 ] && ok t20_uninstall_summary_names_kept
+}
+
+# AC 2 (traces_to #1.4) - THE load-bearing arm. A hard-coded list passes t20 perfectly and
+# fails here. Every negative assertion below is paired with a positive one, because a summary
+# that printed NOTHING would satisfy every "MUST NOT name X" on its own (TASK-IMP-118's class).
+t21_uninstall_summary_derived_not_hardcoded() {
+  local all=1 out
+  # arm 1: the live defect - a repo that never rendered a page
+  local a="$TMP/u21-a"; _t2x_fixture "$a"; rm -rf "$a/docs/status"
+  out="$(bash "$a/.cyberos/uninstall.sh" "$a" 2>&1)"
+  grep -q 'docs/status' <<<"$out" \
+    && { fail t21_uninstall_summary_derived_not_hardcoded "claimed docs/status/ as kept when it does not exist (hard-coded list)"; all=0; }
+  grep -qE '^ +docs/tasks/ +your task corpus' <<<"$out" \
+    || { fail t21_uninstall_summary_derived_not_hardcoded "arm 1 vacuous: the summary named nothing at all, so the negative above proved nothing"; all=0; }
+  # arm 2: a SECOND path, so "only docs/status is conditional, the rest is recited" cannot pass
+  local b="$TMP/u21-b"; _t2x_fixture "$b"
+  out="$(CYBEROS_UNINSTALL_KEEP_BRAIN=0 bash "$b/.cyberos/uninstall.sh" "$b" 2>&1)"
+  [ -e "$b/.cyberos/memory" ] \
+    && { fail t21_uninstall_summary_derived_not_hardcoded "construction broken: KEEP_BRAIN=0 left .cyberos/memory on disk, so the arm cannot test absence"; all=0; }
+  grep -q '\.cyberos/memory' <<<"$out" \
+    && { fail t21_uninstall_summary_derived_not_hardcoded "claimed the BRAIN as kept after dropping it"; all=0; }
+  grep -qE '^ +CHANGELOG\.md +your release history' <<<"$out" \
+    || { fail t21_uninstall_summary_derived_not_hardcoded "arm 2 vacuous: the summary named nothing at all"; all=0; }
+  # arm 3 (§3): never installed - no machine, so no kept list. Nothing was kept BY US; claiming
+  # otherwise would take credit for a decision this run never made.
+  # (the payload's copy, not a vendored one - the whole point is that no machine was installed)
+  local c="$TMP/u21-c"; mkrepo "$c"; mkdir -p "$c/docs/tasks"
+  out="$(bash "$TMP/payload/uninstall.sh" "$c" 2>&1)"
+  grep -qF 'nothing to do (no .cyberos/)' <<<"$out" \
+    || { fail t21_uninstall_summary_derived_not_hardcoded "arm 3 precondition: expected the nothing-to-do guard"; all=0; }
+  grep -qi 'kept' <<<"$out" \
+    && { fail t21_uninstall_summary_derived_not_hardcoded "printed a kept list for a machine that was never there"; all=0; }
+  # arm 4: machine present, everything else absent -> a kept block would be an empty rm -rf
+  local e="$TMP/u21-e"; mkrepo "$e"; _t06_install "$e" >/dev/null
+  rm -rf "$e/docs" "$e/CHANGELOG.md"
+  out="$(CYBEROS_UNINSTALL_KEEP_BRAIN=0 bash "$e/.cyberos/uninstall.sh" "$e" 2>&1)"
+  grep -qF 'removed:' <<<"$out" \
+    || { fail t21_uninstall_summary_derived_not_hardcoded "arm 4 vacuous: not even the removed list printed"; all=0; }
+  grep -qE '^ +rm -rf *$' <<<"$out" \
+    && { fail t21_uninstall_summary_derived_not_hardcoded "printed a bare 'rm -rf' with no arguments"; all=0; }
+  grep -q 'kept on purpose' <<<"$out" \
+    && { fail t21_uninstall_summary_derived_not_hardcoded "printed a kept heading with nothing kept"; all=0; }
+  [ "$all" -eq 1 ] && ok t21_uninstall_summary_derived_not_hardcoded
+}
+
+# AC 3 (traces_to #1.5) - the summary changes nothing on disk.
+# Two identical fixtures: A runs the real vendored uninstall, B runs the SAME script with the
+# summary (section 6 to EOF) stripped out. Same state machine, minus the thing under test, so
+# any file the summary creates or removes shows up as a diff between the trees.
+# Why not diff against a pinned git baseline: a later task that legitimately changes what
+# uninstall removes would fail that arm for a reason with nothing to do with §1.5. Stripping
+# compares the script against itself, so both sides move together for ever.
+t22_uninstall_behavior_unchanged() {
+  local all=1 a="$TMP/u22-a" b="$TMP/u22-b"
+  _t2x_fixture "$a"; _t2x_fixture "$b"
+  local u="$a/.cyberos/uninstall.sh"
+  # construction check 1: the anchor exists, so the sed below is not a silent no-op that would
+  # make this arm compare two identical runs and always pass. (Also proves the payload carries
+  # the change - the vendored copy is what an operator actually runs.)
+  [ "$(grep -c '^# 6\. summary' "$u")" = 1 ] \
+    || { fail t22_uninstall_behavior_unchanged "construction broken: no unique '# 6. summary' anchor in the vendored uninstall.sh"; return; }
+  sed '/^# 6\. summary/,$d' "$u" > "$TMP/u22-nosummary.sh"
+  # construction check 2: the strip really removed the summary, not just a comment
+  grep -q 'kept on purpose' "$TMP/u22-nosummary.sh" \
+    && { fail t22_uninstall_behavior_unchanged "construction broken: stripped copy still prints the summary"; return; }
+  bash "$u" "$a" >/dev/null 2>&1               || { fail t22_uninstall_behavior_unchanged "real uninstall exited nonzero"; all=0; }
+  bash "$TMP/u22-nosummary.sh" "$b" >/dev/null 2>&1 || { fail t22_uninstall_behavior_unchanged "stripped uninstall exited nonzero"; all=0; }
+  # .git is excluded: git's own object/index churn differs run to run and is not our behavior.
+  ( cd "$a" && find . -path ./.git -prune -o -print | sort ) > "$TMP/u22-a.list"
+  ( cd "$b" && find . -path ./.git -prune -o -print | sort ) > "$TMP/u22-b.list"
+  cmp -s "$TMP/u22-a.list" "$TMP/u22-b.list" \
+    || { fail t22_uninstall_behavior_unchanged "the summary changed what uninstall removes or keeps: $(diff "$TMP/u22-a.list" "$TMP/u22-b.list" | tr '\n' ' ')"; all=0; }
+  # construction check 3: the trees are not trivially equal because both are empty
+  [ "$(wc -l < "$TMP/u22-a.list")" -gt 5 ] \
+    || { fail t22_uninstall_behavior_unchanged "construction broken: post-uninstall tree is near-empty, so the comparison proves nothing"; all=0; }
+  [ "$all" -eq 1 ] && ok t22_uninstall_behavior_unchanged
+}
+
+# ---------------------------------------------------------------------------
+# TASK-IMP-126 - uninstall is the inverse of install for three artifacts install writes and the
+# pre-126 uninstall left behind: the MCP registration files, the per-agent skill links, and the
+# hook's leading blank separator. Each arm installs then uninstalls a scratch repo (reusing the
+# harness helpers) and asserts the tree is clean, while an operator's own files of the same names
+# stay untouched (§1.4). The MCP arms run install WITHOUT CYBEROS_NO_MCP so .mcp.json is actually
+# written (the speed helpers set NO_MCP); skills and the hook install under the speed flags.
+# ---------------------------------------------------------------------------
+
+# AC 1 (traces_to #1.1) - install writes the MCP registration; uninstall removes it (byte-match to
+# what install writes) including the cursor limb, and an operator's own .mcp.json (different
+# content) is never touched.
+t_mcp_registration_removed() {
+  local all=1
+  # scenario A: install writes .mcp.json + .cursor/mcp.json; uninstall removes BOTH; the cursor
+  # rules pointer (tracked agent surface) survives - uninstall removes the file, never rmdir .cursor/.
+  local a="$TMP/mcp-rm"; mkrepo "$a"
+  CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 bash "$TMP/payload/install.sh" "$a" >/dev/null 2>&1
+  [ -f "$a/.mcp.json" ] \
+    || { fail t_mcp_registration_removed "precondition: install wrote no .mcp.json (MCP registration)"; return; }
+  grep -q '\.cyberos/mcp/cyberos-mcp\.mjs' "$a/.mcp.json" \
+    || { fail t_mcp_registration_removed "installed .mcp.json is not the cyberos form"; all=0; }
+  [ -f "$a/.cursor/mcp.json" ] \
+    || { fail t_mcp_registration_removed "precondition: install wrote no .cursor/mcp.json (cursor limb)"; all=0; }
+  bash "$a/.cyberos/uninstall.sh" "$a" >/dev/null 2>&1
+  [ ! -e "$a/.mcp.json" ]        || { fail t_mcp_registration_removed "uninstall left the cyberos .mcp.json behind"; all=0; }
+  [ ! -e "$a/.cursor/mcp.json" ] || { fail t_mcp_registration_removed "uninstall left the cyberos .cursor/mcp.json behind"; all=0; }
+  [ -f "$a/.cursor/rules/cyberos.mdc" ] \
+    || { fail t_mcp_registration_removed "uninstall removed the .cursor rules pointer (agent surface must stay)"; all=0; }
+  # scenario B: an operator's own .mcp.json (different content) survives install (create-if-absent)
+  # AND uninstall (content does not byte-match what install writes).
+  local b="$TMP/mcp-op"; mkrepo "$b"
+  printf '{ "mcpServers": { "operator-server": { "command": "node", "args": ["ops.mjs"] } } }\n' > "$b/.mcp.json"
+  cp "$b/.mcp.json" "$TMP/mcp-op.want"
+  CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 bash "$TMP/payload/install.sh" "$b" >/dev/null 2>&1
+  bash "$b/.cyberos/uninstall.sh" "$b" >/dev/null 2>&1
+  { [ -f "$b/.mcp.json" ] && cmp -s "$b/.mcp.json" "$TMP/mcp-op.want"; } \
+    || { fail t_mcp_registration_removed "operator .mcp.json (different content) was modified or removed"; all=0; }
+  [ "$all" -eq 1 ] && ok t_mcp_registration_removed
+}
+
+# AC 2 (traces_to #1.2) - after install then uninstall, ZERO skill links resolve into the removed
+# .cyberos/plugin/skills, checked across every family install writes (claude-code incl. the
+# create-tasks pair, grok, command-code, codex, opencode) plus the shared .agents/skills entries.
+t_no_dangling_skill_links() {
+  local all=1 d="$TMP/skill-links" p; mkrepo "$d"
+  _t06_install "$d" >/dev/null                       # skills install regardless of the speed flags
+  local managed=".claude/skills/ship-tasks .claude/skills/task-author .claude/skills/task-audit
+.grok/skills/ship-tasks .commandcode/skills/ship-tasks .codex/skills/ship-tasks .opencode/skill/ship-tasks
+.agents/skills/ship-tasks .agents/skills/task-author .agents/skills/task-audit"
+  # precondition: install actually created the managed entries as symlinks (the fix is meaningless
+  # if they landed as unmanaged copies - the 7 direct family links point into .cyberos/plugin/skills).
+  local pre=0
+  for p in $managed; do [ -L "$d/$p" ] && pre=$((pre+1)); done
+  [ "$pre" -ge 7 ] \
+    || { fail t_no_dangling_skill_links "precondition: expected managed skill symlinks, saw $pre (install did not symlink - fix untestable)"; return; }
+  bash "$d/.cyberos/uninstall.sh" "$d" >/dev/null 2>&1
+  # every named managed entry is gone - the pre-126 gap left .claude/skills/ship-tasks and the
+  # grok/command-code/codex/opencode entries pointing into the now-removed machine.
+  for p in $managed; do
+    { [ ! -L "$d/$p" ] && [ ! -e "$d/$p" ]; } \
+      || { fail t_no_dangling_skill_links "managed skill entry survived uninstall: $p"; all=0; }
+  done
+  # ...and list-independent: NO symlink anywhere in the tree still resolves into .cyberos/plugin/skills.
+  # bash 3.2 (macOS /bin/bash, the real install target) cannot parse a `case "$(...)"` nested inside a
+  # `$( ... | while ... )` command substitution, so build the list with a plain while over process
+  # substitution and resolve each link into a scalar first - portable to 3.2 and bash 5 alike.
+  local dangling="" _l _tgt
+  while IFS= read -r _l; do
+    _tgt="$(readlink "$_l" 2>/dev/null)"
+    case "$_tgt" in *".cyberos/plugin/skills/"*) dangling="$dangling $_l" ;; esac
+  done < <(find "$d" -path "$d/.git" -prune -o -type l -print 2>/dev/null)
+  [ -z "$dangling" ] \
+    || { fail t_no_dangling_skill_links "links still resolve into removed machine:$dangling"; all=0; }
+  [ "$all" -eq 1 ] && ok t_no_dangling_skill_links
+}
+
+# AC 3 (traces_to #1.3) - a foreign pre-commit hook is byte-identical to its pre-install content
+# after install/uninstall and STAYS byte-identical across repeated cycles (no accumulated blank
+# separator). Two cycles is a sufficient witness: the buggy strip leaves 2 stray blanks, the fix 0.
+t_hook_strip_byte_identical_across_cycles() {
+  local all=1 d="$TMP/hook-cycles" i; mkrepo "$d"
+  mkdir -p "$d/.git/hooks"
+  printf '#!/bin/sh\necho foreign-lint\nfalse\n' > "$d/.git/hooks/pre-commit"; chmod +x "$d/.git/hooks/pre-commit"
+  cp "$d/.git/hooks/pre-commit" "$TMP/hook-cycles.want"
+  for i in 1 2; do
+    CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 CYBEROS_NO_MCP=1 bash "$TMP/payload/install.sh" "$d" >/dev/null 2>&1
+    # precondition each cycle: the block WAS appended (with its leading blank separator), so the
+    # strip has something to undo - otherwise the byte-identity below could pass vacuously.
+    grep -q '>>> cyberos-status-hook' "$d/.git/hooks/pre-commit" \
+      || { fail t_hook_strip_byte_identical_across_cycles "cycle $i: install did not append the managed block"; return; }
+    bash "$TMP/payload/uninstall.sh" "$d" >/dev/null 2>&1
+  done
+  cmp -s "$d/.git/hooks/pre-commit" "$TMP/hook-cycles.want" \
+    || { fail t_hook_strip_byte_identical_across_cycles "hook not byte-identical after 2 cycles (accumulated separator): $(diff "$TMP/hook-cycles.want" "$d/.git/hooks/pre-commit" | tr '\n' '|')"; all=0; }
+  grep -q 'cyberos-status-hook' "$d/.git/hooks/pre-commit" \
+    && { fail t_hook_strip_byte_identical_across_cycles "cyberos block remnant left in the hook"; all=0; }
+  # the stripped hook still runs and preserves the foreign failing exit code (1)
+  ( cd "$d" && sh .git/hooks/pre-commit >/dev/null 2>&1 ); [ "$?" = 1 ] \
+    || { fail t_hook_strip_byte_identical_across_cycles "stripped hook lost its foreign exit code"; all=0; }
+  [ "$all" -eq 1 ] && ok t_hook_strip_byte_identical_across_cycles
+}
+
+# AC 4 (traces_to #1.4) - the guardrail: an operator .mcp.json (different content), an UNMARKED
+# .agents/skills/<cmd> dir, and a foreign hook's own lines all survive uninstall untouched.
+t_operator_files_preserved() {
+  local all=1 d="$TMP/op-preserve"; mkrepo "$d"
+  mkdir -p "$d/.git/hooks"
+  printf '#!/bin/sh\necho foreign-lint\nfalse\n' > "$d/.git/hooks/pre-commit"; chmod +x "$d/.git/hooks/pre-commit"
+  cp "$d/.git/hooks/pre-commit" "$TMP/op-preserve-hook.want"
+  # operator's own .mcp.json, planted BEFORE install (install is create-if-absent, so it stays)
+  printf '{ "mcpServers": { "operator-owned": { "command": "deno", "args": ["mine.ts"] } } }\n' > "$d/.mcp.json"
+  cp "$d/.mcp.json" "$TMP/op-preserve-mcp.want"
+  CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 bash "$TMP/payload/install.sh" "$d" >/dev/null 2>&1
+  # replace a managed .agents/skills entry with an UNMARKED operator dir (no .cyberos-owned marker):
+  # ownership-by-construction must leave it in place even though the NAME is one uninstall manages.
+  rm -rf "$d/.agents/skills/ship-tasks"
+  mkdir -p "$d/.agents/skills/ship-tasks"
+  printf -- '---\nname: ship-tasks\n---\nmy own skill\n' > "$d/.agents/skills/ship-tasks/SKILL.md"
+  cp "$d/.agents/skills/ship-tasks/SKILL.md" "$TMP/op-preserve-skill.want"
+  bash "$d/.cyberos/uninstall.sh" "$d" >/dev/null 2>&1
+  { [ -f "$d/.mcp.json" ] && cmp -s "$d/.mcp.json" "$TMP/op-preserve-mcp.want"; } \
+    || { fail t_operator_files_preserved "operator .mcp.json (different content) not preserved"; all=0; }
+  { [ -f "$d/.agents/skills/ship-tasks/SKILL.md" ] && cmp -s "$d/.agents/skills/ship-tasks/SKILL.md" "$TMP/op-preserve-skill.want"; } \
+    || { fail t_operator_files_preserved "unmarked operator .agents/skills/ship-tasks dir was removed or altered"; all=0; }
+  { [ -f "$d/.git/hooks/pre-commit" ] && cmp -s "$d/.git/hooks/pre-commit" "$TMP/op-preserve-hook.want"; } \
+    || { fail t_operator_files_preserved "foreign hook not restored to its own bytes"; all=0; }
+  [ "$all" -eq 1 ] && ok t_operator_files_preserved
+}
+
+# ---------------------------------------------------------------------------
+# TASK-IMP-121 - uninstall must leave the repo as it found it (the IMP-126 remainder). The data-loss
+# rmdir that deletes operator containers on emptiness ALONE - the .agents pair (now gated by a parent
+# .cyberos-owned marker install writes on creation) and the five native channel parents (fixed by
+# DELETING the rmdir IMP-126 added) - plus two byte leaks (.gitignore separator, hook no-trailing-
+# newline). Each arm reuses the harness (mkrepo + direct install.sh/uninstall.sh, as the IMP-126 arms
+# do) and is written to FAIL on today's behavior. bash 3.2 / BSD idioms only (no case in a $()).
+# ---------------------------------------------------------------------------
+
+# AC 1 (traces_to #1.1) - install writes the parent .cyberos-owned marker ONLY into a container it
+# CREATED; a pre-existing .agents / .agents/skills is never marked. Covers .agents created alone via
+# the antigravity pointer (CYBEROS_AGENTS=antigravity) and via the .agents/skills mkdir chain
+# (CYBEROS_AGENTS=agents). FAILS today: install writes no parent marker at all, so B and C below fail.
+t23_parent_marker_written_only_on_create() {
+  local all=1
+  # A: both containers PRE-EXIST -> install must mark NEITHER (default agents; entries land as links).
+  local a="$TMP/pm-pre"; mkrepo "$a"; mkdir -p "$a/.agents/skills"
+  _t06_install "$a" >/dev/null
+  [ -d "$a/.cyberos" ] || { fail t23_parent_marker_written_only_on_create "precondition: machine not installed"; return; }
+  { [ ! -e "$a/.agents/.cyberos-owned" ] && [ ! -e "$a/.agents/skills/.cyberos-owned" ]; } \
+    || { fail t23_parent_marker_written_only_on_create "marked a pre-existing container (must never mark an operator dir)"; all=0; }
+  # B: neither exists, antigravity only -> .agents created via the ~597 pointer, .agents/skills NOT.
+  local b="$TMP/pm-ag"; mkrepo "$b"
+  CYBEROS_AGENTS=antigravity CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 CYBEROS_NO_MCP=1 bash "$TMP/payload/install.sh" "$b" >/dev/null 2>&1
+  [ -d "$b/.agents" ] || { fail t23_parent_marker_written_only_on_create "construction: antigravity install created no .agents"; all=0; }
+  [ ! -d "$b/.agents/skills" ] || { fail t23_parent_marker_written_only_on_create "construction: antigravity install unexpectedly made .agents/skills"; all=0; }
+  { [ -f "$b/.agents/.cyberos-owned" ] && grep -qF '(.agents)' "$b/.agents/.cyberos-owned" \
+    && grep -qF 'adopt the directory as your own' "$b/.agents/.cyberos-owned"; } \
+    || { fail t23_parent_marker_written_only_on_create ".agents created via pointer not marked with dir-naming adoption text"; all=0; }
+  # C: neither exists, agents family -> .agents AND .agents/skills created via the ~669 mkdir chain.
+  local c="$TMP/pm-ag2"; mkrepo "$c"
+  CYBEROS_AGENTS=agents CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 CYBEROS_NO_MCP=1 bash "$TMP/payload/install.sh" "$c" >/dev/null 2>&1
+  { [ -d "$c/.agents/skills" ] && [ -d "$c/.agents" ]; } \
+    || { fail t23_parent_marker_written_only_on_create "construction: agents install made neither container"; all=0; }
+  { [ -f "$c/.agents/skills/.cyberos-owned" ] && grep -qF '(.agents/skills)' "$c/.agents/skills/.cyberos-owned" \
+    && grep -qF 'adopt the directory as your own' "$c/.agents/skills/.cyberos-owned"; } \
+    || { fail t23_parent_marker_written_only_on_create ".agents/skills created via mkdir chain not marked with dir-naming adoption text"; all=0; }
+  { [ -f "$c/.agents/.cyberos-owned" ] && grep -qF '(.agents)' "$c/.agents/.cyberos-owned"; } \
+    || { fail t23_parent_marker_written_only_on_create ".agents created via mkdir chain not marked naming .agents"; all=0; }
+  [ "$all" -eq 1 ] && ok t23_parent_marker_written_only_on_create
+}
+
+# AC 2 (traces_to #1.2) - a container install CREATED + MARKED is reclaimed on uninstall; an operator's
+# pre-existing EMPTY container (unmarked) survives and is reported kept - emptiness alone must NOT
+# remove it. FAILS today: the unconditional rmdir at :141-142 deletes the empty operator dirs (5a/5b).
+t24_containers_removed_only_when_marked() {
+  local all=1 out
+  # A: operator's pre-existing empty .agents + .agents/skills, agents family (no rules pointer, so
+  # .agents is empty after uninstall too - today :141/:142 delete BOTH). Fix keeps both, reports kept.
+  local a="$TMP/cr-pre"; mkrepo "$a"; mkdir -p "$a/.agents/skills"
+  CYBEROS_AGENTS=agents CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 CYBEROS_NO_MCP=1 bash "$TMP/payload/install.sh" "$a" >/dev/null 2>&1
+  out="$(bash "$a/.cyberos/uninstall.sh" "$a" 2>&1)"
+  { [ -d "$a/.agents/skills" ] && [ -d "$a/.agents" ]; } \
+    || { fail t24_containers_removed_only_when_marked "operator's pre-existing empty container destroyed on emptiness alone (no ownership test)"; all=0; }
+  grep -q 'kept .agents/skills' <<<"$out" \
+    || { fail t24_containers_removed_only_when_marked "unmarked .agents/skills not reported kept"; all=0; }
+  grep -qE 'kept \.agents \(' <<<"$out" \
+    || { fail t24_containers_removed_only_when_marked "unmarked .agents not reported kept"; all=0; }
+  # B: neither pre-exists, agents family -> both CREATED + MARKED -> both REMOVED on uninstall.
+  local b="$TMP/cr-new"; mkrepo "$b"
+  CYBEROS_AGENTS=agents CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 CYBEROS_NO_MCP=1 bash "$TMP/payload/install.sh" "$b" >/dev/null 2>&1
+  { [ -d "$b/.agents/skills" ] && [ -f "$b/.agents/skills/.cyberos-owned" ]; } \
+    || { fail t24_containers_removed_only_when_marked "construction: install did not create+mark .agents/skills"; all=0; }
+  bash "$b/.cyberos/uninstall.sh" "$b" >/dev/null 2>&1
+  { [ ! -e "$b/.agents/skills" ] && [ ! -e "$b/.agents" ]; } \
+    || { fail t24_containers_removed_only_when_marked "installer-created + marked container not reclaimed on uninstall"; all=0; }
+  [ "$all" -eq 1 ] && ok t24_containers_removed_only_when_marked
+}
+
+# AC 3 (traces_to #1.3) - NO .cyberos-owned survives uninstall, including on an install-created .agents
+# KEPT because its rules pointer survives; and an install-created .agents/skills whose marker the
+# operator DELETED to adopt it still EXISTS + is reported kept. FAILS today: no marker is written, so
+# the adopted (unmarked, now empty) .agents/skills is destroyed by :141.
+t25_marker_removed_and_adoption_honoured() {
+  local all=1 out
+  # A: default install -> .agents created + marked and KEPT (rules pointer); its marker must go anyway.
+  local a="$TMP/mr-keep"; mkrepo "$a"; _t06_install "$a" >/dev/null
+  [ -f "$a/.agents/.cyberos-owned" ] \
+    || { fail t25_marker_removed_and_adoption_honoured "precondition: install did not mark the created .agents"; return; }
+  bash "$a/.cyberos/uninstall.sh" "$a" >/dev/null 2>&1
+  [ -d "$a/.agents" ] \
+    || { fail t25_marker_removed_and_adoption_honoured "install-created .agents (rules pointer) wrongly removed"; all=0; }
+  [ -z "$(find "$a" -path "$a/.git" -prune -o -name .cyberos-owned -print 2>/dev/null)" ] \
+    || { fail t25_marker_removed_and_adoption_honoured "a .cyberos-owned marker survived uninstall"; all=0; }
+  # B: operator deletes the parent marker to ADOPT .agents/skills; after its entries are gone it is
+  # empty and unmarked -> must be KEPT (today's :141 deletes it) and reported kept.
+  local b="$TMP/mr-adopt"; mkrepo "$b"; _t06_install "$b" >/dev/null
+  [ -f "$b/.agents/skills/.cyberos-owned" ] \
+    || { fail t25_marker_removed_and_adoption_honoured "precondition: install did not mark the created .agents/skills"; return; }
+  rm -f "$b/.agents/skills/.cyberos-owned"           # adopt
+  out="$(bash "$b/.cyberos/uninstall.sh" "$b" 2>&1)"
+  [ -d "$b/.agents/skills" ] \
+    || { fail t25_marker_removed_and_adoption_honoured "adopted (marker-deleted) .agents/skills destroyed - adoption not honoured"; all=0; }
+  grep -q 'kept .agents/skills' <<<"$out" \
+    || { fail t25_marker_removed_and_adoption_honoured "adopted .agents/skills not reported kept"; all=0; }
+  [ "$all" -eq 1 ] && ok t25_marker_removed_and_adoption_honoured
+}
+
+# AC 4 (traces_to #1.4) - a pre-existing newline-terminated .gitignore is byte-identical to its
+# pre-install bytes after 1 and after 3 cycles (cmp); an install-CREATED .gitignore comes back clean
+# (no leaked separator). FAILS today: the sed strip leaves install's separator byte (20->21).
+t26_gitignore_strip_byte_exact() {
+  local all=1 i
+  local d="$TMP/gi-bytes"; mkrepo "$d"
+  printf '*.log\nnode_modules/\n' > "$d/.gitignore"          # 20 bytes, newline-terminated
+  cp "$d/.gitignore" "$TMP/gi-bytes.want"
+  for i in 1 2 3; do
+    _t06_install "$d" >/dev/null
+    grep -q '>>> cyberos' "$d/.gitignore" \
+      || { fail t26_gitignore_strip_byte_exact "cycle $i: install wrote no managed .gitignore block"; return; }
+    bash "$d/.cyberos/uninstall.sh" "$d" >/dev/null 2>&1
+    cmp -s "$d/.gitignore" "$TMP/gi-bytes.want" \
+      || { fail t26_gitignore_strip_byte_exact "cycle $i: .gitignore not byte-identical (separator leak): $(cmp "$d/.gitignore" "$TMP/gi-bytes.want" 2>&1)"; all=0; break; }
+  done
+  # install-CREATED .gitignore (no pre-existing file: empty tmp, no separator) -> clean after uninstall
+  local e="$TMP/gi-created"; mkrepo "$e"
+  _t06_install "$e" >/dev/null
+  bash "$e/.cyberos/uninstall.sh" "$e" >/dev/null 2>&1
+  { [ ! -f "$e/.gitignore" ] || [ ! -s "$e/.gitignore" ]; } \
+    || { fail t26_gitignore_strip_byte_exact "install-created .gitignore not clean after uninstall: [$(cat "$e/.gitignore")]"; all=0; }
+  [ "$all" -eq 1 ] && ok t26_gitignore_strip_byte_exact
+}
+
+# AC 5 (traces_to #1.5) - a foreign pre-commit hook with NO trailing newline is byte-identical to its
+# pre-install bytes after uninstall across 3 cycles (cmp), AND the newline-terminated control stays
+# byte-identical. FAILS today: the awk re-terminates the last surviving line of the no-nl hook (33->34).
+t27_hook_strip_byte_exact_no_trailing_newline() {
+  local all=1 i
+  local d="$TMP/hk-nonl"; mkrepo "$d"; mkdir -p "$d/.git/hooks"
+  printf '#!/bin/sh\necho foreign-lint\nfalse' > "$d/.git/hooks/pre-commit"   # 33 bytes, NO trailing newline
+  chmod +x "$d/.git/hooks/pre-commit"
+  cp "$d/.git/hooks/pre-commit" "$TMP/hk-nonl.want"
+  for i in 1 2 3; do
+    CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 CYBEROS_NO_MCP=1 bash "$TMP/payload/install.sh" "$d" >/dev/null 2>&1
+    grep -q '>>> cyberos-status-hook' "$d/.git/hooks/pre-commit" \
+      || { fail t27_hook_strip_byte_exact_no_trailing_newline "cycle $i: install did not append the managed block"; return; }
+    bash "$TMP/payload/uninstall.sh" "$d" >/dev/null 2>&1
+    cmp -s "$d/.git/hooks/pre-commit" "$TMP/hk-nonl.want" \
+      || { fail t27_hook_strip_byte_exact_no_trailing_newline "cycle $i: no-trailing-newline hook not byte-identical (added byte): $(cmp "$d/.git/hooks/pre-commit" "$TMP/hk-nonl.want" 2>&1)"; all=0; break; }
+  done
+  # newline-terminated control must stay byte-identical (IMP-126's tested case must not regress)
+  local c="$TMP/hk-nl"; mkrepo "$c"; mkdir -p "$c/.git/hooks"
+  printf '#!/bin/sh\necho foreign-lint\nfalse\n' > "$c/.git/hooks/pre-commit"   # 34 bytes, newline-terminated
+  chmod +x "$c/.git/hooks/pre-commit"
+  cp "$c/.git/hooks/pre-commit" "$TMP/hk-nl.want"
+  CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 CYBEROS_NO_MCP=1 bash "$TMP/payload/install.sh" "$c" >/dev/null 2>&1
+  bash "$c/.cyberos/uninstall.sh" "$c" >/dev/null 2>&1
+  cmp -s "$c/.git/hooks/pre-commit" "$TMP/hk-nl.want" \
+    || { fail t27_hook_strip_byte_exact_no_trailing_newline "newline-terminated control regressed: $(cmp "$c/.git/hooks/pre-commit" "$TMP/hk-nl.want" 2>&1)"; all=0; }
+  [ "$all" -eq 1 ] && ok t27_hook_strip_byte_exact_no_trailing_newline
+}
+
+# AC 6 (traces_to #1.6) - an operator's pre-existing empty native channel dir survives uninstall, and
+# the managed skill link inside it is still removed (no IMP-126 regression). FAILS today: the
+# per-family rmdir at :165 deletes the emptied native parent (reproduced end to end at HEAD).
+t28_native_channel_parent_survives() {
+  local all=1 d="$TMP/native-parent"; mkrepo "$d"
+  mkdir -p "$d/.claude/skills" "$d/.grok/skills"     # operator's pre-existing EMPTY native parents
+  _t06_install "$d" >/dev/null
+  { [ -L "$d/.claude/skills/ship-tasks" ] && [ -L "$d/.grok/skills/ship-tasks" ]; } \
+    || { fail t28_native_channel_parent_survives "precondition: install did not drop managed skill links"; return; }
+  bash "$d/.cyberos/uninstall.sh" "$d" >/dev/null 2>&1
+  { [ -d "$d/.claude/skills" ] && [ -d "$d/.grok/skills" ]; } \
+    || { fail t28_native_channel_parent_survives "operator's pre-existing native channel dir destroyed by the :165 rmdir"; all=0; }
+  { [ ! -e "$d/.claude/skills/ship-tasks" ] && [ ! -L "$d/.claude/skills/ship-tasks" ] \
+    && [ ! -e "$d/.grok/skills/ship-tasks" ] && [ ! -L "$d/.grok/skills/ship-tasks" ]; } \
+    || { fail t28_native_channel_parent_survives "managed skill link not removed (IMP-126 link-cleanup regression)"; all=0; }
+  [ "$all" -eq 1 ] && ok t28_native_channel_parent_survives
+}
+
 t01_gitignore_managed_block
 t02_changelog_once
 t03_root_task_migration
@@ -458,6 +891,19 @@ t06_existing_config_untouched
 t07_workflow_gitignore_patterns
 t08_gates_env_regen_notice
 t09_nongit_summary_line
+t20_uninstall_summary_names_kept
+t21_uninstall_summary_derived_not_hardcoded
+t22_uninstall_behavior_unchanged
+t_mcp_registration_removed
+t_no_dangling_skill_links
+t_hook_strip_byte_identical_across_cycles
+t_operator_files_preserved
+t23_parent_marker_written_only_on_create
+t24_containers_removed_only_when_marked
+t25_marker_removed_and_adoption_honoured
+t26_gitignore_strip_byte_exact
+t27_hook_strip_byte_exact_no_trailing_newline
+t28_native_channel_parent_survives
 
 echo "install-hygiene: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

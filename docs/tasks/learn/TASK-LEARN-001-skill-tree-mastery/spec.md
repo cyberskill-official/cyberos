@@ -1,8 +1,10 @@
 ---
 id: TASK-LEARN-001
 title: "LEARN skill tree schema — 1-5 mastery levels per skill per Member with parent-child skill graph"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,32 +36,31 @@ source_decisions:
   - DEC-2083 2026-05-17 — Per-Member mastery per skill — append-only; corrections via new row (audit lineage)
   - DEC-2084 2026-05-17 — memory audit kinds: learn.skill_added, learn.mastery_set, learn.mastery_corrected
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/learn/
-  new_files:
-    - services/learn/migrations/0001_skill_tree_mastery.sql
-    - services/learn/src/skill_tree/mod.rs
-    - services/learn/src/skill_tree/validator.rs
-    - services/learn/src/handlers/skill_routes.rs
-    - services/learn/src/audit/skill_events.rs
-    - services/learn/tests/skill_domain_enum_cardinality_test.rs
-    - services/learn/tests/skill_mastery_enum_cardinality_test.rs
-    - services/learn/tests/skill_parent_child_depth_test.rs
-    - services/learn/tests/skill_mastery_append_only_test.rs
-    - services/learn/tests/skill_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/learn/
+new_files:
+  - services/learn/migrations/0001_skill_tree_mastery.sql
+  - services/learn/src/skill_tree/mod.rs
+  - services/learn/src/skill_tree/validator.rs
+  - services/learn/src/handlers/skill_routes.rs
+  - services/learn/src/audit/skill_events.rs
+  - services/learn/tests/skill_domain_enum_cardinality_test.rs
+  - services/learn/tests/skill_mastery_enum_cardinality_test.rs
+  - services/learn/tests/skill_parent_child_depth_test.rs
+  - services/learn/tests/skill_mastery_append_only_test.rs
+  - services/learn/tests/skill_audit_emission_test.rs
 
-  modified_files:
-    - services/learn/src/lib.rs
+modified_files:
+  - services/learn/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/learn/**
-    - file_write: services/learn/{src,tests,migrations}/**
-    - bash: cd services/learn && cargo test skill
+allowed_tools:
+  - file_read: services/learn/**
+  - file_write: services/learn/{src,tests,migrations}/**
+  - bash: cd services/learn && cargo test skill
 
-  disallowed_tools:
-    - mutate prior mastery row (per DEC-2083)
-    - nesting depth > 4 (per DEC-2080)
+disallowed_tools:
+  - mutate prior mastery row (per DEC-2083)
+  - nesting depth > 4 (per DEC-2080)
 
 effort_hours: 6
 subtasks:

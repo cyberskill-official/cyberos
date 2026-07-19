@@ -1,8 +1,10 @@
 ---
 id: TASK-KB-001
 title: "KB Document schema — slug + markdown body + YAML frontmatter + closed category enum + 3-tier ACL + immutable versions + translation_of"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -22,7 +24,8 @@ shipped: null
 memory_chain_hash: null
 related_tasks: [TASK-AUTH-003, TASK-AUTH-101, TASK-AI-003, TASK-MEMORY-101, TASK-KB-002, TASK-KB-003, TASK-KB-004, TASK-KB-005, TASK-KB-007, TASK-KB-008, TASK-KB-009]
 depends_on: [TASK-AUTH-003, TASK-AUTH-101]
-blocks: [TASK-KB-002, TASK-KB-003, TASK-KB-004, TASK-KB-005, TASK-KB-007, TASK-KB-008, TASK-KB-009]   # all 7 entries are placeholders — not yet specified (downstream consumers)
+# all 7 entries are placeholders — not yet specified (downstream consumers)
+blocks: [TASK-KB-002, TASK-KB-003, TASK-KB-004, TASK-KB-005, TASK-KB-007, TASK-KB-008, TASK-KB-009]
 
 source_pages:
   - website/docs/modules/kb.html#what
@@ -48,29 +51,51 @@ source_decisions:
 language: rust 1.81 + sql
 service: cyberos/services/kb/
 new_files:
-  - services/kb/migrations/0001_documents.sql                         # documents + document_versions + ENUMs + RLS + REVOKE writes + uniqueness indexes
-  - services/kb/migrations/0002_document_views.sql                    # current_documents_view + active_documents_view + version chain walker
-  - services/kb/src/lib.rs                                            # crate root
-  - services/kb/src/types.rs                                          # Document, DocumentVersion, Category, PermissionTier, DocumentStatus, Language enums
-  - services/kb/src/frontmatter.rs                                    # YAML schema validator (serde_yaml + custom validation)
-  - services/kb/src/repo/documents.rs                                 # CRUD: create + get + list + new_version + archive
-  - services/kb/src/repo/versions.rs                                  # append-only version writer
-  - services/kb/src/audit/doc_events.rs                               # canonical kb.document_* memory row builders
-  - services/kb/src/handlers/documents.rs                             # POST/GET/PATCH/DELETE /v1/kb/documents + POST /versions
-  - services/kb/Cargo.toml                                            # +sqlx, +uuid, +serde, +serde_yaml, +chrono, +async-trait, +cyberos-cli-exit
-  - services/kb/tests/documents_crud_test.rs                          # happy + invalid + RLS + idempotent
-  - services/kb/tests/category_enum_closed_test.rs                    # SQL enum + Rust enum cross-validation
-  - services/kb/tests/permission_tier_enum_closed_test.rs             # same shape
-  - services/kb/tests/frontmatter_validation_test.rs                  # required keys + closed values + tag bounds
-  - services/kb/tests/version_append_only_test.rs                     # UPDATE/DELETE rejected by SQL grant
-  - services/kb/tests/version_chain_test.rs                           # save N times → N versions; current_version_id always points at latest
-  - services/kb/tests/translation_of_test.rs                          # self-FK across languages; same-language reject
-  - services/kb/tests/slug_uniqueness_test.rs                         # same slug different language allowed; same slug same language rejected
-  - services/kb/tests/role_restricted_validation_test.rs              # unknown role → 400; empty allowed_role_codes → 400
-  - services/kb/tests/markdown_size_bounds_test.rs                    # 0 chars → 400; > 500_000 → 400
-  - services/kb/tests/archive_workflow_test.rs                        # status=archived; new versions still allowed via separate handler; rendering preserved
+  # documents + document_versions + ENUMs + RLS + REVOKE writes + uniqueness indexes
+  - services/kb/migrations/0001_documents.sql
+  # current_documents_view + active_documents_view + version chain walker
+  - services/kb/migrations/0002_document_views.sql
+  # crate root
+  - services/kb/src/lib.rs
+  # Document, DocumentVersion, Category, PermissionTier, DocumentStatus, Language enums
+  - services/kb/src/types.rs
+  # YAML schema validator (serde_yaml + custom validation)
+  - services/kb/src/frontmatter.rs
+  # CRUD: create + get + list + new_version + archive
+  - services/kb/src/repo/documents.rs
+  # append-only version writer
+  - services/kb/src/repo/versions.rs
+  # canonical kb.document_* memory row builders
+  - services/kb/src/audit/doc_events.rs
+  # POST/GET/PATCH/DELETE /v1/kb/documents + POST /versions
+  - services/kb/src/handlers/documents.rs
+  # +sqlx, +uuid, +serde, +serde_yaml, +chrono, +async-trait, +cyberos-cli-exit
+  - services/kb/Cargo.toml
+  # happy + invalid + RLS + idempotent
+  - services/kb/tests/documents_crud_test.rs
+  # SQL enum + Rust enum cross-validation
+  - services/kb/tests/category_enum_closed_test.rs
+  # same shape
+  - services/kb/tests/permission_tier_enum_closed_test.rs
+  # required keys + closed values + tag bounds
+  - services/kb/tests/frontmatter_validation_test.rs
+  # UPDATE/DELETE rejected by SQL grant
+  - services/kb/tests/version_append_only_test.rs
+  # save N times → N versions; current_version_id always points at latest
+  - services/kb/tests/version_chain_test.rs
+  # self-FK across languages; same-language reject
+  - services/kb/tests/translation_of_test.rs
+  # same slug different language allowed; same slug same language rejected
+  - services/kb/tests/slug_uniqueness_test.rs
+  # unknown role → 400; empty allowed_role_codes → 400
+  - services/kb/tests/role_restricted_validation_test.rs
+  # 0 chars → 400; > 500_000 → 400
+  - services/kb/tests/markdown_size_bounds_test.rs
+  # status=archived; new versions still allowed via separate handler; rendering preserved
+  - services/kb/tests/archive_workflow_test.rs
 modified_files:
-  - services/auth/src/rls/templates.rs                                # add documents + document_versions to TENANT_SCOPED_TABLES
+  # add documents + document_versions to TENANT_SCOPED_TABLES
+  - services/auth/src/rls/templates.rs
 
 allowed_tools:
   - file_read: services/kb/**

@@ -29,42 +29,43 @@ outputs:
 
 skill_chain:
   # ── Conditional entry: the task claims work this workflow did not perform (see 'Reconcile entry' §) ──
-  - { step: 0,  skill: task-reconcile,                             inputs_from: { task: next_task, repo_root: repo_root },                    outputs_to: reconcile_report,                          condition: 'entry state drifted — status past ready_to_implement AND (no ship-manifest OR manifest verify fails OR the claimed phase artefact set is missing)', phase: "entry (reconcile)" }
+  # `judgment:` is ADVISORY host-routing metadata (§11e). A host MAY route on it; nothing here reads it. Never a model name.
+  - { step: 0,  skill: task-reconcile,                             inputs_from: { task: next_task, repo_root: repo_root },                    outputs_to: reconcile_report,                          judgment: mechanical, condition: 'entry state drifted — status past ready_to_implement AND (no ship-manifest OR manifest verify fails OR the claimed phase artefact set is missing)', phase: "entry (reconcile)" }
   # ── Phase: ready_to_implement → implementing (workflow start) ──
-  - { step: 1,  skill: repo-context-map-author,                    inputs_from: { repo_root: repo_root, task_id: next_task_id },              outputs_to: context_map_draft,                         phase: "ready_to_implement → implementing" }
-  - { step: 2,  skill: repo-context-map-audit,                     inputs_from: context_map_draft,                                        outputs_to: context_map }
-  - { step: 3,  skill: architecture-decision-record-author,        inputs_from: { context_map: context_map, task: next_task },                outputs_to: adr_draft,                                 condition: 'context_map.files_outside_immediate_domain > 3' }
-  - { step: 4,  skill: architecture-decision-record-audit,         inputs_from: adr_draft,                                                outputs_to: adr,                                       condition: "step 3 ran" }
-  - { step: 5,  skill: edge-case-matrix-author,                    inputs_from: { task: next_task, context_map: context_map },                outputs_to: edge_case_matrix_draft }
-  - { step: 6,  skill: edge-case-matrix-audit,                     inputs_from: edge_case_matrix_draft,                                   outputs_to: edge_case_matrix }
-  - { step: 7,  skill: mock-contract-test-author,                  inputs_from: { task: next_task, edge_case_matrix: edge_case_matrix },      outputs_to: mock_contracts_draft,                      condition: "task.has_external_dependency" }
-  - { step: 8,  skill: mock-contract-test-audit,                   inputs_from: mock_contracts_draft,                                     outputs_to: mock_contracts,                            condition: "step 7 ran" }
-  - { step: 9,  skill: implementation-plan-author,                 inputs_from: { task: next_task, edge_case_matrix: edge_case_matrix, adr: adr },  outputs_to: impl_plan_draft }
-  - { step: 10, skill: implementation-plan-audit,                  inputs_from: impl_plan_draft,                                          outputs_to: impl_plan }
-  - { step: 11, skill: observability-injection-author,             inputs_from: { task: next_task, impl_plan: impl_plan },                    outputs_to: obs_injection_plan }
-  - { step: 12, skill: observability-injection-audit,              inputs_from: obs_injection_plan,                                       outputs_to: obs_injection }
+  - { step: 1,  skill: repo-context-map-author,                    inputs_from: { repo_root: repo_root, task_id: next_task_id },              outputs_to: context_map_draft,                         judgment: high, phase: "ready_to_implement → implementing" }
+  - { step: 2,  skill: repo-context-map-audit,                     inputs_from: context_map_draft,                                        outputs_to: context_map,                               judgment: medium }
+  - { step: 3,  skill: architecture-decision-record-author,        inputs_from: { context_map: context_map, task: next_task },                outputs_to: adr_draft,                                 judgment: high, condition: 'context_map.files_outside_immediate_domain > 3' }
+  - { step: 4,  skill: architecture-decision-record-audit,         inputs_from: adr_draft,                                                outputs_to: adr,                                       judgment: medium, condition: "step 3 ran" }
+  - { step: 5,  skill: edge-case-matrix-author,                    inputs_from: { task: next_task, context_map: context_map },                outputs_to: edge_case_matrix_draft,                    judgment: high }
+  - { step: 6,  skill: edge-case-matrix-audit,                     inputs_from: edge_case_matrix_draft,                                   outputs_to: edge_case_matrix,                          judgment: medium }
+  - { step: 7,  skill: mock-contract-test-author,                  inputs_from: { task: next_task, edge_case_matrix: edge_case_matrix },      outputs_to: mock_contracts_draft,                      judgment: high, condition: "task.has_external_dependency" }
+  - { step: 8,  skill: mock-contract-test-audit,                   inputs_from: mock_contracts_draft,                                     outputs_to: mock_contracts,                            judgment: medium, condition: "step 7 ran" }
+  - { step: 9,  skill: implementation-plan-author,                 inputs_from: { task: next_task, edge_case_matrix: edge_case_matrix, adr: adr },  outputs_to: impl_plan_draft,                     judgment: high }
+  - { step: 10, skill: implementation-plan-audit,                  inputs_from: impl_plan_draft,                                          outputs_to: impl_plan,                                 judgment: medium }
+  - { step: 11, skill: observability-injection-author,             inputs_from: { task: next_task, impl_plan: impl_plan },                    outputs_to: obs_injection_plan,                        judgment: medium }
+  - { step: 12, skill: observability-injection-audit,              inputs_from: obs_injection_plan,                                       outputs_to: obs_injection,                             judgment: medium }
   # ── Phase transition: implementing → ready_to_review ──
-  - { step: 13, skill: backlog-state-update-author,                inputs_from: { task: next_task, transition: "implementing → ready_to_review", outcome: steps_1_to_12 }, outputs_to: backlog_mutation_phase_1, phase: "implementing → ready_to_review" }
-  - { step: 14, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_1,                                 outputs_to: backlog_after_phase_1 }
+  - { step: 13, skill: backlog-state-update-author,                inputs_from: { task: next_task, transition: "implementing → ready_to_review", outcome: steps_1_to_12 }, outputs_to: backlog_mutation_phase_1, judgment: mechanical, phase: "implementing → ready_to_review" }
+  - { step: 14, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_1,                                 outputs_to: backlog_after_phase_1,                     judgment: medium }
   # ── Phase: ready_to_review → reviewing → ready_to_test ──
-  - { step: 15, skill: backlog-state-update-author,                inputs_from: { task: next_task, transition: "ready_to_review → reviewing", outcome: reviewer_claim }, outputs_to: backlog_mutation_phase_2 }
-  - { step: 16, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_2,                                 outputs_to: backlog_after_phase_2 }
-  - { step: 17, skill: code-review-author,                         inputs_from: { task: next_task, impl_diff: implementation_diff, adr: adr, edge_case_matrix: edge_case_matrix }, outputs_to: code_review_draft }
-  - { step: 18, skill: code-review-audit,                          inputs_from: code_review_draft,                                        outputs_to: code_review_report }
-  - { step: 19, skill: backlog-state-update-author,                inputs_from: { task: next_task, transition: "reviewing → ready_to_test", outcome: code_review_report }, outputs_to: backlog_mutation_phase_3 }
-  - { step: 20, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_3,                                 outputs_to: backlog_after_phase_3 }
+  - { step: 15, skill: backlog-state-update-author,                inputs_from: { task: next_task, transition: "ready_to_review → reviewing", outcome: reviewer_claim }, outputs_to: backlog_mutation_phase_2, judgment: mechanical }
+  - { step: 16, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_2,                                 outputs_to: backlog_after_phase_2,                     judgment: medium }
+  - { step: 17, skill: code-review-author,                         inputs_from: { task: next_task, impl_diff: implementation_diff, adr: adr, edge_case_matrix: edge_case_matrix }, outputs_to: code_review_draft, judgment: high }
+  - { step: 18, skill: code-review-audit,                          inputs_from: code_review_draft,                                        outputs_to: code_review_report,                        judgment: medium }
+  - { step: 19, skill: backlog-state-update-author,                inputs_from: { task: next_task, transition: "reviewing → ready_to_test", outcome: code_review_report }, outputs_to: backlog_mutation_phase_3, judgment: mechanical }
+  - { step: 20, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_3,                                 outputs_to: backlog_after_phase_3,                     judgment: medium }
   # ── Phase: ready_to_test → testing → done ──
-  - { step: 21, skill: backlog-state-update-author,                inputs_from: { task: next_task, transition: "ready_to_test → testing", outcome: tester_claim }, outputs_to: backlog_mutation_phase_4 }
-  - { step: 22, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_4,                                 outputs_to: backlog_after_phase_4 }
-  - { step: 23, skill: coverage-gate-author,                       inputs_from: { task: next_task, edge_case_matrix: edge_case_matrix },      outputs_to: coverage_gate_draft }
-  - { step: 24, skill: coverage-gate-audit,                        inputs_from: coverage_gate_draft,                                      outputs_to: coverage_gate_report }
-  - { step: 25, skill: debugging-cycle-author,                     inputs_from: { task: next_task, coverage_report: coverage_gate_report },   outputs_to: debug_cycle_draft,                         condition: "coverage_gate_report.tests_failed > 0" }
-  - { step: 26, skill: debugging-cycle-audit,                      inputs_from: debug_cycle_draft,                                        outputs_to: debug_trace,                               condition: "step 25 ran" }
-  - { step: 27, skill: task-audit,                      inputs_from: { task: next_task, coverage_report: coverage_gate_report },   outputs_to: task_audit_report,                           description: "Post-implementation TRACE-004 closure — every §1 clause's cited test MUST be passed in coverage_gate_report. Pre-flight spec audit (`draft → ready_to_implement` transition) ran earlier, BEFORE this workflow; this is the closure check just before marking the task done." }
-  - { step: 28, skill: awh-gate,                                   inputs_from: { task: next_task, module: next_task.module, goldenset: "modules/<module>/.awh/goldenset.yaml", baseline: "modules/<module>/.awh/eval-baseline.json" }, outputs_to: awh_gate_report, description: "Out-of-band independent rerun (the check step 27 is NOT). `awh eval <goldenset> --base-dir . --seeds 1 --baseline <baseline> --max-regression 0.0` reruns the task's §1 cited tests plus the module suite against the sealed, read-only baseline. GREEN (no task regressed) is REQUIRED to reach the done-flip; RED routes the task back to ready_to_implement per STATUS-REFERENCE §1.3 with routed_back_count += 1. Tests sealed via `awh lock modules/<module>/tests`. Emits memory.awh_gate_result." }
-  - { step: 29, skill: caf-gate,                                 inputs_from: { task: next_task, module: next_task.module, audit_profile: "modules/<module>/audit-profile.yaml", audit_baseline: "modules/<module>/.caf/" }, outputs_to: caf_gate_report, description: "Code-audit gate (absorbed from CyberSkill/code-audit-framework). Deterministic floor, no LLM: `bash scripts/caf_gate.sh <module>` runs the module's TARGET HEALTH via tools/caf/core/evals/verify-target.sh (the module's own RUN_COMMANDS - build/lint/typecheck/test - from modules/<module>/audit-profile.yaml, fail-closed) AND, when a sealed audit exists at modules/<module>/.caf/, `code-audit-validate --run modules/<module>/.caf --fail-on High` (no new High/Critical finding vs the sealed baseline). CLEAN is REQUIRED alongside the awh gate to reach the done-flip; RED routes the task back to ready_to_implement per STATUS-REFERENCE §1.3 with routed_back_count += 1. Catches the class awh cannot: build/lint breaks, route 404s, changed data contracts (the CCAF/kymondongiap class). Emits memory.caf_gate_result. See docs/verification/caf-absorption-design.md." }
-  - { step: 30, skill: backlog-state-update-author,                inputs_from: { task: next_task, transition: "testing → done", outcome: { task_audit_report: task_audit_report, awh_gate_report: awh_gate_report, caf_gate_report: caf_gate_report } }, outputs_to: backlog_mutation_phase_5, condition: "awh_gate_report.outcome == GREEN AND caf_gate_report.outcome == CLEAN" }
-  - { step: 31, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_5,                                 outputs_to: updated_backlog }
+  - { step: 21, skill: backlog-state-update-author,                inputs_from: { task: next_task, transition: "ready_to_test → testing", outcome: tester_claim }, outputs_to: backlog_mutation_phase_4, judgment: mechanical }
+  - { step: 22, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_4,                                 outputs_to: backlog_after_phase_4,                     judgment: medium }
+  - { step: 23, skill: coverage-gate-author,                       inputs_from: { task: next_task, edge_case_matrix: edge_case_matrix },      outputs_to: coverage_gate_draft,                       judgment: medium }
+  - { step: 24, skill: coverage-gate-audit,                        inputs_from: coverage_gate_draft,                                      outputs_to: coverage_gate_report,                      judgment: medium }
+  - { step: 25, skill: debugging-cycle-author,                     inputs_from: { task: next_task, coverage_report: coverage_gate_report },   outputs_to: debug_cycle_draft,                         judgment: high, condition: "coverage_gate_report.tests_failed > 0" }
+  - { step: 26, skill: debugging-cycle-audit,                      inputs_from: debug_cycle_draft,                                        outputs_to: debug_trace,                               judgment: medium, condition: "step 25 ran" }
+  - { step: 27, skill: task-audit,                      inputs_from: { task: next_task, coverage_report: coverage_gate_report },   outputs_to: task_audit_report,                           judgment: high, description: "Post-implementation TRACE-004 closure — every §1 clause's cited test MUST be passed in coverage_gate_report. Pre-flight spec audit (`draft → ready_to_implement` transition) ran earlier, BEFORE this workflow; this is the closure check just before marking the task done." }
+  - { step: 28, skill: awh-gate,                                   inputs_from: { task: next_task, module: next_task.module, goldenset: "modules/<module>/.awh/goldenset.yaml", baseline: "modules/<module>/.awh/eval-baseline.json" }, outputs_to: awh_gate_report, judgment: medium, description: "Out-of-band independent rerun (the check step 27 is NOT). `awh eval <goldenset> --base-dir . --seeds 1 --baseline <baseline> --max-regression 0.0` reruns the task's §1 cited tests plus the module suite against the sealed, read-only baseline. GREEN (no task regressed) is REQUIRED to reach the done-flip; RED routes the task back to ready_to_implement per STATUS-REFERENCE §1.3 with routed_back_count += 1. Tests sealed via `awh lock modules/<module>/tests`. Emits memory.awh_gate_result." }
+  - { step: 29, skill: caf-gate,                                 inputs_from: { task: next_task, module: next_task.module, audit_profile: "modules/<module>/audit-profile.yaml", audit_baseline: "modules/<module>/.caf/" }, outputs_to: caf_gate_report, judgment: medium, description: "Code-audit gate (absorbed from CyberSkill/code-audit-framework). Deterministic floor, no LLM: `bash scripts/caf_gate.sh <module>` runs the module's TARGET HEALTH via tools/caf/core/evals/verify-target.sh (the module's own RUN_COMMANDS - build/lint/typecheck/test - from modules/<module>/audit-profile.yaml, fail-closed) AND, when a sealed audit exists at modules/<module>/.caf/, `code-audit-validate --run modules/<module>/.caf --fail-on High` (no new High/Critical finding vs the sealed baseline). CLEAN is REQUIRED alongside the awh gate to reach the done-flip; RED routes the task back to ready_to_implement per STATUS-REFERENCE §1.3 with routed_back_count += 1. Catches the class awh cannot: build/lint breaks, route 404s, changed data contracts (the CCAF/kymondongiap class). Emits memory.caf_gate_result. See docs/verification/caf-absorption-design.md." }
+  - { step: 30, skill: backlog-state-update-author,                inputs_from: { task: next_task, transition: "testing → done", outcome: { task_audit_report: task_audit_report, awh_gate_report: awh_gate_report, caf_gate_report: caf_gate_report } }, outputs_to: backlog_mutation_phase_5, judgment: mechanical, condition: "awh_gate_report.outcome == GREEN AND caf_gate_report.outcome == CLEAN" }
+  - { step: 31, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_5,                                 outputs_to: updated_backlog,                           judgment: medium }
 
 escalates_to:
   - { persona: chief-information-security-officer,                 when: "step 6 edge-case-matrix flags a SECURITY-class entry above warning + no corresponding ADR exists yet" }
@@ -210,6 +211,8 @@ Status flips to `testing` (steps 21-22). `coverage-gate-author` runs the test su
 If any test fails, `debugging-cycle-author` runs the multi-vector pass (classify failure vector — state/network/memory/logic/flake; output hypothesis + targeted change; re-run; after 5 consecutive failures revert + trip circuit breaker). The audit emits the full hypothesis-and-attempt log.
 
 After coverage + debugging settle, `task-audit` runs the post-impl pass at step 27 to enforce **TRACE-004** — every §1 clause's cited test MUST appear as `passed` in `coverage_gate_report`. A §1 clause may have an AC and a named test from the pre-flight pass, but if the actual test is failing or absent from the coverage report, the task cannot ship `done`.
+
+Step 27's terminal `pass`/`fail` verdict is ALSO logged, one append-only row, to the skill-trust ledger (`docs/tasks/.workflow/skill-trust.tsv`) via `node tools/install/docs-tools/skill-log.mjs append --skill <skill> --verdict <pass|fail> --task <task-id>` (TASK-IMP-113). This is a **measurement side-effect only**: the tier label `skill-log.mjs --render` prints is INFORMATIONAL (spec §1.4) — no step, gate, or queue in this workflow reads a tier to decide anything, and the transition table below is untouched by it. The ledger is append-only run-state (gitignored by the install seed), a report for the operator asking "which skills actually work?" — never a gate. A `needs_human` pause or a run cut mid-flight is not a terminal verdict and is not logged.
 
 Acceptance evidence for content deliverables — a backlog row, a doc passage, anything whose deliverable IS bytes in a file — MUST be measured on the committed object (`git show <commit>:<path>`), never a working view (v2.6.3, TASK-IMP-092). A working view can read back exactly what was just written into it while no commit carries the change; the committed object is the only thing a reviewer, a consumer repo, or the next session receives. (Learned 2026-07-16, TASK-IMP-086 incident: every working-view read looked consistent while no commit ever carried the rows.)
 
@@ -411,6 +414,68 @@ of them losing three of four swarm agents mid-flight.
   starts blocking is a gate that arrived without anyone deciding to add one; the operator reads the
   row and makes the call. Spend limits are a real problem, and the answer to them is not a machine
   that stops itself for a reason nobody agreed to.
+
+## 11e. Judgment tiering: which steps need judgment (v2.8.0, TASK-IMP-115)
+
+Every step above runs at whatever reasoning the host happens to give it. Nothing marked
+which steps deserve expensive judgment (step 27's task-audit, step 3's ADR) and which are
+near-mechanical (the backlog flips — already a script, correctly). So a host had exactly
+one strategy available: spend the same on all 32. This session supplied the argument the
+expensive way, with two API spend-limit cutoffs, one of them losing three of four swarm
+agents mid-flight.
+
+Each `skill_chain` step therefore carries `judgment: high | medium | mechanical`.
+
+- **It is ADVISORY, and that is the whole design.** A host MAY route on it. **Nothing in
+  the payload reads it to decide anything** — no step, no gate, no helper, no condition. It
+  is information, not instruction. A host that ignores the field entirely is correct, and
+  is the default: the chain runs identically with or without it. The field can only be
+  wrong about the work; it can never break the run.
+- **NO MODEL STRINGS. EVER.** No model name, no price, no host effort level appears here or
+  anywhere in the payload. Those are the host's facts — accurate the day they are written
+  and wrong soon after — and a `<vendor>-<model>-5` literal in a rule is a rule with an
+  expiry date nobody will notice passing. The payload describes the WORK; the host picks
+  the worker. This is the constraint the field exists to respect, not a caveat on it.
+- **`mechanical` = a docs-tools helper produces the step's result.** The agent runs the tool
+  and transcribes; no model is deciding anything. The label is never applied on a
+  feels-deterministic basis — it is anchored to a helper the payload names for that skill:
+
+  | Steps | Skill | Helper that does the work | Where the payload says so |
+  |---|---|---|---|
+  | 0 | `task-reconcile` | `docs-tools/task-reconcile.mjs` | `modules/skill/task-reconcile/SKILL.md` frontmatter `tool:` |
+  | 13, 15, 19, 21, 30 | `backlog-state-update-author` | `docs-tools/backlog-mutate.mjs` | §1 above — "the byte-discipline executor for `backlog-state-update` mutations … never hand-sed" |
+
+- **`high` = the step's output is a judgment the chain then depends on.** Every one carries
+  its reason here, because a level asserted without a reason is a level that was guessed:
+
+  | Step | Skill | Why a model is deciding |
+  |---|---|---|
+  | 1 | `repo-context-map-author` | the "outside-domain" call is a judgment, and step 3's ADR trigger is derived from it |
+  | 3 | `architecture-decision-record-author` | an ADR IS the architectural decision |
+  | 5 | `edge-case-matrix-author` | enumerates the boundary and SECURITY cases nobody wrote down |
+  | 7 | `mock-contract-test-author` | designs the contract shape of a service that does not exist yet |
+  | 9 | `implementation-plan-author` | the implementation itself |
+  | 17 | `code-review-author` | produces the packet the human acceptance gate reads |
+  | 25 | `debugging-cycle-author` | classifies the failure vector and forms the hypothesis |
+  | 27 | `task-audit` | TRACE-004 closure — the judgment half; its `task-lint.mjs` floor only seeds the mechanical findings |
+
+- **Ambiguous is `medium`, never `high`.** Overstating a step's need is how the expensive
+  default returns wearing a label. `medium` is also the honest reading of a step whose work
+  a helper only half-owns: step 23's `coverage-scope.mjs` computes the per-file table but
+  its own header reserves the judgment fields (`tests_failed`, `ecm_rows_uncovered`) for the
+  author skill, so step 23 is `medium`, not `mechanical`.
+- **Steps 28-29 are the known rough edge.** Both gates are deterministic — caf-gate's skill
+  says "no LLM" — but their executors (`tools/awh`, `scripts/caf_gate.sh`) are not
+  docs-tools helpers, and TASK-IMP-115's AC 2 scopes `mechanical` to docs-tools backing.
+  They read `medium`: under-informative rather than wrong. Widening the helper family is a
+  follow-up, not a silent reinterpretation here.
+- **Where it does NOT extend yet.** `create-tasks` and the `plan` workflow (TASK-IMP-111)
+  carry no `judgment` field. This is one workflow's experiment; extend it once a host has
+  actually routed on it and said the information was worth having.
+- **A wrong level is a drift bug, not an outage.** A step marked `mechanical` whose helper
+  is later replaced by a model is simply wrong until someone fixes it — the suite arm
+  (`test_mechanical_steps_are_helper_backed`) is what notices, by re-proving the helper
+  exists and is still the thing the payload names for that skill.
 
 ## 12. No partial-ship-and-pause within a task
 

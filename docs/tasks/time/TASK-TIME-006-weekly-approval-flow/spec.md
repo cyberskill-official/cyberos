@@ -1,8 +1,10 @@
 ---
 id: TASK-TIME-006
 title: "TIME weekly approval flow — Member submit → AM (engagement_admin) review → CFO visibility with auto-lock + bulk-approve + diff view"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -37,44 +39,44 @@ source_decisions:
   - DEC-1426 2026-05-17 — Email notifications: Submit reminder Monday AM; AM review reminder Wednesday AM; rejection notifies Member
   - DEC-1427 2026-05-17 — memory audit kinds: time.timesheet_submitted, time.timesheet_approved, time.timesheet_rejected, time.timesheet_auto_locked, time.timesheet_bulk_approved
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/time/
-  new_files:
-    - services/time/migrations/0005_timesheets.sql
-    - services/time/migrations/0006_timesheet_reviews.sql
-    - services/time/src/timesheet/mod.rs
-    - services/time/src/timesheet/submit.rs
-    - services/time/src/timesheet/review.rs
-    - services/time/src/timesheet/bulk_approve.rs
-    - services/time/src/timesheet/auto_lock_job.rs
-    - services/time/src/timesheet/diff.rs
-    - services/time/src/audit/timesheet_events.rs
-    - services/time/src/handlers/timesheet_routes.rs
-    - services/time/tests/timesheet_submit_test.rs
-    - services/time/tests/timesheet_am_approve_test.rs
-    - services/time/tests/timesheet_am_reject_test.rs
-    - services/time/tests/timesheet_resubmit_diff_test.rs
-    - services/time/tests/timesheet_bulk_approve_test.rs
-    - services/time/tests/timesheet_auto_lock_14d_test.rs
-    - services/time/tests/timesheet_status_enum_test.rs
-    - services/time/tests/timesheet_locked_immutable_test.rs
-    - services/time/tests/timesheet_email_notification_test.rs
-    - services/time/tests/timesheet_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/time/
+new_files:
+  - services/time/migrations/0005_timesheets.sql
+  - services/time/migrations/0006_timesheet_reviews.sql
+  - services/time/src/timesheet/mod.rs
+  - services/time/src/timesheet/submit.rs
+  - services/time/src/timesheet/review.rs
+  - services/time/src/timesheet/bulk_approve.rs
+  - services/time/src/timesheet/auto_lock_job.rs
+  - services/time/src/timesheet/diff.rs
+  - services/time/src/audit/timesheet_events.rs
+  - services/time/src/handlers/timesheet_routes.rs
+  - services/time/tests/timesheet_submit_test.rs
+  - services/time/tests/timesheet_am_approve_test.rs
+  - services/time/tests/timesheet_am_reject_test.rs
+  - services/time/tests/timesheet_resubmit_diff_test.rs
+  - services/time/tests/timesheet_bulk_approve_test.rs
+  - services/time/tests/timesheet_auto_lock_14d_test.rs
+  - services/time/tests/timesheet_status_enum_test.rs
+  - services/time/tests/timesheet_locked_immutable_test.rs
+  - services/time/tests/timesheet_email_notification_test.rs
+  - services/time/tests/timesheet_audit_emission_test.rs
 
-  modified_files:
-    - services/time/src/lib.rs
-    - services/time/src/entry/create.rs                              # block entries for locked weeks
+modified_files:
+  - services/time/src/lib.rs
+  # block entries for locked weeks
+  - services/time/src/entry/create.rs
 
-  allowed_tools:
-    - file_read: services/time/**
-    - file_write: services/time/{src,tests,migrations}/**
-    - bash: cd services/time && cargo test timesheet
+allowed_tools:
+  - file_read: services/time/**
+  - file_write: services/time/{src,tests,migrations}/**
+  - bash: cd services/time && cargo test timesheet
 
-  disallowed_tools:
-    - mutate locked timesheets (per DEC-1422)
-    - skip 14d auto-lock (per DEC-1425)
-    - allow non-AM approval (per DEC-1420)
+disallowed_tools:
+  - mutate locked timesheets (per DEC-1422)
+  - skip 14d auto-lock (per DEC-1425)
+  - allow non-AM approval (per DEC-1420)
 
 effort_hours: 6
 subtasks:

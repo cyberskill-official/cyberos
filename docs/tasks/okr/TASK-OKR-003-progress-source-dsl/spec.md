@@ -1,8 +1,10 @@
 ---
 id: TASK-OKR-003
 title: "OKR KR progress_source DSL — declarative query against PROJ / INV / HR / LEARN modules for auto-progress feed"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -35,40 +37,39 @@ source_decisions:
   - DEC-1984 2026-05-17 — DSL stored as JSONB on KR; resolved at progress compute time
   - DEC-1985 2026-05-17 — memory audit kinds: okr.progress_source_set, okr.progress_source_resolved, okr.progress_source_resolution_failed, okr.custom_sql_dual_signed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/okr/
-  new_files:
-    - services/okr/migrations/0003_progress_source.sql
-    - services/okr/src/dsl/mod.rs
-    - services/okr/src/dsl/parser.rs
-    - services/okr/src/dsl/resolvers/mod.rs
-    - services/okr/src/dsl/resolvers/proj_resolver.rs
-    - services/okr/src/dsl/resolvers/inv_resolver.rs
-    - services/okr/src/dsl/resolvers/hr_resolver.rs
-    - services/okr/src/dsl/resolvers/learn_resolver.rs
-    - services/okr/src/dsl/resolvers/custom_sql_resolver.rs
-    - services/okr/src/dsl/metric_whitelist.rs
-    - services/okr/src/handlers/dsl_routes.rs
-    - services/okr/src/audit/dsl_events.rs
-    - services/okr/tests/dsl_module_enum_cardinality_test.rs
-    - services/okr/tests/dsl_agg_enum_cardinality_test.rs
-    - services/okr/tests/dsl_proj_resolver_test.rs
-    - services/okr/tests/dsl_metric_whitelist_test.rs
-    - services/okr/tests/dsl_custom_sql_dual_sign_test.rs
-    - services/okr/tests/dsl_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/okr/
+new_files:
+  - services/okr/migrations/0003_progress_source.sql
+  - services/okr/src/dsl/mod.rs
+  - services/okr/src/dsl/parser.rs
+  - services/okr/src/dsl/resolvers/mod.rs
+  - services/okr/src/dsl/resolvers/proj_resolver.rs
+  - services/okr/src/dsl/resolvers/inv_resolver.rs
+  - services/okr/src/dsl/resolvers/hr_resolver.rs
+  - services/okr/src/dsl/resolvers/learn_resolver.rs
+  - services/okr/src/dsl/resolvers/custom_sql_resolver.rs
+  - services/okr/src/dsl/metric_whitelist.rs
+  - services/okr/src/handlers/dsl_routes.rs
+  - services/okr/src/audit/dsl_events.rs
+  - services/okr/tests/dsl_module_enum_cardinality_test.rs
+  - services/okr/tests/dsl_agg_enum_cardinality_test.rs
+  - services/okr/tests/dsl_proj_resolver_test.rs
+  - services/okr/tests/dsl_metric_whitelist_test.rs
+  - services/okr/tests/dsl_custom_sql_dual_sign_test.rs
+  - services/okr/tests/dsl_audit_emission_test.rs
 
-  modified_files:
-    - services/okr/src/krs.rs
+modified_files:
+  - services/okr/src/krs.rs
 
-  allowed_tools:
-    - file_read: services/{okr,proj,inv,hr,learn}/**
-    - file_write: services/okr/{src,tests,migrations}/**
-    - bash: cd services/okr && cargo test dsl
+allowed_tools:
+  - file_read: services/{okr,proj,inv,hr,learn}/**
+  - file_write: services/okr/{src,tests,migrations}/**
+  - bash: cd services/okr && cargo test dsl
 
-  disallowed_tools:
-    - bypass metric whitelist (per DEC-1983)
-    - custom_sql without dual-sign (per DEC-1983)
+disallowed_tools:
+  - bypass metric whitelist (per DEC-1983)
+  - custom_sql without dual-sign (per DEC-1983)
 
 effort_hours: 10
 subtasks:

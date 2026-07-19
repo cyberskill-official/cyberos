@@ -1,8 +1,10 @@
 ---
 id: TASK-TIME-004
 title: "TIME auto-detect proposals — Member-confirm suggestions from PROJ activity (status changes + comment patterns + commit/PR activity)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -36,40 +38,39 @@ source_decisions:
   - DEC-1445 2026-05-17 — Member always confirms — NEVER auto-creates TIME entry (per task-audit skill §8 — destructive auto-action forbidden)
   - DEC-1446 2026-05-17 — memory audit kinds: time.proposal_generated, time.proposal_accepted, time.proposal_rejected, time.proposal_expired
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/time/
-  new_files:
-    - services/time/migrations/0008_time_proposals.sql
-    - services/time/src/proposals/mod.rs
-    - services/time/src/proposals/detector.rs
-    - services/time/src/proposals/proj_activity_watcher.rs
-    - services/time/src/proposals/confidence_score.rs
-    - services/time/src/proposals/expire_job.rs
-    - services/time/src/audit/proposal_events.rs
-    - services/time/src/handlers/proposal_routes.rs
-    - services/time/tests/proposal_from_status_change_test.rs
-    - services/time/tests/proposal_from_comment_burst_test.rs
-    - services/time/tests/proposal_member_confirm_test.rs
-    - services/time/tests/proposal_member_reject_test.rs
-    - services/time/tests/proposal_expire_7d_test.rs
-    - services/time/tests/proposal_confidence_filter_test.rs
-    - services/time/tests/proposal_no_auto_create_test.rs
-    - services/time/tests/proposal_enum_cardinality_test.rs
-    - services/time/tests/proposal_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/time/
+new_files:
+  - services/time/migrations/0008_time_proposals.sql
+  - services/time/src/proposals/mod.rs
+  - services/time/src/proposals/detector.rs
+  - services/time/src/proposals/proj_activity_watcher.rs
+  - services/time/src/proposals/confidence_score.rs
+  - services/time/src/proposals/expire_job.rs
+  - services/time/src/audit/proposal_events.rs
+  - services/time/src/handlers/proposal_routes.rs
+  - services/time/tests/proposal_from_status_change_test.rs
+  - services/time/tests/proposal_from_comment_burst_test.rs
+  - services/time/tests/proposal_member_confirm_test.rs
+  - services/time/tests/proposal_member_reject_test.rs
+  - services/time/tests/proposal_expire_7d_test.rs
+  - services/time/tests/proposal_confidence_filter_test.rs
+  - services/time/tests/proposal_no_auto_create_test.rs
+  - services/time/tests/proposal_enum_cardinality_test.rs
+  - services/time/tests/proposal_audit_emission_test.rs
 
-  modified_files:
-    - services/time/src/lib.rs
+modified_files:
+  - services/time/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{time,proj}/**
-    - file_write: services/time/{src,tests,migrations}/**
-    - bash: cd services/time && cargo test proposals
+allowed_tools:
+  - file_read: services/{time,proj}/**
+  - file_write: services/time/{src,tests,migrations}/**
+  - bash: cd services/time && cargo test proposals
 
-  disallowed_tools:
-    - auto-create TIME entry without Member confirm (per DEC-1445)
-    - keep proposals past 7d expiry (per DEC-1443)
-    - emit proposals < 50 confidence (per DEC-1444)
+disallowed_tools:
+  - auto-create TIME entry without Member confirm (per DEC-1445)
+  - keep proposals past 7d expiry (per DEC-1443)
+  - emit proposals < 50 confidence (per DEC-1444)
 
 effort_hours: 6
 subtasks:

@@ -17,6 +17,58 @@ CY="$root/.cyberos"
 
 echo "cyberos uninstall: target=$root"
 
+# What THIS RUN removed (TASK-IMP-106 §1.1). Each removal appends here at the moment it happens,
+# beside the line that reports it - so a branch that did not run contributes nothing, and the
+# summary cannot claim an action the run did not take. Newline-delimited string rather than an
+# array on purpose: `set -u` plus an empty array is an error on bash < 4.4, and this script runs
+# on whatever bash the operator has (macOS ships 3.2).
+_removed_list=""
+_note_removed() { _removed_list="${_removed_list}$1
+"; }
+
+# TASK-IMP-121 §1.4/§1.5: strip a managed cyberos block install APPENDED (always at the file's tail)
+# together with the SINGLE '\n' separator byte install writes immediately before the block's '# >>>'
+# marker, restoring the operator's pre-install bytes EXACTLY - including a file with NO trailing
+# newline. The old sed/awk deleted only the marked range, so install's separator survived (.gitignore
+# 20->21) and, for a no-trailing-newline hook, awk's `print` re-terminated the last surviving line
+# (hook 33->34). Byte-level fix: hold each line one step; at the marker, DROP a blank separator line
+# outright but emit a NON-blank last content line WITHOUT a trailing newline (its newline in the file
+# WAS install's separator). Operator blank lines elsewhere are untouched - only the line adjacent to
+# the marker is the separator. bash-3.2 / BSD-awk safe: index() literal match, no case in a
+# command-substitution, no gawk-isms.   $1 = file   $2 = begin-marker substring
+_strip_cyberos_block() {
+  local f="$1" mk="$2" tmp="$1.cyberos.tmp"
+  awk -v mk="$mk" '
+    index($0, mk) > 0 { if (has && pend !~ /^[[:space:]]*$/) printf "%s", pend; inblk=1; has=0; next }
+    inblk { next }
+    { if (has) print pend; pend=$0; has=1 }
+    END { if (has && !inblk) print pend }
+  ' "$f" > "$tmp" && mv "$tmp" "$f"
+}
+
+# TASK-IMP-121 §1.2/§1.3: reclaim a container install CREATES (.agents/skills, then .agents) ONLY when
+# it carries the parent .cyberos-owned marker install writes on creation (§1.1) AND is empty once our
+# content and that marker are gone. Emptiness ALONE is not proof of ownership: an operator's
+# pre-existing empty .agents/skills is theirs and MUST survive (the old unconditional rmdir destroyed
+# it). The marker is removed BEFORE the rmdir and whether or not the rmdir succeeds, so no marker
+# survives on a KEPT .agents (its .agents/rules pointer keeps it non-empty); a dir whose marker the
+# operator deleted to adopt it is kept and reported kept - the adoption promise, one directory up.
+_reclaim_parent() {         # $1 = container dir, relative to root
+  local d="$root/$1"
+  [ -d "$d" ] || return 0
+  if [ -f "$d/.cyberos-owned" ]; then
+    rm -f "$d/.cyberos-owned"                        # §1.3: marker goes FIRST, unconditionally
+    if rmdir "$d" 2>/dev/null; then
+      echo "  removed $1 (installer-created container, now empty)"
+      _note_removed "$1 (installer-created container)"
+    else
+      echo "  kept $1 (installer-created but not empty - your files are inside; marker removed)"
+    fi
+  else
+    echo "  kept $1 (not ours - no cyberos marker; operator dir, left in place)"
+  fi
+}
+
 # Soft update check is irrelevant when removing — skip
 
 if [ ! -d "$CY" ]; then
@@ -63,27 +115,38 @@ if [ -f "$hk" ]; then
   if _cyberos_owns_hook "$hk"; then
     rm -f "$hk"
     echo "  removed managed pre-commit hook"
+    _note_removed "${hk#$root/} (managed pre-commit hook)"
   elif grep -q "cyberos-status-hook" "$hk" 2>/dev/null; then
-    tmp="$hk.cyberos.tmp"
-    sed '/# >>> cyberos-status-hook/,/# <<< cyberos-status-hook <<</d' "$hk" > "$tmp" && mv "$tmp" "$hk"
+    # Strip the managed block AND install's single '\n' separator byte-exact via the shared helper
+    # (TASK-IMP-121 §1.5). IMP-126's inline awk was byte-exact ONLY for a NEWLINE-TERMINATED foreign
+    # hook; for one with no trailing newline it re-terminated the last surviving line (measured
+    # 33->34). The block is always at the tail (install appends via `cat >>`); _strip_cyberos_block
+    # drops the one separator byte without re-terminating the survivor, and heals a v1 leftover the
+    # same way (its '# >>> cyberos-status-hook' prefix matches too - install.sh:856 upgrade shares it).
+    _strip_cyberos_block "$hk" "# >>> cyberos-status-hook"
     chmod +x "$hk"
     echo "  stripped cyberos block from pre-commit"
+    _note_removed "${hk#$root/} (our block only - the hook itself is yours and stays)"
   fi
 fi
 
 # 2. managed .gitignore block
 gi="$root/.gitignore"
 if [ -f "$gi" ] && grep -q 'cyberos' "$gi" 2>/dev/null; then
-  tmp="$gi.cyberos.tmp"
-  # strip marked block if present
+  # strip the marked block AND install's leading '\n' separator byte-exact (TASK-IMP-121 §1.4): the
+  # old sed deleted only the >>>..<<< range, leaving the separator install writes above '# >>>'
+  # (measured 20->21 on a newline-terminated .gitignore). Same shared strip the hook uses; the block
+  # is at the tail (install rewrites .gitignore as operator-lines + separator + block).
   if grep -q '>>> cyberos' "$gi" 2>/dev/null; then
-    sed '/# >>> cyberos/,/# <<< cyberos <<</d' "$gi" > "$tmp" && mv "$tmp" "$gi"
+    _strip_cyberos_block "$gi" "# >>> cyberos"
     echo "  removed managed .gitignore block"
+    _note_removed ".gitignore (managed block only - your rules stay)"
   fi
 fi
 
-# 2b. shared .agents/skills entries + the /create-tasks pair's .claude/skills counterparts
-# (TASK-IMP-094). Removed only when OURS by construction: a symlink whose target is the
+# 2b. managed skill entries install writes - the shared .agents/skills entries (TASK-IMP-094) in the
+# loop here, then every per-agent family link in the loop below (extended by TASK-IMP-126 §1.2).
+# Removed only when OURS by construction: a symlink whose target is the
 # vendored machine (directly, or chained via .claude/skills/<cmd>), or the installer's
 # copy-fallback (a dir carrying our .cyberos-owned marker). A dir with only a SKILL.md is
 # NOT proof of ownership - the installer's copy is byte-indistinguishable from an operator's,
@@ -96,10 +159,12 @@ for _sc in ship-tasks task-author task-audit; do
   if [ -L "$_p" ]; then
     case "$(readlink "$_p" 2>/dev/null)" in
       *".claude/skills/$_sc"|*".cyberos/plugin/skills/$_sc")
-        rm -f "$_p"; echo "  removed .agents/skills/$_sc (managed entry)";;
+        rm -f "$_p"; echo "  removed .agents/skills/$_sc (managed entry)"
+        _note_removed ".agents/skills/$_sc (managed entry)";;
     esac
   elif [ -d "$_p" ] && [ -f "$_p/.cyberos-owned" ]; then
     rm -rf "$_p"; echo "  removed .agents/skills/$_sc (installer copy)"
+    _note_removed ".agents/skills/$_sc (installer copy)"
   elif [ -d "$_p" ] && [ -f "$_p/SKILL.md" ]; then
     # A skill dir we did NOT mark: either an operator's own, or a copy from an install that
     # predates the marker (TASK-IMP-094 PR-review fix). Ambiguous ownership is not a licence
@@ -107,16 +172,58 @@ for _sc in ship-tasks task-author task-audit; do
     echo "  kept .agents/skills/$_sc (unmarked skill dir - not an installer copy we can prove;"
     echo "       remove it by hand if it is a leftover from a pre-marker install)"
   fi
-  # the pair under .claude/skills is machine-pointing and new with TASK-IMP-094;
-  # .claude/skills/ship-tasks keeps today's leave-in-place behavior (section 6).
-  if [ "$_sc" != "ship-tasks" ] && [ -L "$root/.claude/skills/$_sc" ]; then
-    case "$(readlink "$root/.claude/skills/$_sc" 2>/dev/null)" in
-      *".cyberos/plugin/skills/$_sc") rm -f "$root/.claude/skills/$_sc"; echo "  removed .claude/skills/$_sc (managed entry)";;
+done
+# TASK-IMP-121 §1.2/§1.3: gate the container reclaim on the parent marker install writes on creation.
+# Empty-but-unmarked means the operator's, and it stays. Skills dir first, so .agents can then empty.
+_reclaim_parent ".agents/skills"
+_reclaim_parent ".agents"
+
+# Then the per-agent native skill entries install writes (install.sh install_skill calls, ~L632-641):
+# claude-code gets ship-tasks + the /create-tasks pair (task-author, task-audit); grok, command-code,
+# codex and opencode each get ship-tasks. Each is a relative symlink into .cyberos/plugin/skills/<skill>
+# (a copy-fallback lands only where a link cannot be made). Before TASK-IMP-126, uninstall touched only
+# the .claude/skills create-tasks pair and LEFT .claude/skills/ship-tasks plus the grok/command-code/
+# codex/opencode entries pointing into the machine it was about to remove - every one a dangling link
+# (§1.2). The family/skill list below mirrors install.sh exactly; do not invent names here.
+for _fs in ".claude/skills:ship-tasks" ".claude/skills:task-author" ".claude/skills:task-audit" \
+           ".grok/skills:ship-tasks" ".commandcode/skills:ship-tasks" \
+           ".codex/skills:ship-tasks" ".opencode/skill:ship-tasks"; do
+  _sd="${_fs%%:*}"; _sk="${_fs##*:}"; _p="$root/$_sd/$_sk"
+  if [ -L "$_p" ]; then
+    case "$(readlink "$_p" 2>/dev/null)" in
+      *".cyberos/plugin/skills/$_sk")
+        rm -f "$_p"; echo "  removed $_sd/$_sk (managed skill link)"
+        _note_removed "$_sd/$_sk (managed skill link)";;
     esac
+  elif [ -d "$_p" ] && [ -f "$_p/.cyberos-owned" ]; then
+    rm -rf "$_p"; echo "  removed $_sd/$_sk (installer skill copy)"
+    _note_removed "$_sd/$_sk (installer skill copy)"
+  fi
+  # TASK-IMP-121 §1.6: do NOT rmdir the native channel parent ($_sd). IMP-126 added this rmdir; it
+  # destroyed an operator's pre-existing empty .claude/skills (and the four other native parents)
+  # once our link was cleared - the same blind-emptiness data-loss as the old .agents pair. The
+  # managed link removal above STAYS (no IMP-126 regression); the emptied parent is left in place.
+done
+
+# 2c. MCP registration files (TASK-IMP-126 §1.1). install.sh writes .mcp.json (always) and, when
+# the cursor agent was selected, .cursor/mcp.json - each a FIXED JSON string emitted by mcp_json(),
+# pointing at .cyberos/mcp/cyberos-mcp.mjs, the entry point this run is about to remove. Remove each
+# ONLY when its content byte-matches what install writes (recreate the string, cmp -s) - the same
+# ownership-by-construction the skill and hook sections use. An operator's own file of either name,
+# any other content, STAYS (§1.4). Absent files are not an error (§3: the cursor file exists only
+# when the cursor agent was selected at install). Never rmdir .cursor/: its rules/ pointer is tracked
+# agent surface and is kept.
+mcp_json() { printf '{\n  "mcpServers": {\n    "cyberos": { "command": "node", "args": [".cyberos/mcp/cyberos-mcp.mjs"] }\n  }\n}\n'; }
+_mcp_ours="$(mktemp "${TMPDIR:-/tmp}/cyberos-mcp.XXXXXX")"
+mcp_json > "$_mcp_ours"
+for _mf in .mcp.json .cursor/mcp.json; do
+  _mp="$root/$_mf"
+  if [ -f "$_mp" ] && cmp -s "$_mp" "$_mcp_ours"; then
+    rm -f "$_mp"; echo "  removed $_mf (cyberos MCP registration)"
+    _note_removed "$_mf (cyberos MCP registration)"
   fi
 done
-rmdir "$root/.agents/skills" 2>/dev/null || true
-rmdir "$root/.agents" 2>/dev/null || true
+rm -f "$_mcp_ours"
 
 # 3. BRAIN store
 brain="$CY/memory/store"
@@ -150,6 +257,7 @@ if [ -d "$_ul" ]; then
 fi
 rm -rf "$CY"
 echo "  removed .cyberos/"
+_note_removed ".cyberos/ (the vendored machine: workflows, skills, plugin, docs-tools)"
 
 # 5. optional restore brain only (minimal rehydrate)
 if [ -n "${KEEP_BRAIN_STASH:-}" ] && [ -d "$KEEP_BRAIN_STASH" ]; then
@@ -159,7 +267,56 @@ if [ -n "${KEEP_BRAIN_STASH:-}" ] && [ -d "$KEEP_BRAIN_STASH" ]; then
   echo "  restored BRAIN at .cyberos/memory/store/ (machine removed; re-install to restore workflow)"
 fi
 
-# 6. skill symlinks into .cyberos (dangling) — leave dirs; operator cleans
+# 6. summary — what went, what stayed and why, and how to finish the job by hand (TASK-IMP-106).
+#
+# This block REPORTS; it MUST NOT mutate. Everything above has already run, so a bug here can
+# never leave a half-removed machine — that is why the summary is last and why nothing follows it.
+#
+# The kept list is DERIVED from what is on disk right now, never recited from memory (§1.4). The
+# line this replaced read `kept: docs/tasks/, docs/status/, CHANGELOG.md, AGENTS.md / pointer
+# files` unconditionally — so it claimed docs/status/ on repos that had never rendered a page, and
+# told the operator their corpus was safe without ever looking for it. A summary that is right by
+# luck is wrong; it drifts the moment the state machine changes and nothing notices, because a
+# hard-coded list has no way to be wrong out loud.
+#
+# Managed skill links into .cyberos/plugin/skills are removed above (§1.2, every family install
+# writes); an unmarked operator skill dir is left in place and is the operator's to clean.
 echo "cyberos uninstall: done."
-echo "  kept: docs/tasks/, docs/status/, CHANGELOG.md, AGENTS.md / pointer files"
+
+if [ -n "$_removed_list" ]; then
+  echo "  removed:"
+  # `|| continue`, not `&& echo`: an && list whose left side fails leaves a non-zero status as
+  # the loop body's last command, and `set -e` would abort the script HERE - after the machine
+  # is already gone. The summary must never be able to fail the run it is reporting on.
+  printf '%s' "$_removed_list" | while IFS= read -r _r; do
+    [ -n "$_r" ] || continue
+    echo "    $_r"
+  done
+fi
+
+# Kept paths: a present-tense probe of the tree we just finished editing. The four NAMES are
+# string literals here — the probe decides only WHETHER a literal prints, never what prints, so
+# nothing from the tree or from "$1" can reach the rm line below. Directories are probed with a
+# trailing slash: `[ -e docs/tasks/ ]` is false for a regular FILE of that name, so a stray file
+# is never announced as the operator's corpus.
+_kept_lines=""
+_kept_paths=""
+_keep() {   # $1 = path (as displayed, probed, and removed)   $2 = the one-line reason
+  [ -e "$root/$1" ] || return 0
+  _kept_lines="${_kept_lines}$(printf '    %-16s %s' "$1" "$2")
+"
+  _kept_paths="${_kept_paths:+$_kept_paths }$1"
+  return 0
+}
+_keep "docs/tasks/"     "your task corpus - specs, audits, the backlog"
+_keep "docs/status/"    "the rendered status page for that corpus"
+_keep "CHANGELOG.md"    "your release history"
+_keep ".cyberos/memory" "the BRAIN store - everything the machine remembered for you"
+
+if [ -n "$_kept_paths" ]; then
+  echo "  kept on purpose - this is your work, not the machine's, so uninstall never removes it:"
+  printf '%s' "$_kept_lines"
+  echo "  to remove the kept material yourself, run this from $root:"
+  echo "    rm -rf $_kept_paths"
+fi
 echo "  re-install: bash <payload>/install.sh $root"

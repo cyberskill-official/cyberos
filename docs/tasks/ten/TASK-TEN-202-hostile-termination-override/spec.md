@@ -1,8 +1,10 @@
 ---
 id: TASK-TEN-202
 title: "TEN hostile-termination override — legal-trigger fast-track with CEO+CLO+CSO triple-sign for hostile actor offboarding"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,33 +36,32 @@ source_decisions:
   - DEC-2413 2026-05-17 — Override is sev-1 + CISO email; CISO can challenge within 24h
   - DEC-2414 2026-05-17 — memory audit kinds: ten.hostile_override_initiated, ten.hostile_override_signed, ten.hostile_override_executed, ten.hostile_override_challenged, ten.hostile_override_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/ten/
-  new_files:
-    - services/ten/migrations/0011_hostile_overrides.sql
-    - services/ten/src/hostile/mod.rs
-    - services/ten/src/hostile/triple_sign_gate.rs
-    - services/ten/src/hostile/cascade.rs
-    - services/ten/src/handlers/hostile_routes.rs
-    - services/ten/src/audit/hostile_events.rs
-    - services/ten/tests/hostile_trigger_enum_cardinality_test.rs
-    - services/ten/tests/hostile_triple_sign_test.rs
-    - services/ten/tests/hostile_legal_doc_required_test.rs
-    - services/ten/tests/hostile_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/ten/
+new_files:
+  - services/ten/migrations/0011_hostile_overrides.sql
+  - services/ten/src/hostile/mod.rs
+  - services/ten/src/hostile/triple_sign_gate.rs
+  - services/ten/src/hostile/cascade.rs
+  - services/ten/src/handlers/hostile_routes.rs
+  - services/ten/src/audit/hostile_events.rs
+  - services/ten/tests/hostile_trigger_enum_cardinality_test.rs
+  - services/ten/tests/hostile_triple_sign_test.rs
+  - services/ten/tests/hostile_legal_doc_required_test.rs
+  - services/ten/tests/hostile_audit_emission_test.rs
 
-  modified_files:
-    - services/ten/src/lib.rs
+modified_files:
+  - services/ten/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{ten,hr,auth,doc}/**
-    - file_write: services/ten/{src,tests,migrations}/**
-    - bash: cd services/ten && cargo test hostile
+allowed_tools:
+  - file_read: services/{ten,hr,auth,doc}/**
+  - file_write: services/ten/{src,tests,migrations}/**
+  - bash: cd services/ten && cargo test hostile
 
-  disallowed_tools:
-    - execute without triple-sign (per DEC-2410)
-    - skip legal doc (per DEC-2412)
-    - bypass CISO notification (per DEC-2413)
+disallowed_tools:
+  - execute without triple-sign (per DEC-2410)
+  - skip legal doc (per DEC-2412)
+  - bypass CISO notification (per DEC-2413)
 
 effort_hours: 5
 subtasks:

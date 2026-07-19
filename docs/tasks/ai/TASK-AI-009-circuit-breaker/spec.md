@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-009
 title: "Circuit breaker per (provider, model) with half-open recovery probing"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -30,7 +32,8 @@ source_pages:
   - website/docs/modules/ai.html#multi-provider
   - website/docs/modules/ai.html#failover-sla
 source_decisions:
-  - docs/tasks/ai/TASK-AI-008-multi-provider-router/spec.md §1 #5 (failover policy needs a circuit breaker to avoid hammering a dead provider)
+  #5 (failover policy needs a circuit breaker to avoid hammering a dead provider)
+  - docs/tasks/ai/TASK-AI-008-multi-provider-router/spec.md §1
   - docs/tasks/ai/TASK-AI-008-multi-provider-router/spec.md §6 (build_provider_chain hook for breaker filtering)
   - archive/2026-05-14/RESEARCH_REVIEW.md §3.2 (Hystrix-style breaker as prior art)
 
@@ -44,10 +47,14 @@ new_files:
   - services/ai-gateway/tests/circuit_breaker_test.rs
   - services/ai-gateway/benches/circuit_breaker_bench.rs
 modified_files:
-  - services/ai-gateway/src/router.rs                   # consult breaker before dispatch + record outcome
-  - services/ai-gateway/src/router/failover.rs          # build_provider_chain filters open breakers
-  - services/ai-gateway/src/lib.rs                      # export circuit_breaker module
-  - services/ai-gateway/src/handlers/admin.rs           # operator reset endpoint (TASK-AI-021)
+  # consult breaker before dispatch + record outcome
+  - services/ai-gateway/src/router.rs
+  # build_provider_chain filters open breakers
+  - services/ai-gateway/src/router/failover.rs
+  # export circuit_breaker module
+  - services/ai-gateway/src/lib.rs
+  # operator reset endpoint (TASK-AI-021)
+  - services/ai-gateway/src/handlers/admin.rs
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests,benches}/**
@@ -55,7 +62,8 @@ allowed_tools:
   - bash: cargo bench -p cyberos-ai-gateway circuit_breaker_bench
 disallowed_tools:
   - bypassing breaker on the hot path (every router call MUST consult)
-  - persisting breaker state to disk (in-memory only by §1 #6)
+  #6)
+  - persisting breaker state to disk (in-memory only by §1
   - format!("{:?}", provider) for OBS labels (use as_metric_label())
   - directly comparing AtomicU8 to magic numbers like `if state == 1` (use BreakerState::from_u8)
   - per-tenant breaker keying in slice 2 (TASK-AI-021 introduces tenant scope)

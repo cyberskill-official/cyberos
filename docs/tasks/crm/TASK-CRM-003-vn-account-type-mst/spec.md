@@ -1,8 +1,10 @@
 ---
 id: TASK-CRM-003
 title: "CRM VN account types + MST — legal entity classification (Sole/LLC/JSC/FDI) + tax ID field with format validation"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-CRM-008]
 
 source_pages:
   - website/docs/modules/crm.html#vn-account-type
-  - https://thuvienphapluat.vn/  # VN Enterprise Law 59/2020
+  # VN Enterprise Law 59/2020
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-1630 2026-05-17 — VN legal entity types per Enterprise Law 59/2020: Sole proprietorship (Doanh nghiệp tư nhân), LLC (Công ty TNHH), JSC (Công ty cổ phần), FDI (Doanh nghiệp có vốn đầu tư nước ngoài)
@@ -35,31 +38,30 @@ source_decisions:
   - DEC-1633 2026-05-17 — Field is OPTIONAL for non-VN accounts; REQUIRED + validated for accounts with residency='vn-1'
   - DEC-1634 2026-05-17 — memory audit kinds: crm.vn_account_type_set, crm.mst_validated, crm.mst_validation_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/crm/
-  new_files:
-    - services/crm/migrations/0003_vn_account_fields.sql
-    - services/crm/src/vn/account_type.rs
-    - services/crm/src/vn/mst_format.rs
-    - services/crm/src/audit/vn_account_events.rs
-    - services/crm/tests/vn_account_type_enum_cardinality_test.rs
-    - services/crm/tests/vn_mst_format_10_digit_test.rs
-    - services/crm/tests/vn_mst_format_13_digit_test.rs
-    - services/crm/tests/vn_mst_required_for_vn_residency_test.rs
-    - services/crm/tests/vn_account_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/crm/
+new_files:
+  - services/crm/migrations/0003_vn_account_fields.sql
+  - services/crm/src/vn/account_type.rs
+  - services/crm/src/vn/mst_format.rs
+  - services/crm/src/audit/vn_account_events.rs
+  - services/crm/tests/vn_account_type_enum_cardinality_test.rs
+  - services/crm/tests/vn_mst_format_10_digit_test.rs
+  - services/crm/tests/vn_mst_format_13_digit_test.rs
+  - services/crm/tests/vn_mst_required_for_vn_residency_test.rs
+  - services/crm/tests/vn_account_audit_emission_test.rs
 
-  modified_files:
-    - services/crm/src/accounts.rs
+modified_files:
+  - services/crm/src/accounts.rs
 
-  allowed_tools:
-    - file_read: services/crm/**
-    - file_write: services/crm/{src,tests,migrations}/**
-    - bash: cd services/crm && cargo test vn
+allowed_tools:
+  - file_read: services/crm/**
+  - file_write: services/crm/{src,tests,migrations}/**
+  - bash: cd services/crm && cargo test vn
 
-  disallowed_tools:
-    - MST not validated on VN account (per DEC-1633)
-    - 11/12/14-digit MST accepted (per DEC-1632)
+disallowed_tools:
+  - MST not validated on VN account (per DEC-1633)
+  - 11/12/14-digit MST accepted (per DEC-1632)
 
 effort_hours: 4
 subtasks:

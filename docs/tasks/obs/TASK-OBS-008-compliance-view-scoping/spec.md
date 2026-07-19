@@ -1,8 +1,10 @@
 ---
 id: TASK-OBS-008
 title: "obs-compliance-view: pre-built read-only views (EU AI Act / PDPL / SOC 2 / ISO 27001) over memory audit chain with Ed25519 chain-proof + tenant-scoped + PDF/JSON export"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -61,9 +63,12 @@ allowed_tools:
   - file_write: services/obs-compliance-view/**, deploy/obs/**
   - bash: cd services/obs-compliance-view && cargo test
 disallowed_tools:
-  - expose compliance view across tenant boundaries (per §1 #3)
-  - mutate audit chain from compliance view (per §1 #4 read-only)
-  - export raw PII from compliance view (per §1 #11 — placeholders only)
+  #3)
+  - expose compliance view across tenant boundaries (per §1
+  #4 read-only)
+  - mutate audit chain from compliance view (per §1
+  #11 — placeholders only)
+  - export raw PII from compliance view (per §1
   - sign chain proof with non-Ed25519 (per DEC-176)
 
 effort_hours: 14

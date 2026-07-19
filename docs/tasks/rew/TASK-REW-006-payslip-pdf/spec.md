@@ -1,8 +1,10 @@
 ---
 id: TASK-REW-006
 title: "REW byte-identical payslip PDF render — Tectonic + pinned fonts produces deterministic PDF bytes for verification"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,34 +36,33 @@ source_decisions:
   - DEC-2203 2026-05-17 — Verification: post-render, recompute sha256; expected matches deterministic-replay value
   - DEC-2204 2026-05-17 — memory audit kinds: rew.payslip_pdf_rendered, rew.payslip_pdf_verified, rew.payslip_pdf_verification_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/rew/
-  new_files:
-    - services/rew/migrations/0006_payslip_pdfs.sql
-    - services/rew/src/pdf/mod.rs
-    - services/rew/src/pdf/tectonic_renderer.rs
-    - services/rew/src/pdf/verifier.rs
-    - services/rew/src/handlers/payslip_pdf_routes.rs
-    - services/rew/src/audit/pdf_events.rs
-    - services/rew/templates/payslip.tex
-    - services/rew/tests/pdf_byte_identical_test.rs
-    - services/rew/tests/pdf_render_status_enum_cardinality_test.rs
-    - services/rew/tests/pdf_pinned_fonts_test.rs
-    - services/rew/tests/pdf_verification_test.rs
-    - services/rew/tests/pdf_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/rew/
+new_files:
+  - services/rew/migrations/0006_payslip_pdfs.sql
+  - services/rew/src/pdf/mod.rs
+  - services/rew/src/pdf/tectonic_renderer.rs
+  - services/rew/src/pdf/verifier.rs
+  - services/rew/src/handlers/payslip_pdf_routes.rs
+  - services/rew/src/audit/pdf_events.rs
+  - services/rew/templates/payslip.tex
+  - services/rew/tests/pdf_byte_identical_test.rs
+  - services/rew/tests/pdf_render_status_enum_cardinality_test.rs
+  - services/rew/tests/pdf_pinned_fonts_test.rs
+  - services/rew/tests/pdf_verification_test.rs
+  - services/rew/tests/pdf_audit_emission_test.rs
 
-  modified_files:
-    - services/rew/src/lib.rs
+modified_files:
+  - services/rew/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{rew,doc}/**
-    - file_write: services/rew/{src,tests,migrations,templates}/**
-    - bash: cd services/rew && cargo test pdf
+allowed_tools:
+  - file_read: services/{rew,doc}/**
+  - file_write: services/rew/{src,tests,migrations,templates}/**
+  - bash: cd services/rew && cargo test pdf
 
-  disallowed_tools:
-    - non-pinned fonts (per DEC-2200)
-    - bypass verification (per DEC-2203)
+disallowed_tools:
+  - non-pinned fonts (per DEC-2200)
+  - bypass verification (per DEC-2203)
 
 effort_hours: 6
 subtasks:

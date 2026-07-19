@@ -1,8 +1,10 @@
 ---
 id: TASK-KB-002
 title: "KB server-side renderer — markdown → sanitised HTML (ammonia) + sanitised plaintext for memory ingest"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,34 +36,33 @@ source_decisions:
   - DEC-1893 2026-05-17 — Render cache keyed by (doc_id, version_id) — invalidated on new version per TASK-KB-001 immutability
   - DEC-1894 2026-05-17 — memory audit kinds: kb.doc_rendered, kb.render_failed, kb.render_cache_invalidated
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/kb/
-  new_files:
-    - services/kb/migrations/0002_render_cache.sql
-    - services/kb/src/renderer/mod.rs
-    - services/kb/src/renderer/markdown_to_html.rs
-    - services/kb/src/renderer/plaintext_extract.rs
-    - services/kb/src/renderer/ammonia_config.rs
-    - services/kb/src/audit/renderer_events.rs
-    - services/kb/tests/render_html_test.rs
-    - services/kb/tests/render_plaintext_test.rs
-    - services/kb/tests/render_xss_blocked_test.rs
-    - services/kb/tests/render_target_enum_cardinality_test.rs
-    - services/kb/tests/render_cache_invalidation_test.rs
-    - services/kb/tests/render_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/kb/
+new_files:
+  - services/kb/migrations/0002_render_cache.sql
+  - services/kb/src/renderer/mod.rs
+  - services/kb/src/renderer/markdown_to_html.rs
+  - services/kb/src/renderer/plaintext_extract.rs
+  - services/kb/src/renderer/ammonia_config.rs
+  - services/kb/src/audit/renderer_events.rs
+  - services/kb/tests/render_html_test.rs
+  - services/kb/tests/render_plaintext_test.rs
+  - services/kb/tests/render_xss_blocked_test.rs
+  - services/kb/tests/render_target_enum_cardinality_test.rs
+  - services/kb/tests/render_cache_invalidation_test.rs
+  - services/kb/tests/render_audit_emission_test.rs
 
-  modified_files:
-    - services/kb/src/lib.rs
+modified_files:
+  - services/kb/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/kb/**
-    - file_write: services/kb/{src,tests,migrations}/**
-    - bash: cd services/kb && cargo test renderer
+allowed_tools:
+  - file_read: services/kb/**
+  - file_write: services/kb/{src,tests,migrations}/**
+  - bash: cd services/kb && cargo test renderer
 
-  disallowed_tools:
-    - bypass ammonia sanitiser (per DEC-1890)
-    - serve unsanitised HTML (per DEC-1890)
+disallowed_tools:
+  - bypass ammonia sanitiser (per DEC-1890)
+  - serve unsanitised HTML (per DEC-1890)
 
 effort_hours: 5
 subtasks:

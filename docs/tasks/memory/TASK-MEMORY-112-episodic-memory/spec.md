@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-112
 title: "memory episodic memory — `kind: episode` frontmatter + `cyberos recall-similar` API; task / approach / outcome / quality_score per Episode; reflection-loop foundation"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -41,22 +43,31 @@ new_files:
   - modules/memory/tests/core/test_episode.py
   - modules/memory/tests/fixtures/episode_corpus.jsonl
 modified_files:
-  - modules/memory/memory.schema.json           # add `episode` to MemoryKind enum + per-kind required fields
-  - modules/memory/cyberos/__main__.py          # wire `cyberos episode log` + `cyberos recall-similar` subcommands
-  - modules/memory/cyberos/core/semantic.py     # accept `memory_kind=` filter; preserve back-compat
-  - modules/memory/cyberos/core/walker.py       # invariant: every episode has `outcome` ∈ closed enum
-  - modules/memory/cyberos/core/frontmatter.py  # validate per-kind frontmatter contract
-  - modules/memory/memory.invariants.yaml       # add `episode-outcome-closed-enum` + `episode-quality-score-range`
-  - AGENTS.md                                    # §2 layout — add `memories/episodes/` to the kind list (additive, see §0.2 not amended; no normative behaviour change)
+  # add `episode` to MemoryKind enum + per-kind required fields
+  - modules/memory/memory.schema.json
+  # wire `cyberos episode log` + `cyberos recall-similar` subcommands
+  - modules/memory/cyberos/__main__.py
+  # accept `memory_kind=` filter; preserve back-compat
+  - modules/memory/cyberos/core/semantic.py
+  # invariant: every episode has `outcome` ∈ closed enum
+  - modules/memory/cyberos/core/walker.py
+  # validate per-kind frontmatter contract
+  - modules/memory/cyberos/core/frontmatter.py
+  # add `episode-outcome-closed-enum` + `episode-quality-score-range`
+  - modules/memory/memory.invariants.yaml
+  # §2 layout — add `memories/episodes/` to the kind list (additive, see §0.2 not amended; no normative behaviour change)
+  - AGENTS.md
 allowed_tools:
   - file_read: modules/memory/**
   - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, AGENTS.md
   - bash: cd modules/memory && python -m pytest modules/memory/tests/core/test_episode.py modules/memory/tests/core/test_episode.py -v
   - bash: cd modules/memory && python -m cyberos --store /tmp/memory doctor
 disallowed_tools:
-  - emit episodes whose `outcome` is outside the closed enum (per §1 #5 — walker rejects)
+  #5 — walker rejects)
+  - emit episodes whose `outcome` is outside the closed enum (per §1
   - silently default `quality_score` to anything other than the literal `0.5` (per DEC-181)
-  - mutate the canonical writer to accept `kind: episode` rows that bypass the per-kind frontmatter contract (§1 #2)
+  #2)
+  - mutate the canonical writer to accept `kind: episode` rows that bypass the per-kind frontmatter contract (§1
 
 effort_hours: 12
 subtasks:

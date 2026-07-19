@@ -1,8 +1,10 @@
 ---
 id: TASK-DOCS-004
 title: "Folder-per-task layout - <module>/<STEM>/{spec.md, audit.md, assets/} + loud regen + the 42 yaml-invalid tasks repaired"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: improvement
 created_at: 2026-07-12T00:00:00+07:00

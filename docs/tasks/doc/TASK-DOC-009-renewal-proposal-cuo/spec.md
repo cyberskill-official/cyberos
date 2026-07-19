@@ -1,8 +1,10 @@
 ---
 id: TASK-DOC-009
 title: "DOC renewal proposal CUO draft — auto-generate renewal terms + price adjustment + send-to-customer flow with AM approval"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -35,33 +37,32 @@ source_decisions:
   - DEC-1734 2026-05-17 — On approval: creates new doc with parent_contract_id pointing to original; status='draft' until signed
   - DEC-1735 2026-05-17 — memory audit kinds: doc.renewal_draft_created, doc.renewal_approved, doc.renewal_dismissed, doc.renewal_sent
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/doc/
-  new_files:
-    - services/doc/migrations/0004_renewal_drafts.sql
-    - services/doc/src/renewal/mod.rs
-    - services/doc/src/renewal/draft_generator.rs
-    - services/doc/src/renewal/cpi_adjuster.rs
-    - services/doc/src/handlers/renewal_routes.rs
-    - services/doc/src/audit/renewal_events.rs
-    - services/doc/tests/renewal_triggered_at_d90_test.rs
-    - services/doc/tests/renewal_no_auto_send_test.rs
-    - services/doc/tests/renewal_recommendation_enum_cardinality_test.rs
-    - services/doc/tests/renewal_creates_child_doc_test.rs
-    - services/doc/tests/renewal_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/doc/
+new_files:
+  - services/doc/migrations/0004_renewal_drafts.sql
+  - services/doc/src/renewal/mod.rs
+  - services/doc/src/renewal/draft_generator.rs
+  - services/doc/src/renewal/cpi_adjuster.rs
+  - services/doc/src/handlers/renewal_routes.rs
+  - services/doc/src/audit/renewal_events.rs
+  - services/doc/tests/renewal_triggered_at_d90_test.rs
+  - services/doc/tests/renewal_no_auto_send_test.rs
+  - services/doc/tests/renewal_recommendation_enum_cardinality_test.rs
+  - services/doc/tests/renewal_creates_child_doc_test.rs
+  - services/doc/tests/renewal_audit_emission_test.rs
 
-  modified_files:
-    - services/doc/src/lib.rs
+modified_files:
+  - services/doc/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{doc,cuo,email,ai}/**
-    - file_write: services/doc/{src,tests,migrations}/**
-    - bash: cd services/doc && cargo test renewal
+allowed_tools:
+  - file_read: services/{doc,cuo,email,ai}/**
+  - file_write: services/doc/{src,tests,migrations}/**
+  - bash: cd services/doc && cargo test renewal
 
-  disallowed_tools:
-    - auto-send to customer (per DEC-1733)
-    - skip parent_contract_id (per DEC-1734)
+disallowed_tools:
+  - auto-send to customer (per DEC-1733)
+  - skip parent_contract_id (per DEC-1734)
 
 effort_hours: 6
 subtasks:

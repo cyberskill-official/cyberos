@@ -1,8 +1,10 @@
 ---
 id: TASK-KB-004
 title: "KB FTS5 + PGroonga lexical search — VN bigram tokenisation + English stemming + per-tenant index with tier filter"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -35,35 +37,34 @@ source_decisions:
   - DEC-1914 2026-05-17 — Search results filtered by TASK-KB-003 visibility tier at query time (RLS handles tenant + tier)
   - DEC-1915 2026-05-17 — memory audit kinds: kb.lexical_query_executed, kb.index_updated, kb.search_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/kb/
-  new_files:
-    - services/kb/migrations/0004_pgroonga_fts5_index.sql
-    - services/kb/src/search/lexical.rs
-    - services/kb/src/search/pgroonga_client.rs
-    - services/kb/src/search/fts5_fallback.rs
-    - services/kb/src/search/bigram_tokeniser.rs
-    - services/kb/src/handlers/search_routes.rs
-    - services/kb/src/audit/lexical_search_events.rs
-    - services/kb/tests/lexical_pgroonga_test.rs
-    - services/kb/tests/lexical_vn_bigram_test.rs
-    - services/kb/tests/lexical_english_stem_test.rs
-    - services/kb/tests/lexical_tier_filter_test.rs
-    - services/kb/tests/lexical_engine_enum_cardinality_test.rs
-    - services/kb/tests/lexical_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/kb/
+new_files:
+  - services/kb/migrations/0004_pgroonga_fts5_index.sql
+  - services/kb/src/search/lexical.rs
+  - services/kb/src/search/pgroonga_client.rs
+  - services/kb/src/search/fts5_fallback.rs
+  - services/kb/src/search/bigram_tokeniser.rs
+  - services/kb/src/handlers/search_routes.rs
+  - services/kb/src/audit/lexical_search_events.rs
+  - services/kb/tests/lexical_pgroonga_test.rs
+  - services/kb/tests/lexical_vn_bigram_test.rs
+  - services/kb/tests/lexical_english_stem_test.rs
+  - services/kb/tests/lexical_tier_filter_test.rs
+  - services/kb/tests/lexical_engine_enum_cardinality_test.rs
+  - services/kb/tests/lexical_audit_emission_test.rs
 
-  modified_files:
-    - services/kb/src/lib.rs
+modified_files:
+  - services/kb/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/kb/**
-    - file_write: services/kb/{src,tests,migrations}/**
-    - bash: cd services/kb && cargo test lexical
+allowed_tools:
+  - file_read: services/kb/**
+  - file_write: services/kb/{src,tests,migrations}/**
+  - bash: cd services/kb && cargo test lexical
 
-  disallowed_tools:
-    - bypass tier filter (per DEC-1914)
-    - skip VN bigram for VN tenants (per DEC-1912)
+disallowed_tools:
+  - bypass tier filter (per DEC-1914)
+  - skip VN bigram for VN tenants (per DEC-1912)
 
 effort_hours: 6
 subtasks:

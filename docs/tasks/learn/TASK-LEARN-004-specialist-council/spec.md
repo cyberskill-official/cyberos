@@ -1,8 +1,10 @@
 ---
 id: TASK-LEARN-004
 title: "LEARN Hội đồng Chuyên môn (Specialist Council) — 3-5 judges + multi-dim scoring + per-judge anonymity within council"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -35,35 +37,34 @@ source_decisions:
   - DEC-2114 2026-05-17 — Aggregate output: median per-dimension + overall recommendation (promote / hold / decline)
   - DEC-2115 2026-05-17 — memory audit kinds: learn.council_convened, learn.judge_assigned, learn.score_submitted, learn.council_completed, learn.council_dismissed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/learn/
-  new_files:
-    - services/learn/migrations/0004_councils.sql
-    - services/learn/src/council/mod.rs
-    - services/learn/src/council/scorer.rs
-    - services/learn/src/council/aggregator.rs
-    - services/learn/src/handlers/council_routes.rs
-    - services/learn/src/audit/council_events.rs
-    - services/learn/tests/council_3_to_5_judges_test.rs
-    - services/learn/tests/score_dimension_enum_cardinality_test.rs
-    - services/learn/tests/council_status_enum_cardinality_test.rs
-    - services/learn/tests/council_judge_scoring_test.rs
-    - services/learn/tests/council_aggregate_test.rs
-    - services/learn/tests/council_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/learn/
+new_files:
+  - services/learn/migrations/0004_councils.sql
+  - services/learn/src/council/mod.rs
+  - services/learn/src/council/scorer.rs
+  - services/learn/src/council/aggregator.rs
+  - services/learn/src/handlers/council_routes.rs
+  - services/learn/src/audit/council_events.rs
+  - services/learn/tests/council_3_to_5_judges_test.rs
+  - services/learn/tests/score_dimension_enum_cardinality_test.rs
+  - services/learn/tests/council_status_enum_cardinality_test.rs
+  - services/learn/tests/council_judge_scoring_test.rs
+  - services/learn/tests/council_aggregate_test.rs
+  - services/learn/tests/council_audit_emission_test.rs
 
-  modified_files:
-    - services/learn/src/lib.rs
+modified_files:
+  - services/learn/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{learn,auth}/**
-    - file_write: services/learn/{src,tests,migrations}/**
-    - bash: cd services/learn && cargo test council
+allowed_tools:
+  - file_read: services/{learn,auth}/**
+  - file_write: services/learn/{src,tests,migrations}/**
+  - bash: cd services/learn && cargo test council
 
-  disallowed_tools:
-    - judges < 3 (per DEC-2110)
-    - judges > 5 (per DEC-2110)
-    - mutate prior score (per DEC-2113)
+disallowed_tools:
+  - judges < 3 (per DEC-2110)
+  - judges > 5 (per DEC-2110)
+  - mutate prior score (per DEC-2113)
 
 effort_hours: 10
 subtasks:

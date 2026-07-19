@@ -1,8 +1,10 @@
 ---
 id: TASK-LEARN-003
 title: "LEARN VP (Voting Power) deterministic nightly roll-up — aggregates PROJ + TIME + KB contributions into per-Member VP score"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,35 +36,34 @@ source_decisions:
   - DEC-2103 2026-05-17 — Deterministic — same inputs + same weights → same VP; weights versioned (CEO-configurable)
   - DEC-2104 2026-05-17 — memory audit kinds: learn.vp_rollup_started, learn.vp_snapshot_created, learn.vp_rollup_completed, learn.vp_rollup_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/learn/
-  new_files:
-    - services/learn/migrations/0003_vp_snapshots.sql
-    - services/learn/src/vp/mod.rs
-    - services/learn/src/vp/aggregator.rs
-    - services/learn/src/vp/weights_loader.rs
-    - services/learn/src/vp/nightly_batch.rs
-    - services/learn/src/handlers/vp_routes.rs
-    - services/learn/src/audit/vp_events.rs
-    - services/learn/tests/vp_aggregator_test.rs
-    - services/learn/tests/vp_component_enum_cardinality_test.rs
-    - services/learn/tests/vp_snapshot_immutable_test.rs
-    - services/learn/tests/vp_deterministic_test.rs
-    - services/learn/tests/vp_weights_version_test.rs
-    - services/learn/tests/vp_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/learn/
+new_files:
+  - services/learn/migrations/0003_vp_snapshots.sql
+  - services/learn/src/vp/mod.rs
+  - services/learn/src/vp/aggregator.rs
+  - services/learn/src/vp/weights_loader.rs
+  - services/learn/src/vp/nightly_batch.rs
+  - services/learn/src/handlers/vp_routes.rs
+  - services/learn/src/audit/vp_events.rs
+  - services/learn/tests/vp_aggregator_test.rs
+  - services/learn/tests/vp_component_enum_cardinality_test.rs
+  - services/learn/tests/vp_snapshot_immutable_test.rs
+  - services/learn/tests/vp_deterministic_test.rs
+  - services/learn/tests/vp_weights_version_test.rs
+  - services/learn/tests/vp_audit_emission_test.rs
 
-  modified_files:
-    - services/learn/src/lib.rs
+modified_files:
+  - services/learn/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{learn,proj,time,kb}/**
-    - file_write: services/learn/{src,tests,migrations}/**
-    - bash: cd services/learn && cargo test vp
+allowed_tools:
+  - file_read: services/{learn,proj,time,kb}/**
+  - file_write: services/learn/{src,tests,migrations}/**
+  - bash: cd services/learn && cargo test vp
 
-  disallowed_tools:
-    - mutate prior snapshot (per DEC-2102)
-    - non-deterministic computation (per DEC-2103)
+disallowed_tools:
+  - mutate prior snapshot (per DEC-2102)
+  - non-deterministic computation (per DEC-2103)
 
 effort_hours: 6
 subtasks:

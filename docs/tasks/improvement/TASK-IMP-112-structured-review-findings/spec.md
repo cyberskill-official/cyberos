@@ -4,7 +4,7 @@ title: Structured review findings alongside the prose packet
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: done
 priority: p2
 author: "@stephencheng"
 department: engineering

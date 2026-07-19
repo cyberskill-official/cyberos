@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-010
 title: "Streaming SSE end-to-end (token-by-token to client)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -30,8 +32,10 @@ source_pages:
   - website/docs/modules/ai.html#streaming
   - website/docs/modules/ai.html#first-token-sla
 source_decisions:
-  - docs/tasks/ai/TASK-AI-008-multi-provider-router/spec.md §1 #16 (router exposes call_provider_streaming with SSE pipeline)
-  - docs/tasks/ai/TASK-AI-002-cost-ledger-reconcile/spec.md §1 #5 (cancel-before-first-token reconciles as Cancelled and refunds)
+  #16 (router exposes call_provider_streaming with SSE pipeline)
+  - docs/tasks/ai/TASK-AI-008-multi-provider-router/spec.md §1
+  #5 (cancel-before-first-token reconciles as Cancelled and refunds)
+  - docs/tasks/ai/TASK-AI-002-cost-ledger-reconcile/spec.md §1
   - archive/2026-05-14/RESEARCH_REVIEW.md §3.4 (SSE vs WebSocket trade-off study)
 
 # ───── Build envelope ─────
@@ -41,13 +45,17 @@ new_files:
   - services/ai-gateway/src/streaming.rs
   - services/ai-gateway/src/streaming/sse.rs
   - services/ai-gateway/src/streaming/heartbeat.rs
-  - services/ai-gateway/src/router/streaming.rs                 # provider-streaming impls
+  # provider-streaming impls
+  - services/ai-gateway/src/router/streaming.rs
   - services/ai-gateway/tests/streaming_test.rs
   - services/ai-gateway/benches/streaming_first_token_bench.rs
 modified_files:
-  - services/ai-gateway/src/handlers/chat.rs                    # branch on req.stream
-  - services/ai-gateway/src/router.rs                           # wire call_provider_streaming (replaces slice-2 stub from TASK-AI-008 §1 #16)
-  - services/ai-gateway/src/lib.rs                              # export streaming module
+  # branch on req.stream
+  - services/ai-gateway/src/handlers/chat.rs
+  # wire call_provider_streaming (replaces slice-2 stub from TASK-AI-008 §1 #16)
+  - services/ai-gateway/src/router.rs
+  # export streaming module
+  - services/ai-gateway/src/lib.rs
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests,benches}/**

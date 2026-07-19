@@ -1,8 +1,10 @@
 ---
 id: TASK-AUTH-004
 title: "JWT issuance + JWKS endpoint (RS256) with tenant_id + agent_persona + scope_grants + dual-rate-limit + jti dedup"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -50,16 +52,21 @@ new_files:
   - services/auth/tests/rls_isolation_test.rs
   - services/auth/tests/admin_list_test.rs
 modified_files:
-  - services/auth/src/admin/subjects.rs                   # add suspended check
+  # add suspended check
+  - services/auth/src/admin/subjects.rs
 allowed_tools:
   - file_read: services/auth/**
   - file_write: services/auth/{src,tests,migrations}/**
   - bash: cd services/auth && cargo test jwt && cargo test jwks
 disallowed_tools:
-  - issue tokens for `suspended: true` subjects (per §1 #14)
-  - skip `auth.token_failed` audit row on failed login (per §1 #6 — credential-stuffing detection depends on it)
-  - bypass rate limit on `/v1/auth/token` (per §1 #5 — both IP AND account limits MUST apply)
-  - emit JWKS without the previous key during rotation overlap (per §1 #3 — clients during transition need both)
+  #14)
+  - issue tokens for `suspended: true` subjects (per §1
+  #6 — credential-stuffing detection depends on it)
+  - skip `auth.token_failed` audit row on failed login (per §1
+  #5 — both IP AND account limits MUST apply)
+  - bypass rate limit on `/v1/auth/token` (per §1
+  #3 — clients during transition need both)
+  - emit JWKS without the previous key during rotation overlap (per §1
   - sign with anything weaker than RSA-2048 (per DEC-120)
 
 effort_hours: 12

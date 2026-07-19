@@ -1,8 +1,10 @@
 ---
 id: TASK-KB-006
 title: "KB BGE-rerank-v2-m3 cross-encoder — reranks top-K results from TASK-KB-004 lexical + TASK-KB-005 semantic to final ordering"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -35,34 +37,33 @@ source_decisions:
   - DEC-1933 2026-05-17 — Per-tenant rerank query cache (5min TTL) — same query+source → cached
   - DEC-1934 2026-05-17 — memory audit kinds: kb.rerank_executed, kb.rerank_cache_hit, kb.rerank_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/kb/
-  new_files:
-    - services/kb/migrations/0006_rerank_cache.sql
-    - services/kb/src/rerank/mod.rs
-    - services/kb/src/rerank/bge_rerank_client.rs
-    - services/kb/src/rerank/hybrid_merger.rs
-    - services/kb/src/handlers/rerank_routes.rs
-    - services/kb/src/audit/rerank_events.rs
-    - services/kb/tests/rerank_lexical_only_test.rs
-    - services/kb/tests/rerank_semantic_only_test.rs
-    - services/kb/tests/rerank_hybrid_test.rs
-    - services/kb/tests/rerank_source_enum_cardinality_test.rs
-    - services/kb/tests/rerank_cache_test.rs
-    - services/kb/tests/rerank_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/kb/
+new_files:
+  - services/kb/migrations/0006_rerank_cache.sql
+  - services/kb/src/rerank/mod.rs
+  - services/kb/src/rerank/bge_rerank_client.rs
+  - services/kb/src/rerank/hybrid_merger.rs
+  - services/kb/src/handlers/rerank_routes.rs
+  - services/kb/src/audit/rerank_events.rs
+  - services/kb/tests/rerank_lexical_only_test.rs
+  - services/kb/tests/rerank_semantic_only_test.rs
+  - services/kb/tests/rerank_hybrid_test.rs
+  - services/kb/tests/rerank_source_enum_cardinality_test.rs
+  - services/kb/tests/rerank_cache_test.rs
+  - services/kb/tests/rerank_audit_emission_test.rs
 
-  modified_files:
-    - services/kb/src/lib.rs
+modified_files:
+  - services/kb/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{kb,ai}/**
-    - file_write: services/kb/{src,tests,migrations}/**
-    - bash: cd services/kb && cargo test rerank
+allowed_tools:
+  - file_read: services/{kb,ai}/**
+  - file_write: services/kb/{src,tests,migrations}/**
+  - bash: cd services/kb && cargo test rerank
 
-  disallowed_tools:
-    - return >10 rerank results (per DEC-1932)
-    - bypass cache (per DEC-1933 — perf)
+disallowed_tools:
+  - return >10 rerank results (per DEC-1932)
+  - bypass cache (per DEC-1933 — perf)
 
 effort_hours: 4
 subtasks:

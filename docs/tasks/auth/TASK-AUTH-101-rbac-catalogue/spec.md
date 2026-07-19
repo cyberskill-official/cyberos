@@ -1,8 +1,10 @@
 ---
 id: TASK-AUTH-101
 title: "AUTH 22-role RBAC catalogue — closed enum + permission matrix + role-assignment REST + JWT claims + ADR gate + stub→full migration"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -30,7 +32,8 @@ source_pages:
 source_decisions:
   - DEC-121 (closed 22-role catalogue — ADR-gated, no code-only role additions)
   - DEC-122 (permission matrix is roles × resources × actions; never ABAC)
-  - DEC-123 (5-role stub from TASK-AUTH-002 §1 #5 is strict prefix of the 22-role full catalogue — same role names, additive only)
+  #5 is strict prefix of the 22-role full catalogue — same role names, additive only)
+  - DEC-123 (5-role stub from TASK-AUTH-002 §1
   - DEC-124 (role + scope-grant layered: role gives base privilege; scope-grant narrows to specific resources)
   - DEC-125 (existing TASK-AUTH-004 access tokens remain valid for a 30-day grace window after this task ships — see TASK-AUTH-109 for the migration enforcer)
   - DEC-126 (role checks via in-memory `RoleMatrix` snapshot, refreshed every 60s; never per-request DB lookup)
@@ -44,36 +47,65 @@ source_decisions:
 language: rust 1.81
 service: cyberos/services/auth/
 new_files:
-  - services/auth/src/rbac/catalogue.rs                                 # closed Role enum + 22 variants + name parse + Display
-  - services/auth/src/rbac/permissions.rs                               # closed Resource × Action enums + permission-matrix loader
-  - services/auth/src/rbac/matrix.rs                                    # in-memory RoleMatrix snapshot + 60s refresher
-  - services/auth/src/rbac/check.rs                                     # HasRole / HasAnyRole / HasPermission middleware extractors
-  - services/auth/src/rbac/scope_grant.rs                               # narrowing layer: role gives base; grant restricts to {resource_id}
-  - services/auth/src/rbac/migrate.rs                                   # stub→full migration helper (used by TASK-AUTH-109)
-  - services/auth/src/rbac/adr.rs                                       # ADR-file validator — refuses catalogue change without matching ADR-NNN.md
-  - services/auth/src/admin/roles_rest.rs                               # POST/DELETE /v1/admin/subjects/{id}/roles + GET /v1/admin/roles
-  - services/auth/src/audit/role_events.rs                              # canonical auth.role_assigned / auth.role_revoked / auth.role_catalogue_changed builders
-  - services/auth/migrations/0005_roles_permissions.sql                 # roles + permissions + role_permissions + subject_roles tables; seeded with 22 roles + matrix
-  - services/auth/migrations/0006_role_catalogue_version.sql            # role_catalogue_version singleton table + bump trigger
-  - services/auth/tests/rbac_catalogue_test.rs                          # closed-enum invariants (no extra strings parseable, no missing roles)
-  - services/auth/tests/rbac_adr_gate_test.rs                  # matrix lookups, in-memory cache, refresh semantics
-  - services/auth/tests/rbac_catalogue_test.rs                              # HasRole / HasAnyRole / HasPermission middleware tests
-  - services/auth/tests/rbac_adr_gate_test.rs                         # POST roles handler — happy + 401 + 403 + 409 + invalid-role + reserved-role + idempotent
-  - services/auth/tests/rbac_catalogue_test.rs                          # roles + rbac_v claims present, parseable, downstream-checkable
-  - services/auth/tests/rls_isolation_test.rs                     # TASK-AUTH-002 5-role stub tokens still valid; new tokens carry rbac_v=2+
-  - services/auth/tests/rbac_adr_gate_test.rs                           # CI gate: migration touches roles table without matching ADR → fail
-  - services/auth/tests/rbac_adr_gate_test.rs                        # role + scope-grant intersection; revoked grant blocks access
-  - services/auth/tests/rbac_adr_gate_test.rs              # founder assignment fails without WebAuthn factor
-  - services/auth/tests/rbac_reserved_role_self_assign_test.rs          # root-admin / auditor / regulator / billing-system / client-portal-user — refuse self-assign
-  - services/auth/adr/ADR-101-rbac-22-role-catalogue.md                 # the catalogue's own ADR (this task ships the ADR)
+  # closed Role enum + 22 variants + name parse + Display
+  - services/auth/src/rbac/catalogue.rs
+  # closed Resource × Action enums + permission-matrix loader
+  - services/auth/src/rbac/permissions.rs
+  # in-memory RoleMatrix snapshot + 60s refresher
+  - services/auth/src/rbac/matrix.rs
+  # HasRole / HasAnyRole / HasPermission middleware extractors
+  - services/auth/src/rbac/check.rs
+  # narrowing layer: role gives base; grant restricts to {resource_id}
+  - services/auth/src/rbac/scope_grant.rs
+  # stub→full migration helper (used by TASK-AUTH-109)
+  - services/auth/src/rbac/migrate.rs
+  # ADR-file validator — refuses catalogue change without matching ADR-NNN.md
+  - services/auth/src/rbac/adr.rs
+  # POST/DELETE /v1/admin/subjects/{id}/roles + GET /v1/admin/roles
+  - services/auth/src/admin/roles_rest.rs
+  # canonical auth.role_assigned / auth.role_revoked / auth.role_catalogue_changed builders
+  - services/auth/src/audit/role_events.rs
+  # roles + permissions + role_permissions + subject_roles tables; seeded with 22 roles + matrix
+  - services/auth/migrations/0005_roles_permissions.sql
+  # role_catalogue_version singleton table + bump trigger
+  - services/auth/migrations/0006_role_catalogue_version.sql
+  # closed-enum invariants (no extra strings parseable, no missing roles)
+  - services/auth/tests/rbac_catalogue_test.rs
+  # matrix lookups, in-memory cache, refresh semantics
+  - services/auth/tests/rbac_adr_gate_test.rs
+  # HasRole / HasAnyRole / HasPermission middleware tests
+  - services/auth/tests/rbac_catalogue_test.rs
+  # POST roles handler — happy + 401 + 403 + 409 + invalid-role + reserved-role + idempotent
+  - services/auth/tests/rbac_adr_gate_test.rs
+  # roles + rbac_v claims present, parseable, downstream-checkable
+  - services/auth/tests/rbac_catalogue_test.rs
+  # TASK-AUTH-002 5-role stub tokens still valid; new tokens carry rbac_v=2+
+  - services/auth/tests/rls_isolation_test.rs
+  # CI gate: migration touches roles table without matching ADR → fail
+  - services/auth/tests/rbac_adr_gate_test.rs
+  # role + scope-grant intersection; revoked grant blocks access
+  - services/auth/tests/rbac_adr_gate_test.rs
+  # founder assignment fails without WebAuthn factor
+  - services/auth/tests/rbac_adr_gate_test.rs
+  # root-admin / auditor / regulator / billing-system / client-portal-user — refuse self-assign
+  - services/auth/tests/rbac_reserved_role_self_assign_test.rs
+  # the catalogue's own ADR (this task ships the ADR)
+  - services/auth/adr/ADR-101-rbac-22-role-catalogue.md
 modified_files:
-  - services/auth/src/admin/subjects.rs                                 # role allow-list switches from {tenant-admin, tenant-member} to full RoleMatrix
-  - services/auth/src/admin/password.rs                                 # founder role triggers MFA-required side-condition
-  - services/auth/src/jwt.rs                                            # add `roles` (array) + `rbac_v` (integer) claims; preserve `tenant_id` shape
-  - services/auth/src/rls/templates.rs                                  # RLS now consults role membership for sensitive tables (subjects, audit, billing)
-  - services/auth/src/lib.rs                                            # pub mod rbac
-  - services/auth/Cargo.toml                                            # +tokio-stream (for 60s refresher), +sha2 (matrix hash)
-  - services/auth/RFC.md                                                # update §6 (role catalogue source-of-truth) — point at TASK-AUTH-101
+  # role allow-list switches from {tenant-admin, tenant-member} to full RoleMatrix
+  - services/auth/src/admin/subjects.rs
+  # founder role triggers MFA-required side-condition
+  - services/auth/src/admin/password.rs
+  # add `roles` (array) + `rbac_v` (integer) claims; preserve `tenant_id` shape
+  - services/auth/src/jwt.rs
+  # RLS now consults role membership for sensitive tables (subjects, audit, billing)
+  - services/auth/src/rls/templates.rs
+  # pub mod rbac
+  - services/auth/src/lib.rs
+  # +tokio-stream (for 60s refresher), +sha2 (matrix hash)
+  - services/auth/Cargo.toml
+  # update §6 (role catalogue source-of-truth) — point at TASK-AUTH-101
+  - services/auth/RFC.md
 
 allowed_tools:
   - file_read: services/auth/**
@@ -88,7 +120,8 @@ disallowed_tools:
   - allow ABAC (attribute-based) checks anywhere in the rbac module (per DEC-122 — closed catalogue is the design assertion)
   - allow self-assignment of root-admin / auditor / regulator / billing-system / client-portal-user (per DEC-127)
   - assign founder role to a subject without a registered WebAuthn factor (per DEC-128 + TASK-AUTH-105)
-  - issue a JWT with a `roles` claim referencing a role not in the closed catalogue (per §1 #13)
+  #13)
+  - issue a JWT with a `roles` claim referencing a role not in the closed catalogue (per §1
   - perform per-request permission lookup against the database (per DEC-126 — must use the in-memory RoleMatrix)
   - mutate the role catalogue at runtime via REST (the catalogue is migration-defined; runtime mutation is forbidden)
 

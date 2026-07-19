@@ -1,8 +1,10 @@
 ---
 id: TASK-EMAIL-003
 title: "EMAIL Missive-style team UX — shared inbox, thread assignment, internal comments, Genie actions panel, keyboard shortcuts"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/email.html#missive-ux
-  - https://missiveapp.com/  # Missive — collaborative email reference
+  # Missive — collaborative email reference
+  - https://missiveapp.com/
 
 source_decisions:
   - DEC-1610 2026-05-17 — Shared inbox model: tenant has one or more channels (e.g. support@, sales@); threads visible to all members of channel
@@ -37,42 +40,41 @@ source_decisions:
   - DEC-1615 2026-05-17 — Keyboard shortcuts: navigation (j/k), reply (r), forward (f), assign (a), snooze (z), close (e), Genie (g)
   - DEC-1616 2026-05-17 — memory audit kinds: email.thread_assigned, email.thread_state_changed, email.internal_comment_added, email.thread_snoozed, email.thread_closed
 
-build_envelope:
-  language: typescript / react
-  service: cyberos/services/portal-web/
-  new_files:
-    - services/email/migrations/0012_thread_state.sql
-    - services/email/src/threads/state.rs
-    - services/email/src/threads/internal_comments.rs
-    - services/email/src/handlers/thread_state_routes.rs
-    - services/email/src/handlers/comment_routes.rs
-    - services/email/src/audit/thread_events.rs
-    - services/portal-web/src/email/InboxView.tsx
-    - services/portal-web/src/email/ThreadView.tsx
-    - services/portal-web/src/email/AssignmentPicker.tsx
-    - services/portal-web/src/email/SnoozePicker.tsx
-    - services/portal-web/src/email/InternalCommentEditor.tsx
-    - services/portal-web/src/email/GenieActionsPanel.tsx
-    - services/portal-web/src/email/keyboard_shortcuts.ts
-    - services/email/tests/thread_assign_test.rs
-    - services/email/tests/thread_state_enum_cardinality_test.rs
-    - services/email/tests/internal_comment_not_in_reply_test.rs
-    - services/email/tests/thread_snooze_wake_test.rs
-    - services/email/tests/thread_audit_emission_test.rs
-    - services/portal-web/tests/inbox-keyboard.spec.ts
-    - services/portal-web/tests/thread-genie-panel.spec.ts
+language: typescript / react
+service: cyberos/services/portal-web/
+new_files:
+  - services/email/migrations/0012_thread_state.sql
+  - services/email/src/threads/state.rs
+  - services/email/src/threads/internal_comments.rs
+  - services/email/src/handlers/thread_state_routes.rs
+  - services/email/src/handlers/comment_routes.rs
+  - services/email/src/audit/thread_events.rs
+  - services/portal-web/src/email/InboxView.tsx
+  - services/portal-web/src/email/ThreadView.tsx
+  - services/portal-web/src/email/AssignmentPicker.tsx
+  - services/portal-web/src/email/SnoozePicker.tsx
+  - services/portal-web/src/email/InternalCommentEditor.tsx
+  - services/portal-web/src/email/GenieActionsPanel.tsx
+  - services/portal-web/src/email/keyboard_shortcuts.ts
+  - services/email/tests/thread_assign_test.rs
+  - services/email/tests/thread_state_enum_cardinality_test.rs
+  - services/email/tests/internal_comment_not_in_reply_test.rs
+  - services/email/tests/thread_snooze_wake_test.rs
+  - services/email/tests/thread_audit_emission_test.rs
+  - services/portal-web/tests/inbox-keyboard.spec.ts
+  - services/portal-web/tests/thread-genie-panel.spec.ts
 
-  modified_files:
-    - services/portal-web/src/app/email/page.tsx
+modified_files:
+  - services/portal-web/src/app/email/page.tsx
 
-  allowed_tools:
-    - file_read: services/{email,portal-web}/**
-    - file_write: services/{email,portal-web}/{src,tests,migrations}/**
-    - bash: cd services/email && cargo test thread; cd services/portal-web && pnpm test
+allowed_tools:
+  - file_read: services/{email,portal-web}/**
+  - file_write: services/{email,portal-web}/{src,tests,migrations}/**
+  - bash: cd services/email && cargo test thread; cd services/portal-web && pnpm test
 
-  disallowed_tools:
-    - include internal comments in email reply quote (per DEC-1612)
-    - email notification on assignment (per DEC-1611 — internal only)
+disallowed_tools:
+  - include internal comments in email reply quote (per DEC-1612)
+  - email notification on assignment (per DEC-1611 — internal only)
 
 effort_hours: 16
 subtasks:

@@ -51,6 +51,25 @@ def _hash_of(path):
         return None
 
 
+def _seed_block(install_sh_text):
+    """Extract install.sh's .workflow/.gitignore seed block (from `wf_ignore=` up to the
+    `# 0a.` section header) so the REAL seed — not a replica — is exercised (TASK-IMP-113)."""
+    out, capturing = [], False
+    for ln in install_sh_text.split("\n"):
+        if ln.startswith("wf_ignore="):
+            capturing = True
+        if capturing and ln.startswith("# 0a."):
+            break
+        if capturing:
+            out.append(ln)
+    return "\n".join(out)
+
+
+def _run_seed(seed, d):
+    script = 'set -euo pipefail\nroot="%s"\nmkdir -p "$root/docs/tasks/.workflow"\n%s' % (d, seed)
+    subprocess.run(["bash", "-c", script], check=True)
+
+
 class TestShipManifest(unittest.TestCase):
 
     def test_schema_fields_and_example_validate(self):  # AC 1
@@ -153,6 +172,40 @@ class TestShipManifest(unittest.TestCase):
             out = subprocess.run(["git", "check-ignore", probe],
                                  cwd=ROOT, capture_output=True)
             self.assertEqual(out.returncode, 0, f"{probe} is not gitignored")
+
+    def test_gitignore_seed_covers_skill_trust(self):  # TASK-IMP-113 §1.6 (extends AC 6)
+        # The IMP-090 seed covered *.ship.json + *.manifest.json only; IMP-113 extends it with the
+        # skill-trust ledger. Runs the REAL seed from install.sh against scratch repos (not a replica).
+        install_sh = open(os.path.join(ROOT, "tools", "install", "install.sh")).read()
+        self.assertIn("skill-trust.tsv", install_sh)                       # fresh seed carries it
+        self.assertIn("grep -qxF 'skill-trust.tsv'", install_sh)           # ...append-once guarded
+        seed = _seed_block(install_sh)
+        self.assertTrue(seed.strip(), "could not extract the .workflow seed block from install.sh")
+
+        with tempfile.TemporaryDirectory() as d:
+            subprocess.run(["git", "init", "-q", d], check=True)
+            # 1.6's premise: the ledger is NOT covered before the seed runs
+            before = subprocess.run(["git", "check-ignore", "docs/tasks/.workflow/skill-trust.tsv"], cwd=d)
+            self.assertNotEqual(before.returncode, 0, "ledger gitignored before seed — 1.6 premise false")
+            _run_seed(seed, d)
+            gi = os.path.join(d, "docs", "tasks", ".workflow", ".gitignore")
+            self.assertEqual(open(gi).read().split(), ["*.ship.json", "*.manifest.json", "skill-trust.tsv"])
+            after = subprocess.run(["git", "check-ignore", "docs/tasks/.workflow/skill-trust.tsv"], cwd=d)
+            self.assertEqual(after.returncode, 0, "ledger not gitignored after seed")
+            _run_seed(seed, d)  # re-install must NOT duplicate the line
+            self.assertEqual(open(gi).read().split().count("skill-trust.tsv"), 1)
+
+        # a legacy 2-pattern seed (predates 1.6) gains skill-trust.tsv exactly once, keeps the rest
+        with tempfile.TemporaryDirectory() as d:
+            wf = os.path.join(d, "docs", "tasks", ".workflow")
+            os.makedirs(wf)
+            with open(os.path.join(wf, ".gitignore"), "w") as f:
+                f.write("*.ship.json\n*.manifest.json\n")
+            _run_seed(seed, d)
+            gi = os.path.join(wf, ".gitignore")
+            self.assertEqual(open(gi).read().split(), ["*.ship.json", "*.manifest.json", "skill-trust.tsv"])
+            _run_seed(seed, d)  # re-run: still exactly one
+            self.assertEqual(open(gi).read().split().count("skill-trust.tsv"), 1)
 
     def test_done_deletes_routeback_keeps(self):  # AC 7
         m = _manifest()

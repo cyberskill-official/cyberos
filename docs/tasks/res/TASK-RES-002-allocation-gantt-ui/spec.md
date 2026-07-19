@@ -1,8 +1,10 @@
 ---
 id: TASK-RES-002
 title: "RES allocation Gantt UI — drag-rebalance interface over capacity matrix with optimistic concurrency + commit-on-save"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -35,38 +37,37 @@ source_decisions:
   - DEC-2044 2026-05-17 — Changes append to allocation_changes table; matrix row updated atomically; immutable history
   - DEC-2045 2026-05-17 — memory audit kinds: res.allocation_proposed, res.allocation_committed, res.allocation_rejected, res.allocation_conflicted
 
-build_envelope:
-  language: typescript / react + rust 1.81
-  service: cyberos/services/{res,portal-web}/
-  new_files:
-    - services/res/migrations/0002_allocation_changes.sql
-    - services/res/src/allocation/mod.rs
-    - services/res/src/allocation/proposer.rs
-    - services/res/src/allocation/validator.rs
-    - services/res/src/allocation/commit_handler.rs
-    - services/res/src/handlers/allocation_routes.rs
-    - services/res/src/audit/allocation_events.rs
-    - services/portal-web/src/res/GanttView.tsx
-    - services/portal-web/src/res/DragHandler.tsx
-    - services/portal-web/src/res/CommitDialog.tsx
-    - services/res/tests/allocation_proposer_test.rs
-    - services/res/tests/allocation_status_enum_cardinality_test.rs
-    - services/res/tests/allocation_optimistic_concurrency_test.rs
-    - services/res/tests/allocation_validation_test.rs
-    - services/res/tests/allocation_commit_atomic_test.rs
-    - services/res/tests/allocation_audit_emission_test.rs
+language: typescript / react + rust 1.81
+service: cyberos/services/{res,portal-web}/
+new_files:
+  - services/res/migrations/0002_allocation_changes.sql
+  - services/res/src/allocation/mod.rs
+  - services/res/src/allocation/proposer.rs
+  - services/res/src/allocation/validator.rs
+  - services/res/src/allocation/commit_handler.rs
+  - services/res/src/handlers/allocation_routes.rs
+  - services/res/src/audit/allocation_events.rs
+  - services/portal-web/src/res/GanttView.tsx
+  - services/portal-web/src/res/DragHandler.tsx
+  - services/portal-web/src/res/CommitDialog.tsx
+  - services/res/tests/allocation_proposer_test.rs
+  - services/res/tests/allocation_status_enum_cardinality_test.rs
+  - services/res/tests/allocation_optimistic_concurrency_test.rs
+  - services/res/tests/allocation_validation_test.rs
+  - services/res/tests/allocation_commit_atomic_test.rs
+  - services/res/tests/allocation_audit_emission_test.rs
 
-  modified_files:
-    - services/portal-web/src/app/res/page.tsx
+modified_files:
+  - services/portal-web/src/app/res/page.tsx
 
-  allowed_tools:
-    - file_read: services/{res,portal-web}/**
-    - file_write: services/{res,portal-web}/{src,tests,migrations}/**
-    - bash: cd services/res && cargo test allocation; cd services/portal-web && pnpm test
+allowed_tools:
+  - file_read: services/{res,portal-web}/**
+  - file_write: services/{res,portal-web}/{src,tests,migrations}/**
+  - bash: cd services/res && cargo test allocation; cd services/portal-web && pnpm test
 
-  disallowed_tools:
-    - bypass validation gate (per DEC-2043)
-    - mutate prior change row (per DEC-2044)
+disallowed_tools:
+  - bypass validation gate (per DEC-2043)
+  - mutate prior change row (per DEC-2044)
 
 effort_hours: 12
 subtasks:

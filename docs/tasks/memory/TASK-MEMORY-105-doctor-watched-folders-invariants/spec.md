@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + task-catalog renderer) ─────
 id: TASK-MEMORY-105
 title: "cyberos doctor — watched-folders integrity invariants (manifest ↔ filesystem ↔ HEAD reconciliation; 5 new invariants in memory.invariants.yaml)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -45,10 +47,14 @@ new_files:
   - services/memory/tests/doctor_watched_folders_test.rs
   - services/memory/tests/doctor_invariants_v2_test.rs
 modified_files:
-  - services/memory/src/doctor/mod.rs                       # register watched-folders module
-  - services/memory/src/doctor/cli.rs                       # surface new invariant ids in `cyberos doctor --json`
-  - services/memory/memory.invariants.yaml                  # include directive for watched-folders-v2.yaml
-  - services/memory/docs/doctor.md                          # document the 5 new invariants
+  # register watched-folders module
+  - services/memory/src/doctor/mod.rs
+  # surface new invariant ids in `cyberos doctor --json`
+  - services/memory/src/doctor/cli.rs
+  # include directive for watched-folders-v2.yaml
+  - services/memory/memory.invariants.yaml
+  # document the 5 new invariants
+  - services/memory/docs/doctor.md
 allowed_tools:
   - file_read: services/memory/**
   - file_write: services/memory/{src,tests,memory.invariants.yaml.d,docs}/**

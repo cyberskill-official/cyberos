@@ -1,8 +1,10 @@
 ---
 id: TASK-PORTAL-007
 title: "PORTAL PWA installable — mobile-first Progressive Web App with offline-capable view cache + push notifications + per-tenant manifest"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -44,47 +46,47 @@ source_decisions:
   - DEC-1270 2026-05-17 — memory audit kinds: portal.pwa_subscription_created, portal.pwa_subscription_revoked, portal.pwa_notification_sent, portal.pwa_notification_delivery_failed
   - DEC-1271 2026-05-17 — Mobile-first responsive design via Tailwind breakpoints; minimum supported viewport 320×568 (iPhone SE); design targets 360×640 (Android baseline)
 
-build_envelope:
-  language: rust 1.81 + typescript 5.5
-  service: cyberos/services/portal/
-  new_files:
-    - services/portal/migrations/0020_portal_pwa_subscriptions.sql
-    - services/portal/migrations/0021_portal_pwa_notifications_log.sql
-    - services/portal/src/pwa/mod.rs
-    - services/portal/src/pwa/manifest_gen.rs
-    - services/portal/src/pwa/service_worker_gen.rs
-    - services/portal/src/pwa/push_subscribe.rs
-    - services/portal/src/pwa/push_dispatcher.rs
-    - services/portal/src/pwa/vapid.rs
-    - services/portal/src/audit/pwa_events.rs
-    - services/portal/src/handlers/pwa_routes.rs
-    - services/portal/web/pwa/service-worker.ts
-    - services/portal/web/pwa/install-prompt.ts
-    - services/portal/web/pwa/notification-handler.ts
-    - services/portal/tests/pwa_manifest_per_tenant_test.rs
-    - services/portal/tests/pwa_service_worker_test.rs
-    - services/portal/tests/pwa_push_subscribe_test.rs
-    - services/portal/tests/pwa_push_dispatch_test.rs
-    - services/portal/tests/pwa_notification_pref_opt_out_test.rs
-    - services/portal/tests/pwa_offline_cache_test.rs
-    - services/portal/tests/pwa_rate_limit_test.rs
-    - services/portal/tests/pwa_notification_kind_enum_cardinality_test.rs
-    - services/portal/tests/pwa_audit_emission_test.rs
+language: rust 1.81 + typescript 5.5
+service: cyberos/services/portal/
+new_files:
+  - services/portal/migrations/0020_portal_pwa_subscriptions.sql
+  - services/portal/migrations/0021_portal_pwa_notifications_log.sql
+  - services/portal/src/pwa/mod.rs
+  - services/portal/src/pwa/manifest_gen.rs
+  - services/portal/src/pwa/service_worker_gen.rs
+  - services/portal/src/pwa/push_subscribe.rs
+  - services/portal/src/pwa/push_dispatcher.rs
+  - services/portal/src/pwa/vapid.rs
+  - services/portal/src/audit/pwa_events.rs
+  - services/portal/src/handlers/pwa_routes.rs
+  - services/portal/web/pwa/service-worker.ts
+  - services/portal/web/pwa/install-prompt.ts
+  - services/portal/web/pwa/notification-handler.ts
+  - services/portal/tests/pwa_manifest_per_tenant_test.rs
+  - services/portal/tests/pwa_service_worker_test.rs
+  - services/portal/tests/pwa_push_subscribe_test.rs
+  - services/portal/tests/pwa_push_dispatch_test.rs
+  - services/portal/tests/pwa_notification_pref_opt_out_test.rs
+  - services/portal/tests/pwa_offline_cache_test.rs
+  - services/portal/tests/pwa_rate_limit_test.rs
+  - services/portal/tests/pwa_notification_kind_enum_cardinality_test.rs
+  - services/portal/tests/pwa_audit_emission_test.rs
 
-  modified_files:
-    - services/portal/src/lib.rs
-    - services/portal/Cargo.toml                                       # +web-push crate
+modified_files:
+  - services/portal/src/lib.rs
+  # +web-push crate
+  - services/portal/Cargo.toml
 
-  allowed_tools:
-    - file_read: services/portal/**
-    - file_write: services/portal/{src,tests,migrations,web}/**
-    - bash: cd services/portal && cargo test pwa
+allowed_tools:
+  - file_read: services/portal/**
+  - file_write: services/portal/{src,tests,migrations,web}/**
+  - bash: cd services/portal && cargo test pwa
 
-  disallowed_tools:
-    - serve manifest.json without per-tenant brand application (per DEC-1261)
-    - exceed 100 push/day/user (per DEC-1268)
-    - cache write operations offline (per DEC-1264 — read-only)
-    - send notifications for opted-out kinds (per DEC-1267)
+disallowed_tools:
+  - serve manifest.json without per-tenant brand application (per DEC-1261)
+  - exceed 100 push/day/user (per DEC-1268)
+  - cache write operations offline (per DEC-1264 — read-only)
+  - send notifications for opted-out kinds (per DEC-1267)
 
 effort_hours: 6
 subtasks:

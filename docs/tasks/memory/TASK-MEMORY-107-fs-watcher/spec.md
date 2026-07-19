@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-107
 title: "memory capture daemon — Rust + notify crate FS watcher with rate-limit + content-dedup + backpressure + W3C trace propagation"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -50,9 +52,12 @@ new_files:
   - services/memory/tests/ingest_test.rs
   - services/memory/tests/ingest_test.rs
 modified_files:
-  - cyberos/Cargo.toml                                      # workspace member
-  - services/memory/src/cli/watch.rs                         # `cyberos memory watch` registers folder with capture daemon
-  - services/memory/manifest.json                            # add `capture_daemon` section
+  # workspace member
+  - cyberos/Cargo.toml
+  # `cyberos memory watch` registers folder with capture daemon
+  - services/memory/src/cli/watch.rs
+  # add `capture_daemon` section
+  - services/memory/manifest.json
 allowed_tools:
   - file_read: services/memory-capture/**, services/memory/**
   - file_write: services/memory-capture/{src,tests}/**
@@ -61,7 +66,8 @@ allowed_tools:
 disallowed_tools:
   - poll-based watching (DEC-140 — always event-driven)
   - bypass dedup (DEC-141 — same content-hash = same memory, idempotently)
-  - silently drop events on queue overflow (per §1 #7 — must emit `memory.capture_dropped` audit row)
+  #7 — must emit `memory.capture_dropped` audit row)
+  - silently drop events on queue overflow (per §1
   - write directly to audit chain (per AGENTS.md §14.1 — only canonical writer mutates chain)
 
 effort_hours: 14

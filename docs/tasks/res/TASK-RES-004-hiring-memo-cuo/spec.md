@@ -1,8 +1,10 @@
 ---
 id: TASK-RES-004
 title: "RES hiring memo CUO draft — skill-gap × CRM pipeline trigger → CEO+CFO review queue with cost-benefit projection"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,34 +36,33 @@ source_decisions:
   - DEC-2073 2026-05-17 — Dual sign-off CEO + CFO required to convert memo to hiring action; TASK-RES-002 marks role as "approved-hire" — slot reserved in capacity matrix
   - DEC-2074 2026-05-17 — memory audit kinds: res.hiring_memo_drafted, res.hiring_memo_signed, res.hiring_memo_dismissed, res.hiring_memo_approved_for_action
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/res/
-  new_files:
-    - services/res/migrations/0004_hiring_memos.sql
-    - services/res/src/hiring/mod.rs
-    - services/res/src/hiring/gap_detector.rs
-    - services/res/src/hiring/cost_projector.rs
-    - services/res/src/hiring/memo_generator.rs
-    - services/res/src/handlers/hiring_routes.rs
-    - services/res/src/audit/hiring_events.rs
-    - services/res/tests/hiring_trigger_at_4w_over_allocated_test.rs
-    - services/res/tests/hire_recommendation_enum_cardinality_test.rs
-    - services/res/tests/hiring_dual_sign_test.rs
-    - services/res/tests/hiring_no_auto_action_test.rs
-    - services/res/tests/hiring_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/res/
+new_files:
+  - services/res/migrations/0004_hiring_memos.sql
+  - services/res/src/hiring/mod.rs
+  - services/res/src/hiring/gap_detector.rs
+  - services/res/src/hiring/cost_projector.rs
+  - services/res/src/hiring/memo_generator.rs
+  - services/res/src/handlers/hiring_routes.rs
+  - services/res/src/audit/hiring_events.rs
+  - services/res/tests/hiring_trigger_at_4w_over_allocated_test.rs
+  - services/res/tests/hire_recommendation_enum_cardinality_test.rs
+  - services/res/tests/hiring_dual_sign_test.rs
+  - services/res/tests/hiring_no_auto_action_test.rs
+  - services/res/tests/hiring_audit_emission_test.rs
 
-  modified_files:
-    - services/res/src/lib.rs
+modified_files:
+  - services/res/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{res,crm,hr,rew,cuo,ai}/**
-    - file_write: services/res/{src,tests,migrations}/**
-    - bash: cd services/res && cargo test hiring
+allowed_tools:
+  - file_read: services/{res,crm,hr,rew,cuo,ai}/**
+  - file_write: services/res/{src,tests,migrations}/**
+  - bash: cd services/res && cargo test hiring
 
-  disallowed_tools:
-    - auto-create hire without dual-sign (per DEC-2073)
-    - skip cost projection (per DEC-2072)
+disallowed_tools:
+  - auto-create hire without dual-sign (per DEC-2073)
+  - skip cost projection (per DEC-2072)
 
 effort_hours: 8
 subtasks:

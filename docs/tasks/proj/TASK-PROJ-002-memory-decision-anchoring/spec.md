@@ -1,8 +1,10 @@
 ---
 id: TASK-PROJ-002
 title: "memory-anchored proj.decision row per Issue state change — reason + prior_chain link + cross-module references + ACL + audit-before-action"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -41,17 +43,23 @@ new_files:
   - services/proj/tests/error_mapping_test.rs
   - services/proj/tests/decision_acl_test.rs
 modified_files:
-  - services/proj/src/handlers/issues.rs                 # call decisions::emit on status change
-  - services/proj/src/audit.rs                            # extend with decision builder
+  # call decisions::emit on status change
+  - services/proj/src/handlers/issues.rs
+  # extend with decision builder
+  - services/proj/src/audit.rs
 allowed_tools:
   - file_read: services/proj/**
   - file_write: services/proj/**
   - bash: cd services/proj && cargo test decision
 disallowed_tools:
-  - mutate issue without emitting decision row (per §1 #1)
-  - bypass audit-before-action invariant (per §1 #6)
-  - skip prior_decision_chain link (per §1 #5 — breaks per-issue history)
-  - allow reason > 500 chars (per §1 #3)
+  #1)
+  - mutate issue without emitting decision row (per §1
+  #6)
+  - bypass audit-before-action invariant (per §1
+  #5 — breaks per-issue history)
+  - skip prior_decision_chain link (per §1
+  #3)
+  - allow reason > 500 chars (per §1
 
 effort_hours: 7
 subtasks:

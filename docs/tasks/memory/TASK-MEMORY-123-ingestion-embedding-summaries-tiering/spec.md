@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-123
 title: "BRAIN ingestion + embedding + rolling summaries + hot/warm/cold tiering + access-scoped recall — the interaction-event log becomes a fast, persistent, citable brain (HNSW sub-second recall, summaries-first, audit chain stays system of record)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-06-29T00:00:00+07:00
@@ -61,10 +63,13 @@ new_files:
   - services/memory/tests/brain_backfill_rebuild_test.rs
   - services/memory/tests/brain_residency_spend_test.rs
 modified_files:
-  - services/memory/src/main.rs                 # spawn the brain ingest worker alongside the layer2 loop
-  - services/memory/src/handlers/mod.rs         # mount POST /v1/memory/recall
+  # spawn the brain ingest worker alongside the layer2 loop
+  - services/memory/src/main.rs
+  # mount POST /v1/memory/recall
+  - services/memory/src/handlers/mod.rs
 modified_files_python:
-  - modules/ai-gateway/gateway/embeddings.py    # note: residency + spend-cap path the worker calls (no new behaviour; documented contract)
+  # note: residency + spend-cap path the worker calls (no new behaviour; documented contract)
+  - modules/ai-gateway/gateway/embeddings.py
 allowed_tools:
   - file_read: services/memory/**
   - file_read: modules/ai-gateway/**

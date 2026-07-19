@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-110
 title: "memory capture daemon supervision — systemd + launchd units + /healthz + watchdog + crash-restart with exponential backoff + sweeper cron"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -46,8 +48,10 @@ new_files:
   - services/memory/tests/ingest_test.rs
   - services/memory-capture/tests/restart_e2e_test.sh
 modified_files:
-  - services/memory-capture/src/main.rs                  # bind /healthz; start sweeper; install signal handlers
-  - services/memory-capture/src/lib.rs                   # CaptureDaemon::health() + ::run_sweeper()
+  # bind /healthz; start sweeper; install signal handlers
+  - services/memory-capture/src/main.rs
+  # CaptureDaemon::health() + ::run_sweeper()
+  - services/memory-capture/src/lib.rs
 allowed_tools:
   - file_read: services/memory-capture/**
   - file_write: services/memory-capture/{src,install,tests}/**

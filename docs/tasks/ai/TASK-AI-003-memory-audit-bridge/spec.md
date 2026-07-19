@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter ─────
 id: TASK-AI-003
 title: "memory audit-row bridge — canonical Writer for AI Gateway"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -46,14 +48,18 @@ new_files:
   - services/ai-gateway/src/memory_writer/subprocess.rs
   - services/ai-gateway/tests/memory_writer_test.rs
 modified_files:
-  - services/ai-gateway/Cargo.toml   # add serde_json, sha2, base64, tokio process features
-  - services/ai-gateway/src/lib.rs   # export memory_writer module
+  # add serde_json, sha2, base64, tokio process features
+  - services/ai-gateway/Cargo.toml
+  # export memory_writer module
+  - services/ai-gateway/src/lib.rs
 allowed_tools:
   - file_read: services/ai-gateway/**
-  - file_read: cyberos/{src,scripts}/**   # read-only access to canonical Writer source
+  # read-only access to canonical Writer source
+  - file_read: cyberos/{src,scripts}/**
   - file_write: services/ai-gateway/{src,tests}/**
   - bash: cargo test -p cyberos-ai-gateway memory_writer
-  - bash: python3 -m cyberos.writer --help   # smoke-test the Writer CLI handshake
+  # smoke-test the Writer CLI handshake
+  - bash: python3 -m cyberos.writer --help
 disallowed_tools:
   - direct write to <memory-root>/audit/*.binlog   (MUST route through canonical Writer)
   - direct write to <memory-root>/HEAD   (MUST route through canonical Writer)

@@ -1,8 +1,10 @@
 ---
 id: TASK-AUTH-109
 title: "AUTH stub → full migration enforcer — 30-day grace window + cutover timestamp + rejection metric + per-tenant override"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -45,12 +47,18 @@ new_files:
   - services/auth/migrations/0014_auth_migration_state.sql
   - services/auth/migrations/0015_auth_token_refresh_log.sql
   - services/auth/src/migration/mod.rs
-  - services/auth/src/migration/state.rs                  # cutover_at lookup + status
-  - services/auth/src/migration/grace_window.rs           # is_in_grace_window + days_remaining
-  - services/auth/src/migration/verifier_hook.rs          # hook into TASK-AUTH-004 verifier to reject post-grace stub tokens
-  - services/auth/src/migration/refresh_hook.rs           # hook into TASK-AUTH-004 refresh to inject rbac_v
-  - services/auth/src/migration/audit.rs                  # 4 memory row builders
-  - services/auth/src/handlers/migration.rs               # GET /preview + POST /extend-grace
+  # cutover_at lookup + status
+  - services/auth/src/migration/state.rs
+  # is_in_grace_window + days_remaining
+  - services/auth/src/migration/grace_window.rs
+  # hook into TASK-AUTH-004 verifier to reject post-grace stub tokens
+  - services/auth/src/migration/verifier_hook.rs
+  # hook into TASK-AUTH-004 refresh to inject rbac_v
+  - services/auth/src/migration/refresh_hook.rs
+  # 4 memory row builders
+  - services/auth/src/migration/audit.rs
+  # GET /preview + POST /extend-grace
+  - services/auth/src/handlers/migration.rs
   - services/auth/tests/admin_list_test.rs
   - services/auth/tests/rbac_catalogue_test.rs
   - services/auth/tests/jwt_token_endpoint_test.rs
@@ -63,9 +71,12 @@ new_files:
   - services/auth/tests/admin_list_test.rs
   - services/auth/tests/rls_isolation_test.rs
 modified_files:
-  - services/auth/src/jwt/verifier.rs                     # hook in migration::verifier_hook before successful verify
-  - services/auth/src/jwt/refresh.rs                      # hook in migration::refresh_hook after refresh
-  - services/auth/src/lib.rs                              # pub mod migration
+  # hook in migration::verifier_hook before successful verify
+  - services/auth/src/jwt/verifier.rs
+  # hook in migration::refresh_hook after refresh
+  - services/auth/src/jwt/refresh.rs
+  # pub mod migration
+  - services/auth/src/lib.rs
 
 allowed_tools:
   - file_read: services/auth/**

@@ -1,8 +1,10 @@
 ---
 id: TASK-AUTH-102
 title: "AUTH TOTP (RFC 6238) + WebAuthn Level 3 MFA — closed factor enum + enrolment FSM + challenge/response + recovery codes + sev-1 lockout + memory audit per factor lifecycle event"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -57,16 +59,26 @@ new_files:
   - services/auth/migrations/0019_mfa_recovery_codes.sql
   - services/auth/migrations/0020_mfa_lockout_state.sql
   - services/auth/src/mfa/mod.rs
-  - services/auth/src/mfa/factor_kind.rs                    # closed 3-value enum
-  - services/auth/src/mfa/totp.rs                           # RFC 6238 generator + verifier
-  - services/auth/src/mfa/webauthn.rs                       # webauthn-rs wrapper
-  - services/auth/src/mfa/challenge.rs                      # challenge issuance + verification + lifecycle FSM
-  - services/auth/src/mfa/recovery.rs                       # 10-code batch generator + verifier (bcrypt-hashed)
-  - services/auth/src/mfa/lockout.rs                        # 5/15min → 30min lock state machine
-  - services/auth/src/mfa/policy.rs                         # per-tenant MFA-required-roles policy lookup
-  - services/auth/src/mfa/repo.rs                           # CRUD across mfa_factors + history + log + recovery + lockout
-  - services/auth/src/mfa/audit.rs                          # 8 memory row builders
-  - services/auth/src/handlers/mfa.rs                       # enrol + challenge + verify + recovery + unlock
+  # closed 3-value enum
+  - services/auth/src/mfa/factor_kind.rs
+  # RFC 6238 generator + verifier
+  - services/auth/src/mfa/totp.rs
+  # webauthn-rs wrapper
+  - services/auth/src/mfa/webauthn.rs
+  # challenge issuance + verification + lifecycle FSM
+  - services/auth/src/mfa/challenge.rs
+  # 10-code batch generator + verifier (bcrypt-hashed)
+  - services/auth/src/mfa/recovery.rs
+  # 5/15min → 30min lock state machine
+  - services/auth/src/mfa/lockout.rs
+  # per-tenant MFA-required-roles policy lookup
+  - services/auth/src/mfa/policy.rs
+  # CRUD across mfa_factors + history + log + recovery + lockout
+  - services/auth/src/mfa/repo.rs
+  # 8 memory row builders
+  - services/auth/src/mfa/audit.rs
+  # enrol + challenge + verify + recovery + unlock
+  - services/auth/src/handlers/mfa.rs
   - services/auth/tests/mfa_factor_kind_closed_test.rs
   - services/auth/tests/mfa_totp_rfc6238_test.rs
   - services/auth/tests/mfa_totp_secret_kms_encrypted_test.rs
@@ -82,8 +94,10 @@ new_files:
   - services/auth/tests/admin_deny_list_test.rs
   - services/auth/tests/mfa_audit_emission_test.rs
 modified_files:
-  - services/auth/src/jwt/issuer.rs                         # MFA-required gate consults policy before issuing JWT
-  - services/auth/src/lib.rs                                # pub mod mfa
+  # MFA-required gate consults policy before issuing JWT
+  - services/auth/src/jwt/issuer.rs
+  # pub mod mfa
+  - services/auth/src/lib.rs
 
 allowed_tools:
   - file_read: services/auth/**

@@ -1,8 +1,10 @@
 ---
 id: TASK-PROJ-004
 title: "Issue lifecycle FSM — backlog → todo → in-progress → in-review → done | cancelled with TASK-PROJ-002 audit trail, validation, and forward-only enforcement"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -30,7 +32,8 @@ source_pages:
 source_decisions:
   - DEC-250 (issue lifecycle is a strict FSM; arbitrary status mutations forbidden by construction)
   - DEC-251 (backlog → done is the canonical 5-state pattern; teams using extended states must subclass via state_groups)
-  - DEC-252 (transitions are LWW-scalar via TASK-PROJ-003 §1 #6; companion columns track when/who)
+  #6; companion columns track when/who)
+  - DEC-252 (transitions are LWW-scalar via TASK-PROJ-003 §1
   - DEC-253 (re-open from done/cancelled is explicit transition with reason; not implicit)
 
 language: rust 1.81 + typescript 5.4
@@ -45,9 +48,12 @@ new_files:
   - web/proj-client/src/lifecycle/StatusPicker.tsx
   - web/proj-client/src/lifecycle/allowed_transitions.ts
 modified_files:
-  - services/proj-sync/src/scalar_handlers.rs        # status PATCH uses FSM validator
-  - services/proj-sync/src/types.rs                  # IssueStatus enum
-  - web/proj-client/src/components/IssueEditor.tsx   # status field uses StatusPicker
+  # status PATCH uses FSM validator
+  - services/proj-sync/src/scalar_handlers.rs
+  # IssueStatus enum
+  - services/proj-sync/src/types.rs
+  # status field uses StatusPicker
+  - web/proj-client/src/components/IssueEditor.tsx
 allowed_tools:
   - file_read: services/proj-sync/**, web/proj-client/**
   - file_write: services/proj-sync/{src,tests,migrations}/**, web/proj-client/src/**

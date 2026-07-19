@@ -1,8 +1,10 @@
 ---
 id: TASK-PLUGIN-004
 title: "Skill playbooks bundle — Anthropic-Agent-Skills SKILL.md files teaching hosts how to chain plugin tools correctly"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -37,51 +39,50 @@ source_decisions:
   - DEC-2434 2026-05-19 — Playbooks are organised by use-case (orchestration, memory, skill discovery, governance) not by tool — single playbook MAY reference multiple tools
   - DEC-2435 2026-05-19 — Playbook v1 set is 12; subsequent additions via task-PLUGIN-004a/b/c successor tasks gated on usage data
 
-build_envelope:
-  language: markdown
-  service: modules/plugin/skills/
-  new_files:
-    - modules/plugin/skills/run-cuo-workflow/SKILL.md
-    - modules/plugin/skills/run-cuo-workflow/acceptance/TRIGGER_TESTS.md
-    - modules/plugin/skills/route-natural-language/SKILL.md
-    - modules/plugin/skills/route-natural-language/acceptance/TRIGGER_TESTS.md
-    - modules/plugin/skills/audit-trail-query/SKILL.md
-    - modules/plugin/skills/audit-trail-query/acceptance/TRIGGER_TESTS.md
-    - modules/plugin/skills/audit-trail-append/SKILL.md
-    - modules/plugin/skills/audit-trail-append/acceptance/TRIGGER_TESTS.md
-    - modules/plugin/skills/discover-skills/SKILL.md
-    - modules/plugin/skills/discover-skills/acceptance/TRIGGER_TESTS.md
-    - modules/plugin/skills/invoke-cyberos-skill/SKILL.md
-    - modules/plugin/skills/invoke-cyberos-skill/acceptance/TRIGGER_TESTS.md
-    - modules/plugin/skills/persona-discovery/SKILL.md
-    - modules/plugin/skills/persona-discovery/acceptance/TRIGGER_TESTS.md
-    - modules/plugin/skills/workflow-inspection/SKILL.md
-    - modules/plugin/skills/workflow-inspection/acceptance/TRIGGER_TESTS.md
-    - modules/plugin/skills/cross-workflow-chain/SKILL.md
-    - modules/plugin/skills/cross-workflow-chain/acceptance/TRIGGER_TESTS.md
-    - modules/plugin/skills/memory-write-discipline/SKILL.md
-    - modules/plugin/skills/memory-write-discipline/acceptance/TRIGGER_TESTS.md
-    - modules/plugin/skills/auth-and-scopes/SKILL.md
-    - modules/plugin/skills/auth-and-scopes/acceptance/TRIGGER_TESTS.md
-    - modules/plugin/skills/audit-emission-discipline/SKILL.md
-    - modules/plugin/skills/audit-emission-discipline/acceptance/TRIGGER_TESTS.md
-    - modules/plugin/tests/test_playbooks_conform_to_skb.py
-    - modules/plugin/tests/test_playbooks_have_trigger_tests.py
-    - modules/plugin/tests/test_playbooks_reference_valid_tools.py
+language: markdown
+service: modules/plugin/skills/
+new_files:
+  - modules/plugin/skills/run-cuo-workflow/SKILL.md
+  - modules/plugin/skills/run-cuo-workflow/acceptance/TRIGGER_TESTS.md
+  - modules/plugin/skills/route-natural-language/SKILL.md
+  - modules/plugin/skills/route-natural-language/acceptance/TRIGGER_TESTS.md
+  - modules/plugin/skills/audit-trail-query/SKILL.md
+  - modules/plugin/skills/audit-trail-query/acceptance/TRIGGER_TESTS.md
+  - modules/plugin/skills/audit-trail-append/SKILL.md
+  - modules/plugin/skills/audit-trail-append/acceptance/TRIGGER_TESTS.md
+  - modules/plugin/skills/discover-skills/SKILL.md
+  - modules/plugin/skills/discover-skills/acceptance/TRIGGER_TESTS.md
+  - modules/plugin/skills/invoke-cyberos-skill/SKILL.md
+  - modules/plugin/skills/invoke-cyberos-skill/acceptance/TRIGGER_TESTS.md
+  - modules/plugin/skills/persona-discovery/SKILL.md
+  - modules/plugin/skills/persona-discovery/acceptance/TRIGGER_TESTS.md
+  - modules/plugin/skills/workflow-inspection/SKILL.md
+  - modules/plugin/skills/workflow-inspection/acceptance/TRIGGER_TESTS.md
+  - modules/plugin/skills/cross-workflow-chain/SKILL.md
+  - modules/plugin/skills/cross-workflow-chain/acceptance/TRIGGER_TESTS.md
+  - modules/plugin/skills/memory-write-discipline/SKILL.md
+  - modules/plugin/skills/memory-write-discipline/acceptance/TRIGGER_TESTS.md
+  - modules/plugin/skills/auth-and-scopes/SKILL.md
+  - modules/plugin/skills/auth-and-scopes/acceptance/TRIGGER_TESTS.md
+  - modules/plugin/skills/audit-emission-discipline/SKILL.md
+  - modules/plugin/skills/audit-emission-discipline/acceptance/TRIGGER_TESTS.md
+  - modules/plugin/tests/test_playbooks_conform_to_skb.py
+  - modules/plugin/tests/test_playbooks_have_trigger_tests.py
+  - modules/plugin/tests/test_playbooks_reference_valid_tools.py
 
-  modified_files:
-    - modules/plugin/manifests/cyberos@1.0.0.plugin.json (skills array)
-    - website docs (Plugin page)
+modified_files:
+  - modules/plugin/manifests/cyberos@1.0.0.plugin.json (skills array)
+  - website docs (Plugin page)
 
-  allowed_tools:
-    - file_read: modules/plugin/skills/**
-    - file_write: modules/plugin/skills/**
-    - bash: python -m pytest modules/plugin/tests/test_playbooks_*.py
+allowed_tools:
+  - file_read: modules/plugin/skills/**
+  - file_write: modules/plugin/skills/**
+  - bash: python -m pytest modules/plugin/tests/test_playbooks_*.py
 
-  disallowed_tools:
-    - bypass TASK-SKILL-111 description format (per DEC-2432)
-    - skip TRIGGER_TESTS (per DEC-2433)
-    - extend playbook set without task (per DEC-2435)
+disallowed_tools:
+  - bypass TASK-SKILL-111 description format (per DEC-2432)
+  - skip TRIGGER_TESTS (per DEC-2433)
+  - extend playbook set without task (per DEC-2435)
 
 effort_hours: 6
 subtasks:

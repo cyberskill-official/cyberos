@@ -1,8 +1,10 @@
 ---
 id: TASK-TEN-104
 title: "TEN 90-day offboarding contract — closed 4-state FSM (Active → Terminating-A → Terminating-B → Terminated) + day-pinned transitions + scheduled jobs + read-only freeze + dead-letter recovery + dual-signoff irreversible wipe"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -43,7 +45,8 @@ source_decisions:
   - DEC-513 (dead-letter restore from terminating_b requires CSO + CLO dual-signoff + restore reason; emits `ten.dead_letter_restored` memory row sev-1)
   - DEC-514 (FSM enforced at trigger AND handler — defense in depth; trigger uses ENUM transition matrix function)
   - DEC-515 (terminating_a + terminating_b durations are PINNED at FSM entry — `scheduled_advance_at` column captures the target transition time; extensions update this; the scheduled job consults this column)
-  - GDPR Art. 17 (right to erasure — 90-day grace satisfies; legal-hold blocks per TASK-DOC-001 §1 #13)
+  #13)
+  - GDPR Art. 17 (right to erasure — 90-day grace satisfies; legal-hold blocks per TASK-DOC-001 §1
   - PDPL Art. 17 (data subject erasure — equivalent + per-tenant override)
   - SOC 2 CC6.5 (data disposal controls)
 
@@ -53,13 +56,20 @@ new_files:
   - services/ten/migrations/0004_tenant_offboarding_state.sql
   - services/ten/migrations/0005_tenant_offboarding_log.sql
   - services/ten/src/offboarding/mod.rs
-  - services/ten/src/offboarding/fsm.rs                       # closed transition matrix
-  - services/ten/src/offboarding/scheduler.rs                 # hourly advance job
-  - services/ten/src/offboarding/read_only_gate.rs            # JWT issuance hook
-  - services/ten/src/offboarding/dead_letter.rs               # S3 dead-letter writer + restorer
-  - services/ten/src/offboarding/repo.rs                      # CRUD across state + log
-  - services/ten/src/offboarding/audit.rs                     # 8 memory row builders
-  - services/ten/src/handlers/offboarding.rs                  # initiate + cancel + extend + restore
+  # closed transition matrix
+  - services/ten/src/offboarding/fsm.rs
+  # hourly advance job
+  - services/ten/src/offboarding/scheduler.rs
+  # JWT issuance hook
+  - services/ten/src/offboarding/read_only_gate.rs
+  # S3 dead-letter writer + restorer
+  - services/ten/src/offboarding/dead_letter.rs
+  # CRUD across state + log
+  - services/ten/src/offboarding/repo.rs
+  # 8 memory row builders
+  - services/ten/src/offboarding/audit.rs
+  # initiate + cancel + extend + restore
+  - services/ten/src/handlers/offboarding.rs
   - services/ten/tests/offboarding_fsm_test.rs
   - services/ten/tests/offboarding_initiate_test.rs
   - services/ten/tests/offboarding_scheduler_advance_test.rs
@@ -74,7 +84,8 @@ new_files:
   - services/ten/tests/offboarding_append_only_log_test.rs
   - services/ten/tests/offboarding_audit_emission_test.rs
 modified_files:
-  - services/auth/src/jwt/issuer.rs                          # consult read_only_gate at issuance
+  # consult read_only_gate at issuance
+  - services/auth/src/jwt/issuer.rs
 
 allowed_tools:
   - file_read: services/ten/**

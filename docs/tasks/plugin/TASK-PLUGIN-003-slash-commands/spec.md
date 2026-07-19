@@ -1,8 +1,10 @@
 ---
 id: TASK-PLUGIN-003
 title: "Canonical slash-commands — /cyberos-run, /cyberos-memory, /cyberos-skill-list, /cyberos-route markdown definitions in modules/plugin/commands/"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -14,6 +16,14 @@ priority: p0
 status: draft
 new_files:
   - modules/plugin/commands/SCHEMA.md
+  - modules/plugin/commands/cyberos-run.md
+  - modules/plugin/commands/cyberos-memory.md
+  - modules/plugin/commands/cyberos-skill-list.md
+  - modules/plugin/commands/cyberos-route.md
+  - modules/plugin/tests/test_commands_have_frontmatter.py
+  - modules/plugin/tests/test_commands_bind_to_valid_tools.py
+  - modules/plugin/tests/test_commands_description_length.py
+  - modules/plugin/tests/test_commands_trigger_count.py
 verify: T
 phase: P1
 milestone: P1 · slice 1
@@ -36,32 +46,21 @@ source_decisions:
   - DEC-2423 2026-05-19 — Command argument schema MUST mirror the underlying MCP tool's input_schema — single source of truth per TASK-PLUGIN-001
   - DEC-2424 2026-05-19 — Commands MUST include before-use trigger discipline per TASK-SKILL-111 — description (60-480 chars) + 4 trigger examples
 
-build_envelope:
-  language: markdown
-  service: modules/plugin/commands/
-  new_files:
-    - modules/plugin/commands/cyberos-run.md
-    - modules/plugin/commands/cyberos-memory.md
-    - modules/plugin/commands/cyberos-skill-list.md
-    - modules/plugin/commands/cyberos-route.md
-    - modules/plugin/commands/SCHEMA.md
-    - modules/plugin/tests/test_commands_have_frontmatter.py
-    - modules/plugin/tests/test_commands_bind_to_valid_tools.py
-    - modules/plugin/tests/test_commands_description_length.py
-    - modules/plugin/tests/test_commands_trigger_count.py
+language: markdown
+service: modules/plugin/commands/
 
-  modified_files:
-    - modules/plugin/manifests/cyberos@1.0.0.plugin.json (commands array)
-    - website docs (Plugin page §3)
+modified_files:
+  - modules/plugin/manifests/cyberos@1.0.0.plugin.json (commands array)
+  - website docs (Plugin page §3)
 
-  allowed_tools:
-    - file_read: modules/plugin/commands/**
-    - file_write: modules/plugin/commands/**
-    - bash: python -m pytest modules/plugin/tests/test_commands_*.py
+allowed_tools:
+  - file_read: modules/plugin/commands/**
+  - file_write: modules/plugin/commands/**
+  - bash: python -m pytest modules/plugin/tests/test_commands_*.py
 
-  disallowed_tools:
-    - inline tool input schemas (per DEC-2423 — single source of truth in manifest)
-    - exceed 4 commands in v1 (per DEC-2421 — successor task required)
+disallowed_tools:
+  - inline tool input schemas (per DEC-2423 — single source of truth in manifest)
+  - exceed 4 commands in v1 (per DEC-2421 — successor task required)
 
 effort_hours: 4
 subtasks:

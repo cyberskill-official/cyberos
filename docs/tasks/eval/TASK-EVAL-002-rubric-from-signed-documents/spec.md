@@ -1,7 +1,8 @@
 ---
 id: TASK-EVAL-002
 title: "evaluation rubric from the three signed employment documents — versioned, effective-dated, bilingual VN/EN; each item cites its exact source clause (document + clause_ref) so an assessment can name the contract clause it measured against"
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-06-29T00:00:00+07:00
@@ -47,8 +48,10 @@ new_files:
   - services/eval/tests/rubric_versioning_test.rs
   - services/eval/tests/rubric_rls_test.rs
 modified_files:
-  - services/eval/src/lib.rs                 # mount the rubric module
-  - services/eval/src/audit.rs               # add eval.rubric_* row kinds
+  # mount the rubric module
+  - services/eval/src/lib.rs
+  # add eval.rubric_* row kinds
+  - services/eval/src/audit.rs
 allowed_tools:
   - file_read: services/eval/**
   - file_write: services/eval/{src,tests,migrations}/**

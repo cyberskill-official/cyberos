@@ -1,8 +1,10 @@
 ---
 id: TASK-RES-003
 title: "RES over/under-allocation flags — 110% warning / 60% under-utilization threshold with weekly digest to CHRO"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,30 +36,29 @@ source_decisions:
   - DEC-2053 2026-05-17 — Weekly digest Friday 16:00 CHRO summarizes flag counts + flagged members
   - DEC-2054 2026-05-17 — memory audit kinds: res.flag_changed, res.weekly_digest_sent
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/res/
-  new_files:
-    - services/res/migrations/0003_allocation_flags.sql
-    - services/res/src/flags/mod.rs
-    - services/res/src/flags/computer.rs
-    - services/res/src/flags/weekly_digest.rs
-    - services/res/src/audit/flags_events.rs
-    - services/res/tests/flags_thresholds_test.rs
-    - services/res/tests/flag_enum_cardinality_test.rs
-    - services/res/tests/flags_weekly_digest_test.rs
-    - services/res/tests/flags_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/res/
+new_files:
+  - services/res/migrations/0003_allocation_flags.sql
+  - services/res/src/flags/mod.rs
+  - services/res/src/flags/computer.rs
+  - services/res/src/flags/weekly_digest.rs
+  - services/res/src/audit/flags_events.rs
+  - services/res/tests/flags_thresholds_test.rs
+  - services/res/tests/flag_enum_cardinality_test.rs
+  - services/res/tests/flags_weekly_digest_test.rs
+  - services/res/tests/flags_audit_emission_test.rs
 
-  modified_files:
-    - services/res/src/matrix/computer.rs
+modified_files:
+  - services/res/src/matrix/computer.rs
 
-  allowed_tools:
-    - file_read: services/{res,chat,email}/**
-    - file_write: services/res/{src,tests,migrations}/**
-    - bash: cd services/res && cargo test flags
+allowed_tools:
+  - file_read: services/{res,chat,email}/**
+  - file_write: services/res/{src,tests,migrations}/**
+  - bash: cd services/res && cargo test flags
 
-  disallowed_tools:
-    - hardcode thresholds outside DEC-2050 (per spec — version-pinned)
+disallowed_tools:
+  - hardcode thresholds outside DEC-2050 (per spec — version-pinned)
 
 effort_hours: 4
 subtasks:

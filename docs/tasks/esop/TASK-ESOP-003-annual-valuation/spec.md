@@ -1,8 +1,10 @@
 ---
 id: TASK-ESOP-003
 title: "ESOP annual valuation — CFO base + Board multiplier sign-off with immutable share-price snapshot per year"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,32 +36,31 @@ source_decisions:
   - DEC-2273 2026-05-17 — UNIQUE per (tenant, year); corrections via new valuation row with explicit "correction_of" link
   - DEC-2274 2026-05-17 — memory audit kinds: esop.valuation_proposed, esop.valuation_board_signed, esop.valuation_committed, esop.valuation_dismissed, esop.valuation_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/esop/
-  new_files:
-    - services/esop/migrations/0003_annual_valuations.sql
-    - services/esop/src/valuation/mod.rs
-    - services/esop/src/valuation/board_sign_gate.rs
-    - services/esop/src/handlers/valuation_routes.rs
-    - services/esop/src/audit/valuation_events.rs
-    - services/esop/tests/valuation_status_enum_cardinality_test.rs
-    - services/esop/tests/valuation_board_threshold_test.rs
-    - services/esop/tests/valuation_unique_per_year_test.rs
-    - services/esop/tests/valuation_immutability_test.rs
-    - services/esop/tests/valuation_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/esop/
+new_files:
+  - services/esop/migrations/0003_annual_valuations.sql
+  - services/esop/src/valuation/mod.rs
+  - services/esop/src/valuation/board_sign_gate.rs
+  - services/esop/src/handlers/valuation_routes.rs
+  - services/esop/src/audit/valuation_events.rs
+  - services/esop/tests/valuation_status_enum_cardinality_test.rs
+  - services/esop/tests/valuation_board_threshold_test.rs
+  - services/esop/tests/valuation_unique_per_year_test.rs
+  - services/esop/tests/valuation_immutability_test.rs
+  - services/esop/tests/valuation_audit_emission_test.rs
 
-  modified_files:
-    - services/esop/src/lib.rs
+modified_files:
+  - services/esop/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{esop,auth}/**
-    - file_write: services/esop/{src,tests,migrations}/**
-    - bash: cd services/esop && cargo test valuation
+allowed_tools:
+  - file_read: services/{esop,auth}/**
+  - file_write: services/esop/{src,tests,migrations}/**
+  - bash: cd services/esop && cargo test valuation
 
-  disallowed_tools:
-    - commit without board threshold (per DEC-2272)
-    - mutate prior valuation (per DEC-2273)
+disallowed_tools:
+  - commit without board threshold (per DEC-2272)
+  - mutate prior valuation (per DEC-2273)
 
 effort_hours: 5
 subtasks:

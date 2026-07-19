@@ -1,8 +1,10 @@
 ---
 id: TASK-CRM-007
 title: "CRM win/loss analysis CUO draft — auto-generate analysis at deal close + memory memory persistence for institutional learning"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -35,33 +37,32 @@ source_decisions:
   - DEC-1674 2026-05-17 — Draft requires CDO review before memory persistence — never auto-persist (PII + accuracy risk)
   - DEC-1675 2026-05-17 — memory audit kinds: crm.wl_draft_created, crm.wl_draft_approved, crm.wl_memory_memory_written, crm.wl_dismissed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/crm/
-  new_files:
-    - services/crm/migrations/0007_win_loss_drafts.sql
-    - services/crm/src/win_loss/mod.rs
-    - services/crm/src/win_loss/draft_generator.rs
-    - services/crm/src/win_loss/memory_writer.rs
-    - services/crm/src/handlers/win_loss_routes.rs
-    - services/crm/src/audit/win_loss_events.rs
-    - services/crm/tests/wl_auto_on_close_test.rs
-    - services/crm/tests/wl_outcome_enum_cardinality_test.rs
-    - services/crm/tests/wl_no_auto_persist_test.rs
-    - services/crm/tests/wl_memory_write_on_approve_test.rs
-    - services/crm/tests/wl_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/crm/
+new_files:
+  - services/crm/migrations/0007_win_loss_drafts.sql
+  - services/crm/src/win_loss/mod.rs
+  - services/crm/src/win_loss/draft_generator.rs
+  - services/crm/src/win_loss/memory_writer.rs
+  - services/crm/src/handlers/win_loss_routes.rs
+  - services/crm/src/audit/win_loss_events.rs
+  - services/crm/tests/wl_auto_on_close_test.rs
+  - services/crm/tests/wl_outcome_enum_cardinality_test.rs
+  - services/crm/tests/wl_no_auto_persist_test.rs
+  - services/crm/tests/wl_memory_write_on_approve_test.rs
+  - services/crm/tests/wl_audit_emission_test.rs
 
-  modified_files:
-    - services/crm/src/deals.rs
+modified_files:
+  - services/crm/src/deals.rs
 
-  allowed_tools:
-    - file_read: services/{crm,memory,cuo,ai}/**
-    - file_write: services/crm/{src,tests,migrations}/**
-    - bash: cd services/crm && cargo test win_loss
+allowed_tools:
+  - file_read: services/{crm,memory,cuo,ai}/**
+  - file_write: services/crm/{src,tests,migrations}/**
+  - bash: cd services/crm && cargo test win_loss
 
-  disallowed_tools:
-    - auto-persist memory memory (per DEC-1674)
-    - skip outcome categorization (per DEC-1671)
+disallowed_tools:
+  - auto-persist memory memory (per DEC-1674)
+  - skip outcome categorization (per DEC-1671)
 
 effort_hours: 5
 subtasks:

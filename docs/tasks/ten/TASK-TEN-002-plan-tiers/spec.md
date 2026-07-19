@@ -1,8 +1,10 @@
 ---
 id: TASK-TEN-002
 title: "3 plan tiers (Starter / Team / Enterprise) hardcoded with per-tier caps"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -14,6 +16,16 @@ priority: p0
 status: ready_to_implement
 new_files:
   - docs/tasks/ten/PLAN_CAPS.md
+  - services/ten/src/plans/mod.rs
+  - services/ten/src/plans/tiers.rs
+  - services/ten/src/plans/caps.rs
+  - services/ten/src/handlers/plan_change.rs
+  - services/ten/src/handlers/plan_show.rs
+  - services/ten/migrations/0004_plan_tier.sql
+  - services/ten/migrations/0005_plan_history.sql
+  - services/ten/tests/plan_change_test.rs
+  - services/ten/tests/plan_downgrade_violation_test.rs
+  - services/ten/tests/plan_founder_test.rs
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng
 verify: T
@@ -46,30 +58,18 @@ source_decisions:
   - DEC-782 2026-05-16 — Per-tenant override allowed only by CyberSkill founder role; sev-2 audit
   - DEC-783 2026-05-16 — Plan-change handler issues a TASK-TEN-004 metering event tagged with `plan_change` for audit linkage
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/ten/
-  new_files:
-    - services/ten/src/plans/mod.rs
-    - services/ten/src/plans/tiers.rs
-    - services/ten/src/plans/caps.rs
-    - services/ten/src/handlers/plan_change.rs
-    - services/ten/src/handlers/plan_show.rs
-    - services/ten/migrations/0004_plan_tier.sql
-    - services/ten/migrations/0005_plan_history.sql
-    - services/ten/tests/plan_change_test.rs
-    - services/ten/tests/plan_downgrade_violation_test.rs
-    - services/ten/tests/plan_founder_test.rs
-  modified_files:
-    - services/ten/src/handlers/tenant_create.rs (default plan_tier=Starter)
-    - services/metering/src/policy.rs (consume plan-tier caps when no per-tenant override)
-  allowed_tools:
-    - file_read: services/ten/**
-    - file_write: services/ten/{src,tests,migrations}/**
-    - bash: cargo test -p cyberos-ten
-  disallowed_tools:
-    - hardcode plan caps in any other crate (single source of truth = services/ten/src/plans/caps.rs)
-    - UPDATE tenants.plan_tier without a tenant_plan_history INSERT in same TX
+language: rust 1.81
+service: cyberos/services/ten/
+modified_files:
+  - services/ten/src/handlers/tenant_create.rs (default plan_tier=Starter)
+  - services/metering/src/policy.rs (consume plan-tier caps when no per-tenant override)
+allowed_tools:
+  - file_read: services/ten/**
+  - file_write: services/ten/{src,tests,migrations}/**
+  - bash: cargo test -p cyberos-ten
+disallowed_tools:
+  - hardcode plan caps in any other crate (single source of truth = services/ten/src/plans/caps.rs)
+  - UPDATE tenants.plan_tier without a tenant_plan_history INSERT in same TX
 
 effort_hours: 4
 subtasks:

@@ -16,8 +16,12 @@
 //       cell equals <from> AND — when --old-line carries the recorded pre-image — the
 //       full old line byte-for-byte (line terminator excluded), then rewrite EXACTLY
 //       that one cell; every other byte of the line (title, tags, comments, CR) is
-//       preserved. Refuses with exit 6 on a missing row, on 2+ matching rows (corrupted
-//       backlog — both lines are named, never a guess), or on any drift. When the
+//       preserved. BEFORE writing, reads the task's spec.md frontmatter `status` and
+//       refuses (exit 6) unless it ALREADY equals <to> — the frontmatter is the record
+//       of truth and the index may only ever catch up to it, never lead (TASK-IMP-120;
+//       an unfindable, unreadable, or ambiguous truth also refuses). Refuses with exit 6
+//       on a missing row, on 2+ matching rows (corrupted backlog — both lines are named,
+//       never a guess), or on any drift. When the
 //       containing `## section` header carries `(N status, ...)` counts, the header is
 //       rewritten from a FULL RETALLY of the section's rows after the flip (zero-count
 //       statuses omitted, statuses in lifecycle order) — an inherited wrong count is
@@ -36,6 +40,15 @@
 //       auto-detected as the unique section already holding rows with the same
 //       `TASK-<MODULE>-` prefix (zero or many candidates = exit 2, pass --section).
 //       This tool never creates sections; regenerate the backlog for that.
+//   next-id <module>
+//       Print the module's next task stem and exit 0 (TASK-IMP-105). Scans the
+//       TASK-<PREFIX>-<NNN> task FOLDERS in docs/tasks/<module>/ and returns the
+//       HIGHEST plus one — gaps ignored (001,002,004 -> 005), never the lowest free
+//       number. An empty or not-yet-existent module returns its first stem (...-001);
+//       the prefix comes from the existing folders (improvement -> IMP) so no map is
+//       maintained. Reads the same folder corpus the insert gate's uniqueness check
+//       reads, so an id it returns cannot be rejected by that gate for non-uniqueness
+//       (spec §1.3). Strictly read-only: it never writes, moves, or flips anything.
 //
 // Exit codes:
 //   0  ok
@@ -53,10 +66,10 @@
 
 import {
   readFileSync, writeFileSync, renameSync, existsSync, mkdirSync,
-  openSync, fsyncSync, closeSync,
+  openSync, fsyncSync, closeSync, readdirSync, statSync,
 } from "node:fs";
 import { randomBytes } from "node:crypto";
-import { join, resolve, dirname } from "node:path";
+import { join, resolve, dirname, relative, isAbsolute } from "node:path";
 
 // STATUS-REFERENCE.md §1 enum; the first ten are regen_backlog()'s STATUS_ORDER —
 // header counts render in this order.
@@ -113,6 +126,16 @@ function findRoot(explicit) {
     d = parent;
   }
 }
+
+// CONFINE (TASK-IMP-105): the same relUnderRoot rule every repo-reading docs-tool carries
+// (task-reconcile, coverage-scope, verify-goals) — a value that resolves to the root itself,
+// escapes it with `..`, or is absolute is refused, never followed out of the corpus. Returns
+// the confined POSIX-relative path, or null when the argument walks out.
+const relUnderRoot = (root, p) => {
+  const abs = isAbsolute(p) ? p : resolve(root, p);
+  const rel = relative(root, abs).split("\\").join("/");
+  return (rel === "" || rel.startsWith("..") || isAbsolute(rel)) ? null : rel;
+};
 
 function readBacklog(root, opts) {
   const path = opts.backlog ? resolve(root, opts.backlog) : join(root, "docs", "tasks", "BACKLOG.md");
@@ -194,6 +217,62 @@ const nearestHeaderAbove = (lines, idx) => {
   return -1;
 };
 
+// ── flip truth guard (TASK-IMP-120): the index catches up to the truth, never leads ──────────
+// STATUS-REFERENCE.md §1: the task's spec.md frontmatter `status` IS the record of truth and
+// BACKLOG.md is only its index. So `flip` reads the truth BEFORE it writes the index and refuses
+// unless the frontmatter already carries the target - a caller who moves the index first (the
+// TASK-IMP-116 divergence, where two index flips ran while the frontmatter still said `reviewing`)
+// gets a refusal, not a silent disagreement. The spec is resolved the SAME way the rest of the
+// toolchain resolves a task-id (task-reconcile.mjs findTask): scan docs/tasks/<module>/<dir>/spec.md
+// for dir === id or dir startsWith `${id}-`. One resolver, reused - not a second one invented here.
+// This whole path is FLIP-only: insert never calls it (spec §1.4).
+function resolveSpecPaths(root, id) {
+  const base = join(root, "docs", "tasks");
+  const hits = [];
+  if (!existsSync(base)) return { base, hits };
+  let mods;
+  try { mods = readdirSync(base); } catch { return { base, hits }; }
+  for (const mod of mods) {
+    const md = join(base, mod);
+    let st; try { st = statSync(md); } catch { continue; }
+    if (!st.isDirectory()) continue;
+    let entries; try { entries = readdirSync(md); } catch { continue; }
+    for (const d of entries) {
+      if (d === id || d.startsWith(id + "-")) {
+        const spec = join(md, d, "spec.md");
+        if (existsSync(spec)) hits.push(spec);
+      }
+    }
+  }
+  return { base, hits };
+}
+
+// Reads the SINGLE frontmatter `status:` value from a spec. Returns { status } or { error }: an
+// absent status, an unterminated fence, or two `status:` lines is an error - an unreadable or
+// ambiguous truth is not a matching truth (spec §1.3, edge rows 1/6). A trailing `# comment`
+// (FM-001, live across the corpus) is stripped, and surrounding whitespace/quotes trimmed
+// (edge rows 5/7), before the value is returned.
+function frontmatterStatus(text) {
+  const lines = text.split("\n");
+  if (stripCR(lines[0] ?? "").trim() !== "---") return { error: "spec has no frontmatter fence" };
+  let end = -1;
+  for (let i = 1; i < lines.length; i++) { if (stripCR(lines[i]).trim() === "---") { end = i; break; } }
+  if (end < 0) return { error: "spec frontmatter fence is unterminated" };
+  const found = [];
+  for (let i = 1; i < end; i++) {
+    const m = /^status:[ \t]*(.*)$/.exec(stripCR(lines[i]));
+    if (m) found.push(m[1]);
+  }
+  if (found.length === 0) return { error: "spec frontmatter carries no `status:` field" };
+  if (found.length > 1) return { error: `spec frontmatter carries ${found.length} \`status:\` lines (ambiguous truth)` };
+  let v = found[0];
+  const h = v.indexOf("#");
+  if (h >= 0) v = v.slice(0, h);
+  v = v.trim().replace(/^["']|["']$/g, "").trim();
+  if (v === "") return { error: "spec frontmatter `status:` is empty" };
+  return { status: v };
+}
+
 // ── flip ─────────────────────────────────────────────────────────────────────
 function cmdFlip(root, positionals, opts) {
   const [id, from, to] = positionals;
@@ -218,6 +297,31 @@ function cmdFlip(root, positionals, opts) {
   if (opts["old-line"] !== undefined && opts["old-line"] !== stripCR(lines[i])) {
     throw new Refusal(6, `flip ${id}: full old line at ${i + 1} differs byte-for-byte from the recorded pre-image - refusing (optimistic concurrency, SKILL.md §3)`);
   }
+
+  // ── TASK-IMP-120: the frontmatter (truth) MUST already carry <to> before the index moves ──
+  // Read AFTER the pre-image checks (missing/duplicate/drift keep their own refusals) but BEFORE
+  // the write: the guard gates exactly the flip that would otherwise succeed - the one that would
+  // move the index. Every refusal here is exit 6, the pre-image refusal code, and NEVER writes the
+  // file. When the truth already equals <to>, the guard is a no-op and the flip proceeds exactly as
+  // before - same footprint, same retally (spec §1.2).
+  const spec = resolveSpecPaths(root, id);
+  if (spec.hits.length === 0) {
+    throw new Refusal(6, `flip ${id}: no spec.md found for '${id}' under ${relative(root, spec.base) || "docs/tasks"}/*/ - an unreadable truth is not agreement, refusing (write the frontmatter first)`);
+  }
+  if (spec.hits.length > 1) {
+    throw new Refusal(6, `flip ${id}: ${spec.hits.length} specs match '${id}' (${spec.hits.map((p) => relative(root, p)).join(", ")}) - ambiguous truth, refusing to guess`);
+  }
+  let specText;
+  try { specText = readFileSync(spec.hits[0], "utf8"); }
+  catch { throw new Refusal(6, `flip ${id}: spec ${relative(root, spec.hits[0])} cannot be read - an unreadable truth is not agreement, refusing`); }
+  const fm = frontmatterStatus(specText);
+  if (fm.error) {
+    throw new Refusal(6, `flip ${id}: ${relative(root, spec.hits[0])} - ${fm.error} - refusing (the truth must carry '${to}' before the index catches up)`);
+  }
+  if (fm.status !== to) {
+    throw new Refusal(6, `flip ${id}: spec frontmatter status is '${fm.status}', but the flip targets '${to}' - truth precedes index (TASK-IMP-120): write '${to}' into ${relative(root, spec.hits[0])} first, then re-run. Refusing.`);
+  }
+
   const cellPrefix = `- [${from}]`;
   const oldLine = lines[i];
   const newLine = `- [${to}]` + oldLine.slice(cellPrefix.length);
@@ -350,6 +454,75 @@ function cmdInsert(root, positionals, opts) {
   };
 }
 
+// ── next-id (TASK-IMP-105): allocate a module's next task stem ────────────────
+// The next id for a module is the HIGHEST existing stem in docs/tasks/<module>/ PLUS ONE
+// (spec §1.2, §1.5). The corpus scanned is the set of TASK-<PREFIX>-<NNN> task FOLDERS on
+// disk, not BACKLOG rows: the folder is the task, the row is only its index, so a half-landed
+// task that has a folder but no row is still counted — skipping it would hand out the colliding
+// id again (spec edge row 1). Every backlog row has a folder but not every folder has a row, so
+// the folder set is a superset of the row set and highest-folder+1 is free in BOTH: an id this
+// returns can never be rejected by the insert uniqueness gate for non-uniqueness in the same
+// instant (spec §1.3). GAPS ARE IGNORED — 001,002,004 -> 005, never the free 003 (§1.5) —
+// because reusing a retired id makes two different tasks share a name in the history.
+//
+// A populated module derives its PREFIX from the folders themselves (docs/tasks/improvement/
+// holds TASK-IMP-*, not TASK-IMPROVEMENT-*), so the live corpus's abbreviated modules
+// (improvement -> IMP, templates -> TPL) resolve with no hand-maintained map. An empty or
+// not-yet-existent module is NOT an error: it returns that module's first stem,
+// TASK-<MODULE-UPPERCASED>-001 (spec §1.4, edge row 4).
+//
+// Read-only and deterministic: reads directory names, prints one stem, writes nothing and
+// flips nothing (node stdlib only). The <module> argument is confined under docs/tasks/ by the
+// shared relUnderRoot rule (spec security-class edge row) so a crafted `../` cannot walk out.
+// A single TASK-prefixed folder that does not parse is skipped with a note on stderr — one bad
+// folder must not stop allocation (spec edge row 2).
+const STEM_RE = /^TASK-([A-Za-z0-9]+)-(\d+)(?:-.*)?$/;
+
+function cmdNextId(root, positionals) {
+  const [module] = positionals;
+  if (!module) throw new UsageError("next-id requires <module>");
+  if (!ID_RE.test(module)) throw new UsageError(`module must match ${ID_RE} (a single docs/tasks/<module> directory name)`);
+  const base = join(root, "docs", "tasks");
+  const rel = relUnderRoot(base, module);
+  if (rel === null || rel.includes("/")) {
+    throw new UsageError(`module '${module}' must be a single directory name directly under docs/tasks/`);
+  }
+  const moduleDir = join(base, module);
+
+  // Scan the module directory. A non-existent (or unreadable) directory is an EMPTY module,
+  // not an error (spec §1.4, edge row 4).
+  let names = [];
+  if (existsSync(moduleDir)) {
+    try { names = readdirSync(moduleDir); } catch { names = []; }
+  }
+
+  let best = null;                          // { prefix, num, width } of the highest parsed stem
+  for (const name of names) {
+    let st; try { st = statSync(join(moduleDir, name)); } catch { continue; }
+    if (!st.isDirectory()) continue;        // a task is a FOLDER; a stray MIGRATION-MAP.md etc. is not one
+    const m = STEM_RE.exec(name);
+    if (!m) {
+      // A folder that LOOKS like a task (TASK-*) but does not parse is malformed: note it and
+      // move on. A folder that is not TASK-* at all is simply not a task and is ignored silently.
+      if (/^TASK-/.test(name)) process.stderr.write(`next-id: skipping malformed task folder '${name}' under docs/tasks/${module}/\n`);
+      continue;
+    }
+    const num = parseInt(m[2], 10);
+    if (best === null || num > best.num) best = { prefix: m[1], num, width: m[2].length };
+  }
+
+  let stem;
+  if (best === null) {
+    // First stem for an empty/absent module. The prefix defaults to the uppercased module name;
+    // the corpus's populated modules never reach this branch, so their abbreviations are moot.
+    stem = `TASK-${module.toUpperCase()}-001`;
+  } else {
+    const next = String(best.num + 1).padStart(Math.max(3, best.width), "0");
+    stem = `TASK-${best.prefix}-${next}`;
+  }
+  return { code: 0, module, stem, message: stem };
+}
+
 // ── CLI shell ────────────────────────────────────────────────────────────────
 const HELP = `backlog-mutate.mjs - byte-discipline executor for backlog-state-update@2 writes (TASK-IMP-085)
 
@@ -359,21 +532,31 @@ commands
   flip <task-id> <from> <to> [--backlog <path>] [--old-line <text>]
       rewrite ONE status cell: the row is located by stem, the cell must equal <from>,
       and --old-line (the recorded pre-image) must match the full line byte-for-byte
-      when given; every other byte of the line is preserved. A counted section header
-      ('(N status, ...)') is rewritten from a full retally of the section's rows after
-      the flip; bare headers stay untouched.
+      when given; every other byte of the line is preserved. The task's spec.md
+      frontmatter 'status' MUST already equal <to> or the flip refuses (exit 6): the
+      frontmatter is the record of truth, the index only catches up to it (TASK-IMP-120).
+      A counted section header ('(N status, ...)') is rewritten from a full retally of
+      the section's rows after the flip; bare headers stay untouched.
   insert <task-id> <stem> <title> <status> [--backlog <path>] [--section <name>] [--class product|improvement]
       insert ONE row in the regenerator-identical grammar
       '- [<status>] <stem> - <title>' (+ ' (improvement)'), stem-ascending inside the
       target section's contiguous block; a '- (nothing remaining)' placeholder becomes
       the first row. Uniqueness is enforced across the WHOLE file. This tool never
       creates sections.
+  next-id <module>
+      print the module's next task stem to stdout and exit 0: the HIGHEST existing
+      TASK-<PREFIX>-<NNN> folder in docs/tasks/<module>/ PLUS ONE (gaps ignored -
+      001,002,004 -> 005). An empty or absent module returns its first stem
+      (...-001). Read-only: reads folder names, writes and flips nothing. The insert
+      uniqueness gate (exit 7) stays the authority on admission (TASK-IMP-105).
 
 exit codes
   0  ok
   2  usage error, unreadable backlog, section not found / ambiguous, no row block
-  6  flip refusal: missing row, duplicate rows, or drifted pre-image (status cell or
+  6  flip refusal: missing row, duplicate rows, drifted pre-image (status cell or
      --old-line bytes) - optimistic concurrency per backlog-state-update-author SKILL.md §3
+     - OR the spec frontmatter does not already carry <to> (truth precedes index,
+     TASK-IMP-120: unfindable / unreadable / ambiguous / disagreeing truth all refuse)
   7  insert refusal: a row for the id already exists (uniqueness pre-image violated)
 
 discipline
@@ -422,6 +605,7 @@ function main(argv) {
   try {
     if (command === "flip") return emit(cmdFlip(findRoot(opts.root), rest, opts));
     if (command === "insert") return emit(cmdInsert(findRoot(opts.root), rest, opts));
+    if (command === "next-id") return emit(cmdNextId(findRoot(opts.root), rest));
     throw new UsageError(command ? `unknown command '${command}'` : "no command given");
   } catch (e) {
     if (e instanceof Refusal || e instanceof UsageError) {

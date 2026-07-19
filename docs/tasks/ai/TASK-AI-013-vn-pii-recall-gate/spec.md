@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-013
 title: "VN-PII recall ≥ 99% per-recognizer CI gate on 200-sample fixture"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -30,8 +32,10 @@ source_pages:
   - website/docs/modules/ai.html#pii-redaction
   - website/docs/legal/vn-pdpl-compliance.html
 source_decisions:
-  - TASK-AI-012 §1 #1 (recall ≥ 99% per-recognizer AND aggregate floor)
-  - TASK-AI-012 §1 #14 (recognizer-version endpoint exists; this task pins fixture to it)
+  #1 (recall ≥ 99% per-recognizer AND aggregate floor)
+  - TASK-AI-012 §1
+  #14 (recognizer-version endpoint exists; this task pins fixture to it)
+  - TASK-AI-012 §1
   - PDPL Art. 7 (Vietnam personal-data-sale ban; CCCD government-ID handling)
   - DEC-053 (CCCD treated as Class-A government ID — never persists in memory raw)
   - archive/2026-05-14/RESEARCH_REVIEW.md §4.2 (recall gate is the compliance assertion)
@@ -40,22 +44,37 @@ source_decisions:
 language: python 3.11 + GitHub Actions (CI runner)
 service: cyberos/services/ai-gateway/pii/
 new_files:
-  - services/ai-gateway/pii/fixtures/vn_pii_200_samples.yaml          # 200-sample test set + 30 negative samples (reconciled to TASK-AI-012's path)
-  - services/ai-gateway/pii/fixtures/vn_pii_200_samples_README.md     # provenance + maintenance log
-  - services/ai-gateway/pii/fixtures/fixture_manifest.yaml            # version, recognizer-version pins, sample-count assertions
-  - services/ai-gateway/pii/tests/test_recall_gate.py                 # per-recognizer + aggregate recall test
-  - services/ai-gateway/pii/tests/test_precision_warning.py           # precision reported (not gated); regression-trend hook
-  - services/ai-gateway/pii/tests/test_fixture_invariants.py          # fixture-format validation: counts, span offsets, schema
-  - services/ai-gateway/pii/tests/test_no_real_pii_in_corpus.py       # AST/regex sweep: no real-CCCD-like sequences leak into corpus
-  - services/ai-gateway/pii/tests/test_recall_gate_runtime_budget.py  # asserts test_recall_gate completes < 5 min
-  - services/ai-gateway/pii/scripts/validate_corpus_format.py         # standalone pre-commit hook script
-  - services/ai-gateway/pii/scripts/regen_fixture.py                  # quarterly refresh tool (anonymises real data, adds new edge cases)
-  - .github/workflows/vn-pii-recall.yml                               # CI gate on PRs touching pii/**
-  - .github/workflows/vn-pii-quarterly-refresh.yml                    # scheduled bot that opens "corpus refresh due" issue
-  - .pre-commit-hooks/no-real-pii-in-corpus.sh                        # pre-commit gate executed by `pre-commit` framework
+  # 200-sample test set + 30 negative samples (reconciled to TASK-AI-012's path)
+  - services/ai-gateway/pii/fixtures/vn_pii_200_samples.yaml
+  # provenance + maintenance log
+  - services/ai-gateway/pii/fixtures/vn_pii_200_samples_README.md
+  # version, recognizer-version pins, sample-count assertions
+  - services/ai-gateway/pii/fixtures/fixture_manifest.yaml
+  # per-recognizer + aggregate recall test
+  - services/ai-gateway/pii/tests/test_recall_gate.py
+  # precision reported (not gated); regression-trend hook
+  - services/ai-gateway/pii/tests/test_precision_warning.py
+  # fixture-format validation: counts, span offsets, schema
+  - services/ai-gateway/pii/tests/test_fixture_invariants.py
+  # AST/regex sweep: no real-CCCD-like sequences leak into corpus
+  - services/ai-gateway/pii/tests/test_no_real_pii_in_corpus.py
+  # asserts test_recall_gate completes < 5 min
+  - services/ai-gateway/pii/tests/test_recall_gate_runtime_budget.py
+  # standalone pre-commit hook script
+  - services/ai-gateway/pii/scripts/validate_corpus_format.py
+  # quarterly refresh tool (anonymises real data, adds new edge cases)
+  - services/ai-gateway/pii/scripts/regen_fixture.py
+  # CI gate on PRs touching pii/**
+  - .github/workflows/vn-pii-recall.yml
+  # scheduled bot that opens "corpus refresh due" issue
+  - .github/workflows/vn-pii-quarterly-refresh.yml
+  # pre-commit gate executed by `pre-commit` framework
+  - .pre-commit-hooks/no-real-pii-in-corpus.sh
 modified_files:
-  - services/ai-gateway/pii/Makefile                                  # `make pii-recall-test`, `make pii-fixture-validate`, `make pii-precision-report`
-  - .pre-commit-config.yaml                                           # register no-real-pii hook
+  # `make pii-recall-test`, `make pii-fixture-validate`, `make pii-precision-report`
+  - services/ai-gateway/pii/Makefile
+  # register no-real-pii hook
+  - .pre-commit-config.yaml
 allowed_tools:
   - file_read: services/ai-gateway/pii/**
   - file_write: services/ai-gateway/pii/**
@@ -65,11 +84,14 @@ allowed_tools:
   - bash: cd services/ai-gateway/pii && pytest -v
   - bash: pre-commit run --all-files
 disallowed_tools:
-  - commit real PII to the corpus (must be synthetic or de-identified per §1 #3)
-  - skip the per-recognizer recall floor in favour of aggregate-only (per §1 #5)
+  #3)
+  - commit real PII to the corpus (must be synthetic or de-identified per §1
+  #5)
+  - skip the per-recognizer recall floor in favour of aggregate-only (per §1
   - silence the CI gate (e.g., `pytest --skip-recall`); the gate MUST run on every PR
   - read real customer prompts during test execution (the fixture is the ONLY input)
-  - call any network endpoint from test_recall_gate.py (offline-only per §1 #11)
+  #11)
+  - call any network endpoint from test_recall_gate.py (offline-only per §1
 
 # ───── Estimated work ─────
 effort_hours: 8

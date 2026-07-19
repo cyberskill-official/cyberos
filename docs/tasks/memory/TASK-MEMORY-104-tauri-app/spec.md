@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-104
 title: "Tauri 2.x desktop app — macOS + Windows + Linux signed/notarised + auto-update + tray + quick capture + Full Disk Access"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -22,7 +24,8 @@ shipped: 2026-05-23
 memory_chain_hash: null
 related_tasks: [TASK-MEMORY-103, TASK-MEMORY-105, TASK-MEMORY-108]
 depends_on: [TASK-MEMORY-103]
-blocks: [TASK-MEMORY-105]   # placeholder — disputed-pair UI task, not yet specified
+# placeholder — disputed-pair UI task, not yet specified
+blocks: [TASK-MEMORY-105]
 
 source_pages:
   - website/docs/modules/memory.html#desktop-app
@@ -59,12 +62,17 @@ allowed_tools:
   - file_write: services/memory/desktop/**
   - bash: cd apps/memory && cargo tauri dev
   - bash: cd apps/memory && cargo tauri build
-  - bash: codesign --verify Memory.app   # macOS
+  # macOS
+  - bash: codesign --verify Memory.app
 disallowed_tools:
-  - ship unsigned releases (per §1 #2 — must be signed + notarised)
-  - bypass Full Disk Access prompt on macOS (per §1 #7)
-  - request more permissions than necessary (least-privilege per §1 #8)
-  - update without signature verification (per §1 #2 — rollback on signature fail)
+  #2 — must be signed + notarised)
+  - ship unsigned releases (per §1
+  #7)
+  - bypass Full Disk Access prompt on macOS (per §1
+  #8)
+  - request more permissions than necessary (least-privilege per §1
+  #2 — rollback on signature fail)
+  - update without signature verification (per §1
 
 effort_hours: 28
 subtasks:

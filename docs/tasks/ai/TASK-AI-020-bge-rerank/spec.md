@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-020
 title: "BGE-reranker-v2-m3 cross-encoder for KB reranking (per-region sidecar; CPU fallback)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -46,14 +48,20 @@ new_files:
   - services/ai-gateway/src/router/rerank_provider.rs
   - services/ai-gateway/src/router/rerank_batch_buffer.rs
   - services/ai-gateway/tests/rerank_test.rs
-  - services/ai-gateway/tests/rerank_test.rs                # known-relevance fixtures
+  # known-relevance fixtures
+  - services/ai-gateway/tests/rerank_test.rs
   - services/ai-gateway/tests/rerank_test.rs
 modified_files:
-  - services/ai-gateway/src/router/mod.rs                         # add RerankProvider variant
-  - services/ai-gateway/src/router/provider.rs                    # add call_rerank to trait
-  - services/ai-gateway/config/cost_rates.yaml                    # bge-reranker-v2-m3 input=0 output=0
-  - services/ai-gateway/config/embeddings.yaml                    # add rerank sidecar URLs per region
-  - services/ai-gateway/src/memory_writer.rs                       # canonical::invocation_rerank builder
+  # add RerankProvider variant
+  - services/ai-gateway/src/router/mod.rs
+  # add call_rerank to trait
+  - services/ai-gateway/src/router/provider.rs
+  # bge-reranker-v2-m3 input=0 output=0
+  - services/ai-gateway/config/cost_rates.yaml
+  # add rerank sidecar URLs per region
+  - services/ai-gateway/config/embeddings.yaml
+  # canonical::invocation_rerank builder
+  - services/ai-gateway/src/memory_writer.rs
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests,embeddings}/**
@@ -61,11 +69,15 @@ allowed_tools:
   - bash: cargo test -p cyberos-ai-gateway rerank
 disallowed_tools:
   - send rerank to managed APIs when bge-rerank sidecar is healthy (router prefers self-hosted per cost rule)
-  - bypass tenant residency on rerank inference (per-region deployment per §1 #11; TASK-AI-016 enforces)
+  #11; TASK-AI-016 enforces)
+  - bypass tenant residency on rerank inference (per-region deployment per §1
   - skip cost-ledger emission on rerank calls (still emit ai.invocation row even with cost=0)
-  - load the BGE-reranker model without checksum verification (per §1 #9)
-  - silently truncate candidate lists > 100 (must return 413 instead per §1 #6)
-  - emit cost > 0 in `ai.invocation` rows for BGE-rerank calls (marginal cost = 0; amortised infra cost tracked separately per TASK-AI-019 §1 #6)
+  #9)
+  - load the BGE-reranker model without checksum verification (per §1
+  #6)
+  - silently truncate candidate lists > 100 (must return 413 instead per §1
+  #6)
+  - emit cost > 0 in `ai.invocation` rows for BGE-rerank calls (marginal cost = 0; amortised infra cost tracked separately per TASK-AI-019 §1
 
 # ───── Estimated work ─────
 effort_hours: 8

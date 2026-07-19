@@ -1,8 +1,10 @@
 ---
 id: TASK-TIME-008
 title: "TIME expense capture — photo → AWS Textract OCR → hóa đơn parser → Member confirm + categorisation + invoice integration"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -37,45 +39,44 @@ source_decisions:
   - "DEC-1456 2026-05-17 — Hóa đơn extraction (VN tenants): MST (10-digit), total VND, issued_at, supplier_name, VAT amount; non-VN receipts: generic merchant/total/date"
   - DEC-1457 2026-05-17 — memory audit kinds: time.expense_captured, time.expense_ocr_completed, time.expense_confirmed, time.expense_rejected, time.expense_invoiced, time.expense_ocr_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/time/
-  new_files:
-    - services/time/migrations/0009_expenses.sql
-    - services/time/migrations/0010_expense_policies.sql
-    - services/time/src/expense/mod.rs
-    - services/time/src/expense/upload.rs
-    - services/time/src/expense/ocr_dispatcher.rs
-    - services/time/src/expense/hoadon_parser.rs
-    - services/time/src/expense/generic_parser.rs
-    - services/time/src/expense/policy_check.rs
-    - services/time/src/expense/invoice_attach.rs
-    - services/time/src/audit/expense_events.rs
-    - services/time/src/handlers/expense_routes.rs
-    - services/time/web/expense-capture.ts
-    - services/time/tests/expense_upload_test.rs
-    - services/time/tests/expense_ocr_async_test.rs
-    - services/time/tests/expense_hoadon_parse_test.rs
-    - services/time/tests/expense_member_confirm_test.rs
-    - services/time/tests/expense_policy_cap_test.rs
-    - services/time/tests/expense_invoice_attach_test.rs
-    - services/time/tests/expense_kind_enum_cardinality_test.rs
-    - services/time/tests/expense_status_enum_cardinality_test.rs
-    - services/time/tests/expense_no_auto_persist_test.rs
-    - services/time/tests/expense_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/time/
+new_files:
+  - services/time/migrations/0009_expenses.sql
+  - services/time/migrations/0010_expense_policies.sql
+  - services/time/src/expense/mod.rs
+  - services/time/src/expense/upload.rs
+  - services/time/src/expense/ocr_dispatcher.rs
+  - services/time/src/expense/hoadon_parser.rs
+  - services/time/src/expense/generic_parser.rs
+  - services/time/src/expense/policy_check.rs
+  - services/time/src/expense/invoice_attach.rs
+  - services/time/src/audit/expense_events.rs
+  - services/time/src/handlers/expense_routes.rs
+  - services/time/web/expense-capture.ts
+  - services/time/tests/expense_upload_test.rs
+  - services/time/tests/expense_ocr_async_test.rs
+  - services/time/tests/expense_hoadon_parse_test.rs
+  - services/time/tests/expense_member_confirm_test.rs
+  - services/time/tests/expense_policy_cap_test.rs
+  - services/time/tests/expense_invoice_attach_test.rs
+  - services/time/tests/expense_kind_enum_cardinality_test.rs
+  - services/time/tests/expense_status_enum_cardinality_test.rs
+  - services/time/tests/expense_no_auto_persist_test.rs
+  - services/time/tests/expense_audit_emission_test.rs
 
-  modified_files:
-    - services/time/src/lib.rs
+modified_files:
+  - services/time/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{time,doc,inv}/**
-    - file_write: services/time/{src,tests,migrations,web}/**
-    - bash: cd services/time && cargo test expense
+allowed_tools:
+  - file_read: services/{time,doc,inv}/**
+  - file_write: services/time/{src,tests,migrations,web}/**
+  - bash: cd services/time && cargo test expense
 
-  disallowed_tools:
-    - persist expense without Member confirm (per DEC-1453)
-    - skip policy cap check (per DEC-1454)
-    - bill expense to client without engagement billable flag (per TASK-INV-001 integration)
+disallowed_tools:
+  - persist expense without Member confirm (per DEC-1453)
+  - skip policy cap check (per DEC-1454)
+  - bill expense to client without engagement billable flag (per TASK-INV-001 integration)
 
 effort_hours: 8
 subtasks:

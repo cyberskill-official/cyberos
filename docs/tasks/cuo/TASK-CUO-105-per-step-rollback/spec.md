@@ -1,8 +1,10 @@
 ---
 id: TASK-CUO-105
 title: "CUO per-step rollback on chain failure — execute compensating actions in reverse order with partial-execution audit preserved"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,32 +36,31 @@ source_decisions:
   - DEC-2373 2026-05-17 — Per-step compensation IMMUTABLE; chain composite gets partial_rolled_back status post-rollback completion
   - DEC-2374 2026-05-17 — memory audit kinds: cuo.rollback_initiated, cuo.rollback_step_started, cuo.rollback_step_compensated, cuo.rollback_step_no_compensation, cuo.rollback_completed, cuo.rollback_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/cuo/
-  new_files:
-    - services/cuo/migrations/0005_chain_rollbacks.sql
-    - services/cuo/src/rollback/mod.rs
-    - services/cuo/src/rollback/executor.rs
-    - services/cuo/src/rollback/compensation_registry.rs
-    - services/cuo/src/audit/rollback_events.rs
-    - services/cuo/tests/rollback_step_status_enum_cardinality_test.rs
-    - services/cuo/tests/rollback_reverse_order_test.rs
-    - services/cuo/tests/rollback_no_compensation_preserved_test.rs
-    - services/cuo/tests/rollback_compensation_failure_test.rs
-    - services/cuo/tests/rollback_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/cuo/
+new_files:
+  - services/cuo/migrations/0005_chain_rollbacks.sql
+  - services/cuo/src/rollback/mod.rs
+  - services/cuo/src/rollback/executor.rs
+  - services/cuo/src/rollback/compensation_registry.rs
+  - services/cuo/src/audit/rollback_events.rs
+  - services/cuo/tests/rollback_step_status_enum_cardinality_test.rs
+  - services/cuo/tests/rollback_reverse_order_test.rs
+  - services/cuo/tests/rollback_no_compensation_preserved_test.rs
+  - services/cuo/tests/rollback_compensation_failure_test.rs
+  - services/cuo/tests/rollback_audit_emission_test.rs
 
-  modified_files:
-    - services/cuo/src/chain/walker.rs
+modified_files:
+  - services/cuo/src/chain/walker.rs
 
-  allowed_tools:
-    - file_read: services/{cuo,skill}/**
-    - file_write: services/cuo/{src,tests,migrations}/**
-    - bash: cd services/cuo && cargo test rollback
+allowed_tools:
+  - file_read: services/{cuo,skill}/**
+  - file_write: services/cuo/{src,tests,migrations}/**
+  - bash: cd services/cuo && cargo test rollback
 
-  disallowed_tools:
-    - skip compensation if registered (per DEC-2370)
-    - rollback in forward order (per DEC-2370)
+disallowed_tools:
+  - skip compensation if registered (per DEC-2370)
+  - rollback in forward order (per DEC-2370)
 
 effort_hours: 6
 subtasks:

@@ -1,8 +1,10 @@
 ---
 id: TASK-HR-006
 title: "HR annual leave accrual nightly batch — Decree 145 formula (1d/month + 1d/5yr seniority bonus) with immutable accrual ledger"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/hr.html#leave-accrual
-  - https://thuvienphapluat.vn/  # Decree 145/2020 Art. 65 (leave accrual formula)
+  # Decree 145/2020 Art. 65 (leave accrual formula)
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-1850 2026-05-17 — Nightly batch at 02:00 tenant_tz computes monthly accrual + seniority bonus per Decree 145 Art. 65
@@ -36,34 +39,33 @@ source_decisions:
   - DEC-1854 2026-05-17 — Idempotency: one accrual row per (member_id, year_month, kind); UNIQUE constraint
   - DEC-1855 2026-05-17 — memory audit kinds: hr.accrual_batch_started, hr.accrual_added, hr.accrual_correction_added, hr.accrual_batch_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/hr/
-  new_files:
-    - services/hr/migrations/0006_leave_accrual_ledger.sql
-    - services/hr/src/accrual/mod.rs
-    - services/hr/src/accrual/monthly_batch.rs
-    - services/hr/src/accrual/correction_handler.rs
-    - services/hr/src/handlers/accrual_routes.rs
-    - services/hr/src/audit/accrual_events.rs
-    - services/hr/tests/accrual_monthly_test.rs
-    - services/hr/tests/accrual_seniority_bonus_test.rs
-    - services/hr/tests/accrual_idempotency_test.rs
-    - services/hr/tests/accrual_kind_enum_cardinality_test.rs
-    - services/hr/tests/accrual_correction_test.rs
-    - services/hr/tests/accrual_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/hr/
+new_files:
+  - services/hr/migrations/0006_leave_accrual_ledger.sql
+  - services/hr/src/accrual/mod.rs
+  - services/hr/src/accrual/monthly_batch.rs
+  - services/hr/src/accrual/correction_handler.rs
+  - services/hr/src/handlers/accrual_routes.rs
+  - services/hr/src/audit/accrual_events.rs
+  - services/hr/tests/accrual_monthly_test.rs
+  - services/hr/tests/accrual_seniority_bonus_test.rs
+  - services/hr/tests/accrual_idempotency_test.rs
+  - services/hr/tests/accrual_kind_enum_cardinality_test.rs
+  - services/hr/tests/accrual_correction_test.rs
+  - services/hr/tests/accrual_audit_emission_test.rs
 
-  modified_files:
-    - services/hr/src/lib.rs
+modified_files:
+  - services/hr/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/hr/**
-    - file_write: services/hr/{src,tests,migrations}/**
-    - bash: cd services/hr && cargo test accrual
+allowed_tools:
+  - file_read: services/hr/**
+  - file_write: services/hr/{src,tests,migrations}/**
+  - bash: cd services/hr && cargo test accrual
 
-  disallowed_tools:
-    - mutate prior accrual row (per DEC-1853)
-    - duplicate accrual per month (per DEC-1854)
+disallowed_tools:
+  - mutate prior accrual row (per DEC-1853)
+  - duplicate accrual per month (per DEC-1854)
 
 effort_hours: 4
 subtasks:

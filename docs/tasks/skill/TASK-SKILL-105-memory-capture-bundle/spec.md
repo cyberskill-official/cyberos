@@ -1,8 +1,10 @@
 ---
 id: TASK-SKILL-105
 title: "memory-capture@1 skill bundle — canonical SDK-style entry point for emitting memory capture rows from tools, scripts, and external integrations"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -37,20 +39,25 @@ language: rust 1.81 + python 3.11 + bash
 service: cyberos/skills/memory-capture/
 new_files:
   - skills/memory-capture/SKILL.md
-  - skills/memory-capture/main.rs                              # skill binary (broker subprocess entrypoint)
+  # skill binary (broker subprocess entrypoint)
+  - skills/memory-capture/main.rs
   - skills/memory-capture/Cargo.toml
-  - skills/memory-capture/src/lib.rs                           # public Rust SDK
+  # public Rust SDK
+  - skills/memory-capture/src/lib.rs
   - skills/memory-capture/src/emit.rs
   - skills/memory-capture/src/dedup.rs
   - skills/memory-capture/sdk-python/cyberos_memory_capture/__init__.py
   - skills/memory-capture/sdk-python/setup.py
-  - skills/memory-capture/cli/cyberos-memory-capture           # bash wrapper for one-shot CLI use
+  # bash wrapper for one-shot CLI use
+  - skills/memory-capture/cli/cyberos-memory-capture
   - skills/memory-capture/tests/sdk_rust_test.rs
   - skills/memory-capture/tests/sdk_python_test.py
   - skills/memory-capture/tests/cli_e2e_test.sh
-  - skills/memory-capture/scripts/sign-bundle.sh              # uses TASK-SKILL-102 signing infra
+  # uses TASK-SKILL-102 signing infra
+  - skills/memory-capture/scripts/sign-bundle.sh
 modified_files:
-  - cyberos/Cargo.toml                                       # workspace member for SDK crate
+  # workspace member for SDK crate
+  - cyberos/Cargo.toml
 allowed_tools:
   - file_read: skills/memory-capture/**, services/memory/**
   - file_write: skills/memory-capture/**

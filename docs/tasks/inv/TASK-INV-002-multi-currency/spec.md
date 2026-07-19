@@ -1,8 +1,10 @@
 ---
 id: TASK-INV-002
 title: "INV multi-currency support — VND/USD/SGD/EUR/GBP with daily SBV FX snapshot + per-invoice currency lock + cross-currency reporting"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/inv.html#fx
-  - https://sbv.gov.vn/  # State Bank of Vietnam reference rates
+  # State Bank of Vietnam reference rates
+  - https://sbv.gov.vn/
 
 source_decisions:
   - DEC-1510 2026-05-17 — Per-invoice currency locked at creation (matches engagement.billing_currency); cross-currency conversion ONLY for reporting (not invoice mutation)
@@ -36,39 +39,38 @@ source_decisions:
   - DEC-1514 2026-05-17 — Per-tenant base currency for financial reports (default = engagement's currency; tenant may set tenant-wide base)
   - DEC-1515 2026-05-17 — memory audit kinds: inv.fx_snapshot_recorded, inv.fx_snapshot_failed, inv.fx_manual_override, inv.report_currency_converted
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/inv/
-  new_files:
-    - services/inv/migrations/0006_fx_rates.sql
-    - services/inv/src/fx/mod.rs
-    - services/inv/src/fx/sbv_fetcher.rs
-    - services/inv/src/fx/ecb_fetcher.rs
-    - services/inv/src/fx/snapshot_job.rs
-    - services/inv/src/fx/converter.rs
-    - services/inv/src/fx/manual_override.rs
-    - services/inv/src/audit/fx_events.rs
-    - services/inv/src/handlers/fx_routes.rs
-    - services/inv/tests/fx_sbv_fetch_test.rs
-    - services/inv/tests/fx_daily_snapshot_test.rs
-    - services/inv/tests/fx_as_of_deterministic_test.rs
-    - services/inv/tests/fx_manual_override_test.rs
-    - services/inv/tests/fx_source_enum_test.rs
-    - services/inv/tests/fx_source_unavailable_test.rs
-    - services/inv/tests/fx_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/inv/
+new_files:
+  - services/inv/migrations/0006_fx_rates.sql
+  - services/inv/src/fx/mod.rs
+  - services/inv/src/fx/sbv_fetcher.rs
+  - services/inv/src/fx/ecb_fetcher.rs
+  - services/inv/src/fx/snapshot_job.rs
+  - services/inv/src/fx/converter.rs
+  - services/inv/src/fx/manual_override.rs
+  - services/inv/src/audit/fx_events.rs
+  - services/inv/src/handlers/fx_routes.rs
+  - services/inv/tests/fx_sbv_fetch_test.rs
+  - services/inv/tests/fx_daily_snapshot_test.rs
+  - services/inv/tests/fx_as_of_deterministic_test.rs
+  - services/inv/tests/fx_manual_override_test.rs
+  - services/inv/tests/fx_source_enum_test.rs
+  - services/inv/tests/fx_source_unavailable_test.rs
+  - services/inv/tests/fx_audit_emission_test.rs
 
-  modified_files:
-    - services/inv/src/lib.rs
+modified_files:
+  - services/inv/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/inv/**
-    - file_write: services/inv/{src,tests,migrations}/**
-    - bash: cd services/inv && cargo test fx
+allowed_tools:
+  - file_read: services/inv/**
+  - file_write: services/inv/{src,tests,migrations}/**
+  - bash: cd services/inv && cargo test fx
 
-  disallowed_tools:
-    - mutate invoice currency post-creation (per DEC-1510)
-    - skip daily snapshot (per DEC-1511)
-    - allow non-CFO manual override (per DEC-1512)
+disallowed_tools:
+  - mutate invoice currency post-creation (per DEC-1510)
+  - skip daily snapshot (per DEC-1511)
+  - allow non-CFO manual override (per DEC-1512)
 
 effort_hours: 6
 subtasks:

@@ -1,8 +1,10 @@
 ---
 id: TASK-INV-003
 title: "INV Stripe webhook handler — Stripe-Signature verify + closed event-type allowlist + idempotent receipt insert + multi-currency + append-only ledger + memory audit"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -49,16 +51,26 @@ source_decisions:
 language: rust 1.81 + sql
 service: cyberos/services/inv/
 new_files:
-  - services/inv/migrations/0012_stripe_event_log.sql            # append-only event log + RLS
-  - services/inv/migrations/0013_stripe_webhook_secrets.sql       # per-tenant secret + rotation history
-  - services/inv/src/webhook/stripe.rs                            # POST handler
-  - services/inv/src/webhook/stripe_signature.rs                  # Stripe v1 signing scheme verification
-  - services/inv/src/webhook/stripe_event_dispatch.rs             # closed event-type → handler routing
-  - services/inv/src/webhook/stripe_idempotency.rs                # event.id idempotency cache
-  - services/inv/src/types.rs                                     # StripeEventKind enum (closed 8 values)
-  - services/inv/src/repo/stripe_event_log.rs                     # append-only writer
-  - services/inv/src/repo/stripe_secrets.rs                       # secret CRUD + rotation
-  - services/inv/src/audit/stripe_events.rs                       # 6 memory row builders
+  # append-only event log + RLS
+  - services/inv/migrations/0012_stripe_event_log.sql
+  # per-tenant secret + rotation history
+  - services/inv/migrations/0013_stripe_webhook_secrets.sql
+  # POST handler
+  - services/inv/src/webhook/stripe.rs
+  # Stripe v1 signing scheme verification
+  - services/inv/src/webhook/stripe_signature.rs
+  # closed event-type → handler routing
+  - services/inv/src/webhook/stripe_event_dispatch.rs
+  # event.id idempotency cache
+  - services/inv/src/webhook/stripe_idempotency.rs
+  # StripeEventKind enum (closed 8 values)
+  - services/inv/src/types.rs
+  # append-only writer
+  - services/inv/src/repo/stripe_event_log.rs
+  # secret CRUD + rotation
+  - services/inv/src/repo/stripe_secrets.rs
+  # 6 memory row builders
+  - services/inv/src/audit/stripe_events.rs
   - services/inv/tests/stripe_signature_test.rs
   - services/inv/tests/stripe_event_allowlist_test.rs
   - services/inv/tests/stripe_idempotent_test.rs
@@ -71,7 +83,8 @@ new_files:
   - services/inv/tests/stripe_audit_emission_test.rs
   - services/inv/tests/stripe_perf_test.rs
 modified_files:
-  - services/inv/src/types.rs                                     # extend receipt_source enum (already added in TASK-INV-005)
+  # extend receipt_source enum (already added in TASK-INV-005)
+  - services/inv/src/types.rs
 
 allowed_tools:
   - file_read: services/inv/**

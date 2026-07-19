@@ -1,8 +1,10 @@
 ---
 id: TASK-DOC-006
 title: "DOC identity verification — 4 methods (WebAuthn / VNeID / SMS-OTP / email-link) with per-document method selection + audit"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-DOC-005]
 
 source_pages:
   - website/docs/modules/doc.html#identity-verification
-  - https://eur-lex.europa.eu/eli/reg/2014/910/oj  # eIDAS
+  # eIDAS
+  - https://eur-lex.europa.eu/eli/reg/2014/910/oj
 
 source_decisions:
   - DEC-1740 2026-05-17 — 4 verification methods: webauthn (FIDO2/passkey), vneid (VN national ID), sms_otp, email_link; tenant configures per-document defaults
@@ -36,38 +39,37 @@ source_decisions:
   - DEC-1744 2026-05-17 — Verification audit (immutable): method + result + assurance_level + signer_id + verification_at
   - DEC-1745 2026-05-17 — memory audit kinds: doc.verification_initiated, doc.verification_succeeded, doc.verification_failed, doc.verification_expired
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/doc/
-  new_files:
-    - services/doc/migrations/0005_identity_verifications.sql
-    - services/doc/src/verification/mod.rs
-    - services/doc/src/verification/webauthn_handler.rs
-    - services/doc/src/verification/vneid_handler.rs
-    - services/doc/src/verification/otp_handler.rs
-    - services/doc/src/verification/email_link_handler.rs
-    - services/doc/src/handlers/verification_routes.rs
-    - services/doc/src/audit/verification_events.rs
-    - services/doc/tests/verification_webauthn_test.rs
-    - services/doc/tests/verification_vneid_test.rs
-    - services/doc/tests/verification_otp_test.rs
-    - services/doc/tests/verification_email_link_test.rs
-    - services/doc/tests/verification_method_enum_cardinality_test.rs
-    - services/doc/tests/verification_result_enum_cardinality_test.rs
-    - services/doc/tests/verification_eidas_level_test.rs
-    - services/doc/tests/verification_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/doc/
+new_files:
+  - services/doc/migrations/0005_identity_verifications.sql
+  - services/doc/src/verification/mod.rs
+  - services/doc/src/verification/webauthn_handler.rs
+  - services/doc/src/verification/vneid_handler.rs
+  - services/doc/src/verification/otp_handler.rs
+  - services/doc/src/verification/email_link_handler.rs
+  - services/doc/src/handlers/verification_routes.rs
+  - services/doc/src/audit/verification_events.rs
+  - services/doc/tests/verification_webauthn_test.rs
+  - services/doc/tests/verification_vneid_test.rs
+  - services/doc/tests/verification_otp_test.rs
+  - services/doc/tests/verification_email_link_test.rs
+  - services/doc/tests/verification_method_enum_cardinality_test.rs
+  - services/doc/tests/verification_result_enum_cardinality_test.rs
+  - services/doc/tests/verification_eidas_level_test.rs
+  - services/doc/tests/verification_audit_emission_test.rs
 
-  modified_files:
-    - services/doc/src/lib.rs
+modified_files:
+  - services/doc/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{doc,auth}/**
-    - file_write: services/doc/{src,tests,migrations}/**
-    - bash: cd services/doc && cargo test verification
+allowed_tools:
+  - file_read: services/{doc,auth}/**
+  - file_write: services/doc/{src,tests,migrations}/**
+  - bash: cd services/doc && cargo test verification
 
-  disallowed_tools:
-    - bypass eIDAS minimum (per DEC-1743)
-    - mutate verification audit (per DEC-1744)
+disallowed_tools:
+  - bypass eIDAS minimum (per DEC-1743)
+  - mutate verification audit (per DEC-1744)
 
 effort_hours: 8
 subtasks:

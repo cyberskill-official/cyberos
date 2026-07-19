@@ -1,8 +1,10 @@
 ---
 id: TASK-TIME-007
 title: "TIME VN Labour Code Art. 107 OT cap — hard-block at entry write when monthly OT > 40h or yearly OT > 200h (300h with regulator approval)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/time.html#vn-labour-code
-  - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Bo-luat-lao-dong-2019-333670.aspx  # Art. 107
+  # Art. 107
+  - https://thuvienphapluat.vn/van-ban/Lao-dong-Tien-luong/Bo-luat-lao-dong-2019-333670.aspx
 
 source_decisions:
   - DEC-1390 2026-05-17 — VN Labour Code Art. 107: OT capped at 40h/month + 200h/year (300h/year with regulator approval); standard workday 8h; OT = hours beyond 8/day or 48/week
@@ -37,37 +40,37 @@ source_decisions:
   - DEC-1395 2026-05-17 — Daily/weekly hard caps: 4h OT/day, 12h OT/week per Art. 107(2); breach blocks entry
   - DEC-1396 2026-05-17 — memory audit kinds: time.ot_warning_issued, time.ot_breach_blocked, time.ot_approval_changed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/time/
-  new_files:
-    - services/time/migrations/0003_vn_ot_tracking.sql
-    - services/time/src/vn_labour/mod.rs
-    - services/time/src/vn_labour/cap_check.rs
-    - services/time/src/vn_labour/aggregator.rs
-    - services/time/src/audit/vn_ot_events.rs
-    - services/time/tests/vn_ot_40h_monthly_blocked_test.rs
-    - services/time/tests/vn_ot_200h_yearly_blocked_test.rs
-    - services/time/tests/vn_ot_300h_with_approval_test.rs
-    - services/time/tests/vn_ot_4h_daily_blocked_test.rs
-    - services/time/tests/vn_ot_12h_weekly_blocked_test.rs
-    - services/time/tests/vn_ot_warning_80pct_test.rs
-    - services/time/tests/vn_ot_non_vn_skip_test.rs
-    - services/time/tests/vn_ot_breach_enum_cardinality_test.rs
-    - services/time/tests/vn_ot_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/time/
+new_files:
+  - services/time/migrations/0003_vn_ot_tracking.sql
+  - services/time/src/vn_labour/mod.rs
+  - services/time/src/vn_labour/cap_check.rs
+  - services/time/src/vn_labour/aggregator.rs
+  - services/time/src/audit/vn_ot_events.rs
+  - services/time/tests/vn_ot_40h_monthly_blocked_test.rs
+  - services/time/tests/vn_ot_200h_yearly_blocked_test.rs
+  - services/time/tests/vn_ot_300h_with_approval_test.rs
+  - services/time/tests/vn_ot_4h_daily_blocked_test.rs
+  - services/time/tests/vn_ot_12h_weekly_blocked_test.rs
+  - services/time/tests/vn_ot_warning_80pct_test.rs
+  - services/time/tests/vn_ot_non_vn_skip_test.rs
+  - services/time/tests/vn_ot_breach_enum_cardinality_test.rs
+  - services/time/tests/vn_ot_audit_emission_test.rs
 
-  modified_files:
-    - services/time/src/entry/create.rs                               # invoke cap_check pre-write
+modified_files:
+  # invoke cap_check pre-write
+  - services/time/src/entry/create.rs
 
-  allowed_tools:
-    - file_read: services/{time,hr}/**
-    - file_write: services/time/{src,tests,migrations}/**
-    - bash: cd services/time && cargo test vn_ot
+allowed_tools:
+  - file_read: services/{time,hr}/**
+  - file_write: services/time/{src,tests,migrations}/**
+  - bash: cd services/time && cargo test vn_ot
 
-  disallowed_tools:
-    - allow entry write that breaches caps (per DEC-1391 — hard block)
-    - skip approval validation for 300h tier (per DEC-1393)
-    - apply VN caps to non-vn-1 Members (per DEC-1394)
+disallowed_tools:
+  - allow entry write that breaches caps (per DEC-1391 — hard block)
+  - skip approval validation for 300h tier (per DEC-1393)
+  - apply VN caps to non-vn-1 Members (per DEC-1394)
 
 effort_hours: 4
 subtasks:

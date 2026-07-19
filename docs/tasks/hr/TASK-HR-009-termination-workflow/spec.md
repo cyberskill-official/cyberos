@@ -1,8 +1,10 @@
 ---
 id: TASK-HR-009
 title: "HR termination workflow — Good-Leaver / Bad-Leaver branch with CFO+CEO co-sign + ESOP forfeiture + access revocation cascade"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-ESOP-005]
 
 source_pages:
   - website/docs/modules/hr.html#termination
-  - https://thuvienphapluat.vn/  # VN Labour Code Art. 34-37
+  # VN Labour Code Art. 34-37
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-1870 2026-05-17 — GL/BL branch determines ESOP forfeiture rate, severance computation, references — per board policy + VN Labour Code Art. 36
@@ -36,34 +39,33 @@ source_decisions:
   - DEC-1874 2026-05-17 — On executed: cascade to TASK-ESOP-005 (vesting halt), TASK-AUTH-101 (deprovision), TASK-PORTAL-008 (DSAR offer), TASK-PROJ-013 (issue reassignment)
   - DEC-1875 2026-05-17 — memory audit kinds: hr.termination_initiated, hr.termination_signed, hr.termination_executed, hr.termination_disputed, hr.termination_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/hr/
-  new_files:
-    - services/hr/migrations/0008_terminations.sql
-    - services/hr/src/termination/mod.rs
-    - services/hr/src/termination/dual_sign_gate.rs
-    - services/hr/src/termination/cascade_executor.rs
-    - services/hr/src/handlers/termination_routes.rs
-    - services/hr/src/audit/termination_events.rs
-    - services/hr/tests/termination_kind_enum_cardinality_test.rs
-    - services/hr/tests/termination_stage_enum_cardinality_test.rs
-    - services/hr/tests/termination_dual_sign_required_test.rs
-    - services/hr/tests/termination_gl_bl_branch_test.rs
-    - services/hr/tests/termination_cascade_test.rs
-    - services/hr/tests/termination_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/hr/
+new_files:
+  - services/hr/migrations/0008_terminations.sql
+  - services/hr/src/termination/mod.rs
+  - services/hr/src/termination/dual_sign_gate.rs
+  - services/hr/src/termination/cascade_executor.rs
+  - services/hr/src/handlers/termination_routes.rs
+  - services/hr/src/audit/termination_events.rs
+  - services/hr/tests/termination_kind_enum_cardinality_test.rs
+  - services/hr/tests/termination_stage_enum_cardinality_test.rs
+  - services/hr/tests/termination_dual_sign_required_test.rs
+  - services/hr/tests/termination_gl_bl_branch_test.rs
+  - services/hr/tests/termination_cascade_test.rs
+  - services/hr/tests/termination_audit_emission_test.rs
 
-  modified_files:
-    - services/hr/src/members.rs
+modified_files:
+  - services/hr/src/members.rs
 
-  allowed_tools:
-    - file_read: services/{hr,esop,auth,portal,proj}/**
-    - file_write: services/hr/{src,tests,migrations}/**
-    - bash: cd services/hr && cargo test termination
+allowed_tools:
+  - file_read: services/{hr,esop,auth,portal,proj}/**
+  - file_write: services/hr/{src,tests,migrations}/**
+  - bash: cd services/hr && cargo test termination
 
-  disallowed_tools:
-    - execute without dual sign (per DEC-1873)
-    - skip cascade (per DEC-1874)
+disallowed_tools:
+  - execute without dual sign (per DEC-1873)
+  - skip cascade (per DEC-1874)
 
 effort_hours: 8
 subtasks:

@@ -1,8 +1,10 @@
 ---
 id: TASK-REW-004
 title: "REW statutory deductions — BHXH 10.5% + BHYT 1.5% + BHTN 1% + PIT progressive per Decree 152/2020 with TASK-HR-005 policy lookup"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/rew.html#statutory
-  - https://thuvienphapluat.vn/  # Decree 152/2020
+  # Decree 152/2020
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-2180 2026-05-17 — Compute statutory deductions per Decree 152/2020 employee-side rates: BHXH 8% + BHYT 1.5% + BHTN 1% = 10.5% (NOT 17.5% which is employer-side) + PIT progressive
@@ -35,33 +38,32 @@ source_decisions:
   - DEC-2183 2026-05-17 — Contractor (per TASK-HR-002 contract_type) exempt from BHXH/BHYT/BHTN; still subject to PIT
   - DEC-2184 2026-05-17 — memory audit kinds: rew.deduction_computed, rew.deduction_skipped_contractor, rew.deduction_compute_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/rew/
-  new_files:
-    - services/rew/migrations/0004_deductions.sql
-    - services/rew/src/deductions/mod.rs
-    - services/rew/src/deductions/computer.rs
-    - services/rew/src/deductions/pit_progressive.rs
-    - services/rew/src/audit/deductions_events.rs
-    - services/rew/tests/deduction_kind_enum_cardinality_test.rs
-    - services/rew/tests/bhxh_8pct_test.rs
-    - services/rew/tests/pit_progressive_brackets_test.rs
-    - services/rew/tests/contractor_si_exempt_test.rs
-    - services/rew/tests/deduction_deterministic_test.rs
-    - services/rew/tests/deduction_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/rew/
+new_files:
+  - services/rew/migrations/0004_deductions.sql
+  - services/rew/src/deductions/mod.rs
+  - services/rew/src/deductions/computer.rs
+  - services/rew/src/deductions/pit_progressive.rs
+  - services/rew/src/audit/deductions_events.rs
+  - services/rew/tests/deduction_kind_enum_cardinality_test.rs
+  - services/rew/tests/bhxh_8pct_test.rs
+  - services/rew/tests/pit_progressive_brackets_test.rs
+  - services/rew/tests/contractor_si_exempt_test.rs
+  - services/rew/tests/deduction_deterministic_test.rs
+  - services/rew/tests/deduction_audit_emission_test.rs
 
-  modified_files:
-    - services/rew/src/lib.rs
+modified_files:
+  - services/rew/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{rew,hr}/**
-    - file_write: services/rew/{src,tests,migrations}/**
-    - bash: cd services/rew && cargo test deductions
+allowed_tools:
+  - file_read: services/{rew,hr}/**
+  - file_write: services/rew/{src,tests,migrations}/**
+  - bash: cd services/rew && cargo test deductions
 
-  disallowed_tools:
-    - deduct SI from contractors (per DEC-2183)
-    - use unversioned rates (per DEC-2182)
+disallowed_tools:
+  - deduct SI from contractors (per DEC-2183)
+  - use unversioned rates (per DEC-2182)
 
 effort_hours: 6
 subtasks:

@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-119
 title: "memory session transcript ledger — opt-in `cyberos session {start,append,end}` writes turn-level transcript rows under sessions/<date>/<id>.binlog.zst; default classification=confidential; configurable retention; feeds TASK-MEMORY-115 dream"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-19T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-MEMORY-115]
 protocol_amendment_required: "AGENTS.md §18 (new) — session-transcript ledger; approval phrase: APPROVE protocol change P22 §18"
 
 source_pages:
-  - playground/extracts/memory-and-dreaming.transcript.txt  # see "input sessions" segment that dream consumes
+  # see "input sessions" segment that dream consumes
+  - playground/extracts/memory-and-dreaming.transcript.txt
 source_decisions:
   - DEC-250 (Session transcript is OPT-IN — not every cyberos invocation creates a session; opt in via `cyberos session start --id <slug>`)
   - DEC-251 (Default `classification: confidential` per Stephen's 2026-05-19 decision — encryption recommended but not required; operators can pin to `restricted` to force encryption envelope)
@@ -41,19 +44,26 @@ new_files:
   - modules/memory/tests/core/test_transcript.py
   - modules/memory/tests/core/test_session.py
 modified_files:
-  - modules/memory/cyberos/__main__.py            # wire `cyberos session start|append|end|read|list|purge-expired` subcommands
-  - modules/memory/cyberos/core/writer.py         # add session-aware emit path; sessions/<date>/<id>.binlog.zst storage
-  - modules/memory/memory.schema.json             # `SessionFrontmatter` + `SessionTurnPayload` + `SessionAuditKind` definitions
-  - modules/memory/memory.invariants.yaml         # `session-lifecycle-well-formed` + `session-classification-valid` rules
-  - AGENTS.md                                      # add §18 — sessions (REQUIRES amendment via APPROVE chat-turn P22 §18)
+  # wire `cyberos session start|append|end|read|list|purge-expired` subcommands
+  - modules/memory/cyberos/__main__.py
+  # add session-aware emit path; sessions/<date>/<id>.binlog.zst storage
+  - modules/memory/cyberos/core/writer.py
+  # `SessionFrontmatter` + `SessionTurnPayload` + `SessionAuditKind` definitions
+  - modules/memory/memory.schema.json
+  # `session-lifecycle-well-formed` + `session-classification-valid` rules
+  - modules/memory/memory.invariants.yaml
+  # add §18 — sessions (REQUIRES amendment via APPROVE chat-turn P22 §18)
+  - AGENTS.md
 allowed_tools:
   - file_read: modules/memory/**
   - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, AGENTS.md
   - bash: cd modules/memory && python -m pytest tests/test_session_*.py -v
   - bash: cd modules/memory && python -m cyberos session start --id smoke-test && python -m cyberos session append --id smoke-test --role user --content "hello" && python -m cyberos session end --id smoke-test
 disallowed_tools:
-  - emit session.turn rows without a preceding session.start for that id (per §1 #6 — walker rejects)
-  - write session bodies in plaintext when classification: restricted is configured (per task §5.4 + §1 #4)
+  #6 — walker rejects)
+  - emit session.turn rows without a preceding session.start for that id (per §1
+  #4)
+  - write session bodies in plaintext when classification: restricted is configured (per task §5.4 + §1
   - mutate AGENTS.md §18 without APPROVE protocol change P22 §18 chat-turn
 
 effort_hours: 24

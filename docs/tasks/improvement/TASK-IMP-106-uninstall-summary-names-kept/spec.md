@@ -4,8 +4,8 @@ title: Uninstall summary names what it kept
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
-priority: p2
+status: done
+priority: p1
 author: "@stephencheng"
 department: engineering
 created_at: 2026-07-17T14:00:00Z

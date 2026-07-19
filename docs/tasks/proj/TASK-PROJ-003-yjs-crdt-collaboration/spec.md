@@ -1,8 +1,10 @@
 ---
 id: TASK-PROJ-003
 title: "Yjs CRDT for issue description + comment-body fields; LWW for scalar metadata; reconnection state recovery; conflict-free multi-cursor editing"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -48,10 +50,14 @@ new_files:
   - web/proj-client/src/collab/ScalarLWW.ts
   - web/proj-client/tests/yjs_provider_test.ts
 modified_files:
-  - services/proj-sync/src/server.rs                # add /yjs/<doc_id> WebSocket route
-  - services/proj-sync/Cargo.toml                   # yrs (Rust Yjs port), y-sync@0.4
-  - web/proj-client/package.json                    # yjs@13, y-websocket@2, y-protocols@1
-  - web/proj-client/src/components/IssueEditor.tsx  # wire Y.Text to TipTap editor
+  # add /yjs/<doc_id> WebSocket route
+  - services/proj-sync/src/server.rs
+  # yrs (Rust Yjs port), y-sync@0.4
+  - services/proj-sync/Cargo.toml
+  # yjs@13, y-websocket@2, y-protocols@1
+  - web/proj-client/package.json
+  # wire Y.Text to TipTap editor
+  - web/proj-client/src/components/IssueEditor.tsx
 allowed_tools:
   - file_read: services/proj-sync/**, web/proj-client/**
   - file_write: services/proj-sync/{src,tests,migrations}/**, web/proj-client/src/**, web/proj-client/tests/**

@@ -1,8 +1,10 @@
 ---
 id: TASK-DOC-010
 title: "DOC third-party import — DocuSign / Adobe Sign / HelloSign migration with LTV (long-term-validation) preservation"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -35,37 +37,36 @@ source_decisions:
   - DEC-1764 2026-05-17 — Idempotency: source_provider + source_doc_id → one CyberOS doc; re-import returns existing document_id
   - DEC-1765 2026-05-17 — memory audit kinds: doc.import_initiated, doc.import_completed, doc.import_ltv_verified, doc.import_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/doc/
-  new_files:
-    - services/doc/migrations/0007_third_party_imports.sql
-    - services/doc/src/import/mod.rs
-    - services/doc/src/import/docusign_client.rs
-    - services/doc/src/import/adobe_sign_client.rs
-    - services/doc/src/import/hellosign_client.rs
-    - services/doc/src/import/ltv_verifier.rs
-    - services/doc/src/handlers/import_routes.rs
-    - services/doc/src/audit/import_events.rs
-    - services/doc/tests/import_docusign_test.rs
-    - services/doc/tests/import_adobe_sign_test.rs
-    - services/doc/tests/import_hellosign_test.rs
-    - services/doc/tests/import_ltv_preserved_test.rs
-    - services/doc/tests/import_idempotency_test.rs
-    - services/doc/tests/import_source_enum_cardinality_test.rs
-    - services/doc/tests/import_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/doc/
+new_files:
+  - services/doc/migrations/0007_third_party_imports.sql
+  - services/doc/src/import/mod.rs
+  - services/doc/src/import/docusign_client.rs
+  - services/doc/src/import/adobe_sign_client.rs
+  - services/doc/src/import/hellosign_client.rs
+  - services/doc/src/import/ltv_verifier.rs
+  - services/doc/src/handlers/import_routes.rs
+  - services/doc/src/audit/import_events.rs
+  - services/doc/tests/import_docusign_test.rs
+  - services/doc/tests/import_adobe_sign_test.rs
+  - services/doc/tests/import_hellosign_test.rs
+  - services/doc/tests/import_ltv_preserved_test.rs
+  - services/doc/tests/import_idempotency_test.rs
+  - services/doc/tests/import_source_enum_cardinality_test.rs
+  - services/doc/tests/import_audit_emission_test.rs
 
-  modified_files:
-    - services/doc/src/lib.rs
+modified_files:
+  - services/doc/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{doc,auth}/**
-    - file_write: services/doc/{src,tests,migrations}/**
-    - bash: cd services/doc && cargo test import
+allowed_tools:
+  - file_read: services/{doc,auth}/**
+  - file_write: services/doc/{src,tests,migrations}/**
+  - bash: cd services/doc && cargo test import
 
-  disallowed_tools:
-    - add new signature on import (per DEC-1762 — preserve LTV)
-    - duplicate import (per DEC-1764)
+disallowed_tools:
+  - add new signature on import (per DEC-1762 — preserve LTV)
+  - duplicate import (per DEC-1764)
 
 effort_hours: 10
 subtasks:

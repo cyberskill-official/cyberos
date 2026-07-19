@@ -1,8 +1,10 @@
 ---
 id: TASK-RES-005
 title: "RES VN Labour Code Art. 107 OT cap hard-block — propose-time validation gate preventing weekly + annual OT overflow"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/res.html#ot-cap
-  - https://thuvienphapluat.vn/  # Decree 145/2020 Art. 107
+  # Decree 145/2020 Art. 107
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-2060 2026-05-17 — Hard-block at TASK-RES-002 propose-time: weekly OT cap (12h regular / 30h with consent) + annual OT cap (200h / 300h industry-specific)
@@ -35,32 +38,31 @@ source_decisions:
   - DEC-2063 2026-05-17 — Cap values read from TASK-HR-005 policy version (replay determinism)
   - DEC-2064 2026-05-17 — memory audit kinds: res.ot_check_passed, res.ot_blocked_weekly, res.ot_blocked_annual, res.ot_blocked_consent
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/res/
-  new_files:
-    - services/res/migrations/0005_ot_consent.sql
-    - services/res/src/ot_cap/mod.rs
-    - services/res/src/ot_cap/checker.rs
-    - services/res/src/handlers/ot_cap_routes.rs
-    - services/res/src/audit/ot_cap_events.rs
-    - services/res/tests/ot_cap_weekly_block_test.rs
-    - services/res/tests/ot_cap_annual_block_test.rs
-    - services/res/tests/ot_cap_consent_required_test.rs
-    - services/res/tests/ot_cap_decision_enum_cardinality_test.rs
-    - services/res/tests/ot_cap_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/res/
+new_files:
+  - services/res/migrations/0005_ot_consent.sql
+  - services/res/src/ot_cap/mod.rs
+  - services/res/src/ot_cap/checker.rs
+  - services/res/src/handlers/ot_cap_routes.rs
+  - services/res/src/audit/ot_cap_events.rs
+  - services/res/tests/ot_cap_weekly_block_test.rs
+  - services/res/tests/ot_cap_annual_block_test.rs
+  - services/res/tests/ot_cap_consent_required_test.rs
+  - services/res/tests/ot_cap_decision_enum_cardinality_test.rs
+  - services/res/tests/ot_cap_audit_emission_test.rs
 
-  modified_files:
-    - services/res/src/allocation/validator.rs
+modified_files:
+  - services/res/src/allocation/validator.rs
 
-  allowed_tools:
-    - file_read: services/{res,hr,time}/**
-    - file_write: services/res/{src,tests,migrations}/**
-    - bash: cd services/res && cargo test ot_cap
+allowed_tools:
+  - file_read: services/{res,hr,time}/**
+  - file_write: services/res/{src,tests,migrations}/**
+  - bash: cd services/res && cargo test ot_cap
 
-  disallowed_tools:
-    - bypass cap (per DEC-2060 — hard-block)
-    - allow >12h/wk without consent (per DEC-2062)
+disallowed_tools:
+  - bypass cap (per DEC-2060 — hard-block)
+  - allow >12h/wk without consent (per DEC-2062)
 
 effort_hours: 4
 subtasks:

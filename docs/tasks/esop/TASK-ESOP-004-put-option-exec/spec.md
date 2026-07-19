@@ -1,8 +1,10 @@
 ---
 id: TASK-ESOP-004
 title: "ESOP put-option exec flow — Year 3+ eligibility + per-Member annual cap + CFO approve + bank wire via TASK-INV-005"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,36 +36,35 @@ source_decisions:
   - DEC-2283 2026-05-17 — Cap enforced: sum(exercised in calendar year) ≤ cap_pct * vested_at_year_start
   - DEC-2284 2026-05-17 — memory audit kinds: esop.put_requested, esop.put_cfo_approved, esop.put_cfo_rejected, esop.put_wire_initiated, esop.put_paid, esop.put_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/esop/
-  new_files:
-    - services/esop/migrations/0004_put_options.sql
-    - services/esop/src/put/mod.rs
-    - services/esop/src/put/eligibility.rs
-    - services/esop/src/put/price_calculator.rs
-    - services/esop/src/put/cap_enforcer.rs
-    - services/esop/src/put/wire_initiator.rs
-    - services/esop/src/handlers/put_routes.rs
-    - services/esop/src/audit/put_events.rs
-    - services/esop/tests/put_status_enum_cardinality_test.rs
-    - services/esop/tests/put_year_3_eligibility_test.rs
-    - services/esop/tests/put_annual_cap_test.rs
-    - services/esop/tests/put_price_calc_test.rs
-    - services/esop/tests/put_wire_integration_test.rs
-    - services/esop/tests/put_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/esop/
+new_files:
+  - services/esop/migrations/0004_put_options.sql
+  - services/esop/src/put/mod.rs
+  - services/esop/src/put/eligibility.rs
+  - services/esop/src/put/price_calculator.rs
+  - services/esop/src/put/cap_enforcer.rs
+  - services/esop/src/put/wire_initiator.rs
+  - services/esop/src/handlers/put_routes.rs
+  - services/esop/src/audit/put_events.rs
+  - services/esop/tests/put_status_enum_cardinality_test.rs
+  - services/esop/tests/put_year_3_eligibility_test.rs
+  - services/esop/tests/put_annual_cap_test.rs
+  - services/esop/tests/put_price_calc_test.rs
+  - services/esop/tests/put_wire_integration_test.rs
+  - services/esop/tests/put_audit_emission_test.rs
 
-  modified_files:
-    - services/esop/src/lib.rs
+modified_files:
+  - services/esop/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{esop,inv}/**
-    - file_write: services/esop/{src,tests,migrations}/**
-    - bash: cd services/esop && cargo test put
+allowed_tools:
+  - file_read: services/{esop,inv}/**
+  - file_write: services/esop/{src,tests,migrations}/**
+  - bash: cd services/esop && cargo test put
 
-  disallowed_tools:
-    - approve before Year 3 (per DEC-2280)
-    - exceed annual cap (per DEC-2283)
+disallowed_tools:
+  - approve before Year 3 (per DEC-2280)
+  - exceed annual cap (per DEC-2283)
 
 effort_hours: 8
 subtasks:

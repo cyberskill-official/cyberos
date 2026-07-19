@@ -1,8 +1,10 @@
 ---
 id: TASK-INV-010
 title: "INV CUO dunning draft — auto-generate polite/firm/legal-warning email drafts per aging bucket + CFO review queue + send-via-TASK-EMAIL-009"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -35,40 +37,39 @@ source_decisions:
   - DEC-1554 2026-05-17 — Daily scan triggered at 09:00 tenant_timezone; generates drafts for new transitions only (idempotent: skip if draft exists for same invoice+bucket)
   - DEC-1555 2026-05-17 — memory audit kinds: inv.dunning_draft_generated, inv.dunning_draft_approved, inv.dunning_draft_dismissed, inv.dunning_email_sent
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/invoicing/
-  new_files:
-    - services/invoicing/migrations/0009_dunning_drafts.sql
-    - services/invoicing/src/dunning/mod.rs
-    - services/invoicing/src/dunning/scanner.rs
-    - services/invoicing/src/dunning/draft_generator.rs
-    - services/invoicing/src/dunning/template_loader.rs
-    - services/invoicing/src/handlers/dunning_routes.rs
-    - services/invoicing/src/audit/dunning_events.rs
-    - services/invoicing/templates/dunning_polite.md
-    - services/invoicing/templates/dunning_firm.md
-    - services/invoicing/templates/dunning_urgent.md
-    - services/invoicing/templates/dunning_legal_warning.md
-    - services/invoicing/tests/dunning_bucket_to_tone_test.rs
-    - services/invoicing/tests/dunning_no_auto_send_test.rs
-    - services/invoicing/tests/dunning_idempotent_scan_test.rs
-    - services/invoicing/tests/dunning_tone_enum_cardinality_test.rs
-    - services/invoicing/tests/dunning_template_render_test.rs
-    - services/invoicing/tests/dunning_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/invoicing/
+new_files:
+  - services/invoicing/migrations/0009_dunning_drafts.sql
+  - services/invoicing/src/dunning/mod.rs
+  - services/invoicing/src/dunning/scanner.rs
+  - services/invoicing/src/dunning/draft_generator.rs
+  - services/invoicing/src/dunning/template_loader.rs
+  - services/invoicing/src/handlers/dunning_routes.rs
+  - services/invoicing/src/audit/dunning_events.rs
+  - services/invoicing/templates/dunning_polite.md
+  - services/invoicing/templates/dunning_firm.md
+  - services/invoicing/templates/dunning_urgent.md
+  - services/invoicing/templates/dunning_legal_warning.md
+  - services/invoicing/tests/dunning_bucket_to_tone_test.rs
+  - services/invoicing/tests/dunning_no_auto_send_test.rs
+  - services/invoicing/tests/dunning_idempotent_scan_test.rs
+  - services/invoicing/tests/dunning_tone_enum_cardinality_test.rs
+  - services/invoicing/tests/dunning_template_render_test.rs
+  - services/invoicing/tests/dunning_audit_emission_test.rs
 
-  modified_files:
-    - services/invoicing/src/lib.rs
+modified_files:
+  - services/invoicing/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/invoicing/**
-    - file_write: services/invoicing/{src,tests,migrations,templates}/**
-    - bash: cd services/invoicing && cargo test dunning
+allowed_tools:
+  - file_read: services/invoicing/**
+  - file_write: services/invoicing/{src,tests,migrations,templates}/**
+  - bash: cd services/invoicing && cargo test dunning
 
-  disallowed_tools:
-    - auto-send (per DEC-1553)
-    - duplicate draft for same invoice+bucket (per DEC-1554)
-    - send legal-warning without CFO sign-off (per DEC-1553)
+disallowed_tools:
+  - auto-send (per DEC-1553)
+  - duplicate draft for same invoice+bucket (per DEC-1554)
+  - send legal-warning without CFO sign-off (per DEC-1553)
 
 effort_hours: 5
 subtasks:

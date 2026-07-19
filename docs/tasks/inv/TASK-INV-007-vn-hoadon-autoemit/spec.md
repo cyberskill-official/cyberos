@@ -1,8 +1,10 @@
 ---
 id: TASK-INV-007
 title: "INV VN hóa đơn auto-emit on AM-send — Decree 123/2020 GDT XML signing + idempotent transmission + verification code retrieval for VN tenants"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,8 +28,10 @@ blocks: [TASK-INV-008, TASK-CRM-010]
 
 source_pages:
   - website/docs/modules/inv.html#hoadon
-  - https://gdt.gov.vn/  # General Department of Taxation Vietnam
-  - https://thuvienphapluat.vn/van-ban/Thue-Phi-Le-Phi/Nghi-dinh-123-2020-ND-CP  # Decree 123/2020 reference
+  # General Department of Taxation Vietnam
+  - https://gdt.gov.vn/
+  # Decree 123/2020 reference
+  - https://thuvienphapluat.vn/van-ban/Thue-Phi-Le-Phi/Nghi-dinh-123-2020-ND-CP
 
 source_decisions:
   - DEC-1520 2026-05-17 — Auto-emit triggered ONLY on first AM-send for VN tenants (residency=vn-1) with engagement.billing_currency=VND; non-VN tenants skipped
@@ -39,40 +43,39 @@ source_decisions:
   - DEC-1526 2026-05-17 — memory audit kinds: inv.hoadon_emit_started, inv.hoadon_signed, inv.hoadon_transmitted, inv.hoadon_verification_received, inv.hoadon_emit_failed
   - DEC-1527 2026-05-17 — Per-tenant config: gdt_registration_id, signing_cert_kms_arn, gdt_environment (sandbox/prod); ROOT-CFO writes via separate TASK-INV-013 admin endpoint
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/invoicing/
-  new_files:
-    - services/invoicing/migrations/0007_vn_hoadon.sql
-    - services/invoicing/src/hoadon/mod.rs
-    - services/invoicing/src/hoadon/xml_builder.rs
-    - services/invoicing/src/hoadon/signer.rs
-    - services/invoicing/src/hoadon/gdt_client.rs
-    - services/invoicing/src/hoadon/poller.rs
-    - services/invoicing/src/audit/hoadon_events.rs
-    - services/invoicing/src/handlers/hoadon_routes.rs
-    - services/invoicing/tests/hoadon_emit_on_send_test.rs
-    - services/invoicing/tests/hoadon_idempotency_test.rs
-    - services/invoicing/tests/hoadon_non_vn_skipped_test.rs
-    - services/invoicing/tests/hoadon_xml_format_test.rs
-    - services/invoicing/tests/hoadon_signing_test.rs
-    - services/invoicing/tests/hoadon_gdt_retry_test.rs
-    - services/invoicing/tests/hoadon_status_enum_cardinality_test.rs
-    - services/invoicing/tests/hoadon_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/invoicing/
+new_files:
+  - services/invoicing/migrations/0007_vn_hoadon.sql
+  - services/invoicing/src/hoadon/mod.rs
+  - services/invoicing/src/hoadon/xml_builder.rs
+  - services/invoicing/src/hoadon/signer.rs
+  - services/invoicing/src/hoadon/gdt_client.rs
+  - services/invoicing/src/hoadon/poller.rs
+  - services/invoicing/src/audit/hoadon_events.rs
+  - services/invoicing/src/handlers/hoadon_routes.rs
+  - services/invoicing/tests/hoadon_emit_on_send_test.rs
+  - services/invoicing/tests/hoadon_idempotency_test.rs
+  - services/invoicing/tests/hoadon_non_vn_skipped_test.rs
+  - services/invoicing/tests/hoadon_xml_format_test.rs
+  - services/invoicing/tests/hoadon_signing_test.rs
+  - services/invoicing/tests/hoadon_gdt_retry_test.rs
+  - services/invoicing/tests/hoadon_status_enum_cardinality_test.rs
+  - services/invoicing/tests/hoadon_audit_emission_test.rs
 
-  modified_files:
-    - services/invoicing/src/lib.rs
-    - services/invoicing/src/handlers/invoice_send.rs
+modified_files:
+  - services/invoicing/src/lib.rs
+  - services/invoicing/src/handlers/invoice_send.rs
 
-  allowed_tools:
-    - file_read: services/invoicing/**
-    - file_write: services/invoicing/{src,tests,migrations}/**
-    - bash: cd services/invoicing && cargo test hoadon
+allowed_tools:
+  - file_read: services/invoicing/**
+  - file_write: services/invoicing/{src,tests,migrations}/**
+  - bash: cd services/invoicing && cargo test hoadon
 
-  disallowed_tools:
-    - emit for non-VN tenants (per DEC-1520)
-    - duplicate emission (per DEC-1522)
-    - hardcoded cert path (per DEC-1521 — KMS only)
+disallowed_tools:
+  - emit for non-VN tenants (per DEC-1520)
+  - duplicate emission (per DEC-1522)
+  - hardcoded cert path (per DEC-1521 — KMS only)
 
 effort_hours: 6
 subtasks:

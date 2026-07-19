@@ -78,7 +78,7 @@ Human acceptance is mandatory, not optional (see `modules/cuo/EXECUTION-DISCIPLI
 - **Review acceptance** (`reviewing → ready_to_test`): a human reviewer records the approval verdict after reading the diff against the §1 clauses and the edge-case matrix.
 - **Final acceptance** (`testing → done`): a human records the acceptance verdict after every machine gate (coverage, TRACE-004, awh, caf) is green. The agent NEVER self-sets `done`.
 
-The agent brings the task up to each gate with evidence and halts; the recorded human verdict is what advances the cell. An operator retains the superset power to override any cell to any other cell at any time (park, resurrect, re-audit, or explicitly skip a gate for a trivial task) — that override authority is unchanged. What changed: the forward path no longer auto-crosses the two acceptance gates on green alone; a human verdict is required there.
+The agent brings the task up to each gate with evidence and halts; the recorded human verdict is what advances the cell. At each gate the agent MUST explain the decision in plain language, with the context the decider needs, BEFORE presenting options (see `modules/cuo/EXECUTION-DISCIPLINE.md` §2c). An operator retains the superset power to override any cell to any other cell at any time (park, resurrect, re-audit, or explicitly skip a gate for a trivial task) — that override authority is unchanged. What changed: the forward path no longer auto-crosses the two acceptance gates on green alone; a human verdict is required there.
 
 Common operator operations:
 - **Re-audit a shipped task:** flip `done` → `ready_to_review` (or `ready_to_test`) to force `ship-tasks` to re-run review + test gates from that point.

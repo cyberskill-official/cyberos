@@ -1,8 +1,10 @@
 ---
 id: TASK-INV-009
 title: "INV AR aging report — current/30/60/90/120+ bucket rollup per customer + per engagement with as-of date determinism"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -36,32 +38,31 @@ source_decisions:
   - DEC-1545 2026-05-17 — Per-customer + per-engagement + tenant-wide rollup variants
   - DEC-1546 2026-05-17 — memory audit kinds: inv.aging_report_generated (no PII in chain, only count + total)
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/invoicing/
-  new_files:
-    - services/invoicing/src/reports/aging.rs
-    - services/invoicing/src/reports/aging_bucketer.rs
-    - services/invoicing/src/handlers/aging_routes.rs
-    - services/invoicing/src/audit/aging_events.rs
-    - services/invoicing/tests/aging_bucket_test.rs
-    - services/invoicing/tests/aging_as_of_determinism_test.rs
-    - services/invoicing/tests/aging_partial_paid_test.rs
-    - services/invoicing/tests/aging_multi_currency_test.rs
-    - services/invoicing/tests/aging_status_enum_cardinality_test.rs
-    - services/invoicing/tests/aging_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/invoicing/
+new_files:
+  - services/invoicing/src/reports/aging.rs
+  - services/invoicing/src/reports/aging_bucketer.rs
+  - services/invoicing/src/handlers/aging_routes.rs
+  - services/invoicing/src/audit/aging_events.rs
+  - services/invoicing/tests/aging_bucket_test.rs
+  - services/invoicing/tests/aging_as_of_determinism_test.rs
+  - services/invoicing/tests/aging_partial_paid_test.rs
+  - services/invoicing/tests/aging_multi_currency_test.rs
+  - services/invoicing/tests/aging_status_enum_cardinality_test.rs
+  - services/invoicing/tests/aging_audit_emission_test.rs
 
-  modified_files:
-    - services/invoicing/src/lib.rs
+modified_files:
+  - services/invoicing/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/invoicing/**
-    - file_write: services/invoicing/{src,tests}/**
-    - bash: cd services/invoicing && cargo test aging
+allowed_tools:
+  - file_read: services/invoicing/**
+  - file_write: services/invoicing/{src,tests}/**
+  - bash: cd services/invoicing && cargo test aging
 
-  disallowed_tools:
-    - bucket on full invoice when partial-paid (per DEC-1543)
-    - use now() in bucket calc (per DEC-1541 — as_of only)
+disallowed_tools:
+  - bucket on full invoice when partial-paid (per DEC-1543)
+  - use now() in bucket calc (per DEC-1541 — as_of only)
 
 effort_hours: 4
 subtasks:

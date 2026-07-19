@@ -1,8 +1,10 @@
 ---
 id: TASK-LEARN-006
 title: "LEARN promotion approval workflow — CEO + CHRO sign-off after council vote with cascade to HR + REW comp band update"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,33 +36,32 @@ source_decisions:
   - DEC-2133 2026-05-17 — Same-person dual-sign rejected (separation of duties)
   - DEC-2134 2026-05-17 — memory audit kinds: learn.promotion_initiated, learn.promotion_signed, learn.promotion_executed, learn.promotion_declined, learn.promotion_cascade_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/learn/
-  new_files:
-    - services/learn/migrations/0006_promotions.sql
-    - services/learn/src/promotion/mod.rs
-    - services/learn/src/promotion/dual_sign_gate.rs
-    - services/learn/src/promotion/cascade.rs
-    - services/learn/src/handlers/promotion_routes.rs
-    - services/learn/src/audit/promotion_events.rs
-    - services/learn/tests/promotion_status_enum_cardinality_test.rs
-    - services/learn/tests/promotion_dual_sign_test.rs
-    - services/learn/tests/promotion_same_person_rejected_test.rs
-    - services/learn/tests/promotion_cascade_test.rs
-    - services/learn/tests/promotion_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/learn/
+new_files:
+  - services/learn/migrations/0006_promotions.sql
+  - services/learn/src/promotion/mod.rs
+  - services/learn/src/promotion/dual_sign_gate.rs
+  - services/learn/src/promotion/cascade.rs
+  - services/learn/src/handlers/promotion_routes.rs
+  - services/learn/src/audit/promotion_events.rs
+  - services/learn/tests/promotion_status_enum_cardinality_test.rs
+  - services/learn/tests/promotion_dual_sign_test.rs
+  - services/learn/tests/promotion_same_person_rejected_test.rs
+  - services/learn/tests/promotion_cascade_test.rs
+  - services/learn/tests/promotion_audit_emission_test.rs
 
-  modified_files:
-    - services/learn/src/lib.rs
+modified_files:
+  - services/learn/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{learn,hr,rew,chat}/**
-    - file_write: services/learn/{src,tests,migrations}/**
-    - bash: cd services/learn && cargo test promotion
+allowed_tools:
+  - file_read: services/{learn,hr,rew,chat}/**
+  - file_write: services/learn/{src,tests,migrations}/**
+  - bash: cd services/learn && cargo test promotion
 
-  disallowed_tools:
-    - execute without dual-sign (per DEC-2130)
-    - skip cascade (per DEC-2132)
+disallowed_tools:
+  - execute without dual-sign (per DEC-2130)
+  - skip cascade (per DEC-2132)
 
 effort_hours: 5
 subtasks:

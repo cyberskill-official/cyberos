@@ -1,8 +1,10 @@
 ---
 id: TASK-HR-005
 title: "HR Decree 145/2020 working-hour caps + Decree 152/2020 SI rates — version-pinned policy constants with annual refresh + tenant override"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-RES-005, TASK-REW-004]
 
 source_pages:
   - website/docs/modules/hr.html#policy-constants
-  - https://thuvienphapluat.vn/  # Decree 145/2020 (working hours) + Decree 152/2020 (SI rates)
+  # Decree 145/2020 (working hours) + Decree 152/2020 (SI rates)
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-1840 2026-05-17 — Version-pinned policy table: working-hour caps (48h/wk regular, +12h OT/wk, +200h OT/yr — Art. 107), SI rates (BHXH 17.5%, BHYT 4.5%, BHTN 2% employer-side per Decree 152)
@@ -35,32 +38,31 @@ source_decisions:
   - DEC-1843 2026-05-17 — Tenant override allowed for non-statutory (working hours below cap OK); statutory rates immutable per tenant
   - DEC-1844 2026-05-17 — memory audit kinds: hr.policy_version_added, hr.policy_lookup_executed, hr.tenant_override_set
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/hr/
-  new_files:
-    - services/hr/migrations/0005_policy_constants.sql
-    - services/hr/src/policy/mod.rs
-    - services/hr/src/policy/loader.rs
-    - services/hr/src/policy/seed_decree_145_152.rs
-    - services/hr/src/audit/policy_events.rs
-    - services/hr/tests/policy_version_pinning_test.rs
-    - services/hr/tests/policy_kind_enum_cardinality_test.rs
-    - services/hr/tests/policy_immutability_test.rs
-    - services/hr/tests/policy_tenant_override_test.rs
-    - services/hr/tests/policy_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/hr/
+new_files:
+  - services/hr/migrations/0005_policy_constants.sql
+  - services/hr/src/policy/mod.rs
+  - services/hr/src/policy/loader.rs
+  - services/hr/src/policy/seed_decree_145_152.rs
+  - services/hr/src/audit/policy_events.rs
+  - services/hr/tests/policy_version_pinning_test.rs
+  - services/hr/tests/policy_kind_enum_cardinality_test.rs
+  - services/hr/tests/policy_immutability_test.rs
+  - services/hr/tests/policy_tenant_override_test.rs
+  - services/hr/tests/policy_audit_emission_test.rs
 
-  modified_files:
-    - services/hr/src/lib.rs
+modified_files:
+  - services/hr/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/hr/**
-    - file_write: services/hr/{src,tests,migrations}/**
-    - bash: cd services/hr && cargo test policy
+allowed_tools:
+  - file_read: services/hr/**
+  - file_write: services/hr/{src,tests,migrations}/**
+  - bash: cd services/hr && cargo test policy
 
-  disallowed_tools:
-    - mutate prior version (per DEC-1842)
-    - tenant override of statutory rates (per DEC-1843)
+disallowed_tools:
+  - mutate prior version (per DEC-1842)
+  - tenant override of statutory rates (per DEC-1843)
 
 effort_hours: 4
 subtasks:

@@ -4,7 +4,7 @@ title: Skill trust measurement - pass rates as a report, not a gate
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: done
 priority: p2
 author: "@stephencheng"
 department: engineering

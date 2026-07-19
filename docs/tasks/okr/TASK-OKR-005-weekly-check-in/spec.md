@@ -1,8 +1,10 @@
 ---
 id: TASK-OKR-005
 title: "OKR weekly check-in — 1-10 confidence + rationale per KR with rolling 4-week history + trend visualization"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,34 +36,33 @@ source_decisions:
   - DEC-2003 2026-05-17 — Reminder cron Monday 09:00 tenant_tz; missing check-in = sev-3 alert to KR owner
   - DEC-2004 2026-05-17 — memory audit kinds: okr.checkin_submitted, okr.checkin_corrected, okr.checkin_missing_alert
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/okr/
-  new_files:
-    - services/okr/migrations/0005_weekly_checkins.sql
-    - services/okr/src/checkin/mod.rs
-    - services/okr/src/checkin/trend_calculator.rs
-    - services/okr/src/checkin/reminder_cron.rs
-    - services/okr/src/handlers/checkin_routes.rs
-    - services/okr/src/audit/checkin_events.rs
-    - services/okr/tests/checkin_confidence_range_test.rs
-    - services/okr/tests/checkin_trend_enum_cardinality_test.rs
-    - services/okr/tests/checkin_immutability_test.rs
-    - services/okr/tests/checkin_correction_via_new_row_test.rs
-    - services/okr/tests/checkin_reminder_test.rs
-    - services/okr/tests/checkin_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/okr/
+new_files:
+  - services/okr/migrations/0005_weekly_checkins.sql
+  - services/okr/src/checkin/mod.rs
+  - services/okr/src/checkin/trend_calculator.rs
+  - services/okr/src/checkin/reminder_cron.rs
+  - services/okr/src/handlers/checkin_routes.rs
+  - services/okr/src/audit/checkin_events.rs
+  - services/okr/tests/checkin_confidence_range_test.rs
+  - services/okr/tests/checkin_trend_enum_cardinality_test.rs
+  - services/okr/tests/checkin_immutability_test.rs
+  - services/okr/tests/checkin_correction_via_new_row_test.rs
+  - services/okr/tests/checkin_reminder_test.rs
+  - services/okr/tests/checkin_audit_emission_test.rs
 
-  modified_files:
-    - services/okr/src/lib.rs
+modified_files:
+  - services/okr/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/okr/**
-    - file_write: services/okr/{src,tests,migrations}/**
-    - bash: cd services/okr && cargo test checkin
+allowed_tools:
+  - file_read: services/okr/**
+  - file_write: services/okr/{src,tests,migrations}/**
+  - bash: cd services/okr && cargo test checkin
 
-  disallowed_tools:
-    - mutate prior check-in (per DEC-2002)
-    - confidence outside 1-10 (per DEC-2000)
+disallowed_tools:
+  - mutate prior check-in (per DEC-2002)
+  - confidence outside 1-10 (per DEC-2000)
 
 effort_hours: 5
 subtasks:

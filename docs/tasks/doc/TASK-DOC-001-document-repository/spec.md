@@ -1,8 +1,10 @@
 ---
 id: TASK-DOC-001
 title: "DOC Document repository — S3 Object-Lock Compliance bucket + per-tenant residency pinning + versioned + ACL'd + 10-year retention + hash-chained audit"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -22,7 +24,8 @@ shipped: null
 memory_chain_hash: null
 related_tasks: [TASK-AUTH-003, TASK-AUTH-101, TASK-AI-003, TASK-AI-016, TASK-MEMORY-101, TASK-DOC-002, TASK-DOC-003, TASK-DOC-004, TASK-DOC-005, TASK-DOC-007, TASK-DOC-010, TASK-DOC-011]
 depends_on: [TASK-AUTH-101]
-blocks: [TASK-DOC-002, TASK-DOC-003, TASK-DOC-004, TASK-DOC-005, TASK-DOC-007, TASK-DOC-010]   # all 6 entries are placeholders — not yet specified (downstream consumers)
+# all 6 entries are placeholders — not yet specified (downstream consumers)
+blocks: [TASK-DOC-002, TASK-DOC-003, TASK-DOC-004, TASK-DOC-005, TASK-DOC-007, TASK-DOC-010]
 
 source_pages:
   - website/docs/modules/doc.html#what
@@ -52,34 +55,61 @@ source_decisions:
 language: rust 1.81 + sql
 service: cyberos/services/doc/
 new_files:
-  - services/doc/migrations/0001_document_metadata.sql           # document_metadata + document_versions + BucketScope ENUM + RLS + REVOKE writes + Object-Lock-aware constraints
-  - services/doc/migrations/0002_document_audit_log.sql          # hash-chained per-document audit log + chain integrity trigger
-  - services/doc/src/lib.rs                                      # crate root
-  - services/doc/src/types.rs                                    # DocumentMetadata, DocumentVersion, BucketScope (7), DocumentStatus (4), RetentionPolicy
-  - services/doc/src/s3/object_lock.rs                           # S3 Object-Lock Compliance configuration: bucket setup + per-object retention
-  - services/doc/src/s3/upload.rs                                # presigned upload + integrity hash + residency-pinned bucket selection
-  - services/doc/src/s3/download.rs                              # signed-URL fetch with audit-emission
-  - services/doc/src/residency.rs                                # per-tenant residency lookup → S3 bucket + KMS key (joins TASK-AI-016)
-  - services/doc/src/repo/documents.rs                           # metadata CRUD; uses S3 client for storage path
-  - services/doc/src/repo/versions.rs                            # append-only version writer
-  - services/doc/src/repo/audit_log.rs                           # hash-chained per-document log writer
-  - services/doc/src/audit/doc_events.rs                         # canonical doc.* memory row builders (8 kinds per DEC-289)
-  - services/doc/src/legal_hold.rs                               # apply + release with CLO+CSO co-sign gate
-  - services/doc/src/handlers/documents.rs                       # POST/GET/PATCH /v1/doc/documents + POST /upload + POST /sign-stub
-  - services/doc/Cargo.toml                                      # +sqlx, +uuid, +serde, +chrono, +aws-sdk-s3, +sha2, +cyberos-cli-exit
-  - services/doc/tests/documents_crud_test.rs                    # happy + invalid + RLS + idempotent
-  - services/doc/tests/bucket_scope_enum_test.rs                 # SQL enum + Rust enum cross-validation; ADR gate stub
-  - services/doc/tests/residency_pin_test.rs                     # VN tenant → vn-1 bucket; EU → eu-1; assert no cross-region leakage
-  - services/doc/tests/object_lock_compliance_test.rs            # Object-Lock retention applied on archive transition; LegalHold path tested with mock S3
-  - services/doc/tests/version_append_only_test.rs               # UPDATE/DELETE rejected by SQL grant
-  - services/doc/tests/audit_log_chain_test.rs                   # chain integrity: prev_hash → SHA-256 chains; tampered row detected
-  - services/doc/tests/retention_period_test.rs                  # hr-contracts default 50y; esop 75y; generic 10y
-  - services/doc/tests/cross_scope_move_rejected_test.rs         # hr-contracts → generic move rejected with `cross_scope_move_forbidden`
-  - services/doc/tests/legal_hold_dual_signoff_test.rs           # single signer rejected; CLO+CSO co-sign accepted
-  - services/doc/tests/access_audit_emission_test.rs             # GET /download emits doc.access_audited sev-2
-  - services/doc/tests/erasure_request_with_legal_hold_test.rs   # GDPR erasure blocked while legal_hold active
+  # document_metadata + document_versions + BucketScope ENUM + RLS + REVOKE writes + Object-Lock-aware constraints
+  - services/doc/migrations/0001_document_metadata.sql
+  # hash-chained per-document audit log + chain integrity trigger
+  - services/doc/migrations/0002_document_audit_log.sql
+  # crate root
+  - services/doc/src/lib.rs
+  # DocumentMetadata, DocumentVersion, BucketScope (7), DocumentStatus (4), RetentionPolicy
+  - services/doc/src/types.rs
+  # S3 Object-Lock Compliance configuration: bucket setup + per-object retention
+  - services/doc/src/s3/object_lock.rs
+  # presigned upload + integrity hash + residency-pinned bucket selection
+  - services/doc/src/s3/upload.rs
+  # signed-URL fetch with audit-emission
+  - services/doc/src/s3/download.rs
+  # per-tenant residency lookup → S3 bucket + KMS key (joins TASK-AI-016)
+  - services/doc/src/residency.rs
+  # metadata CRUD; uses S3 client for storage path
+  - services/doc/src/repo/documents.rs
+  # append-only version writer
+  - services/doc/src/repo/versions.rs
+  # hash-chained per-document log writer
+  - services/doc/src/repo/audit_log.rs
+  # canonical doc.* memory row builders (8 kinds per DEC-289)
+  - services/doc/src/audit/doc_events.rs
+  # apply + release with CLO+CSO co-sign gate
+  - services/doc/src/legal_hold.rs
+  # POST/GET/PATCH /v1/doc/documents + POST /upload + POST /sign-stub
+  - services/doc/src/handlers/documents.rs
+  # +sqlx, +uuid, +serde, +chrono, +aws-sdk-s3, +sha2, +cyberos-cli-exit
+  - services/doc/Cargo.toml
+  # happy + invalid + RLS + idempotent
+  - services/doc/tests/documents_crud_test.rs
+  # SQL enum + Rust enum cross-validation; ADR gate stub
+  - services/doc/tests/bucket_scope_enum_test.rs
+  # VN tenant → vn-1 bucket; EU → eu-1; assert no cross-region leakage
+  - services/doc/tests/residency_pin_test.rs
+  # Object-Lock retention applied on archive transition; LegalHold path tested with mock S3
+  - services/doc/tests/object_lock_compliance_test.rs
+  # UPDATE/DELETE rejected by SQL grant
+  - services/doc/tests/version_append_only_test.rs
+  # chain integrity: prev_hash → SHA-256 chains; tampered row detected
+  - services/doc/tests/audit_log_chain_test.rs
+  # hr-contracts default 50y; esop 75y; generic 10y
+  - services/doc/tests/retention_period_test.rs
+  # hr-contracts → generic move rejected with `cross_scope_move_forbidden`
+  - services/doc/tests/cross_scope_move_rejected_test.rs
+  # single signer rejected; CLO+CSO co-sign accepted
+  - services/doc/tests/legal_hold_dual_signoff_test.rs
+  # GET /download emits doc.access_audited sev-2
+  - services/doc/tests/access_audit_emission_test.rs
+  # GDPR erasure blocked while legal_hold active
+  - services/doc/tests/erasure_request_with_legal_hold_test.rs
 modified_files:
-  - services/auth/src/rbac/permissions.rs                        # +Resource::DocDocument (already in TASK-AUTH-101 catalog at slice 1)
+  # +Resource::DocDocument (already in TASK-AUTH-101 catalog at slice 1)
+  - services/auth/src/rbac/permissions.rs
 
 allowed_tools:
   - file_read: services/doc/**

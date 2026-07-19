@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-016
 title: "Tenant residency pinning (sg-1 / eu-1 / us-1 / vn-1) propagating to provider region selection"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -23,7 +25,8 @@ shipped: 2026-05-21
 memory_chain_hash: null
 related_tasks: [TASK-AI-005, TASK-AI-006, TASK-AI-008, TASK-AI-015, TASK-AI-022]
 depends_on: [TASK-AI-006]
-blocks: [TASK-TEN-103, TASK-AI-104]   # TASK-AI-104 placeholder — not yet specified
+# TASK-AI-104 placeholder — not yet specified
+blocks: [TASK-TEN-103, TASK-AI-104]
 
 # ───── Source contracts ─────
 source_pages:
@@ -49,11 +52,16 @@ new_files:
   - services/ai-gateway/tests/residency_property_test.rs
   - services/ai-gateway/tests/residency_integration_test.rs
 modified_files:
-  - services/ai-gateway/src/alias.rs                         # TASK-AI-006 §1 #7 invokes residency::matches
-  - services/ai-gateway/src/handlers/chat.rs                 # emit ai.residency_violation memory row on refusal
-  - services/ai-gateway/src/memory_writer.rs                  # add canonical::residency_violation builder
-  - services/ai-gateway/src/policy.rs                        # parse `residency` field from TASK-AI-005 schema
-  - services/ai-gateway/Cargo.toml                           # proptest@1, regex@1 (for region-string validation)
+  # TASK-AI-006 §1 #7 invokes residency::matches
+  - services/ai-gateway/src/alias.rs
+  # emit ai.residency_violation memory row on refusal
+  - services/ai-gateway/src/handlers/chat.rs
+  # add canonical::residency_violation builder
+  - services/ai-gateway/src/memory_writer.rs
+  # parse `residency` field from TASK-AI-005 schema
+  - services/ai-gateway/src/policy.rs
+  # proptest@1, regex@1 (for region-string validation)
+  - services/ai-gateway/Cargo.toml
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests}/**
@@ -62,7 +70,8 @@ allowed_tools:
 disallowed_tools:
   - hardcode region strings outside `region_table.rs`
   - bypass `policy.ai_policy.residency` from any code path
-  - silently degrade `vn-1` to `sg-1` (must explicitly refuse and let the caller choose; per §1 #6)
+  #6)
+  - silently degrade `vn-1` to `sg-1` (must explicitly refuse and let the caller choose; per §1
   - extend the residency enum without a task amendment (slice 4 ships exactly 4 variants)
 
 # ───── Estimated work ─────

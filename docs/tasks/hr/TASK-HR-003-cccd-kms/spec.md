@@ -1,8 +1,10 @@
 ---
 id: TASK-HR-003
 title: "HR CCCD photo KMS — separate keyspace for VN citizen ID photos with sev-1 access audit + ROOT-CHRO-only key access"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: []
 
 source_pages:
   - website/docs/modules/hr.html#cccd-kms
-  - https://thuvienphapluat.vn/  # Law 91/2025 PDPL Art. 23 (sensitive personal data)
+  # Law 91/2025 PDPL Art. 23 (sensitive personal data)
+  - https://thuvienphapluat.vn/
 
 source_decisions:
   - DEC-1820 2026-05-17 — CCCD photo encrypted with separate KMS key per-tenant; key access ROOT-CHRO only; no system service has decrypt grant
@@ -35,33 +38,32 @@ source_decisions:
   - DEC-1823 2026-05-17 — PDPL Law 91/2025 Art. 23 compliance: CCCD = sensitive personal data; requires explicit consent at upload
   - DEC-1824 2026-05-17 — memory audit kinds: hr.cccd_uploaded, hr.cccd_decrypted, hr.cccd_access_denied, hr.cccd_key_rotated, hr.cccd_deleted
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/hr/
-  new_files:
-    - services/hr/migrations/0003_cccd_storage.sql
-    - services/hr/src/cccd/mod.rs
-    - services/hr/src/cccd/kms_wrapper.rs
-    - services/hr/src/cccd/access_gate.rs
-    - services/hr/src/handlers/cccd_routes.rs
-    - services/hr/src/audit/cccd_events.rs
-    - services/hr/tests/cccd_upload_test.rs
-    - services/hr/tests/cccd_decrypt_root_chro_only_test.rs
-    - services/hr/tests/cccd_access_kind_enum_cardinality_test.rs
-    - services/hr/tests/cccd_consent_required_test.rs
-    - services/hr/tests/cccd_sev1_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/hr/
+new_files:
+  - services/hr/migrations/0003_cccd_storage.sql
+  - services/hr/src/cccd/mod.rs
+  - services/hr/src/cccd/kms_wrapper.rs
+  - services/hr/src/cccd/access_gate.rs
+  - services/hr/src/handlers/cccd_routes.rs
+  - services/hr/src/audit/cccd_events.rs
+  - services/hr/tests/cccd_upload_test.rs
+  - services/hr/tests/cccd_decrypt_root_chro_only_test.rs
+  - services/hr/tests/cccd_access_kind_enum_cardinality_test.rs
+  - services/hr/tests/cccd_consent_required_test.rs
+  - services/hr/tests/cccd_sev1_audit_emission_test.rs
 
-  modified_files:
-    - services/hr/src/lib.rs
+modified_files:
+  - services/hr/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/{hr,auth}/**
-    - file_write: services/hr/{src,tests,migrations}/**
-    - bash: cd services/hr && cargo test cccd
+allowed_tools:
+  - file_read: services/{hr,auth}/**
+  - file_write: services/hr/{src,tests,migrations}/**
+  - bash: cd services/hr && cargo test cccd
 
-  disallowed_tools:
-    - decrypt CCCD via non-CHRO role (per DEC-1820)
-    - upload without consent (per DEC-1823)
+disallowed_tools:
+  - decrypt CCCD via non-CHRO role (per DEC-1820)
+  - upload without consent (per DEC-1823)
 
 effort_hours: 5
 subtasks:

@@ -1,8 +1,10 @@
 ---
 id: TASK-CUO-102
 title: "CUO Postgres checkpointer for LangGraph state — persists supervisor graph state per run with EU AI Act Art. 12 logging"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -26,7 +28,8 @@ blocks: [TASK-CUO-103]
 
 source_pages:
   - website/docs/modules/cuo.html#checkpointer
-  - https://eur-lex.europa.eu/eli/reg/2024/1689  # EU AI Act Art. 12
+  # EU AI Act Art. 12
+  - https://eur-lex.europa.eu/eli/reg/2024/1689
 
 source_decisions:
   - DEC-2320 2026-05-17 — LangGraph state checkpointed to Postgres per supervisor node transition; rows immutable per EU AI Act Art. 12 logging requirement
@@ -35,31 +38,30 @@ source_decisions:
   - DEC-2323 2026-05-17 — Append-only; 7-year retention per Art. 12; archive partition monthly
   - DEC-2324 2026-05-17 — memory audit kinds: cuo.checkpoint_written, cuo.checkpoint_replayed, cuo.checkpoint_archive_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/cuo/
-  new_files:
-    - services/cuo/migrations/0002_langgraph_checkpoints.sql
-    - services/cuo/src/checkpointer/mod.rs
-    - services/cuo/src/checkpointer/postgres_writer.rs
-    - services/cuo/src/checkpointer/state_serializer.rs
-    - services/cuo/src/audit/checkpoint_events.rs
-    - services/cuo/tests/checkpoint_kind_enum_cardinality_test.rs
-    - services/cuo/tests/checkpoint_immutable_test.rs
-    - services/cuo/tests/checkpoint_serialization_roundtrip_test.rs
-    - services/cuo/tests/checkpoint_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/cuo/
+new_files:
+  - services/cuo/migrations/0002_langgraph_checkpoints.sql
+  - services/cuo/src/checkpointer/mod.rs
+  - services/cuo/src/checkpointer/postgres_writer.rs
+  - services/cuo/src/checkpointer/state_serializer.rs
+  - services/cuo/src/audit/checkpoint_events.rs
+  - services/cuo/tests/checkpoint_kind_enum_cardinality_test.rs
+  - services/cuo/tests/checkpoint_immutable_test.rs
+  - services/cuo/tests/checkpoint_serialization_roundtrip_test.rs
+  - services/cuo/tests/checkpoint_audit_emission_test.rs
 
-  modified_files:
-    - services/cuo/src/supervisor.rs
+modified_files:
+  - services/cuo/src/supervisor.rs
 
-  allowed_tools:
-    - file_read: services/cuo/**
-    - file_write: services/cuo/{src,tests,migrations}/**
-    - bash: cd services/cuo && cargo test checkpoint
+allowed_tools:
+  - file_read: services/cuo/**
+  - file_write: services/cuo/{src,tests,migrations}/**
+  - bash: cd services/cuo && cargo test checkpoint
 
-  disallowed_tools:
-    - mutate prior checkpoint (per DEC-2323)
-    - skip persistence (per DEC-2320)
+disallowed_tools:
+  - mutate prior checkpoint (per DEC-2323)
+  - skip persistence (per DEC-2320)
 
 effort_hours: 5
 subtasks:

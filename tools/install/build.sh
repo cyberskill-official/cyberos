@@ -66,6 +66,18 @@ else
   echo "cyberos: WARN no modules/skill/contracts/task/rubrics/ in source - payload ships without per-type rule families (task-audit cannot enforce BUG-*/REGRESSION-*)" >&2
 fi
 
+# TASK-IMP-111: the plan workflow's standalone rubric. plan-audit loads plan_rubric@1.0 from
+# modules/skill/rubrics/plan_rubric.md and flattens it into cuo/rubrics/ next to bug.md/common.md
+# (the installed home .cyberos/cuo/rubrics/). A rubric correct in modules/ and absent from dist/ is
+# correct nowhere: the vendored plan-audit would name a rubric no installed repo carries. Best-effort
+# like the block above, but loud — a silent skip is exactly how the per-type templates went missing.
+if [ -f "$repo/modules/skill/rubrics/plan_rubric.md" ]; then
+  mkdir -p "$out/cuo/rubrics"
+  cp "$repo/modules/skill/rubrics/plan_rubric.md" "$out/cuo/rubrics/plan_rubric.md"
+else
+  echo "cyberos: WARN no modules/skill/rubrics/plan_rubric.md in source - payload ships without plan_rubric@1.0 (plan-audit cannot enforce PLAN-*)" >&2
+fi
+
 # The vendored skill set - one name per line with its SDP stage, in lifecycle order
 # (TASK-CUO-209: reviewable data, not a drifting string; TASK-SKILL-116's chain-coverage
 # check runs at the end of this build and fails on any under-coverage).
@@ -80,6 +92,8 @@ nfr-certification-author                    # SDP 4  NFR (allowlisted unpaired)
 nfr-evaluator                               # SDP 4  NFR
 nfr-test-runner                             # SDP 4  NFR
 nfr-regression-handler                      # SDP 4  NFR
+plan-author                      # SDP 5  plan (front door: idea -> plan@1 -> create-tasks, TASK-IMP-111)
+plan-audit                       # SDP 5  plan
 task-author                      # SDP 5  task
 task-audit                       # SDP 5
 task-reconcile                   # SDP 5  reconcile drifted entry states (TASK-IMP-100)
@@ -180,6 +194,10 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   # batch-select: the maximal cone-independent batch, computed (v2.8.0). ship-tasks §11a runs it
   # before step 1, so a payload without it cannot obey the batch rule.
   [ -f "$here/docs-tools/batch-select.mjs" ] && cp "$here/docs-tools/batch-select.mjs" "$out/docs-tools/"
+  # cone-audit: reports a task's writes that escape its DECLARED cone (TASK-IMP-119), run at the
+  # implementing -> ready_to_review flip. It mirrors batch-select's containment + (none) filter
+  # verbatim; a payload without it ships batch-select's promise with nothing checking it.
+  [ -f "$here/docs-tools/cone-audit.mjs" ] && cp "$here/docs-tools/cone-audit.mjs" "$out/docs-tools/"
   # verify-goals: re-verifies what done claimed (TASK-IMP-109). ship-tasks §11c names the
   # vendored path, so a payload without it cannot obey the rule.
   [ -f "$here/docs-tools/verify-goals.mjs" ] && cp "$here/docs-tools/verify-goals.mjs" "$out/docs-tools/"
@@ -192,6 +210,10 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   [ -f "$here/docs-tools/coverage-scope.mjs" ] && cp "$here/docs-tools/coverage-scope.mjs" "$out/docs-tools/"
   # TASK-IMP-100: reconcile the third state - work this workflow did not perform.
   [ -f "$here/docs-tools/task-reconcile.mjs" ] && cp "$here/docs-tools/task-reconcile.mjs" "$out/docs-tools/"
+  # fm001-migrate: clean a repo's task corpus of FM-001 trailing frontmatter comments (TASK-IMP-117).
+  # Vendored so any installed repo can run it against its OWN specs - the TASK-TEMPLATE.md that taught
+  # the trailing-comment shape is itself vendored, so every consumer corpus inherited the violation.
+  [ -f "$here/docs-tools/fm001-migrate.mjs" ] && cp "$here/docs-tools/fm001-migrate.mjs" "$out/docs-tools/"
   # workflow-improve: the outer loop's machine floor (TASK-IMP-110). The workflow-improver skill
   # and the /improve command both name `.cyberos/docs-tools/workflow-improve.mjs`, so a payload
   # without it ships a skill that cannot reach its own floor.

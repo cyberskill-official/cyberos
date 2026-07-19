@@ -50,3 +50,7 @@ All 8 concerns addressed. The machine floor (task-lint) ran FIRST and was clean 
 ---
 
 *End of TASK-IMP-111 audit.*
+
+## Amendment 2026-07-19 (cone growth, operator-approved)
+
+Grew `modified_files` by `tools/install/tests/test_full_sdp_payload.sh`. Adding plan-author + plan-audit takes the vendored census 54 -> 56, and that test hard-asserts the count (its own comment mandates the bump-and-say-why pattern). This is a census update, not a behaviour change: no clause, test, or traceability was altered. Re-verified - task-lint clean; test_full_sdp_payload 9/0; plan-workflow suite 7/0; the declared cone (3 modified + 5 new = 8) now matches every actual write with 0 escapes. Audit verdict unchanged.

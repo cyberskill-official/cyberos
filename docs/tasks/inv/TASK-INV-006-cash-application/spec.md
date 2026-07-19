@@ -1,8 +1,10 @@
 ---
 id: TASK-INV-006
 title: "INV cash application — closed 4-step matching cascade (exact-ref → amount+date → fuzzy-fraction → manual) + atomic ledger reconciliation + partial allocation + over-allocation block + memory audit per match"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -52,16 +54,25 @@ new_files:
   - services/inv/migrations/0014_payment_allocations.sql
   - services/inv/migrations/0015_invoice_outstanding_view.sql
   - services/inv/src/cash_app/mod.rs
-  - services/inv/src/cash_app/cascade.rs                       # 4-step closed cascade dispatcher
-  - services/inv/src/cash_app/step1_exact_ref.rs               # HD/INV prefix match (extends TASK-INV-005 memo parser)
-  - services/inv/src/cash_app/step2_amount_date.rs             # amount + close-date window match
-  - services/inv/src/cash_app/step3_fuzzy.rs                   # 5% fuzzy partial-amount match
-  - services/inv/src/cash_app/step4_manual.rs                  # CFO-driven manual handler
-  - services/inv/src/cash_app/allocator.rs                     # atomic allocation writer + over-allocation check
-  - services/inv/src/cash_app/scheduler.rs                     # 5-min job
+  # 4-step closed cascade dispatcher
+  - services/inv/src/cash_app/cascade.rs
+  # HD/INV prefix match (extends TASK-INV-005 memo parser)
+  - services/inv/src/cash_app/step1_exact_ref.rs
+  # amount + close-date window match
+  - services/inv/src/cash_app/step2_amount_date.rs
+  # 5% fuzzy partial-amount match
+  - services/inv/src/cash_app/step3_fuzzy.rs
+  # CFO-driven manual handler
+  - services/inv/src/cash_app/step4_manual.rs
+  # atomic allocation writer + over-allocation check
+  - services/inv/src/cash_app/allocator.rs
+  # 5-min job
+  - services/inv/src/cash_app/scheduler.rs
   - services/inv/src/cash_app/repo.rs
-  - services/inv/src/cash_app/audit.rs                         # 9 memory row builders
-  - services/inv/src/handlers/cash_app.rs                      # POST /allocate-manual + POST /reverse + GET /unmatched
+  # 9 memory row builders
+  - services/inv/src/cash_app/audit.rs
+  # POST /allocate-manual + POST /reverse + GET /unmatched
+  - services/inv/src/handlers/cash_app.rs
   - services/inv/tests/cash_app_cascade_test.rs
   - services/inv/tests/cash_app_step1_exact_ref_test.rs
   - services/inv/tests/cash_app_step2_amount_date_test.rs
@@ -75,8 +86,10 @@ new_files:
   - services/inv/tests/cash_app_append_only_test.rs
   - services/inv/tests/cash_app_audit_emission_test.rs
 modified_files:
-  - services/inv/src/types.rs                                   # +AllocationSource enum
-  - services/inv/src/lib.rs                                     # pub mod cash_app
+  # +AllocationSource enum
+  - services/inv/src/types.rs
+  # pub mod cash_app
+  - services/inv/src/lib.rs
 
 allowed_tools:
   - file_read: services/inv/**

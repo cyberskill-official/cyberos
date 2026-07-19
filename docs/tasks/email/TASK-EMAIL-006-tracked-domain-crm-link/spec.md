@@ -1,8 +1,10 @@
 ---
 id: TASK-EMAIL-006
 title: "EMAIL tracked-domain → CRM auto-link — inbound message from tenant-tracked domain auto-creates/links CRM contact + thread association"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -35,34 +37,33 @@ source_decisions:
   - "DEC-1574 2026-05-17 — Auto-created contact: name from From: header display name; company from domain via TASK-AI-003 lookup (cached)"
   - DEC-1575 2026-05-17 — memory audit kinds: email.crm_link_auto_created, email.crm_link_existing_matched, email.crm_link_failed
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/email/
-  new_files:
-    - services/email/migrations/0008_tracked_domains.sql
-    - services/email/src/crm_link/mod.rs
-    - services/email/src/crm_link/domain_matcher.rs
-    - services/email/src/crm_link/auto_contact_creator.rs
-    - services/email/src/handlers/tracked_domains_routes.rs
-    - services/email/src/audit/crm_link_events.rs
-    - services/email/tests/crm_link_tracked_domain_test.rs
-    - services/email/tests/crm_link_existing_contact_test.rs
-    - services/email/tests/crm_link_auto_create_test.rs
-    - services/email/tests/crm_link_untracked_skipped_test.rs
-    - services/email/tests/crm_link_link_origin_enum_cardinality_test.rs
-    - services/email/tests/crm_link_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/email/
+new_files:
+  - services/email/migrations/0008_tracked_domains.sql
+  - services/email/src/crm_link/mod.rs
+  - services/email/src/crm_link/domain_matcher.rs
+  - services/email/src/crm_link/auto_contact_creator.rs
+  - services/email/src/handlers/tracked_domains_routes.rs
+  - services/email/src/audit/crm_link_events.rs
+  - services/email/tests/crm_link_tracked_domain_test.rs
+  - services/email/tests/crm_link_existing_contact_test.rs
+  - services/email/tests/crm_link_auto_create_test.rs
+  - services/email/tests/crm_link_untracked_skipped_test.rs
+  - services/email/tests/crm_link_link_origin_enum_cardinality_test.rs
+  - services/email/tests/crm_link_audit_emission_test.rs
 
-  modified_files:
-    - services/email/src/inbound_processor.rs
+modified_files:
+  - services/email/src/inbound_processor.rs
 
-  allowed_tools:
-    - file_read: services/{email,crm}/**
-    - file_write: services/email/{src,tests,migrations}/**
-    - bash: cd services/email && cargo test crm_link
+allowed_tools:
+  - file_read: services/{email,crm}/**
+  - file_write: services/email/{src,tests,migrations}/**
+  - bash: cd services/email && cargo test crm_link
 
-  disallowed_tools:
-    - link on outbound (per DEC-1570 — handled at send)
-    - auto-link untracked domains (per DEC-1572 — explicit allowlist)
+disallowed_tools:
+  - link on outbound (per DEC-1570 — handled at send)
+  - auto-link untracked domains (per DEC-1572 — explicit allowlist)
 
 effort_hours: 5
 subtasks:

@@ -2,8 +2,10 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-011
 title: "Presidio EN-base PII redaction in-flight (every prompt)"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -48,11 +50,16 @@ new_files:
   - services/ai-gateway/tests/redact_test.rs
   - services/ai-gateway/tests/redact_test.rs
 modified_files:
-  - services/ai-gateway/src/handlers/chat.rs    # call redact between precheck and router
-  - services/ai-gateway/src/lib.rs              # export redact module
-  - services/ai-gateway/Cargo.toml              # reqwest, serde, tracing
-  - deploy/compose/ai-gateway.yml               # add presidio sidecar service
-  - deploy/k8s/ai-gateway/presidio-sidecar.yaml # k8s sidecar manifest
+  # call redact between precheck and router
+  - services/ai-gateway/src/handlers/chat.rs
+  # export redact module
+  - services/ai-gateway/src/lib.rs
+  # reqwest, serde, tracing
+  - services/ai-gateway/Cargo.toml
+  # add presidio sidecar service
+  - deploy/compose/ai-gateway.yml
+  # k8s sidecar manifest
+  - deploy/k8s/ai-gateway/presidio-sidecar.yaml
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests,pii}/**
@@ -62,7 +69,8 @@ disallowed_tools:
   - run a non-localhost presidio (sidecar MUST be loopback only — no network egress)
   - skip redaction on any chat path (every chat call MUST go through redact())
   - log raw prompt text after redaction (logs MUST contain only the redacted form)
-  - persist RestorationMap to disk, Postgres, or memory (memory-only by §1 #4)
+  #4)
+  - persist RestorationMap to disk, Postgres, or memory (memory-only by §1
   - format!("{:?}", PiiType) for OBS labels (use as_metric_label() per TASK-AI-007 ISS-003 pattern)
   - include prompt fragments in RedactError variants (error messages MUST NOT leak input)
 

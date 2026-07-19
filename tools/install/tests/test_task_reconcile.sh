@@ -106,7 +106,7 @@ t02_route_back() {
   local g="$TMP/t02c"; fixture "$g" reviewing yes committed pass
   local gt="$g/docs/tasks/demo/TASK-DEMO-001-thing"
   printf '#!/usr/bin/env bash\ntouch "$TMP/PWNED"\nexit 0\n' > "$TMP/outside.sh"; chmod +x "$TMP/outside.sh"
-  sed -i 's|test: `tests/thing.sh::t01`|test: `../../outside.sh::t01`|' "$gt/spec.md"
+  sed -i.bak 's|test: `tests/thing.sh::t01`|test: `../../outside.sh::t01`|' "$gt/spec.md" && rm -f "$gt/spec.md.bak"
   ( cd "$g" && git add -A && git commit -qm "spec citing a path outside the repo" )
   node "$TR" TASK-DEMO-001 --repo "$g" --run-tests 2>/dev/null | grep -q "escapes the repo root" \
     || { fail t02_route_back "an out-of-root citation was not refused"; return; }
@@ -153,13 +153,13 @@ t04_read_only_and_spec_drift() {
   [ "$before" = "$after" ] || { fail t04_read_only_and_spec_drift "the tool mutated the tree"; return; }
   # normative drift: a clause edited AFTER the audit commit
   local t="$d/docs/tasks/demo/TASK-DEMO-001-thing"
-  sed -i 's/- 1.1 The thing MUST exist./- 1.1 The thing MUST exist and MUST be blue./' "$t/spec.md"
+  sed -i.bak 's/- 1.1 The thing MUST exist./- 1.1 The thing MUST exist and MUST be blue./' "$t/spec.md" && rm -f "$t/spec.md.bak"
   ( cd "$d" && git add -A && git commit -qm "edit a clause after the audit" )
   [ "$(rec_of "$TR" TASK-DEMO-001 "$d")" = "route_back" ] || { fail t04_read_only_and_spec_drift "normative drift did not route back"; return; }
   node "$TR" TASK-DEMO-001 --repo "$d" 2>/dev/null | grep -q "SPEC DRIFT" || { fail t04_read_only_and_spec_drift "drift not named"; return; }
   # lifecycle-only churn is NOT drift (the flip the workflow itself performs)
   local e="$TMP/t04b"; fixture "$e" reviewing yes committed pass
-  sed -i 's/^status: reviewing$/status: done/' "$e/docs/tasks/demo/TASK-DEMO-001-thing/spec.md"
+  sed -i.bak 's/^status: reviewing$/status: done/' "$e/docs/tasks/demo/TASK-DEMO-001-thing/spec.md" && rm -f "$e/docs/tasks/demo/TASK-DEMO-001-thing/spec.md.bak"
   ( cd "$e" && git add -A && git commit -qm "lifecycle flip only" )
   [ "$(rung_of "$TR" TASK-DEMO-001 "$e" "" r1)" = "pass" ] || { fail t04_read_only_and_spec_drift "lifecycle churn was misread as drift"; return; }
   # not_applicable
@@ -210,20 +210,20 @@ t06_body_binding_preferred() {
   # re-audit with the body field, then flip status like the workflow does
   local b; b="$(body_sha "$t/spec.md")"
   printf -- '---\naudited_file_sha256_prefix: "deadbeefdeadbeef"\naudited_body_sha256_prefix: "%s"\noverall_status: "pass"\n---\n# audit\n' "$b" > "$t/audit.md"
-  sed -i 's/^status: reviewing$/status: done/' "$t/spec.md"
+  sed -i.bak 's/^status: reviewing$/status: done/' "$t/spec.md" && rm -f "$t/spec.md.bak"
   ( cd "$d" && git add -A && git commit -qm "body-bound audit + lifecycle flip" )
   [ "$(rung_of "$TR" TASK-DEMO-001 "$d" "" r1)" = "pass" ] \
     || { fail t06 "body binding did not survive a lifecycle flip"; return; }
   node "$TR" TASK-DEMO-001 --repo "$d" 2>/dev/null | grep -q "binding gap" \
     && { fail t06 "body-bound audit still reported a binding gap"; return; }
   # a clause edit is real drift
-  sed -i 's/- 1.1 The thing MUST exist./- 1.1 The thing MUST exist and MUST be blue./' "$t/spec.md"
+  sed -i.bak 's/- 1.1 The thing MUST exist./- 1.1 The thing MUST exist and MUST be blue./' "$t/spec.md" && rm -f "$t/spec.md.bak"
   ( cd "$d" && git add -A && git commit -qm "clause edit after the audit" )
   [ "$(rung_of "$TR" TASK-DEMO-001 "$d" "" r1)" = "red" ] || { fail t06 "normative edit was not caught"; return; }
   node "$TR" TASK-DEMO-001 --repo "$d" 2>/dev/null | grep -q "SPEC DRIFT" || { fail t06 "drift not named"; return; }
   # legacy audit (no body field) still resolves via the audit commit, gap named as legacy
   local e="$TMP/t06b"; fixture "$e" reviewing yes committed pass
-  sed -i 's/^status: reviewing$/status: done/' "$e/docs/tasks/demo/TASK-DEMO-001-thing/spec.md"
+  sed -i.bak 's/^status: reviewing$/status: done/' "$e/docs/tasks/demo/TASK-DEMO-001-thing/spec.md" && rm -f "$e/docs/tasks/demo/TASK-DEMO-001-thing/spec.md.bak"
   ( cd "$e" && git add -A && git commit -qm "legacy audit + flip" )
   node "$TR" TASK-DEMO-001 --repo "$e" 2>/dev/null | grep -q "via the audit commit" \
     || { fail t06 "legacy audit did not resolve through the audit-commit path"; return; }

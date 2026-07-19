@@ -1,8 +1,10 @@
 ---
 id: TASK-REW-010
 title: "REW memory structural exclusion CI gate — no comp fields appear in memory-ingest paths; static analysis + runtime check"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,32 +36,31 @@ source_decisions:
   - DEC-2243 2026-05-17 — Runtime: memory ingest path validates payload against schema blocklist; reject + sev-1 audit if comp fields detected
   - DEC-2244 2026-05-17 — memory audit kinds: rew.exclusion_ci_passed, rew.exclusion_ci_failed, rew.exclusion_runtime_violation, rew.exclusion_field_blocked
 
-build_envelope:
-  language: rust 1.81 + ci scripts
-  service: cyberos/services/rew/
-  new_files:
-    - services/rew/src/exclusion/mod.rs
-    - services/rew/src/exclusion/runtime_check.rs
-    - services/rew/src/exclusion/field_blocklist.rs
-    - services/rew/src/audit/exclusion_events.rs
-    - .github/workflows/rew-memory-exclusion.yml
-    - scripts/check_rew_memory_exclusion.sh
-    - services/rew/tests/exclusion_kind_enum_cardinality_test.rs
-    - services/rew/tests/exclusion_runtime_blocks_comp_test.rs
-    - services/rew/tests/exclusion_static_grep_test.rs
-    - services/rew/tests/exclusion_audit_emission_test.rs
+language: rust 1.81 + ci scripts
+service: cyberos/services/rew/
+new_files:
+  - services/rew/src/exclusion/mod.rs
+  - services/rew/src/exclusion/runtime_check.rs
+  - services/rew/src/exclusion/field_blocklist.rs
+  - services/rew/src/audit/exclusion_events.rs
+  - .github/workflows/rew-memory-exclusion.yml
+  - scripts/check_rew_memory_exclusion.sh
+  - services/rew/tests/exclusion_kind_enum_cardinality_test.rs
+  - services/rew/tests/exclusion_runtime_blocks_comp_test.rs
+  - services/rew/tests/exclusion_static_grep_test.rs
+  - services/rew/tests/exclusion_audit_emission_test.rs
 
-  modified_files:
-    - services/rew/src/lib.rs
+modified_files:
+  - services/rew/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/**
-    - file_write: services/rew/{src,tests,migrations}/**
-    - bash: cd services/rew && cargo test exclusion
+allowed_tools:
+  - file_read: services/**
+  - file_write: services/rew/{src,tests,migrations}/**
+  - bash: cd services/rew && cargo test exclusion
 
-  disallowed_tools:
-    - bypass static analysis (per DEC-2242)
-    - skip runtime check (per DEC-2243)
+disallowed_tools:
+  - bypass static analysis (per DEC-2242)
+  - skip runtime check (per DEC-2243)
 
 effort_hours: 3
 subtasks:

@@ -1,8 +1,10 @@
 ---
 id: TASK-PROJ-006
 title: "Billable cascade — Member-override → task-class → role-default → fallback; resolution snapshot at time-entry write"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -40,7 +42,8 @@ new_files:
   - services/proj-sync/src/billable/cascade.rs
   - services/proj-sync/tests/billable_cascade_test.rs
 modified_files:
-  - services/proj-sync/src/types.rs                  # TaskClass enum
+  # TaskClass enum
+  - services/proj-sync/src/types.rs
 allowed_tools:
   - file_read: services/proj-sync/**
   - file_write: services/proj-sync/{src,tests,migrations}/**

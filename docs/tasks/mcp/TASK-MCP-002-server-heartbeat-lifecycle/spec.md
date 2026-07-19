@@ -1,8 +1,10 @@
 ---
 id: TASK-MCP-002
 title: "MCP per-module server registration + heartbeat lifecycle — 3-miss → unhealthy with automatic skill_unavailable propagation"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -34,33 +36,32 @@ source_decisions:
   - DEC-2353 2026-05-17 — Recovery: unhealthy → healthy on next successful heartbeat (no manual intervention)
   - DEC-2354 2026-05-17 — memory audit kinds: mcp.server_registered, mcp.server_heartbeat_missed, mcp.server_unhealthy, mcp.server_recovered, mcp.server_deregistered
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/mcp/
-  new_files:
-    - services/mcp/migrations/0002_server_heartbeats.sql
-    - services/mcp/src/heartbeat/mod.rs
-    - services/mcp/src/heartbeat/registrar.rs
-    - services/mcp/src/heartbeat/health_monitor.rs
-    - services/mcp/src/handlers/heartbeat_routes.rs
-    - services/mcp/src/audit/heartbeat_events.rs
-    - services/mcp/tests/server_health_enum_cardinality_test.rs
-    - services/mcp/tests/heartbeat_3_miss_unhealthy_test.rs
-    - services/mcp/tests/recovery_on_heartbeat_test.rs
-    - services/mcp/tests/skill_unavailable_propagation_test.rs
-    - services/mcp/tests/heartbeat_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/mcp/
+new_files:
+  - services/mcp/migrations/0002_server_heartbeats.sql
+  - services/mcp/src/heartbeat/mod.rs
+  - services/mcp/src/heartbeat/registrar.rs
+  - services/mcp/src/heartbeat/health_monitor.rs
+  - services/mcp/src/handlers/heartbeat_routes.rs
+  - services/mcp/src/audit/heartbeat_events.rs
+  - services/mcp/tests/server_health_enum_cardinality_test.rs
+  - services/mcp/tests/heartbeat_3_miss_unhealthy_test.rs
+  - services/mcp/tests/recovery_on_heartbeat_test.rs
+  - services/mcp/tests/skill_unavailable_propagation_test.rs
+  - services/mcp/tests/heartbeat_audit_emission_test.rs
 
-  modified_files:
-    - services/mcp/src/lib.rs
+modified_files:
+  - services/mcp/src/lib.rs
 
-  allowed_tools:
-    - file_read: services/mcp/**
-    - file_write: services/mcp/{src,tests,migrations}/**
-    - bash: cd services/mcp && cargo test heartbeat
+allowed_tools:
+  - file_read: services/mcp/**
+  - file_write: services/mcp/{src,tests,migrations}/**
+  - bash: cd services/mcp && cargo test heartbeat
 
-  disallowed_tools:
-    - skip heartbeat (per DEC-2350)
-    - manual unhealthy (per DEC-2353 — auto-recovery only)
+disallowed_tools:
+  - skip heartbeat (per DEC-2350)
+  - manual unhealthy (per DEC-2353 — auto-recovery only)
 
 effort_hours: 6
 subtasks:

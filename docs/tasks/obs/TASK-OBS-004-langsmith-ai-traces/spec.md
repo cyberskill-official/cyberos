@@ -1,8 +1,10 @@
 ---
 id: TASK-OBS-004
 title: "LangSmith integration for AI traces — self-hosted + per-tenant opt-in + redacted-prompts-only + W3C TraceContext correlation + async non-blocking"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -44,19 +46,26 @@ new_files:
   - deploy/obs/langsmith-config.yaml
   - deploy/obs/langsmith-docker-compose.yml
 modified_files:
-  - services/ai-gateway/src/router/mod.rs                 # call export_to_langsmith on response
-  - services/ai-gateway/src/handlers/chat.rs              # propagate W3C trace_id to LangSmith
-  - services/ai-gateway/src/policy.rs                     # add ai_policy.langsmith_export field
-  - deploy/obs/docker-compose.yml                         # langsmith service
+  # call export_to_langsmith on response
+  - services/ai-gateway/src/router/mod.rs
+  # propagate W3C trace_id to LangSmith
+  - services/ai-gateway/src/handlers/chat.rs
+  # add ai_policy.langsmith_export field
+  - services/ai-gateway/src/policy.rs
+  # langsmith service
+  - deploy/obs/docker-compose.yml
 allowed_tools:
   - file_read: services/ai-gateway/**, deploy/obs/**
   - file_write: services/ai-gateway/{src,tests}/**, deploy/obs/**
   - bash: cd services/ai-gateway && cargo test langsmith
 disallowed_tools:
-  - send raw (un-redacted) prompts to LangSmith — must be the TASK-AI-011 redacted version (per §1 #4)
+  #4)
+  - send raw (un-redacted) prompts to LangSmith — must be the TASK-AI-011 redacted version (per §1
   - send to langchain.com or any non-CyberOS LangSmith instance (per DEC-155)
-  - block the gateway hot-path on LangSmith export (per §1 #6 — async only)
-  - export for tenants without explicit opt-in (per §1 #3 — default false)
+  #6 — async only)
+  - block the gateway hot-path on LangSmith export (per §1
+  #3 — default false)
+  - export for tenants without explicit opt-in (per §1
 
 effort_hours: 6
 subtasks:

@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-106
 title: "memory sync_class enforcement — private vs shareable + ACL filtering + structural compensation exclusion + property test"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-15T00:00:00+07:00
@@ -22,7 +24,8 @@ shipped: 2026-05-23
 memory_chain_hash: null
 related_tasks: [TASK-MEMORY-103, TASK-MEMORY-107, TASK-MEMORY-108]
 depends_on: [TASK-MEMORY-101, TASK-MEMORY-103]
-blocks: [TASK-MEMORY-107]   # placeholder — read-time ACL filtering task, not yet specified
+# placeholder — read-time ACL filtering task, not yet specified
+blocks: [TASK-MEMORY-107]
 
 source_pages:
   - website/docs/modules/memory.html#sync-class
@@ -40,16 +43,20 @@ new_files:
   - services/memory-sync/tests/sync_class_property_test.rs
   - services/memory-sync/tests/structural_exclusion_test.rs
 modified_files:
-  - services/memory-sync/src/sync.rs                       # call should_sync() at every direction
+  # call should_sync() at every direction
+  - services/memory-sync/src/sync.rs
 allowed_tools:
   - file_read: services/memory-sync/**
   - file_write: services/memory-sync/**
   - bash: cd services/memory-sync && cargo test sync_class
 disallowed_tools:
   - sync compensation/equity rows under any sync_class (per DEC-036 — structural exclusion)
-  - skip should_sync() check on any sync direction (per §1 #1 + #2 + #4)
-  - bypass ACL on shareable rows with non-empty acl (per §1 #3)
-  - silently apply transitional v1 mapping (per §1 #4 — log + count)
+  #1 + #2 + #4)
+  - skip should_sync() check on any sync direction (per §1
+  #3)
+  - bypass ACL on shareable rows with non-empty acl (per §1
+  #4 — log + count)
+  - silently apply transitional v1 mapping (per §1
 
 effort_hours: 6
 subtasks:

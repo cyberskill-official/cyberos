@@ -1,8 +1,10 @@
 ---
 id: TASK-PORTAL-008
 title: "PORTAL DSAR self-service — GDPR Art. 15 + PDPL Art. 17 client-initiated data subject access request with 30-day SLA + async export bundle + redaction audit"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-17T00:00:00+07:00
@@ -44,47 +46,47 @@ source_decisions:
   - DEC-1230 2026-05-17 — Denial reasons (DEC closed enum): identity_unverifiable, contradicts_law_compliance, third_party_rights_conflict, manifestly_unfounded; CFO + CLO sign-off required for denial
   - DEC-1231 2026-05-17 — memory audit kinds: portal.dsar_received, portal.dsar_identity_verified, portal.dsar_processing_started, portal.dsar_ready_for_review, portal.dsar_delivered, portal.dsar_denied, portal.dsar_expired
 
-build_envelope:
-  language: rust 1.81
-  service: cyberos/services/portal/
-  new_files:
-    - services/portal/migrations/0016_portal_dsar_requests.sql
-    - services/portal/migrations/0017_portal_dsar_denials.sql
-    - services/portal/src/dsar/mod.rs
-    - services/portal/src/dsar/create.rs
-    - services/portal/src/dsar/processor.rs
-    - services/portal/src/dsar/bundle_builder.rs
-    - services/portal/src/dsar/identity_verify.rs
-    - services/portal/src/dsar/delivery.rs
-    - services/portal/src/dsar/denial.rs
-    - services/portal/src/audit/dsar_events.rs
-    - services/portal/src/handlers/dsar_routes.rs
-    - services/portal/tests/dsar_create_test.rs
-    - services/portal/tests/dsar_identity_verify_test.rs
-    - services/portal/tests/dsar_bundle_contents_test.rs
-    - services/portal/tests/dsar_cross_subject_excluded_test.rs
-    - services/portal/tests/dsar_rate_limit_test.rs
-    - services/portal/tests/dsar_denial_workflow_test.rs
-    - services/portal/tests/dsar_30day_sla_test.rs
-    - services/portal/tests/dsar_type_enum_cardinality_test.rs
-    - services/portal/tests/dsar_status_enum_cardinality_test.rs
-    - services/portal/tests/dsar_audit_emission_test.rs
+language: rust 1.81
+service: cyberos/services/portal/
+new_files:
+  - services/portal/migrations/0016_portal_dsar_requests.sql
+  - services/portal/migrations/0017_portal_dsar_denials.sql
+  - services/portal/src/dsar/mod.rs
+  - services/portal/src/dsar/create.rs
+  - services/portal/src/dsar/processor.rs
+  - services/portal/src/dsar/bundle_builder.rs
+  - services/portal/src/dsar/identity_verify.rs
+  - services/portal/src/dsar/delivery.rs
+  - services/portal/src/dsar/denial.rs
+  - services/portal/src/audit/dsar_events.rs
+  - services/portal/src/handlers/dsar_routes.rs
+  - services/portal/tests/dsar_create_test.rs
+  - services/portal/tests/dsar_identity_verify_test.rs
+  - services/portal/tests/dsar_bundle_contents_test.rs
+  - services/portal/tests/dsar_cross_subject_excluded_test.rs
+  - services/portal/tests/dsar_rate_limit_test.rs
+  - services/portal/tests/dsar_denial_workflow_test.rs
+  - services/portal/tests/dsar_30day_sla_test.rs
+  - services/portal/tests/dsar_type_enum_cardinality_test.rs
+  - services/portal/tests/dsar_status_enum_cardinality_test.rs
+  - services/portal/tests/dsar_audit_emission_test.rs
 
-  modified_files:
-    - services/portal/src/lib.rs
-    - services/portal/Cargo.toml                                       # +zip + age (encryption)
+modified_files:
+  - services/portal/src/lib.rs
+  # +zip + age (encryption)
+  - services/portal/Cargo.toml
 
-  allowed_tools:
-    - file_read: services/portal/**
-    - file_read: services/{proj,inv,doc,chat,auth}/src/**
-    - file_write: services/portal/{src,tests,migrations}/**
-    - bash: cd services/portal && cargo test dsar
+allowed_tools:
+  - file_read: services/portal/**
+  - file_read: services/{proj,inv,doc,chat,auth}/src/**
+  - file_write: services/portal/{src,tests,migrations}/**
+  - bash: cd services/portal && cargo test dsar
 
-  disallowed_tools:
-    - include cross-subject audit rows (per DEC-1229)
-    - skip identity verification on email-password caller (per DEC-1223)
-    - allow > 1 DSAR per 90 days (per DEC-1228)
-    - deny request without CFO+CLO sign-off (per DEC-1230)
+disallowed_tools:
+  - include cross-subject audit rows (per DEC-1229)
+  - skip identity verification on email-password caller (per DEC-1223)
+  - allow > 1 DSAR per 90 days (per DEC-1228)
+  - deny request without CFO+CLO sign-off (per DEC-1230)
 
 effort_hours: 5
 subtasks:

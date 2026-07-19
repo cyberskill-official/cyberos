@@ -1,8 +1,10 @@
 ---
 id: TASK-MEMORY-111
 title: "memory pre-ingest PII detection — Presidio EN + custom VN recognisers; ≥ 99.5% held-back recall on labelled fixture; auto-redact at capture boundary"
-eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
-ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+eu_ai_act_risk_class: not_ai
+# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
 created_at: 2026-05-16T00:00:00+07:00
@@ -40,22 +42,27 @@ new_files:
   - services/memory-capture/src/pii/presidio_bridge.rs
   - services/memory-capture/src/pii/vn_recognisers.rs
   - services/memory-capture/src/pii/ruleset.rs
-  - services/memory-capture/install/presidio/Cargo-deps.toml.sub        # NER deps subset
+  # NER deps subset
+  - services/memory-capture/install/presidio/Cargo-deps.toml.sub
   - services/memory-capture/install/presidio/requirements.txt
   - services/memory/tests/ingest_test.rs
   - services/memory-capture/tests/fixtures/pii-corpus.jsonl
   - services/memory-capture/tests/fixtures/pii-corpus-vn.jsonl
 modified_files:
-  - services/memory-capture/src/emit.rs                  # call pii::scan_and_redact before memory write
-  - services/memory-claude-hook/src/redact.rs            # re-export ruleset from pii::ruleset
-  - services/ai-gateway/src/pii.rs                      # TASK-AI-011/012 share ruleset.rs
+  # call pii::scan_and_redact before memory write
+  - services/memory-capture/src/emit.rs
+  # re-export ruleset from pii::ruleset
+  - services/memory-claude-hook/src/redact.rs
+  # TASK-AI-011/012 share ruleset.rs
+  - services/ai-gateway/src/pii.rs
 allowed_tools:
   - file_read: services/memory-capture/**, services/ai-gateway/**, services/memory-claude-hook/**
   - file_write: services/memory-capture/{src,tests,install}/**
   - bash: cd services/memory-capture && cargo test pii
   - bash: cd services/memory-capture && python3 -m pytest install/presidio/test_bridge.py
 disallowed_tools:
-  - emit memories whose body contains unredacted PII matching ruleset (per §1 #1 — fail closed)
+  #1 — fail closed)
+  - emit memories whose body contains unredacted PII matching ruleset (per §1
   - skip pre-ingest scan on any capture path (per DEC-170)
   - diverge from TASK-AI-012's canonical ruleset (per DEC-171)
 
