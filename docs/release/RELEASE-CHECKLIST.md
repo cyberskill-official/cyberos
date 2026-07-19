@@ -73,8 +73,7 @@ install exercises them.
 |---|---|---|---|---|
 | D1 | IMP-15.6 CHANGELOG 1.0.0 release section final | operator | open | `CHANGELOG.md` head carries `## [1.0.0]` (currently dated 2026-07-14) but predates improvement batches 1-2; extend it to cover TASK-IMP-082..087 before the tag - satisfied when the section names the batch tasks |
 | D2 | GUIDE pass | operator | open | read `dist/cyberos/GUIDE.md` end-to-end for 1.0.0 truth (source `tools/install/docs/index.md`, ships via `build.sh` line 195); after any edit, the machine half is the A6 trio |
-| D3 | IMP-15.7 fresh-clone consumer test | agent | open | `git clone sachviet && npm ci && npm run coverage` - the reference consumer repo (`~/Projects/CyberSkill/sachviet`); gates GREEN (batch-1 baseline: 22/22 tests, 100 percent coverage on touched files) |
-
+| D3 | IMP-15.7 fresh-clone consumer test | agent | checked | 2026-07-19: fresh clone of sachviet at branch `batch/1-web-workspace` (HEAD a6cb4d9) per recorded decision D3 (main does not yet carry the workspace). `npm ci` rc=0 (150 packages), `npm run coverage` rc=0 -> 4 test files, **22/22 tests passed**, coverage 100% stmts/branch/funcs/lines - matches the batch-1 baseline exactly. NOTE: a first attempt failed with `vitest: command not found` purely because the runner shell had NODE_ENV=production (npm omit=dev), which skips devDependencies; re-run with NODE_ENV unset. Not a repo or payload defect. |
 ## (e) Decided items (operator decisions 2026-07-16, batch-2 PLAN gate)
 
 | # | Line | Owner | State | Evidence / command |
