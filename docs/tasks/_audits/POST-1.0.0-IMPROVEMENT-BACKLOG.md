@@ -108,3 +108,26 @@ per-module boundaries slightly and yields 355 emit-only clauses vs the 335
 originally sized - wider, so nothing in scope was skipped. Clause ids in the
 reports are transcribed from the per-module records; reconcile against the tally
 tables when authoring fix-tasks.
+
+## Findings from the B3 live-plugin run (2026-07-19)
+
+Three items surfaced only because a real backlog was authored and driven end to
+end. None blocks the tag; all are cheap.
+
+- **STATUS-REFERENCE:89 overstates a conditional guarantee.** It reads "Every
+  human verdict or override emits one `memory.status_overridden` aux audit row
+  ... proves a human accepted each task at the two mandatory gates." That holds
+  only when the MCP writer is wired. `docs-tools/memory-append.mjs` is the
+  doc-driven fallback and its `KINDS` list is deliberately closed to four kinds,
+  refusing `status_overridden` with "the MCP writer owns every other kind". In a
+  doc-driven run the override is silently unlogged. Fix the sentence, not the
+  tool - the division of labour is correct.
+- **Nothing tests the KINDS boundary.** No suite asserts the closed list, nor
+  that a refused kind writes nothing. An undefended boundary is how a closed list
+  quietly stops being closed. Same shape as the TRACE-006 findings: the guard
+  exists, the assertion for it does not.
+- **Cone over-declaration serialises a batch.** All four eligible sachviet tasks
+  declared `app/web/tests/i18n-completeness.spec.ts` in `new_files`, so
+  batch-select excluded three on conflict and produced a batch of one from four
+  independent modules. One task should own a shared spec file; the rest should
+  drop it. Worth a task-author lint rule.

@@ -13,7 +13,7 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p1
-status: duplicate
+status: closed
 duplicate_of: TASK-IMP-110
 phase: Wave 3 - widen the envelope
 refs: [Stage, 3]
