@@ -588,6 +588,17 @@ pointer() {
   esac
   AGENT_FILES="$AGENT_FILES $rel"
 }
+# TASK-IMP-121 §1.1: capture whether the two .agents containers exist BEFORE any mkdir -p that could
+# create them. The antigravity pointer below (.agents/rules/cyberos.md, whose dirname mkdir at ~575
+# creates .agents) runs BEFORE the .agents/skills mkdir (~669), and `mkdir -p` is silently ok on an
+# existing dir AND creates every chain level - so a test taken AFTER any mkdir would falsely read an
+# operator's pre-existing dir as installer-created. We mark a parent (below, after the skills block)
+# ONLY when install itself created it, so uninstall reclaims what it made and leaves what predated it.
+# Two independent flags: .agents has a second creator (~669) and needs its own gate, not .agents/skills'.
+_agents_pre=0
+_agents_skills_pre=0
+[ -d "$root/.agents" ]        && _agents_pre=1
+[ -d "$root/.agents/skills" ] && _agents_skills_pre=1
 pointer claude-code   CLAUDE.md                          md      # Claude Code CLI (Command Code also reads CLAUDE.md)
 pointer gemini        GEMINI.md                          md      # Gemini CLI + Antigravity (GEMINI.md wins on conflict)
 pointer cursor        .cursorrules                       plain   # Cursor (legacy rules file)
@@ -686,6 +697,23 @@ if want_agent agents; then
     SKILL_DIRS="$SKILL_DIRS .agents/skills/$_sc"
   done
 fi
+
+# --- TASK-IMP-121 §1.1: parent .cyberos-owned markers on the containers install CREATED ---
+# uninstall.sh reclaimed .agents/skills then .agents on EMPTINESS alone (no ownership test), so an
+# operator's pre-existing empty .agents/skills - and .agents when the antigravity pointer is filtered
+# off - was destroyed on uninstall. Mirror the child copy-fallback marker (~684, TASK-IMP-094) one
+# directory up: mark a container ONLY when install itself created it (decided by the pre-mkdir
+# existence captured above), so uninstall removes only what we made. The marker text names the dir
+# and carries the same adoption sentence the child marker gives, so deleting it re-adopts the dir.
+_mark_parent() {            # $1 = container dir, relative to root
+  printf '%s\n' \
+    "cyberos install marker (TASK-IMP-121) - cyberos install CREATED this directory ($1)." \
+    "uninstall.sh removes this container ONLY while it carries this file AND it is otherwise empty." \
+    "Delete it to adopt the directory as your own; uninstall will then leave it alone." \
+    > "$root/$1/.cyberos-owned"
+}
+if [ "$_agents_skills_pre" = 0 ] && [ -d "$root/.agents/skills" ]; then _mark_parent ".agents/skills"; fi
+if [ "$_agents_pre" = 0 ]        && [ -d "$root/.agents" ];        then _mark_parent ".agents";        fi
 
 # --- MCP server registration (any MCP-capable agent triggers the workflow tool-natively) ---
 # Writes a project .mcp.json (Claude Code, Cursor via .cursor/mcp.json, Windsurf, etc. read it)

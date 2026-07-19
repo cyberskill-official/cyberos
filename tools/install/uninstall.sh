@@ -26,6 +26,49 @@ _removed_list=""
 _note_removed() { _removed_list="${_removed_list}$1
 "; }
 
+# TASK-IMP-121 §1.4/§1.5: strip a managed cyberos block install APPENDED (always at the file's tail)
+# together with the SINGLE '\n' separator byte install writes immediately before the block's '# >>>'
+# marker, restoring the operator's pre-install bytes EXACTLY - including a file with NO trailing
+# newline. The old sed/awk deleted only the marked range, so install's separator survived (.gitignore
+# 20->21) and, for a no-trailing-newline hook, awk's `print` re-terminated the last surviving line
+# (hook 33->34). Byte-level fix: hold each line one step; at the marker, DROP a blank separator line
+# outright but emit a NON-blank last content line WITHOUT a trailing newline (its newline in the file
+# WAS install's separator). Operator blank lines elsewhere are untouched - only the line adjacent to
+# the marker is the separator. bash-3.2 / BSD-awk safe: index() literal match, no case in a
+# command-substitution, no gawk-isms.   $1 = file   $2 = begin-marker substring
+_strip_cyberos_block() {
+  local f="$1" mk="$2" tmp="$1.cyberos.tmp"
+  awk -v mk="$mk" '
+    index($0, mk) > 0 { if (has && pend !~ /^[[:space:]]*$/) printf "%s", pend; inblk=1; has=0; next }
+    inblk { next }
+    { if (has) print pend; pend=$0; has=1 }
+    END { if (has && !inblk) print pend }
+  ' "$f" > "$tmp" && mv "$tmp" "$f"
+}
+
+# TASK-IMP-121 §1.2/§1.3: reclaim a container install CREATES (.agents/skills, then .agents) ONLY when
+# it carries the parent .cyberos-owned marker install writes on creation (§1.1) AND is empty once our
+# content and that marker are gone. Emptiness ALONE is not proof of ownership: an operator's
+# pre-existing empty .agents/skills is theirs and MUST survive (the old unconditional rmdir destroyed
+# it). The marker is removed BEFORE the rmdir and whether or not the rmdir succeeds, so no marker
+# survives on a KEPT .agents (its .agents/rules pointer keeps it non-empty); a dir whose marker the
+# operator deleted to adopt it is kept and reported kept - the adoption promise, one directory up.
+_reclaim_parent() {         # $1 = container dir, relative to root
+  local d="$root/$1"
+  [ -d "$d" ] || return 0
+  if [ -f "$d/.cyberos-owned" ]; then
+    rm -f "$d/.cyberos-owned"                        # §1.3: marker goes FIRST, unconditionally
+    if rmdir "$d" 2>/dev/null; then
+      echo "  removed $1 (installer-created container, now empty)"
+      _note_removed "$1 (installer-created container)"
+    else
+      echo "  kept $1 (installer-created but not empty - your files are inside; marker removed)"
+    fi
+  else
+    echo "  kept $1 (not ours - no cyberos marker; operator dir, left in place)"
+  fi
+}
+
 # Soft update check is irrelevant when removing — skip
 
 if [ ! -d "$CY" ]; then
@@ -74,23 +117,13 @@ if [ -f "$hk" ]; then
     echo "  removed managed pre-commit hook"
     _note_removed "${hk#$root/} (managed pre-commit hook)"
   elif grep -q "cyberos-status-hook" "$hk" 2>/dev/null; then
-    tmp="$hk.cyberos.tmp"
-    # Strip the managed block AND the single blank separator install writes immediately BEFORE our
-    # `# >>> cyberos-status-hook` marker (install.sh appends the block via a heredoc whose first line
-    # is that blank - TASK-IMP-126 §1.3). The old strip deleted only the >>>..<<< range inclusive, so
-    # the separator survived and every install/uninstall cycle on a foreign hook accumulated one blank
-    # line. awk, not sed, because the fix needs one line of look-behind: hold a pending blank and drop
-    # it ONLY when the very next line is our marker - so an operator's own blank line anywhere else in
-    # the hook is never touched (§1.4). The start pattern is the shared `# >>> cyberos-status-hook`
-    # prefix, exactly as the old strip matched, so a v1 leftover (install.sh:856 upgrade shares the
-    # shape) is healed the same as a v2 block.
-    awk '
-      inblk { if ($0 ~ /# <<< cyberos-status-hook <<</) inblk=0; next }
-      /# >>> cyberos-status-hook/ { inblk=1; held=0; next }
-      /^[[:space:]]*$/ { if (held) print sep; sep=$0; held=1; next }
-      { if (held) { print sep; held=0 } print }
-      END { if (held) print sep }
-    ' "$hk" > "$tmp" && mv "$tmp" "$hk"
+    # Strip the managed block AND install's single '\n' separator byte-exact via the shared helper
+    # (TASK-IMP-121 §1.5). IMP-126's inline awk was byte-exact ONLY for a NEWLINE-TERMINATED foreign
+    # hook; for one with no trailing newline it re-terminated the last surviving line (measured
+    # 33->34). The block is always at the tail (install appends via `cat >>`); _strip_cyberos_block
+    # drops the one separator byte without re-terminating the survivor, and heals a v1 leftover the
+    # same way (its '# >>> cyberos-status-hook' prefix matches too - install.sh:856 upgrade shares it).
+    _strip_cyberos_block "$hk" "# >>> cyberos-status-hook"
     chmod +x "$hk"
     echo "  stripped cyberos block from pre-commit"
     _note_removed "${hk#$root/} (our block only - the hook itself is yours and stays)"
@@ -100,10 +133,12 @@ fi
 # 2. managed .gitignore block
 gi="$root/.gitignore"
 if [ -f "$gi" ] && grep -q 'cyberos' "$gi" 2>/dev/null; then
-  tmp="$gi.cyberos.tmp"
-  # strip marked block if present
+  # strip the marked block AND install's leading '\n' separator byte-exact (TASK-IMP-121 §1.4): the
+  # old sed deleted only the >>>..<<< range, leaving the separator install writes above '# >>>'
+  # (measured 20->21 on a newline-terminated .gitignore). Same shared strip the hook uses; the block
+  # is at the tail (install rewrites .gitignore as operator-lines + separator + block).
   if grep -q '>>> cyberos' "$gi" 2>/dev/null; then
-    sed '/# >>> cyberos/,/# <<< cyberos <<</d' "$gi" > "$tmp" && mv "$tmp" "$gi"
+    _strip_cyberos_block "$gi" "# >>> cyberos"
     echo "  removed managed .gitignore block"
     _note_removed ".gitignore (managed block only - your rules stay)"
   fi
@@ -138,8 +173,10 @@ for _sc in ship-tasks task-author task-audit; do
     echo "       remove it by hand if it is a leftover from a pre-marker install)"
   fi
 done
-rmdir "$root/.agents/skills" 2>/dev/null || true
-rmdir "$root/.agents" 2>/dev/null || true
+# TASK-IMP-121 §1.2/§1.3: gate the container reclaim on the parent marker install writes on creation.
+# Empty-but-unmarked means the operator's, and it stays. Skills dir first, so .agents can then empty.
+_reclaim_parent ".agents/skills"
+_reclaim_parent ".agents"
 
 # Then the per-agent native skill entries install writes (install.sh install_skill calls, ~L632-641):
 # claude-code gets ship-tasks + the /create-tasks pair (task-author, task-audit); grok, command-code,
@@ -162,7 +199,10 @@ for _fs in ".claude/skills:ship-tasks" ".claude/skills:task-author" ".claude/ski
     rm -rf "$_p"; echo "  removed $_sd/$_sk (installer skill copy)"
     _note_removed "$_sd/$_sk (installer skill copy)"
   fi
-  rmdir "$root/$_sd" 2>/dev/null || true
+  # TASK-IMP-121 §1.6: do NOT rmdir the native channel parent ($_sd). IMP-126 added this rmdir; it
+  # destroyed an operator's pre-existing empty .claude/skills (and the four other native parents)
+  # once our link was cleared - the same blind-emptiness data-loss as the old .agents pair. The
+  # managed link removal above STAYS (no IMP-126 regression); the emptied parent is left in place.
 done
 
 # 2c. MCP registration files (TASK-IMP-126 §1.1). install.sh writes .mcp.json (always) and, when
