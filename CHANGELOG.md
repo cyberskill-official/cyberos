@@ -38,6 +38,39 @@ Changed
   AGENTS.md are replaced with the thin pointer; status-page freshness is proven by re-render +
   byte-compare. tools/install/{fleet-install-test,audit-fleet}.sh roll and PROVE the fleet.
 
+Hardening - pre-1.0.0 improvement batches (2026-07-16 .. 2026-07-19)
+- Determinism and provenance: the status stamp is a byte-stable corpus fingerprint instead of a
+  commit sha that chased HEAD forever (TASK-IMP-082); regen_backlog emits every status and
+  recomputes Totals from frontmatter truth, halting before any write on unparseable frontmatter
+  (TASK-IMP-091); backlog headers retally from rows so no wrong baseline can propagate, and
+  acceptance claims are measured on committed objects (TASK-IMP-092, TASK-IMP-116).
+- Install and uninstall correctness: the status hook lands where core.hooksPath points
+  (TASK-IMP-083); shared skills dir plus Devin/Windsurf pointers (TASK-IMP-094); gates.env no
+  longer silently clobbered (TASK-IMP-095); non-git installs say so (TASK-IMP-096); an install
+  concurrency lock with tri-state liveness and an owner-byte stamp (TASK-IMP-103); a version
+  guard so an old payload cannot silently downgrade a repo (TASK-IMP-104); and uninstall now
+  leaves the repo as it was found - MCP registration, dangling skill links, byte-exact hook and
+  gitignore strips, marker-gated container removal (TASK-IMP-126, TASK-IMP-121).
+- Audit and gate rigour: task-lint as a deterministic machine floor under the task-audit rubric
+  (TASK-IMP-084); per-task coverage scoping (TASK-IMP-098); audits bind the normative half of a
+  spec rather than fields the workflow itself rewrites (TASK-IMP-102); and TRACE-006 requires a
+  cited test's assertion to be at least as strong as its clause's verb (TASK-IMP-118).
+- Workflow doctrine: doc-driven ship-manifest and backlog-mutate helpers, dogfooded on their own
+  batch (TASK-IMP-085); task-reconcile, a read-only evidence ladder for work that is already
+  implemented but unaudited (TASK-IMP-100), wired into ship-tasks as a conditional third human
+  gate (TASK-IMP-101); optional draft_reason and entered_via, spec-rejected route-back to draft,
+  and a route-back ceiling that halts at an operator gate (TASK-IMP-108).
+- Authoring and templates: consumer installs scaffold task_template: task@1 (TASK-IMP-088); the
+  task@1 template drops its duplicate out-of-scope section (TASK-IMP-089); author manifests
+  default to untracked session state (TASK-IMP-090); backlog index rows 068-081 backfilled to
+  frontmatter truth (TASK-IMP-086).
+- Release and reporting: the 1.0.0 release-readiness checklist itself (TASK-IMP-087) and batch
+  economics on the status page, measured and not enforced (TASK-IMP-114).
+- Test-suite portability: the repo suite now runs on macOS (bash 3.2 + BSD userland) as well as
+  Linux. Five harness defects were fixed - an unparseable heredoc, GNU-only sed -i in two suites
+  (one of which was a gate that could not fail), a bash-4-only BASHPID, and a logical-vs-physical
+  temp path. No shipped payload code was affected.
+
 ## [0.4.0] - 2026-07-12
 
 Added

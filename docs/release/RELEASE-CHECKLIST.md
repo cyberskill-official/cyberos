@@ -29,7 +29,7 @@ say what evidence satisfies them. No credentials belong in this file.
 
 | # | Line | Owner | State | Evidence / command |
 |---|---|---|---|---|
-| A1 | IMP-15.1 rollup: every S1 handoff item landed or explicitly waived (waiver reason on its own row) - rows A2-A5 plus E1 | operator | open | flips when A5 and E1 leave `open`; waiver verdicts are human and land per-row |
+| A1 | IMP-15.1 rollup: every S1 handoff item landed or explicitly waived (waiver reason on its own row) - rows A2-A5 plus E1 | operator | checked | 2026-07-19: operator confirmed. Precondition met - A2-A5 and E1 all checked with evidence, and all 14 agent-owned rows are now checked. No S1 handoff item outstanding; no waiver rows required. |
 | A2 | IMP-01 status-page stamp byte-stable (fp- corpus content fingerprint) | agent | checked | landed as TASK-IMP-082 in `27292774..ca9ae490`; suite `scripts/tests/test_render_stamp.sh` 6/6 |
 | A3 | IMP-02 hooksPath-aware status hook install/uninstall (plus two uninstall defects fixed) | agent | checked | landed as TASK-IMP-083 in `27292774..ca9ae490`; suite `tools/install/tests/test_install_hygiene.sh` 13/13 |
 | A4 | IMP-03 task-lint machine floor wired into task-audit | agent | checked | landed as TASK-IMP-084 in `27292774..ca9ae490`; suite `tools/install/tests/test_task_lint.sh` 8/8; first governed use caught a TRACE-001 in batch-2 authoring (`e9cfb97a`) |
