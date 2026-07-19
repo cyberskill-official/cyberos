@@ -4,7 +4,7 @@ title: Uninstall must leave the repo as it found it
 template: task@1
 type: improvement
 module: improvement
-status: implementing
+status: ready_to_review
 priority: p1
 author: "@stephencheng"
 department: engineering
