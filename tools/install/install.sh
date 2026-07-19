@@ -857,9 +857,18 @@ set -euo pipefail
 # Read staged list ONCE — never `git diff | grep -q` under pipefail (SIGPIPE skip bug).
 staged="$(git diff --cached --name-only || true)"
 if grep -Eq '^(docs/tasks/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
+  # An ORPHANED hook stands down; it does not veto the commit. .git/hooks/ is untracked
+  # and machine-local, so this file outlives .cyberos/ by construction - deleting the
+  # machine without running uninstall (or cloning a repo whose .cyberos/ is ignored)
+  # leaves the hook behind with nothing to call. It guards a RENDERED STATUS PAGE, a
+  # cosmetic concern, so exiting 1 here blocked every commit touching VERSION,
+  # CHANGELOG.md or docs/tasks/ for no correctness gain. Fail-closed is for gates that
+  # guard correctness; this is not one. uninstall.sh removes this hook on the tidy path
+  # (:93-128) - this branch covers the untidy one, which is the common one.
   if [ ! -f .cyberos/lib/status-page.sh ] || [ ! -f .cyberos/lib/task-migrate.sh ]; then
-    echo "cyberos: ERROR .cyberos/lib/status-page.sh required (run cyberos install)" >&2
-    exit 1
+    echo "cyberos: hook is orphaned (.cyberos/ missing) - skipping status regen." >&2
+    echo "cyberos: restore with 'cyberos install', or delete .git/hooks/pre-commit." >&2
+    exit 0
   fi
   if ! command -v node >/dev/null 2>&1; then
     echo "cyberos: ERROR node required to regenerate docs/status" >&2
