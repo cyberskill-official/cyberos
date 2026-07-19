@@ -18,8 +18,13 @@ Every operation has two equal paths:
 | `bash version.sh [repo]` | `/version` | Check for a newer CyberOS; if stale, ask → runs `install` on **y** |
 | `bash status.sh [repo]` | `/status` | Open `docs/status/index.html` in the default browser |
 | `bash help.sh` | `/help` | Print the CLI surface |
+| `bash create.sh [dir]` | — | Scaffold a **new** repo with CyberOS already installed |
+| `bash .cyberos/cuo/gates/run-gates.sh [repo]` | — | Run the machine gates for an installed repo |
+| `node mcp/cyberos-mcp.mjs` | — | Launch the stdio **MCP server** (agents register it; see `mcp/README.md`) |
 
 Also: `/ship-tasks`, `/create-tasks` for the task workflow.
+
+Via the npm package the same eight commands are `npx cyberos <command>`: `install`, `uninstall`, `version`, `status`, `create`, `gates`, `mcp`, `help`. `create`, `gates` and `mcp` have no slash command - they are CLI-only. The Claude plugin additionally ships `/plan`, `/create-tasks` and `/improve` for the task workflow.
 
 **Day-to-day rule:** install once, then forget. Soft update-check runs automatically whenever anything under `.cyberos/` is used (gates, hooks, MCP, help, version, status). Manual check is only `/version`. Re-vendor is always `install` — there is no separate “apply” command.
 
