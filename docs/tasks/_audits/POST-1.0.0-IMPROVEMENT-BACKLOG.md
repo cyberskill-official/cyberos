@@ -131,3 +131,27 @@ end. None blocks the tag; all are cheap.
   batch-select excluded three on conflict and produced a batch of one from four
   independent modules. One task should own a shared spec file; the rest should
   drop it. Worth a task-author lint rule.
+
+## Bin-name collision: two CLIs both called `cyberos` (2026-07-19)
+
+Found while verifying that a global `cyberos` command reaches the installer from
+any directory. On this machine it does not.
+
+`command -v cyberos` resolves to `~/.pyenv/shims/cyberos`, which is the BRAIN
+memory CLI - `modules/memory/cyberos/__main__.py`, installed into pyenv 3.12.13.
+Its verbs are `init view put move delete verify export audit search ... dream
+episode recall-similar`. It has no `install`, `version` or `status`, so
+`cyberos version` fails with `invalid choice: 'version'` - an error raised by a
+DIFFERENT tool in the same product, which reads as the installer being broken.
+
+The installer CLI is fine when reached directly: `node
+dist/cyberos/cli/bin/cli.mjs version` returns installed=1.0.0 payload=1.0.0 with
+matching rules_sha. The documented path (`npx cyberos <command>`) bypasses PATH,
+so documented usage is unaffected.
+
+Not a 1.0.0 blocker - it only bites when the Python package is installed, and the
+documented invocation works either way. But 1.0.0 is the moment both names become
+public, so the naming decision is cheaper now than after. Options: rename one bin;
+or teach the Python parser to recognise the installer verbs and point at
+`npx cyberos`, so the error names the real problem instead of listing memory
+subcommands.
