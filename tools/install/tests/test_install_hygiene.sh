@@ -483,7 +483,11 @@ t20_uninstall_summary_names_kept() {
     || { fail t20_uninstall_summary_names_kept "verbatim removal command absent or drifted"; all=0; }
   # ...and it must be presented as something to run from the repo root, or it is a command
   # whose meaning depends on a cwd the operator was never told.
-  grep -qF "run this from $d" <<<"$out" \
+  # uninstall.sh resolves the root via `git rev-parse --show-toplevel`, which returns the
+  # PHYSICAL path; on macOS /var is a symlink to /private/var so the logical $d from mktemp
+  # never matches. Canonicalize our side (a no-op on Linux, where logical == physical).
+  local dphys; dphys="$(cd "$d" && pwd -P)"
+  grep -qF "run this from $dphys" <<<"$out" \
     || { fail t20_uninstall_summary_names_kept "removal command does not name the directory to run it from"; all=0; }
   # §1.5 guard rail at the cheapest possible price: the four are still on disk afterwards.
   { [ -f "$d/docs/tasks/TASK-X-001.md" ] && [ -f "$d/docs/status/index.html" ] \

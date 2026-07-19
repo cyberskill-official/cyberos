@@ -54,7 +54,7 @@ t02_totals_true() {
   want="$(python3 - "$d/docs/tasks" <<'TALLY'
 import sys, yaml
 from pathlib import Path
-# Independent tally: the assert must not inherit the script's own reader. Boundary rule is
+# Independent tally: the assert must not inherit the reader used by the script under test. Boundary rule is
 # the corpus convention - first line '---', block ends at the next line that is exactly
 # '---' (a body line containing '---' is not a fence).
 ORDER = ["draft","ready_to_implement","implementing","ready_to_review","reviewing",

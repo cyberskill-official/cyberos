@@ -147,7 +147,7 @@ t02_verify_and_tamper() {
     || { fail t02 "boot-skew lease append rc=$rc err=$(cat "$TMP/err")"; return; }
   # orphan lease (same host, holder pid dead, expiry still valid) -> reaped via the
   # kill(pid,0) liveness probe, append proceeds.
-  dead_pid="$(bash -c 'echo $BASHPID')"   # that shell has exited; its pid is free/dead
+  dead_pid="$(bash -c 'echo $$')"   # that shell has exited; its pid is free/dead. NOT $BASHPID: bash 3.2 (macOS) has no such variable, so it expanded empty and the lease fixture was never written.
   node -e "const now=process.hrtime.bigint(); const os=require('os'); process.stdout.write(JSON.stringify({pid:${dead_pid},host:os.hostname(),monotonic_ns:Number(now),expiry_ns:Number(now+8000000000n),version:1}))" > "$s/.lock"
   ma append "$s" workflow_complete "$d/p3.json"; rc=$?
   { [ "$rc" -eq 0 ] && grep -q "holder pid is gone" "$TMP/err"; } \

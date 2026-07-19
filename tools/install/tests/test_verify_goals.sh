@@ -62,7 +62,7 @@ t02_broken_test_violates(){
 # --- AC 3 (#1.5): a passing goal refreshes last_pass and stays satisfied
 t03_passing_refreshes(){
   local d="$TMP/t03"; mk "$d"; goal "$d" g satisfied tests/pass.sh
-  sed -i 's/^last_pass:.*/last_pass: 2020-01-01/' "$d/docs/goals/g.md"
+  sed -i.bak 's/^last_pass:.*/last_pass: 2020-01-01/' "$d/docs/goals/g.md" && rm -f "$d/docs/goals/g.md.bak"
   node "$VG" --repo "$d" >/dev/null 2>&1 || { no t03_passing_refreshes "passing goal exited non-zero"; return; }
   grep -q "^status: satisfied" "$d/docs/goals/g.md" || { no t03_passing_refreshes "status not satisfied"; return; }
   grep -q "^last_pass: 2020-01-01" "$d/docs/goals/g.md" && { no t03_passing_refreshes "last_pass not refreshed"; return; }
@@ -168,7 +168,7 @@ t12_retired_goal_is_not_missing(){
   local d="$TMP/t12"; mk "$d"; goal "$d" g retired tests/pass.sh
   mkdir -p "$d/docs/tasks/x/TASK-XX-001"
   printf -- "---\nid: TASK-XX-001\nstatus: done\n---\n# a\n" > "$d/docs/tasks/x/TASK-XX-001/spec.md"
-  sed -i 's/^source: .*/source: TASK-XX-001/' "$d/docs/goals/g.md"
+  sed -i.bak 's/^source: .*/source: TASK-XX-001/' "$d/docs/goals/g.md" && rm -f "$d/docs/goals/g.md.bak"
   local out; out="$(node "$VG" --repo "$d" 2>&1)"
   grep -q "0 have NO goal" <<<"$out" || { no t12_retired_goal_is_not_missing "a quarantined goal counted as missing: $out"; return; }
   grep -q "QUARANTINED" <<<"$out" || { no t12_retired_goal_is_not_missing "quarantine not named: $out"; return; }
