@@ -48,21 +48,20 @@ say what evidence satisfies them. No credentials belong in this file.
 
 | # | Line | Owner | State | Evidence / command |
 |---|---|---|---|---|
-| C1 | IMP-15.4 re-verify the channel matrix below against current tool conventions BEFORE the tag - the matrix is research dated 2026-07-16 and conventions moved twice in H1 2026; do not trust it at tag time without a fresh pass | operator | open | a fresh research pass recorded in this cell with its date and any changed rows; current sources: IMPROVEMENT_HANDOFF.md §5 (docs.windsurf.com, thepromptshelf.dev, opencode.ai/docs/skills, developers.openai.com/codex/skills, codex.danielvaughan.com) |
-
-Channel matrix (agent surface per tool, researched 2026-07-16):
+| C1 | IMP-15.4 re-verify the channel matrix below against current tool conventions BEFORE the tag - the matrix is research dated 2026-07-16 and conventions moved twice in H1 2026; do not trust it at tag time without a fresh pass | operator | checked | 2026-07-19 fresh research pass (row demanded one; prior research was 2026-07-16, only 3 days old, so this is largely confirmatory). Verified against docs.devin.ai, cursor.com/docs, agents.md, developers.openai.com/codex/skills, codex.danielvaughan.com and secondary 2026 guides. CHANGED ROWS: (1) Cursor - `.cursorrules` is legacy and silently ignored in Cursor Agent mode; `.cursor/rules/*.mdc` is the live channel (we ship both, so we are covered, but the shim must not be relied on). (2) `.agents/skills/` - promoted from `candidate` to shipped; Agent Skills is now a ratified open standard under the Linux Foundation AAIF. (3) Devin Desktop - promoted from `candidate` to shipped; rebrand confirmed 2026-06-02 and the row's precedence/fallback description is exactly correct. CONFIRMED UNCHANGED: AGENTS.md (now LF/AAIF-stewarded, 28+ tools), CLAUDE.md, GEMINI.md, `.github/copilot-instructions.md`, `.grok/GROK.md`. NOT INDEPENDENTLY VERIFIED this pass: the `.agents/rules/cyberos.md` open-rules-dir row - I found no authoritative source for `.agents/rules/` as a convention distinct from `.agents/skills/`. It is harmless (create-if-absent) but should not be claimed as a standard until someone confirms it. |
+Channel matrix (agent surface per tool, researched 2026-07-16; RE-VERIFIED 2026-07-19 per C1):
 
 | Agent / tool | Surface file(s) | Status |
 |---|---|---|
-| Cross-agent spine | `AGENTS.md` (thin pointer to `.cyberos/AGENT-ENTRY.md`) | shipped |
+| Cross-agent spine | `AGENTS.md` (thin pointer to `.cyberos/AGENT-ENTRY.md`) | shipped - CONFIRMED 2026-07-19: AGENTS.md is stewarded by the Linux Foundation Agentic AI Foundation, ships in 28+ tools and 60k+ repos, and is now read natively by Claude Code too (CLAUDE.md remains its richer format). The spine choice is stronger than when researched |
 | Claude Code / Cowork | `CLAUDE.md` | shipped |
 | Gemini CLI | `GEMINI.md` | shipped |
-| Cursor | `.cursorrules` + `.cursor/rules/cyberos.mdc` | shipped |
+| Cursor | `.cursorrules` + `.cursor/rules/cyberos.mdc` | shipped - CHANGED 2026-07-19: `.cursorrules` is legacy and is SILENTLY IGNORED in Cursor Agent mode; `.cursor/rules/*.mdc` is the live channel. We ship both, so agentic use is covered - treat `.cursorrules` as a back-compat shim only, not a channel to rely on |
 | Grok CLI | `.grok/GROK.md` | shipped |
 | GitHub Copilot | `.github/copilot-instructions.md` | shipped |
 | Open rules dir | `.agents/rules/cyberos.md` | shipped |
-| Shared skills dir - Agent Skills open standard (read by Codex, Copilot, Cursor, Gemini CLI, OpenCode) | `.agents/skills/` | candidate - line E3 |
-| Devin Desktop (Windsurf rebrand, June 2026) | `.devin/rules/` preferred, `.windsurf/rules/` fallback; legacy `.windsurfrules` still read, kept | candidate - line E3 |
+| Shared skills dir - Agent Skills open standard (read by Codex, Copilot, Cursor, Gemini CLI, OpenCode) | `.agents/skills/` | shipped (E3 checked, TASK-IMP-094) - CHANGED 2026-07-19: Agent Skills is now a ratified open standard governed by the Linux Foundation Agentic AI Foundation; Codex scans `.agents/skills` from cwd up to repo root; portable across 30+ agent platforms |
+| Devin Desktop (Windsurf rebrand, June 2026) | `.devin/rules/` preferred, `.windsurf/rules/` fallback; legacy `.windsurfrules` still read, kept | shipped (E3 checked, TASK-IMP-094) - CONFIRMED 2026-07-19: rebrand landed 2026-06-02; `.devin/rules/` takes precedence, `.windsurf/rules/` remains a fallback, `.windsurfrules` is still read and there is no `.devinrules` single-file equivalent. Row is exactly right |
 
 MCP registrations (`.mcp.json`, `.cursor/mcp.json`) ride the same install step; B2's scratch
 install exercises them.
