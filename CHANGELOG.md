@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.0.5] - 2026-07-20
+
+Fixed
+- let users choose which Google account to sign in with
+
 ## [1.0.4] - 2026-07-20
 
 Fixed
