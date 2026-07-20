@@ -55,12 +55,6 @@ export function Login() {
           </button>
           <div className="err">{gerr}</div>
 
-          {!showPw && (
-            <button className="linkish" type="button" onClick={() => setShowPw(true)}>
-              {t("login.adminSignIn")}
-            </button>
-          )}
-
           {showPw && (
             <form onSubmit={onPassword}>
               <div className="field">
@@ -87,9 +81,20 @@ export function Login() {
             </form>
           )}
 
-          <button className="linkish" type="button" onClick={() => setLang(currentLang() === "vi" ? "en" : "vi")}>
-            {t("top.language")}
-          </button>
+          {/* Both links share one flex row. They used to be two bare inline-block
+              buttons rendered back to back: JSX strips the newline between sibling
+              elements, so they butted together and read as "Admin sign-inTiengViet"
+              on the first screen a store reviewer sees. */}
+          <div className="link-row">
+            {!showPw && (
+              <button className="linkish" type="button" onClick={() => setShowPw(true)}>
+                {t("login.adminSignIn")}
+              </button>
+            )}
+            <button className="linkish" type="button" onClick={() => setLang(currentLang() === "vi" ? "en" : "vi")}>
+              {t("top.language")}
+            </button>
+          </div>
         </div>
       </div>
     </div>

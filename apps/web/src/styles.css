@@ -173,6 +173,10 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .btn-google .g { font-weight: 800; color: #4285f4; font-size: 16px; }
 .linkish { display: inline-block; margin-top: 14px; font-size: 12px; color: var(--muted); text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; }
 .linkish:hover { color: var(--accent-text); }
+/* Sign-in card footer links. Without the gap the two .linkish buttons render
+   flush against each other ("Admin sign-in" + the language toggle). */
+.link-row { display: flex; justify-content: center; align-items: center; gap: 18px; flex-wrap: wrap; }
+.link-row .linkish { margin-top: 14px; }
 
 /* ---- dashboard ---- */
 .dash { flex: 1; padding: 30px 36px; overflow: auto; }
