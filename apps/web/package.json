@@ -1,7 +1,7 @@
 {
   "name": "cyberos-web",
   "private": true,
-  "version": "1.0.6",
+  "version": "1.0.7",
   "type": "module",
   "description": "CyberOS operator console - Vite + React + TS SPA (login, dashboard, chat) served same-origin behind Caddy.",
   "scripts": {
