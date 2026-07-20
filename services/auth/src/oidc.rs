@@ -219,9 +219,17 @@ pub async fn initiate(
     // Compose the authorization URL.
     let redirect_uri = q.redirect.unwrap_or(registered_redirect);
     let scope_str = scopes.join(" ");
+    // prompt=select_account is not optional in practice. Without it the IdP silently reuses whichever
+    // account is already signed in on the device and never asks, so there is no way to sign in as anyone
+    // else and no way to correct a wrong choice from inside the app - the only escape is signing out of
+    // Google system-wide. That makes shared and multi-account devices unusable, and it makes the app
+    // untestable with a dedicated review account, because the reviewer lands in whatever account their
+    // device happens to hold.
+    // The cost is one extra tap for single-account users. That is the right side of the trade.
     let url = format!(
         "{authz}?response_type=code&client_id={cid}&redirect_uri={ru}\
-&scope={scope}&state={state}&code_challenge={ch}&code_challenge_method=S256",
+&scope={scope}&state={state}&code_challenge={ch}&code_challenge_method=S256\
+&prompt=select_account",
         authz = discovery.authorization_endpoint,
         cid = urlencode(&client_id),
         ru = urlencode(&redirect_uri),
@@ -331,9 +339,12 @@ pub(crate) async fn begin_idp_flow(
     tx.commit().await.map_err(internal)?;
 
     let scope_str = scopes.join(" ");
+    // prompt=select_account for the same reason as the branch above - keep the two in step, or which
+    // account you land in silently depends on which code path built the URL.
     let url = format!(
         "{authz}?response_type=code&client_id={cid}&redirect_uri={ru}\
-&scope={scope}&state={state}&code_challenge={ch}&code_challenge_method=S256",
+&scope={scope}&state={state}&code_challenge={ch}&code_challenge_method=S256\
+&prompt=select_account",
         authz = discovery.authorization_endpoint,
         cid = urlencode(&client_id),
         ru = urlencode(&registered_redirect),
