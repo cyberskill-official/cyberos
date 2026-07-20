@@ -60,6 +60,9 @@ jobs:
       - name: Produce deterministic release assets
         run: bash tools/install/release-assets.sh "$RUNNER_TEMP/payload" "$RUNNER_TEMP/assets"
       - name: Render release notes (asset guide + CHANGELOG section)
+        # GH_TOKEN: the renderer asks gh whether a previous PUBLISHED release exists (first-release
+        # detection). Without the token it fails open to the old splice-the-section behaviour.
+        env: { GH_TOKEN: "${{ github.token }}" }
         run: |
           ver="${TAG#v}"
           bash tools/install/render-release-notes.sh "$ver" "$RUNNER_TEMP/RELEASE_NOTES.md"

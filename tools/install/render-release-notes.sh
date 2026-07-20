@@ -16,16 +16,37 @@ cl="$repo/CHANGELOG.md"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
-# Extract ## [ver] section body (until next ## [ or EOF)
-awk -v v="$ver" '
-  BEGIN { p=0 }
-  $0 ~ "^## \\[" v "\\]" { p=1; next }
-  p && /^## \[/ { exit }
-  p { print }
-' "$cl" > "$tmp/section.md"
+# FIRST RELEASE: the changelog block on a release page means "what changed since the
+# previous release". When no previous PUBLISHED release exists, there is nothing to diff
+# against and splicing the version's CHANGELOG section renders the whole pre-release
+# history as if it were a delta — misleading on the very first release page. Detection is
+# against published releases (gh), not git tags: pre-1.0 tags exist here (v0.1.0..v0.4.0)
+# that never had a release, and "previous release" is what a release page reader means.
+# Fail-open: when gh is absent or unauthenticated (local render, forks), keep the old
+# behaviour and splice the section — wrong only in the rare first-release case, and never
+# silently hides a changelog on release N>1.
+is_first_release=0
+if command -v gh >/dev/null 2>&1; then
+  if rel_tags="$(gh release list --limit 100 --json tagName --jq '.[].tagName' 2>/dev/null)"; then
+    prev="$(printf '%s\n' "$rel_tags" | grep -vx "v$ver" | grep -v '^[[:space:]]*$' | head -1 || true)"
+    [ -z "$prev" ] && is_first_release=1
+  fi
+fi
 
-if [ ! -s "$tmp/section.md" ] || [ -z "$(tr -d '[:space:]' < "$tmp/section.md")" ]; then
-  printf '%s\n' "_(No CHANGELOG.md section for $ver — add ## [$ver] - YYYY-MM-DD before releasing.)_" > "$tmp/section.md"
+if [ "$is_first_release" = 1 ]; then
+  printf '%s\n' "_First release — no previous release to compare against. The full road to $ver is recorded in the CHANGELOG below._" > "$tmp/section.md"
+else
+  # Extract ## [ver] section body (until next ## [ or EOF)
+  awk -v v="$ver" '
+    BEGIN { p=0 }
+    $0 ~ "^## \\[" v "\\]" { p=1; next }
+    p && /^## \[/ { exit }
+    p { print }
+  ' "$cl" > "$tmp/section.md"
+
+  if [ ! -s "$tmp/section.md" ] || [ -z "$(tr -d '[:space:]' < "$tmp/section.md")" ]; then
+    printf '%s\n' "_(No CHANGELOG.md section for $ver — add ## [$ver] - YYYY-MM-DD before releasing.)_" > "$tmp/section.md"
+  fi
 fi
 
 # Substitute version tokens, then splice changelog section at the marker
