@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.0.4] - 2026-07-20
+
+Fixed
+- make Google sign-in work in the native shells
+
 ## [1.0.3] - 2026-07-20
 
 Fixed

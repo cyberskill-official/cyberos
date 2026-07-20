@@ -1,6 +1,6 @@
 {
   "name": "cyberos-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Zero-dependency stdio MCP server exposing the CyberOS ship-tasks workflow (task_install, task_gates, task_status, ship_task) to any MCP-capable agent.",
   "type": "module",
   "bin": {
