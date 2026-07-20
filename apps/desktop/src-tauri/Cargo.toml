@@ -1,6 +1,6 @@
 [package]
 name = "cyberos-desktop"
-version = "1.0.2"
+version = "1.0.3"
 description = "CyberOS desktop - trigger CyberOS workflows and skills from your Mac"
 authors = ["CyberSkill <info@cyberskill.world>"]
 edition = "2021"

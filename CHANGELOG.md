@@ -2,6 +2,13 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.0.3] - 2026-07-20
+
+Fixed
+- rebuild the served bundle inside the version bump
+- guard the android and ios jobs on tag == VERSION
+- correct mobile layout on notched viewports
+
 ## [1.0.2] - 2026-07-20
 
 Maintenance release.
