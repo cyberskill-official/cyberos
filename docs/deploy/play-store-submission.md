@@ -4,13 +4,31 @@ Everything the Play Console asks for, answered, so the console work is copy-past
 
 The CI side is already done: `ANDROID_RELEASE=true`, the keystore secrets are set, and the android job builds and signs the `.aab` on every `v*` tag. What is left is Play's own paperwork, plus one manual upload that the API is not permitted to do for you (see the bottom of this file).
 
-## Before you start: the two real blockers
+## Before you start: the two former blockers — both RESOLVED (verified 2026-07-20)
 
-1. **The privacy and deletion pages must be deployed.** They are at `landing-page/app/[lang]/cyberos/{privacy,delete-account}`. Play fetches both URLs and will reject a 404. Ship the landing page first, then confirm:
+Both items below blocked submission when this runbook was written. Both are now closed. Re-verify
+rather than trust this note if significant time has passed.
+
+1. **Privacy and deletion pages — LIVE.** Both return HTTP 200 as of 2026-07-20:
 - <https://cyberskill.world/en/cyberos/privacy>
 - <https://cyberskill.world/en/cyberos/delete-account>
 
-2. **CyberOS has user-generated content**, because it has chat. You must declare user-to-user communication truthfully in the content rating questionnaire, and doing so puts the app under Play's UGC policy: an in-app way to **report** objectionable content, an in-app way to **block** another user, and a published content policy. CyberOS has none of these today. The workspace is invite-only and org-scoped, which makes the moderation load light, but the mechanisms still have to exist. Raise this as a task against the chat module before you submit. Declaring UGC without the controls gets you rejected; not declaring it gets you pulled later, which is worse.
+2. **UGC controls — SHIPPED.** CyberOS has user-generated content because it has chat, so declaring
+user-to-user communication truthfully in the content rating questionnaire puts the app under Play's
+UGC policy: an in-app **report**, an in-app **block**, and a published content policy. All three now
+exist — this runbook previously said "CyberOS has none of these today", which is out of date:
+
+| Requirement | Implementation | Verified |
+| --- | --- | --- |
+| Report objectionable content | `apps/web/src/components/ReportDialog.tsx`, wired into `pages/Chat.tsx` and `components/ChannelSettings.tsx` | 2026-07-20 |
+| Block another user | Block/unblock in `components/ChannelSettings.tsx` + `components/BlockedMessage.tsx` (TASK-CHAT-268) | 2026-07-20 |
+| Published content policy | <https://cyberskill.world/en/cyberos/content-policy> (en + vi, both HTTP 200), linked from the report dialog and `pages/Moderation.tsx` | 2026-07-20 |
+
+**Open question, not a blocker: the age declaration disagrees across stores.** Play declares
+*18 and over* (App content → Target audience and content, confirmed in console). App Store Connect
+declares *4+* across 172 countries. Same app, contradictory answers. Reconcile before either store
+review looks closely — a chat app carrying UGC rated 4+ is the kind of thing Apple queries under
+guideline 1.2.
 
 ## Set up your app
 

@@ -1,5 +1,28 @@
 # CyberOS 1.0.0 go-live checklist
 
+> **Status as of 2026-07-20 — read this before trusting anything below.**
+>
+> The body of this document describes the **2026-07-14** state, when `v1.0.0` pointed at commit
+> `ba22529` (release run #66). That is no longer the shipped release. The tag was re-cut twice more;
+> `v1.0.0` now points at **`0504681`** (release run #80, all 9 jobs green, 2026-07-20).
+>
+> Verified live on 2026-07-20, superseding the per-section claims below:
+>
+> | Channel | Verified state |
+> | --- | --- |
+> | Web | Live. `deploy` run #163 green on the tag commit |
+> | Desktop updater | **Was broken, now fixed.** The shipped `latest.json` listed Windows only — tauri-action writes one manifest per matrix leg and the last upload wins. macOS and Linux installs of 1.0.0 could never see an update. Regenerated with all 8 platform keys; `release.yml` now has an `updater-manifest` job that rebuilds once after the matrix and hard-fails on a partial manifest (commit `44893a05`) |
+> | Desktop signing | macOS **signed + notarized + stapled** (run #80 step 9 succeeded). Windows `.exe` and `.msi` are **unsigned** |
+> | npm | `@cyberskill/cyberos@1.0.0` shipped a *different* payload (`rules_sha e339faab`, commit `5f9f8526`) than the release (`8745b0fd`, `0504681`), missing `/plan` and `/improve` entirely. Corrected by publishing **1.0.1** from the release payload; `dist-tag latest` = 1.0.1 |
+> | iOS | Version 1.0 had the **stale Jul 14 build 29733164** attached. Swapped to **29742047** (matches `0504681`), export compliance answered, release set to Manual. Still blocked on real screenshots (0 of 10) and App Review sign-in credentials (empty) |
+> | Play | Internal testing live on 29742047. Three stale `10801 (1.8.1)` drafts cleared from Production, Open testing, and Closed testing. Production release created from 29742047 and **staged in Publishing overview, not yet submitted** — the app has never been through Google review |
+> | §2.1, §3.1, §3.2 | Confirmed still accurate |
+> | §4–§9 | Not re-verified; all remain blocked on credentials, hardware, or registrations |
+>
+> Two console quirks worth knowing: Play's Closed testing page reports "There is no release on this
+> track" while a draft is still present — trust the per-track Releases tab. And `SHA256SUMS` on the
+> release covers only the 4 payload/plugin assets, not any of the 6 installers.
+
 Living document (2026-07-14). Everything code-side is committed and machine-verified. This is the full list of remaining steps to ship every channel, with a **Who** column on every row: **Agent task** means Claude can drive it now on request (drafting, running CLI commands, filling forms, clicking through up to any irreversible Submit); **Stephen** means it needs a password, a credential, a real device/toolchain, a payment, or an explicit go/no-go call only Stephen can make.
 
 ## 0. One push unblocks everything — Done
