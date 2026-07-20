@@ -44,8 +44,17 @@ services:
       AUTH_LISTEN_ADDR: 0.0.0.0:7700
       DATABASE_URL: ${AUTH_DATABASE_URL}
       AUTH_JWT_ISSUER: ${CYBEROS_APP_URL}
-      # Allow the OIDC console hand-back to return the token to the product origin (oidc.rs return_to gate).
-      AUTH_OIDC_RETURN_ALLOW: ${CYBEROS_APP_URL}/
+      # Allow the OIDC hand-back to return the token to the product origin (oidc.rs return_to gate). The
+      # gate is a comma-separated PREFIX match, so each entry is a prefix and not a whole URL.
+      # The second entry is the mobile apps. A Capacitor build cannot use the web origin: its own origin is
+      # capacitor://localhost (iOS) / http://localhost (Android), and the Google consent screen runs in an
+      # external browser that cannot redirect into another app's private scheme. It hands back to the custom
+      # scheme instead, which the OS routes to the app. Without this entry the server answers
+      # return_to_not_allowed and Google sign-in is impossible on mobile - which it was, on every build up to
+      # and including 1.0.3, for what is the PRIMARY sign-in button.
+      # Must match CFBundleURLSchemes (iOS), the Android intent-filter, and NATIVE_RETURN_TO in
+      # apps/web/src/lib/auth.tsx.
+      AUTH_OIDC_RETURN_ALLOW: ${CYBEROS_APP_URL}/,os.cyberskill.world://
       # AUTH_DEV_CORS intentionally unset - single origin needs no CORS.
       # DATABASE_URL points at Supabase (set in .env.p0); no local DB dependency to wait on.
     healthcheck:

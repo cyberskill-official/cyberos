@@ -22,6 +22,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Google sign-in hand-back. The consent screen runs in an external browser, which cannot
+                 redirect into http://localhost (the Capacitor bundle's own origin), so the callback comes
+                 back through this scheme instead. BROWSABLE is what makes a browser willing to dispatch
+                 it; DEFAULT is what makes an implicit intent match at all. The activity is already
+                 launchMode="singleTask", so this re-enters the running instance and fires appUrlOpen
+                 rather than starting a second copy of the app on top of the first.
+                 Scheme must match CFBundleURLSchemes (iOS), NATIVE_RETURN_TO in apps/web/src/lib/auth.tsx,
+                 and AUTH_OIDC_RETURN_ALLOW in deploy/vps/docker-compose.p0*.yml. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="os.cyberskill.world" />
+            </intent-filter>
+
         </activity>
 
         <provider

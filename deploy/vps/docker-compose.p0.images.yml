@@ -34,7 +34,9 @@ services:
       AUTH_LISTEN_ADDR: 0.0.0.0:7700
       DATABASE_URL: ${AUTH_DATABASE_URL}
       AUTH_JWT_ISSUER: ${CYBEROS_APP_URL}
-      AUTH_OIDC_RETURN_ALLOW: ${CYBEROS_APP_URL}/
+      # Comma-separated prefix allow-list. Second entry is the mobile custom scheme - see the fuller note in
+      # docker-compose.p0.yml. Keep both files in step or Google sign-in breaks on native.
+      AUTH_OIDC_RETURN_ALLOW: ${CYBEROS_APP_URL}/,os.cyberskill.world://
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7700/healthz"]
       interval: 10s

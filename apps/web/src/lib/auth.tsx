@@ -1,6 +1,22 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { apiUrl, decodeJwt, tokenValid } from "./api";
+import { apiUrl, decodeJwt, isNativeShell, tokenValid } from "./api";
+
+// OIDC hand-back target on native. The web build returns to its own URL, but a Capacitor build cannot: its
+// origin is capacitor://localhost (iOS) or http://localhost (Android), and the Google consent screen runs in
+// SAFARI, not in the app's webview. Safari cannot redirect into another app's private scheme, so the
+// hand-back has to go to a scheme iOS/Android will route back to us - one declared in CFBundleURLTypes
+// (iOS) and an intent-filter (Android).
+//
+// The scheme is the bundle id rather than something short like "cyberos://". Any app may claim any custom
+// scheme, and on iOS the winner of a collision is undefined; a reverse-DNS id we already own cannot be
+// claimed out from under us. This is also the convention Apple documents for OAuth redirects.
+//
+// Must stay in lockstep with three other places, or Google sign-in breaks on native:
+//   apps/web/ios/App/App/Info.plist            CFBundleURLTypes
+//   apps/web/android/.../AndroidManifest.xml   intent-filter data android:scheme
+//   deploy/vps/docker-compose.p0*.yml          AUTH_OIDC_RETURN_ALLOW (server-side allow-list)
+const NATIVE_RETURN_TO = "os.cyberskill.world://auth";
 
 // Token persistence mirrors the legacy console (app.html): access + refresh tokens in localStorage, email
 // derived from the JWT. This is a first-party app on a real origin, so localStorage is appropriate.
@@ -79,23 +95,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Adopt an OIDC hand-back fragment (#access_token=...&refresh_token=...). Shared by two callers that
+  // receive the same payload through different doors: the web/desktop flow, where the browser navigates
+  // back to us and it arrives in location.hash, and the native flow, where the OS hands the whole URL to
+  // the appUrlOpen listener below and location never changes at all.
+  function adoptFromHash(hash: string): boolean {
+    if (!hash || hash.indexOf("access_token") === -1) return false;
+    const p = new URLSearchParams(hash.replace(/^#/, ""));
+    const at = p.get("access_token");
+    if (!at) return false;
+    adopt(at, p.get("refresh_token"));
+    return true;
+  }
+
   // Boot: capture an OIDC hand-back fragment (#access_token=...), else a valid stored token, else refresh.
   useEffect(() => {
     let alive = true;
     (async () => {
-      if (location.hash && location.hash.indexOf("access_token") !== -1) {
-        const p = new URLSearchParams(location.hash.replace(/^#/, ""));
-        const at = p.get("access_token");
-        if (at) {
-          adopt(at, p.get("refresh_token"));
-          try {
-            history.replaceState(null, "", location.pathname + location.search);
-          } catch {
-            location.hash = "";
-          }
-          if (alive) setReady(true);
-          return;
+      if (adoptFromHash(location.hash)) {
+        try {
+          history.replaceState(null, "", location.pathname + location.search);
+        } catch {
+          location.hash = "";
         }
+        if (alive) setReady(true);
+        return;
       }
       const stored = lsGet(LS.token);
       if (tokenValid(stored)) {
@@ -117,6 +141,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Native only: the OIDC hand-back arrives as an app-open URL, not as a navigation. Safari finishes the
+  // Google flow, and iOS/Android route os.cyberskill.world://auth#access_token=... back into the app, which
+  // surfaces it here. location never changes, so the boot effect above would never see it - which is the
+  // whole reason Google sign-in dead-ended on mobile.
+  //
+  // @capacitor/app is imported dynamically and only on native, so it never enters the web bundle - the same
+  // rule api.ts follows for @capacitor/core. A failed import is swallowed: password sign-in is the path that
+  // still works when any of this is misconfigured, and it must not be taken down by an absent plugin.
+  useEffect(() => {
+    if (!isNativeShell()) return;
+    let alive = true;
+    let remove: (() => void) | undefined;
+    void (async () => {
+      try {
+        const { App } = await import("@capacitor/app");
+        const handle = await App.addListener("appUrlOpen", ({ url }) => {
+          const i = url.indexOf("#");
+          if (i !== -1) adoptFromHash(url.slice(i));
+        });
+        if (alive) remove = () => void handle.remove();
+        else void handle.remove();
+      } catch {
+        /* plugin absent or bridge unavailable - password sign-in is unaffected */
+      }
+    })();
+    return () => {
+      alive = false;
+      remove?.();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function loginPassword(tenant: string, handle: string, password: string) {
     const res = await fetch(apiUrl("/v1/auth/token"), {
       method: "POST",
@@ -133,9 +189,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function googleSignIn(tenant: string) {
-    // Return here; the boot effect captures the hand-back. On a native build location.origin is
-    // capacitor://localhost, which is not a registered redirect target - see the note below.
-    const ret = location.origin + location.pathname;
+    // Where Google hands the user back to. On web and desktop that is this page, and the boot effect picks
+    // the token out of location.hash. On native it is the registered custom scheme, and the appUrlOpen
+    // listener picks it up instead - location.origin there is capacitor://localhost, which Safari cannot
+    // redirect to and which the server rejects as return_to_not_allowed.
+    const ret = isNativeShell() ? NATIVE_RETURN_TO : location.origin + location.pathname;
     const res = await fetch(
       apiUrl(
         `/v1/auth/oidc/initiate?tenant_slug=${encodeURIComponent(tenant)}&idp=google&return_to=${encodeURIComponent(ret)}`,

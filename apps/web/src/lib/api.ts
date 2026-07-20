@@ -17,14 +17,24 @@
 // (apps/desktop/src/index.html) and is genuinely same-origin from then on.
 const NATIVE_ORIGIN = "https://os.cyberskill.world";
 
-function resolveApiBase(): string {
-  if (typeof window === "undefined") return "";
+// True inside a Capacitor shell (iOS or Android); false on web, on the Tauri desktop shell, and in SSR.
+// Detected from location for exactly the reason spelled out above - @capacitor/core is a devDependency and
+// must not become runtime code in the web bundle.
+//
+// Exported because the OIDC hand-back needs the same answer for a different reason: a native build cannot
+// use location.origin as its return_to, because that origin (capacitor://localhost) is not a URL Safari can
+// redirect back to. See googleSignIn in auth.tsx.
+export function isNativeShell(): boolean {
+  if (typeof window === "undefined") return false;
   const { protocol, hostname, port } = window.location;
-  if (protocol === "capacitor:") return NATIVE_ORIGIN; // iOS
+  if (protocol === "capacitor:") return true; // iOS
   // Android Capacitor serves from http://localhost with no port. The Vite dev server always has one
   // (5173), so requiring an empty port keeps local development on the proxy.
-  if (protocol === "http:" && hostname === "localhost" && port === "") return NATIVE_ORIGIN;
-  return "";
+  return protocol === "http:" && hostname === "localhost" && port === "";
+}
+
+function resolveApiBase(): string {
+  return isNativeShell() ? NATIVE_ORIGIN : "";
 }
 
 export const API_BASE: string = resolveApiBase();

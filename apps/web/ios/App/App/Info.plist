@@ -20,6 +20,27 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
+	<!-- Custom URL scheme, registered solely so iOS can hand the Google sign-in callback back to this app.
+	     The consent screen runs in Safari, which cannot redirect into capacitor://localhost (that scheme
+	     exists only inside our own WKWebView). Without this entry Safari has nowhere to send the user and
+	     the flow dead-ends - which is exactly what "return_to_not_allowed" was reporting.
+	     The scheme is the bundle id: any app can claim any custom scheme and iOS does not define who wins a
+	     collision, so a reverse-DNS id we own is the only one that cannot be hijacked.
+	     Changing it means changing NATIVE_RETURN_TO in apps/web/src/lib/auth.tsx, the Android intent-filter,
+	     and AUTH_OIDC_RETURN_ALLOW in deploy/vps/docker-compose.p0*.yml - all four or none. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>os.cyberskill.world.auth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>os.cyberskill.world</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<!-- Answers the export-compliance question in the binary instead of in the App Store Connect UI, where
