@@ -292,7 +292,19 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .m-row:hover .m-actions { opacity: 1; transform: translateY(0); }
 /* Keyboard users reveal the action bar by focusing into the row; touch devices show it always (no hover). */
 .m-row:focus-within .m-actions { opacity: 1; transform: translateY(0); }
-@media (hover: none) { .m-row .m-actions { opacity: 1; transform: translateY(0); } }
+/* Touch devices have no hover, so the bar is permanently on screen. It was still
+   positioned as a hover overlay (top: -16px), which floated it across the row
+   ABOVE and clipped that message's text - badly on iPad, and worse once the
+   thread panel narrows the column and sender names truncate. Anchor it inside
+   its own row and reserve a gutter so it never covers the name or the body.
+   The three quick-react shortcuts collapse into the picker the react button
+   already opens, which keeps the reserved strip narrow enough to survive a
+   split column. */
+@media (hover: none) {
+  .m-row .m-actions { opacity: 1; transform: none; top: 4px; right: 8px; }
+  .m-row .m-actions .quick-react { display: none; }
+  .m-content { padding-right: 150px; }
+}
 .m-actions .quick-react { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: none; border-radius: 7px; background: transparent; cursor: pointer; font-size: 15px; line-height: 1; transition: transform 0.1s ease, background 0.1s ease; }
 .m-actions .quick-react:hover { background: var(--hover); transform: scale(1.18); }
 
