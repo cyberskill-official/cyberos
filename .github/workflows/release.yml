@@ -5,21 +5,25 @@ name: release
 # binaries: signed desktop installers (always) and the mobile apps (once MOBILE_RELEASE is turned on). It
 # publishes a GitHub Release and attaches the desktop installers.
 #
-# HOW TO CUT A RELEASE - and why the obvious way does NOT work:
+# HOW TO CUT A RELEASE:
 #
-#   DO:    gh workflow run release.yml --ref main -f tag=vX.Y.Z      (after pushing the tag)
-#   NOT:   git tag vX.Y.Z && git push origin vX.Y.Z                  ... alone. It will not build anything.
+#   DO:    git tag vX.Y.Z <the `chore(release): X.Y.Z` commit> && git push origin vX.Y.Z
+#   NOT:   gh workflow run release.yml --ref main -f tag=vX.Y.Z
 #
-# The tag trigger below is real, but it cannot fire on the commit you actually want to tag. version.yml
-# commits the new VERSION as `chore(release): X.Y.Z [skip ci]`, and that IS the commit carrying the version
-# you are releasing - so it is the one you would naturally tag. GitHub honours [skip ci] and skips EVERY
-# workflow for that commit, tag pushes included: the tag lands, nothing runs, and it looks like the tag was
-# simply ignored. (Tagging an earlier commit "works", but that commit has the OLD VERSION, so the stamper
-# would mislabel every installer - worse than not building.)
+# Pushing the tag is sufficient: the `push: tags` trigger below fires natively on the bump commit.
 #
-# The [skip ci] itself is load-bearing (TASK-IMP-068 §1 #7: it keeps payload-gate.yml off the bump commit,
-# which version.yml compensates for by proving the payload builds at the new version), so it is not simply
-# removable. Push the tag for provenance, then dispatch this workflow against it.
+# That was NOT true before TASK-IMP-071, and this comment used to say the opposite. version.yml once
+# committed the bump as `chore(release): X.Y.Z [skip ci]`; GitHub honours [skip ci] by skipping EVERY
+# workflow for that commit, tag pushes included, so the tag landed and nothing ran. TASK-IMP-071 dropped
+# [skip ci] precisely so the bump commit stays visible to push-triggered workflows. Verified 2026-07-20:
+# run #82 fired from `git push origin v1.0.2` on bump commit d071b2ee and went green end to end.
+#
+# workflow_dispatch survives as a manual override. Either route needs the guard below, because the ref you
+# NAME and the VERSION recorded AT that ref can disagree. Run #81 (2026-07-20) is the worked example: it was
+# dispatched with tag=v1.0.2, but v1.0.2 pointed at a commit whose VERSION read 1.0.0 at the time, and the
+# tag was re-pointed to d071b2ee only afterwards. Naming the right tag is therefore not sufficient - the tag
+# has to point where its name claims. Every job that publishes externally (payload, android, ios) asserts
+# `v$(cat VERSION)` = TAG, which is exactly what caught it.
 #
 # Secrets + accounts this consumes are listed in docs/deploy/RELEASE.md (Apple / Windows / Google signing, App Store
 # Connect, the Tauri updater key). Desktop builds run unsigned until the signing secrets are present, so the
@@ -45,8 +49,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions: { contents: write }
     env:
-      # Dispatch-aware like the installer jobs: bump commits carry [skip ci], so tag pushes on
-      # them never fire push triggers - releases are cut via workflow_dispatch with the tag input.
+      # Resolves to the dispatch input when dispatched, otherwise to the pushed ref name. Both paths work;
+      # the tag push is the documented one. (This used to claim dispatch was mandatory because bump commits
+      # carried [skip ci] - TASK-IMP-071 removed that. See the header.)
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v7
@@ -385,9 +390,24 @@ jobs:
   android:
     if: ${{ vars.ANDROID_RELEASE == 'true' || vars.MOBILE_RELEASE == 'true' }}
     runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v7
         with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
+      # The same guard the payload job has carried since TASK-IMP-068, and it belongs here for a stronger
+      # reason: payload only writes a release asset, whereas this job PUBLISHES to a live store.
+      #
+      # The check is not about naming the wrong ref. It is about a ref and its contents disagreeing. In run
+      # #81 (2026-07-20) the dispatch named tag=v1.0.2 - the correct tag - but v1.0.2 then pointed at a
+      # commit whose VERSION read 1.0.0; it was re-pointed to d071b2ee afterwards. payload compared v1.0.0
+      # against v1.0.2 and correctly went red. This job had no such check, so it stamped versionName 1.0.0 /
+      # versionCode 29742483 (stamp-release-version.mjs reads the root VERSION of the checked-out tree) and
+      # published that to Play. It landed on the INTERNAL track, which is the only reason it was quietly
+      # recoverable; the same job with `tracks: production` would not have been. A store upload cannot be
+      # recalled, only superseded, so this guard belongs on every externally publishing job.
+      - name: Tag must equal v$(cat VERSION)
+        run: test "v$(cat VERSION)" = "$TAG"
       - uses: actions/setup-node@v7
         with: { node-version: 24 }
       - uses: actions/setup-java@v5
@@ -496,9 +516,17 @@ jobs:
   ios:
     if: ${{ vars.IOS_RELEASE == 'true' }}
     runs-on: macos-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v7
         with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
+      # See the identical guard, and the run #81 post-mortem, in the android job above. The same mis-pointed
+      # tag put a 1.0.0-labelled build into App Store Connect, which then had to be discarded by hand.
+      # ASC burns a build number permanently the moment an upload is accepted, so failing here costs nothing
+      # and failing to fail here costs a build number plus a manual cleanup, every time.
+      - name: Tag must equal v$(cat VERSION)
+        run: test "v$(cat VERSION)" = "$TAG"
       - uses: actions/setup-node@v7
         with: { node-version: 24 }
 
