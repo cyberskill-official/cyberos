@@ -2,7 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- viewport-fit=cover is REQUIRED for env(safe-area-inset-*) to resolve to anything but 0. Without it
+         every safe-area rule in styles.css is dead code, which is why the padding and this attribute have
+         to ship together. iOS draws the webview under the notch and home indicator; Android 15+
+         (targetSdk 35+) enforces the same edge-to-edge behaviour with no opt-out. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#1e0f08" />
     <link rel="icon" href="/cyberskill-logo.svg" type="image/svg+xml" />
     <title>CyberOS</title>

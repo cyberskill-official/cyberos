@@ -96,10 +96,18 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 ::-webkit-scrollbar-thumb:hover { background: var(--scroll-hover); background-clip: padding-box; }
 
 /* ---- app shell ---- */
-.app { display: flex; flex-direction: column; height: 100%; min-height: 100%; }
+/* Safe-area insets: on a notched iPhone the webview draws under the status bar and home indicator, so any
+   chrome pinned to an edge needs to reserve that space itself. env() resolves to 0 on every surface that
+   has no inset (desktop, web, older phones), so these are inert everywhere else and need no breakpoint. */
+.app {
+  display: flex; flex-direction: column; height: 100%; min-height: 100%;
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
 .topbar {
   flex: none; display: flex; align-items: center; gap: 14px;
-  padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line);
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 20px 10px;
+  background: var(--panel); border-bottom: 1px solid var(--line);
 }
 .brandmark { width: 26px; height: 26px; border-radius: 6px; display: block; }
 .wordmark { font-weight: 800; font-size: 19px; letter-spacing: 0.4px; }
@@ -362,7 +370,7 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .drop-hint { position: sticky; top: 8px; z-index: 3; width: max-content; margin: 0 auto 8px; padding: 6px 14px; border-radius: 999px; background: var(--ochre); color: var(--on-accent); font-size: 12px; font-weight: 700; box-shadow: var(--shadow-1); pointer-events: none; }
 .banner { margin: 0 14px 6px; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
 .banner.err { background: var(--bad-soft-bg); border: 1px solid var(--bad-soft-border); color: var(--bad-text); }
-.composer { flex: none; padding: 10px 14px 6px; display: flex; gap: 8px; align-items: flex-end; }
+.composer { flex: none; padding: 10px 14px calc(6px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; align-items: flex-end; }
 .composer textarea {
   flex: 1; resize: none; max-height: 140px; background: var(--panel); border: 1px solid var(--line);
   color: var(--ink); border-radius: 12px; padding: 11px 14px; font-size: 15px; line-height: 1.45;
@@ -634,18 +642,52 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
   .slogan, .who { display: none; }
   .sidebar {
     position: fixed; left: 0; top: 0; bottom: 0; z-index: 56; width: min(300px, 86vw);
+    /* Pinned to both edges, so it spans the notch and the home indicator and must inset itself. */
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
     transform: translateX(-105%); box-shadow: var(--shadow-2);
     /* Hide the closed drawer from the tab order + screen readers once it has slid off-screen. */
     visibility: hidden; transition: transform 0.18s ease-out, visibility 0s linear 0.18s;
   }
   .sidebar.open { transform: none; visibility: visible; transition: transform 0.18s ease-out; }
   .side-backdrop { display: block; position: fixed; inset: 0; z-index: 55; background: var(--overlay); }
-  .thread { position: fixed; right: 0; top: 0; bottom: 0; z-index: 50; width: min(360px, 92vw); box-shadow: var(--shadow-2); }
+  .thread {
+    position: fixed; right: 0; top: 0; bottom: 0; z-index: 50; width: min(360px, 92vw);
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: var(--shadow-2);
+  }
   .picker { width: 100%; }
   .picker.settings { width: 100%; }
   .att-group .att-img { max-width: 46vw; }
   .empty.big .only-narrow { position: absolute; top: 12px; left: 12px; }
   .empty.big { position: relative; }
+
+  /* The topbar is a non-wrapping flex row whose children are all intrinsically sized, so it measures to
+     its content rather than to the screen. On an iPhone 14 Plus that came out at 672px against a 428px
+     viewport (measured in the Capacitor webview), and because nothing clipped it the overflow propagated
+     up through .app, BODY and HTML - the whole document became horizontally scrollable, which is why the
+     header rendered clipped and shifted off-centre rather than merely truncated.
+     Two rules, deliberately conservative: the page must never scroll sideways, and the topbar absorbs its
+     own overflow by scrolling internally. Nothing is hidden, so every control stays reachable - hiding
+     items here would be an information-architecture decision, and this is a layout bug. */
+  .app { overflow-x: hidden; }
+  .topbar { overflow-x: auto; scrollbar-width: none; }
+  .topbar::-webkit-scrollbar { display: none; }
+
+  /* iOS zooms the page in when a focused field's font-size is below 16px, and it does not zoom back out
+     on blur. Measured here as innerWidth 375 against clientWidth 428 - a factor of 1.141, which is 16/14,
+     the .edit-input / .picker-input size. The page therefore stayed magnified and off-centre after any
+     tap into a field. 16px is the documented threshold; raising it only at this breakpoint leaves the
+     desktop type scale untouched.
+     A bare `input, textarea, select` is specificity (0,0,1) and loses to every rule that sets these sizes -
+     .composer textarea (0,1,1), .edit-input (0,1,0), .picker-input (0,1,0), .search-bar input (0,1,1),
+     .mod-note textarea (0,1,1). The offenders are therefore named explicitly: each selector below matches
+     the specificity of the rule it overrides and sits later in the file, so it wins on source order. */
+  .composer textarea,
+  .edit-input,
+  .picker-input,
+  .search-bar input,
+  .mod-note textarea,
+  input, textarea, select { font-size: 16px; }
 }
 
 /* TASK-CHAT-267 — report dialog. Reuses .picker-bg / .picker (the shared modal shell) and .confirm-actions
