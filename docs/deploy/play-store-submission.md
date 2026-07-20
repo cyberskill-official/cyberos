@@ -40,18 +40,33 @@ https://cyberskill.world/en/cyberos/privacy
 
 ### Sign in details (app access)
 
-CyberOS is entirely behind Google SSO. A reviewer who cannot sign in sees a login wall and rejects the app - this is the single most common cause of rejection for a workspace tool.
+CyberOS is entirely behind a sign-in wall - Google SSO for members, a password form for everyone else. A
+reviewer who cannot sign in sees that wall and rejects the app, and this is the single most common cause of
+rejection for a workspace tool.
 
 Choose **All or some functionality is restricted**, then add one instruction set:
 
-- Name: `Google sign-in (required)`
-- Username: a real Google account you control, provisioned into a demo workspace. Create `play-review@cyberskill.world` for this and nothing else.
-- Password: that account's password.
+- Name: `Password sign-in (required)`
+- Username: `demo@cyberskill.world` - a password account provisioned into the demo workspace, used for
+  store review and nothing else.
+- Password: that account's password. Keep it in the password manager; it is deliberately not written
+  down in this repo.
 - Any other instructions:
-  > CyberOS is a private workspace tool. Tap "Sign in with Google" and use the credentials above.
-  > The account is already a member of a demo workspace with sample channels and messages. All app
-  > functionality is reachable after sign-in. There is no public sign-up: access is granted by a
-  > workspace administrator.
+  > CyberOS is a private workspace tool. On the sign-in screen, tap "Admin sign-in" - the small link
+  > below the Google button - then enter the username and password above.
+  > Do NOT tap "Sign in with Google": that path is for workspace members who have a Google account, and
+  > it will not accept these credentials.
+  > The account is a member of a demo workspace with sample channels and messages. All app functionality
+  > is reachable after sign-in. There is no public sign-up: access is granted by a workspace administrator.
+
+A password account rather than a Google one is a deliberate choice. It takes the whole OIDC path out of
+the review process: no consent screen, no account chooser, and no dependency on which Google account the
+reviewer's device happens to be signed into. The Google path is a member convenience, not the way a
+reviewer should be asked to get in.
+
+The "Admin sign-in" label is misleading here - that link is the generic password form and any account
+with a password can use it, not just admins. Reviewers have to be told to tap it, or they will only see
+the Google button and conclude the credentials do not work.
 
 Keep that account alive and its workspace populated. If it stops working, every future update is rejected until it does.
 
