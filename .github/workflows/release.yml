@@ -355,6 +355,29 @@ jobs:
         env:
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
 
+  # The updater manifest is rebuilt HERE, after the whole desktop matrix - never by the matrix itself.
+  # tauri-action emits a latest.json holding ONLY the platform of the leg that produced it and uploads it
+  # with clobber semantics, so all three legs race to write the same asset and the last one to finish wins.
+  # v1.0.0 shipped that way: the Windows leg landed last (manifest pub_date 04:53:14Z, job end 04:53:20Z,
+  # against a macOS leg whose tauri-action had already run before its notarize step), so the published
+  # latest.json listed windows-x86_64/-msi/-nsis and nothing else. Every macOS and Linux install of 1.0.0
+  # was stranded - their platform key simply was not there - and run #80 was green on all 9 jobs while it
+  # happened. Rebuilding once, from the .sig files actually on the release, is the only ordering that
+  # cannot race. The script hard-fails on a partial manifest rather than publishing one.
+  updater-manifest:
+    needs: desktop
+    if: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
+      - name: Rebuild latest.json across every platform on the release
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          REPO: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/release/publish-updater-manifest.sh
+
   # Android app bundle (Capacitor). Gated on the repo variable ANDROID_RELEASE=true (the android/ project is
   # committed and the upload keystore is configured via the ANDROID_* secrets). Legacy MOBILE_RELEASE=true is
   # still honoured so existing setups keep working. iOS has its OWN gate (IOS_RELEASE) so turning Android on
