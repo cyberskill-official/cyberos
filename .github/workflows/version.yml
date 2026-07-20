@@ -51,6 +51,27 @@ jobs:
       - name: Compute + apply the next version
         id: bump
         run: node scripts/cyberos-version.mjs --apply ${{ github.event.inputs.level && format('--level {0}', github.event.inputs.level) || '' }}
+      # apps/console/web is the tracked vite output the VPS serves, and it stamps its own version.json from
+      # VERSION at build time. check-version-sync.sh asserts the two agree (TASK-IMP-080 item 7). The step
+      # above has just moved VERSION in the workspace, so without this rebuild the tracked bundle is one
+      # version behind and that assertion fails before the bump is ever committed. That is precisely what
+      # broke 1.0.2 -> 1.0.3: run 29753051609, "DRIFT apps/console/web/version.json: 1.0.2 != 1.0.3",
+      # exit 10.
+      #
+      # deploy.yml cannot cover this. It runs afterwards and rebuilds at the COMMITTED VERSION, so VERSION
+      # could never advance past the bundle's stamp - the two were deadlocked. It went unnoticed only
+      # because the 1.0.x run-up re-applied the SAME version repeatedly (three `chore(release): 1.0.2`
+      # commits), which the assertion is blind to.
+      #
+      # Rebuilding here, before the proof, closes the loop and restores TASK-IMP-072's rule that the bump
+      # commit carries the whole codebase to the new version. apps/console/web joins that commit's `git add`
+      # below for the same reason.
+      - name: Rebuild the served bundle at the new version
+        if: ${{ steps.bump.outputs.changed == 'true' }}
+        working-directory: apps/web
+        run: |
+          npm ci
+          npm run build
       # TASK-IMP-068 §1 #7 (amended by TASK-IMP-071): payload-gate.yml now ALSO sees the bump commit
       # (no [skip ci]); this inline proof stays as belt-and-suspenders at zero marginal cost.
       - name: Prove a payload builds clean at the new version
@@ -74,10 +95,14 @@ jobs:
           # NOTE: the MCP server package lives at tools/install/mcp/ (not root mcp/ - a
           # nonexistent pathspec here is fatal and killed run #36). Keep this list in lockstep
           # with the stampJson/stampCargo/stampGradle/stampXcodeProj calls in the stamper script.
+          # apps/console/web is the served vite output rebuilt above. It is a DIRECTORY, not a stamped
+          # file, because a rebuild also rewrites the hashed asset filenames and sw.js cache name, not just
+          # version.json - staging the file alone would leave the bundle internally inconsistent.
           git add VERSION BUILD_NUMBER CHANGELOG.md \
             apps/desktop/src-tauri/tauri.conf.json apps/desktop/src-tauri/Cargo.toml \
             apps/web/package.json apps/web/android/app/build.gradle \
-            apps/web/ios/App/App.xcodeproj/project.pbxproj tools/install/mcp/package.json
+            apps/web/ios/App/App.xcodeproj/project.pbxproj tools/install/mcp/package.json \
+            apps/console/web
           git commit -m "chore(release): ${{ steps.bump.outputs.version }}"
           # A protected-branch ruleset blocks a direct push from the default token. With a deploy key
           # configured (secrets.VERSION_BUMP_SSH_KEY, added to the ruleset bypass) the push succeeds;
