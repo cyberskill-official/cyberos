@@ -1,5 +1,46 @@
-// Origin-relative API access. In production Caddy proxies /v1/* to the services on the same origin; in dev
-// the Vite proxy (vite.config.ts) forwards /v1/* to the local services. Every call is just "/v1/...".
+// API access. In production Caddy proxies /v1/* to the services on the same origin; in dev the Vite proxy
+// (vite.config.ts) forwards /v1/* to the local services. On both, an origin-relative "/v1/..." is correct
+// and API_BASE is "".
+//
+// Capacitor is the exception, and it fails silently, so it is worth spelling out. A native build serves the
+// bundle from its own local origin - capacitor://localhost on iOS, http://localhost on Android - so a
+// relative "/v1/auth/token" resolves against THAT origin, not the server. The local bundle server answers
+// every unknown path with index.html and HTTP 200. The request therefore "succeeds": res.ok is true, then
+// res.json() chokes on HTML, the .catch(() => null) swallows it, and the caller throws with the status
+// attached - which is how sign-in reported "(200)" on a request that never left the device. A genuine auth
+// failure would have been 401.
+//
+// Native builds therefore need an absolute origin. Detected from location rather than by importing
+// @capacitor/core, which is a devDependency and should not become runtime code in the web bundle.
+//
+// Not affected: the Tauri desktop shell, which navigates to https://os.cyberskill.world/ on boot
+// (apps/desktop/src/index.html) and is genuinely same-origin from then on.
+const NATIVE_ORIGIN = "https://os.cyberskill.world";
+
+function resolveApiBase(): string {
+  if (typeof window === "undefined") return "";
+  const { protocol, hostname, port } = window.location;
+  if (protocol === "capacitor:") return NATIVE_ORIGIN; // iOS
+  // Android Capacitor serves from http://localhost with no port. The Vite dev server always has one
+  // (5173), so requiring an empty port keeps local development on the proxy.
+  if (protocol === "http:" && hostname === "localhost" && port === "") return NATIVE_ORIGIN;
+  return "";
+}
+
+export const API_BASE: string = resolveApiBase();
+
+// Absolute on native, unchanged on web/desktop. Pass any origin-relative path through this before fetch.
+export function apiUrl(path: string): string {
+  return API_BASE && path.startsWith("/") ? API_BASE + path : path;
+}
+
+// ws:// or wss:// origin for the chat sockets. On web this mirrors the page origin; on native it is derived
+// from API_BASE, because location.origin there is capacitor://localhost - a scheme the WebSocket
+// constructor rejects outright, and one that "replace(/^http/, 'ws')" silently fails to rewrite at all.
+export function wsOrigin(): string {
+  const base = API_BASE || window.location.origin;
+  return base.replace(/^http/, "ws");
+}
 
 export class ApiError extends Error {
   status: number;
@@ -35,7 +76,7 @@ export async function apiFetch<T = unknown>(
   path: string,
   body?: unknown,
 ): Promise<T> {
-  const res = await fetch(path, {
+  const res = await fetch(apiUrl(path), {
     method,
     headers: {
       Authorization: "Bearer " + token,
@@ -61,7 +102,7 @@ export async function apiFetch<T = unknown>(
 // Authenticated raw-body upload: POSTs the file bytes as the request body (no base64 inflation), content
 // type from the file itself. Same error shape as apiFetch so callers can branch on ApiError.status.
 export async function apiUploadRaw<T = unknown>(token: string, path: string, file: File | Blob): Promise<T> {
-  const res = await fetch(path, {
+  const res = await fetch(apiUrl(path), {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,

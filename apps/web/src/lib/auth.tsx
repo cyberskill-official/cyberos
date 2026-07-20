@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { decodeJwt, tokenValid } from "./api";
+import { apiUrl, decodeJwt, tokenValid } from "./api";
 
 // Token persistence mirrors the legacy console (app.html): access + refresh tokens in localStorage, email
 // derived from the JWT. This is a first-party app on a real origin, so localStorage is appropriate.
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const rt = lsGet(LS.refresh);
     if (!rt) return false;
     try {
-      const res = await fetch("/v1/auth/token", {
+      const res = await fetch(apiUrl("/v1/auth/token"), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ grant_type: "refresh_token", refresh_token: rt }),
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function loginPassword(tenant: string, handle: string, password: string) {
-    const res = await fetch("/v1/auth/token", {
+    const res = await fetch(apiUrl("/v1/auth/token"), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ grant_type: "password", tenant_slug: tenant, handle, password }),
@@ -133,9 +133,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function googleSignIn(tenant: string) {
-    const ret = location.origin + location.pathname; // return here; the boot effect captures the hand-back
+    // Return here; the boot effect captures the hand-back. On a native build location.origin is
+    // capacitor://localhost, which is not a registered redirect target - see the note below.
+    const ret = location.origin + location.pathname;
     const res = await fetch(
-      `/v1/auth/oidc/initiate?tenant_slug=${encodeURIComponent(tenant)}&idp=google&return_to=${encodeURIComponent(ret)}`,
+      apiUrl(
+        `/v1/auth/oidc/initiate?tenant_slug=${encodeURIComponent(tenant)}&idp=google&return_to=${encodeURIComponent(ret)}`,
+      ),
     );
     const data = (await res.json().catch(() => null)) as
       | { authorization_url?: string; error?: string }

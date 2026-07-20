@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
-import { apiFetch } from "../../lib/api";
+import { apiFetch, wsOrigin } from "../../lib/api";
 import type { Message, ReadMarker } from "../../lib/chat";
 import { applyReaction, sortMessagesAsc } from "../../lib/chat";
 import type { CallApi } from "../../lib/call";
@@ -185,7 +185,7 @@ export function useChatSocket({
     const connect = () => {
       if (stopped) return;
       const url =
-        location.origin.replace(/^http/, "ws") +
+        wsOrigin() +
         `/v1/chat/ws?channel=${encodeURIComponent(activeId)}&access_token=${encodeURIComponent(token)}`;
       sock = new WebSocket(url);
       wsRef.current = sock;

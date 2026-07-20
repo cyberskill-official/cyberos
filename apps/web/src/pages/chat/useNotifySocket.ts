@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { wsOrigin } from "../../lib/api";
 
 // A cross-channel notification pushed over the per-user socket (server: notify.rs NotifyEvent). It carries
 // only enough to bump an unread badge, float the channel, and raise a desktop notification - the full message
@@ -34,8 +35,7 @@ export function useNotifySocket({
     let sock: WebSocket | null = null;
     const connect = () => {
       if (stopped) return;
-      const url =
-        location.origin.replace(/^http/, "ws") + `/v1/chat/notify?access_token=${encodeURIComponent(token)}`;
+      const url = wsOrigin() + `/v1/chat/notify?access_token=${encodeURIComponent(token)}`;
       sock = new WebSocket(url);
       sock.onmessage = (ev) => {
         try {
