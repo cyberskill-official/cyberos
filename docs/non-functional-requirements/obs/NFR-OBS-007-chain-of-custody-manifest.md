@@ -15,10 +15,10 @@ related_tasks: [TASK-OBS-009, TASK-OBS-007]
 ## §1 — Statement (BCP-14 normative)
 
 1. Every Alertmanager-routed alert **MUST** carry the four-field chain-of-custody manifest:
-   - `trace_id` — the OTel trace that triggered the alert (or `unknown` if the alert is from a recording rule without a trace).
-   - `alertmanager_id` — the Alertmanager fingerprint (deterministic hash of label set).
-   - `runbook_id` — the CUO runbook path (see NFR-OBS-004).
-   - `tenant_id` — the affected tenant (or `cross-tenant` for platform-wide alerts).
+- `trace_id` — the OTel trace that triggered the alert (or `unknown` if the alert is from a recording rule without a trace).
+- `alertmanager_id` — the Alertmanager fingerprint (deterministic hash of label set).
+- `runbook_id` — the CUO runbook path (see NFR-OBS-004).
+- `tenant_id` — the affected tenant (or `cross-tenant` for platform-wide alerts).
 2. The manifest **MUST** survive every routing hop (Alertmanager → router → Slack → CUO supervisor) — no field dropped.
 3. Each manifest **MUST** be appended to the memory audit chain as `obs.alert.custody_manifest` with the four fields + the alert's `startsAt` timestamp; this row is immutable and survives consolidation.
 4. CI gate **MUST** verify on every `deploy/obs/alerts/*.yml` change that all alert rules carry annotations for `cyberos_runbook` and a templated `tenant_id` (where applicable).

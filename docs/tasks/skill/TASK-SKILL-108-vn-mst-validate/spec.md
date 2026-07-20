@@ -77,20 +77,19 @@ The `vietnam-mst-validate@1` skill **MUST** validate Vietnamese Tax IDs (MST) us
 
 1. **MUST** accept input as a 10-digit or 13-digit MST string. 10-digit = company head office; 13-digit = company branch (`AAAAAAAAAA-BBB` format where AAAAAAAAAA is the parent 10-digit and BBB is the branch suffix).
 2. **MUST** run local checksum FIRST per the official GDT algorithm:
-    - 10-digit: `Sum = Σ digit[i] × weight[i]` where weights `= [31, 29, 23, 19, 17, 13, 7, 5, 3, 1]`. Check digit (last) = `10 - (Sum % 11) mod 10`, mod 10.
-    - 13-digit: validate the parent 10-digit first (same algorithm); branch suffix (BBB) is informational, no checksum.
+- 10-digit: `Sum = Σ digit[i] × weight[i]` where weights `= [31, 29, 23, 19, 17, 13, 7, 5, 3, 1]`. Check digit (last) = `10 - (Sum % 11) mod 10`, mod 10.
+- 13-digit: validate the parent 10-digit first (same algorithm); branch suffix (BBB) is informational, no checksum.
 3. **MUST** reject with `MstError::ChecksumFailed` if local checksum doesn't match. Network call NOT attempted on checksum failure (saves the round-trip).
 4. **MUST** call the GDT public API at `https://gdtapi.gdt.gov.vn/Service.asmx` with SOAP envelope (canonical method `ttin_NNT_DN`). Parse the XML response:
-    - `valid: true` if response contains `<TrangThai>00</TrangThai>` (active status).
-    - `name: <DiaChiNNT>` (registered tax name).
-    - `address: <DiaChi>` (registered address).
-    - `business_type: <NganhNghe>` (registered business sector).
-    - `valid_from: <NgayCap>` (registration date).
-    - `status: <TenTrangThai>` (human-readable status).
+- `valid: true` if response contains `<TrangThai>00</TrangThai>` (active status).
+- `name: <DiaChiNNT>` (registered tax name).
+- `address: <DiaChi>` (registered address).
+- `business_type: <NganhNghe>` (registered business sector).
+- `valid_from: <NgayCap>` (registration date).
+- `status: <TenTrangThai>` (human-readable status).
 5. **MUST** treat the following GDT statuses as "valid for transactions":
-    - `00` — đang hoạt động (active).
-    - `04` — chờ đóng cửa (closing; warn but accept).
-   All others → reject with `MstError::Inactive { status, status_text }`.
+- `00` — đang hoạt động (active).
+- `04` — chờ đóng cửa (closing; warn but accept). All others → reject with `MstError::Inactive { status, status_text }`.
 6. **MUST** cache validation outcomes in sled-backed local cache with 24h TTL. Cache key: MST string. Cache hit within TTL → no GDT call; cache miss OR expired → fresh call.
 7. **MUST** support `force_refresh: true` flag to bypass cache (operator-controlled; e.g. when re-validating after a known status change).
 8. **MUST** retry GDT calls on transient failure with exp backoff: 3 retries at 500ms, 2s, 8s. Total max wait ~10s. Permanent failure → `MstError::GdtUnreachable`.
@@ -100,9 +99,9 @@ The `vietnam-mst-validate@1` skill **MUST** validate Vietnamese Tax IDs (MST) us
 12. **MUST** offline-mode fallback: if `CYBEROS_OFFLINE=true` OR network unreachable, return last cached outcome (regardless of TTL) with `stale: true` flag. Caller decides whether to accept stale data.
 13. **MUST** emit OTel span `skill.vn_mst.validate` with attributes `mst_redacted`, `valid`, `cache_hit`, `gdt_round_trip_ms`, `duration_ms`.
 14. **MUST** emit OTel metrics:
-    - `skill_vn_mst_validations_total{outcome}` (counter; outcome ∈ valid | checksum_failed | inactive | gdt_unreachable | rate_limited | offline_stale).
-    - `skill_vn_mst_gdt_round_trip_seconds` (histogram; only when cache_hit=false).
-    - `skill_vn_mst_cache_hit_ratio` (gauge).
+- `skill_vn_mst_validations_total{outcome}` (counter; outcome ∈ valid | checksum_failed | inactive | gdt_unreachable | rate_limited | offline_stale).
+- `skill_vn_mst_gdt_round_trip_seconds` (histogram; only when cache_hit=false).
+- `skill_vn_mst_cache_hit_ratio` (gauge).
 
 ---
 
@@ -155,8 +154,7 @@ Vietnamese Tax ID (MST) validation skill.
 ```rust
 use cyberos_vn_mst_validate::{validate_mst, ValidateOptions};
 
-let outcome = validate_mst("0312345678", ValidateOptions::default()).await?;
-if outcome.valid {
+let outcome = validate_mst("0312345678", ValidateOptions::default()).await?; if outcome.valid {
     println!("MST belongs to: {} ({})", outcome.business_name, outcome.business_type);
 }
 ```

@@ -218,8 +218,7 @@ async fn approve_writes_memory() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-CRM-001, TASK-CUO-101.
-**Cross-module:** TASK-CRM-002 (activity context), TASK-AI-003 (draft), TASK-MEMORY-111 (PII + memory write), TASK-AUTH-101 (CDO role), TASK-MEMORY-108 (search).
+**Upstream:** TASK-CRM-001, TASK-CUO-101. **Cross-module:** TASK-CRM-002 (activity context), TASK-AI-003 (draft), TASK-MEMORY-111 (PII + memory write), TASK-AUTH-101 (CDO role), TASK-MEMORY-108 (search).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

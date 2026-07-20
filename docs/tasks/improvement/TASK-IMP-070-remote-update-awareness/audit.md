@@ -43,25 +43,15 @@ All six findings addressed as cited. Offline behavior, verdict totality, and bot
 
 ## §10 - Post-implementation gates (2026-07-12, ship run)
 
-- §10.4 coverage gate: PASS - t01-t08 green on fresh rerun; all three prior suites green
-  (33 cases total). Report: .workflow/TASK-IMP-070/artefacts-bundle.md.
+- §10.4 coverage gate: PASS - t01-t08 green on fresh rerun; all three prior suites green (33 cases total). Report: .workflow/TASK-IMP-070/artefacts-bundle.md.
 - TRACE-004 closure: PASS. awh/caf: N/A (declared); floor = bash -n + suites.
-- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit
-  operator pre-authorization at the review gate; gates stayed green.
-- Deviations recorded: build.sh vendors check-latest.sh (frontmatter updated); legacy one-line
-  --check format replaced by the machine-parseable three-value contract.
+- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit operator pre-authorization at the review gate; gates stayed green.
+- Deviations recorded: build.sh vendors check-latest.sh (frontmatter updated); legacy one-line --check format replaced by the machine-parseable three-value contract.
 
 *TASK-IMP-070 shipped 2026-07-12. Wave A (version coupling) complete: TASK-IMP-068 + 069 + 070 all done.*
 
 ## §11 - Post-ship amendment (2026-07-12, first live release)
 
-Field finding: with v1.8.1 published, the resolver still returned unknown - the unauthenticated
-GitHub API was 403 rate-limited for the operator's IP (the §10 #1 failure mode, observed live,
-degraded exactly as designed). Hardening: the resolver now tries the releases/latest page
-REDIRECT first (Location header names the tag; not subject to API rate limits) with the API as
-fallback. §1 #1 amended; t01-t08 unaffected (endpoint-override paths unchanged), suite green.
+Field finding: with v1.8.1 published, the resolver still returned unknown - the unauthenticated GitHub API was 403 rate-limited for the operator's IP (the §10 #1 failure mode, observed live, degraded exactly as designed). Hardening: the resolver now tries the releases/latest page REDIRECT first (Location header names the tag; not subject to API rate limits) with the API as fallback. §1 #1 amended; t01-t08 unaffected (endpoint-override paths unchanged), suite green.
 
-- 2026-07-12 (post-ship, during TASK-SKILL-118 regression): t04B assumed the live repo VERSION exceeds
-  its 1.0.0 fixture; the PR #44 semver rollback to 0.1.0 falsified that. Fixed by pinning the payload
-  copy's VERSION to 2.0.0 (the t05 pattern) - the suite is now independent of the repo's current
-  version. Verdict unchanged: PASS, Score = 10/10.
+- 2026-07-12 (post-ship, during TASK-SKILL-118 regression): t04B assumed the live repo VERSION exceeds its 1.0.0 fixture; the PR #44 semver rollback to 0.1.0 falsified that. Fixed by pinning the payload copy's VERSION to 2.0.0 (the t05 pattern) - the suite is now independent of the repo's current version. Verdict unchanged: PASS, Score = 10/10.

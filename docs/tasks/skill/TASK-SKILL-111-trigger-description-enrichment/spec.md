@@ -100,8 +100,8 @@ This task establishes the rules for the `description:` field of every `SKILL.md`
 1. The `description:` field **MUST** carry three structural elements in any order: **(a) WHAT** the skill does (one verb phrase, present tense, third-person), **(b) WHEN** the host should route to it (≥2 distinct trigger-phrase forms quoted in the description prose; trigger phrases mirror natural-language fragments a user might type), and **(c) KEY VALUE** (what the user gets — one outcome phrase). Order is recommended `WHAT + WHEN + KEY VALUE` but not enforced.
 2. The `description:` field's character length **MUST** be **≥ 80 chars** AND **≤ 1024 chars** (raised from TASK-SKILL-103's baseline of 200; aligns with the Anthropic guide's published cap per Reference B p. 31). Below 80 chars cannot carry both WHAT and ≥2 trigger phrases; above 1024 violates the host system-prompt budget.
 3. Trigger phrases **MUST** be quoted in standard double-quotes (`"..."`) inside the description prose. Two acceptable forms:
-   - **Use-when form** — `Use when user asks to "<verb phrase>"` or `Use when user mentions "<noun>"`. Example: `Use when user asks to "audit this task" or "check the rubric"`.
-   - **Triggers-on form** — `Triggers on "<phrase>" or "<phrase>"`. Example: `Triggers on "draft a PRD" or "outline the requirements"`.
+- **Use-when form** — `Use when user asks to "<verb phrase>"` or `Use when user mentions "<noun>"`. Example: `Use when user asks to "audit this task" or "check the rubric"`.
+- **Triggers-on form** — `Triggers on "<phrase>" or "<phrase>"`. Example: `Triggers on "draft a PRD" or "outline the requirements"`.
 4. The description **MUST NOT** contain XML angle brackets `<` or `>`. (Restates TASK-SKILL-103 §1 #2 and TASK-SKILL-113 sketch; included here so FM-112 is self-contained for the auditor — the validator runs the bracket check before the trigger-phrase check so the user gets the more diagnostic error first.)
 5. The description **MAY** contain negative triggers in the form `Do NOT use for "<phrase>" (use <other-skill> instead)`. When present, the validator increments the trigger-phrase count for the positive triggers but not the negative ones (negatives are disambiguators, not triggers).
 6. The description **MUST** reference file types or input artefacts by their canonical name when the skill consumes a specific format. Examples: `PRD/spec/SRS documents`, `.fig files`, `Postman collections`. This mirrors the Anthropic guide Chapter 2 p. 10 "Mention file types if relevant".
@@ -261,17 +261,7 @@ impl From<DescriptionViolation> for FrontmatterError {
 **Issue template:**
 
 ```
-ISSUE
-id:              ISS-NNN
-rule_id:         FM-112
-severity:        error|warning
-category:        description_format
-location:        frontmatter "description:" field
-evidence:        "<the description text, truncated to 200 chars>"
-description:     "Description fails FM-112: <sub-code>. Detail: <validator output>."
-suggestion:      "Rewrite description to include WHAT + WHEN (≥2 quoted triggers like \"<phrase>\") + KEY VALUE. See task-audit skill §3.13 for examples."
-auto_fix_applied: false
-resolution:      null
+ISSUE id:              ISS-NNN rule_id:         FM-112 severity:        error|warning category:        description_format location:        frontmatter "description:" field evidence:        "<the description text, truncated to 200 chars>" description:     "Description fails FM-112: <sub-code>. Detail: <validator output>." suggestion:      "Rewrite description to include WHAT + WHEN (≥2 quoted triggers like \"<phrase>\") + KEY VALUE. See task-audit skill §3.13 for examples." auto_fix_applied: false resolution:      null
 ```
 ```
 

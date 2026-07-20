@@ -84,8 +84,8 @@ risk_if_skipped: "Without rollup, TASK-INV-001 has no way to convert TIME entrie
 The TIME service **MUST** ship per-cycle billable rollup at `services/time/src/rollup/` producing per-Member × role × project × task aggregations consumed by TASK-INV-001, with idempotency cache, rate-card snapshot, status/billable filtering, and 4 memory audit kinds.
 
 1. **MUST** expose `POST /v1/time/rollup` body `{ engagement_id, cycle_start_date, cycle_end_date }`. Caller has `cfo` OR `engagement_admin` role. Handler:
-   - Check cache by `(engagement_id, cycle_end_date)`; hit → return cached + emit `time.rollup_idempotent_hit`.
-   - Else: invoke aggregator; cache result; emit `time.rollup_started` + `time.rollup_completed`.
+- Check cache by `(engagement_id, cycle_end_date)`; hit → return cached + emit `time.rollup_idempotent_hit`.
+- Else: invoke aggregator; cache result; emit `time.rollup_started` + `time.rollup_completed`.
 
 2. **MUST** aggregate via `aggregator.rs::aggregate(engagement_id, start, end)`:
    ```sql
@@ -241,9 +241,7 @@ async fn rollup_excludes_non_billable_and_unlocked() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-TIME-005 (billable flag); transitively TASK-TIME-001 + TASK-TIME-006 (locked status).
-**Downstream:** TASK-INV-001 (consumes rollup result).
-**Cross-module:** TASK-AUTH-101 (role gates), TASK-AI-003, TASK-MEMORY-111.
+**Upstream:** TASK-TIME-005 (billable flag); transitively TASK-TIME-001 + TASK-TIME-006 (locked status). **Downstream:** TASK-INV-001 (consumes rollup result). **Cross-module:** TASK-AUTH-101 (role gates), TASK-AI-003, TASK-MEMORY-111.
 
 ---
 

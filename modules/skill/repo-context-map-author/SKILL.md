@@ -43,11 +43,7 @@ blockers:
 
 ## 1. Purpose
 
-Build a static, code-aware snapshot of the parts of the repo that the
-incoming task will interact with — **before** any code is generated. The
-map is the input to the implementation-plan-author and the trigger for
-the optional architecture-decision-record auto-ADR when a task's blast
-radius exceeds the in-module threshold.
+Build a static, code-aware snapshot of the parts of the repo that the incoming task will interact with — **before** any code is generated. The map is the input to the implementation-plan-author and the trigger for the optional architecture-decision-record auto-ADR when a task's blast radius exceeds the in-module threshold.
 
 ## 2. Output schema
 
@@ -88,54 +84,34 @@ module_placement_warning: null | "task appears to belong in module <X>, not <Y>;
 
 ## 3. Quality gates
 
-- `existing_patterns` covers at least: error_type, logging, test_framework
-  (the three patterns every cyberos service uses).
-- `files_outside_immediate_domain.length > 3` MUST trigger the ADR
-  branch in the workflow (steps 3-4).
-- `schemas` is non-empty for any task that declares a `migrations` or
-  `data:` block in its frontmatter.
-- `module_placement_warning` is null OR is escalated to chief-product-officer
-  before the chain continues.
+- `existing_patterns` covers at least: error_type, logging, test_framework (the three patterns every cyberos service uses).
+- `files_outside_immediate_domain.length > 3` MUST trigger the ADR branch in the workflow (steps 3-4).
+- `schemas` is non-empty for any task that declares a `migrations` or `data:` block in its frontmatter.
+- `module_placement_warning` is null OR is escalated to chief-product-officer before the chain continues.
 
 ## 4. Chains to
 
-`repo-context-map-audit` then (conditionally) `architecture-decision-record-author`
-when `files_outside_immediate_domain.length > 3`, then `edge-case-matrix-author`.
+`repo-context-map-audit` then (conditionally) `architecture-decision-record-author` when `files_outside_immediate_domain.length > 3`, then `edge-case-matrix-author`.
 
 ## 5. Scan scope — `repo` | `task` (TASK-IMP-111)
 
-This skill accepts a `scope` input. It is **additive**: everything above this section describes
-`scope: task`, and that path is **unchanged**.
+This skill accepts a `scope` input. It is **additive**: everything above this section describes `scope: task`, and that path is **unchanged**.
 
 ### `scope: task` (default)
 
-The default. Behaves **byte-identically to pre-111**: inputs are `{task, repo_root}`, the scan is
-scoped to the task's declared module, and the output is the `repo-context-map@1` in §2 exactly as
-specified above. `chief-technology-officer/ship-tasks` step 1 calls this skill with `{repo_root,
-task_id}` and **no** `scope` argument, so it resolves to `task` and the ship-tasks path does not
-move. The §2 output schema and §3 quality gates in this file are the task-scope contract and are not
-touched by this task.
+The default. Behaves **byte-identically to pre-111**: inputs are `{task, repo_root}`, the scan is scoped to the task's declared module, and the output is the `repo-context-map@1` in §2 exactly as specified above. `chief-technology-officer/ship-tasks` step 1 calls this skill with `{repo_root, task_id}` and **no** `scope` argument, so it resolves to `task` and the ship-tasks path does not move. The §2 output schema and §3 quality gates in this file are the task-scope contract and are not touched by this task.
 
 ### `scope: repo` (repo-wide, pre-task)
 
-Used by [`plan-author`](../plan-author/SKILL.md) BEFORE any task exists (planning against an existing
-repo needs a repo-wide scan, not a task-scoped one). In this mode:
+Used by [`plan-author`](../plan-author/SKILL.md) BEFORE any task exists (planning against an existing repo needs a repo-wide scan, not a task-scoped one). In this mode:
 
 - **Inputs** are `{repo_root, scope: repo}`. `task` is **not** required — there is no task yet.
-- The scan is **repo-wide**: a module inventory and the repo's conventions (error type, DI, state
-  management, logging, test framework), the schema/type surface across modules, and a coarse
-  blast-surface read — not one module's immediate domain.
-- **Bounding (spec §3):** on a 100k+-line repo the scan MUST bound itself to the module inventory
-  and conventions rather than every file, or it exceeds the sandbox cap. It MUST report what it
-  **sampled** (which modules/dirs it read) rather than imply exhaustiveness.
-- **Output** is a `repo-context-map@1` whose `task_id` is `null` (no task) and whose
-  `existing_patterns` / `schemas` are reported repo-wide; `blast_radius` and
-  `module_placement_warning` are omitted or null (they are task-relative and there is no task). The
-  map records the sampled surface so a plan can cite checkable evidence from it.
+- The scan is **repo-wide**: a module inventory and the repo's conventions (error type, DI, state management, logging, test framework), the schema/type surface across modules, and a coarse blast-surface read — not one module's immediate domain.
+- **Bounding (spec §3):** on a 100k+-line repo the scan MUST bound itself to the module inventory and conventions rather than every file, or it exceeds the sandbox cap. It MUST report what it **sampled** (which modules/dirs it read) rather than imply exhaustiveness.
+- **Output** is a `repo-context-map@1` whose `task_id` is `null` (no task) and whose `existing_patterns` / `schemas` are reported repo-wide; `blast_radius` and `module_placement_warning` are omitted or null (they are task-relative and there is no task). The map records the sampled surface so a plan can cite checkable evidence from it.
 - The scan MUST confine itself under `repo_root` and reads files as **data**, never executing them.
 
-The two scopes share this one skill on purpose: the repo-wide scan is the same scanner run at a
-wider aperture, not a second scanner to drift from the first.
+The two scopes share this one skill on purpose: the repo-wide scan is the same scanner run at a wider aperture, not a second scanner to drift from the first.
 
 ---
 

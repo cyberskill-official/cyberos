@@ -98,57 +98,57 @@ The TIME service **MUST** ship timer start/stop primitive at `services/time/src/
 3. **MUST** enforce RLS scoped to `tenant_id` AND `member_subject_id = current_setting('auth.subject_id')::uuid` (Members see own timers only).
 
 4. **MUST** expose `POST /v1/time/timer/start` body `{ engagement_id, project_id?, task_id?, description? }`. Handler:
-   - Validates engagement_id in Member's engagements.
-   - Checks existing active timer per §1 #5 — if exists, auto-commits it first.
-   - INSERTs new timer row with state='running'.
-   - Emits `time.timer_started` sev-3.
+- Validates engagement_id in Member's engagements.
+- Checks existing active timer per §1 #5 — if exists, auto-commits it first.
+- INSERTs new timer row with state='running'.
+- Emits `time.timer_started` sev-3.
 
 5. **MUST** auto-stop prior active timer per DEC-1380 on new start. Sequence:
-   - SELECT existing active timer for member.
-   - If found: invoke commit handler (§1 #7) — produces TIME entry + state='committed'.
-   - Then proceed to new INSERT.
-   - Both operations in single transaction.
+- SELECT existing active timer for member.
+- If found: invoke commit handler (§1 #7) — produces TIME entry + state='committed'.
+- Then proceed to new INSERT.
+- Both operations in single transaction.
 
 6. **MUST** expose `POST /v1/time/timer/heartbeat` for client keep-alive. Body `{ timer_id }`. Handler:
-   - UPDATE `last_heartbeat_at = now()` if state='running'.
-   - Idempotent at sub-second rate.
-   - Returns current state for client UI.
+- UPDATE `last_heartbeat_at = now()` if state='running'.
+- Idempotent at sub-second rate.
+- Returns current state for client UI.
 
 7. **MUST** expose `POST /v1/time/timer/stop` body `{ timer_id, final_description? }`. Handler:
-   - Validates timer belongs to caller.
-   - Computes duration = `now() - started_at - sum(pause durations)`.
-   - Snaps duration UP to nearest 15-min per DEC-1382.
-   - Creates TIME entry via TASK-TIME-001 with snapped duration.
-   - Transitions timer to state='committed' + `committed_entry_id` populated.
-   - Emits `time.timer_committed` sev-2.
+- Validates timer belongs to caller.
+- Computes duration = `now() - started_at - sum(pause durations)`.
+- Snaps duration UP to nearest 15-min per DEC-1382.
+- Creates TIME entry via TASK-TIME-001 with snapped duration.
+- Transitions timer to state='committed' + `committed_entry_id` populated.
+- Emits `time.timer_committed` sev-2.
 
 8. **MUST** detect idle per DEC-1381 via `idle_detector.rs::run_watchdog()`. Scheduled job runs every 60s:
-   - SELECT timers WHERE state='running' AND `last_heartbeat_at < now() - 10 min`.
-   - For each: transition to state='paused_idle' + `idle_paused_at = now()`.
-   - Emits `time.timer_idle_paused` sev-3.
+- SELECT timers WHERE state='running' AND `last_heartbeat_at < now() - 10 min`.
+- For each: transition to state='paused_idle' + `idle_paused_at = now()`.
+- Emits `time.timer_idle_paused` sev-3.
 
 9. **MUST** expose `POST /v1/time/timer/resume` body `{ timer_id, idle_decision }` where `idle_decision ∈ {include, exclude, partial}`. Handler:
-   - Validates state IN ('paused_idle', 'paused_manual').
-   - Per idle_decision: include = re-start timer including idle period; exclude = subtract idle period from final duration; partial = prompt for split.
-   - Transitions state='running' + `last_heartbeat_at = now()`.
+- Validates state IN ('paused_idle', 'paused_manual').
+- Per idle_decision: include = re-start timer including idle period; exclude = subtract idle period from final duration; partial = prompt for split.
+- Transitions state='running' + `last_heartbeat_at = now()`.
 
 10. **MUST** expose `POST /v1/time/timer/pause` body `{ timer_id, reason? }`. Handler:
-    - Transitions state='paused_manual' + `manual_paused_at = now()`.
+- Transitions state='paused_manual' + `manual_paused_at = now()`.
 
 11. **MUST** auto-commit on logout per DEC-1384. TASK-AUTH-004 logout handler invokes `time::timer::commit_all_for_subject(subject_id)`:
-    - SELECT timers WHERE member_subject_id=$1 AND state IN ('running','paused_idle','paused_manual').
-    - For each: invoke commit handler.
+- SELECT timers WHERE member_subject_id=$1 AND state IN ('running','paused_idle','paused_manual').
+- For each: invoke commit handler.
 
 12. **MUST** snap duration UP to nearest 15-min per DEC-1382. Implementation: `let snapped_seconds = ((raw_seconds + 899) / 900) * 900`.
 
 13. **MUST** support timer abandon at `POST /v1/time/timer/abandon` body `{ timer_id, reason }`. Transitions state='abandoned' WITHOUT creating TIME entry. Use case: accidental timer start. Emits `time.timer_abandoned` sev-3.
 
 14. **MUST** emit 5 memory audit kinds per DEC-1385:
-    - `time.timer_started` (sev-3)
-    - `time.timer_stopped` (sev-3 — generic; logout path)
-    - `time.timer_idle_paused` (sev-3)
-    - `time.timer_committed` (sev-2 — material commercial)
-    - `time.timer_abandoned` (sev-3)
+- `time.timer_started` (sev-3)
+- `time.timer_stopped` (sev-3 — generic; logout path)
+- `time.timer_idle_paused` (sev-3)
+- `time.timer_committed` (sev-2 — material commercial)
+- `time.timer_abandoned` (sev-3)
 
 15. **MUST** PII-scrub `description` via TASK-MEMORY-111 — SHA256 in chain; raw in DB.
 
@@ -305,8 +305,7 @@ async fn logout_commits_running_timers() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-TIME-001 (TimeEntry schema).
-**Cross-module:** TASK-AUTH-004 (logout integration), TASK-PROJ-001 (project_id), TASK-AI-003, TASK-MEMORY-111.
+**Upstream:** TASK-TIME-001 (TimeEntry schema). **Cross-module:** TASK-AUTH-004 (logout integration), TASK-PROJ-001 (project_id), TASK-AI-003, TASK-MEMORY-111.
 
 ---
 

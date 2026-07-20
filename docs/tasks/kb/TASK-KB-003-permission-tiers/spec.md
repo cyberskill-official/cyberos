@@ -86,10 +86,10 @@ The KB service **MUST** ship 3-tier permission system at `services/kb/src/permis
 1. **MUST** validate `visibility_tier` against closed enum per DEC-1901.
 
 2. **MUST** gate access at `access_gate.rs::check(doc, user, share_token?)`:
-   - public: always allow
-   - org_only: require valid session matching doc.tenant_id
-   - role_restricted: require user has one of doc.allowed_roles
-   - share_token (if provided): verify token signature + expiry + max_uses
+- public: always allow
+- org_only: require valid session matching doc.tenant_id
+- role_restricted: require user has one of doc.allowed_roles
+- share_token (if provided): verify token signature + expiry + max_uses
 
 3. **MUST** define table extension + share-link table at migration `0003`:
    ```sql
@@ -122,11 +122,11 @@ The KB service **MUST** ship 3-tier permission system at `services/kb/src/permis
 4. **MUST** create share-links at `share_link.rs::create(doc_id, expires_in, max_uses?)` per DEC-1902 — CDO-only.
 
 5. **MUST** validate share-link on use per DEC-1902:
-   - Signature valid
-   - expires_at > now()
-   - max_uses=0 OR used_count < max_uses
-   - revoked_at IS NULL
-   - On success: increment used_count atomically.
+- Signature valid
+- expires_at > now()
+- max_uses=0 OR used_count < max_uses
+- revoked_at IS NULL
+- On success: increment used_count atomically.
 
 6. **MUST** expose endpoints:
    ```text
@@ -233,8 +233,7 @@ async fn share_link_max_uses_enforced() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-KB-001.
-**Cross-module:** TASK-AUTH-101 (role check), TASK-MEMORY-111 (audit), TASK-AUTH-105 (KMS for JWT signing key).
+**Upstream:** TASK-KB-001. **Cross-module:** TASK-AUTH-101 (role check), TASK-MEMORY-111 (audit), TASK-AUTH-105 (KMS for JWT signing key).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

@@ -85,16 +85,16 @@ The REW service **MUST** ship quarterly P3 distribution at `services/rew/src/p3/
 1. **MUST** validate `distribution_status` against closed enum per DEC-2221.
 
 2. **MUST** calculate at `calculator.rs::calc(tenant, quarter, fund_vnd)` per DEC-2220:
-   - Receive VP shares from TASK-LEARN-007 handoff (sums to 1.0)
-   - Per member: payout_vnd = fund_vnd * vp_share
+- Receive VP shares from TASK-LEARN-007 handoff (sums to 1.0)
+- Per member: payout_vnd = fund_vnd * vp_share
 
 3. **MUST** require CEO + CFO dual-sign at `dual_sign_gate.rs::can_execute(distribution)` per DEC-2222 — same-person rejected.
 
 4. **MUST** be idempotent per DEC-2223 — UNIQUE(tenant, quarter).
 
 5. **MUST** on execute:
-   - Debit BP balance (TASK-REW-007 credit_p3_distribution converted to BP-equiv)
-   - Add to next payroll (TASK-REW-005) as P3 income kind
+- Debit BP balance (TASK-REW-007 credit_p3_distribution converted to BP-equiv)
+- Add to next payroll (TASK-REW-005) as P3 income kind
 
 6. **MUST** define tables at migration `0008`:
    ```sql
@@ -234,8 +234,7 @@ async fn idempotent_quarter() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-REW-007.
-**Cross-module:** TASK-LEARN-007 (VP shares), TASK-REW-005 (payroll injection), TASK-AUTH-101 (CEO/CFO), TASK-MCP-007 (trigger cron), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-REW-007. **Cross-module:** TASK-LEARN-007 (VP shares), TASK-REW-005 (payroll injection), TASK-AUTH-101 (CEO/CFO), TASK-MCP-007 (trigger cron), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

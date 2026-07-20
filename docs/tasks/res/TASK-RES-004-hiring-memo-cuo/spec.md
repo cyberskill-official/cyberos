@@ -87,22 +87,22 @@ The RES service **MUST** ship hiring memo at `services/res/src/hiring/` triggere
 1. **MUST** validate `hire_recommendation` against closed enum per DEC-2071.
 
 2. **MUST** detect trigger at `gap_detector.rs::detect(tenant)` per DEC-2070:
-   - SELECT members from TASK-RES-001 matrix where `allocation_flag='over_allocated'` for ≥4 consecutive weeks
-   - SELECT TASK-CRM-001 deals advancing stage in same period
-   - If both conditions met: enqueue memo draft
+- SELECT members from TASK-RES-001 matrix where `allocation_flag='over_allocated'` for ≥4 consecutive weeks
+- SELECT TASK-CRM-001 deals advancing stage in same period
+- If both conditions met: enqueue memo draft
 
 3. **MUST** project cost at `cost_projector.rs::project(role, region, contract_type)` per DEC-2072:
-   - Base salary band per role (TASK-RES-007 future or hardcoded table for v1)
-   - TASK-REW-004 statutory deductions per region (BHXH + BHYT + BHTN + PIT)
-   - Total fully-loaded 6-month cost
-   - Pipeline-derived revenue offset
+- Base salary band per role (TASK-RES-007 future or hardcoded table for v1)
+- TASK-REW-004 statutory deductions per region (BHXH + BHYT + BHTN + PIT)
+- Total fully-loaded 6-month cost
+- Pipeline-derived revenue offset
 
 4. **MUST** generate memo at `memo_generator.rs::generate(tenant, gap, costs)`:
-   - Skill gap summary
-   - Pipeline correlation
-   - Cost projection table
-   - 6-month ROI estimate
-   - AI recommendation (TASK-AI-003) with reasoning
+- Skill gap summary
+- Pipeline correlation
+- Cost projection table
+- 6-month ROI estimate
+- AI recommendation (TASK-AI-003) with reasoning
 
 5. **MUST** require CEO + CFO dual-sign per DEC-2073 — same-person rejected.
 
@@ -236,8 +236,7 @@ async fn same_person_both_roles_rejected() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-CUO-101, TASK-CRM-001.
-**Cross-module:** TASK-RES-001 (over-allocation signal), TASK-RES-002 (slot reserved), TASK-HR-002 (contract type), TASK-REW-004 (statutory deductions), TASK-AI-003 (LLM), TASK-AUTH-101 (CEO/CFO roles), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-CUO-101, TASK-CRM-001. **Cross-module:** TASK-RES-001 (over-allocation signal), TASK-RES-002 (slot reserved), TASK-HR-002 (contract type), TASK-REW-004 (statutory deductions), TASK-AI-003 (LLM), TASK-AUTH-101 (CEO/CFO roles), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

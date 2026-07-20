@@ -105,15 +105,15 @@ The CyberOS documentation build pipeline **MUST** server-render the three refere
 4. **MUST** preserve Alpine reactive behaviour: on JS hydration, `hydrated=true` is set; CSS `[x-cloak] { display: none }` hides prerendered AND Alpine takes over. No double-render flash.
 5. **MUST** preserve filter/sort UX from current Alpine implementation. Post-hydrate clicks still filter/sort the (now-Alpine-rendered) cards.
 6. **MUST** include all metadata fields per card type:
-    - **NFR**: id, category, target, phase, modules, references, description.
-    - **Risk**: id, severity, likelihood, mitigation, owner, status.
-    - **task**: id, module, priority, status, slice, owner, depends_on, blocks.
+- **NFR**: id, category, target, phase, modules, references, description.
+- **Risk**: id, severity, likelihood, mitigation, owner, status.
+- **task**: id, module, priority, status, slice, owner, depends_on, blocks.
 7. **MUST** generate stable IDs/anchors so external links (e.g., `https://docs.cyberos.world/reference/nfr-catalog.html#NFR-PERF-01`) work. Each card has `id="<NFR-ID>"` attribute.
 8. **MUST** integrate with Cloudflare Pages build (or other CI). The build script runs as a step BEFORE deploy; failure aborts deploy.
 9. **MUST** be Pagefind-indexable — re-running `pagefind --site docs/` after prerender produces an index that returns hits for `NFR-PERF-01`, `RSK-09`, `TASK-AI-001` queries.
 10. **MUST** support both build-time AND watch-mode runs:
-    - `node build/render-reference-pages.mjs` (one-shot).
-    - `node build/render-reference-pages.mjs --watch` (re-renders on JSON change; for local dev).
+- `node build/render-reference-pages.mjs` (one-shot).
+- `node build/render-reference-pages.mjs --watch` (re-renders on JSON change; for local dev).
 11. **MUST** be CI-gated by `docs-prerender-gate.yml`: on every PR touching `website/**`, the workflow runs the build + asserts the output matches the committed HTML (drift = build fail). Prevents the JSON-vs-HTML drift class.
 12. **SHOULD** emit a build report at `website/build/last-build-report.json` with stats: number of NFRs/RSKs/tasks rendered, build duration, output bytes per page. Visible in CI logs for operator review.
 
@@ -548,14 +548,4 @@ All resolved. Deferred:
 
 ---
 
-**Supersession record (2026-07-12, conflict-scan doctrine: newest wins).** The live intent of this task
-shipped through the TASK-DOCS-002/005/006 pipeline: data extraction to JSON (tools/docs-site/data-extract.mjs
--> data/tasks.json, nfrs), prerendered `<section data-prerendered="true">` catalog cards (render-task-catalog /
-render-nfr-catalog carry `TASK-DOCS-001 §1 #2` citations), deterministic builds, stable per-card anchors,
-and last-build-report.json. The remaining clauses are obsolete by later approved doctrine: #1's
-website/build paths and #8's Cloudflare Pages (replaced by tools/docs-site + VPS deploy), #4/#5 Alpine
-hydration (vanilla JS since the rebuild), #11's committed-HTML drift gate (FORBIDDEN by TASK-DOCS-002:
-generated output is never committed), #9 Pagefind and #10 watch mode (never built). Client-side search
-of the docs site is genuinely undelivered and is queued as a fresh-task candidate for the next intake batch
-rather than resurrecting this spec's mechanics. Status: closed (superseded), not done - several clauses
-as written are permanently false.
+**Supersession record (2026-07-12, conflict-scan doctrine: newest wins).** The live intent of this task shipped through the TASK-DOCS-002/005/006 pipeline: data extraction to JSON (tools/docs-site/data-extract.mjs -> data/tasks.json, nfrs), prerendered `<section data-prerendered="true">` catalog cards (render-task-catalog / render-nfr-catalog carry `TASK-DOCS-001 §1 #2` citations), deterministic builds, stable per-card anchors, and last-build-report.json. The remaining clauses are obsolete by later approved doctrine: #1's website/build paths and #8's Cloudflare Pages (replaced by tools/docs-site + VPS deploy), #4/#5 Alpine hydration (vanilla JS since the rebuild), #11's committed-HTML drift gate (FORBIDDEN by TASK-DOCS-002: generated output is never committed), #9 Pagefind and #10 watch mode (never built). Client-side search of the docs site is genuinely undelivered and is queued as a fresh-task candidate for the next intake batch rather than resurrecting this spec's mechanics. Status: closed (superseded), not done - several clauses as written are permanently false.

@@ -1,7 +1,6 @@
 # cyberos-mcp - the MCP channel
 
-A zero-dependency Node stdio MCP server that exposes the CyberOS `ship-tasks`
-workflow as tools, so any MCP-capable agent triggers it with no files. Requires `node >= 18`.
+A zero-dependency Node stdio MCP server that exposes the CyberOS `ship-tasks` workflow as tools, so any MCP-capable agent triggers it with no files. Requires `node >= 18`.
 
 Tools:
 
@@ -10,14 +9,11 @@ Tools:
 - `task_status {repo?}` - summarize the task backlog (counts by status, next eligible task) and installed version.
 - `ship_task {repo?, task_id?}` - return the canonical, HITL-gated trigger for the next (or a named) task. It never drives or accepts a task itself - the human still holds the two acceptance gates.
 
-`repo` defaults to the current working directory, walked up to the repo root. After `install.sh`
-runs, the server is vendored at `.cyberos/mcp/cyberos-mcp.mjs`; `task_gates` / `task_status` /
-`ship_task` need only that repo's `.cyberos/`.
+`repo` defaults to the current working directory, walked up to the repo root. After `install.sh` runs, the server is vendored at `.cyberos/mcp/cyberos-mcp.mjs`; `task_gates` / `task_status` / `ship_task` need only that repo's `.cyberos/`.
 
 ## Register it (pick your agent)
 
-Claude Code, Cursor, Windsurf and other `.mcp.json` readers - `install.sh` already writes this
-(and `.cursor/mcp.json` for Cursor) when absent. Manual form:
+Claude Code, Cursor, Windsurf and other `.mcp.json` readers - `install.sh` already writes this (and `.cursor/mcp.json` for Cursor) when absent. Manual form:
 
 ```json
 {
@@ -41,12 +37,9 @@ command = "node"
 args = [".cyberos/mcp/cyberos-mcp.mjs"]
 ```
 
-Antigravity / zcode / Command Code / any MCP client - point a stdio server at
-`node .cyberos/mcp/cyberos-mcp.mjs` (use the client's "add MCP server" UI or its
-`mcp.json`/config, e.g. Command Code `/mcp add`).
+Antigravity / zcode / Command Code / any MCP client - point a stdio server at `node .cyberos/mcp/cyberos-mcp.mjs` (use the client's "add MCP server" UI or its `mcp.json`/config, e.g. Command Code `/mcp add`).
 
-Payload-hosted (before a repo is inited) - run from the pack so `task_install` can bootstrap new
-repos, or set `CYBEROS_PAYLOAD`:
+Payload-hosted (before a repo is inited) - run from the pack so `task_install` can bootstrap new repos, or set `CYBEROS_PAYLOAD`:
 
 ```bash
 node dist/cyberos/mcp/cyberos-mcp.mjs           # task_install resolves ../install.sh

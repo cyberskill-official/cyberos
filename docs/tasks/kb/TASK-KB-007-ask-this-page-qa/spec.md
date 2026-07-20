@@ -90,22 +90,22 @@ The KB service **MUST** ship Q&A at `services/kb/src/qa/` grounded in current pa
 1. **MUST** validate `qa_answer_kind` against closed enum per DEC-1941.
 
 2. **MUST** assemble context at `context_assembler.rs::assemble(doc_id, question)` per DEC-1940:
-   - Current doc chunks (all)
-   - 1-hop linked docs (via TASK-MEMORY-108 inbound/outbound links) → their top-3 most relevant chunks via TASK-KB-006 rerank
-   - Capped at 50k tokens total
+- Current doc chunks (all)
+- 1-hop linked docs (via TASK-MEMORY-108 inbound/outbound links) → their top-3 most relevant chunks via TASK-KB-006 rerank
+- Capped at 50k tokens total
 
 3. **MUST** generate answer at `answer_generator.rs::generate(context, question)` per DEC-1940 with TASK-AI-003 prompt:
-   - System prompt restricts to provided context only
-   - Output JSON: `{answer, confidence_score, citations: [{doc_id, chunk_id, char_start, char_end}]}`
+- System prompt restricts to provided context only
+- Output JSON: `{answer, confidence_score, citations: [{doc_id, chunk_id, char_start, char_end}]}`
 
 4. **MUST** extract citations at `citation_extractor.rs::extract(answer)` per DEC-1942:
-   - Every factual claim must reference a chunk + char range
-   - Reject if any claim un-cited → mark as decline_low_confidence
+- Every factual claim must reference a chunk + char range
+- Reject if any claim un-cited → mark as decline_low_confidence
 
 5. **MUST** apply confidence gate per DEC-1943:
-   - confidence ≥ 0.7 → return confident or partial
-   - confidence < 0.7 → return decline_low_confidence
-   - 0 citations → return decline_no_evidence
+- confidence ≥ 0.7 → return confident or partial
+- confidence < 0.7 → return decline_low_confidence
+- 0 citations → return decline_no_evidence
 
 6. **MUST** enforce rate limit per DEC-1944 — 50/user/day; return 429.
 
@@ -247,8 +247,7 @@ async fn rate_limit_50_per_day() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-KB-006, TASK-CUO-101.
-**Cross-module:** TASK-AI-003 (LLM), TASK-MEMORY-108 (link graph for 1-hop), TASK-KB-003 (linked doc visibility), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-KB-006, TASK-CUO-101. **Cross-module:** TASK-AI-003 (LLM), TASK-MEMORY-108 (link graph for 1-hop), TASK-KB-003 (linked doc visibility), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

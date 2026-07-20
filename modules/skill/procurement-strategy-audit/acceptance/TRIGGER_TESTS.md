@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this procurement strategy"
+- "Audit this procurement strategy"
 - "Check the procurement strategy for completeness"
 - "Verify the procurement strategy meets the rubric"
 - "Re-audit the procurement strategy"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a procurement strategy" → procurement-strategy-author
+- "Draft a procurement strategy" → procurement-strategy-author
 - "Create the procurement strategy" → procurement-strategy-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

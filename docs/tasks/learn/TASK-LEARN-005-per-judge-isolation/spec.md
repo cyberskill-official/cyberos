@@ -84,17 +84,17 @@ The LEARN service **MUST** ship per-judge score isolation at `services/learn/src
 1. **MUST** validate `external_disclosure` against closed enum per DEC-2121.
 
 2. **MUST** filter at `filter.rs::apply(council_data, requester_role)` per DEC-2120:
-   - aggregate_only: median scores per dim + recommendation
-   - recommendation_only: just promote/hold/decline + reasoning summary
-   - judge_identities_only: who served (for transparency about who reviewed)
-   - none: 403
+- aggregate_only: median scores per dim + recommendation
+- recommendation_only: just promote/hold/decline + reasoning summary
+- judge_identities_only: who served (for transparency about who reviewed)
+- none: 403
 
 3. **MUST** gate at `access_gate.rs::check(requester, council)` per DEC-2123:
-   - HR consumers (TASK-HR-008): aggregate_only
-   - REW consumers: aggregate_only
-   - CEO + CHRO: recommendation_only
-   - CISO: full access for audit (logged)
-   - Other roles: none (403)
+- HR consumers (TASK-HR-008): aggregate_only
+- REW consumers: aggregate_only
+- CEO + CHRO: recommendation_only
+- CISO: full access for audit (logged)
+- Other roles: none (403)
 
 4. **MUST** define disclosure log at migration `0005`:
    ```sql
@@ -122,7 +122,7 @@ The LEARN service **MUST** ship per-judge score isolation at `services/learn/src
    ```text
    GET /v1/learn/councils/{id}/disclosure?kind=aggregate_only
    ```
-   Returns filtered data; rejects unauthorized roles.
+Returns filtered data; rejects unauthorized roles.
 
 6. **MUST** internal council scoring endpoints (TASK-LEARN-004) marked `internal_only` — direct cross-service raw access blocked.
 
@@ -220,9 +220,7 @@ async fn unauthorized_attempt_audited() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-LEARN-004.
-**Downstream:** TASK-LEARN-006 (promotion uses recommendation_only).
-**Cross-module:** TASK-AUTH-101 (role check), TASK-HR-008 (HR consumer), task-REW (REW consumer), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-LEARN-004. **Downstream:** TASK-LEARN-006 (promotion uses recommendation_only). **Cross-module:** TASK-AUTH-101 (role check), TASK-HR-008 (HR consumer), task-REW (REW consumer), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

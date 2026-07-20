@@ -95,22 +95,22 @@ The EMAIL service **MUST** ship outbound 1:1 send at `services/email/src/outboun
 1. **MUST** define closed `send_status` enum: `('drafting','queued','sent','bounced_hard','bounced_soft','complaint','suppressed')` per DEC-1481. Cardinality 7.
 
 2. **MUST** expose compose `POST /v1/email/outbound/compose` body `{ to, cc, bcc, subject, body_html, body_text, in_reply_to? }`. Handler:
-   - Validates recipients not in suppression list per DEC-1483; suppressed → 412 + suppressed reason.
-   - Generates `confirm_token` (UUIDv7) with 5-min TTL; cached in Redis.
-   - Returns 201 + `{ message_id, confirm_token, expires_at }`.
+- Validates recipients not in suppression list per DEC-1483; suppressed → 412 + suppressed reason.
+- Generates `confirm_token` (UUIDv7) with 5-min TTL; cached in Redis.
+- Returns 201 + `{ message_id, confirm_token, expires_at }`.
 
 3. **MUST** expose send `POST /v1/email/outbound/send` body `{ message_id, confirm_token }`. Handler:
-   - Validates token + message ownership.
-   - Rate-limit check per DEC-1485.
-   - Invokes TASK-EMAIL-004 DKIM signer.
-   - Hands to Stalwart SMTP queue.
-   - Persists status='queued'.
-   - Emits `email.send_queued` sev-2.
+- Validates token + message ownership.
+- Rate-limit check per DEC-1485.
+- Invokes TASK-EMAIL-004 DKIM signer.
+- Hands to Stalwart SMTP queue.
+- Persists status='queued'.
+- Emits `email.send_queued` sev-2.
 
 4. **MUST** handle bounce events from Stalwart per DEC-1481:
-   - Hard bounce (5xx permanent) → status='bounced_hard' + add recipient to suppression.
-   - Soft bounce (4xx temporary) → status='bounced_soft' + Stalwart retries up to 3 days.
-   - Emits respective audit kinds.
+- Hard bounce (5xx permanent) → status='bounced_hard' + add recipient to suppression.
+- Soft bounce (4xx temporary) → status='bounced_soft' + Stalwart retries up to 3 days.
+- Emits respective audit kinds.
 
 5. **MUST** handle complaint (Feedback Loop from Gmail/Outlook) per DEC-1481 → status='complaint' + add to suppression + emit `email.send_complaint` sev-1.
 
@@ -271,9 +271,7 @@ async fn rate_limit_100_per_hour() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-EMAIL-004.
-**Cross-module:** TASK-AUTH-101 (engagement_admin), TASK-AI-003, TASK-MEMORY-111.
-**Downstream:** TASK-EMAIL-010, TASK-EMAIL-011.
+**Upstream:** TASK-EMAIL-004. **Cross-module:** TASK-AUTH-101 (engagement_admin), TASK-AI-003, TASK-MEMORY-111. **Downstream:** TASK-EMAIL-010, TASK-EMAIL-011.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

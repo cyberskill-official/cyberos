@@ -1,8 +1,6 @@
 # CyberOS EMAIL — Stalwart adapter + per-tenant DKIM + residency-pinned bodies
 
-**Status:** TASK-EMAIL-001 + TASK-EMAIL-004/005/009/011 shipped as service slices — Stalwart container config, per-tenant DKIM keystore, residency-pinned S3+KMS body storage, delivery-auth hardening, CaMeL quarantine gate, outbound confirm-before-send queue, DSAR export jobs, HTTP routes, and memory audit row builders.
-**Mail server:** [Stalwart Mail Server](https://stalw.art) v0.10.x (AGPL-3.0; container pinned in `docker/stalwart.toml`).
-**Protocols:** JMAP + IMAP + SMTP + POP3 + ManageSieve + MTA-STS + DANE + DKIM + ARC + BIMI.
+**Status:** TASK-EMAIL-001 + TASK-EMAIL-004/005/009/011 shipped as service slices — Stalwart container config, per-tenant DKIM keystore, residency-pinned S3+KMS body storage, delivery-auth hardening, CaMeL quarantine gate, outbound confirm-before-send queue, DSAR export jobs, HTTP routes, and memory audit row builders. **Mail server:** [Stalwart Mail Server](https://stalw.art) v0.10.x (AGPL-3.0; container pinned in `docker/stalwart.toml`). **Protocols:** JMAP + IMAP + SMTP + POP3 + ManageSieve + MTA-STS + DANE + DKIM + ARC + BIMI.
 
 ---
 
@@ -89,8 +87,7 @@ cd services && cargo test -p cyberos-email --lib
 docker compose -f services/email/docker/compose.yml up
 ```
 
-The protocol-endpoint integration tests under `tests/protocol_endpoints_test.rs`
-require the compose stack to be running.
+The protocol-endpoint integration tests under `tests/protocol_endpoints_test.rs` require the compose stack to be running.
 
 ---
 
@@ -131,17 +128,13 @@ TASK-EMAIL-001 defines the core message row kinds; TASK-EMAIL-004/005/009/011 ad
 | `email.outbound_*` | Draft, confirm, send, bounce, complaint, suppression events | Recipient address hashed where emitted |
 | `email.dsar_*` | DSAR export request/completion | Attachment refs only; no raw body in memory |
 
-The core row body is defined by `src/audit/email_events.rs` (`EmailAuditRow`).
-Postgres `message_metadata` carries raw addresses (RLS-scoped); memory holds
-only the 16-char hash prefix per §1 #14.
+The core row body is defined by `src/audit/email_events.rs` (`EmailAuditRow`). Postgres `message_metadata` carries raw addresses (RLS-scoped); memory holds only the 16-char hash prefix per §1 #14.
 
 ---
 
 ## §7 — Spec divergences
 
-See `docs/tasks/email/TASK-EMAIL-001-stalwart-deployment.audit.md`
-§10.6 for the GUC-name divergence (`app.current_tenant_id` from
-TASK-AUTH-003 §10.6 vs. the spec's `auth.tenant_id`).
+See `docs/tasks/email/TASK-EMAIL-001-stalwart-deployment.audit.md` §10.6 for the GUC-name divergence (`app.current_tenant_id` from TASK-AUTH-003 §10.6 vs. the spec's `auth.tenant_id`).
 
 ---
 

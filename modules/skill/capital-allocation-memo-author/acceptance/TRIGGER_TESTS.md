@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a capital allocation memo"
+- "Draft a capital allocation memo"
 - "Create the capital allocation memo"
 - "Author a new capital allocation memo"
 - "Generate the capital allocation memo"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this capital allocation memo" → capital-allocation-memo-audit
+- "Audit this capital allocation memo" → capital-allocation-memo-audit
 - "Check the capital allocation memo for completeness" → capital-allocation-memo-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

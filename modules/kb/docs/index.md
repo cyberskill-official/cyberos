@@ -48,18 +48,7 @@ public-readable docs"] MEMBER -- "read · write" --> KB KB --> GENIE KB --> OBS 
 
 ### Auto vs human-in-loop operations matrix
 
-Operation| How it happens| Why this split
----|---|---
-Doc save| **Manual** Member action| Each save = new immutable version; never edit-in-place.
-Re-ingest to memory Layer 2| **Auto** on every save| Embedding + chunk-tracking; downstream RAG never stale.
-Translation linkage| **Manual** + auto-suggest| Author confirms `translation_of` after first VN/EN translation.
-"Ask this page" Q&A| **Auto** ground in current + linked docs| Bounded surface; ACL-aware; span citations always attached.
-Cross-KB Q&A| **Auto** + ACL filter pre-retrieval| Filter at retrieval time, never after; "no result" is OK.
-Promote to canonical| **Manual** CDO action| Elevation grants high authority weight in memory/Lumi synthesis; intentional.
-Runbook publish (for OBS)| **Manual** after post-incident review| Runbook is a deliberate authoring act; on-call authors after resolving.
-ACL change| **Manual** with audit row| Permission changes are high-impact; every change chains in memory.
-Share-link generation (time-bound)| **Manual**, **auto-expire**| External access requires explicit token; auto-expires per policy.
-Stale-doc flag| **Auto** nightly scan| Docs > 6 months without view OR with dropped citation count flagged for review; CDO triages.
+Operation| How it happens| Why this split ---|---|--- Doc save| **Manual** Member action| Each save = new immutable version; never edit-in-place. Re-ingest to memory Layer 2| **Auto** on every save| Embedding + chunk-tracking; downstream RAG never stale. Translation linkage| **Manual** + auto-suggest| Author confirms `translation_of` after first VN/EN translation. "Ask this page" Q&A| **Auto** ground in current + linked docs| Bounded surface; ACL-aware; span citations always attached. Cross-KB Q&A| **Auto** + ACL filter pre-retrieval| Filter at retrieval time, never after; "no result" is OK. Promote to canonical| **Manual** CDO action| Elevation grants high authority weight in memory/Lumi synthesis; intentional. Runbook publish (for OBS)| **Manual** after post-incident review| Runbook is a deliberate authoring act; on-call authors after resolving. ACL change| **Manual** with audit row| Permission changes are high-impact; every change chains in memory. Share-link generation (time-bound)| **Manual**, **auto-expire**| External access requires explicit token; auto-expires per policy. Stale-doc flag| **Auto** nightly scan| Docs > 6 months without view OR with dropped citation count flagged for review; CDO triages.
 
 ## Why KB exists
 
@@ -75,21 +64,7 @@ The bet is that the docs surface and the AI retrieval surface are the same surfa
 
 A structured decomposition of KB's scope.
 
-Axis| Question| Answer
----|---|---
-**5W - What**| What is KB?| A markdown-source, server-rendered HTML, versioned, ACL'd documentation system that ingests into memory Layer 2 for AI-grounded retrieval. Three-layer search (FTS5 + semantic + reranker). "Ask this page" with span-level citations. Dual-language vi + en.
-**5W - Who**| Who uses it?| **Members:** read + write docs daily. **CDO seat:** owns the surface; reviews "promote to canonical" requests. **Members in a category role:** can edit docs in their category. **Trust Center readers:** public-readable docs for opted-in tenants. **Agents:** KB is the primary grounded-retrieval target.
-**5W - When**| When does it run?| Continuous: SPA editor + reader. On every save: render -> memory ingest p95 <= 5 s. Nightly: dead-link detection; semantic index refresh on changed embeddings.
-**5W - Where**| Where does it run?| P1: single region (SG-1) with VN-residency RDS. P3+: multi-region read replicas. Source markdown is RDS + S3 (S3 for attachments and large binaries).
-**5W - Why**| Why a separate module?| Off-the-shelf wikis do not treat AI-grounded retrieval as a first-class concern; folding KB into memory corrupts the memory ingestion ledger; folding it into PROJ ties it to engagement-scoped lifetimes. Standalone module with tight memory integration is the right shape.
-**1H - How**| How does it work?| Editor writes markdown + frontmatter; on save, server validates, renders HTML (sanitised), computes diff vs prior version, creates a Version row, queues memory ingest. Search: FTS5 / PGroonga produces top-100 lexical, BGE-M3 reranks, BGE-rerank-v2-m3 picks top-10. Q&A: pull top spans, format prompt, call AI Gateway with citation-required system instruction.
-**2C - Cost**| Cost budget?| P1: ~$55 / month single-tenant pilot (Fargate + RDS + Redis + S3). Embedding cost ~$0.0001 / doc-version; reranker ~$0.0005 / query. 50-tenant: ~$220 / month.
-**2C - Constraints**| Constraints?| (a) memory ingest p95 <= 5 s (task pending). (b) Q&A must cite (task pending). (c) Permissions enforced at retrieval time - ACL leak via Q&A is a sev-0 bug. (d) Trust Center pages are public-readable only when explicitly opted in (task pending). (e) Vietnamese-quality search >= 90% recall on a fixed evaluation corpus.
-**5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16 + PGroonga, pulldown-cmark for markdown, ammonia for HTML sanitisation, Redis 7, S3 + KMS, BGE-M3 embedder + BGE-rerank-v2-m3 reranker (memory-shared), TipTap or CodeMirror for the editor, OpenTelemetry SDK.
-**5M - Methods**| Method choices?| Markdown source of truth (not block-based proprietary). Immutable versioning (no in-place edit). Server-side render (no client-side trust). FTS5 / PGroonga + semantic + reranker triple-layer (not just one). ACL at retrieval time (not at display time).
-**5M - Machines**| Deployment?| Fargate axum service. RDS Postgres Multi-AZ. PGroonga compiled into the RDS image. Redis hot cache. Embedding + reranker GPU node shared with memory.
-**5M - Manpower**| Who maintains?| 0.4 FTE (CDO seat) at P1 launch + 0.1 FTE (CCO for Trust Center pages). CTO owns the engine.
-**5M - Measurement**| How measured?| Search p95 <= 350 ms, Q&A p95 <= 4 s end-to-end, citation accuracy >= 95% (claim -> source span), memory ingest lag p95 <= 5 s, Vietnamese-query recall >= 90%.
+Axis| Question| Answer ---|---|--- **5W - What**| What is KB?| A markdown-source, server-rendered HTML, versioned, ACL'd documentation system that ingests into memory Layer 2 for AI-grounded retrieval. Three-layer search (FTS5 + semantic + reranker). "Ask this page" with span-level citations. Dual-language vi + en. **5W - Who**| Who uses it?| **Members:** read + write docs daily. **CDO seat:** owns the surface; reviews "promote to canonical" requests. **Members in a category role:** can edit docs in their category. **Trust Center readers:** public-readable docs for opted-in tenants. **Agents:** KB is the primary grounded-retrieval target. **5W - When**| When does it run?| Continuous: SPA editor + reader. On every save: render -> memory ingest p95 <= 5 s. Nightly: dead-link detection; semantic index refresh on changed embeddings. **5W - Where**| Where does it run?| P1: single region (SG-1) with VN-residency RDS. P3+: multi-region read replicas. Source markdown is RDS + S3 (S3 for attachments and large binaries). **5W - Why**| Why a separate module?| Off-the-shelf wikis do not treat AI-grounded retrieval as a first-class concern; folding KB into memory corrupts the memory ingestion ledger; folding it into PROJ ties it to engagement-scoped lifetimes. Standalone module with tight memory integration is the right shape. **1H - How**| How does it work?| Editor writes markdown + frontmatter; on save, server validates, renders HTML (sanitised), computes diff vs prior version, creates a Version row, queues memory ingest. Search: FTS5 / PGroonga produces top-100 lexical, BGE-M3 reranks, BGE-rerank-v2-m3 picks top-10. Q&A: pull top spans, format prompt, call AI Gateway with citation-required system instruction. **2C - Cost**| Cost budget?| P1: ~$55 / month single-tenant pilot (Fargate + RDS + Redis + S3). Embedding cost ~$0.0001 / doc-version; reranker ~$0.0005 / query. 50-tenant: ~$220 / month. **2C - Constraints**| Constraints?| (a) memory ingest p95 <= 5 s (task pending). (b) Q&A must cite (task pending). (c) Permissions enforced at retrieval time - ACL leak via Q&A is a sev-0 bug. (d) Trust Center pages are public-readable only when explicitly opted in (task pending). (e) Vietnamese-quality search >= 90% recall on a fixed evaluation corpus. **5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16 + PGroonga, pulldown-cmark for markdown, ammonia for HTML sanitisation, Redis 7, S3 + KMS, BGE-M3 embedder + BGE-rerank-v2-m3 reranker (memory-shared), TipTap or CodeMirror for the editor, OpenTelemetry SDK. **5M - Methods**| Method choices?| Markdown source of truth (not block-based proprietary). Immutable versioning (no in-place edit). Server-side render (no client-side trust). FTS5 / PGroonga + semantic + reranker triple-layer (not just one). ACL at retrieval time (not at display time). **5M - Machines**| Deployment?| Fargate axum service. RDS Postgres Multi-AZ. PGroonga compiled into the RDS image. Redis hot cache. Embedding + reranker GPU node shared with memory. **5M - Manpower**| Who maintains?| 0.4 FTE (CDO seat) at P1 launch + 0.1 FTE (CCO for Trust Center pages). CTO owns the engine. **5M - Measurement**| How measured?| Search p95 <= 350 ms, Q&A p95 <= 4 s end-to-end, citation accuracy >= 95% (claim -> source span), memory ingest lag p95 <= 5 s, Vietnamese-query recall >= 90%.
 
 ## Architecture
 
@@ -121,24 +96,7 @@ Layer 2 ingestion · audit"] AI["⚡ AI Gateway"] OBS["👁 OBS"] end SPA --> GQ
 
 ### Internal components
 
-Component| Path (planned)| Responsibility
----|---|---
-`document.rs`| services/kb/src/document.rs| Document CRUD. Slug uniqueness per tenant. Frontmatter validation (kind, category, language, permission tier).
-`version.rs`| services/kb/src/version.rs| Version archiver. Every save -> new immutable row. Retains markdown + rendered HTML hash.
-`renderer.rs`| services/kb/src/renderer.rs| Server-side markdown -> HTML. Uses pulldown-cmark + ammonia (sanitise). No client-side JS execution.
-`diff.rs`| services/kb/src/diff.rs| Unified diff between versions. Powers the version-history UI.
-`memory_ingest.rs`| services/kb/src/memory_ingest.rs| On every version save: strip markdown, chunk at semantic boundaries, write memory Layer 2 rows + embeddings. p95 <= 5 s (task pending).
-`search.rs`| services/kb/src/search.rs| Triple-layer search. FTS5 / PGroonga -> top-100; BGE-M3 cosine top-30; BGE-rerank-v2-m3 -> top-10.
-`qa.rs`| services/kb/src/qa.rs| Q&A composer. Pull top spans -> format prompt with citation-required system instruction -> call AI Gateway -> parse cited answer.
-`acl.rs`| services/kb/src/acl.rs| ACL gate at retrieval time. Filters spans before they reach the QA composer.
-`share_link.rs`| services/kb/src/share_link.rs| Time-bound share-link tokens for external readers (task pending).
-`translation.rs`| services/kb/src/translation.rs| Translation-of linkage. Reader sees doc in JWT-locale; AI grounds across language pairs.
-`backlink.rs`| services/kb/src/backlink.rs| Backlink graph: "what links here" query.
-`promote.rs`| services/kb/src/promote.rs| "Promote to canonical" - elevates a doc to a high-authority memory source (task pending). Requires CDO approval.
-`notion_import.rs`| services/kb/src/notion_import.rs| Notion-export ZIP import (task pending). Preserves links + categories.
-`export.rs`| services/kb/src/export.rs| Per-page or per-tree markdown export.
-`trust_center.rs`| services/kb/src/trust_center.rs| Public-readable Trust Center pages. Opt-in per tenant (task pending).
-`migrations/`| services/kb/migrations/| sqlx migrations + PGroonga index DDL. RLS on every table.
+Component| Path (planned)| Responsibility ---|---|--- `document.rs`| services/kb/src/document.rs| Document CRUD. Slug uniqueness per tenant. Frontmatter validation (kind, category, language, permission tier). `version.rs`| services/kb/src/version.rs| Version archiver. Every save -> new immutable row. Retains markdown + rendered HTML hash. `renderer.rs`| services/kb/src/renderer.rs| Server-side markdown -> HTML. Uses pulldown-cmark + ammonia (sanitise). No client-side JS execution. `diff.rs`| services/kb/src/diff.rs| Unified diff between versions. Powers the version-history UI. `memory_ingest.rs`| services/kb/src/memory_ingest.rs| On every version save: strip markdown, chunk at semantic boundaries, write memory Layer 2 rows + embeddings. p95 <= 5 s (task pending). `search.rs`| services/kb/src/search.rs| Triple-layer search. FTS5 / PGroonga -> top-100; BGE-M3 cosine top-30; BGE-rerank-v2-m3 -> top-10. `qa.rs`| services/kb/src/qa.rs| Q&A composer. Pull top spans -> format prompt with citation-required system instruction -> call AI Gateway -> parse cited answer. `acl.rs`| services/kb/src/acl.rs| ACL gate at retrieval time. Filters spans before they reach the QA composer. `share_link.rs`| services/kb/src/share_link.rs| Time-bound share-link tokens for external readers (task pending). `translation.rs`| services/kb/src/translation.rs| Translation-of linkage. Reader sees doc in JWT-locale; AI grounds across language pairs. `backlink.rs`| services/kb/src/backlink.rs| Backlink graph: "what links here" query. `promote.rs`| services/kb/src/promote.rs| "Promote to canonical" - elevates a doc to a high-authority memory source (task pending). Requires CDO approval. `notion_import.rs`| services/kb/src/notion_import.rs| Notion-export ZIP import (task pending). Preserves links + categories. `export.rs`| services/kb/src/export.rs| Per-page or per-tree markdown export. `trust_center.rs`| services/kb/src/trust_center.rs| Public-readable Trust Center pages. Opt-in per tenant (task pending). `migrations/`| services/kb/migrations/| sqlx migrations + PGroonga index DDL. RLS on every table.
 
 ## Data model
 
@@ -152,13 +110,7 @@ erDiagram TENANT ||--o{ DOCUMENT: "owns" DOCUMENT ||--o{ VERSION: "has" DOCUMENT
 
 ### Permission tiers
 
-Tier| Visible to| Used for
----|---|---
-`public`| Anyone with the URL (incl. anonymous if trust_center_published)| Trust Center pages, public marketing docs.
-`org`| Any authenticated subject in the tenant| How-to, reference, decision-log (default).
-`role-restricted`| Subjects holding one of `allowed_role_codes`| Policy (HR), runbook (CSO), compensation references.
-`explicit`| Subjects in `PERMISSION` table| Per-doc carve-outs (e.g. specific Member can read role-restricted).
-`share-link`| Anyone with the token, until expiry| Time-bound external sharing (client review of a doc).
+Tier| Visible to| Used for ---|---|--- `public`| Anyone with the URL (incl. anonymous if trust_center_published)| Trust Center pages, public marketing docs. `org`| Any authenticated subject in the tenant| How-to, reference, decision-log (default). `role-restricted`| Subjects holding one of `allowed_role_codes`| Policy (HR), runbook (CSO), compensation references. `explicit`| Subjects in `PERMISSION` table| Per-doc carve-outs (e.g. specific Member can read role-restricted). `share-link`| Anyone with the token, until expiry| Time-bound external sharing (client review of a doc).
 
 ## API surface
 
@@ -250,34 +202,11 @@ type Mutation {
 
 ### REST surface
 
-Method| Path| Purpose
----|---|---
-GET| `/kb/{slug}`| Render document as HTML (ACL-gated).
-GET| `/kb/{slug}.md`| Markdown source download.
-POST| `/kb/{slug}/save`| Save markdown + frontmatter.
-GET| `/kb/{slug}/versions/{n}`| Render a specific version.
-GET| `/kb/{slug}/diff?from={a}&to={b}`| Unified diff.
-GET| `/kb/search?q=...&cat=...`| Triple-layer search.
-POST| `/kb/ask-page`| Q&A grounded in this page + linked pages.
-POST| `/kb/ask`| Q&A across whole KB (ACL-filtered).
-GET| `/trust-center/{slug}`| Public read (opted-in tenants).
-GET| `/share/{token}`| Share-link access.
-POST| `/admin/import/notion`| Notion ZIP import.
-POST| `/admin/export/tree?root=...`| Per-tree markdown export.
+Method| Path| Purpose ---|---|--- GET| `/kb/{slug}`| Render document as HTML (ACL-gated). GET| `/kb/{slug}.md`| Markdown source download. POST| `/kb/{slug}/save`| Save markdown + frontmatter. GET| `/kb/{slug}/versions/{n}`| Render a specific version. GET| `/kb/{slug}/diff?from={a}&to={b}`| Unified diff. GET| `/kb/search?q=...&cat=...`| Triple-layer search. POST| `/kb/ask-page`| Q&A grounded in this page + linked pages. POST| `/kb/ask`| Q&A across whole KB (ACL-filtered). GET| `/trust-center/{slug}`| Public read (opted-in tenants). GET| `/share/{token}`| Share-link access. POST| `/admin/import/notion`| Notion ZIP import. POST| `/admin/export/tree?root=...`| Per-tree markdown export.
 
 ### MCP tool catalogue
 
-Tool name| Inputs| Outputs| Annotations
----|---|---|---
-`cyberos.kb.search`| query, category?, limit| SearchResult| readonly, scope=kb.read
-`cyberos.kb.get_document`| slug| Document| readonly, scope=kb.read
-`cyberos.kb.ask_page`| document_id, question| QAResult| readonly, scope=kb.read
-`cyberos.kb.ask`| question, scope?| QAResult| readonly, scope=kb.ask
-`cyberos.kb.list_versions`| document_id| Version| readonly, scope=kb.read
-`cyberos.kb.diff`| document_id, from, to| diff text| readonly, scope=kb.read
-`cyberos.kb.save`| document_id, markdown, change_summary| Version| scope=kb.write
-`cyberos.kb.create_share_link`| document_id, valid_until, max_views?| {token, url}| scope=kb.share
-`cyberos.kb.promote`| document_id, memory_canonical_path| Promotion| destructive, human-confirm, scope=kb.promote
+Tool name| Inputs| Outputs| Annotations ---|---|---|--- `cyberos.kb.search`| query, category?, limit| SearchResult| readonly, scope=kb.read `cyberos.kb.get_document`| slug| Document| readonly, scope=kb.read `cyberos.kb.ask_page`| document_id, question| QAResult| readonly, scope=kb.read `cyberos.kb.ask`| question, scope?| QAResult| readonly, scope=kb.ask `cyberos.kb.list_versions`| document_id| Version| readonly, scope=kb.read `cyberos.kb.diff`| document_id, from, to| diff text| readonly, scope=kb.read `cyberos.kb.save`| document_id, markdown, change_summary| Version| scope=kb.write `cyberos.kb.create_share_link`| document_id, valid_until, max_views?| {token, url}| scope=kb.share `cyberos.kb.promote`| document_id, memory_canonical_path| Promotion| destructive, human-confirm, scope=kb.promote
 
 ## Key flows
 
@@ -324,14 +253,7 @@ stateDiagram-v2 [*] --> Draft: create Draft --> Published: first save (version 1
 
 ### Version retention
 
-Category| Retention| Notes
----|---|---
-`policy`| 10 years| Required by Vietnamese Decree 13 / labour law.
-`runbook`| 5 years| Incident-response audit support.
-`decision-log`| indefinite| Mirrors memory decisions retention.
-`reference`| indefinite| Foundational facts.
-`how-to`| 2 years| How-tos drift; old versions archived.
-`trust-center`| indefinite| External commitments - provenance retained.
+Category| Retention| Notes ---|---|--- `policy`| 10 years| Required by Vietnamese Decree 13 / labour law. `runbook`| 5 years| Incident-response audit support. `decision-log`| indefinite| Mirrors memory decisions retention. `reference`| indefinite| Foundational facts. `how-to`| 2 years| How-tos drift; old versions archived. `trust-center`| indefinite| External commitments - provenance retained.
 
 ## Functional requirements
 
@@ -343,20 +265,7 @@ Previous task enumerations were archived 2026-05-14 and are no longer reflected 
 
 NFRs KB must satisfy.
 
-NFR ID| Concern| Target| Measurement
----|---|---|---
-(NFR pending)| Search p95| <= 350 ms| OBS histogram
-(NFR pending)| Q&A p95 (end-to-end)| <= 4 s| OBS + AI Gateway
-(NFR pending)| memory ingest p95| <= 5 s (task pending)| BI histogram
-(NFR pending)| Document render p95 (cache-cold)| <= 250 ms| OBS histogram
-(NFR pending)| Vietnamese-query recall (eval corpus)| >= 90%| quarterly review
-(NFR pending)| Citation accuracy| >= 95%| monthly human review of 50 Q&A pairs
-(NFR pending)| Q&A "I don't know" rate on out-of-corpus queries| >= 90%| red-team eval
-(NFR pending)| ACL leak via search / Q&A| = 0| CI test on every PR
-(NFR pending)| HTML rendering XSS| = 0| ammonia sanitisation + CSP
-(NFR pending)| Service availability| >= 99.9% (28-day)| OBS SLO
-(NFR pending)| Version durability| 0 lost saves under crash| chaos test
-(NFR pending)| Policy / runbook retention (10 / 5 years)| 100%| retention policy enforcement
+NFR ID| Concern| Target| Measurement ---|---|---|--- (NFR pending)| Search p95| <= 350 ms| OBS histogram (NFR pending)| Q&A p95 (end-to-end)| <= 4 s| OBS + AI Gateway (NFR pending)| memory ingest p95| <= 5 s (task pending)| BI histogram (NFR pending)| Document render p95 (cache-cold)| <= 250 ms| OBS histogram (NFR pending)| Vietnamese-query recall (eval corpus)| >= 90%| quarterly review (NFR pending)| Citation accuracy| >= 95%| monthly human review of 50 Q&A pairs (NFR pending)| Q&A "I don't know" rate on out-of-corpus queries| >= 90%| red-team eval (NFR pending)| ACL leak via search / Q&A| = 0| CI test on every PR (NFR pending)| HTML rendering XSS| = 0| ammonia sanitisation + CSP (NFR pending)| Service availability| >= 99.9% (28-day)| OBS SLO (NFR pending)| Version durability| 0 lost saves under crash| chaos test (NFR pending)| Policy / runbook retention (10 / 5 years)| 100%| retention policy enforcement
 
 ## Dependencies
 
@@ -380,77 +289,25 @@ link previews"] end AUTH --> KB memory --> KB AI --> KB EMB --> KB MCP --> KB OB
 
 KB holds policy and decision-log documents that are themselves compliance artefacts; it must satisfy retention, residency, and access-audit obligations.
 
-Regulation / standard| Article / clause| KB feature that satisfies it
----|---|---
-Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| DSAR export of every doc a subject authored or edited.
-Vietnam Decree 13/2023| Art. 17 - Processing log| Every save / view writes a memory audit row.
-Vietnam Decree 53/2022| Art. 26 - Residency| VN-tenant docs on hanoi-1 RDS + S3.
-GDPR (EU 2016/679)| Art. 15 - Right of access| DSAR export.
-GDPR| Art. 17 - Right to erasure| Document purge with audit row; KB Layer 2 chunk removal cascades to memory.
-ISO/IEC 27001:2022| A.5.10 - Acceptable use| Policy docs live in KB; acceptance audit via read receipts.
-ISO/IEC 27001:2022| A.8.5 - Secure authentication| ACL-gated retrieval; share-link tokens time-bound.
-SOC 2 Type II| CC2.2 - Internal communication| KB is the canonical doc surface for policy + runbook.
-SOC 2 Type II| CC6.1 - Logical access| RBAC + per-doc ACL; ACL applied at retrieval.
-OWASP Top-10 (web)| A03 - Injection (XSS)| ammonia HTML sanitisation; CSP headers.
+Regulation / standard| Article / clause| KB feature that satisfies it ---|---|--- Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| DSAR export of every doc a subject authored or edited. Vietnam Decree 13/2023| Art. 17 - Processing log| Every save / view writes a memory audit row. Vietnam Decree 53/2022| Art. 26 - Residency| VN-tenant docs on hanoi-1 RDS + S3. GDPR (EU 2016/679)| Art. 15 - Right of access| DSAR export. GDPR| Art. 17 - Right to erasure| Document purge with audit row; KB Layer 2 chunk removal cascades to memory. ISO/IEC 27001:2022| A.5.10 - Acceptable use| Policy docs live in KB; acceptance audit via read receipts. ISO/IEC 27001:2022| A.8.5 - Secure authentication| ACL-gated retrieval; share-link tokens time-bound. SOC 2 Type II| CC2.2 - Internal communication| KB is the canonical doc surface for policy + runbook. SOC 2 Type II| CC6.1 - Logical access| RBAC + per-doc ACL; ACL applied at retrieval. OWASP Top-10 (web)| A03 - Injection (XSS)| ammonia HTML sanitisation; CSP headers.
 
 ## Risk entries
 
 KB-specific risks tracked in the [risk register](../../reference/risk-register.html#kb).
 
-ID| Risk| Likelihood| Impact| Owner| Mitigation
----|---|---|---|---|---
-`R-KB-001`| ACL leak via search / Q&A surface| Low| High| CSO| ACL applied _before_ reranking + LLM; CI test asserts a restricted doc cannot surface.
-`R-KB-002`| Q&A hallucinates a citation that does not match the cited span| Medium| Medium| CDO| QA composer validates every cited span_id; mismatched citations rejected; "I don't know" returned.
-`R-KB-003`| memory ingest backlog blinds retrieval after major doc rewrite| Medium| Medium| CDO| p95 <= 5 s SLO; backlog alarm at > 60 s pages CDO.
-`R-KB-004`| Vietnamese tokenisation regression on PGroonga upgrade| Low| Medium| CTO| 50-query VN eval corpus run on every PGroonga upgrade.
-`R-KB-005`| XSS via markdown embedding raw HTML| Low| High| CSO| ammonia sanitiser + strict CSP; fuzz tests on every PR.
-`R-KB-006`| Notion import truncates large pages| Medium| Low| CTO| Page-size guard; rejected pages reported in import summary.
-`R-KB-007`| Share-link token replay after expiry| Low| Medium| CSO| Token expiry enforced server-side; revocation propagates to Redis cache within 30 s.
-`R-KB-008`| Promoted-to-canonical doc later modified, memory canonical out of sync| Medium| Medium| CDO| Demotion required before edit on promoted doc; or auto re-promotion with audit row.
-`R-KB-009`| Translation drift between vi and en versions| Medium| Low| CCO| Drift detection (word-count + key-phrase diff); flagged in editor UI.
-`R-KB-010`| Public Trust Center page reveals private policy by misconfiguration| Low| High| CCO| Trust-center publish requires double-confirm + audit row; CI test asserts no role-restricted docs published.
-`R-KB-011`| Runbook catalogue drift - runbook claims "increase Bedrock quota" but tenant uses Vertex| Medium| Medium| CDO| Runbooks tagged with applicability (provider, region, severity); CUO triage filters before suggestion; staleness scan flags > 6mo unverified.
-`R-KB-012`| OBS-runbook coupling tightens - KB outage breaks auto-runbook router| Low| High| CTO| OBS caches last-known-good runbook catalogue (1h TTL); on KB outage CUO triage falls back to static severity routing; alarm on KB unreachable.
-`R-KB-013`| Span-citation drift - doc edited, citation now points to wrong paragraph| Medium| Medium| CDO| Citations are version-pinned (doc_id x version x span_id); editing creates new version; old citations resolve to old version; nightly sweep flags broken cites.
-`R-KB-014`| Vertical-pack vendor uploads malicious markdown that escapes sanitiser| Low| High| CSO| Pack-uploaded docs run through extended sanitisation (ammonia + CSP); CSO review required before promote-to-canonical for vendor-authored docs.
-`R-KB-015`| Q&A "I don't know" rate too high -> Members stop using Genie| Medium| Medium| CDO| Out-of-corpus questions trigger doc-gap-detector -> suggests "no doc exists, write one?"; tracking shows topic-area gaps.
+ID| Risk| Likelihood| Impact| Owner| Mitigation ---|---|---|---|---|--- `R-KB-001`| ACL leak via search / Q&A surface| Low| High| CSO| ACL applied _before_ reranking + LLM; CI test asserts a restricted doc cannot surface. `R-KB-002`| Q&A hallucinates a citation that does not match the cited span| Medium| Medium| CDO| QA composer validates every cited span_id; mismatched citations rejected; "I don't know" returned. `R-KB-003`| memory ingest backlog blinds retrieval after major doc rewrite| Medium| Medium| CDO| p95 <= 5 s SLO; backlog alarm at > 60 s pages CDO. `R-KB-004`| Vietnamese tokenisation regression on PGroonga upgrade| Low| Medium| CTO| 50-query VN eval corpus run on every PGroonga upgrade. `R-KB-005`| XSS via markdown embedding raw HTML| Low| High| CSO| ammonia sanitiser + strict CSP; fuzz tests on every PR. `R-KB-006`| Notion import truncates large pages| Medium| Low| CTO| Page-size guard; rejected pages reported in import summary. `R-KB-007`| Share-link token replay after expiry| Low| Medium| CSO| Token expiry enforced server-side; revocation propagates to Redis cache within 30 s. `R-KB-008`| Promoted-to-canonical doc later modified, memory canonical out of sync| Medium| Medium| CDO| Demotion required before edit on promoted doc; or auto re-promotion with audit row. `R-KB-009`| Translation drift between vi and en versions| Medium| Low| CCO| Drift detection (word-count + key-phrase diff); flagged in editor UI. `R-KB-010`| Public Trust Center page reveals private policy by misconfiguration| Low| High| CCO| Trust-center publish requires double-confirm + audit row; CI test asserts no role-restricted docs published. `R-KB-011`| Runbook catalogue drift - runbook claims "increase Bedrock quota" but tenant uses Vertex| Medium| Medium| CDO| Runbooks tagged with applicability (provider, region, severity); CUO triage filters before suggestion; staleness scan flags > 6mo unverified. `R-KB-012`| OBS-runbook coupling tightens - KB outage breaks auto-runbook router| Low| High| CTO| OBS caches last-known-good runbook catalogue (1h TTL); on KB outage CUO triage falls back to static severity routing; alarm on KB unreachable. `R-KB-013`| Span-citation drift - doc edited, citation now points to wrong paragraph| Medium| Medium| CDO| Citations are version-pinned (doc_id x version x span_id); editing creates new version; old citations resolve to old version; nightly sweep flags broken cites. `R-KB-014`| Vertical-pack vendor uploads malicious markdown that escapes sanitiser| Low| High| CSO| Pack-uploaded docs run through extended sanitisation (ammonia + CSP); CSO review required before promote-to-canonical for vendor-authored docs. `R-KB-015`| Q&A "I don't know" rate too high -> Members stop using Genie| Medium| Medium| CDO| Out-of-corpus questions trigger doc-gap-detector -> suggests "no doc exists, write one?"; tracking shows topic-area gaps.
 
 ## KPIs
 
 KB rolls up 14 KPIs covering search quality, Q&A grounding, ingestion latency, and editorial health.
 
-KPI| Formula| Source| Target
----|---|---|---
-**Search p95**| histogram| OBS| <= 350 ms
-**Q&A p95**| histogram| OBS + AI Gateway| <= 4 s
-**Citation accuracy**| matching_spans / claims| monthly human review| >= 95%
-**memory ingest p95**| histogram| BI| <= 5 s
-**VN-query recall**| relevant_returned / relevant_total| quarterly eval| >= 90%
-**"I don't know" rate (out-of-corpus)**| idk / total_questions| red-team| >= 90%
-**Docs per Member**| active_docs / members| memory audit| tracked; baseline 8
-**Stale-doc rate**| > 180 d untouched / total| memory| <= 25%
-**ACL-leak incidents**| count| memory audit| = 0
-**Runbook applicability accuracy**| OBS routings correctly matched / total runbook suggestions| OBS triage telemetry| >= 0.80
-**Span-citation integrity**| citations resolving to valid (doc_id x version x span_id) / total citations| nightly sweep| = 1.0
-**Doc-gap-detector signal rate**| topic gaps suggested / "I don't know" responses| Q&A telemetry| >= 0.30 (catch enough gaps)
-**Cross-tenant retrieval reject rate**| ACL-filtered retrievals / total retrievals| retrieval logs| tracked; spike = active probing
-**Vendor-pack doc CSO-review rate**| pack-authored canonical-promoted docs with CSO sign-off / total such promotions| memory audit| = 1.0
+KPI| Formula| Source| Target ---|---|---|--- **Search p95**| histogram| OBS| <= 350 ms **Q&A p95**| histogram| OBS + AI Gateway| <= 4 s **Citation accuracy**| matching_spans / claims| monthly human review| >= 95% **memory ingest p95**| histogram| BI| <= 5 s **VN-query recall**| relevant_returned / relevant_total| quarterly eval| >= 90% **"I don't know" rate (out-of-corpus)**| idk / total_questions| red-team| >= 90% **Docs per Member**| active_docs / members| memory audit| tracked; baseline 8 **Stale-doc rate**| > 180 d untouched / total| memory| <= 25% **ACL-leak incidents**| count| memory audit| = 0 **Runbook applicability accuracy**| OBS routings correctly matched / total runbook suggestions| OBS triage telemetry| >= 0.80 **Span-citation integrity**| citations resolving to valid (doc_id x version x span_id) / total citations| nightly sweep| = 1.0 **Doc-gap-detector signal rate**| topic gaps suggested / "I don't know" responses| Q&A telemetry| >= 0.30 (catch enough gaps) **Cross-tenant retrieval reject rate**| ACL-filtered retrievals / total retrievals| retrieval logs| tracked; spike = active probing **Vendor-pack doc CSO-review rate**| pack-authored canonical-promoted docs with CSO sign-off / total such promotions| memory audit| = 1.0
 
 ## RACI matrix
 
 KB is owned by CDO seat (interim CEO).
 
-Activity| CEO| CDO| CTO| CSO| CCO| CHRO
----|---|---|---|---|---|---
-Service design + spec| A| R| C| C| C| I
-Implementation| I| C| A/R| C| I| I
-Promote-to-canonical approval| C| A/R| I| I| I| I
-Trust Center publication| C| C| I| C| A/R| I
-Policy doc authorship| C| C| I| C| I| A/R
-ACL audit| C| C| R| A| I| I
-Vietnamese-quality review| I| A/R| C| I| C| I
-Notion / external import| I| A/R| C| I| I| I
-DSAR fulfilment| I| C| C| R| I| I
+Activity| CEO| CDO| CTO| CSO| CCO| CHRO ---|---|---|---|---|---|--- Service design + spec| A| R| C| C| C| I Implementation| I| C| A/R| C| I| I Promote-to-canonical approval| C| A/R| I| I| I| I Trust Center publication| C| C| I| C| A/R| I Policy doc authorship| C| C| I| C| I| A/R ACL audit| C| C| R| A| I| I Vietnamese-quality review| I| A/R| C| I| C| I Notion / external import| I| A/R| C| I| I| I DSAR fulfilment| I| C| C| R| I| I
 
 R = Responsible, A = Accountable, C = Consulted, I = Informed.
 
@@ -557,24 +414,7 @@ $ cyberos-kb export --root policy --format markdown --output./policies/
 | CLI subcommands | ~16 planned (`cyberos-kb`) |
 | P1 budget | ~$55/mo (Fargate + RDS + Redis + S3) |
 
-Capability| Status
----|---
-Markdown editor + frontmatter| planned - P1
-Immutable versioning + diff| planned - P1
-Per-page ACL + share-link tokens| planned - P1
-FTS5 / PGroonga + semantic + reranker| planned - P1
-"Ask this page" with citations| planned - P1
-"Ask the KB" (whole-corpus QA)| planned - P1
-memory ingest p95 <= 5 s| planned - P1
-Promote-to-canonical (CDO gate)| planned - P1
-Translation linkage (vi <-> en)| planned - P1
-Backlink graph| planned - P1
-Notion import + markdown export| planned - P1
-Trust Center public-readable pages| planned - P1
-Attachment AV scan| planned - P1
-Confluence / GitBook import| planned - P2+
-Real-time collaborative editing (Yjs)| planned - P2+
-Translation auto-draft via AI| planned - P2+
+Capability| Status ---|--- Markdown editor + frontmatter| planned - P1 Immutable versioning + diff| planned - P1 Per-page ACL + share-link tokens| planned - P1 FTS5 / PGroonga + semantic + reranker| planned - P1 "Ask this page" with citations| planned - P1 "Ask the KB" (whole-corpus QA)| planned - P1 memory ingest p95 <= 5 s| planned - P1 Promote-to-canonical (CDO gate)| planned - P1 Translation linkage (vi <-> en)| planned - P1 Backlink graph| planned - P1 Notion import + markdown export| planned - P1 Trust Center public-readable pages| planned - P1 Attachment AV scan| planned - P1 Confluence / GitBook import| planned - P2+ Real-time collaborative editing (Yjs)| planned - P2+ Translation auto-draft via AI| planned - P2+
 
 ## References
 

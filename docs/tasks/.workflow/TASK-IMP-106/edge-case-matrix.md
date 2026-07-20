@@ -9,11 +9,7 @@ verdict: pass (edge-case-matrix-audit: every category >=1 row; SECURITY rows poi
 ---
 # Edge-case matrix - TASK-IMP-106
 
-The summary is pure output over two inputs: what this run recorded as removed, and what is on
-disk when the run finishes. So the interesting edges are all *state of the tree*, and §1.4 -
-"a path that is not present MUST NOT be claimed as kept" - is the fail-closed rule the matrix
-has to attack from every side. Rows 4-9 are that attack: one row per kept path absent, plus the
-two ways the whole list can be wrong at once.
+The summary is pure output over two inputs: what this run recorded as removed, and what is on disk when the run finishes. So the interesting edges are all *state of the tree*, and §1.4 - "a path that is not present MUST NOT be claimed as kept" - is the fail-closed rule the matrix has to attack from every side. Rows 4-9 are that attack: one row per kept path absent, plus the two ways the whole list can be wrong at once.
 
 | # | category | trigger | expected behavior | covered by |
 |---|----------|---------|-------------------|-----------|
@@ -40,17 +36,12 @@ two ways the whole list can be wrong at once.
 - bounds: rows 10, 11
 - malformed: row 12
 - concurrency: rows 13, 14
-- SECURITY: row 15 -> paired to t20 + an in-line justification; no ADR needed (no new attack
-  surface: the block adds no input, no interpolation, and no execution)
+- SECURITY: row 15 -> paired to t20 + an in-line justification; no ADR needed (no new attack surface: the block adds no input, no interpolation, and no execution)
 - DEGRADATION: row 16 -> detection + recovery both named
 - **§1.4 fail-closed: rows 4-9** - the reason this matrix is 16 rows and not 8
 
 ## The row that matters most
 
-Row 8. A hard-coded kept list satisfies §1.1, §1.2 and §1.3 completely and violates §1.4
-invisibly - on a full install the output is byte-identical to the correct implementation. t20
-cannot see the difference and never will; that is not a flaw in t20, it is the shape of the
-defect. Only an arm that makes a claimed path ABSENT can tell a derivation from a recital.
-That arm is t21, and it is the one this task lives or dies on.
+Row 8. A hard-coded kept list satisfies §1.1, §1.2 and §1.3 completely and violates §1.4 invisibly - on a full install the output is byte-identical to the correct implementation. t20 cannot see the difference and never will; that is not a flaw in t20, it is the shape of the defect. Only an arm that makes a claimed path ABSENT can tell a derivation from a recital. That arm is t21, and it is the one this task lives or dies on.
 </parameter>
 </invoke>

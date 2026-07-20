@@ -61,25 +61,25 @@ risk_if_skipped: "Lumi (the assistant) is the brand surface for AI-augmented cha
 The @lumi mention layer **MUST** intercept chat messages, parse mentions, route to CUO supervisor, and post reply. The contract:
 
 1. **MUST** install a Mattermost plugin `cyberos-lumi-router` that intercepts every new post:
-   - On post.create: parse body via `(?i)@lumi(?:[\\s,!?:]|$)` regex.
-   - On match: extract surrounding context (4 sentences before + after) → send to chat-lumi service.
+- On post.create: parse body via `(?i)@lumi(?:[\\s,!?:]|$)` regex.
+- On match: extract surrounding context (4 sentences before + after) → send to chat-lumi service.
 2. **MUST** the chat-lumi service (separate process) receives webhook with `{post_id, channel_id, user_id, body, context, tenant_id, trace_id}`.
 3. **MUST** route to CUO supervisor (TASK-CUO-101) with persona = `lumi`. CUO returns either:
-   - `Resolved { reply: String }` — immediate reply.
-   - `Routed { eta_seconds: i32 }` — async work; respond later.
-   - `Refused { reason: String }` — policy or capability gap.
+- `Resolved { reply: String }` — immediate reply.
+- `Routed { eta_seconds: i32 }` — async work; respond later.
+- `Refused { reason: String }` — policy or capability gap.
 4. **MUST** post reply to chat channel via Mattermost API:
-   - Reply as user "Lumi" (system user provisioned at install).
-   - Reply threaded to the mention post (`root_id` set).
-   - Include CUO outcome footer: `_(via Lumi · trace ...)`.
+- Reply as user "Lumi" (system user provisioned at install).
+- Reply threaded to the mention post (`root_id` set).
+- Include CUO outcome footer: `_(via Lumi · trace ...)`.
 5. **MUST** emit memory audit `chat.lumi_invoked` per mention with payload `{post_id, channel_id, user_id, body_redacted, context_hash, cuo_outcome, response_hash, latency_ms, trace_id}`.
 6. **MUST** PII-redact body before memory write (TASK-MEMORY-111).
 7. **MUST** dedup: same `(post_id)` mentioned multiple times by edits → only first mention triggers.
 8. **MUST** respect channel privacy: in private channel, reply has `sync_class: private` per TASK-MEMORY-106; public → shareable.
 9. **MUST** complete first response (CUO ack OR Resolved) within 2 seconds; longer responses post "thinking..." placeholder then update.
 10. **MUST** emit OTel metrics:
-    - `chat_lumi_mentions_total{outcome}` (outcome ∈ resolved | routed | refused | error).
-    - `chat_lumi_first_response_latency_seconds`.
+- `chat_lumi_mentions_total{outcome}` (outcome ∈ resolved | routed | refused | error).
+- `chat_lumi_first_response_latency_seconds`.
 11. **MUST NOT** trigger on imported posts: posts whose `props.cyberos_imported = true` (from TASK-CHAT-006/007) MUST be skipped, even if their body contains `@lumi`. Historical mentions must not generate live LLM calls.
 12. **MUST NOT** trigger on Lumi's own replies: posts authored by the Lumi system user are filtered before regex eval. Prevents infinite reply loops.
 13. **MUST** rate-limit per-user mentions: 30 mentions per user per minute, sliding window. Excess returns Refused with `reason: "rate_limited"`. Counters live in Redis.

@@ -42,12 +42,7 @@ blockers:
 
 ## 1. Purpose
 
-Produce a single artefact — the `edge-case-matrix@1` — that captures every
-boundary condition the implementation must address, **before** any code is
-written. The matrix is the contract between the task's acceptance criteria
-and the test suite; the coverage-gate skill (which runs after
-implementation) reads the matrix to verify every row has a corresponding
-test.
+Produce a single artefact — the `edge-case-matrix@1` — that captures every boundary condition the implementation must address, **before** any code is written. The matrix is the contract between the task's acceptance criteria and the test suite; the coverage-gate skill (which runs after implementation) reads the matrix to verify every row has a corresponding test.
 
 ## 2. Output schema
 
@@ -68,8 +63,7 @@ rows:
 ## 3. Quality gates
 
 - Every category has ≥1 row (the audit-companion will fail if any is empty).
-- SECURITY rows have a `planned_test` pointing at a real test file (not
-  TBD).
+- SECURITY rows have a `planned_test` pointing at a real test file (not TBD).
 - DEGRADATION rows describe both detection and recovery.
 - `total_rows ≥ 8` for any task rated `MUST` priority.
 

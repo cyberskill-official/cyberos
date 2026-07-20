@@ -93,17 +93,17 @@ A Rust HTTP service `obs-router` **MUST** accept Alertmanager webhook fires and 
 1. **MUST** accept Alertmanager v2 webhook on `:7777/alert` with payload schema per Alertmanager docs.
 2. **MUST** invoke CUO `obs.triage-alert@1` skill with the alert payload as input. The skill returns `{ confidence: f64, summary: String, suggested_runbook: Option<RunbookRef>, suspected_cause: String }`.
 3. **MUST** route based on (severity, confidence):
-    - sev-1: route to BOTH CHAT and PagerDuty regardless of confidence.
-    - sev-2..sev-4 + confidence ≥ 0.70: post triage summary to CHAT (`#oncall` channel).
-    - sev-2..sev-4 + confidence < 0.70: trigger PagerDuty.
+- sev-1: route to BOTH CHAT and PagerDuty regardless of confidence.
+- sev-2..sev-4 + confidence ≥ 0.70: post triage summary to CHAT (`#oncall` channel).
+- sev-2..sev-4 + confidence < 0.70: trigger PagerDuty.
 4. **MUST** include in CHAT post:
-    - Alert name + severity (visual badge).
-    - CUO triage summary (the skill's output).
-    - Suspected cause.
-    - Suggested runbook (link to KB if present).
-    - Trace_id link (jumps to Tempo).
-    - Ack button (sends POST to `obs-router:7777/ack/<alert_id>`).
-    - Escalate-to-PagerDuty button (sends POST to escalate).
+- Alert name + severity (visual badge).
+- CUO triage summary (the skill's output).
+- Suspected cause.
+- Suggested runbook (link to KB if present).
+- Trace_id link (jumps to Tempo).
+- Ack button (sends POST to `obs-router:7777/ack/<alert_id>`).
+- Escalate-to-PagerDuty button (sends POST to escalate).
 5. **MUST** route sev-1 alerts to BOTH CHAT and PagerDuty (no triage trust at sev-1 — DEC-171).
 6. **MUST** emit memory audit row `obs.alert_triaged` per alert with payload: `alert_name`, `severity`, `cuo_confidence`, `route` (chat | pagerduty | both), `suggested_runbook`, `trace_id`, `request_id`.
 7. **MUST** preserve `trace_id` from alert labels (`trace_id` exemplar from TASK-OBS-005). The CHAT post + audit row carry the trace_id; investigators click → jump to Tempo.
@@ -114,12 +114,12 @@ A Rust HTTP service `obs-router` **MUST** accept Alertmanager webhook fires and 
 12. **MUST** support deduplication: alerts with identical `alert_fingerprint` arriving within 5 minutes are deduplicated to a single CHAT post (with a counter "fired N times in last 5m"). PagerDuty has its own dedup; we don't double-up.
 13. **MUST** authenticate Alertmanager via shared secret (`X-CyberOS-Webhook-Secret` header). Unauthenticated webhooks → 401.
 14. **SHOULD** emit OTel metrics:
-    - `obs_router_alerts_received_total{severity}` (counter).
-    - `obs_router_alerts_routed_total{route, severity, outcome}` (counter; outcome ∈ ok | chat_failed | pagerduty_failed | cuo_failed | dropped).
-    - `obs_triage_confidence` (histogram).
-    - `obs_router_triage_latency_ms` (histogram; SLO p95 < 10s).
-    - `obs_router_acks_total{ack_source}` (counter).
-    - `obs_router_dedup_total` (counter).
+- `obs_router_alerts_received_total{severity}` (counter).
+- `obs_router_alerts_routed_total{route, severity, outcome}` (counter; outcome ∈ ok | chat_failed | pagerduty_failed | cuo_failed | dropped).
+- `obs_triage_confidence` (histogram).
+- `obs_router_triage_latency_ms` (histogram; SLO p95 < 10s).
+- `obs_router_acks_total{ack_source}` (counter).
+- `obs_router_dedup_total` (counter).
 
 ---
 

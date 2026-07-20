@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a change management plan"
+- "Draft a change management plan"
 - "Create the change management plan"
 - "Author a new change management plan"
 - "Generate the change management plan"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this change management plan" → change-management-plan-audit
+- "Audit this change management plan" → change-management-plan-audit
 - "Check the change management plan for completeness" → change-management-plan-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

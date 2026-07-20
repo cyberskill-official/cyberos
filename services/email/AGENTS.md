@@ -1,9 +1,6 @@
 # EMAIL module — agent instructions
 
-This file is read by Claude / Cursor / Codex agents working inside
-`services/email/`. It is supplementary to the root `AGENTS.md` (the
-CyberOS Layer-1 Memory Protocol); it does NOT override the protocol's
-§0.1 precedence rules.
+This file is read by Claude / Cursor / Codex agents working inside `services/email/`. It is supplementary to the root `AGENTS.md` (the CyberOS Layer-1 Memory Protocol); it does NOT override the protocol's §0.1 precedence rules.
 
 ---
 
@@ -18,31 +15,15 @@ CyberOS Layer-1 Memory Protocol); it does NOT override the protocol's
 
 ## §2 — Hard rules for EMAIL work
 
-- **Bodies live in S3+KMS, not Postgres.** Per TASK-EMAIL-001 §1 DEC-311 and
-  the `disallowed_tools` line, message bodies MUST NOT be stored on a
-  Postgres-readable row. The metadata mirror in `message_metadata` carries
-  `s3_body_key` + `s3_body_kms_key_id` + `body_sha256_hex` — that is the
-  ONLY place body provenance lives.
+- **Bodies live in S3+KMS, not Postgres.** Per TASK-EMAIL-001 §1 DEC-311 and the `disallowed_tools` line, message bodies MUST NOT be stored on a Postgres-readable row. The metadata mirror in `message_metadata` carries `s3_body_key` + `s3_body_kms_key_id` + `body_sha256_hex` — that is the ONLY place body provenance lives.
 
-- **Outbound mail MUST be DKIM-signed.** Per TASK-EMAIL-001 §1 #15. Any
-  outbound path that bypasses the DKIM verification step is a spec
-  violation. The `on_outbound` adapter checks `dkim_keys.status =
-  'active'` before submitting; do not add a path that skips the check.
+- **Outbound mail MUST be DKIM-signed.** Per TASK-EMAIL-001 §1 #15. Any outbound path that bypasses the DKIM verification step is a spec violation. The `on_outbound` adapter checks `dkim_keys.status = 'active'` before submitting; do not add a path that skips the check.
 
-- **Cross-residency writes are fail-closed.** Per §1 #12. The Stalwart
-  inbound handler asserts residency match BEFORE the S3 PUT. Adding an
-  override (even for "operator can fix later") is forbidden — Decree
-  53/2022 + GDPR require this be enforced by code, not by review.
+- **Cross-residency writes are fail-closed.** Per §1 #12. The Stalwart inbound handler asserts residency match BEFORE the S3 PUT. Adding an override (even for "operator can fix later") is forbidden — Decree 53/2022 + GDPR require this be enforced by code, not by review.
 
-- **Append-only at the SQL-grant layer.** `REVOKE UPDATE, DELETE ON
-  message_metadata, bounce_log FROM cyberos_app;` is the line. Any path
-  that requires editing an existing row MUST instead write a new row
-  with `prior_message_id` set.
+- **Append-only at the SQL-grant layer.** `REVOKE UPDATE, DELETE ON message_metadata, bounce_log FROM cyberos_app;` is the line. Any path that requires editing an existing row MUST instead write a new row with `prior_message_id` set.
 
-- **PII never lands in memory audit.** Raw email addresses, raw subjects,
-  raw body text — none of these may appear in an `email.*` audit row.
-  The `from_hash16` / `to_hash16` helpers in `src/audit/email_events.rs`
-  are the only addressee representation allowed.
+- **PII never lands in memory audit.** Raw email addresses, raw subjects, raw body text — none of these may appear in an `email.*` audit row. The `from_hash16` / `to_hash16` helpers in `src/audit/email_events.rs` are the only addressee representation allowed.
 
 ---
 
@@ -82,5 +63,4 @@ cd services && cargo test -p cyberos-email
 
 Documented in `TASK-EMAIL-001-stalwart-deployment.audit.md` §10.6:
 
-- `auth.tenant_id` (spec §1 #10) → `app.current_tenant_id` (impl,
-  aligned with TASK-AUTH-003 §10.6 amendment).
+- `auth.tenant_id` (spec §1 #10) → `app.current_tenant_id` (impl, aligned with TASK-AUTH-003 §10.6 amendment).

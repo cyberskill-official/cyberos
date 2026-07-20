@@ -155,67 +155,67 @@ risk_if_skipped: "Without SCIM deprovision, terminated employees retain access t
 The PORTAL service **MUST** ship SCIM 2.0 DELETE handler at `services/portal/src/scim/user_delete.rs` extending TASK-PORTAL-003's SCIM endpoint with session invalidation ≤ 30s p99, dual-channel session kill (JWT blacklist + WebSocket close), cascade revocation across PORTAL-005 + PORTAL-001 + CHAT-005 + MCP-006, 5-min grace period + admin restore, idempotency, per-Engagement isolation, nightly reconciliation, and 7 memory audit kinds.
 
 1. **MUST** extend the SCIM endpoint at `DELETE /scim/v2/{engagement_slug}/Users/{id}` per RFC 7644 §3.6. Handler:
-    - Authenticated via per-Engagement SCIM bearer token (TASK-PORTAL-003 §1 #13).
-    - Marks subject status `tombstoned` + sets `tombstoned_at = now()` in the SUBJECTS table (TASK-AUTH-002).
-    - Enters sync phase per §1 #3 — completes within 1 second wall-clock.
-    - Enqueues async phase per §1 #4 — completes within 30 seconds wall-clock end-to-end.
-    - Returns `204 No Content` per RFC 7644 §3.6 (synchronous ack; async work continues).
+- Authenticated via per-Engagement SCIM bearer token (TASK-PORTAL-003 §1 #13).
+- Marks subject status `tombstoned` + sets `tombstoned_at = now()` in the SUBJECTS table (TASK-AUTH-002).
+- Enters sync phase per §1 #3 — completes within 1 second wall-clock.
+- Enqueues async phase per §1 #4 — completes within 30 seconds wall-clock end-to-end.
+- Returns `204 No Content` per RFC 7644 §3.6 (synchronous ack; async work continues).
 
 2. **MUST** define `portal_jwt_blacklist` table at migration `0010`: `(jti UUID PRIMARY KEY, tenant_id UUID NOT NULL, subject_id UUID NOT NULL, engagement_id UUID, blacklisted_at TIMESTAMPTZ NOT NULL DEFAULT now(), expires_at TIMESTAMPTZ NOT NULL, reason TEXT NOT NULL)`. Postgres is the durable store; Redis is the hot-path cache. Both consulted at JWT validate; Postgres is the source of truth on cache miss.
 
 3. **MUST** complete the sync phase within 1 second wall-clock per DEC-1096. The `deprovision/sync_phase.rs::execute(subject_id, engagement_id)`:
-    - UPDATE `subjects SET status='tombstoned', tombstoned_at=now() WHERE id=$1` (within TASK-AUTH-002 RLS scope).
-    - SELECT all active JWT jtis for the subject from `auth_sessions WHERE subject_id=$1 AND revoked_at IS NULL`.
-    - For each jti: INSERT into `portal_jwt_blacklist` (Postgres) + ZADD into Redis sorted-set `jwt_blacklist:<tenant>` with score=expiration_unix.
-    - PUBLISH on Redis pub/sub channel `jwt_blacklist_update` so all gateway nodes update their in-memory caches within ~50ms.
-    - Emit `portal.scim_user_deprovisioned` memory row.
+- UPDATE `subjects SET status='tombstoned', tombstoned_at=now() WHERE id=$1` (within TASK-AUTH-002 RLS scope).
+- SELECT all active JWT jtis for the subject from `auth_sessions WHERE subject_id=$1 AND revoked_at IS NULL`.
+- For each jti: INSERT into `portal_jwt_blacklist` (Postgres) + ZADD into Redis sorted-set `jwt_blacklist:<tenant>` with score=expiration_unix.
+- PUBLISH on Redis pub/sub channel `jwt_blacklist_update` so all gateway nodes update their in-memory caches within ~50ms.
+- Emit `portal.scim_user_deprovisioned` memory row.
 
 4. **MUST** complete the async phase within 30 seconds end-to-end per DEC-1089. The `deprovision/async_phase.rs::execute(subject_id, engagement_id)`:
-    - In parallel, invoke each of the 4 cascade targets per DEC-1084 + §1 #6.
-    - Iterate active WebSocket connections per §1 #5 + close them.
-    - UPDATE `auth_sessions SET revoked_at=now(), revoked_reason='scim_deprovision' WHERE subject_id=$1 AND engagement_id=$2 AND revoked_at IS NULL`.
-    - Compute end-to-end latency (sync phase start → last cascade complete) + emit OTel histogram + check 30s SLO.
-    - On SLO breach: emit `portal.scim_deprovision_sla_breach` sev-1.
+- In parallel, invoke each of the 4 cascade targets per DEC-1084 + §1 #6.
+- Iterate active WebSocket connections per §1 #5 + close them.
+- UPDATE `auth_sessions SET revoked_at=now(), revoked_reason='scim_deprovision' WHERE subject_id=$1 AND engagement_id=$2 AND revoked_at IS NULL`.
+- Compute end-to-end latency (sync phase start → last cascade complete) + emit OTel histogram + check 30s SLO.
+- On SLO breach: emit `portal.scim_deprovision_sla_breach` sev-1.
 
 5. **MUST** force-close active WebSocket connections per DEC-1081 + DEC-1095. The `deprovision/websocket_killer.rs::close_for_subject(subject_id, engagement_id)`:
-    - Iterates `chat_active_connections` + `genie_active_connections` registries (in-memory + Redis-backed for multi-node).
-    - For each connection matching `(subject_id, engagement_id)`: send WebSocket close frame with code `4001` + reason `"scim_deprovision"`.
-    - Emit `portal.websocket_force_closed` memory row per closed connection (informational; sev-3; sampled at 10% for high-volume scenarios via TASK-OBS-006).
+- Iterates `chat_active_connections` + `genie_active_connections` registries (in-memory + Redis-backed for multi-node).
+- For each connection matching `(subject_id, engagement_id)`: send WebSocket close frame with code `4001` + reason `"scim_deprovision"`.
+- Emit `portal.websocket_force_closed` memory row per closed connection (informational; sev-3; sampled at 10% for high-volume scenarios via TASK-OBS-006).
 
 6. **MUST** cascade revoke 4 downstream resources per DEC-1084. The `deprovision/cascade.rs::run_all(subject_id, engagement_id)` invokes in parallel:
-    - **TASK-PORTAL-005 Genie sessions**: `portal_genie_sessions` table — UPDATE `revoked_at=now()` WHERE subject_id + engagement_id; emit `portal.scim_cascade_revocation` with `target='genie_sessions'`.
-    - **TASK-PORTAL-001 scoped views**: invalidate any cached view tokens in Redis for this subject's Engagement membership; no DB write needed (views are computed; tombstoned subject's Engagement-membership join returns 0 rows).
-    - **TASK-CHAT-005 channel memberships**: `chat_channel_memberships` table — UPDATE `revoked_at=now()`; cascade emits a CHAT membership-revoked event for any active subscribers.
-    - **TASK-MCP-006 pending confirmations**: DELETE FROM `mcp_pending_confirmations` WHERE caller_subject_id=$1 AND consumed_at IS NULL (per MCP-006 grants table; tombstoned subject's pending acks are voided).
+- **TASK-PORTAL-005 Genie sessions**: `portal_genie_sessions` table — UPDATE `revoked_at=now()` WHERE subject_id + engagement_id; emit `portal.scim_cascade_revocation` with `target='genie_sessions'`.
+- **TASK-PORTAL-001 scoped views**: invalidate any cached view tokens in Redis for this subject's Engagement membership; no DB write needed (views are computed; tombstoned subject's Engagement-membership join returns 0 rows).
+- **TASK-CHAT-005 channel memberships**: `chat_channel_memberships` table — UPDATE `revoked_at=now()`; cascade emits a CHAT membership-revoked event for any active subscribers.
+- **TASK-MCP-006 pending confirmations**: DELETE FROM `mcp_pending_confirmations` WHERE caller_subject_id=$1 AND consumed_at IS NULL (per MCP-006 grants table; tombstoned subject's pending acks are voided).
 
 7. **MUST** consult the JWT blacklist on every JWT validate per DEC-1085. The `services/auth/src/jwt/validator.rs::validate(jwt)` modification:
-    - After standard signature + exp + aud checks: lookup `jwt.jti` in Redis blacklist set (`SISMEMBER jwt_blacklist:<tenant> <jti>`).
-    - If present → return `Err(AuthError::JwtRevoked)` → handler returns 401 + `{ error: "jwt_revoked", reason: "scim_deprovision" }`.
-    - On Redis miss + Postgres hit: backfill Redis (cache warm).
+- After standard signature + exp + aud checks: lookup `jwt.jti` in Redis blacklist set (`SISMEMBER jwt_blacklist:<tenant> <jti>`).
+- If present → return `Err(AuthError::JwtRevoked)` → handler returns 401 + `{ error: "jwt_revoked", reason: "scim_deprovision" }`.
+- On Redis miss + Postgres hit: backfill Redis (cache warm).
 
 8. **MUST** support 5-min grace period per DEC-1083. Within 5 minutes of tombstone, SCIM PUT on the same user reactivates:
-    - Handler at `PUT /scim/v2/{engagement_slug}/Users/{id}`: if subject is tombstoned + `now() - tombstoned_at < 5 min`, transition `status='active'` + `tombstoned_at=null` + reverse the JWT blacklist (DELETE rows + ZREM from Redis sorted-set + PUBLISH unblacklist event).
-    - Cascade rollback: re-activate sessions + Genie subscriptions etc. WebSocket connections cannot be re-opened (already closed); client must re-connect (will succeed since blacklist cleared).
-    - Emit `portal.scim_user_restored` sev-2 + payload `restored_via=scim_put_within_grace`.
-    - Beyond 5 min: SCIM PUT returns `409 + grace_period_expired` + suggests using admin restore endpoint.
+- Handler at `PUT /scim/v2/{engagement_slug}/Users/{id}`: if subject is tombstoned + `now() - tombstoned_at < 5 min`, transition `status='active'` + `tombstoned_at=null` + reverse the JWT blacklist (DELETE rows + ZREM from Redis sorted-set + PUBLISH unblacklist event).
+- Cascade rollback: re-activate sessions + Genie subscriptions etc. WebSocket connections cannot be re-opened (already closed); client must re-connect (will succeed since blacklist cleared).
+- Emit `portal.scim_user_restored` sev-2 + payload `restored_via=scim_put_within_grace`.
+- Beyond 5 min: SCIM PUT returns `409 + grace_period_expired` + suggests using admin restore endpoint.
 
 9. **MUST** expose admin restore at `POST /v1/admin/engagements/{eng_id}/subjects/{subject_id}/restore` per DEC-1092. Caller has `tenant_admin` role. Body: `{ reason }`. Handler:
-    - Validates subject status='tombstoned'.
-    - Same logic as §1 #8 grace-period reversal (un-blacklist + cascade re-activate).
-    - Emit `portal.scim_user_restored` sev-1 + payload `restored_via=admin_restore`.
-    - Reason free-text persisted to `portal_restore_requests` (audit forensic).
+- Validates subject status='tombstoned'.
+- Same logic as §1 #8 grace-period reversal (un-blacklist + cascade re-activate).
+- Emit `portal.scim_user_restored` sev-1 + payload `restored_via=admin_restore`.
+- Reason free-text persisted to `portal_restore_requests` (audit forensic).
 
 10. **MUST** be idempotent on SCIM DELETE per DEC-1087:
-    - Re-DELETE on tombstoned subject → 204 (no state change; no re-emit of deprovision audit row to avoid double-counting).
-    - Re-DELETE on hard-purged subject → 404 + `{ scim_type: "noTarget" }` per RFC 7644 §3.6.
+- Re-DELETE on tombstoned subject → 204 (no state change; no re-emit of deprovision audit row to avoid double-counting).
+- Re-DELETE on hard-purged subject → 404 + `{ scim_type: "noTarget" }` per RFC 7644 §3.6.
 
 11. **MUST** scope session invalidation per-Engagement per DEC-1086. Subject A is member of Engagement X + Y. SCIM DELETE on subject A within Engagement X's SCIM endpoint revokes ONLY X-scoped sessions (JWTs with `engagement_id=X` claim); Y-scoped sessions remain valid. Subject A's `auth_sessions` rows filtered `WHERE engagement_id = $X`.
 
 12. **MUST** propagate JWT blacklist updates across gateway nodes within 50ms p95 per DEC-1085. The Redis pub/sub mechanism:
-    - Sync-phase publish: `PUBLISH jwt_blacklist_update <jti_list_json>`.
-    - Each gateway node subscribes; on receive, updates in-memory cache.
-    - Cache miss falls back to Redis SISMEMBER (~1ms) then Postgres SELECT (~5ms).
-    - End-to-end visibility: < 100ms p99 for blacklist effect.
+- Sync-phase publish: `PUBLISH jwt_blacklist_update <jti_list_json>`.
+- Each gateway node subscribes; on receive, updates in-memory cache.
+- Cache miss falls back to Redis SISMEMBER (~1ms) then Postgres SELECT (~5ms).
+- End-to-end visibility: < 100ms p99 for blacklist effect.
 
 13. **MUST** maintain `portal_deprovision_log` table at migration `0009`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID NOT NULL, engagement_id UUID NOT NULL, subject_id UUID NOT NULL, action TEXT NOT NULL CHECK (action IN ('soft_tombstone','hard_purge','restore','grace_undelete')), initiated_at TIMESTAMPTZ NOT NULL DEFAULT now(), completed_at TIMESTAMPTZ, sync_phase_duration_ms INT, async_phase_duration_ms INT, cascade_targets JSONB NOT NULL, sla_breach BOOLEAN NOT NULL DEFAULT false)`. Append-only. RLS scoped to `(tenant_id, engagement_id)`.
 
@@ -224,19 +224,19 @@ The PORTAL service **MUST** ship SCIM 2.0 DELETE handler at `services/portal/src
 15. **MUST** rate-limit SCIM DELETE at 1000/min/Engagement per DEC-1091 — enterprise org-wide cleanup scenarios. Excess returns `429 + Retry-After: 60`.
 
 16. **MUST** run nightly reconciliation per DEC-1097 + DEC-1094. The `reconciliation.rs::run_nightly()`:
-    - SELECT subjects WHERE status='tombstoned' AND tombstoned_at < now() - interval '1 day'.
-    - For each: check `auth_sessions WHERE subject_id=$1 AND revoked_at IS NULL` should return 0 rows.
-    - Any active session for a tombstoned subject = sev-1 `portal.scim_orphan_session_detected` (not in 7-kind core list per DEC-1088; informational+forensic).
-    - Auto-revoke the orphan + audit; emit one row per orphan.
+- SELECT subjects WHERE status='tombstoned' AND tombstoned_at < now() - interval '1 day'.
+- For each: check `auth_sessions WHERE subject_id=$1 AND revoked_at IS NULL` should return 0 rows.
+- Any active session for a tombstoned subject = sev-1 `portal.scim_orphan_session_detected` (not in 7-kind core list per DEC-1088; informational+forensic).
+- Auto-revoke the orphan + audit; emit one row per orphan.
 
 17. **MUST** emit 7 memory audit row kinds per DEC-1088:
-    - `portal.scim_user_deprovisioned` (sev-1 — material identity event)
-    - `portal.scim_user_restored` (sev-1 — counter-event)
-    - `portal.scim_cascade_revocation` (sev-2 — one per cascade target)
-    - `portal.jwt_blacklist_propagated` (sev-3 — high-volume; sampled at 1%)
-    - `portal.websocket_force_closed` (sev-3 — high-volume; sampled at 10%)
-    - `portal.scim_grace_period_expired` (sev-3 — informational)
-    - `portal.scim_deprovision_sla_breach` (sev-1 — SLO miss)
+- `portal.scim_user_deprovisioned` (sev-1 — material identity event)
+- `portal.scim_user_restored` (sev-1 — counter-event)
+- `portal.scim_cascade_revocation` (sev-2 — one per cascade target)
+- `portal.jwt_blacklist_propagated` (sev-3 — high-volume; sampled at 1%)
+- `portal.websocket_force_closed` (sev-3 — high-volume; sampled at 10%)
+- `portal.scim_grace_period_expired` (sev-3 — informational)
+- `portal.scim_deprovision_sla_breach` (sev-1 — SLO miss)
 
 18. **MUST** PII-scrub audit rows per DEC-1090 + task-audit skill rule 18. `subject_id` UUID retained (forensic anti-correlation needed); `email` PII-scrubbed via TASK-MEMORY-111 → `email_hash16`.
 

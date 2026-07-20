@@ -31,8 +31,7 @@ incident: <link> | null                  # BUG ONLY — required when severity i
 
 ## Reproduction
 
-Deterministic steps. If a reader cannot make the bug happen by following these, the
-task is not ready to leave `draft` (BUG-001).
+Deterministic steps. If a reader cannot make the bug happen by following these, the task is not ready to leave `draft` (BUG-001).
 
 ```
 1.
@@ -40,8 +39,7 @@ task is not ready to leave `draft` (BUG-001).
 3.
 ```
 
-**Environment**: <os / runtime / service version / config that matters>
-**Frequency**: always | intermittent (<n> in <m> attempts)
+**Environment**: <os / runtime / service version / config that matters> **Frequency**: always | intermittent (<n> in <m> attempts)
 
 ## Expected vs observed
 
@@ -50,22 +48,18 @@ task is not ready to leave `draft` (BUG-001).
 | **Expected** | <what the system promised — cite the clause, spec or contract that promises it> |
 | **Observed** | <what it actually did — paste the error, the wrong value, the trace> |
 
-Stating these separately is not ceremony. It is how you find the bugs where the
-*expectation* was wrong (BUG-002).
+Stating these separately is not ceremony. It is how you find the bugs where the *expectation* was wrong (BUG-002).
 
 ## Blast radius
 
 - **Who is affected**: <tenants / users / services>
 - **Since when**: <version or commit — see `first_bad_commit`>
 - **Workaround**: <exists / none>
-- **Data integrity**: <is anything already persisted wrong? this decides whether a
-  fix is enough, or whether a backfill is also owed>
+- **Data integrity**: <is anything already persisted wrong? this decides whether a fix is enough, or whether a backfill is also owed>
 
 ## Root cause
 
-The mechanism, not the symptom. "The request 500s" is a symptom. "The connection
-pool is exhausted because `close()` is skipped on the error path in `foo.rs:214`"
-is a cause.
+The mechanism, not the symptom. "The request 500s" is a symptom. "The connection pool is exhausted because `close()` is skipped on the error path in `foo.rs:214`" is a cause.
 
 BUG-003 rejects a root cause that merely restates the observed behaviour.
 
@@ -86,16 +80,11 @@ This test MUST:
 1. **fail** when checked out at `first_bad_commit` (or `HEAD~` if unknown), and
 2. **pass** at `HEAD`.
 
-Both halves are machine-checkable, and `coverage-gate-audit`'s `REGRESSION-*` family
-runs them (see RUBRIC §10). A test that passes before the fix proves nothing — it
-does not test the bug. This is the single rule that stops "fixed" from meaning
-"the symptom went away while I was looking at it".
+Both halves are machine-checkable, and `coverage-gate-audit`'s `REGRESSION-*` family runs them (see RUBRIC §10). A test that passes before the fix proves nothing — it does not test the bug. This is the single rule that stops "fixed" from meaning "the symptom went away while I was looking at it".
 
 ## Edge cases
 
-Scope the matrix to the *cause's neighbourhood*, not the whole feature. If the cause
-is a missing `close()` on an error path, enumerate the other error paths — not the
-happy path.
+Scope the matrix to the *cause's neighbourhood*, not the whole feature. If the cause is a missing `close()` on an error path, enumerate the other error paths — not the happy path.
 
 | category | trigger | covered by |
 |---|---|---|
@@ -103,5 +92,4 @@ happy path.
 
 ## Prevention
 
-Why did this reach production? What class of bug is it? What would have caught it?
-Answer honestly, or `postmortem-author` will have to (required for `sev1`).
+Why did this reach production? What class of bug is it? What would have caught it? Answer honestly, or `postmortem-author` will have to (required for `sev1`).

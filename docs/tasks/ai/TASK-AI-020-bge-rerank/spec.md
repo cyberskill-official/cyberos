@@ -118,13 +118,13 @@ The AI Gateway service **MAY** offer a BGE-reranker-v2-m3 cross-encoder service 
 14. **MUST** apply per-tenant fairness in the batch buffer (mirrors TASK-AI-019 §1 #5): when multiple tenants have rerank queries pending, dispatch order is round-robin per tenant within each batch. A single tenant's flood cannot starve another tenant's request.
 15. **SHOULD** support both monolingual and bilingual (Vi+En) rerank inputs. BGE-reranker-v2-m3 handles cross-lingual pairs natively; the request body's `query` and `candidates` can mix languages without explicit signalling.
 16. **SHOULD** emit OTel metrics:
-    - `ai_rerank_calls_total{tenant_id, candidate_bucket, device, outcome}` (counter; outcome ∈ ok | skipped | too_many | breaker_open).
-    - `ai_rerank_latency_ms{device, candidate_bucket}` (histogram; SLO 100ms p95 GPU / 600ms p95 CPU).
-    - `ai_rerank_candidates_per_call` (histogram).
-    - `ai_rerank_total_tokens_per_call` (histogram; for TASK-AI-022 cost-attribution dashboards).
-    - `ai_rerank_skipped_total{tenant_id, reason}` (counter; reason ∈ breaker_open | sidecar_unreachable).
-    - `ai_rerank_fallback_to_cpu_total{sidecar_url}` (counter; sev-2 alarm).
-    - `ai_rerank_checksum_failed_total` (counter; sev-1).
+- `ai_rerank_calls_total{tenant_id, candidate_bucket, device, outcome}` (counter; outcome ∈ ok | skipped | too_many | breaker_open).
+- `ai_rerank_latency_ms{device, candidate_bucket}` (histogram; SLO 100ms p95 GPU / 600ms p95 CPU).
+- `ai_rerank_candidates_per_call` (histogram).
+- `ai_rerank_total_tokens_per_call` (histogram; for TASK-AI-022 cost-attribution dashboards).
+- `ai_rerank_skipped_total{tenant_id, reason}` (counter; reason ∈ breaker_open | sidecar_unreachable).
+- `ai_rerank_fallback_to_cpu_total{sidecar_url}` (counter; sev-2 alarm).
+- `ai_rerank_checksum_failed_total` (counter; sev-1).
 
 ---
 

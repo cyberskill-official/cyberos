@@ -164,45 +164,42 @@ The DOC service **MUST** ship the document repository as the foundational storag
 6. **MUST** be **append-only** on `document_versions` at the SQL-grant layer (per DEC-286 + task-audit skill rule 12). `REVOKE UPDATE, DELETE ON document_versions FROM cyberos_app;`. Every update creates a new version row + new S3 object.
 
 7. **MUST** apply S3 Object-Lock Compliance retention on transition to `status='archived'` (per DEC-280). The retention period is computed from the bucket_scope's policy (per DEC-287):
-    - `hr_contracts` → 50 years (VN Labour Code Art. 161).
-    - `esop_grants` → 75 years (long-term employment-equivalent record).
-    - `kyc_docs` → 10 years (PDPL retention floor).
-    - `generic`, `crm_contracts`, `vendor_contracts`, `policies` → 10 years (eIDAS + US ESIGN floor).
-   The retention is applied via `aws-sdk-s3 put_object_retention` with `Mode=COMPLIANCE` and `RetainUntilDate=<computed>`. Compliance mode means even the AWS root account cannot delete or shorten the retention.
+- `hr_contracts` → 50 years (VN Labour Code Art. 161).
+- `esop_grants` → 75 years (long-term employment-equivalent record).
+- `kyc_docs` → 10 years (PDPL retention floor).
+- `generic`, `crm_contracts`, `vendor_contracts`, `policies` → 10 years (eIDAS + US ESIGN floor). The retention is applied via `aws-sdk-s3 put_object_retention` with `Mode=COMPLIANCE` and `RetainUntilDate=<computed>`. Compliance mode means even the AWS root account cannot delete or shorten the retention.
 
 8. **MUST** pin each tenant's documents to the residency region per TASK-AI-016 (per DEC-281). Lookup function `residency::resolve(tenant_id) -> (region, bucket, kms_key)`. The mapping:
-    - VN tenants → region `ap-southeast-1` + bucket `cyberos-doc-vn-1-<scope>` + KMS key alias `alias/cyberos-doc-vn-1-<scope>`.
-    - EU tenants → region `eu-west-1` + bucket `cyberos-doc-eu-1-<scope>` + KMS key alias `alias/cyberos-doc-eu-1-<scope>`.
-    - SG tenants → `ap-southeast-1` + bucket `cyberos-doc-sg-1-<scope>` (separate from VN bucket).
-    - US tenants → `us-east-1` + bucket `cyberos-doc-us-1-<scope>`.
-   The `s3_region`, `s3_bucket`, `kms_key_id` columns capture the resolution at upload time; downstream operations use these (not the residency resolver) to avoid races during tenant residency changes.
+- VN tenants → region `ap-southeast-1` + bucket `cyberos-doc-vn-1-<scope>` + KMS key alias `alias/cyberos-doc-vn-1-<scope>`.
+- EU tenants → region `eu-west-1` + bucket `cyberos-doc-eu-1-<scope>` + KMS key alias `alias/cyberos-doc-eu-1-<scope>`.
+- SG tenants → `ap-southeast-1` + bucket `cyberos-doc-sg-1-<scope>` (separate from VN bucket).
+- US tenants → `us-east-1` + bucket `cyberos-doc-us-1-<scope>`. The `s3_region`, `s3_bucket`, `kms_key_id` columns capture the resolution at upload time; downstream operations use these (not the residency resolver) to avoid races during tenant residency changes.
 
 9. **MUST** support **versioning at every modification** (per DEC-284). Every upload of a new version of an existing document creates:
-    - A new row in `document_versions` with monotonic `version_number`.
-    - A new S3 object stored at `<s3_key>?versionId=<aws-version-id>` (S3 Versioning enabled on the bucket).
-    - An update to `document_metadata.current_version_id` pointing at the new version.
-    - A `doc.versioned` memory audit row.
-   All within one transaction.
+- A new row in `document_versions` with monotonic `version_number`.
+- A new S3 object stored at `<s3_key>?versionId=<aws-version-id>` (S3 Versioning enabled on the bucket).
+- An update to `document_metadata.current_version_id` pointing at the new version.
+- A `doc.versioned` memory audit row. All within one transaction.
 
 10. **MUST** ship the **hash-chained per-document audit log** at `document_audit_log` table (per DEC-283). Schema: `id BIGSERIAL PRIMARY KEY`, `document_id UUID NOT NULL REFERENCES document_metadata(id)`, `tenant_id UUID NOT NULL`, `event_kind TEXT NOT NULL`, `event_payload JSONB NOT NULL`, `prev_hash CHAR(64)`, `chain_hash CHAR(64) NOT NULL`, `ts TIMESTAMPTZ NOT NULL DEFAULT now()`, `actor_subject_id UUID NOT NULL`. The `chain_hash` is `SHA-256(canonical(prev_hash || event_kind || event_payload || ts || actor_subject_id))`. A `BEFORE INSERT` trigger validates `prev_hash` matches the prior row's `chain_hash`; tampered chain → reject. The log is queryable via `document_audit_chain(doc_id) RETURNS SETOF document_audit_log ORDER BY id ASC`.
 
 11. **MUST** emit the following 8 memory audit row kinds (per DEC-289):
-    - `doc.uploaded` — first upload (status=draft → version 1 written).
-    - `doc.versioned` — new version of existing doc.
-    - `doc.acl_changed` — bucket_scope or RBAC scope change.
-    - `doc.signed` — signing event from TASK-DOC-002/003/004 (placeholder kind at slice 1).
-    - `doc.archived` — status → archived; Object-Lock applied.
-    - `doc.legal_hold_applied` — LegalHold ON; CLO + CSO co-sign required (sev-1).
-    - `doc.legal_hold_released` — LegalHold OFF; same dual-signoff required (sev-1).
-    - `doc.access_audited` — every read of a document (per DEC-290; sev-2 — forensically relevant).
+- `doc.uploaded` — first upload (status=draft → version 1 written).
+- `doc.versioned` — new version of existing doc.
+- `doc.acl_changed` — bucket_scope or RBAC scope change.
+- `doc.signed` — signing event from TASK-DOC-002/003/004 (placeholder kind at slice 1).
+- `doc.archived` — status → archived; Object-Lock applied.
+- `doc.legal_hold_applied` — LegalHold ON; CLO + CSO co-sign required (sev-1).
+- `doc.legal_hold_released` — LegalHold OFF; same dual-signoff required (sev-1).
+- `doc.access_audited` — every read of a document (per DEC-290; sev-2 — forensically relevant).
 
 12. **MUST** enforce **legal hold dual-signoff** (per DEC-285). `POST /v1/doc/documents/{id}/legal-hold` accepts body `{"apply": true | false, "primary_signer_subject_id": <uuid>, "secondary_signer_subject_id": <uuid>, "reason": "<text>", "case_reference": "<text>"}`. Validation:
-    - `primary_signer` MUST have role `clo` per TASK-AUTH-101.
-    - `secondary_signer` MUST have role `cso` (security CSO, `cseco`) per TASK-AUTH-101.
-    - `primary != secondary` (cannot self-co-sign).
-    - `case_reference` length 5–200 chars.
-    - On apply: S3 `put_object_legal_hold` with `Status=ON`; `legal_hold=true` in metadata; `doc.legal_hold_applied` row.
-    - On release: same shape; `Status=OFF`; `doc.legal_hold_released` row.
+- `primary_signer` MUST have role `clo` per TASK-AUTH-101.
+- `secondary_signer` MUST have role `cso` (security CSO, `cseco`) per TASK-AUTH-101.
+- `primary != secondary` (cannot self-co-sign).
+- `case_reference` length 5–200 chars.
+- On apply: S3 `put_object_legal_hold` with `Status=ON`; `legal_hold=true` in metadata; `doc.legal_hold_applied` row.
+- On release: same shape; `Status=OFF`; `doc.legal_hold_released` row.
 
 13. **MUST** block GDPR/PDPL erasure requests while `legal_hold=true` (per §1 #12 + GDPR Art. 17). Erasure handler (placeholder; slice 2) calls `is_erasure_blocked(doc_id) -> bool` from this task; true → erasure refused with reason `legal_hold_active`. This task ships the predicate; the erasure handler ships in task-DOC-2xx.
 
@@ -211,14 +208,14 @@ The DOC service **MUST** ship the document repository as the foundational storag
 15. **MUST** lock `retention_until` post-archive (per DEC-287). A `BEFORE UPDATE` trigger rejects mutation of `retention_until` when prior `status='archived'`. The retention period is set ONCE at archive transition, computed from the scope's policy.
 
 16. **MUST** expose REST handlers:
-    - `POST /v1/doc/documents` — initialise document metadata (no body upload yet); returns `{document_id, presigned_upload_url, presigned_form_fields}` for S3 direct-upload.
-    - `POST /v1/doc/documents/{id}/finalize` — called after S3 upload completes; validates SHA-256 server-side against S3 object's etag; creates version 1.
-    - `POST /v1/doc/documents/{id}/versions` — same flow for new versions.
-    - `GET /v1/doc/documents/{id}` — return metadata + presigned download URL.
-    - `GET /v1/doc/documents?bucket_scope=<>&status=<>&parent_object_id=<>` — list with cursor pagination.
-    - `PATCH /v1/doc/documents/{id}` — update non-scope-bound fields (original_filename, parent_object_id); rejects bucket_scope changes.
-    - `POST /v1/doc/documents/{id}/archive` — transition to archived; applies Object-Lock retention.
-    - `POST /v1/doc/documents/{id}/legal-hold` — dual-signoff legal hold workflow.
+- `POST /v1/doc/documents` — initialise document metadata (no body upload yet); returns `{document_id, presigned_upload_url, presigned_form_fields}` for S3 direct-upload.
+- `POST /v1/doc/documents/{id}/finalize` — called after S3 upload completes; validates SHA-256 server-side against S3 object's etag; creates version 1.
+- `POST /v1/doc/documents/{id}/versions` — same flow for new versions.
+- `GET /v1/doc/documents/{id}` — return metadata + presigned download URL.
+- `GET /v1/doc/documents?bucket_scope=<>&status=<>&parent_object_id=<>` — list with cursor pagination.
+- `PATCH /v1/doc/documents/{id}` — update non-scope-bound fields (original_filename, parent_object_id); rejects bucket_scope changes.
+- `POST /v1/doc/documents/{id}/archive` — transition to archived; applies Object-Lock retention.
+- `POST /v1/doc/documents/{id}/legal-hold` — dual-signoff legal hold workflow.
 
 17. **MUST** verify SHA-256 integrity at every upload (per §1 #1 + S3 ETag check at finalize). Client computes locally + sends as `x-amz-content-sha256`; server validates against actual byte-stream + against S3 ETag. Mismatch → 409 `integrity_mismatch`.
 
@@ -231,12 +228,12 @@ The DOC service **MUST** ship the document repository as the foundational storag
 21. **MUST** emit OTel span `doc.{upload,version,archive,download,legal_hold,acl_change}` with attributes: `tenant_id`, `document_id`, `bucket_scope`, `status`, `outcome` (success | invalid_scope | residency_mismatch | integrity_mismatch | legal_hold_blocked | not_found | permission_denied | object_lock_apply_failed | etag_mismatch).
 
 22. **MUST** emit OTel metrics:
-    - `doc_upload_total{outcome, bucket_scope}` (counter).
-    - `doc_archive_total{outcome, retention_years}` (counter).
-    - `doc_legal_hold_total{outcome, apply}` (counter; `apply` ∈ {true, false}).
-    - `doc_access_total{tenant_id, bucket_scope}` (counter; downloads emit sev-2 audit).
-    - `doc_bytes_stored{tenant_id, bucket_scope}` (gauge — periodic compute via S3 inventory; eventual consistency).
-    - `doc_count{tenant_id, bucket_scope, status}` (gauge).
+- `doc_upload_total{outcome, bucket_scope}` (counter).
+- `doc_archive_total{outcome, retention_years}` (counter).
+- `doc_legal_hold_total{outcome, apply}` (counter; `apply` ∈ {true, false}).
+- `doc_access_total{tenant_id, bucket_scope}` (counter; downloads emit sev-2 audit).
+- `doc_bytes_stored{tenant_id, bucket_scope}` (gauge — periodic compute via S3 inventory; eventual consistency).
+- `doc_count{tenant_id, bucket_scope, status}` (gauge).
 
 23. **MUST** ensure access (GET /download) emits a `doc.access_audited` memory row at sev-2 per access (per DEC-290). The row carries `{document_id, accessed_by_subject_id_hash16, purpose, requesting_ip_hash16, ts_ns}`. `purpose` is supplied by the caller as a required field (`?purpose=<text>` query param, 1-200 chars); absent → 400.
 

@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a budget"
+- "Draft a budget"
 - "Create the budget"
 - "Author a new budget"
 - "Generate the budget"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this budget" → budget-audit
+- "Audit this budget" → budget-audit
 - "Check the budget for completeness" → budget-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

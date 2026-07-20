@@ -71,26 +71,26 @@ The calibration layer **MUST** compute nightly snapshots of estimate accuracy pe
 1. **MUST** define `estimate_calibration_snapshots` table: `id UUID PK`, `member_id UUID`, `task_class TEXT`, `snapshot_date DATE`, `posterior_mean f64`, `posterior_std f64`, `sample_size i32`, `effective_sample_size f64` (after exp decay), `recommended_multiplier f64`, `created_at`, `tenant_id`. Composite key `(member_id, task_class, snapshot_date)`.
 2. **MUST** schedule a nightly cron at 03:00 local time (after TASK-PROJ-010 drift sweep).
 3. **MUST** compute per-cell as follows:
-    - Query all issues with `status = Done`, `cycle_id != NULL`, `assignee = member`, `task_class = class`, completed in last 365 days.
-    - For each issue: `ratio = actual_hours / estimate_hours` where actual = sum of billable time entries; estimate from issue.estimate field. Skip issues without estimate or actual.
-    - Apply exp-decay weight: `w_i = exp(-Δt / 90)` where Δt = days since completion.
-    - Posterior mean = `Σ(w_i × ratio_i) / Σ(w_i)`.
-    - Posterior std = weighted std of ratios.
-    - Effective sample size = `Σ(w_i)`.
-    - Recommended multiplier = posterior mean (rounded to 2 decimals).
+- Query all issues with `status = Done`, `cycle_id != NULL`, `assignee = member`, `task_class = class`, completed in last 365 days.
+- For each issue: `ratio = actual_hours / estimate_hours` where actual = sum of billable time entries; estimate from issue.estimate field. Skip issues without estimate or actual.
+- Apply exp-decay weight: `w_i = exp(-Δt / 90)` where Δt = days since completion.
+- Posterior mean = `Σ(w_i × ratio_i) / Σ(w_i)`.
+- Posterior std = weighted std of ratios.
+- Effective sample size = `Σ(w_i)`.
+- Recommended multiplier = posterior mean (rounded to 2 decimals).
 4. **MUST** require minimum `effective_sample_size >= 3` for a cell to publish a snapshot; below threshold → no row written (insufficient data; UI shows "not enough data yet").
 5. **MUST** persist snapshots APPEND-ONLY. Multiple snapshots per cell across days form a trend.
 6. **MUST** emit `proj.estimate_calibration_computed` memory audit row per published snapshot.
 7. **MUST** expose REST endpoints:
-    - `GET /api/proj/calibration/:member_id/:task_class` — latest snapshot.
-    - `GET /api/proj/calibration/:member_id/:task_class/history?since=YYYY-MM-DD` — trend.
-    - `GET /api/proj/calibration/team?engagement_id=...` — aggregate trends per team.
+- `GET /api/proj/calibration/:member_id/:task_class` — latest snapshot.
+- `GET /api/proj/calibration/:member_id/:task_class/history?since=YYYY-MM-DD` — trend.
+- `GET /api/proj/calibration/team?engagement_id=...` — aggregate trends per team.
 8. **MUST** NEVER auto-apply multipliers to issue estimates — calibration is advisory. UI surfaces the recommended multiplier when creating new estimates.
 9. **MUST** RLS-enforce.
 10. **MUST** emit OTel metrics:
-    - `proj_calibration_cells_computed_total` (counter).
-    - `proj_calibration_cells_below_threshold_total` (counter).
-    - `proj_calibration_posterior_mean_drift{member_bucket, task_class}` (histogram — magnitude of change vs prior snapshot).
+- `proj_calibration_cells_computed_total` (counter).
+- `proj_calibration_cells_below_threshold_total` (counter).
+- `proj_calibration_posterior_mean_drift{member_bucket, task_class}` (histogram — magnitude of change vs prior snapshot).
 11. **MUST** support outlier filtering: data points with `ratio > 5.0` OR `ratio < 0.2` are excluded from the posterior compute by default (catches clear data-entry errors). Tenant policy `cyberos_proj_tenant_settings.calibration_outlier_threshold` overrides bounds.
 12. **MUST** include `posterior_ci_lower` + `posterior_ci_upper` (95% confidence interval) on each snapshot — UI shows "recommended × 1.28 (CI: 1.10–1.46)" so operators see uncertainty.
 13. **MUST** support per-engagement opt-out: `cyberos_proj_engagement_settings.calibration_enabled = false` excludes that engagement's issues from data points. Used for unusual engagements (R&D experiments) that would bias calibration.

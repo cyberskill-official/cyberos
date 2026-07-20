@@ -10,8 +10,7 @@
 | `bash status.sh [repo]` | `/status` | Open `docs/status/index.html` in the default browser |
 | `bash help.sh` | `/help` | CLI surface |
 
-**Day-to-day:** install once, then forget. Soft update-check runs on any `.cyberos` use.
-**Re-vendor path:** only `install` (version never has a second apply path).
+**Day-to-day:** install once, then forget. Soft update-check runs on any `.cyberos` use. **Re-vendor path:** only `install` (version never has a second apply path).
 
 ## Soft update triggers (automatic)
 

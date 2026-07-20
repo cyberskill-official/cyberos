@@ -26,9 +26,7 @@ Touched files and their coverage:
 TRACE-004 closure:
 - 1.1 -> AC 1 verify (SKILL.md:184 grep recorded in gate-log E1): satisfied
 - 1.2, 1.5 -> t07_workflow_gitignore_patterns: passed
-- 1.3 -> AC 3 verify (`git ls-files docs/tasks/.workflow | grep -c manifest.json` = 0, on the
-  committed tree via `git ls-tree -r HEAD`): satisfied
+- 1.3 -> AC 3 verify (`git ls-files docs/tasks/.workflow | grep -c manifest.json` = 0, on the committed tree via `git ls-tree -r HEAD`): satisfied
 - 1.4 -> AC 4 verify (record present, 121 lines, 27 member-id mentions): satisfied
 
-Ops-verified ACs carry the rationale recorded in audit.md ISS-001 and match the pattern
-accepted for TASK-IMP-086/087.
+Ops-verified ACs carry the rationale recorded in audit.md ISS-001 and match the pattern accepted for TASK-IMP-086/087.

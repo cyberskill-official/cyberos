@@ -86,9 +86,9 @@ The LEARN service **MUST** ship VP → REW handoff at `services/learn/src/handof
 2. **MUST** schedule cron Q-end+1d at 04:00 tenant_tz via TASK-MCP-007.
 
 3. **MUST** aggregate at `aggregator.rs::aggregate(tenant, quarter)` per DEC-2140:
-   - Sum TASK-LEARN-003 snapshots for each member over quarter's weeks
-   - Compute total_vp = sum across all members
-   - Per-member share = member_vp / total_vp (sums to 1.0)
+- Sum TASK-LEARN-003 snapshots for each member over quarter's weeks
+- Compute total_vp = sum across all members
+- Per-member share = member_vp / total_vp (sums to 1.0)
 
 4. **MUST** emit to REW at `rew_emitter.rs::emit(tenant, quarter, shares)` per DEC-2140 — call TASK-REW-008 with `{member_id, vp_share}` list.
 
@@ -218,8 +218,7 @@ async fn rew_emit_and_ack() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-LEARN-003.
-**Cross-module:** TASK-REW-008 (BP fund consumer), TASK-MCP-007 (cron), TASK-AUTH-101 (CEO), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-LEARN-003. **Cross-module:** TASK-REW-008 (BP fund consumer), TASK-MCP-007 (cron), TASK-AUTH-101 (CEO), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

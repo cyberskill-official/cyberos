@@ -90,9 +90,9 @@ The EMAIL service **MUST** ship DSAR message export at `services/email/src/dsar/
 1. **MUST** expose `POST /v1/email/dsar/export` body `{ subject_id }`. Caller is TASK-PORTAL-008 task (system-tenant). Enqueues TASK-MCP-007 task per DEC-1504; returns task_id.
 
 2. **MUST** aggregate via `aggregator.rs::aggregate(tenant_id, subject_id)`:
-   - SELECT messages WHERE author_subject_id=$subject AND tenant_id=$tenant.
-   - UNION SELECT WHERE recipient or cc or bcc matches subject's email_addresses.
-   - Per DEC-1503: cross-tenant NEVER included.
+- SELECT messages WHERE author_subject_id=$subject AND tenant_id=$tenant.
+- UNION SELECT WHERE recipient or cc or bcc matches subject's email_addresses.
+- Per DEC-1503: cross-tenant NEVER included.
 
 3. **MUST** write JSONL per DEC-1501 — one message per line, structure: `{ id, from, to, cc, subject, body_text, body_html, sent_at, attachments: [{filename, s3_key, sha256, size}], memory_audit_chain_hash }`.
 
@@ -203,8 +203,7 @@ async fn chain_anchor_per_message() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-EMAIL-001.
-**Cross-module:** TASK-PORTAL-008 (caller), TASK-MCP-007 (async task), TASK-DOC-001 (S3), TASK-AI-003, TASK-MEMORY-111.
+**Upstream:** TASK-EMAIL-001. **Cross-module:** TASK-PORTAL-008 (caller), TASK-MCP-007 (async task), TASK-DOC-001 (S3), TASK-AI-003, TASK-MEMORY-111.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

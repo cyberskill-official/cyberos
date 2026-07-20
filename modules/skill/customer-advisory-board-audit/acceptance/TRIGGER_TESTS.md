@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this customer advisory board"
+- "Audit this customer advisory board"
 - "Check the customer advisory board for completeness"
 - "Verify the customer advisory board meets the rubric"
 - "Re-audit the customer advisory board"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a customer advisory board" → customer-advisory-board-author
+- "Draft a customer advisory board" → customer-advisory-board-author
 - "Create the customer advisory board" → customer-advisory-board-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

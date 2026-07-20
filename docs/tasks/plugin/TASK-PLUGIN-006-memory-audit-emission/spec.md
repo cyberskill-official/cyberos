@@ -88,12 +88,12 @@ risk_if_skipped: "Without audit emission, plugin operations are invisible to the
 The PLUGIN module **MUST** emit memory audit rows for every plugin lifecycle event. The emitter at `services/plugin-host/src/audit/` writes to the memory HTTP endpoint, queues failures to a durable Postgres outbox, and retries with exponential backoff for up to 24 hours.
 
 1. **MUST** emit exactly 6 audit kinds per DEC-2450:
-   - `plugin.installed` — on first successful OAuth-PKCE token exchange (per TASK-PLUGIN-005 clause 9)
-   - `plugin.updated` — on version bump install replacing a prior version of the same plugin_id
-   - `plugin.uninstalled` — on revoke + grant deletion
-   - `plugin.invoked` — on every successful tool call (one row per `tools/call`)
-   - `plugin.auth_refreshed` — on every refresh-token rotation
-   - `plugin.scope_denied` — on every scope check failure
+- `plugin.installed` — on first successful OAuth-PKCE token exchange (per TASK-PLUGIN-005 clause 9)
+- `plugin.updated` — on version bump install replacing a prior version of the same plugin_id
+- `plugin.uninstalled` — on revoke + grant deletion
+- `plugin.invoked` — on every successful tool call (one row per `tools/call`)
+- `plugin.auth_refreshed` — on every refresh-token rotation
+- `plugin.scope_denied` — on every scope check failure
 
 2. **MUST** treat audit emission as REQUIRED per DEC-2451 — a tool call response MUST NOT be returned to the host until either (a) the audit row is acknowledged by memory, OR (b) the row is durably queued in the outbox. Failures in both paths MUST surface as `upstream_unavailable` error class.
 
@@ -104,15 +104,14 @@ The PLUGIN module **MUST** emit memory audit rows for every plugin lifecycle eve
 5. **MUST** implement retry per DEC-2454: exponential backoff `[250ms, 1s, 4s, 16s, 64s, 256s, 1024s, 4096s, ...]`; up to 24 hours total. After 24h, mark row `failed` and emit OTel alert (TASK-OBS-007 picks up).
 
 6. **MUST** scrub user data from audit bodies per DEC-2455. The audit row body MUST include exactly these fields (and nothing else):
-   - `plugin_id`, `plugin_version` — from manifest
-   - `tenant_id`, `subject_id` — from JWT
-   - `trace_id` — request trace identifier
-   - `outcome` — "success" | one of 4 error classes from TASK-PLUGIN-002 clause 7
-   - For `plugin.invoked` only: `tool_name` (SEP-986 name; not the tool's input/output)
-   - For `plugin.scope_denied` only: `missing_scopes` (array of scope strings)
-   - For `plugin.installed` only: `granted_scopes` (array)
-   - `duration_ms` for `plugin.invoked`
-   The body MUST NOT contain: tool input arguments, tool output content, workflow inputs, audit row contents read by the plugin, file paths or filenames the plugin touched.
+- `plugin_id`, `plugin_version` — from manifest
+- `tenant_id`, `subject_id` — from JWT
+- `trace_id` — request trace identifier
+- `outcome` — "success" | one of 4 error classes from TASK-PLUGIN-002 clause 7
+- For `plugin.invoked` only: `tool_name` (SEP-986 name; not the tool's input/output)
+- For `plugin.scope_denied` only: `missing_scopes` (array of scope strings)
+- For `plugin.installed` only: `granted_scopes` (array)
+- `duration_ms` for `plugin.invoked` The body MUST NOT contain: tool input arguments, tool output content, workflow inputs, audit row contents read by the plugin, file paths or filenames the plugin touched.
 
 7. **MUST** emit an OTel span per DEC-2456 for every audit emission, both success + failure. Span attributes: `cyberos.audit_kind`, `cyberos.idempotency_key`, `cyberos.outcome` (success / retry_queued / failed), `cyberos.tenant_id`, `cyberos.trace_id`, `cyberos.duration_ms`. Failures additionally tag `error.kind` (network / 4xx / 5xx).
 

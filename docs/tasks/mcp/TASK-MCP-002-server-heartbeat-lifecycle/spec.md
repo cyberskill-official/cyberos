@@ -86,11 +86,11 @@ The MCP service **MUST** ship heartbeat lifecycle at `services/mcp/src/heartbeat
 2. **MUST** register at `registrar.rs::register(server_info)` per DEC-2350 — captures version + protocols + capabilities.
 
 3. **MUST** monitor at `health_monitor.rs::monitor()` per DEC-2350 + DEC-2353:
-   - Run every 5s; check each server's last_heartbeat_at
-   - 0-1 misses (10-20s lag) → healthy
-   - 2 misses (20-30s) → degraded
-   - 3+ misses (≥30s) → unhealthy + cascade skill_unavailable
-   - Heartbeat received → recover to healthy
+- Run every 5s; check each server's last_heartbeat_at
+- 0-1 misses (10-20s lag) → healthy
+- 2 misses (20-30s) → degraded
+- 3+ misses (≥30s) → unhealthy + cascade skill_unavailable
+- Heartbeat received → recover to healthy
 
 4. **MUST** define table at migration `0002`:
    ```sql
@@ -201,9 +201,7 @@ async fn skill_unavailable_propagation() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-MCP-001.
-**Downstream:** TASK-MCP-003 (naming validator).
-**Cross-module:** TASK-OBS-007 (alert on unhealthy), TASK-MEMORY-111 (audit).
+**Upstream:** TASK-MCP-001. **Downstream:** TASK-MCP-003 (naming validator). **Cross-module:** TASK-OBS-007 (alert on unhealthy), TASK-MEMORY-111 (audit).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

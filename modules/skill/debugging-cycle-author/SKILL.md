@@ -41,10 +41,7 @@ blockers:
 
 ## 1. Purpose
 
-Replace the unbounded "try things until it works" loop with a bounded,
-auditable five-attempt budget. Each attempt is classified, hypothesised,
-and tested; the outer workflow uses the attempt count to trip the
-circuit breaker.
+Replace the unbounded "try things until it works" loop with a bounded, auditable five-attempt budget. Each attempt is classified, hypothesised, and tested; the outer workflow uses the attempt count to trip the circuit breaker.
 
 ## 2. Output schema
 
@@ -82,11 +79,9 @@ on_trip_actions:
 ## 3. Quality gates
 
 - Attempts are bounded by `budget_max_attempts` (default 5).
-- Each attempt has a non-vacuous `hypothesis` (≥ one sentence specifying
-  a root cause, not "try X again").
+- Each attempt has a non-vacuous `hypothesis` (≥ one sentence specifying a root cause, not "try X again").
 - `change.file:lines` resolves to a real diff (audit checks via `git diff`).
-- `consecutive_failures` increments on `regressed | no-progress`, resets
-  on `partial`.
+- `consecutive_failures` increments on `regressed | no-progress`, resets on `partial`.
 - `circuit_breaker_tripped` is true iff `consecutive_failures ≥ 5`.
 
 ## 4. Chains to

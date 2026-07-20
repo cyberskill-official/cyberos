@@ -20,5 +20,4 @@ score:                  "N/10"
 
 ## Body
 
-`## §1 Verdict summary`, `## §2 Findings` (one `### <rule_id>` block each: quote, why it fails the gate, fix), `## §3 Resolution`.
-Findings cite rule IDs from RUBRIC.md - never paraphrased prose (that is the point of backlog_state_update_rubric@2.0).
+`## §1 Verdict summary`, `## §2 Findings` (one `### <rule_id>` block each: quote, why it fails the gate, fix), `## §3 Resolution`. Findings cite rule IDs from RUBRIC.md - never paraphrased prose (that is the point of backlog_state_update_rubric@2.0).

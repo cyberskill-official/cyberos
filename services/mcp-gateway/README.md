@@ -1,7 +1,6 @@
 # cyberos-mcp-gateway
 
-**P0 module · external-agent door.**
-Implements [`docs/tasks/mcp/TASK-MCP-001..008`](../../docs/tasks/mcp/) — Model Context Protocol 2025-11-25 federation gateway. External MCP clients (Claude Desktop, IDE plugins, third-party agents) connect here; the gateway holds the federated tool catalog and dispatches `tools/call` to the owning module's MCP server.
+**P0 module · external-agent door.** Implements [`docs/tasks/mcp/TASK-MCP-001..008`](../../docs/tasks/mcp/) — Model Context Protocol 2025-11-25 federation gateway. External MCP clients (Claude Desktop, IDE plugins, third-party agents) connect here; the gateway holds the federated tool catalog and dispatches `tools/call` to the owning module's MCP server.
 
 ## Status (2026-05-19 wave)
 

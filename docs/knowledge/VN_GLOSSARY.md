@@ -1,8 +1,6 @@
 # Vietnamese ↔ English Glossary
 
-**Created:** 2026-05-16
-**Scope:** task-* specs under `docs/tasks/`
-**Policy:** Spec bodies use English-only terminology. Vietnamese names appear here when the underlying concept is VN-regulatory (no clean English equivalent). tasks reference glossary entries via `VN-GLO:<key>`.
+**Created:** 2026-05-16 **Scope:** task-* specs under `docs/tasks/` **Policy:** Spec bodies use English-only terminology. Vietnamese names appear here when the underlying concept is VN-regulatory (no clean English equivalent). tasks reference glossary entries via `VN-GLO:<key>`.
 
 ---
 

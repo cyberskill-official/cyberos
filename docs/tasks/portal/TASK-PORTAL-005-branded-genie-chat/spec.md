@@ -149,26 +149,26 @@ The PORTAL service **MUST** ship branded Genie chat at `services/portal/src/geni
       { "resource_type": "engagement", "resource_ids": ["uuid_eng"],      "permissions": ["read"] }
     ]
     ```
-   JWT mint resolves the caller's TASK-AUTH-101 RBAC role → scope_grants from `engagement_memberships` table.
+JWT mint resolves the caller's TASK-AUTH-101 RBAC role → scope_grants from `engagement_memberships` table.
 
 6. **MUST** expose `POST /v1/portal/genie/query` per DEC-1173. Body: `{ session_id?, message }`. Handler:
-    - Validates JWT + extracts scope_grants.
-    - Creates session if `session_id` absent (UUIDv7) or loads existing.
-    - Rate-limit check per DEC-1179 (60/min/caller).
-    - Pre-flight boundary check per §1 #7.
-    - Invokes CUO with `{ message, scope_grants, persona }` context.
-    - Post-flight boundary check on CUO response per §1 #8.
-    - Returns SSE stream per DEC-1181; on success persists user + assistant messages.
+- Validates JWT + extracts scope_grants.
+- Creates session if `session_id` absent (UUIDv7) or loads existing.
+- Rate-limit check per DEC-1179 (60/min/caller).
+- Pre-flight boundary check per §1 #7.
+- Invokes CUO with `{ message, scope_grants, persona }` context.
+- Post-flight boundary check on CUO response per §1 #8.
+- Returns SSE stream per DEC-1181; on success persists user + assistant messages.
 
 7. **MUST** perform pre-flight boundary check at `services/portal/src/genie/boundary_check.rs::pre_flight(scope_grants, message)`:
-    - Heuristic check on message intent (regex + keyword match for known cross-tenant query patterns like "all clients", "other engagements").
-    - If suspicious: don't block; flag for stricter post-flight check.
-    - Always: ensure CUO query context is scoped to `(tenant_id, engagement_id from JWT)`.
+- Heuristic check on message intent (regex + keyword match for known cross-tenant query patterns like "all clients", "other engagements").
+- If suspicious: don't block; flag for stricter post-flight check.
+- Always: ensure CUO query context is scoped to `(tenant_id, engagement_id from JWT)`.
 
 8. **MUST** perform post-flight boundary check on CUO response per DEC-1174:
-    - CUO returns `retrieval_sources: [{type, id, tenant_id}]` metadata.
-    - For each source: verify `source.tenant_id == jwt.tenant_id` AND `source.id ∈ scope_grants[source.type].resource_ids`.
-    - Violation found: replace response with user-friendly message "I can only see resources in this engagement"; emit `portal.genie_boundary_violation_detected` sev-1 (security-critical); persist violation details in `portal_genie_messages.boundary_violations` JSONB.
+- CUO returns `retrieval_sources: [{type, id, tenant_id}]` metadata.
+- For each source: verify `source.tenant_id == jwt.tenant_id` AND `source.id ∈ scope_grants[source.type].resource_ids`.
+- Violation found: replace response with user-friendly message "I can only see resources in this engagement"; emit `portal.genie_boundary_violation_detected` sev-1 (security-critical); persist violation details in `portal_genie_messages.boundary_violations` JSONB.
 
 9. **MUST** apply per-Engagement brand from TASK-PORTAL-002 per DEC-1175. The Genie UI inlines per-Engagement brand colours + logo via the `portal_brand_pack_active` lookup; default pack if none configured.
 
@@ -183,11 +183,11 @@ The PORTAL service **MUST** ship branded Genie chat at `services/portal/src/geni
 14. **MUST** persist conversation history per DEC-1178. Messages stored with role (user/assistant/system), KMS-encrypted content, scope_grants snapshot (audit forensic — what permissions did the caller have when this answer was generated). Default 90-day retention via daily prune job.
 
 15. **MUST** emit 5 memory audit row kinds per DEC-1180:
-    - `portal.genie_query_issued` (sev-3 — high-volume; sampled at 1% via TASK-OBS-006)
-    - `portal.genie_answer_emitted` (sev-3 — sampled)
-    - `portal.genie_boundary_violation_detected` (sev-1 — security-critical, ALWAYS emitted not sampled)
-    - `portal.genie_session_created` (sev-3)
-    - `portal.genie_session_archived` (sev-3)
+- `portal.genie_query_issued` (sev-3 — high-volume; sampled at 1% via TASK-OBS-006)
+- `portal.genie_answer_emitted` (sev-3 — sampled)
+- `portal.genie_boundary_violation_detected` (sev-1 — security-critical, ALWAYS emitted not sampled)
+- `portal.genie_session_created` (sev-3)
+- `portal.genie_session_archived` (sev-3)
 
 16. **MUST** PII-scrub per DEC-1183. Query + answer SHA256 hashes only in memory chain; raw text in `portal_genie_messages.content_kms_blob` (RLS-scoped, 90-day retention).
 

@@ -89,8 +89,8 @@ The EMAIL service **MUST** ship Genie-prefix routing at `services/email/src/geni
 1. **MUST** hook into `services/email/src/inbound_processor.rs` after message stored: call `genie::route(message)`.
 
 2. **MUST** match prefix per DEC-1590 via `prefix_router.rs::matches(subject, tenant)`:
-   - Load `tenant.genie_prefix` (default "Genie:").
-   - Case-insensitive starts-with match after stripping `Re:`/`Fwd:`.
+- Load `tenant.genie_prefix` (default "Genie:").
+- Case-insensitive starts-with match after stripping `Re:`/`Fwd:`.
 
 3. **MUST** load context per DEC-1594 — brand pack (TASK-PORTAL-002), CRM contact via TASK-EMAIL-006 link, thread last-10-msgs, tenant tool list from TASK-MCP-006.
 
@@ -253,8 +253,7 @@ async fn case_insensitive_prefix() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-EMAIL-001, TASK-PORTAL-005, TASK-CUO-101.
-**Cross-module:** TASK-PORTAL-002 (brand pack), TASK-CRM-001 (contact), TASK-MCP-006 (tool gating), TASK-AI-003 (LLM), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-EMAIL-001, TASK-PORTAL-005, TASK-CUO-101. **Cross-module:** TASK-PORTAL-002 (brand pack), TASK-CRM-001 (contact), TASK-MCP-006 (tool gating), TASK-AI-003 (LLM), TASK-MEMORY-111 (PII).
 
 ## §8 — Sample payloads (see §3)
 

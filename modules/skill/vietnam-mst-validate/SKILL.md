@@ -17,5 +17,4 @@ allowed_mcp_tools:
 
 # vietnam-mst-validate
 
-Normalize separators, validate 10-digit and 13-digit MST forms, and prepare
-GDT lookup metadata.
+Normalize separators, validate 10-digit and 13-digit MST forms, and prepare GDT lookup metadata.

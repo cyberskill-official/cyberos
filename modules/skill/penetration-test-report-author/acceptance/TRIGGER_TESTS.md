@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a penetration test report"
+- "Draft a penetration test report"
 - "Create the penetration test report"
 - "Author a new penetration test report"
 - "Generate the penetration test report"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this penetration test report" → penetration-test-report-audit
+- "Audit this penetration test report" → penetration-test-report-audit
 - "Check the penetration test report for completeness" → penetration-test-report-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

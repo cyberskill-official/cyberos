@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a workforce plan"
+- "Draft a workforce plan"
 - "Create the workforce plan"
 - "Author a new workforce plan"
 - "Generate the workforce plan"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this workforce plan" → workforce-plan-audit
+- "Audit this workforce plan" → workforce-plan-audit
 - "Check the workforce plan for completeness" → workforce-plan-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

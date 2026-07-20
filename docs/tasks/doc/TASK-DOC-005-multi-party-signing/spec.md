@@ -103,20 +103,20 @@ The DOC service **MUST** ship multi-party signing at `services/doc/src/signing/`
 3. **MUST** validate `signature_status` against closed enum per DEC-1752.
 
 4. **MUST** dispatch per kind:
-   - `ordered_runner.rs::run(workflow)` — invite signer[0], wait for sign, invite signer[1], etc.
-   - `parallel_runner.rs::run(workflow)` — invite all signers immediately.
-   - `counter_sign_runner.rs::run(workflow)` — initiator (position=0) signs first, then invites others in parallel.
+- `ordered_runner.rs::run(workflow)` — invite signer[0], wait for sign, invite signer[1], etc.
+- `parallel_runner.rs::run(workflow)` — invite all signers immediately.
+- `counter_sign_runner.rs::run(workflow)` — initiator (position=0) signs first, then invites others in parallel.
 
 5. **MUST** for each signer per DEC-1754:
-   - Invite via TASK-EMAIL-009 with sign link.
-   - On click: trigger TASK-DOC-006 verification (method per signer's region + required_assurance_level).
-   - Only if verified=verified: apply signature via TASK-DOC-002/003/004 (routed per DEC-1755).
-   - Set status=signed; emit audit.
+- Invite via TASK-EMAIL-009 with sign link.
+- On click: trigger TASK-DOC-006 verification (method per signer's region + required_assurance_level).
+- Only if verified=verified: apply signature via TASK-DOC-002/003/004 (routed per DEC-1755).
+- Set status=signed; emit audit.
 
 6. **MUST** route CA per signer region per DEC-1755:
-   - region=vn → TASK-DOC-004 (VN CA)
-   - region=eu → TASK-DOC-002 (eIDAS QTSP)
-   - region=other → TASK-DOC-003 (AATL)
+- region=vn → TASK-DOC-004 (VN CA)
+- region=eu → TASK-DOC-002 (eIDAS QTSP)
+- region=other → TASK-DOC-003 (AATL)
 
 7. **MUST** send reminders per DEC-1753 via TASK-MCP-007 cron — at 24h, 72h, 7d after invite; configurable per tenant.
 
@@ -273,8 +273,7 @@ async fn ca_routed_by_region() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-DOC-001, TASK-DOC-006.
-**Cross-module:** TASK-DOC-002/003/004 (CA per region), TASK-EMAIL-009 (invite + reminder), TASK-MCP-007 (reminder cron), TASK-AUTH-101 (initiator role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-DOC-001, TASK-DOC-006. **Cross-module:** TASK-DOC-002/003/004 (CA per region), TASK-EMAIL-009 (invite + reminder), TASK-MCP-007 (reminder cron), TASK-AUTH-101 (initiator role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

@@ -93,9 +93,9 @@ The AUTH service **MUST** check every new or rotated password against the Have I
 3. **MUST** parse the HIBP response (each line is `<suffix35>:<count>`), find the line whose suffix matches the remaining 35 hex chars of the local SHA-1, and extract the `count` integer. If no line matches, count = 0.
 
 4. **MUST** reject the password if `count >= tenants.hibp_block_threshold` (default 5 per DEC-721, range [1, 10000] per DEC-722). The rejection returns:
-   - At signup: `422 UNPROCESSABLE_ENTITY` with `{error: "password_breached", count, threshold}`.
-   - At rotation: `422 UNPROCESSABLE_ENTITY` with the same body (DEC-729 enables UI prompt).
-   - At admin-set: `422 UNPROCESSABLE_ENTITY` with the same body; the admin gets to choose a different password for the subject.
+- At signup: `422 UNPROCESSABLE_ENTITY` with `{error: "password_breached", count, threshold}`.
+- At rotation: `422 UNPROCESSABLE_ENTITY` with the same body (DEC-729 enables UI prompt).
+- At admin-set: `422 UNPROCESSABLE_ENTITY` with the same body; the admin gets to choose a different password for the subject.
 
 5. **MUST** emit one memory audit row per breach-check call. The row carries `{prefix, count, decision: "allowed" | "rejected" | "unreachable", tenant_id, subject_id, code_path: "signup" | "rotation" | "admin_set"}`. The row never carries the full SHA-1 or the plaintext (DEC-727). The sev tier is sev-3 for `allowed`, sev-2 for `rejected`, sev-2 for `unreachable` when fail-closed, sev-3 for `unreachable` when fail-open.
 
@@ -138,12 +138,12 @@ The AUTH service **MUST** check every new or rotated password against the Have I
 24. **MUST** support a `dry_run` mode on the policy update endpoint where the caller previews what would change without persisting. The `dry_run=true` query param returns the proposed effective config + a list of currently-active sessions that would be affected on next password rotation. No DB mutation, no memory audit emitted.
 
 25. **MUST** emit 6 closed memory audit kinds:
-    - `auth.hibp_check_passed` (sev-3, on count < threshold)
-    - `auth.hibp_check_rejected` (sev-2, on count >= threshold)
-    - `auth.hibp_unreachable_fail_open` (sev-3, network down + tenant fail_open)
-    - `auth.hibp_unreachable_fail_closed` (sev-2, network down + tenant fail_closed)
-    - `auth.hibp_rate_limited` (sev-2 per event; sev-1 escalation when 3+ in 5min)
-    - `auth.hibp_policy_changed` (sev-2 per mutation)
+- `auth.hibp_check_passed` (sev-3, on count < threshold)
+- `auth.hibp_check_rejected` (sev-2, on count >= threshold)
+- `auth.hibp_unreachable_fail_open` (sev-3, network down + tenant fail_open)
+- `auth.hibp_unreachable_fail_closed` (sev-2, network down + tenant fail_closed)
+- `auth.hibp_rate_limited` (sev-2 per event; sev-1 escalation when 3+ in 5min)
+- `auth.hibp_policy_changed` (sev-2 per mutation)
 
 ---
 

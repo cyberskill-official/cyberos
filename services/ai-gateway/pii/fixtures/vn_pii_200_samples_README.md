@@ -2,8 +2,7 @@
 
 ## Overview
 
-This fixture contains 200 samples (170 positive + 30 negative) for testing the
-VN PII recognizers (TASK-AI-012) and the recall-floor CI gate (TASK-AI-013).
+This fixture contains 200 samples (170 positive + 30 negative) for testing the VN PII recognizers (TASK-AI-012) and the recall-floor CI gate (TASK-AI-013).
 
 ## Sample Distribution
 
@@ -20,9 +19,7 @@ VN PII recognizers (TASK-AI-012) and the recall-floor CI gate (TASK-AI-013).
 
 ## Provenance
 
-All samples are **synthetic** — no real customer data is used. Province codes
-are real (from Vietnam's General Statistics Office) but digit sequences are
-fabricated to be format-valid without matching any real identity.
+All samples are **synthetic** — no real customer data is used. Province codes are real (from Vietnam's General Statistics Office) but digit sequences are fabricated to be format-valid without matching any real identity.
 
 ## Regeneration Schedule
 

@@ -51,9 +51,7 @@ awh: N/A
 
 ## 1. Description (normative)
 
-State the requirement in normative clauses. Number them; each clause is a testable
-promise. The reviewer maps every clause to a named test, and the tester proves each
-named test passes before final acceptance.
+State the requirement in normative clauses. Number them; each clause is a testable promise. The reviewer maps every clause to a named test, and the tester proves each named test passes before final acceptance.
 
 - 1.1 The system SHALL ...
 - 1.2 The system MUST reject ... with <specific error>.
@@ -67,11 +65,8 @@ named test passes before final acceptance.
 
 ## 3. Edge cases
 
-Null / empty inputs; extreme bounds; malformed payloads; concurrency / races;
-security-class (auth bypass, tenant escape, injection). Each security-class row needs a
-test or an ADR.
+Null / empty inputs; extreme bounds; malformed payloads; concurrency / races; security-class (auth bypass, tenant escape, injection). Each security-class row needs a test or an ADR.
 
 ## 4. Protected invariants this task must not weaken
 
-List anything a gate must never be made green by weakening (auth model, tenant
-isolation, audit integrity, consent, etc.). Weakening one is a fork: park and record.
+List anything a gate must never be made green by weakening (auth model, tenant isolation, audit integrity, consent, etc.). Weakening one is a fork: park and record.

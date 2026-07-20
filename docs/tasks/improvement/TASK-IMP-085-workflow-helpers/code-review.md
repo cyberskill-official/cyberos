@@ -1,16 +1,6 @@
 # TASK-IMP-085 — code review packet
 
-Files under review: new `tools/install/docs-tools/ship-manifest.mjs` (418 lines),
-`tools/install/docs-tools/backlog-mutate.mjs` (394 lines),
-`tools/install/tests/test_workflow_helpers.sh` (455 lines, executable); modified
-`tools/install/build.sh` (+3, guarded vendor copies) and
-`modules/cuo/chief-technology-officer/workflows/ship-tasks.md` (+9/−1, two pointer
-passages + the workflow_version bump disclosed below). Suite state at review:
-test_workflow_helpers 9/9, 0 failed (~2.5 s including payload build + scratch
-install); test_task_lint re-run 8/8 (build.sh was touched; its t07/t08 payload
-gates stay green). Other dirt in the same working tree (`docs/tasks/BACKLOG.md`,
-`docs/release/`, TASK-IMP-086/087 artefacts) belongs to batch siblings and is
-covered by their own packets.
+Files under review: new `tools/install/docs-tools/ship-manifest.mjs` (418 lines), `tools/install/docs-tools/backlog-mutate.mjs` (394 lines), `tools/install/tests/test_workflow_helpers.sh` (455 lines, executable); modified `tools/install/build.sh` (+3, guarded vendor copies) and `modules/cuo/chief-technology-officer/workflows/ship-tasks.md` (+9/−1, two pointer passages + the workflow_version bump disclosed below). Suite state at review: test_workflow_helpers 9/9, 0 failed (~2.5 s including payload build + scratch install); test_task_lint re-run 8/8 (build.sh was touched; its t07/t08 payload gates stay green). Other dirt in the same working tree (`docs/tasks/BACKLOG.md`, `docs/release/`, TASK-IMP-086/087 artefacts) belongs to batch siblings and is covered by their own packets.
 
 ## §1 clause → proof
 
@@ -28,58 +18,26 @@ covered by their own packets.
 
 ## Acceptance criteria
 
-AC 1 `t01_manifest_lifecycle` ok · AC 2 `t02_two_phase_atomic` ok ·
-AC 3 `t03_verify_staleness_exits` ok · AC 4 `t04_flip_and_drift_refusal` ok ·
-AC 5 `t05_insert_uniqueness_and_grammar` ok · AC 6 `t06_counts_maintained` ok ·
-AC 7 `t07_json_and_determinism` ok · AC 8 `t08_payload_and_install` ok ·
-AC 9 `t09_doctrine_wiring` ok. Suite 9/9. AC 10: path + glob discovery verified
-as the ops check above (run_all.sh execution stays with the batch parent —
-sub-agents do not run whole-workspace gates mid-batch).
+AC 1 `t01_manifest_lifecycle` ok · AC 2 `t02_two_phase_atomic` ok · AC 3 `t03_verify_staleness_exits` ok · AC 4 `t04_flip_and_drift_refusal` ok · AC 5 `t05_insert_uniqueness_and_grammar` ok · AC 6 `t06_counts_maintained` ok · AC 7 `t07_json_and_determinism` ok · AC 8 `t08_payload_and_install` ok · AC 9 `t09_doctrine_wiring` ok. Suite 9/9. AC 10: path + glob discovery verified as the ops check above (run_all.sh execution stays with the batch parent — sub-agents do not run whole-workspace gates mid-batch).
 
 ## workflow_version bump (disclosure)
 
-The task's pointer prose alone would not require a version bump, but the two
-passages are NORMATIVE pointers (they tell doc-driven agents which executable
-implements the section they are reading), so `workflow_version` was bumped
-2.6.1 → 2.6.2. Consequence, by the contract's own design: any ship-manifest
-pinned at 2.6.1 verifies as exit 3 (needs_human) on next resume — the pin doing
-its job, not a regression; manifests are gitignored session state, none are
-committed. t09 asserts 2.6.2 in source and both payload copies.
+The task's pointer prose alone would not require a version bump, but the two passages are NORMATIVE pointers (they tell doc-driven agents which executable implements the section they are reading), so `workflow_version` was bumped 2.6.1 → 2.6.2. Consequence, by the contract's own design: any ship-manifest pinned at 2.6.1 verifies as exit 3 (needs_human) on next resume — the pin doing its job, not a regression; manifests are gitignored session state, none are committed. t09 asserts 2.6.2 in source and both payload copies.
 
 ## Deviations / implementation decisions (disclosure)
 
-- The manifest carries one field beyond SHIP-MANIFEST.md's table: `task_file`
-  (root-relative spec path, recorded at init). Without it the spec's own §1 #1.1
-  signature `verify <task-id>` cannot re-hash the spec. The python `validate()`
-  checks required fields and tolerates extras; `--task-file` on verify overrides.
-- `record --routed-back` (a flag, not a new command) carries `routed_back_count`
-  across route-backs — the workflow's terminal rule needs a writer for the count.
-- verify's current-version source is `--workflow-version` > `--workflow-doc` >
-  auto-discovery (modules/ or .cyberos/ doc); with NO source it skips the check
-  with a loud printed note rather than failing (a repo with no doc cannot have a
-  mixed-version run) — documented in --help.
-- `insert` refuses to CREATE sections (exit 2). SKILL.md §2b sketches section
-  creation for the regenerator; doing it here would exceed the spec's own §1 #1.6
-  discipline (1 row + ≤1 header) and duplicate regen conventions (Totals, module
-  ordering). Spec §1.5 presumes an existing section; the refusal names the fix.
-- A counted header whose counts do not cover the from-status is left untouched
-  (never decremented negative, never rewritten into a lie); the row still flips.
-- `--old-line` comparison excludes the line terminator (the recorded pre-image in
-  a backlog-state-update artefact never carries CR/LF); all other bytes exact.
-- Row-injection guard beyond the spec text: titles carrying newline bytes are
-  exit 2 (a title could otherwise smuggle a second row through the one-row
-  contract); stems must be single whitespace-free tokens. Proven in t05.
-- backlog-mutate validates statuses against the 12-value STATUS-REFERENCE enum
-  (regen's 10-value STATUS_ORDER first, `cannot_reproduce`/`duplicate` appended)
-  so a legal frontmatter status is never refused; headers render in that order.
+- The manifest carries one field beyond SHIP-MANIFEST.md's table: `task_file` (root-relative spec path, recorded at init). Without it the spec's own §1 #1.1 signature `verify <task-id>` cannot re-hash the spec. The python `validate()` checks required fields and tolerates extras; `--task-file` on verify overrides.
+- `record --routed-back` (a flag, not a new command) carries `routed_back_count` across route-backs — the workflow's terminal rule needs a writer for the count.
+- verify's current-version source is `--workflow-version` > `--workflow-doc` > auto-discovery (modules/ or .cyberos/ doc); with NO source it skips the check with a loud printed note rather than failing (a repo with no doc cannot have a mixed-version run) — documented in --help.
+- `insert` refuses to CREATE sections (exit 2). SKILL.md §2b sketches section creation for the regenerator; doing it here would exceed the spec's own §1 #1.6 discipline (1 row + ≤1 header) and duplicate regen conventions (Totals, module ordering). Spec §1.5 presumes an existing section; the refusal names the fix.
+- A counted header whose counts do not cover the from-status is left untouched (never decremented negative, never rewritten into a lie); the row still flips.
+- `--old-line` comparison excludes the line terminator (the recorded pre-image in a backlog-state-update artefact never carries CR/LF); all other bytes exact.
+- Row-injection guard beyond the spec text: titles carrying newline bytes are exit 2 (a title could otherwise smuggle a second row through the one-row contract); stems must be single whitespace-free tokens. Proven in t05.
+- backlog-mutate validates statuses against the 12-value STATUS-REFERENCE enum (regen's 10-value STATUS_ORDER first, `cannot_reproduce`/`duplicate` appended) so a legal frontmatter status is never refused; headers render in that order.
 
 ## Diff size
 
-Three new files (1,267 lines total, all executable), two modified: build.sh +3/−0
-(guarded copies in the docs-tools block's idiom), ship-tasks.md +9/−1 (version
-bump + the two pointer passages). No dependency added anywhere. `dist/` untouched
-here — rebuild, version-sync and full suite before commit are the batch parent's
-step per payload-sync doctrine.
+Three new files (1,267 lines total, all executable), two modified: build.sh +3/−0 (guarded copies in the docs-tools block's idiom), ship-tasks.md +9/−1 (version bump + the two pointer passages). No dependency added anywhere. `dist/` untouched here — rebuild, version-sync and full suite before commit are the batch parent's step per payload-sync doctrine.
 
 ## Verdict
 

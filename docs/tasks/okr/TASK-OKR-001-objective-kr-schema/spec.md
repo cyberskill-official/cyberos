@@ -162,12 +162,11 @@ The OKR service **MUST** ship the Cycle + Team + Objective + KeyResult schema as
 7. **MUST** declare the closed `objective_status` Postgres enum with 4 face-saving values: `'planning'`, `'active'`, `'closed_achieved'`, `'closed_learned'`. The terminal states `closed_achieved` (KRs met) and `closed_learned` (KRs not met — face-saving framing per DEC-364) replace conventional "completed/failed".
 
 8. **MUST** ship the alignment-tree FSM validator (per DEC-365) at `services/okr/src/alignment/validator.rs`. Rules:
-    - `scope='company'` → `parent_objective_id MUST BE NULL`.
-    - `scope='team'` → `parent_objective_id MUST reference an objective with scope='company'` AND `team_id MUST be set`.
-    - `scope='member'` → `parent_objective_id MUST reference an objective with scope='team'` AND `owner_subject_id MUST be set`.
-    - Cross-cascade (e.g. member → company) is forbidden.
-    - The parent objective MUST be in the same cycle (`cycle_id`).
-   Validated at handler boundary AND by trigger `enforce_alignment_tree`.
+- `scope='company'` → `parent_objective_id MUST BE NULL`.
+- `scope='team'` → `parent_objective_id MUST reference an objective with scope='company'` AND `team_id MUST be set`.
+- `scope='member'` → `parent_objective_id MUST reference an objective with scope='team'` AND `owner_subject_id MUST be set`.
+- Cross-cascade (e.g. member → company) is forbidden.
+- The parent objective MUST be in the same cycle (`cycle_id`). Validated at handler boundary AND by trigger `enforce_alignment_tree`.
 
 9. **MUST** define the `key_results` table with: `id UUID PRIMARY KEY`, `tenant_id UUID NOT NULL`, `objective_id UUID NOT NULL REFERENCES objectives(id) ON DELETE CASCADE`, `name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 300)`, `kr_type kr_type NOT NULL` (closed 3-value placeholder; full type validation ships in TASK-OKR-002), `start_value_numeric BIGINT` (nullable for milestone), `target_value_numeric BIGINT NOT NULL`, `current_value_numeric BIGINT NOT NULL DEFAULT 0`, `unit TEXT NOT NULL DEFAULT ''` (e.g. "VND", "%", "count", ""), `status kr_status NOT NULL DEFAULT 'on_track'` (closed 5-value face-saving enum per DEC-364), `progress_source_query TEXT` (nullable; TASK-OKR-003 ships the DSL), `last_progress_at TIMESTAMPTZ`, `created_at TIMESTAMPTZ`, `created_by_subject_id UUID NOT NULL`.
 
@@ -186,28 +185,28 @@ The OKR service **MUST** ship the Cycle + Team + Objective + KeyResult schema as
 16. **MUST** enforce RLS with both `USING` and `WITH CHECK` on cycles, teams, objectives, key_results, kr_progress_log, objective_status_history. Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`.
 
 17. **MUST** ship REST handlers:
-    - `POST /v1/okr/cycles` — create cycle (status=planning).
-    - `POST /v1/okr/cycles/{id}/transition` — transition status (planning → active → closing → closed).
-    - `GET /v1/okr/cycles?status=<>` — list with filter.
-    - `POST /v1/okr/teams` — create team.
-    - `GET /v1/okr/teams` — list.
-    - `POST /v1/okr/objectives` — create objective + initial KRs (3-5).
-    - `PATCH /v1/okr/objectives/{id}` — update non-cascade fields.
-    - `POST /v1/okr/objectives/{id}/transition` — status transition.
-    - `POST /v1/okr/key_results/{id}/progress` — record progress (manual or check_in).
-    - `POST /v1/okr/objectives/{id}/key_results` — add KR (must stay ≤ 5).
-    - `DELETE /v1/okr/objectives/{id}/key_results/{kr_id}` — remove KR (must stay ≥ 3).
-    - `GET /v1/okr/objectives?cycle_id=<>&scope=<>` — list with filters.
+- `POST /v1/okr/cycles` — create cycle (status=planning).
+- `POST /v1/okr/cycles/{id}/transition` — transition status (planning → active → closing → closed).
+- `GET /v1/okr/cycles?status=<>` — list with filter.
+- `POST /v1/okr/teams` — create team.
+- `GET /v1/okr/teams` — list.
+- `POST /v1/okr/objectives` — create objective + initial KRs (3-5).
+- `PATCH /v1/okr/objectives/{id}` — update non-cascade fields.
+- `POST /v1/okr/objectives/{id}/transition` — status transition.
+- `POST /v1/okr/key_results/{id}/progress` — record progress (manual or check_in).
+- `POST /v1/okr/objectives/{id}/key_results` — add KR (must stay ≤ 5).
+- `DELETE /v1/okr/objectives/{id}/key_results/{kr_id}` — remove KR (must stay ≥ 3).
+- `GET /v1/okr/objectives?cycle_id=<>&scope=<>` — list with filters.
 
 18. **MUST** emit memory audit rows for the 8 kinds (per DEC-368):
-    - `okr.cycle_opened` (cycle status → active).
-    - `okr.cycle_closed` (cycle status → closed).
-    - `okr.objective_created` (POST /objectives).
-    - `okr.objective_updated` (PATCH /objectives).
-    - `okr.kr_progress_recorded` (POST /key_results/{id}/progress).
-    - `okr.kr_status_changed` (KR status transition).
-    - `okr.alignment_created` (Team or Member objective with parent set).
-    - `okr.cycle_retro_recorded` (TASK-OKR-007 retro entries; placeholder kind at slice 1).
+- `okr.cycle_opened` (cycle status → active).
+- `okr.cycle_closed` (cycle status → closed).
+- `okr.objective_created` (POST /objectives).
+- `okr.objective_updated` (PATCH /objectives).
+- `okr.kr_progress_recorded` (POST /key_results/{id}/progress).
+- `okr.kr_status_changed` (KR status transition).
+- `okr.alignment_created` (Team or Member objective with parent set).
+- `okr.cycle_retro_recorded` (TASK-OKR-007 retro entries; placeholder kind at slice 1).
 
 19. **MUST** PII-scrub `description`, `rationale`, and `name` fields via TASK-MEMORY-111 before chain commit. Tenant-scoped Postgres rows retain raw; memory chain holds scrubbed.
 
@@ -216,12 +215,12 @@ The OKR service **MUST** ship the Cycle + Team + Objective + KeyResult schema as
 21. **MUST** emit OTel span `okr.{cycle,team,objective,kr,progress}.{create,update,transition,...}` with `outcome` attribute (success | invalid_alignment | kr_count_out_of_range | invalid_status_transition | not_found | permission_denied | forbidden_terminology).
 
 22. **MUST** emit OTel metrics:
-    - `okr_cycle_count{status, tenant_id}` (gauge).
-    - `okr_objective_count{scope, status, tenant_id}` (gauge).
-    - `okr_kr_count{status, kr_type, tenant_id}` (gauge).
-    - `okr_kr_progress_records_total{source}` (counter).
-    - `okr_objective_status_transitions_total{from_status, to_status, scope}` (counter).
-    - `okr_alignment_violations_total{kind}` (counter — should remain 0).
+- `okr_cycle_count{status, tenant_id}` (gauge).
+- `okr_objective_count{scope, status, tenant_id}` (gauge).
+- `okr_kr_count{status, kr_type, tenant_id}` (gauge).
+- `okr_kr_progress_records_total{source}` (counter).
+- `okr_objective_status_transitions_total{from_status, to_status, scope}` (counter).
+- `okr_alignment_violations_total{kind}` (counter — should remain 0).
 
 23. **MUST** ship cascading delete: deleting a `cycles` row CASCADES to objectives + key_results + history rows (per DEC-371). Deleting a `key_results` row with progress_log entries is RESTRICTED — preserve audit history. Cycles older than 5 years MAY be archived (not deleted) via a separate handler (out of scope for slice 1).
 

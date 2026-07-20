@@ -43,10 +43,7 @@ outputs:
 
 ## 2. Pass criterion
 
-10/10. The workflow proceeds to step 17 (backlog-state-update-author)
-once this audit passes — regardless of whether the resolution is
-`passed` or `tripped-circuit-breaker`, because the backlog update
-records both outcomes.
+10/10. The workflow proceeds to step 17 (backlog-state-update-author) once this audit passes — regardless of whether the resolution is `passed` or `tripped-circuit-breaker`, because the backlog update records both outcomes.
 
 ---
 

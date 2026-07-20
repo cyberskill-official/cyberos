@@ -26,23 +26,13 @@ trace_004_closed: true
 
 All 7 §1 clauses cited; 6/6 ACs closed.
 
-**AC 6's citation was AMENDED during implementation** (`t08_draft_staleness_report` ->
-`t11_draft_staleness_report`): `t08` is already `t08_spec_chunks` in that suite, so the spec named
-an occupied slot. Recorded here rather than silently renamed, and accepted by the operator at the
-review gate (2026-07-17).
+**AC 6's citation was AMENDED during implementation** (`t08_draft_staleness_report` -> `t11_draft_staleness_report`): `t08` is already `t08_spec_chunks` in that suite, so the spec named an occupied slot. Recorded here rather than silently renamed, and accepted by the operator at the review gate (2026-07-17).
 
 ## Why some ACs are structural tests, not behavioural ones
 
-AC 2/3/4/5 pin prose contracts (a skill envelope, a status-reference row, a workflow section).
-`backlog-mutate` deliberately never writes frontmatter - it writes rows - so `entered_via` is set
-by the agent in the same edit that moves the status cell, and the contract is the artefact. The
-ceiling is a HALT for a human; a suite cannot simulate the human without becoming a test of its
-own fixture.
+AC 2/3/4/5 pin prose contracts (a skill envelope, a status-reference row, a workflow section). `backlog-mutate` deliberately never writes frontmatter - it writes rows - so `entered_via` is set by the agent in the same edit that moves the status cell, and the contract is the artefact. The ceiling is a HALT for a human; a suite cannot simulate the human without becoming a test of its own fixture.
 
-Structural does not mean weak: t18/t19 and the four ceiling arms fail if the doctrine is deleted,
-reworded past recognition, or left out of the payload. That is the property that matters, and it
-is the same discipline TASK-IMP-104's `t05_single_comparator` uses to pin `ver_lt` to exactly one
-definition repo-wide.
+Structural does not mean weak: t18/t19 and the four ceiling arms fail if the doctrine is deleted, reworded past recognition, or left out of the payload. That is the property that matters, and it is the same discipline TASK-IMP-104's `t05_single_comparator` uses to pin `ver_lt` to exactly one definition repo-wide.
 
 ## Edge-case matrix coverage (§3)
 
@@ -58,9 +48,7 @@ definition repo-wide.
 
 ## Live evidence
 
-The report on the real corpus: **336 drafts, all `unknown`, oldest 2026-05-16.** Correct and
-honest - no draft carries a reason, because backfilling one for tasks this run did not author is
-an explicit Non-Goal. The number nobody believed is now the number with its ignorance stated.
+The report on the real corpus: **336 drafts, all `unknown`, oldest 2026-05-16.** Correct and honest - no draft carries a reason, because backfilling one for tasks this run did not author is an explicit Non-Goal. The number nobody believed is now the number with its ignorance stated.
 
 ## Suite evidence
 

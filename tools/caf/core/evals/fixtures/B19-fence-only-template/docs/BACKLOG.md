@@ -5,8 +5,7 @@
 ### Scope & method
 - Protocol: v1.3.0 | Mode: autonomous | Depth: standard | Severity floor: High | Vectors: Architecture
 
-The audit went well overall. For reference, here is the shape the final
-backlog tables will take once I write them up properly:
+The audit went well overall. For reference, here is the shape the final backlog tables will take once I write them up properly:
 
 ```
 | Metric | Baseline | Target | Verify command |

@@ -86,14 +86,14 @@ The RES service **MUST** ship capacity matrix at `services/res/src/matrix/` join
 1. **MUST** validate `matrix_run_status` against closed enum per DEC-2032.
 
 2. **MUST** compute at `computer.rs::compute(member, iso_week)` per DEC-2031:
-   - capacity_hours = member.hours_per_week (TASK-HR-002) - approved PTO (TASK-HR-004) - LEARN training (TASK-LEARN-001)
-   - demand_hours = sum TASK-PROJ-013 estimates for member's assigned issues in week
-   - allocated_hours = sum task-TIME entries (actual + planned)
+- capacity_hours = member.hours_per_week (TASK-HR-002) - approved PTO (TASK-HR-004) - LEARN training (TASK-LEARN-001)
+- demand_hours = sum TASK-PROJ-013 estimates for member's assigned issues in week
+- allocated_hours = sum task-TIME entries (actual + planned)
 
 3. **MUST** run batch at `batch_runner.rs::run(tenant, run_date)` per DEC-2030:
-   - For each active member, compute next 12 weeks of capacity+demand+allocated
-   - Insert/update rows in matrix table
-   - Catch + isolate per-member failures
+- For each active member, compute next 12 weeks of capacity+demand+allocated
+- Insert/update rows in matrix table
+- Catch + isolate per-member failures
 
 4. **MUST** define table at migration `0001`:
    ```sql
@@ -237,9 +237,7 @@ async fn per_member_failure_isolated() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-HR-001, TASK-PROJ-001, TASK-TIME-001.
-**Downstream:** TASK-RES-002 (Gantt UI), TASK-RES-003 (over/under flags), TASK-RES-005 (OT cap check).
-**Cross-module:** TASK-HR-002 (contract type), TASK-HR-004 (PTO), TASK-LEARN-001 (training), TASK-PROJ-013 (estimates), TASK-MCP-007 (cron), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-HR-001, TASK-PROJ-001, TASK-TIME-001. **Downstream:** TASK-RES-002 (Gantt UI), TASK-RES-003 (over/under flags), TASK-RES-005 (OT cap check). **Cross-module:** TASK-HR-002 (contract type), TASK-HR-004 (PTO), TASK-LEARN-001 (training), TASK-PROJ-013 (estimates), TASK-MCP-007 (cron), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

@@ -71,14 +71,14 @@ The cycle-review generator **MUST** compose a draft review at every cycle close.
 
 1. **MUST** schedule a cycle-close detector running every 15 minutes; identifies cycles whose `ends_at < NOW()` and `review_drafted_at IS NULL`; queues review generation for each.
 2. **MUST** compute `CycleStats` for each detected cycle:
-    - `completed_count` (issues with status=Done where cycle_id matches).
-    - `incomplete_count` (status != Done|Cancelled).
-    - `cancelled_count`.
-    - `velocity_estimate_points` (sum of estimate values on completed issues; per TASK-PROJ-013 estimate field).
-    - `velocity_actual_hours` (sum of TASK-TIME-005 billable_hours on completed issues).
-    - `blocker_count_resolved` (TASK-PROJ-011 blockers resolved during cycle).
-    - `blocker_count_stale_at_close` (active blockers at cycle end).
-    - `time_in_status_p50` per status (median dwell).
+- `completed_count` (issues with status=Done where cycle_id matches).
+- `incomplete_count` (status != Done|Cancelled).
+- `cancelled_count`.
+- `velocity_estimate_points` (sum of estimate values on completed issues; per TASK-PROJ-013 estimate field).
+- `velocity_actual_hours` (sum of TASK-TIME-005 billable_hours on completed issues).
+- `blocker_count_resolved` (TASK-PROJ-011 blockers resolved during cycle).
+- `blocker_count_stale_at_close` (active blockers at cycle end).
+- `time_in_status_p50` per status (median dwell).
 3. **MUST** compose a markdown draft via TASK-AI-014 COO persona using a fixed prompt template:
     ```
     You are the Chief Operations Officer reviewing cycle "{{cycle_name}}" ({{cycle_id}}).
@@ -100,9 +100,9 @@ The cycle-review generator **MUST** compose a draft review at every cycle close.
 9. **MUST** handle LLM failure gracefully: AI Gateway 5xx → retry 3× with exp backoff; final failure → save stats-only stub draft (no prose) + sev-3 alarm; operator iterates manually.
 10. **MUST** RLS-enforce.
 11. **MUST** emit OTel metrics:
-    - `proj_cycle_reviews_drafted_total` (counter).
-    - `proj_cycle_reviews_acceptance_minutes` (histogram — time from draft to accept; ops-quality signal).
-    - `proj_cycle_review_llm_failures_total` (counter).
+- `proj_cycle_reviews_drafted_total` (counter).
+- `proj_cycle_reviews_acceptance_minutes` (histogram — time from draft to accept; ops-quality signal).
+- `proj_cycle_review_llm_failures_total` (counter).
 12. **MUST** support locale-aware drafts: `cyberos_proj_engagement_settings.cycle_review_locale` (default `vi-VN`); prompt template includes the locale instruction so VN engagements get Vietnamese drafts.
 13. **MUST** include TASK-PROJ-013 estimate-vs-actual delta in stats: `velocity_estimate_vs_actual_ratio` (estimate_points / actual_hours). Operators see whether estimates were optimistic / pessimistic.
 14. **MUST** include "Top 5 longest-in-status issues" list in the input context: issues that spent the most cumulative time in any non-Done status, with status name + days.

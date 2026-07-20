@@ -42,18 +42,7 @@ sync_class=client-visible only"] CLIENT --> IDP IDP --> PORTAL PORTAL --> PROJ P
 
 ### Auto vs human-in-loop operations matrix
 
-Operation| How it happens| Why this split
----|---|---
-Client login (SSO)| **Auto** via external IdP| Customer manages own identity lifecycle.
-JIT user provisioning| **Auto** at first login| Attribute-mapped role; new ClientMember created.
-Scoped view query| **Auto** with RLS + sync_class filter| Protocol-level guarantee of isolation.
-Brand-pack apply| **Auto** at session init| Cached CDN; pack version stamped.
-Client AI assistant query| **Auto** CUO grounded in scoped data| Same KB/CUO infrastructure; ACL-aware retrieval.
-Pay invoice (PSP redirect)| **Manual** client click -> external PSP| Payment flow exits PORTAL to Stripe/VietQR.
-File new project request| **Manual** client form -> creates CHAT thread on agency side| Request becomes work for the agency.
-DSAR export request| **Auto** bundle on client request| Per-client subject; chained audit; PDPL/GDPR compliant.
-Brand-pack update| **Manual** agency admin action| Brand changes intentional; CDN cache bust auto-triggered.
-Client user removal| **Auto** on IdP removal (deprovision flow)| SCIM 2.0 sync if customer supports; otherwise next-login deny.
+Operation| How it happens| Why this split ---|---|--- Client login (SSO)| **Auto** via external IdP| Customer manages own identity lifecycle. JIT user provisioning| **Auto** at first login| Attribute-mapped role; new ClientMember created. Scoped view query| **Auto** with RLS + sync_class filter| Protocol-level guarantee of isolation. Brand-pack apply| **Auto** at session init| Cached CDN; pack version stamped. Client AI assistant query| **Auto** CUO grounded in scoped data| Same KB/CUO infrastructure; ACL-aware retrieval. Pay invoice (PSP redirect)| **Manual** client click -> external PSP| Payment flow exits PORTAL to Stripe/VietQR. File new project request| **Manual** client form -> creates CHAT thread on agency side| Request becomes work for the agency. DSAR export request| **Auto** bundle on client request| Per-client subject; chained audit; PDPL/GDPR compliant. Brand-pack update| **Manual** agency admin action| Brand changes intentional; CDN cache bust auto-triggered. Client user removal| **Auto** on IdP removal (deprovision flow)| SCIM 2.0 sync if customer supports; otherwise next-login deny.
 
 ## Why PORTAL exists
 
@@ -69,21 +58,7 @@ The bet is that a portal that surfaces the same data the agency operates from - 
 
 A structured decomposition of PORTAL's scope.
 
-Axis| Question| Answer
----|---|---
-**5W - What**| What is PORTAL?| A second front-door for clients. Branded read-narrowed views of PROJ + INV + DOC + CHAT; client-initiated workflow channels; branded CUO AI assistant; SSO from client IdP; custom-domain CNAME.
-**5W - Who**| Who uses it?| **ClientMembers:** the customer's people (CEO, project sponsor, billing contact). **Agency CCO:** owns portal configuration per client. **Agents:** branded CUO answers grounded questions with citations; CCO-skill summarises client signals across portals.
-**5W - When**| When does it run?| Continuous. Real-time WebSocket for project status updates and signing-notification deeplinks. Branded email digests on a per-client schedule.
-**5W - Where**| Where does it run?| P4: multi-region edge (CloudFront / Vercel) for the static SPA; SG-1 + VN-hanoi-1 for the API. Custom CNAMEs terminate at edge with per-tenant ACM certs.
-**5W - Why**| Why a separate module?| Because the auth surface, the brand-theme system, the data-lens narrowing, and the client AI assistant differ enough from internal CyberOS that compositing them into the main app would muddy both. PORTAL is a focused product for a focused audience.
-**1H - How**| How does it work?| SSO at edge resolves ClientMember -> Subject row -> scope contract grants narrowed to `client_account_id`. Federated GraphQL queries are predicate-narrowed by Apollo Router at request time. Branded SPA reads a tenant.branding config; custom CNAME terminates at edge.
-**2C - Cost**| Cost budget?| P4: edge-served static SPA ($5/mo CloudFront); per-tenant ACM cert ($0). API: ~$20 / month per active client account at low traffic. Branded email templates pass through SES.
-**2C - Constraints**| Constraints?| (a) zero cross-tenant data leakage - three-layer enforcement. (b) ClientMember access is read-only on tenant data; write only on their own consents / requests (task pending). (c) Every portal action audited to memory (task pending). (d) PDPL Art. 14 + GDPR Art. 15 DSAR for ClientMembers. (e) Vietnamese-localised UI.
-**5M - Materials**| Stack?| Rust 1.81, axum (API), Next.js + React + Tailwind (SPA), CloudFront / Vercel edge, ACM for per-tenant TLS, S3 for theme assets, SAML / OIDC libraries, OpenTelemetry.
-**5M - Methods**| Method choices?| Predicate-narrowing at Apollo Router (every field has @requiresScopes + tenant + client_account predicate). JIT user provisioning at SSO callback. Branded CUO is a thin wrapper on the main CUO with persona-stamped scope.
-**5M - Machines**| Deployment?| Edge SPA + multi-region API. Per-tenant ACM cert auto-issued and renewed on CNAME claim. PWA service worker for offline-tolerant read views.
-**5M - Manpower**| Who maintains?| 0.5 FTE at P4. CCO seat owns product surface; CTO owns brand-theming engine; CSO owns isolation invariants.
-**5M - Measurement**| How measured?| (NFR pending) zero tenant data leakage, (NFR pending) TTFB p95 <= 500 ms at edge, KPI client-login MAU per tenant.
+Axis| Question| Answer ---|---|--- **5W - What**| What is PORTAL?| A second front-door for clients. Branded read-narrowed views of PROJ + INV + DOC + CHAT; client-initiated workflow channels; branded CUO AI assistant; SSO from client IdP; custom-domain CNAME. **5W - Who**| Who uses it?| **ClientMembers:** the customer's people (CEO, project sponsor, billing contact). **Agency CCO:** owns portal configuration per client. **Agents:** branded CUO answers grounded questions with citations; CCO-skill summarises client signals across portals. **5W - When**| When does it run?| Continuous. Real-time WebSocket for project status updates and signing-notification deeplinks. Branded email digests on a per-client schedule. **5W - Where**| Where does it run?| P4: multi-region edge (CloudFront / Vercel) for the static SPA; SG-1 + VN-hanoi-1 for the API. Custom CNAMEs terminate at edge with per-tenant ACM certs. **5W - Why**| Why a separate module?| Because the auth surface, the brand-theme system, the data-lens narrowing, and the client AI assistant differ enough from internal CyberOS that compositing them into the main app would muddy both. PORTAL is a focused product for a focused audience. **1H - How**| How does it work?| SSO at edge resolves ClientMember -> Subject row -> scope contract grants narrowed to `client_account_id`. Federated GraphQL queries are predicate-narrowed by Apollo Router at request time. Branded SPA reads a tenant.branding config; custom CNAME terminates at edge. **2C - Cost**| Cost budget?| P4: edge-served static SPA ($5/mo CloudFront); per-tenant ACM cert ($0). API: ~$20 / month per active client account at low traffic. Branded email templates pass through SES. **2C - Constraints**| Constraints?| (a) zero cross-tenant data leakage - three-layer enforcement. (b) ClientMember access is read-only on tenant data; write only on their own consents / requests (task pending). (c) Every portal action audited to memory (task pending). (d) PDPL Art. 14 + GDPR Art. 15 DSAR for ClientMembers. (e) Vietnamese-localised UI. **5M - Materials**| Stack?| Rust 1.81, axum (API), Next.js + React + Tailwind (SPA), CloudFront / Vercel edge, ACM for per-tenant TLS, S3 for theme assets, SAML / OIDC libraries, OpenTelemetry. **5M - Methods**| Method choices?| Predicate-narrowing at Apollo Router (every field has @requiresScopes + tenant + client_account predicate). JIT user provisioning at SSO callback. Branded CUO is a thin wrapper on the main CUO with persona-stamped scope. **5M - Machines**| Deployment?| Edge SPA + multi-region API. Per-tenant ACM cert auto-issued and renewed on CNAME claim. PWA service worker for offline-tolerant read views. **5M - Manpower**| Who maintains?| 0.5 FTE at P4. CCO seat owns product surface; CTO owns brand-theming engine; CSO owns isolation invariants. **5M - Measurement**| How measured?| (NFR pending) zero tenant data leakage, (NFR pending) TTFB p95 <= 500 ms at edge, KPI client-login MAU per tenant.
 
 ## Architecture
 
@@ -115,22 +90,7 @@ portal.* rows"] OBS["👁 OBS"] end BROWSER --> CDN PWA --> CDN CDN --> ACM CDN 
 
 ### Internal components
 
-Component| Path (planned)| Responsibility
----|---|---
-`sso.rs`| services/portal/src/sso.rs| SAML 2.0 + OIDC callback endpoints. Parses assertion, validates issuer, extracts attributes.
-`provision.rs`| services/portal/src/provision.rs| Just-in-Time ClientMember provisioning. Creates Subject + ClientMember + ScopeContractGrant on first login.
-`lens.rs`| services/portal/src/lens.rs| Data-lens narrowing layer. Wraps every federated query with a (tenant_id, client_account_id) predicate; rejects queries that try to escape.
-`brand.rs`| services/portal/src/brand.rs| Branding config CRUD: logo URL, favicon, colour anchors, custom email-template overrides, CNAME claim + ACM cert issuance.
-`cname.rs`| services/portal/src/cname.rs| CNAME validation. DNS TXT challenge for ownership verification; ACM cert request via AWS API; automatic renewal.
-`theme.rs`| services/portal/src/theme.rs| Theme runtime: resolves brand config per request hostname; emits CSS variable bundle in HTML head.
-`ai_proxy.rs`| services/portal/src/ai_proxy.rs| Branded CUO wrapper. Sets persona to `client-cuo` with scope narrowed to ClientMember context.
-`workflow.rs`| services/portal/src/workflow.rs| Client-initiated workflow handlers. New-project request, billing inquiry, support ticket. Materialises CHAT thread on agency side.
-`i18n.rs`| services/portal/src/i18n.rs| UI-string resolution. Default tenant locale + per-ClientMember override; currency localisation.
-`email.rs`| services/portal/src/email.rs| Branded transactional email. Per-tenant template overrides; SES via tenant FROM with SPF/DKIM.
-`consent.rs`| services/portal/src/consent.rs| Client consents (data-processing, marketing, AI usage). Write-allowed for the ClientMember on their own row only.
-`dsar.rs`| services/portal/src/dsar.rs| DSAR / right-to-erasure surface for the ClientMember's own data; 30-day grace before destructive delete.
-`audit_bridge.rs`| services/portal/src/audit_bridge.rs| memory canonical writer. Every portal action: login, view, request, consent, dsar.
-`migrations/`| services/portal/migrations/| sqlx migrations. RLS by (tenant_id, client_account_id). Per-tenant brand config schema.
+Component| Path (planned)| Responsibility ---|---|--- `sso.rs`| services/portal/src/sso.rs| SAML 2.0 + OIDC callback endpoints. Parses assertion, validates issuer, extracts attributes. `provision.rs`| services/portal/src/provision.rs| Just-in-Time ClientMember provisioning. Creates Subject + ClientMember + ScopeContractGrant on first login. `lens.rs`| services/portal/src/lens.rs| Data-lens narrowing layer. Wraps every federated query with a (tenant_id, client_account_id) predicate; rejects queries that try to escape. `brand.rs`| services/portal/src/brand.rs| Branding config CRUD: logo URL, favicon, colour anchors, custom email-template overrides, CNAME claim + ACM cert issuance. `cname.rs`| services/portal/src/cname.rs| CNAME validation. DNS TXT challenge for ownership verification; ACM cert request via AWS API; automatic renewal. `theme.rs`| services/portal/src/theme.rs| Theme runtime: resolves brand config per request hostname; emits CSS variable bundle in HTML head. `ai_proxy.rs`| services/portal/src/ai_proxy.rs| Branded CUO wrapper. Sets persona to `client-cuo` with scope narrowed to ClientMember context. `workflow.rs`| services/portal/src/workflow.rs| Client-initiated workflow handlers. New-project request, billing inquiry, support ticket. Materialises CHAT thread on agency side. `i18n.rs`| services/portal/src/i18n.rs| UI-string resolution. Default tenant locale + per-ClientMember override; currency localisation. `email.rs`| services/portal/src/email.rs| Branded transactional email. Per-tenant template overrides; SES via tenant FROM with SPF/DKIM. `consent.rs`| services/portal/src/consent.rs| Client consents (data-processing, marketing, AI usage). Write-allowed for the ClientMember on their own row only. `dsar.rs`| services/portal/src/dsar.rs| DSAR / right-to-erasure surface for the ClientMember's own data; 30-day grace before destructive delete. `audit_bridge.rs`| services/portal/src/audit_bridge.rs| memory canonical writer. Every portal action: login, view, request, consent, dsar. `migrations/`| services/portal/migrations/| sqlx migrations. RLS by (tenant_id, client_account_id). Per-tenant brand config schema.
 
 **PORTAL-INV-001 - Cross-tenant data leakage MUST be zero.** Three-layer fail-safe: (1) PostgreSQL RLS keyed by (tenant_id, client_account_id) on every relevant table; (2) Apollo Router @requiresScopes + predicate-narrowing on every GraphQL field; (3) S3 prefix-scoped IAM for asset access. CI gate: cross-tenant + cross-client-account read attempts via property-based fuzz. Production gate: SOC 2 CC6.1 + annual pen-test cover this explicitly. Verification: `services/portal/tests/isolation_invariant.rs`.
 
@@ -271,29 +231,11 @@ type Mutation {
 
 ### REST endpoints
 
-Method| Path| Purpose
----|---|---
-GET| `/portal/.well-known/saml-metadata`| SAML 2.0 metadata for the client's IdP.
-POST| `/portal/sso/saml/acs`| SAML assertion consumer URL.
-GET| `/portal/sso/oidc/callback`| OIDC callback.
-POST| `/portal/branding`| Update branding theme. CCO scope.
-POST| `/portal/branding/cname`| Claim custom CNAME (TXT challenge issued).
-GET| `/portal/branding/cname/{id}/verify`| Verify CNAME TXT + request ACM cert.
-GET| `/portal/assets/{theme_id}/logo`| Serve logo (CDN-cached).
-POST| `/portal/dsar/export`| Generate DSAR bundle.
-POST| `/portal/erasure/confirm`| Confirm erasure after 30-day grace.
+Method| Path| Purpose ---|---|--- GET| `/portal/.well-known/saml-metadata`| SAML 2.0 metadata for the client's IdP. POST| `/portal/sso/saml/acs`| SAML assertion consumer URL. GET| `/portal/sso/oidc/callback`| OIDC callback. POST| `/portal/branding`| Update branding theme. CCO scope. POST| `/portal/branding/cname`| Claim custom CNAME (TXT challenge issued). GET| `/portal/branding/cname/{id}/verify`| Verify CNAME TXT + request ACM cert. GET| `/portal/assets/{theme_id}/logo`| Serve logo (CDN-cached). POST| `/portal/dsar/export`| Generate DSAR bundle. POST| `/portal/erasure/confirm`| Confirm erasure after 30-day grace.
 
 ### MCP tool catalogue (branded CUO)
 
-Tool name| Inputs| Outputs| Annotations
----|---|---|---
-`cyberos.portal.my_projects`| -| Project| readonly, scope=portal.read
-`cyberos.portal.project_status`| project_id| {milestones, comments}| readonly
-`cyberos.portal.invoice_summary`| year?| {outstanding, paid, ...}| readonly
-`cyberos.portal.submit_request`| kind, title, body| {ok, request_id}| scope=portal.write_request, human-confirm
-`cyberos.portal.grant_consent`| consent_type, version| {ok}| scope=portal.write_consent
-`cyberos.portal.dsar_request`| -| {request_id}| scope=portal.dsar, email-confirm
-`cyberos.portal.find_doc`| name_match| Document| readonly
+Tool name| Inputs| Outputs| Annotations ---|---|---|--- `cyberos.portal.my_projects`| -| Project| readonly, scope=portal.read `cyberos.portal.project_status`| project_id| {milestones, comments}| readonly `cyberos.portal.invoice_summary`| year?| {outstanding, paid, ...}| readonly `cyberos.portal.submit_request`| kind, title, body| {ok, request_id}| scope=portal.write_request, human-confirm `cyberos.portal.grant_consent`| consent_type, version| {ok}| scope=portal.write_consent `cyberos.portal.dsar_request`| -| {request_id}| scope=portal.dsar, email-confirm `cyberos.portal.find_doc`| name_match| Document| readonly
 
 ## Key flows
 
@@ -342,15 +284,7 @@ stateDiagram-v2 [*] --> Provisioned: agency CCO creates client_account Provision
 
 ### Per-state actions
 
-State| Trigger| Side-effects
----|---|---
-Provisioned| CCO creates ClientAccount| Default subdomain assigned; default branding applied; audit row.
-Configuring| SSO setup + branding upload| SAML metadata exposed; ACM cert requested (if CNAME).
-Active| First successful ClientMember SSO callback| Portal usable; data-lens active; AI assistant enabled.
-Suspended| CCO action| ClientMember login refused; existing JWTs revoked; SSO returns soft "account paused" UI.
-Offboarding| Tenant or CCO close| ClientMember can still log in for 30 days; banner "account closing on YYYY-MM-DD"; DSAR export tooling surfaced.
-GracePeriod| Day 1 of 30-day window| Read-only; export bundle pre-generated; emails sent to all ClientMembers.
-Closed| Day 30 of grace| Data wiped per retention policy; audit row retained; CNAME / ACM cert released.
+State| Trigger| Side-effects ---|---|--- Provisioned| CCO creates ClientAccount| Default subdomain assigned; default branding applied; audit row. Configuring| SSO setup + branding upload| SAML metadata exposed; ACM cert requested (if CNAME). Active| First successful ClientMember SSO callback| Portal usable; data-lens active; AI assistant enabled. Suspended| CCO action| ClientMember login refused; existing JWTs revoked; SSO returns soft "account paused" UI. Offboarding| Tenant or CCO close| ClientMember can still log in for 30 days; banner "account closing on YYYY-MM-DD"; DSAR export tooling surfaced. GracePeriod| Day 1 of 30-day window| Read-only; export bundle pre-generated; emails sent to all ClientMembers. Closed| Day 30 of grace| Data wiped per retention policy; audit row retained; CNAME / ACM cert released.
 
 ## Functional requirements
 
@@ -362,19 +296,7 @@ Previous task enumerations were archived 2026-05-14 and are no longer reflected 
 
 PORTAL NFRs focus on tenant isolation and edge-served performance.
 
-NFR ID| Concern| Target| Measurement
----|---|---|---
-(NFR pending)| Cross-tenant data leakage incidents| = 0| property fuzz + annual pen-test
-(NFR pending)| Cross-client-account leakage (within same tenant)| = 0| RLS verification harness + CI gate
-(NFR pending)| SAML assertion replay| = 0| NotOnOrAfter + InResponseTo enforced
-(NFR pending)| TTFB p95 (edge) for branded SPA| <= 500 ms (global)| RUM + Lighthouse
-(NFR pending)| myProjects GraphQL p95| <= 350 ms| k6 + Apollo Router
-(NFR pending)| CNAME claim -> first served request (cold)| <= 5 min (ACM cert issuance)| end-to-end test
-(NFR pending)| Portal availability (28-day)| >= 99.95%| SLO monitor
-(NFR pending)| Mobile Lighthouse score| >= 90 (perf)| nightly Lighthouse run
-(NFR pending)| PWA install rate| tracked KPI| OBS
-(NFR pending)| WCAG 2.1 AA compliance| full coverage| axe-core audit
-(NFR pending)| Per-client infra cost| <= $20 / mo at typical load| monthly billing
+NFR ID| Concern| Target| Measurement ---|---|---|--- (NFR pending)| Cross-tenant data leakage incidents| = 0| property fuzz + annual pen-test (NFR pending)| Cross-client-account leakage (within same tenant)| = 0| RLS verification harness + CI gate (NFR pending)| SAML assertion replay| = 0| NotOnOrAfter + InResponseTo enforced (NFR pending)| TTFB p95 (edge) for branded SPA| <= 500 ms (global)| RUM + Lighthouse (NFR pending)| myProjects GraphQL p95| <= 350 ms| k6 + Apollo Router (NFR pending)| CNAME claim -> first served request (cold)| <= 5 min (ACM cert issuance)| end-to-end test (NFR pending)| Portal availability (28-day)| >= 99.95%| SLO monitor (NFR pending)| Mobile Lighthouse score| >= 90 (perf)| nightly Lighthouse run (NFR pending)| PWA install rate| tracked KPI| OBS (NFR pending)| WCAG 2.1 AA compliance| full coverage| axe-core audit (NFR pending)| Per-client infra cost| <= $20 / mo at typical load| monthly billing
 
 ## Dependencies
 
@@ -396,78 +318,25 @@ branded CUO"] ACM["AWS ACM"] CDN["CloudFront / Vercel"] S3_T["S3 (theme assets)"
 
 PORTAL is in the SOC 2 / ISO 27001 isolation hotspot and inherits client-data DSAR obligations.
 
-Regulation / standard| Article / clause| PORTAL feature that satisfies it
----|---|---
-Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Client-side DSAR export (task pending).
-Vietnam PDPL| Art. 13 - Consent| ConsentRecord per ClientMember per consent_type.
-GDPR (EU 2016/679)| Art. 15 - Right of access| Same surface as PDPL.
-GDPR| Art. 17 - Right to erasure| Self-service erasure with 30-day grace (task pending).
-GDPR| Art. 7 - Conditions for consent| Versioned consent doc hash; ConsentRecord captures version.
-SOC 2 Type II| CC6.1 - Logical access| SAML / OIDC SSO; RBAC; ClientMember role tiers.
-SOC 2 Type II| CC6.6 - Restricted access| Three-layer predicate-narrowing + RLS + scope check.
-ISO/IEC 27001:2022| A.5.30 - ICT readiness for business continuity| Edge CDN failover; multi-region API.
-ISO/IEC 27018| Privacy for PII in public cloud| Tenant isolation invariants + per-tenant ACM cert.
-WCAG 2.1 AA| Accessibility standard| Branded SPA meets AA per axe-core audit.
-OWASP ASVS L2| Application Security Verification Standard| SAML/OIDC verification checklist; XSS protection in branded content.
+Regulation / standard| Article / clause| PORTAL feature that satisfies it ---|---|--- Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Client-side DSAR export (task pending). Vietnam PDPL| Art. 13 - Consent| ConsentRecord per ClientMember per consent_type. GDPR (EU 2016/679)| Art. 15 - Right of access| Same surface as PDPL. GDPR| Art. 17 - Right to erasure| Self-service erasure with 30-day grace (task pending). GDPR| Art. 7 - Conditions for consent| Versioned consent doc hash; ConsentRecord captures version. SOC 2 Type II| CC6.1 - Logical access| SAML / OIDC SSO; RBAC; ClientMember role tiers. SOC 2 Type II| CC6.6 - Restricted access| Three-layer predicate-narrowing + RLS + scope check. ISO/IEC 27001:2022| A.5.30 - ICT readiness for business continuity| Edge CDN failover; multi-region API. ISO/IEC 27018| Privacy for PII in public cloud| Tenant isolation invariants + per-tenant ACM cert. WCAG 2.1 AA| Accessibility standard| Branded SPA meets AA per axe-core audit. OWASP ASVS L2| Application Security Verification Standard| SAML/OIDC verification checklist; XSS protection in branded content.
 
 ## Risk entries
 
 PORTAL-specific risks in the [risk register](../../reference/risk-register.html#portal).
 
-ID| Risk| Likelihood| Impact| Owner| Mitigation
----|---|---|---|---|---
-`R-PORTAL-001`| Information disclosure - tenant client sees another tenant's data| Medium| Catastrophic| CSO| Three-layer fail-safe: predicate-narrowing + RLS + scope; CI cross-tenant gate; pen-test pre-launch + annual.
-`R-PORTAL-002`| Cross-client-account leak within same tenant| Low| High| CSO| RLS by (tenant_id, client_account_id); GraphQL predicate enforced.
-`R-PORTAL-003`| SAML assertion forgery / replay| Low| High| CSO| InResponseTo + NotOnOrAfter; assertion signature validated; relay-state CSRF token.
-`R-PORTAL-004`| XSS via branded content (logo URL, accent color)| Medium| Medium| CTO| Strict CSP; logo URL allow-list (s3:/ only); colour values validated as hex.
-`R-PORTAL-005`| Custom CNAME hijack (subdomain takeover after CNAME drop)| Medium| High| CSO| Active CNAME verification every 24h; alert on TXT drop; auto-suspend on hijack signal.
-`R-PORTAL-006`| ClientMember provisioning explosion via SSO attribute spam| Low| Medium| CSO| Rate-limit per (tenant, idp_subject); auto-suspend tenant on abuse threshold; CCO notification.
-`R-PORTAL-007`| Branded CUO leaks cross-tenant context via prompt injection| Medium| High| CSO| CaMeL enforcement; persona-stamped JWT cannot escalate; scope-narrowing at AI gateway.
-`R-PORTAL-008`| DSAR / erasure abuse - automated bot triggers mass-erasure| Low| Medium| DPO| Email-confirmation step; 30-day grace; tenant CCO can pause if abuse detected.
-`R-PORTAL-009`| ACM cert expiry / renewal failure| Low| Medium| CTO| Auto-renewal monitored; OBS alert 14d before expiry; manual override path.
-`R-PORTAL-010`| Customer-MCP external-agent over-scope| Medium| Medium| CSO| Per-tool consent gate; scope explicit per tool; revocable; audit trail.
-`R-PORTAL-011`| Sync_class filter misconfiguration -> sibling-client data leaks| Low| Critical| CSO| Sync_class=client-visible enforced at retrieval pre-LLM; CI property test verifies cross-Engagement isolation; quarterly red-team.
-`R-PORTAL-012`| JIT-provisioned ClientMember inherits wrong role from IdP claim mapping| Medium| Medium| CSO| Claim-mapping config audited by CSO per tenant; default role = lowest-privilege if mapping ambiguous; quarterly review.
-`R-PORTAL-013`| Brand-pack accepts user-uploaded SVG -> XSS| Medium| High| CSO| SVG sanitiser strips scripts + event handlers; logo upload to dedicated S3 bucket with CDN no-exec policy.
-`R-PORTAL-014`| Client AI assistant cites memory from a different client's project| Low| Critical| CSO| CUO scope-narrowed at AI Gateway by JWT scope_grants; cross-Engagement retrieval = 403; integration test asserts.
-`R-PORTAL-015`| SCIM deprovision delay leaves removed-customer-user logged-in| Medium| Medium| CSO| Session invalidation on SCIM removal; max session lifetime 8h regardless; OBS alert if mismatch detected.
+ID| Risk| Likelihood| Impact| Owner| Mitigation ---|---|---|---|---|--- `R-PORTAL-001`| Information disclosure - tenant client sees another tenant's data| Medium| Catastrophic| CSO| Three-layer fail-safe: predicate-narrowing + RLS + scope; CI cross-tenant gate; pen-test pre-launch + annual. `R-PORTAL-002`| Cross-client-account leak within same tenant| Low| High| CSO| RLS by (tenant_id, client_account_id); GraphQL predicate enforced. `R-PORTAL-003`| SAML assertion forgery / replay| Low| High| CSO| InResponseTo + NotOnOrAfter; assertion signature validated; relay-state CSRF token. `R-PORTAL-004`| XSS via branded content (logo URL, accent color)| Medium| Medium| CTO| Strict CSP; logo URL allow-list (s3:/ only); colour values validated as hex. `R-PORTAL-005`| Custom CNAME hijack (subdomain takeover after CNAME drop)| Medium| High| CSO| Active CNAME verification every 24h; alert on TXT drop; auto-suspend on hijack signal. `R-PORTAL-006`| ClientMember provisioning explosion via SSO attribute spam| Low| Medium| CSO| Rate-limit per (tenant, idp_subject); auto-suspend tenant on abuse threshold; CCO notification. `R-PORTAL-007`| Branded CUO leaks cross-tenant context via prompt injection| Medium| High| CSO| CaMeL enforcement; persona-stamped JWT cannot escalate; scope-narrowing at AI gateway. `R-PORTAL-008`| DSAR / erasure abuse - automated bot triggers mass-erasure| Low| Medium| DPO| Email-confirmation step; 30-day grace; tenant CCO can pause if abuse detected. `R-PORTAL-009`| ACM cert expiry / renewal failure| Low| Medium| CTO| Auto-renewal monitored; OBS alert 14d before expiry; manual override path. `R-PORTAL-010`| Customer-MCP external-agent over-scope| Medium| Medium| CSO| Per-tool consent gate; scope explicit per tool; revocable; audit trail. `R-PORTAL-011`| Sync_class filter misconfiguration -> sibling-client data leaks| Low| Critical| CSO| Sync_class=client-visible enforced at retrieval pre-LLM; CI property test verifies cross-Engagement isolation; quarterly red-team. `R-PORTAL-012`| JIT-provisioned ClientMember inherits wrong role from IdP claim mapping| Medium| Medium| CSO| Claim-mapping config audited by CSO per tenant; default role = lowest-privilege if mapping ambiguous; quarterly review. `R-PORTAL-013`| Brand-pack accepts user-uploaded SVG -> XSS| Medium| High| CSO| SVG sanitiser strips scripts + event handlers; logo upload to dedicated S3 bucket with CDN no-exec policy. `R-PORTAL-014`| Client AI assistant cites memory from a different client's project| Low| Critical| CSO| CUO scope-narrowed at AI Gateway by JWT scope_grants; cross-Engagement retrieval = 403; integration test asserts. `R-PORTAL-015`| SCIM deprovision delay leaves removed-customer-user logged-in| Medium| Medium| CSO| Session invalidation on SCIM removal; max session lifetime 8h regardless; OBS alert if mismatch detected.
 
 ## KPIs
 
 PORTAL health rolls up into 15 KPIs covering activation, isolation, AI usage, and DSAR fulfilment.
 
-KPI| Formula| Source| Target
----|---|---|---
-**Client-account activation rate**| `active / provisioned (within 14d)`| client_account| >= 80%
-**Per-account MAU**| monthly active ClientMembers| OBS| tracked / tenant
-**PWA install rate**| `installs / first-time visitors`| RUM| >= 15%
-**Branded CUO answer rate**| `queries / MAU`| OBS| >= 3 / MAU / mo
-**Branded CUO citation rate**| `cited_answers / total`| OBS| = 100%
-**Scoped requests opened / mo**| count| scoped_request| tracked
-**Scoped request resolution time p95**| histogram| OBS| <= 48 h
-**Isolation probes failed**| cross-tenant CI gate| CI| = 0
-**DSAR fulfilment p95**| request -> bundle delivery| OBS| <= 30 d (PDPL/GDPR)
-**Custom-CNAME adoption**| `client_account.custom_cname IS NOT NULL count`| client_account| tracked / tenant
-**Sync_class filter pass rate**| queries with sync_class filter applied / total queries| retrieval audit| = 1.0 (hard floor)
-**JIT-provisioned ClientMember role accuracy**| JIT-mapped roles correctly matching intent / total provisioned| quarterly CSO audit| >= 0.99
-**SVG-upload XSS attempts blocked**| sanitiser rejections / total uploads| OBS| tracked; spike = active probing
-**Cross-Engagement retrieval rejection rate**| 403 cross-Engagement responses / total CUO queries| AI Gateway audit| tracked; sustained > 0 = misconfig
-**SCIM deprovision session-invalidation p95**| histogram (SCIM remove -> session killed)| OBS| <= 30 s
+KPI| Formula| Source| Target ---|---|---|--- **Client-account activation rate**| `active / provisioned (within 14d)`| client_account| >= 80% **Per-account MAU**| monthly active ClientMembers| OBS| tracked / tenant **PWA install rate**| `installs / first-time visitors`| RUM| >= 15% **Branded CUO answer rate**| `queries / MAU`| OBS| >= 3 / MAU / mo **Branded CUO citation rate**| `cited_answers / total`| OBS| = 100% **Scoped requests opened / mo**| count| scoped_request| tracked **Scoped request resolution time p95**| histogram| OBS| <= 48 h **Isolation probes failed**| cross-tenant CI gate| CI| = 0 **DSAR fulfilment p95**| request -> bundle delivery| OBS| <= 30 d (PDPL/GDPR) **Custom-CNAME adoption**| `client_account.custom_cname IS NOT NULL count`| client_account| tracked / tenant **Sync_class filter pass rate**| queries with sync_class filter applied / total queries| retrieval audit| = 1.0 (hard floor) **JIT-provisioned ClientMember role accuracy**| JIT-mapped roles correctly matching intent / total provisioned| quarterly CSO audit| >= 0.99 **SVG-upload XSS attempts blocked**| sanitiser rejections / total uploads| OBS| tracked; spike = active probing **Cross-Engagement retrieval rejection rate**| 403 cross-Engagement responses / total CUO queries| AI Gateway audit| tracked; sustained > 0 = misconfig **SCIM deprovision session-invalidation p95**| histogram (SCIM remove -> session killed)| OBS| <= 30 s
 
 ## RACI matrix
 
 PORTAL is owned by the CCO seat (customer-facing surface) with CPO for product, CTO for engineering, CSO for isolation.
 
-Activity| CEO| CCO| CPO| CTO| CSO| DPO
----|---|---|---|---|---|---
-Service design + spec| A| R| R| C| C| C
-Implementation| I| C| C| A/R| C| I
-Branding policy per client| C| A/R| C| I| I| I
-CNAME + ACM cert ops| I| C| I| A/R| C| I
-SSO setup per client| I| R| I| R| A| I
-Isolation invariant validation| I| I| I| R| A/R| C
-DSAR / erasure fulfilment (portal)| I| C| I| C| C| A/R
-Client-MCP consent policy| I| C| R| C| A| C
+Activity| CEO| CCO| CPO| CTO| CSO| DPO ---|---|---|---|---|---|--- Service design + spec| A| R| R| C| C| C Implementation| I| C| C| A/R| C| I Branding policy per client| C| A/R| C| I| I| I CNAME + ACM cert ops| I| C| I| A/R| C| I SSO setup per client| I| R| I| R| A| I Isolation invariant validation| I| I| I| R| A/R| C DSAR / erasure fulfilment (portal)| I| C| I| C| C| A/R Client-MCP consent policy| I| C| R| C| A| C
 
 R = Responsible, A = Accountable, C = Consulted, I = Informed.
 
@@ -582,23 +451,7 @@ $ cyberos-portal verify-isolation --tenant cyberskill --probes 1000
 | External libs | ~15 (saml-rs, openidconnect, acm sdk) |
 | P4 budget | ~$120/mo (CDN + edge + multi-region API) |
 
-Capability| Status
----|---
-Subdomain-based branded portal| planned - P4
-Custom CNAME + ACM cert auto-issuance| planned - P4
-SAML 2.0 SSO| planned - P4
-OIDC SSO| planned - P4
-JIT ClientMember provisioning| planned - P4
-Scoped read-only lenses (PROJ / INV / DOC / CHAT)| planned - P4
-Branded CUO AI assistant| planned - P4
-Client-initiated workflows -> CHAT thread| planned - P4
-PWA + mobile-first responsive| planned - P4
-Vietnamese + English i18n| planned - P4
-Multi-currency display| planned - P4
-Self-service DSAR export| planned - P4
-Self-service right-to-erasure (30d grace)| planned - P4
-External-customer MCP integration| planned - P4+
-Isolation property fuzz in CI| planned - P4
+Capability| Status ---|--- Subdomain-based branded portal| planned - P4 Custom CNAME + ACM cert auto-issuance| planned - P4 SAML 2.0 SSO| planned - P4 OIDC SSO| planned - P4 JIT ClientMember provisioning| planned - P4 Scoped read-only lenses (PROJ / INV / DOC / CHAT)| planned - P4 Branded CUO AI assistant| planned - P4 Client-initiated workflows -> CHAT thread| planned - P4 PWA + mobile-first responsive| planned - P4 Vietnamese + English i18n| planned - P4 Multi-currency display| planned - P4 Self-service DSAR export| planned - P4 Self-service right-to-erasure (30d grace)| planned - P4 External-customer MCP integration| planned - P4+ Isolation property fuzz in CI| planned - P4
 
 ## References
 

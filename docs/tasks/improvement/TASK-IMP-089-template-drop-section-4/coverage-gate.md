@@ -29,9 +29,6 @@ TRACE-004 closure:
 - 1.3 -> t08_duplicate_reintroduction_fails: passed (oracle canary: a re-added section 4 is caught)
 - 1.4 -> t08_payload_carries_shape: passed (scratch build + byte parity with source)
 
-Edge-case matrix rows without a test: none. Historical specs keeping the old shape are
-out of scope by design (the rubric never required section 4); the suite targets the
-template only.
+Edge-case matrix rows without a test: none. Historical specs keeping the old shape are out of scope by design (the rubric never required section 4); the suite targets the template only.
 
-Committed-object evidence: `git show HEAD:tools/install/templates/TASK-TEMPLATE.md`
--> 0 matches for "## 4. Out of scope"; invariants present at `## 4.`.
+Committed-object evidence: `git show HEAD:tools/install/templates/TASK-TEMPLATE.md` -> 0 matches for "## 4. Out of scope"; invariants present at `## 4.`.

@@ -159,10 +159,7 @@ Plus: even with email format, allowing any domain (`attested_by: alice@gmail.com
 
 The first-pass §1 #5 said "MUST be hot-reloadable via `notify`." But what happens if the new YAML has a parse error?
 
-Three possible behaviours:
-(a) Cache cleared (`is_zdr` returns false for everything) — loud failure but blocks ALL ZDR-required requests.
-(b) Cache unchanged (continues serving old data) — silent failure; operator might not notice.
-(c) Cache cleared AND gateway exits — loud + impactful.
+Three possible behaviours: (a) Cache cleared (`is_zdr` returns false for everything) — loud failure but blocks ALL ZDR-required requests. (b) Cache unchanged (continues serving old data) — silent failure; operator might not notice. (c) Cache cleared AND gateway exits — loud + impactful.
 
 The spec doesn't pick. TASK-AI-005 and TASK-AI-007's hot-reload patterns use behaviour (b) with a WARN log; this task should too, but it's not explicit.
 

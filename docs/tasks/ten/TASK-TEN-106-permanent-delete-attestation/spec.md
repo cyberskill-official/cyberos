@@ -113,41 +113,41 @@ The TEN service **MUST** ship permanent-delete attestation at `services/ten/src/
 4. **MUST** define `permanent_delete_cascade_log` at migration `0029`: `(id BIGSERIAL PRIMARY KEY, attestation_id UUID NOT NULL REFERENCES permanent_delete_attestations(attestation_id), target cascade_target NOT NULL, status TEXT NOT NULL CHECK (status IN ('pending','executing','completed','failed')), execution_started_at TIMESTAMPTZ, execution_completed_at TIMESTAMPTZ, failure_reason TEXT, item_count INT, UNIQUE(attestation_id, target))`. One row per (attestation, target).
 
 5. **MUST** expose `POST /v1/admin/tenants/{tid}/permanent-delete/initiate` body `{ reason }`. Caller has `cso` OR `tenant_admin` role. Handler validates preconditions:
-   - `tenants.status = 'terminating'` (set by TASK-TEN-104) — else 412 + `tenant_not_terminating`.
-   - `now() - tenant.terminating_at >= 30 days` — else 412 + `cool_off_not_elapsed`.
-   - Recent bundle within 90d per TASK-TEN-105 §1 #14 — else 412 + `bundle_export_required_before_attestation` (referenced from TASK-TEN-105 cross-task contract).
-   - INSERTs attestation row with status='pending_cso_sign'.
-   - Emits `ten.permanent_delete_attestation_initiated`.
+- `tenants.status = 'terminating'` (set by TASK-TEN-104) — else 412 + `tenant_not_terminating`.
+- `now() - tenant.terminating_at >= 30 days` — else 412 + `cool_off_not_elapsed`.
+- Recent bundle within 90d per TASK-TEN-105 §1 #14 — else 412 + `bundle_export_required_before_attestation` (referenced from TASK-TEN-105 cross-task contract).
+- INSERTs attestation row with status='pending_cso_sign'.
+- Emits `ten.permanent_delete_attestation_initiated`.
 
 6. **MUST** expose `POST /v1/admin/permanent-delete/{attestation_id}/sign-cso` for CSO signature. Caller has `cso` role. Handler:
-   - Validates status='pending_cso_sign'.
-   - Sets `cso_subject_id`, `cso_signed_at`; transitions to 'pending_clo_sign'.
-   - Emits `ten.permanent_delete_cso_signed` sev-1.
+- Validates status='pending_cso_sign'.
+- Sets `cso_subject_id`, `cso_signed_at`; transitions to 'pending_clo_sign'.
+- Emits `ten.permanent_delete_cso_signed` sev-1.
 
 7. **MUST** expose `POST /v1/admin/permanent-delete/{attestation_id}/sign-clo` for CLO signature. Caller has `clo` role. Handler:
-   - Validates status='pending_clo_sign'.
-   - CHECK clo_subject_id ≠ cso_subject_id (CHECK constraint enforces).
-   - Sets `clo_subject_id`, `clo_signed_at`; transitions to 'ready_to_execute'.
-   - Emits `ten.permanent_delete_clo_signed` sev-1.
+- Validates status='pending_clo_sign'.
+- CHECK clo_subject_id ≠ cso_subject_id (CHECK constraint enforces).
+- Sets `clo_subject_id`, `clo_signed_at`; transitions to 'ready_to_execute'.
+- Emits `ten.permanent_delete_clo_signed` sev-1.
 
 8. **MUST** expose `POST /v1/admin/permanent-delete/{attestation_id}/execute` for actual deletion. Caller has `cso` OR `clo` role. Handler:
-   - Validates status='ready_to_execute'.
-   - Transitions to 'executing'; emits `ten.permanent_delete_executing` sev-1.
-   - For each `cascade_target` in fixed order: invoke per-target handler per §1 #10.
-   - On all-success: status='completed' + emit `ten.permanent_delete_completed` sev-1.
-   - On any-failure: status remains 'executing' (operator re-triggers failed target).
+- Validates status='ready_to_execute'.
+- Transitions to 'executing'; emits `ten.permanent_delete_executing` sev-1.
+- For each `cascade_target` in fixed order: invoke per-target handler per §1 #10.
+- On all-success: status='completed' + emit `ten.permanent_delete_completed` sev-1.
+- On any-failure: status remains 'executing' (operator re-triggers failed target).
 
 9. **MUST** support cancellation per DEC-1347 at `POST /v1/admin/permanent-delete/{attestation_id}/cancel` body `{ reason }` BEFORE status='executing'. Handler:
-   - Validates status NOT IN ('executing','completed').
-   - Sets status='cancelled' + `cancellation_reason`.
-   - Emits `ten.permanent_delete_cancelled` sev-1.
+- Validates status NOT IN ('executing','completed').
+- Sets status='cancelled' + `cancellation_reason`.
+- Emits `ten.permanent_delete_cancelled` sev-1.
 
 10. **MUST** cascade purge in fixed order per DEC-1343 + DEC-1348:
-    1. **`postgres_schema`** — `DROP SCHEMA tenant_<slug> CASCADE` after row counts logged to `cascade_log.item_count`.
-    2. **`s3_prefix`** — recursive delete of `s3://cyberos-{residency}-tenants/{tenant_id}/*` AND `cyberos-{residency}-audit/{tenant_id}/*`.
-    3. **`kms_keys`** — `kms schedule-key-deletion` for tenant's keys (signing key from TASK-TEN-105, encryption keys); 30d grace before AWS final deletion.
-    4. **`nats_subjects`** — purge JetStream subject `tenant.<slug>.>` permanently.
-    5. **`audit_chain_tombstone`** — UPDATE audit_rows SET payload='{"tombstoned":true}' WHERE tenant_id=$1; chain hashes preserved per DEC-1344.
+1. **`postgres_schema`** — `DROP SCHEMA tenant_<slug> CASCADE` after row counts logged to `cascade_log.item_count`.
+2. **`s3_prefix`** — recursive delete of `s3://cyberos-{residency}-tenants/{tenant_id}/*` AND `cyberos-{residency}-audit/{tenant_id}/*`.
+3. **`kms_keys`** — `kms schedule-key-deletion` for tenant's keys (signing key from TASK-TEN-105, encryption keys); 30d grace before AWS final deletion.
+4. **`nats_subjects`** — purge JetStream subject `tenant.<slug>.>` permanently.
+5. **`audit_chain_tombstone`** — UPDATE audit_rows SET payload='{"tombstoned":true}' WHERE tenant_id=$1; chain hashes preserved per DEC-1344.
 
 11. **MUST** preserve chain integrity per DEC-1344. Audit rows are NOT deleted; their `payload` JSONB is replaced with `{"tombstoned": true, "deleted_at": "...", "attestation_id": "..."}`. Chain hashes intact; verifier can replay chain and see tombstones in original positions.
 
@@ -362,9 +362,7 @@ async fn cancel_before_execute_succeeds() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-TEN-104 (terminating status), TASK-TEN-105 (bundle precondition).
-**Cross-module:** TASK-AUTH-101 (cso + clo + tenant_admin roles), TASK-AUTH-002 (subject hard-purge), TASK-MEMORY-101 (chain integrity), TASK-AI-003, TASK-MEMORY-111, TASK-OBS-007, TASK-OBS-009 (chain-of-custody anchor).
-**Downstream:** None.
+**Upstream:** TASK-TEN-104 (terminating status), TASK-TEN-105 (bundle precondition). **Cross-module:** TASK-AUTH-101 (cso + clo + tenant_admin roles), TASK-AUTH-002 (subject hard-purge), TASK-MEMORY-101 (chain integrity), TASK-AI-003, TASK-MEMORY-111, TASK-OBS-007, TASK-OBS-009 (chain-of-custody anchor). **Downstream:** None.
 
 ---
 

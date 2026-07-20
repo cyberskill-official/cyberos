@@ -48,43 +48,25 @@ triggers:
 
 # caf-gate
 
-The code-audit gate. awh-gate reruns the tests; this skill reruns the target's own build, lint,
-typecheck, and test, and audits the code. The two are complementary: awh catches test regressions,
-caf catches what awh cannot see - a build or lint break, a route that 404s, a changed data contract
-(the CCAF and kymondongiap class of defect). Absorbed from CyberSkill/code-audit-framework, vendored
-at `tools/caf/`.
+The code-audit gate. awh-gate reruns the tests; this skill reruns the target's own build, lint, typecheck, and test, and audits the code. The two are complementary: awh catches test regressions, caf catches what awh cannot see - a build or lint break, a route that 404s, a changed data contract (the CCAF and kymondongiap class of defect). Absorbed from CyberSkill/code-audit-framework, vendored at `tools/caf/`.
 
 ## When it runs
 
-Step 29 of `chief-technology-officer/ship-tasks`, between the awh-gate (step 28) and the
-`backlog-state-update-author` done flip (step 30). The done flip is conditional on this skill
-returning CLEAN and awh-gate returning GREEN.
+Step 29 of `chief-technology-officer/ship-tasks`, between the awh-gate (step 28) and the `backlog-state-update-author` done flip (step 30). The done flip is conditional on this skill returning CLEAN and awh-gate returning GREEN.
 
 ## What it does
 
 1. Resolve the task's module and its `modules/<module>/audit-profile.yaml`.
 2. Run `bash scripts/caf_gate.sh <module>`. The deterministic floor:
-   - TARGET HEALTH: `tools/caf/core/evals/verify-target.sh modules/<module>` runs the module's own
-     RUN_COMMANDS (build / lint / typecheck / test) and fails closed if any breaks.
-   - AUDIT CONFORMANCE: when a sealed audit exists at `modules/<module>/.caf/`,
-     `code-audit-validate --run modules/<module>/.caf --fail-on High` confirms it is conformant and
-     carries no new High or Critical finding.
-3. Read the verdict. CLEAN (target health passes and no new High/Critical) is required to proceed to
-   the done flip. RED routes the task back to `ready_to_implement` per STATUS-REFERENCE
-   section 1.3 with `routed_back_count += 1`.
-4. Emit one `caf_gate_result` row into the memory audit chain carrying `{task_id, module, outcome,
-   target_health, findings_high, harness_version}`. Until the protocol row kind lands, the verdict is
-   written to a side log (`.caf/gate-results.jsonl`).
+- TARGET HEALTH: `tools/caf/core/evals/verify-target.sh modules/<module>` runs the module's own RUN_COMMANDS (build / lint / typecheck / test) and fails closed if any breaks.
+- AUDIT CONFORMANCE: when a sealed audit exists at `modules/<module>/.caf/`, `code-audit-validate --run modules/<module>/.caf --fail-on High` confirms it is conformant and carries no new High or Critical finding.
+3. Read the verdict. CLEAN (target health passes and no new High/Critical) is required to proceed to the done flip. RED routes the task back to `ready_to_implement` per STATUS-REFERENCE section 1.3 with `routed_back_count += 1`.
+4. Emit one `caf_gate_result` row into the memory audit chain carrying `{task_id, module, outcome, target_health, findings_high, harness_version}`. Until the protocol row kind lands, the verdict is written to a side log (`.caf/gate-results.jsonl`).
 
 ## What it is not
 
-This skill does not rewrite code or tests. It gates and measures. It does not replace the awh gate;
-it is the second, complementary axis. See `website/docs/architecture/verification-gate.html` and
-`docs/verification/caf-absorption-design.md`, and `tools/caf/` for the vendored tool, with
-`tools/caf/RETIREMENT.md` for how the standalone code-audit-framework is retired once every module is
-clean under this gate.
+This skill does not rewrite code or tests. It gates and measures. It does not replace the awh gate; it is the second, complementary axis. See `website/docs/architecture/verification-gate.html` and `docs/verification/caf-absorption-design.md`, and `tools/caf/` for the vendored tool, with `tools/caf/RETIREMENT.md` for how the standalone code-audit-framework is retired once every module is clean under this gate.
 
 ## Provenance
 
-Vendored from CyberSkill/code-audit-framework (validator self-test 40/40). Field-data calibration
-records at `tools/caf/field-data/`.
+Vendored from CyberSkill/code-audit-framework (validator self-test 40/40). Field-data calibration records at `tools/caf/field-data/`.

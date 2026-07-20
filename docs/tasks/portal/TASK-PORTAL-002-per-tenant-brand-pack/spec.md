@@ -175,90 +175,85 @@ The PORTAL service **MUST** ship per-tenant brand pack (logo + colour palette + 
 6. **MUST** enforce RLS with both USING and WITH CHECK on all 4 PORTAL brand tables (per DEC-1014 + task-audit skill rule 13). Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`.
 
 7. **MUST** expose `POST /v1/admin/tenants/{tenant_id}/brand-pack` for brand-pack creation. Caller has `tenant_admin` role. Body: `{ palette: {primary, secondary, accent, background, surface, error}, email_overrides?: {welcome?, magic_link?, password_reset?, invoice_receipt?}, assets: [{kind, base64_content}] }`. Handler:
-    - Validates palette: 6 named slots, each `#RRGGBB` hex.
-    - Runs WCAG 2.1 AA contrast check (per §1 #11) — reject if non-conformant.
-    - For each asset: magic-bytes validate (PNG or SVG); size ≤ 1 MiB; generates 3 size variants via image_pipeline.
-    - Validates email overrides (sandboxed Tera per §1 #14).
-    - INSERTs new `portal_brand_assets` row(s) + new `portal_brand_packs` row at version=max(version)+1.
-    - DOES NOT activate (separate step per §1 #8).
-    - Emits `portal.brand_pack_created`.
+- Validates palette: 6 named slots, each `#RRGGBB` hex.
+- Runs WCAG 2.1 AA contrast check (per §1 #11) — reject if non-conformant.
+- For each asset: magic-bytes validate (PNG or SVG); size ≤ 1 MiB; generates 3 size variants via image_pipeline.
+- Validates email overrides (sandboxed Tera per §1 #14).
+- INSERTs new `portal_brand_assets` row(s) + new `portal_brand_packs` row at version=max(version)+1.
+- DOES NOT activate (separate step per §1 #8).
+- Emits `portal.brand_pack_created`.
 
 8. **MUST** expose `POST /v1/admin/tenants/{tenant_id}/brand-pack/{pack_id}/activate`. Caller has `tenant_admin` role. Handler:
-    - UPSERT `portal_brand_pack_active` with the new pack_id.
-    - Invalidate CDN cache for `<tenant_slug>` (publish to NATS `cyberos.portal.brand_cdn.invalidate.<tenant_slug>`).
-    - Emit `portal.brand_pack_activated`.
+- UPSERT `portal_brand_pack_active` with the new pack_id.
+- Invalidate CDN cache for `<tenant_slug>` (publish to NATS `cyberos.portal.brand_cdn.invalidate.<tenant_slug>`).
+- Emit `portal.brand_pack_activated`.
 
 9. **MUST** expose `POST /v1/admin/tenants/{tenant_id}/brand-pack/rollback` per DEC-1007. Body: `{ target_pack_id }`. Handler re-points `portal_brand_pack_active.active_pack_id` to the named historic pack_id. Emits `portal.brand_pack_rolled_back`. Idempotent on `target_pack_id`.
 
 10. **MUST** enforce per-tenant rate limit of 10 saves per day on `POST /brand-pack` per DEC-1018. Excess returns `429 + Retry-After: 86400` + emits `portal.brand_pack_validation_rejected` with reason='rate_limited'.
 
 11. **MUST** enforce WCAG 2.1 AA contrast per DEC-1003 + W3C contrast formula:
-    - `contrast_ratio(primary, background) ≥ 4.5`
-    - `contrast_ratio(error, background) ≥ 4.5`
-    - `contrast_ratio(primary, surface) ≥ 3.0` (text-on-card UX)
-    Non-conformant submission returns `400 + { error: "wcag_contrast_violation", offending_pair: ["primary","background"], actual_ratio: 3.2, required_ratio: 4.5 }` + emits `portal.brand_pack_validation_rejected`.
+- `contrast_ratio(primary, background) ≥ 4.5`
+- `contrast_ratio(error, background) ≥ 4.5`
+- `contrast_ratio(primary, surface) ≥ 3.0` (text-on-card UX) Non-conformant submission returns `400 + { error: "wcag_contrast_violation", offending_pair: ["primary","background"], actual_ratio: 3.2, required_ratio: 4.5 }` + emits `portal.brand_pack_validation_rejected`.
 
 12. **MUST** validate uploaded asset content-type via magic-bytes per DEC-1019. PNG header = `89 50 4E 47 0D 0A 1A 0A` (8 bytes); SVG header = `<?xml` OR `<svg`. Mismatched magic-bytes vs claimed mime_type → 400 + `invalid_asset_content`. Never trust the Content-Type request header.
 
 13. **MUST** generate 3 size variants from each uploaded logo per DEC-1001 via libvips:
-    - `favicon`: 32×32 px (from any uploaded logo).
-    - `header_logo`: 200×60 px (preserve aspect; pad transparent).
-    - `splash_logo`: 800×240 px (preserve aspect; pad transparent).
-    Variants stored as separate `portal_brand_assets` rows with `kind` differentiation; canonical upload stored at upload-supplied size.
+- `favicon`: 32×32 px (from any uploaded logo).
+- `header_logo`: 200×60 px (preserve aspect; pad transparent).
+- `splash_logo`: 800×240 px (preserve aspect; pad transparent). Variants stored as separate `portal_brand_assets` rows with `kind` differentiation; canonical upload stored at upload-supplied size.
 
 14. **MUST** apply Tera sandboxing for email overrides per DEC-1016. Allowed Tera tags: `{{ var }}`, `{% if %}`, `{% for %}`, `{% include %}` (restricted to a per-tenant include path). DISALLOWED: `{% set %}` with file/env reads, `{% raw %}` with HTML injection, any `tera_*` registered functions that access I/O. Validation: parse Tera template + walk AST + reject if any disallowed tag detected.
 
 15. **MUST** expose CNAME setup at `POST /v1/admin/tenants/{tenant_id}/cname` per DEC-1004 + DEC-1005. Caller has `tenant_admin` role at tenant level. Body: `{ cname: "portal.acme.com" }`. Handler:
-    - Generates a random 32-char `dns_verify_token`.
-    - INSERTs `portal_cname_configs` row with `status='pending_dns'`.
-    - Returns `201 + { cname, dns_verify_record: "_cyberos-portal-verify TXT \"<token>\"" }`.
-    Tenant adds the TXT record at their DNS provider.
+- Generates a random 32-char `dns_verify_token`.
+- INSERTs `portal_cname_configs` row with `status='pending_dns'`.
+- Returns `201 + { cname, dns_verify_record: "_cyberos-portal-verify TXT \"<token>\"" }`. Tenant adds the TXT record at their DNS provider.
 
 16. **MUST** expose `POST /v1/admin/tenants/{tenant_id}/cname/{id}/verify` per DEC-1004. Handler:
-    - Resolves the TXT record at `_cyberos-portal-verify.<cname>` via DNS lookup.
-    - If TXT value matches `dns_verify_token`: UPDATE status='dns_verified' + `dns_verified_at=now()` + invoke ACME issuance per §1 #17 + emit `portal.cname_dns_verified`.
-    - On miss: returns `424 + { error: "dns_record_not_found_or_mismatched" }`; client retries (DNS propagation can take 5min-1h).
+- Resolves the TXT record at `_cyberos-portal-verify.<cname>` via DNS lookup.
+- If TXT value matches `dns_verify_token`: UPDATE status='dns_verified' + `dns_verified_at=now()` + invoke ACME issuance per §1 #17 + emit `portal.cname_dns_verified`.
+- On miss: returns `424 + { error: "dns_record_not_found_or_mismatched" }`; client retries (DNS propagation can take 5min-1h).
 
 17. **MUST** issue ACME TLS cert via `instant-acme` crate per DEC-1004 + RFC 8555:
-    - Use Let's Encrypt production endpoint (sandbox env uses staging).
-    - HTTP-01 challenge served from `https://<cname>/.well-known/acme-challenge/<token>`.
-    - On successful cert issuance: KMS-encrypt cert + key + chain into `portal_cname_configs.tls_*_kms_blob` columns + UPDATE status='active' + `tls_issued_at=now()` + `tls_expires_at=now()+90 days`.
-    - Emit `portal.cname_tls_issued` sev-2.
+- Use Let's Encrypt production endpoint (sandbox env uses staging).
+- HTTP-01 challenge served from `https://<cname>/.well-known/acme-challenge/<token>`.
+- On successful cert issuance: KMS-encrypt cert + key + chain into `portal_cname_configs.tls_*_kms_blob` columns + UPDATE status='active' + `tls_issued_at=now()` + `tls_expires_at=now()+90 days`.
+- Emit `portal.cname_tls_issued` sev-2.
 
 18. **MUST** run daily ACME renewal job per DEC-1011 + DEC-1004. The `cname_renewal_job.rs` scheduled job:
-    - Queries `portal_cname_configs WHERE status='active' AND tls_expires_at < now() + interval '30 days' AND last_renewal_attempt_at < now() - interval '4 hours'`.
-    - For each: invoke ACME renewal (same flow as issuance but reusing the DNS-verified domain).
-    - On success: UPDATE cert blob + `tls_expires_at` + reset `tls_renewal_failures=0` + emit `portal.cname_tls_renewed` sev-2.
-    - On failure: increment `tls_renewal_failures` + emit `portal.cname_tls_renewal_failed` sev-2; after 3 consecutive failures → sev-1 alert; after 7 days at < 30d expiry → page on-call.
+- Queries `portal_cname_configs WHERE status='active' AND tls_expires_at < now() + interval '30 days' AND last_renewal_attempt_at < now() - interval '4 hours'`.
+- For each: invoke ACME renewal (same flow as issuance but reusing the DNS-verified domain).
+- On success: UPDATE cert blob + `tls_expires_at` + reset `tls_renewal_failures=0` + emit `portal.cname_tls_renewed` sev-2.
+- On failure: increment `tls_renewal_failures` + emit `portal.cname_tls_renewal_failed` sev-2; after 3 consecutive failures → sev-1 alert; after 7 days at < 30d expiry → page on-call.
 
 19. **MUST** serve brand assets publicly at `GET https://cdn.cyberos.world/brand/{tenant_slug}/{kind}.{ext}?v={sha16}` per DEC-1008 + DEC-1009. Handler:
-    - Resolves tenant_slug → tenant_id.
-    - Looks up active brand pack + asset by kind.
-    - Returns asset binary with `Content-Type` from row + `ETag: "<sha16>"` + `Cache-Control: public, max-age=300` (5-min edge TTL per DEC-1008).
-    - On `If-None-Match` match: 304.
-    - Unknown slug or kind: 404.
+- Resolves tenant_slug → tenant_id.
+- Looks up active brand pack + asset by kind.
+- Returns asset binary with `Content-Type` from row + `ETag: "<sha16>"` + `Cache-Control: public, max-age=300` (5-min edge TTL per DEC-1008).
+- On `If-None-Match` match: 304.
+- Unknown slug or kind: 404.
 
 20. **MUST** publish CDN cache-invalidation event on brand-pack activation per DEC-1008. NATS subject `cyberos.portal.brand_cdn.invalidate.<tenant_slug>`; downstream CloudFront/CDN edge consumer (slice 1 ops-managed) invalidates the cache. ETag in URL query (`?v=<sha16>`) means CDN cache hit ratio remains high after invalidation (only the changed URL invalidates).
 
 21. **MUST** support brand-pack export per DEC-1012. `GET /v1/admin/tenants/{tenant_id}/brand-pack/{pack_id}/export` returns a deterministic .zip containing:
-    - `pack.json` — canonical-JSON of the pack metadata (palette + email overrides + asset filenames).
-    - `assets/<kind>.<ext>` files for each asset.
-    Deterministic per task-audit skill rule 27-28: file order alphabetic; zip mtime = `2000-01-01T00:00:00Z`; mode 0o644.
+- `pack.json` — canonical-JSON of the pack metadata (palette + email overrides + asset filenames).
+- `assets/<kind>.<ext>` files for each asset. Deterministic per task-audit skill rule 27-28: file order alphabetic; zip mtime = `2000-01-01T00:00:00Z`; mode 0o644.
 
 22. **MUST** apply standard fallback chain for email overrides per DEC-1006. TASK-EMAIL-001's template loader tries (in order):
-    1. `services/email/templates/_overrides/<tenant_slug>/<template>.tera` (per-tenant override mounted from `portal_brand_packs.email_overrides`).
-    2. `services/email/templates/<template>.tera` (CyberSkill default).
-    Missing override silently falls through to default; no error.
+1. `services/email/templates/_overrides/<tenant_slug>/<template>.tera` (per-tenant override mounted from `portal_brand_packs.email_overrides`).
+2. `services/email/templates/<template>.tera` (CyberSkill default). Missing override silently falls through to default; no error.
 
 23. **MUST** emit 8 memory audit row kinds per DEC-1017 (task-audit skill rule 6 namespace):
-    - `portal.brand_pack_created` (sev-2)
-    - `portal.brand_pack_activated` (sev-2)
-    - `portal.brand_pack_rolled_back` (sev-2)
-    - `portal.cname_dns_verified` (sev-2)
-    - `portal.cname_tls_issued` (sev-2)
-    - `portal.cname_tls_renewed` (sev-3 — routine)
-    - `portal.cname_tls_renewal_failed` (sev-2 → sev-1 after 3 consecutive)
-    - `portal.brand_pack_validation_rejected` (sev-3 — informational; high volume during onboarding)
+- `portal.brand_pack_created` (sev-2)
+- `portal.brand_pack_activated` (sev-2)
+- `portal.brand_pack_rolled_back` (sev-2)
+- `portal.cname_dns_verified` (sev-2)
+- `portal.cname_tls_issued` (sev-2)
+- `portal.cname_tls_renewed` (sev-3 — routine)
+- `portal.cname_tls_renewal_failed` (sev-2 → sev-1 after 3 consecutive)
+- `portal.brand_pack_validation_rejected` (sev-3 — informational; high volume during onboarding)
 
 24. **MUST** thread W3C `traceparent` across upload → validate → image_pipeline → INSERT → activate → CDN invalidate (task-audit skill rule 22-24). Single trace_id per save operation.
 

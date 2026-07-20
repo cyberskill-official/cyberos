@@ -88,11 +88,11 @@ The OKR service **MUST** ship weekly check-in at `services/okr/src/checkin/` wit
 2. **MUST** validate `confidence_trend` against closed enum per DEC-2001.
 
 3. **MUST** compute trend at `trend_calculator.rs::trend(kr, current_week)`:
-   - Average confidence of last 4 weeks (excluding current).
-   - improving: current > avg + 1
-   - declining: current < avg - 1
-   - steady: within ±1
-   - unknown: <2 prior weeks of data
+- Average confidence of last 4 weeks (excluding current).
+- improving: current > avg + 1
+- declining: current < avg - 1
+- steady: within ±1
+- unknown: <2 prior weeks of data
 
 4. **MUST** define table at migration `0005`:
    ```sql
@@ -213,9 +213,7 @@ async fn trend_improving_after_3w_climb() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-OKR-001.
-**Downstream:** TASK-OKR-006 (Monday digest uses check-ins).
-**Cross-module:** TASK-MCP-007 (reminder cron), TASK-AUTH-101 (KR owner role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-OKR-001. **Downstream:** TASK-OKR-006 (Monday digest uses check-ins). **Cross-module:** TASK-MCP-007 (reminder cron), TASK-AUTH-101 (KR owner role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

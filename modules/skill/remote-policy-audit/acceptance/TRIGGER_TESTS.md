@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this remote policy"
+- "Audit this remote policy"
 - "Check the remote policy for completeness"
 - "Verify the remote policy meets the rubric"
 - "Re-audit the remote policy"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a remote policy" → remote-policy-author
+- "Draft a remote policy" → remote-policy-author
 - "Create the remote policy" → remote-policy-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

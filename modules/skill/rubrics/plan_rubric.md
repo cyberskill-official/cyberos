@@ -50,9 +50,7 @@
 
 ## §4  Completeness rules (the three that RED an incomplete plan — traces_to spec #1.4 / AC 3)
 
-These are the load-bearing rules. A `plan@1` that trips **any** of `PLAN-OPT-001`, `PLAN-DEC-001`, or
-`PLAN-OUT-001` is RED and MUST NOT pass — they are, respectively, "missing an option", "missing a
-decision", and "missing the out list".
+These are the load-bearing rules. A `plan@1` that trips **any** of `PLAN-OPT-001`, `PLAN-DEC-001`, or `PLAN-OUT-001` is RED and MUST NOT pass — they are, respectively, "missing an option", "missing a decision", and "missing the out list".
 
 | rule_id | Check | Severity |
 | ------- | ----- | -------- |
@@ -107,15 +105,11 @@ decision", and "missing the out list".
 
 ## Verdict
 
-`pass` = every rule green (**10/10**). `fail` = any `error` rule red; findings name each `rule_id` +
-location + what resolves it. `needs_human` = ambiguity the rubric cannot decide (unknown artefact
-version, contradictory frontmatter, or the `PLAN-GATE-001` operator-verdict question). `plan-audit`
-refuses to pass below 10/10.
+`pass` = every rule green (**10/10**). `fail` = any `error` rule red; findings name each `rule_id` + location + what resolves it. `needs_human` = ambiguity the rubric cannot decide (unknown artefact version, contradictory frontmatter, or the `PLAN-GATE-001` operator-verdict question). `plan-audit` refuses to pass below 10/10.
 
 ## Cross-references
 
 - `../plan-audit/SKILL.md` — the auditor that walks this rubric.
 - `../plan-author/SKILL.md` — the author whose `plan@1` this rubric grades.
-- `../architectural-spike-audit/RUBRIC.md` — the SPK-* rubric this one mirrors (option evidence,
-  confidence-vs-evidence cross-check, discard/recommendation discipline).
+- `../architectural-spike-audit/RUBRIC.md` — the SPK-* rubric this one mirrors (option evidence, confidence-vs-evidence cross-check, discard/recommendation discipline).
 - `../../../docs/tasks/improvement/TASK-IMP-111-plan-workflow/spec.md` §1 — the normative clause source.

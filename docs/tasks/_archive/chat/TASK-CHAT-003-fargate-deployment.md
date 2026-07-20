@@ -69,73 +69,73 @@ The CHAT deployment **MUST** be a Terraform module provisioning a per-tenant iso
 
 1. **MUST** be a Terraform module at `infra/terraform/modules/tenant_chat/` invokable per tenant with variables `{tenant_id, tier, aws_region, vpc_id, memory_writer_socket_endpoint, auth_jwks_url}`.
 2. **MUST** provision per tenant:
-    - 1 Fargate service running cyberos/chat image (TASK-CHAT-001).
-    - 1 RDS PostgreSQL instance (PostgreSQL 16; ARM Graviton).
-    - 1 ElastiCache Redis cluster.
-    - Security groups isolating tenant's network.
+- 1 Fargate service running cyberos/chat image (TASK-CHAT-001).
+- 1 RDS PostgreSQL instance (PostgreSQL 16; ARM Graviton).
+- 1 ElastiCache Redis cluster.
+- Security groups isolating tenant's network.
 3. **MUST** support three tiers via `tier` variable:
-    - `trial`: 1 Fargate task; RDS db.t4g.micro single-AZ; Redis cache.t4g.micro single-node.
-    - `standard`: 1-3 auto-scaled Fargate; RDS db.t4g.small Multi-AZ; Redis cache.t4g.small replicated.
-    - `premium`: 1-10 auto-scaled Fargate; RDS db.m6g.large Multi-AZ; Redis cluster.r6g.large 3-shard.
+- `trial`: 1 Fargate task; RDS db.t4g.micro single-AZ; Redis cache.t4g.micro single-node.
+- `standard`: 1-3 auto-scaled Fargate; RDS db.t4g.small Multi-AZ; Redis cache.t4g.small replicated.
+- `premium`: 1-10 auto-scaled Fargate; RDS db.m6g.large Multi-AZ; Redis cluster.r6g.large 3-shard.
 4. **MUST** lock down security groups to least-privilege:
-    - Fargate → RDS on port 5432 ONLY.
-    - Fargate → Redis on port 6379 ONLY.
-    - Fargate egress to internet → BLOCKED (use VPC endpoints).
-    - Fargate ingress from ALB on port 8065 ONLY.
+- Fargate → RDS on port 5432 ONLY.
+- Fargate → Redis on port 6379 ONLY.
+- Fargate egress to internet → BLOCKED (use VPC endpoints).
+- Fargate ingress from ALB on port 8065 ONLY.
 5. **MUST** use VPC endpoints for AWS service access (S3 backups, ECR image pull, CloudWatch logs); zero public internet egress.
 6. **MUST** use VPC endpoints (PrivateLink) for TASK-AUTH-004 JWKS + TASK-MEMORY-101 MemoryWriter:
-    - JWKS endpoint at `https://auth.internal.cyberos.world/.well-known/jwks.json` resolves via private DNS.
-    - memory socket at `tcp://memory-writer.<tenant>.svc.cluster.local:9090`.
+- JWKS endpoint at `https://auth.internal.cyberos.world/.well-known/jwks.json` resolves via private DNS.
+- memory socket at `tcp://memory-writer.<tenant>.svc.cluster.local:9090`.
 7. **MUST** encrypt at rest:
-    - RDS storage encryption with tenant-specific KMS CMK.
-    - Redis backup encryption with same CMK.
-    - ECS task ephemeral volumes encrypted by default.
+- RDS storage encryption with tenant-specific KMS CMK.
+- Redis backup encryption with same CMK.
+- ECS task ephemeral volumes encrypted by default.
 8. **MUST** apply tagging convention to all resources: `{Tenant: <tenant_id>, Service: chat, Tier: <tier>, ManagedBy: terraform}`.
 9. **MUST** emit memory audit `chat.deployment_provisioned` on terraform apply success (via post-apply hook).
 10. **MUST** emit OTel metrics via collector sidecar (TASK-OBS-001):
-    - `chat_fargate_task_count{tenant_id}` (gauge).
-    - `chat_rds_connections_active{tenant_id}` (gauge).
-    - `chat_redis_evicted_keys_total{tenant_id}` (counter).
+- `chat_fargate_task_count{tenant_id}` (gauge).
+- `chat_rds_connections_active{tenant_id}` (gauge).
+- `chat_redis_evicted_keys_total{tenant_id}` (counter).
 11. **MUST** be idempotent: repeated `terraform apply` with same vars → no changes.
 12. **MUST** support clean teardown via `terraform destroy`: deletes Fargate, RDS, Redis; preserves CloudWatch logs (90-day retention).
 13. **MUST** create CloudWatch alarms:
-    - RDS CPU > 80% for 5min → sev-2 page.
-    - Fargate task crash loop (> 3 restarts in 5min) → sev-1.
-    - Redis evictions > 100/sec → sev-2.
-    - RDS replication lag (Multi-AZ replica) > 30s → sev-2.
-    - RDS free storage < 20% → sev-2.
-    - ALB 5xx rate > 1% over 5min → sev-1.
-    - Fargate task memory > 90% for 5min → sev-2.
+- RDS CPU > 80% for 5min → sev-2 page.
+- Fargate task crash loop (> 3 restarts in 5min) → sev-1.
+- Redis evictions > 100/sec → sev-2.
+- RDS replication lag (Multi-AZ replica) > 30s → sev-2.
+- RDS free storage < 20% → sev-2.
+- ALB 5xx rate > 1% over 5min → sev-1.
+- Fargate task memory > 90% for 5min → sev-2.
 14. **MUST** pin the Mattermost image to an immutable SHA-256 digest, not a `:latest` tag. The `pinned_image_tag` variable MUST be a content-addressable reference (`cyberos/chat@sha256:<64-hex>`). Image promotion = re-apply with a new digest; no in-place image swap.
 15. **MUST** provision an ALB in front of the Fargate service:
-    - Listener on 443 with ACM cert for `<tenant>.cyberskill.world`.
-    - Listener on 80 → 301 redirect to 443.
-    - TLS policy `ELBSecurityPolicy-TLS13-1-2-2021-06` (TLS 1.2 floor; 1.3 preferred).
-    - Target group health check on `/api/v4/system/ping` (Mattermost native).
-    - Stickiness via Mattermost session cookie for WebSocket affinity.
+- Listener on 443 with ACM cert for `<tenant>.cyberskill.world`.
+- Listener on 80 → 301 redirect to 443.
+- TLS policy `ELBSecurityPolicy-TLS13-1-2-2021-06` (TLS 1.2 floor; 1.3 preferred).
+- Target group health check on `/api/v4/system/ping` (Mattermost native).
+- Stickiness via Mattermost session cookie for WebSocket affinity.
 16. **MUST** manage Mattermost RDS credentials via AWS Secrets Manager, rotated every 30 days. The Fargate task reads the secret at boot; no plaintext password in environment variables or task definition.
 17. **MUST** capture daily RDS automated backups for 7d (trial) / 14d (standard) / 30d (premium) and emit a synthetic point-in-time-restore test once per week per tier. PITR test rehydrates to a sentinel timestamp and asserts post-restore row count matches a pre-snapshot.
 18. **MUST** maintain a custom RDS parameter group with these settings (deviation from default):
-    - `log_min_duration_statement = 100` (log queries > 100ms; TASK-OBS-005 consumes).
-    - `log_statement = 'mod'` (log DDL + mutations).
-    - `pg_stat_statements.track = top` (TASK-OBS-005 query-fingerprint source).
-    - `shared_preload_libraries = pg_stat_statements,pgroonga,wal2json` (pgroonga for TASK-CHAT-004; wal2json for TASK-CHAT-005 logical replication).
-    - `rds.logical_replication = 1` (TASK-CHAT-005 requires).
+- `log_min_duration_statement = 100` (log queries > 100ms; TASK-OBS-005 consumes).
+- `log_statement = 'mod'` (log DDL + mutations).
+- `pg_stat_statements.track = top` (TASK-OBS-005 query-fingerprint source).
+- `shared_preload_libraries = pg_stat_statements,pgroonga,wal2json` (pgroonga for TASK-CHAT-004; wal2json for TASK-CHAT-005 logical replication).
+- `rds.logical_replication = 1` (TASK-CHAT-005 requires).
 19. **MUST** maintain a custom Redis parameter group with `maxmemory-policy = allkeys-lru` (Mattermost session cache; LRU eviction on memory pressure is preferable to OOM).
 20. **MUST** restrict IAM task role to least privilege:
-    - `secretsmanager:GetSecretValue` on the tenant's RDS secret ARN ONLY.
-    - `kms:Decrypt` on the tenant's CMK ONLY.
-    - `logs:CreateLogStream` + `logs:PutLogEvents` on the tenant's log group ONLY.
-    - NO `s3:*`, NO `iam:*`, NO `ec2:*`. The task-execution role (separate from task role) carries the ECR/CloudWatch boilerplate.
+- `secretsmanager:GetSecretValue` on the tenant's RDS secret ARN ONLY.
+- `kms:Decrypt` on the tenant's CMK ONLY.
+- `logs:CreateLogStream` + `logs:PutLogEvents` on the tenant's log group ONLY.
+- NO `s3:*`, NO `iam:*`, NO `ec2:*`. The task-execution role (separate from task role) carries the ECR/CloudWatch boilerplate.
 21. **MUST** publish the resource inventory of every apply to memory as `chat.deployment_inventory` rows. Each row enumerates: the resource ARNs, the resource counts per type, the AWS account+region, the tier, the Terraform module version SHA. Operators query memory to answer "what's in tenant X's stack" without `aws` CLI access.
 22. **MUST** declare a Terraform state-backend convention: the module is invoked from a per-tenant workspace; state lives in `s3://cyberos-terraform-state/<aws-account>/<tenant_id>/chat/terraform.tfstate` with DynamoDB lock table `cyberos-terraform-lock`. State is per-tenant; cross-tenant blast radius from a corrupted state is zero.
 23. **MUST** expose outputs from the module so callers (cross-module) can wire dependent resources:
-    - `chat_url` (e.g. `https://t-<tenant-shortid>.cyberskill.world`).
-    - `rds_endpoint` (sensitive=true; consumed by TASK-CHAT-005 logical replication).
-    - `redis_endpoint` (sensitive=true).
-    - `ecs_cluster_arn`, `ecs_service_arn`.
-    - `task_role_arn` (consumed by TASK-AUTH-005 cross-account role chain).
-    - `cloudwatch_log_group_name`.
+- `chat_url` (e.g. `https://t-<tenant-shortid>.cyberskill.world`).
+- `rds_endpoint` (sensitive=true; consumed by TASK-CHAT-005 logical replication).
+- `redis_endpoint` (sensitive=true).
+- `ecs_cluster_arn`, `ecs_service_arn`.
+- `task_role_arn` (consumed by TASK-AUTH-005 cross-account role chain).
+- `cloudwatch_log_group_name`.
 24. **MUST** support a `dry_run` variable that, when true, asserts `terraform plan` shows no changes; used by the post-deploy drift detector (TASK-OBS-007 consumes).
 25. **MUST** include a `module_version` output sourced from a `version.tf` constant; the module is semver-versioned; every apply records the version it provisioned (consumed by `chat.deployment_provisioned` payload).
 26. **MUST** support a `data_residency` variable enum `{vn-only, sg-allowed, global}` that constrains the AWS region selection: `vn-only` only permits `ap-southeast-1`; `sg-allowed` adds `ap-southeast-1` + `ap-southeast-2`; `global` opens all supported regions. Mismatch between variable and aws_region MUST fail validation.

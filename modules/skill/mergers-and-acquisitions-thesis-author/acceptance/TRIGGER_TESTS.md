@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a mergers and acquisitions thesis"
+- "Draft a mergers and acquisitions thesis"
 - "Create the mergers and acquisitions thesis"
 - "Author a new mergers and acquisitions thesis"
 - "Generate the mergers and acquisitions thesis"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this mergers and acquisitions thesis" → mergers-and-acquisitions-thesis-audit
+- "Audit this mergers and acquisitions thesis" → mergers-and-acquisitions-thesis-audit
 - "Check the mergers and acquisitions thesis for completeness" → mergers-and-acquisitions-thesis-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this privacy impact assessment"
+- "Audit this privacy impact assessment"
 - "Check the privacy impact assessment for completeness"
 - "Verify the privacy impact assessment meets the rubric"
 - "Re-audit the privacy impact assessment"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a privacy impact assessment" → privacy-impact-assessment-author
+- "Draft a privacy impact assessment" → privacy-impact-assessment-author
 - "Create the privacy impact assessment" → privacy-impact-assessment-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

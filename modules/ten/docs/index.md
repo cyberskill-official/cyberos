@@ -52,17 +52,7 @@ ARR · NDR · churn"] end EXT_CUST --> TEN TEN --> STRIPE TEN --> VNPAY TEN --> 
 
 ### Auto vs human-in-loop operations matrix
 
-Operation| How it happens| Why this split
----|---|---
-Tenant provisioning (P4 self-serve)| **Auto** <= 30 s from signup form| The 30s budget includes Postgres schema init + S3 prefix + NATS subjects + tenant_admin invite email; degraded mode falls back to async with progress page.
-Tenant provisioning (P2 ops-driven)| **Manual** CLI: `cyberos-ten provision <tenant>`| P2 doesn't have self-serve UI; CyberSkill ops creates tenants for vertical-pack customers.
-Plan upgrade| **Auto** via in-app + Stripe portal| Pro-rata + invoice update; effective immediately for seat increases; takes effect next billing cycle for plan-tier change.
-Plan downgrade with quota violation| **Human-confirm** - show data overage + 30-day grace before suspension| Forcing immediate data deletion violates user trust; grace period gives time to clean up.
-Suspension (non-payment)| **Auto** after 14 d past-due + 3 notices| Standard SaaS dunning; suspension = read-only, not deletion.
-Termination (suspension > 90 d)| **Auto-trigger**, **human-confirm** attestation| The trigger is automatic; the actual irreversible delete requires CSO + CLO sign-off + memory audit row.
-Residency change request| **Human-driven** migration job| Cross-region data move is a multi-day operation; never auto-triggered.
-Cross-leak detection (CI gate)| **Auto-block** at PR merge| Property-based test runs on every PR touching tenant code paths; cross-leak = release blocked.
-DSAR export request| **Auto** bundle generation; **human delivery** to subject| Bundle is auto; DPO confirms delivery method per the subject's preference.
+Operation| How it happens| Why this split ---|---|--- Tenant provisioning (P4 self-serve)| **Auto** <= 30 s from signup form| The 30s budget includes Postgres schema init + S3 prefix + NATS subjects + tenant_admin invite email; degraded mode falls back to async with progress page. Tenant provisioning (P2 ops-driven)| **Manual** CLI: `cyberos-ten provision <tenant>`| P2 doesn't have self-serve UI; CyberSkill ops creates tenants for vertical-pack customers. Plan upgrade| **Auto** via in-app + Stripe portal| Pro-rata + invoice update; effective immediately for seat increases; takes effect next billing cycle for plan-tier change. Plan downgrade with quota violation| **Human-confirm** - show data overage + 30-day grace before suspension| Forcing immediate data deletion violates user trust; grace period gives time to clean up. Suspension (non-payment)| **Auto** after 14 d past-due + 3 notices| Standard SaaS dunning; suspension = read-only, not deletion. Termination (suspension > 90 d)| **Auto-trigger**, **human-confirm** attestation| The trigger is automatic; the actual irreversible delete requires CSO + CLO sign-off + memory audit row. Residency change request| **Human-driven** migration job| Cross-region data move is a multi-day operation; never auto-triggered. Cross-leak detection (CI gate)| **Auto-block** at PR merge| Property-based test runs on every PR touching tenant code paths; cross-leak = release blocked. DSAR export request| **Auto** bundle generation; **human delivery** to subject| Bundle is auto; DPO confirms delivery method per the subject's preference.
 
 ## P2 thin slice scope - minimum billing for vertical packs
 
@@ -70,30 +60,13 @@ The TEN-billing thin slice at P2 (P2-exit) is the minimum infrastructure to char
 
 ### P2 thin slice - what ships vs what defers
 
-Capability| P2 thin slice (P2-exit)| P4 full (P4-mid+)
----|---|---
-**Tenant provisioning**| CLI: `cyberos-ten provision` (ops-driven)| Self-serve signup form <= 30 s
-**Plan tiers**| 3 hardcoded (Starter / Team / Enterprise)| Dynamic + per-tenant custom
-**Payment rails**| Stripe only (USD / EUR / SGD)| + VnPay / Momo / ZaloPay for VND
-**Metering**| All 4 axes (seats, API, AI tokens, storage)| Same (no change at P4)
-**Invoicing**| Monthly Stripe-generated invoice| + in-app billing portal + dunning automation
-**Cost cap enforcement**| AI Gateway integration only| + storage cap + API rate cap
-**Tenant-admin UI**| -| Full SPA (seats / audit / residency / retention)
-**Residency pinning**| 4 options at provision time (no change after)| + residency migration job (multi-day operation)
-**Offboarding**| CLI: `cyberos-ten terminate` + 30-day grace| Full 90-day grace + attestation
-**DSAR / signed bundle export**| CLI: `cyberos-ten export`| + in-app export request UI
-**Compliance views (regulator-scoped)**| Via OBS §2.7| Same (no change at P4)
-**Cross-leak CI gate**| Required at P2| Same (locked invariant)
+Capability| P2 thin slice (P2-exit)| P4 full (P4-mid+) ---|---|--- **Tenant provisioning**| CLI: `cyberos-ten provision` (ops-driven)| Self-serve signup form <= 30 s **Plan tiers**| 3 hardcoded (Starter / Team / Enterprise)| Dynamic + per-tenant custom **Payment rails**| Stripe only (USD / EUR / SGD)| + VnPay / Momo / ZaloPay for VND **Metering**| All 4 axes (seats, API, AI tokens, storage)| Same (no change at P4) **Invoicing**| Monthly Stripe-generated invoice| + in-app billing portal + dunning automation **Cost cap enforcement**| AI Gateway integration only| + storage cap + API rate cap **Tenant-admin UI**| -| Full SPA (seats / audit / residency / retention) **Residency pinning**| 4 options at provision time (no change after)| + residency migration job (multi-day operation) **Offboarding**| CLI: `cyberos-ten terminate` + 30-day grace| Full 90-day grace + attestation **DSAR / signed bundle export**| CLI: `cyberos-ten export`| + in-app export request UI **Compliance views (regulator-scoped)**| Via OBS §2.7| Same (no change at P4) **Cross-leak CI gate**| Required at P2| Same (locked invariant)
 
 The P2 slice is "enough infrastructure to charge for vertical packs without building UI." UI comes at P4. The cross-leak CI gate, however, ships at P2 - it's a protocol invariant, not a feature.
 
 ### Plan-tier x usage budget
 
-Tier| Seats| AI tokens / month| Storage| API / month| Price (USD/month base)| Vertical pack add-on
----|---|---|---|---|---|---
-**Starter**| <= 10| 500k| 20 GB| 500k| $49 / mo| + $99 / pack / month
-**Team**| <= 50| 3M| 200 GB| 5M| $249 / mo| + $79 / pack / month
-**Enterprise**| Unlimited| Custom (negotiated)| Custom| Custom| Custom| + negotiated
+Tier| Seats| AI tokens / month| Storage| API / month| Price (USD/month base)| Vertical pack add-on ---|---|---|---|---|---|--- **Starter**| <= 10| 500k| 20 GB| 500k| $49 / mo| + $99 / pack / month **Team**| <= 50| 3M| 200 GB| 5M| $249 / mo| + $79 / pack / month **Enterprise**| Unlimited| Custom (negotiated)| Custom| Custom| Custom| + negotiated
 
 Vertical packs (cyberskill-vn, cyberskill-sg, etc. per SKILL §3.6) are priced as a per-tenant monthly add-on, not per-seat. This is the compounding margin - packs scale with tenant count, not seat count.
 
@@ -103,12 +76,7 @@ Residency is pinned at signup. Once chosen, it propagates to every layer (Postgr
 
 ### Residency option x infra mapping
 
-Residency| Postgres shard| S3 region| AI Gateway providers| OBS retention region| Compliance regime
----|---|---|---|---|---
-**sg-1** (Singapore)| RDS ap-southeast-1| S3 ap-southeast-1| Bedrock AP-SE-1, Anthropic, OpenAI| S3 ap-southeast-1| PDPA-SG + PDPL-VN cross-border under DPA
-**eu-1** (Frankfurt)| RDS eu-central-1| S3 eu-central-1| Bedrock EU-CENTRAL, Vertex EU, Anthropic EU| S3 eu-central-1| GDPR + EU AI Act + EU Data Boundary
-**us-1**| RDS us-east-1| S3 us-east-1| Bedrock US-EAST, Anthropic, OpenAI, Vertex US| S3 us-east-1| CCPA + state-level privacy laws
-**vn-1** (Vietnam)| VN-hosted (P3+) / RDS ap-southeast-1 + PDPL DPA (P2)| VN-hosted + bilateral DPA| Bedrock AP-SE-1 + PDPL DPA, Anthropic with VN DPA| VN-hosted| PDPL (Law 91/2025) + Decree 13/2023
+Residency| Postgres shard| S3 region| AI Gateway providers| OBS retention region| Compliance regime ---|---|---|---|---|--- **sg-1** (Singapore)| RDS ap-southeast-1| S3 ap-southeast-1| Bedrock AP-SE-1, Anthropic, OpenAI| S3 ap-southeast-1| PDPA-SG + PDPL-VN cross-border under DPA **eu-1** (Frankfurt)| RDS eu-central-1| S3 eu-central-1| Bedrock EU-CENTRAL, Vertex EU, Anthropic EU| S3 eu-central-1| GDPR + EU AI Act + EU Data Boundary **us-1**| RDS us-east-1| S3 us-east-1| Bedrock US-EAST, Anthropic, OpenAI, Vertex US| S3 us-east-1| CCPA + state-level privacy laws **vn-1** (Vietnam)| VN-hosted (P3+) / RDS ap-southeast-1 + PDPL DPA (P2)| VN-hosted + bilateral DPA| Bedrock AP-SE-1 + PDPL DPA, Anthropic with VN DPA| VN-hosted| PDPL (Law 91/2025) + Decree 13/2023
 
 ### Cross-leak CI gate (the protocol invariant)
 
@@ -128,12 +96,7 @@ The biggest trust signal in B2B SaaS is "how do you handle me leaving?" TEN's an
 
 ### The 90-day timeline
 
-Phase| Days| Capabilities| Audit events emitted
----|---|---|---
-**Active**| -| Full read/write across all modules| -
-**Terminating-A**| Days 1-30| Read-only access for tenant admin; export bundle download available; no new writes| `ten.terminate_initiated`, `ten.export_generated`
-**Terminating-B**| Days 31-90| No login; dead-letter recovery only (CSO can restore on tenant request)| `ten.recovery_window_entered`
-**Terminated**| Day 91+| Irreversible delete, cryptographic attestation, only audit-chain anchors remain| `ten.permanent_delete` with signed attestation
+Phase| Days| Capabilities| Audit events emitted ---|---|---|--- **Active**| -| Full read/write across all modules| - **Terminating-A**| Days 1-30| Read-only access for tenant admin; export bundle download available; no new writes| `ten.terminate_initiated`, `ten.export_generated` **Terminating-B**| Days 31-90| No login; dead-letter recovery only (CSO can restore on tenant request)| `ten.recovery_window_entered` **Terminated**| Day 91+| Irreversible delete, cryptographic attestation, only audit-chain anchors remain| `ten.permanent_delete` with signed attestation
 
 ### Signed bundle export - the portability contract
 
@@ -187,21 +150,7 @@ The bet is that the value of CyberOS unlocks at N>1 tenants - the memory compoun
 
 A structured decomposition of TEN's scope.
 
-Axis| Question| Answer
----|---|---
-**5W - What**| What is TEN?| A tenant lifecycle + billing + isolation control-plane service. Owns Tenant, Plan, Subscription, Seat, BrandingConfig, UsageMeter, RetentionPolicy. Integrates Stripe + Vietnamese PSPs. Operates the cross-tenant isolation verification harness.
-**5W - Who**| Who uses it?| **Prospective customers:** self-serve signup. **Tenant admins:** seat / billing / audit / retention via tenant-admin SPA. **CFO (CyberSkill):** ARR / NDR / churn dashboards. **CCO (CyberSkill):** upgrade routing. **Agents:** usage-metering scheduled jobs.
-**5W - When**| When does it run?| On-demand for signup, plan change, offboarding. Continuous for usage metering (per-NATS-event aggregation). Daily for billing-reconciliation. Monthly for ARR snapshot + churn calculation.
-**5W - Where**| Where does it run?| P4: SG-1 control plane; per-tenant data partition lives in the residency chosen at signup (vn-hanoi-1 for VN, sg-1 for SG, eu-fra-1 for EU at P4+). Stripe API in stripe.com regions; VN PSPs in VN.
-**5W - Why**| Why a separate module?| Because the multi-tenant control plane is its own primary concern - distinct from any one feature module. SOC 2 / ISO 27017 expect this control plane to be auditable and isolated from the application layer.
-**1H - How**| How does it work?| Signup flow: account create -> residency pick -> plan pick -> payment method capture -> tenant provision (schema namespace + S3 prefix + NATS subject + AUTH tenant row + first founder Subject + default RBAC seed) -> SSO + first-login redirect. Usage metering: per-tenant NATS subject aggregator; nightly rollup; monthly invoice generation.
-**2C - Cost**| Cost budget?| P4: control plane ~$60 / month (Fargate + Postgres for control state + Redis). Stripe pass-through fee 2.9% + 30c; VN PSPs ~1.5% + 1,000 VND. Per-tenant ongoing infra: ~$5-$80 / month depending on plan.
-**2C - Constraints**| Constraints?| (a) Zero cross-tenant data leakage (SOC 2 CC6.6 + (NFR pending)). (b) PCI scope minimisation - CyberOS never touches PAN. (c) Vietnamese PSP regulations (Circular 18/2018/TT-NHNN). (d) GDPR Art. 20 portability + Art. 17 erasure. (e) Tenant signup <= 30s p95.
-**5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, Redis 7, Stripe Rust SDK, VnPay / Momo / ZaloPay HTTP clients, NATS JetStream, AWS Fargate, OpenTelemetry.
-**5M - Methods**| Method choices?| Tenant provisioning is idempotent + atomic across modules (saga pattern). Usage metering is event-sourced (NATS aggregates -> cumulative counters). Offboarding is two-phase: read-only-30d -> recoverable-60d -> wipe. Billing reconciliation is a per-PSP scheduled job.
-**5M - Machines**| Deployment?| Fargate control-plane task + scheduled-job task. Per-tenant data partition keyed by residency-region.
-**5M - Manpower**| Who maintains?| 0.6 FTE at P4 + revenue-ops part-time. CFO seat owns billing + revenue dashboards. CSO seat owns isolation verification.
-**5M - Measurement**| How measured?| (NFR pending) = 0 cross-tenant leaks, (NFR pending) signup <= 30s p95. KPIs: ARR, NDR, churn, CAC, seat-utilisation per tenant, isolation-probe pass rate.
+Axis| Question| Answer ---|---|--- **5W - What**| What is TEN?| A tenant lifecycle + billing + isolation control-plane service. Owns Tenant, Plan, Subscription, Seat, BrandingConfig, UsageMeter, RetentionPolicy. Integrates Stripe + Vietnamese PSPs. Operates the cross-tenant isolation verification harness. **5W - Who**| Who uses it?| **Prospective customers:** self-serve signup. **Tenant admins:** seat / billing / audit / retention via tenant-admin SPA. **CFO (CyberSkill):** ARR / NDR / churn dashboards. **CCO (CyberSkill):** upgrade routing. **Agents:** usage-metering scheduled jobs. **5W - When**| When does it run?| On-demand for signup, plan change, offboarding. Continuous for usage metering (per-NATS-event aggregation). Daily for billing-reconciliation. Monthly for ARR snapshot + churn calculation. **5W - Where**| Where does it run?| P4: SG-1 control plane; per-tenant data partition lives in the residency chosen at signup (vn-hanoi-1 for VN, sg-1 for SG, eu-fra-1 for EU at P4+). Stripe API in stripe.com regions; VN PSPs in VN. **5W - Why**| Why a separate module?| Because the multi-tenant control plane is its own primary concern - distinct from any one feature module. SOC 2 / ISO 27017 expect this control plane to be auditable and isolated from the application layer. **1H - How**| How does it work?| Signup flow: account create -> residency pick -> plan pick -> payment method capture -> tenant provision (schema namespace + S3 prefix + NATS subject + AUTH tenant row + first founder Subject + default RBAC seed) -> SSO + first-login redirect. Usage metering: per-tenant NATS subject aggregator; nightly rollup; monthly invoice generation. **2C - Cost**| Cost budget?| P4: control plane ~$60 / month (Fargate + Postgres for control state + Redis). Stripe pass-through fee 2.9% + 30c; VN PSPs ~1.5% + 1,000 VND. Per-tenant ongoing infra: ~$5-$80 / month depending on plan. **2C - Constraints**| Constraints?| (a) Zero cross-tenant data leakage (SOC 2 CC6.6 + (NFR pending)). (b) PCI scope minimisation - CyberOS never touches PAN. (c) Vietnamese PSP regulations (Circular 18/2018/TT-NHNN). (d) GDPR Art. 20 portability + Art. 17 erasure. (e) Tenant signup <= 30s p95. **5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, Redis 7, Stripe Rust SDK, VnPay / Momo / ZaloPay HTTP clients, NATS JetStream, AWS Fargate, OpenTelemetry. **5M - Methods**| Method choices?| Tenant provisioning is idempotent + atomic across modules (saga pattern). Usage metering is event-sourced (NATS aggregates -> cumulative counters). Offboarding is two-phase: read-only-30d -> recoverable-60d -> wipe. Billing reconciliation is a per-PSP scheduled job. **5M - Machines**| Deployment?| Fargate control-plane task + scheduled-job task. Per-tenant data partition keyed by residency-region. **5M - Manpower**| Who maintains?| 0.6 FTE at P4 + revenue-ops part-time. CFO seat owns billing + revenue dashboards. CSO seat owns isolation verification. **5M - Measurement**| How measured?| (NFR pending) = 0 cross-tenant leaks, (NFR pending) signup <= 30s p95. KPIs: ARR, NDR, churn, CAC, seat-utilisation per tenant, isolation-probe pass rate.
 
 ## Architecture
 
@@ -240,22 +189,7 @@ ARR / NDR / churn"] end SIGN --> SU ADMIN --> PLAN ADMIN --> SEAT ADMIN --> BRAN
 
 ### Internal components
 
-Component| Path (planned)| Responsibility
----|---|---
-`signup.rs`| services/ten/src/signup.rs| Self-serve signup flow. Captures org name, residency choice, plan tier, founder email, payment method.
-`provisioner.rs`| services/ten/src/provisioner.rs| Tenant provisioning saga. Idempotent + atomic across AUTH / memory / module DBs / S3 / NATS / AI. Compensating actions on partial failure.
-`plan.rs`| services/ten/src/plan.rs| Plan CRUD. Subscription lifecycle. Feature flags per tier (e.g., LEARN locked at Starter, available at Team+).
-`seat.rs`| services/ten/src/seat.rs| Seat add / remove / invite. Enforces plan-tier seat caps.
-`branding.rs`| services/ten/src/branding.rs| Per-tenant brand pack - @cyberskill/tokens override layer. Logo, colour anchors, email templates, custom-domain integration with PORTAL.
-`meter.rs`| services/ten/src/meter.rs| Usage metering. NATS aggregator subscribes to `tenant.{id}.usage.{kind}` subjects; nightly rollup; monthly snapshot.
-`billing.rs`| services/ten/src/billing.rs| Stripe integration: customer + subscription + invoice + webhook handling.
-`vnpsp.rs`| services/ten/src/vnpsp.rs| VnPay / Momo / ZaloPay adapters. Single trait, multiple impls. VND-denominated.
-`isolation.rs`| services/ten/src/isolation.rs| Cross-tenant verification harness. 100k probes against PG RLS, NATS subject ACL, S3 prefix IAM on every release.
-`offboard.rs`| services/ten/src/offboard.rs| 90-day offboarding flow: 30d read-only -> 60d recoverable -> wipe. Pre-generates export bundle.
-`export.rs`| services/ten/src/export.rs| Signed-bundle exporter. Full tenant data dump: memory deterministic zip + per-module data + manifest with SHA-256 + Ed25519 signature.
-`retention.rs`| services/ten/src/retention.rs| Per-tenant retention policy override. Defaults: 30 days (logs), 365 days (audit), forever (legal docs).
-`arr.rs`| services/ten/src/arr.rs| Revenue rollup: ARR / MRR / NDR / GRR / churn / CAC. Daily snapshot, monthly review.
-`migrations/`| services/ten/migrations/| sqlx migrations. Tenant rows in control plane; RLS on every row by tenant_id.
+Component| Path (planned)| Responsibility ---|---|--- `signup.rs`| services/ten/src/signup.rs| Self-serve signup flow. Captures org name, residency choice, plan tier, founder email, payment method. `provisioner.rs`| services/ten/src/provisioner.rs| Tenant provisioning saga. Idempotent + atomic across AUTH / memory / module DBs / S3 / NATS / AI. Compensating actions on partial failure. `plan.rs`| services/ten/src/plan.rs| Plan CRUD. Subscription lifecycle. Feature flags per tier (e.g., LEARN locked at Starter, available at Team+). `seat.rs`| services/ten/src/seat.rs| Seat add / remove / invite. Enforces plan-tier seat caps. `branding.rs`| services/ten/src/branding.rs| Per-tenant brand pack - @cyberskill/tokens override layer. Logo, colour anchors, email templates, custom-domain integration with PORTAL. `meter.rs`| services/ten/src/meter.rs| Usage metering. NATS aggregator subscribes to `tenant.{id}.usage.{kind}` subjects; nightly rollup; monthly snapshot. `billing.rs`| services/ten/src/billing.rs| Stripe integration: customer + subscription + invoice + webhook handling. `vnpsp.rs`| services/ten/src/vnpsp.rs| VnPay / Momo / ZaloPay adapters. Single trait, multiple impls. VND-denominated. `isolation.rs`| services/ten/src/isolation.rs| Cross-tenant verification harness. 100k probes against PG RLS, NATS subject ACL, S3 prefix IAM on every release. `offboard.rs`| services/ten/src/offboard.rs| 90-day offboarding flow: 30d read-only -> 60d recoverable -> wipe. Pre-generates export bundle. `export.rs`| services/ten/src/export.rs| Signed-bundle exporter. Full tenant data dump: memory deterministic zip + per-module data + manifest with SHA-256 + Ed25519 signature. `retention.rs`| services/ten/src/retention.rs| Per-tenant retention policy override. Defaults: 30 days (logs), 365 days (audit), forever (legal docs). `arr.rs`| services/ten/src/arr.rs| Revenue rollup: ARR / MRR / NDR / GRR / churn / CAC. Daily snapshot, monthly review. `migrations/`| services/ten/migrations/| sqlx migrations. Tenant rows in control plane; RLS on every row by tenant_id.
 
 **TEN-INV-001 - Zero cross-tenant data leakage.** Three-layer enforcement: (1) PostgreSQL RLS keyed by `tenant_id` on every row in every module's database; (2) NATS subject ACL keyed by `tenant.{id}.*` namespace; (3) S3 bucket-prefix IAM scoped per tenant. The isolation harness runs 100k randomised cross-tenant probes against all three layers on every release; any leak halts deploys. SOC 2 CC6.6 + ISO 27017 control objective. Verification: `tests/ten/isolation/` + nightly chaos in staging.
 
@@ -273,14 +207,7 @@ erDiagram TENANT ||--o| SUBSCRIPTION: "has" TENANT ||--o{ SEAT: "owns" TENANT ||
 
 ### Plan-tier matrix (planned)
 
-Plan| Currency| Price| Seats| AI tokens/mo| Modules locked
----|---|---|---|---|---
-`starter`| USD| $49 / mo| 10| 500k| OKR, REW, ESOP, DOC, PORTAL
-`team`| USD| $249 / mo| 50| 3M| ESOP, DOC, PORTAL
-`enterprise`| USD| custom| custom| custom| none (all enabled)
-`starter-vn`| VND| 1,190,000 VND / mo| 10| 500k| OKR, REW, ESOP, DOC, PORTAL
-`team-vn`| VND| 5,990,000 VND / mo| 50| 3M| ESOP, DOC, PORTAL
-`enterprise-vn`| VND| custom| custom| custom| none
+Plan| Currency| Price| Seats| AI tokens/mo| Modules locked ---|---|---|---|---|--- `starter`| USD| $49 / mo| 10| 500k| OKR, REW, ESOP, DOC, PORTAL `team`| USD| $249 / mo| 50| 3M| ESOP, DOC, PORTAL `enterprise`| USD| custom| custom| custom| none (all enabled) `starter-vn`| VND| 1,190,000 VND / mo| 10| 500k| OKR, REW, ESOP, DOC, PORTAL `team-vn`| VND| 5,990,000 VND / mo| 50| 3M| ESOP, DOC, PORTAL `enterprise-vn`| VND| custom| custom| custom| none
 
 ## API surface
 
@@ -396,34 +323,11 @@ type Mutation {
 
 ### REST endpoints
 
-Method| Path| Purpose
----|---|---
-GET| `/signup/plans?country=VN`| List available plans for a country.
-POST| `/signup/start`| Begin signup; returns signup_token.
-POST| `/signup/payment`| Attach payment method (Stripe SetupIntent or VnPay vault).
-POST| `/signup/finalize`| Provision tenant; returns first-login redirect.
-POST| `/billing/stripe/webhook`| Stripe webhook (signature-verified).
-POST| `/billing/vnpay/webhook`| VnPay IPN handler.
-POST| `/billing/momo/webhook`| Momo IPN handler.
-POST| `/billing/zalopay/webhook`| ZaloPay IPN handler.
-GET| `/tenants/{id}/export-bundle`| Generate or fetch signed export bundle.
-GET| `/tenants/{id}/usage.csv?period=YYYY-MM`| Monthly usage roll-up CSV.
-POST| `/admin/isolation/probe`| Trigger isolation-harness run.
-GET| `/admin/arr.json`| ARR / NDR / churn snapshot (CFO scope).
+Method| Path| Purpose ---|---|--- GET| `/signup/plans?country=VN`| List available plans for a country. POST| `/signup/start`| Begin signup; returns signup_token. POST| `/signup/payment`| Attach payment method (Stripe SetupIntent or VnPay vault). POST| `/signup/finalize`| Provision tenant; returns first-login redirect. POST| `/billing/stripe/webhook`| Stripe webhook (signature-verified). POST| `/billing/vnpay/webhook`| VnPay IPN handler. POST| `/billing/momo/webhook`| Momo IPN handler. POST| `/billing/zalopay/webhook`| ZaloPay IPN handler. GET| `/tenants/{id}/export-bundle`| Generate or fetch signed export bundle. GET| `/tenants/{id}/usage.csv?period=YYYY-MM`| Monthly usage roll-up CSV. POST| `/admin/isolation/probe`| Trigger isolation-harness run. GET| `/admin/arr.json`| ARR / NDR / churn snapshot (CFO scope).
 
 ### MCP tool catalogue
 
-Tool name| Inputs| Outputs| Annotations
----|---|---|---
-`cyberos.ten.tenant_status`| -| Tenant| readonly, scope=ten.admin
-`cyberos.ten.invite_seat`| email| {seat_id, invite_link}| scope=ten.admin, human-confirm
-`cyberos.ten.revoke_seat`| seat_id| {ok}| destructive, scope=ten.admin, human-confirm
-`cyberos.ten.change_plan`| plan_code| {subscription}| destructive, scope=ten.admin, founder-confirm
-`cyberos.ten.usage_report`| period| UsageReport| readonly
-`cyberos.ten.export_bundle`| -| {bundle_url, sha256}| destructive, scope=ten.founder
-`cyberos.ten.initiate_offboard`| reason| {grace_until}| destructive, scope=ten.founder, human-confirm-twice
-`cyberos.ten.cancel_offboard`| -| {ok}| destructive, scope=ten.founder
-`cyberos.ten.set_retention`| RetentionInput| RetentionPolicy| scope=ten.admin, CLO-confirm if reducing
+Tool name| Inputs| Outputs| Annotations ---|---|---|--- `cyberos.ten.tenant_status`| -| Tenant| readonly, scope=ten.admin `cyberos.ten.invite_seat`| email| {seat_id, invite_link}| scope=ten.admin, human-confirm `cyberos.ten.revoke_seat`| seat_id| {ok}| destructive, scope=ten.admin, human-confirm `cyberos.ten.change_plan`| plan_code| {subscription}| destructive, scope=ten.admin, founder-confirm `cyberos.ten.usage_report`| period| UsageReport| readonly `cyberos.ten.export_bundle`| -| {bundle_url, sha256}| destructive, scope=ten.founder `cyberos.ten.initiate_offboard`| reason| {grace_until}| destructive, scope=ten.founder, human-confirm-twice `cyberos.ten.cancel_offboard`| -| {ok}| destructive, scope=ten.founder `cyberos.ten.set_retention`| RetentionInput| RetentionPolicy| scope=ten.admin, CLO-confirm if reducing
 
 ## Key flows
 
@@ -470,15 +374,7 @@ stateDiagram-v2 [*] --> Provisioning: signup saga running Provisioning --> Activ
 
 ### Per-state actions
 
-State| Trigger| Side-effects
----|---|---
-Provisioning| signup payment captured| Saga runs across 8 steps; idempotent; compensation on failure.
-Active| Saga complete| Tenant usable; first-login email sent; AI quota armed; usage metering live.
-Suspended| Past-due >= 14d OR admin| Login refused (soft "account paused"); data preserved; export still available.
-Offboarding| Founder confirm-twice OR auto from suspended| Subscription cancelled at period_end; export bundle pre-generated; emails sent.
-Grace (day 1-30 read-only)| Day 1 of grace| Read-only access; banner; founder can cancel offboard.
-Grace (day 31-90 recoverable)| Day 31| Login refused; bundle still downloadable; admin can re-instate via support.
-Closed| Day 91| Per-tenant rows wiped across modules; S3 prefix wiped; NATS ACL revoked; attestation emailed; `tenant.wiped` audit row remains in memory (forever).
+State| Trigger| Side-effects ---|---|--- Provisioning| signup payment captured| Saga runs across 8 steps; idempotent; compensation on failure. Active| Saga complete| Tenant usable; first-login email sent; AI quota armed; usage metering live. Suspended| Past-due >= 14d OR admin| Login refused (soft "account paused"); data preserved; export still available. Offboarding| Founder confirm-twice OR auto from suspended| Subscription cancelled at period_end; export bundle pre-generated; emails sent. Grace (day 1-30 read-only)| Day 1 of grace| Read-only access; banner; founder can cancel offboard. Grace (day 31-90 recoverable)| Day 31| Login refused; bundle still downloadable; admin can re-instate via support. Closed| Day 91| Per-tenant rows wiped across modules; S3 prefix wiped; NATS ACL revoked; attestation emailed; `tenant.wiped` audit row remains in memory (forever).
 
 ## Functional requirements
 
@@ -490,20 +386,7 @@ Previous task enumerations were archived 2026-05-14 and are no longer reflected 
 
 TEN's NFRs are dominated by tenant isolation and signup-flow performance - the two metrics that determine whether CyberOS can run as a SaaS at scale.
 
-NFR ID| Concern| Target| Measurement
----|---|---|---
-(NFR pending)| Cross-tenant data leakage incidents| = 0 (sev-0)| 100k-probe isolation harness on every release + quarterly pen-test
-(NFR pending)| PSP webhook signature verification| = 100% rejected unsigned| integration test
-(NFR pending)| PCI scope| SAQ-A (Stripe / PSP handles PAN)| annual PCI attestation
-(NFR pending)| Tenant signup end-to-end p95| <= 30 s| k6 + RUM
-(NFR pending)| Plan upgrade p95| <= 5 s| k6
-(NFR pending)| Tenant-admin SPA TTFB| <= 500 ms| RUM
-(NFR pending)| TEN control-plane availability| >= 99.95%| SLO monitor
-(NFR pending)| Tenant export bundle integrity| = 100% sha256-verified| cosign verification on every export
-(NFR pending)| Provisioning saga atomicity under crash injection| 0 inconsistent tenants| chaos test (1000 runs)
-(NFR pending)| Usage-meter accuracy vs ground truth (NATS replay)| <= 0.5% drift / 24h| weekly reconciliation
-(NFR pending)| SOC 2 CC6.6 control objective| passed (annual)| external audit
-(NFR pending)| ISO 27017 cloud-services controls| passed| external audit
+NFR ID| Concern| Target| Measurement ---|---|---|--- (NFR pending)| Cross-tenant data leakage incidents| = 0 (sev-0)| 100k-probe isolation harness on every release + quarterly pen-test (NFR pending)| PSP webhook signature verification| = 100% rejected unsigned| integration test (NFR pending)| PCI scope| SAQ-A (Stripe / PSP handles PAN)| annual PCI attestation (NFR pending)| Tenant signup end-to-end p95| <= 30 s| k6 + RUM (NFR pending)| Plan upgrade p95| <= 5 s| k6 (NFR pending)| Tenant-admin SPA TTFB| <= 500 ms| RUM (NFR pending)| TEN control-plane availability| >= 99.95%| SLO monitor (NFR pending)| Tenant export bundle integrity| = 100% sha256-verified| cosign verification on every export (NFR pending)| Provisioning saga atomicity under crash injection| 0 inconsistent tenants| chaos test (1000 runs) (NFR pending)| Usage-meter accuracy vs ground truth (NATS replay)| <= 0.5% drift / 24h| weekly reconciliation (NFR pending)| SOC 2 CC6.6 control objective| passed (annual)| external audit (NFR pending)| ISO 27017 cloud-services controls| passed| external audit
 
 ## Dependencies
 
@@ -521,92 +404,25 @@ plan / quota gate"] PORTAL["🌐 PORTAL"] end AUTH --> TEN memory --> TEN OBS --
 
 TEN is the SaaS-compliance hotspot. SOC 2, ISO 27001 multi-tenant controls, PCI SAQ-A, and Vietnamese PSP regulation all live here.
 
-Regulation / standard| Article / clause| TEN feature that satisfies it
----|---|---
-SOC 2 Type II| CC6.1 - Logical access| AUTH + plan/feature-flag gating; per-tenant scope.
-SOC 2 Type II| CC6.6 - Restricted access| Three-layer isolation (PG RLS + NATS subject + S3 prefix); 100k-probe harness.
-SOC 2 Type II| CC7.2 - System monitoring| Per-tenant usage telemetry; isolation-harness alerts.
-ISO/IEC 27001:2022| A.5.30 - ICT readiness| Multi-region residency + offboarding grace.
-ISO/IEC 27017| Cloud services controls| Tenant separation + signed-bundle portability.
-ISO/IEC 27018| Privacy for PII| Per-tenant residency choice + retention-policy override.
-PCI DSS| SAQ-A - Card-not-present| PAN never touches CyberOS; Stripe / PSP own PCI scope.
-Vietnam Decree 53/2022| Art. 26 - Data localisation for VN tenants| Residency choice = vn-hanoi-1 for VN tenants.
-Vietnam Circular 18/2018/TT-NHNN| Payment intermediary rules| VnPay / Momo / ZaloPay are SBV-licenced PSPs.
-Vietnam Decree 13/2023| Personal data processing| Per-tenant retention policy + 90d offboarding grace.
-Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Signed-bundle export covers all tenant data.
-GDPR (EU 2016/679)| Art. 20 - Right to portability| Signed-bundle export covers (task pending).
-GDPR| Art. 17 - Right to erasure| Offboarding wipe with audit attestation.
-GDPR| Art. 28 - Processor obligations| DPA per tenant; sub-processor list on Trust Center.
+Regulation / standard| Article / clause| TEN feature that satisfies it ---|---|--- SOC 2 Type II| CC6.1 - Logical access| AUTH + plan/feature-flag gating; per-tenant scope. SOC 2 Type II| CC6.6 - Restricted access| Three-layer isolation (PG RLS + NATS subject + S3 prefix); 100k-probe harness. SOC 2 Type II| CC7.2 - System monitoring| Per-tenant usage telemetry; isolation-harness alerts. ISO/IEC 27001:2022| A.5.30 - ICT readiness| Multi-region residency + offboarding grace. ISO/IEC 27017| Cloud services controls| Tenant separation + signed-bundle portability. ISO/IEC 27018| Privacy for PII| Per-tenant residency choice + retention-policy override. PCI DSS| SAQ-A - Card-not-present| PAN never touches CyberOS; Stripe / PSP own PCI scope. Vietnam Decree 53/2022| Art. 26 - Data localisation for VN tenants| Residency choice = vn-hanoi-1 for VN tenants. Vietnam Circular 18/2018/TT-NHNN| Payment intermediary rules| VnPay / Momo / ZaloPay are SBV-licenced PSPs. Vietnam Decree 13/2023| Personal data processing| Per-tenant retention policy + 90d offboarding grace. Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Signed-bundle export covers all tenant data. GDPR (EU 2016/679)| Art. 20 - Right to portability| Signed-bundle export covers (task pending). GDPR| Art. 17 - Right to erasure| Offboarding wipe with audit attestation. GDPR| Art. 28 - Processor obligations| DPA per tenant; sub-processor list on Trust Center.
 
 ## Risk entries
 
 TEN risks tracked in the [risk register](../../reference/risk-register.html#ten).
 
-ID| Risk| Likelihood| Impact| Owner| Mitigation
----|---|---|---|---|---
-`R-TEN-001`| Information disclosure - billing data exposed across tenants| Medium| Catastrophic| CSO| Per-tenant billing key; PCI scope minimisation via Stripe; webhook signature verification.
-`R-TEN-002`| Cross-tenant data leakage via RLS bypass| Low| Catastrophic| CSO| 100k isolation harness; RLS at PG + NATS subject + S3 prefix; release-gate enforcement.
-`R-TEN-003`| Provisioning saga half-applied; tenant in inconsistent state| Medium| High| CTO| Compensating actions; chaos test with crash injection; idempotent replay.
-`R-TEN-004`| Stripe webhook spoofing| Low| High| CSO| HMAC signature verification mandatory; replay-window enforcement; OBS alert on signature failure.
-`R-TEN-005`| Premature wipe (offboarding bug deletes too early)| Low| Catastrophic| CTO| Two-phase grace (read-only 30d, recoverable 60d); cron job double-checks date + status; audit alarm.
-`R-TEN-006`| VN PSP integration outage blocks domestic signup| Medium| Medium| CTO| Multi-PSP support (VnPay + Momo + ZaloPay); failover at signup.rs; degraded-mode banner.
-`R-TEN-007`| Usage-meter drift causes revenue under/over-charge| Medium| Medium| CFO| NATS replay reconciliation weekly; <= 0.5% drift target; finance audit quarterly.
-`R-TEN-008`| Plan-tier feature flag bypassed (tenant accesses locked module)| Low| Medium| CSO| Feature flag check at Apollo Router + module GraphQL; CI test gate.
-`R-TEN-009`| Retention-override allows compliance breach| Low| High| DPO| Override bounded by DPO-configured min/max; CLO approves below-default values.
-`R-TEN-010`| Export-bundle leaks via mis-scoped pre-signed URL| Low| High| CSO| Pre-signed URL audience-bound + 24h TTL; tenant-scope verified in URL signer.
-`R-TEN-011`| Cancellation-saga compensation fails partially| Medium| Medium| CTO| Idempotent compensation; backup wipe-cron picks up partial state nightly.
-`R-TEN-012`| SBV compliance change affecting VN PSP onboarding| Medium| Medium| CLO| Quarterly review of Circular 18/2018; PSP partner notification subscription.
-`R-TEN-013`| P2 thin slice slips -> vertical-pack pricing has no billing rail -> margin moat delayed| Medium| High| CEO| Hard P2-exit ship gate per research review §7.3; thin-slice scope locked above; any P2-slice scope addition requires CEO ADR sign-off.
-`R-TEN-014`| Residency change request mid-engagement (tenant moves SG -> EU)| Medium| High| CTO| Multi-day migration job with read-only window; never automatic; CSO + DPO sign-off; tested via quarterly drill on staging.
-`R-TEN-015`| Hostile termination (customer fraud) requires premature wipe - but 90d grace blocks it| Low| Medium| CLO| Hostile-termination override exists for legal compliance (fraud, court order); requires CEO + CLO + CSO sign-off + court order or equivalent; emits enhanced audit chain.
-`R-TEN-016`| Stripe DPA insufficient for EU residency -> customer rejection| Medium| Medium| CLO| EU tenants use Stripe Europe entity + EU-DPA; reviewed quarterly; backup plan: Mollie for EU-only customers if Stripe insufficient.
-`R-TEN-017`| Plan downgrade with usage above new tier creates invoice surprise| Medium| Medium| CFO| Downgrade enforces 30-day grace + overage visible in admin UI; final pro-rated invoice shows overage; never silent surprise.
-`R-TEN-018`| Cross-leak CI gate has gap (new cross-tenant code path lands without harness coverage)| Low| Critical| CSO| PR template requires "tenant-aware" check; static analyzer flags new tenant_id-using code paths; manual review by CSO before merge.
-`R-TEN-019`| Vertical-pack revenue attribution leaks via per-pack metering bug| Medium| Medium| CFO| Per-pack invocation rows in memory audit; nightly reconciliation against Stripe line items; alarm on > 1% drift.
-`R-TEN-020`| Lumi-pushed update for a vertical pack changes pricing without tenant consent| Low| High| CFO| Pack pricing pinned per tenant at subscription start; Lumi updates ship as candidate version; tenant must opt-in to new pricing; default-stay on old version.
+ID| Risk| Likelihood| Impact| Owner| Mitigation ---|---|---|---|---|--- `R-TEN-001`| Information disclosure - billing data exposed across tenants| Medium| Catastrophic| CSO| Per-tenant billing key; PCI scope minimisation via Stripe; webhook signature verification. `R-TEN-002`| Cross-tenant data leakage via RLS bypass| Low| Catastrophic| CSO| 100k isolation harness; RLS at PG + NATS subject + S3 prefix; release-gate enforcement. `R-TEN-003`| Provisioning saga half-applied; tenant in inconsistent state| Medium| High| CTO| Compensating actions; chaos test with crash injection; idempotent replay. `R-TEN-004`| Stripe webhook spoofing| Low| High| CSO| HMAC signature verification mandatory; replay-window enforcement; OBS alert on signature failure. `R-TEN-005`| Premature wipe (offboarding bug deletes too early)| Low| Catastrophic| CTO| Two-phase grace (read-only 30d, recoverable 60d); cron job double-checks date + status; audit alarm. `R-TEN-006`| VN PSP integration outage blocks domestic signup| Medium| Medium| CTO| Multi-PSP support (VnPay + Momo + ZaloPay); failover at signup.rs; degraded-mode banner. `R-TEN-007`| Usage-meter drift causes revenue under/over-charge| Medium| Medium| CFO| NATS replay reconciliation weekly; <= 0.5% drift target; finance audit quarterly. `R-TEN-008`| Plan-tier feature flag bypassed (tenant accesses locked module)| Low| Medium| CSO| Feature flag check at Apollo Router + module GraphQL; CI test gate. `R-TEN-009`| Retention-override allows compliance breach| Low| High| DPO| Override bounded by DPO-configured min/max; CLO approves below-default values. `R-TEN-010`| Export-bundle leaks via mis-scoped pre-signed URL| Low| High| CSO| Pre-signed URL audience-bound + 24h TTL; tenant-scope verified in URL signer. `R-TEN-011`| Cancellation-saga compensation fails partially| Medium| Medium| CTO| Idempotent compensation; backup wipe-cron picks up partial state nightly. `R-TEN-012`| SBV compliance change affecting VN PSP onboarding| Medium| Medium| CLO| Quarterly review of Circular 18/2018; PSP partner notification subscription. `R-TEN-013`| P2 thin slice slips -> vertical-pack pricing has no billing rail -> margin moat delayed| Medium| High| CEO| Hard P2-exit ship gate per research review §7.3; thin-slice scope locked above; any P2-slice scope addition requires CEO ADR sign-off. `R-TEN-014`| Residency change request mid-engagement (tenant moves SG -> EU)| Medium| High| CTO| Multi-day migration job with read-only window; never automatic; CSO + DPO sign-off; tested via quarterly drill on staging. `R-TEN-015`| Hostile termination (customer fraud) requires premature wipe - but 90d grace blocks it| Low| Medium| CLO| Hostile-termination override exists for legal compliance (fraud, court order); requires CEO + CLO + CSO sign-off + court order or equivalent; emits enhanced audit chain. `R-TEN-016`| Stripe DPA insufficient for EU residency -> customer rejection| Medium| Medium| CLO| EU tenants use Stripe Europe entity + EU-DPA; reviewed quarterly; backup plan: Mollie for EU-only customers if Stripe insufficient. `R-TEN-017`| Plan downgrade with usage above new tier creates invoice surprise| Medium| Medium| CFO| Downgrade enforces 30-day grace + overage visible in admin UI; final pro-rated invoice shows overage; never silent surprise. `R-TEN-018`| Cross-leak CI gate has gap (new cross-tenant code path lands without harness coverage)| Low| Critical| CSO| PR template requires "tenant-aware" check; static analyzer flags new tenant_id-using code paths; manual review by CSO before merge. `R-TEN-019`| Vertical-pack revenue attribution leaks via per-pack metering bug| Medium| Medium| CFO| Per-pack invocation rows in memory audit; nightly reconciliation against Stripe line items; alarm on > 1% drift. `R-TEN-020`| Lumi-pushed update for a vertical pack changes pricing without tenant consent| Low| High| CFO| Pack pricing pinned per tenant at subscription start; Lumi updates ship as candidate version; tenant must opt-in to new pricing; default-stay on old version.
 
 ## KPIs
 
 TEN rolls up into 20 KPIs spanning revenue health, isolation hygiene, signup conversion, and offboarding compliance.
 
-KPI| Formula| Source| Target
----|---|---|---
-**ARR**| sum monthly subscription x 12| subscription| per-quarter board target
-**MRR growth**| (MRR_now - MRR_30d_ago) / MRR_30d_ago| subscription| tracked
-**NDR (Net Dollar Retention)**| (starting + expansion - contraction - churn) / starting| subscription| >= 110%
-**GRR (Gross Revenue Retention)**| (starting - contraction - churn) / starting| subscription| >= 92%
-**Logo churn rate**| cancelled / total active (per month)| tenant| <= 2% / mo
-**Signup completion rate**| active / signup_started| signup| >= 60%
-**Signup p95 latency**| histogram| OBS| <= 30 s
-**Isolation probe pass rate**| passed / probed| isolation.rs| = 100%
-**Provisioning saga success rate**| complete / started| provisioner.rs| >= 99.9%
-**Offboarding compliance**| wiped_on_or_after_day_91 / offboarded| tenant| = 100%
-**Export-bundle integrity rate**| verified / generated| export.rs| = 100%
-**P2 slice ship date adherence**| scope-locked at P2-exit| roadmap tracker| = P2-exit (no slip)
-**Vertical-pack revenue share**| pack_revenue / total_revenue| Stripe + audit cross-check| >= 30% of ARR by P4-mid (the moat target)
-**Cross-leak rate (production)**| cross-tenant access events / total queries| OBS query proxy + audit| = 0 (hard floor)
-**Residency-change drill MTTR**| migration job duration| quarterly drill| <= 72 h end-to-end
-**Plan-downgrade overage handling**| downgrades with explicit grace acceptance / total downgrades| plan-change events| = 1.0 (never surprise)
-**Hostile-termination cycle time**| (legal trigger -> permanent delete) days| termination audit| tracked; legal-min < case < 90 d
-**VN-PSP coverage rate**| VND transactions via PSP / total VND attempts| billing logs| >= 0.95 (P4)
-**PCI-SAQ-A scope items count**| card-data systems in scope| annual audit| = 0 (Stripe handles all PCI scope)
-**Tenant attestation completeness**| terminations with full attestation row / total terminations| memory audit chain| = 1.0 (hard floor)
+KPI| Formula| Source| Target ---|---|---|--- **ARR**| sum monthly subscription x 12| subscription| per-quarter board target **MRR growth**| (MRR_now - MRR_30d_ago) / MRR_30d_ago| subscription| tracked **NDR (Net Dollar Retention)**| (starting + expansion - contraction - churn) / starting| subscription| >= 110% **GRR (Gross Revenue Retention)**| (starting - contraction - churn) / starting| subscription| >= 92% **Logo churn rate**| cancelled / total active (per month)| tenant| <= 2% / mo **Signup completion rate**| active / signup_started| signup| >= 60% **Signup p95 latency**| histogram| OBS| <= 30 s **Isolation probe pass rate**| passed / probed| isolation.rs| = 100% **Provisioning saga success rate**| complete / started| provisioner.rs| >= 99.9% **Offboarding compliance**| wiped_on_or_after_day_91 / offboarded| tenant| = 100% **Export-bundle integrity rate**| verified / generated| export.rs| = 100% **P2 slice ship date adherence**| scope-locked at P2-exit| roadmap tracker| = P2-exit (no slip) **Vertical-pack revenue share**| pack_revenue / total_revenue| Stripe + audit cross-check| >= 30% of ARR by P4-mid (the moat target) **Cross-leak rate (production)**| cross-tenant access events / total queries| OBS query proxy + audit| = 0 (hard floor) **Residency-change drill MTTR**| migration job duration| quarterly drill| <= 72 h end-to-end **Plan-downgrade overage handling**| downgrades with explicit grace acceptance / total downgrades| plan-change events| = 1.0 (never surprise) **Hostile-termination cycle time**| (legal trigger -> permanent delete) days| termination audit| tracked; legal-min < case < 90 d **VN-PSP coverage rate**| VND transactions via PSP / total VND attempts| billing logs| >= 0.95 (P4) **PCI-SAQ-A scope items count**| card-data systems in scope| annual audit| = 0 (Stripe handles all PCI scope) **Tenant attestation completeness**| terminations with full attestation row / total terminations| memory audit chain| = 1.0 (hard floor)
 
 ## RACI matrix
 
 TEN spans CEO (strategy), CFO (revenue), CTO (engineering), CSO (isolation), CLO (compliance), DPO (data-subject rights).
 
-Activity| CEO| CFO| CTO| CSO| CLO| DPO
----|---|---|---|---|---|---
-Service design + spec| A| C| R| C| C| C
-Implementation| I| I| A/R| C| I| I
-Pricing policy + plan design| A| R| I| I| I| I
-Stripe / PSP integration| I| A| R| C| I| I
-Isolation verification| I| I| R| A/R| I| I
-Offboarding attestation| C| I| R| C| A| R
-ARR / NDR / churn review (monthly)| A| R| I| I| I| I
-SOC 2 / ISO 27017 audit prep| C| C| R| A/R| R| C
-PCI SAQ-A attestation (annual)| I| A| R| R| C| I
+Activity| CEO| CFO| CTO| CSO| CLO| DPO ---|---|---|---|---|---|--- Service design + spec| A| C| R| C| C| C Implementation| I| I| A/R| C| I| I Pricing policy + plan design| A| R| I| I| I| I Stripe / PSP integration| I| A| R| C| I| I Isolation verification| I| I| R| A/R| I| I Offboarding attestation| C| I| R| C| A| R ARR / NDR / churn review (monthly)| A| R| I| I| I| I SOC 2 / ISO 27017 audit prep| C| C| R| A/R| R| C PCI SAQ-A attestation (annual)| I| A| R| R| C| I
 
 R = Responsible, A = Accountable, C = Consulted, I = Informed.
 
@@ -740,23 +556,7 @@ $ cyberos-ten retention set --tenant 01HZ8K9N7… \
 | External libs | ~18 (stripe-rs, momo / vnpay / zalopay clients) |
 | P4 budget | ~$60/mo + 2.9% pass-thru (Fargate + PG + Redis + Stripe fees) |
 
-Capability| Status
----|---
-Self-serve signup with residency choice| planned - P4
-Stripe integration (USD + EUR + ...)| planned - P4
-VnPay / Momo / ZaloPay integration (VND)| planned - P4
-Plan tiers + feature flags| planned - P4
-Tenant-admin SPA (seats / billing / audit / retention)| planned - P4
-Per-tenant brand pack| planned - P4
-Usage metering (4 axes)| planned - P4
-Provisioning saga with compensation| planned - P4
-Three-layer isolation enforcement| planned - P4
-Isolation verification harness (100k probes)| planned - P4
-Signed export bundle (task pending)| planned - P4
-90-day offboarding grace + wipe attestation| planned - P4
-ARR / NDR / churn dashboard| planned - P4
-SOC 2 Type II audit| planned - P4+
-ISO 27017 cloud-services audit| planned - P4+
+Capability| Status ---|--- Self-serve signup with residency choice| planned - P4 Stripe integration (USD + EUR + ...)| planned - P4 VnPay / Momo / ZaloPay integration (VND)| planned - P4 Plan tiers + feature flags| planned - P4 Tenant-admin SPA (seats / billing / audit / retention)| planned - P4 Per-tenant brand pack| planned - P4 Usage metering (4 axes)| planned - P4 Provisioning saga with compensation| planned - P4 Three-layer isolation enforcement| planned - P4 Isolation verification harness (100k probes)| planned - P4 Signed export bundle (task pending)| planned - P4 90-day offboarding grace + wipe attestation| planned - P4 ARR / NDR / churn dashboard| planned - P4 SOC 2 Type II audit| planned - P4+ ISO 27017 cloud-services audit| planned - P4+
 
 ## References
 

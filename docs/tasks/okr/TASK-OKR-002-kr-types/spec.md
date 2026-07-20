@@ -97,14 +97,14 @@ The OKR service **MUST** extend KR schema with 3 types at `services/okr/src/kr_t
    ```
 
 3. **MUST** validate per-type at `validator.rs::validate(kr)` per DEC-1973:
-   - hit_target → target_value REQUIRED; others NULL
-   - improvement → start_value + target_value REQUIRED; checkpoints NULL
-   - milestone → checkpoints REQUIRED (array of `{name, completed: bool}`); start/target NULL
+- hit_target → target_value REQUIRED; others NULL
+- improvement → start_value + target_value REQUIRED; checkpoints NULL
+- milestone → checkpoints REQUIRED (array of `{name, completed: bool}`); start/target NULL
 
 4. **MUST** compute progress at `progress_calc.rs::compute(kr) → NUMERIC(5,2)` per DEC-1972:
-   - hit_target: `current_value >= target_value ? 100 : 0`
-   - improvement: `((current - start) / (target - start)) * 100`, capped 0-100
-   - milestone: `(completed_count / total_count) * 100`
+- hit_target: `current_value >= target_value ? 100 : 0`
+- improvement: `((current - start) / (target - start)) * 100`, capped 0-100
+- milestone: `(completed_count / total_count) * 100`
 
 5. **MUST** be deterministic per DEC-1972 — pure function, same inputs → same output.
 
@@ -194,9 +194,7 @@ async fn milestone_validation_requires_checkpoints() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-OKR-001.
-**Downstream:** TASK-OKR-003 (auto-progress reads computed_progress_pct).
-**Cross-module:** TASK-MEMORY-111 (PII).
+**Upstream:** TASK-OKR-001. **Downstream:** TASK-OKR-003 (auto-progress reads computed_progress_pct). **Cross-module:** TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

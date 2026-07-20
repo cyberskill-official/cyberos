@@ -70,8 +70,8 @@ The `memory-sync@1` skill bundle **MUST** scaffold the sync-trigger surface; ful
 3. **MUST** in slice-3 return `SyncOutcome::DeferredToP2 { reason: "full orchestration ships in P2 via TASK-MEMORY-103" }` regardless of arguments.
 4. **MUST** emit memory audit row `memory.sync_requested` per invocation with payload `{direction, dry_run, by_subject_id, slice_version, trace_id}`.
 5. **MUST** be invokable via:
-    - Rust: `cyberos_memory_sync::request_sync(SyncDirection::Both, false).await`
-    - bash: `cyberos-memory-sync push --dry-run`
+- Rust: `cyberos_memory_sync::request_sync(SyncDirection::Both, false).await`
+- bash: `cyberos-memory-sync push --dry-run`
 6. **MUST** exit with `ExitCode::Ok` (slice-3) even though no actual sync occurs; bash CLI prints `"⚠  memory-sync@1 slice-3: deferred to P2 — see TASK-MEMORY-103"`.
 7. **MUST** emit OTel metric `skill_memory_sync_requests_total{direction, dry_run, outcome}` (counter; outcome ∈ deferred_p2 | error).
 8. **SHOULD** when P2 ships, this task's slice-4 version will delegate to TASK-MEMORY-103's sync daemon via Unix socket call.
@@ -112,9 +112,7 @@ signature:
 # memory-sync@1 (slice-3 stub)
 
 ```rust
-use cyberos_memory_sync::{request_sync, SyncDirection};
-let outcome = request_sync(SyncDirection::Both, false).await?;
-// outcome = SyncOutcome::DeferredToP2 { reason: "..." }
+use cyberos_memory_sync::{request_sync, SyncDirection}; let outcome = request_sync(SyncDirection::Both, false).await?; // outcome = SyncOutcome::DeferredToP2 { reason: "..." }
 ```
 ```
 

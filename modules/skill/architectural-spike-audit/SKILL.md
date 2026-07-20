@@ -39,15 +39,10 @@ blockers:
 
 ## 1. Purpose
 
-Make spike verdicts reproducible: an auditor cites SPK rule ids instead of
-paraphrasing prose. Only 10/10 passes; evidence is checked by RESOLUTION (does the
-citation actually check out at audit time), not by presence.
+Make spike verdicts reproducible: an auditor cites SPK rule ids instead of paraphrasing prose. Only 10/10 passes; evidence is checked by RESOLUTION (does the citation actually check out at audit time), not by presence.
 
 ## 2. Verdict semantics
 
-pass = every rubric rule green (10/10). fail = any rule red, findings name each rule
-id + location + what resolves it. needs_human = ambiguity the rubric cannot decide
-(unknown artefact version, contradictory frontmatter, an operator-verdict question).
+pass = every rubric rule green (10/10). fail = any rule red, findings name each rule id + location + what resolves it. needs_human = ambiguity the rubric cannot decide (unknown artefact version, contradictory frontmatter, an operator-verdict question).
 
-See RUBRIC.md for the rule families, AUDIT_LOOP.md for the iteration protocol, and
-REPORT_FORMAT.md for the report shape.
+See RUBRIC.md for the rule families, AUDIT_LOOP.md for the iteration protocol, and REPORT_FORMAT.md for the report shape.

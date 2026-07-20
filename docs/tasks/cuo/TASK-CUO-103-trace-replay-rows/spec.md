@@ -84,17 +84,17 @@ The CUO service **MUST** ship trace replay rows at `services/cuo/src/trace/` cap
 1. **MUST** validate `trace_call_kind` against closed enum per DEC-2331.
 
 2. **MUST** capture per call at `writer.rs::write(call)` per DEC-2330:
-   - prompt (full text)
-   - model (e.g. "claude-sonnet-4-6")
-   - temperature
-   - seed (or null if vendor doesn't support)
-   - response (full output)
+- prompt (full text)
+- model (e.g. "claude-sonnet-4-6")
+- temperature
+- seed (or null if vendor doesn't support)
+- response (full output)
 
 3. **MUST** replay at `replay.rs::replay(trace_id)` per DEC-2333:
-   - Recall prompt + model + temp + seed
-   - Re-invoke AI provider with same params
-   - Compare output bytes
-   - Match → audit "match"; differ → audit "drift" sev-2
+- Recall prompt + model + temp + seed
+- Re-invoke AI provider with same params
+- Compare output bytes
+- Match → audit "match"; differ → audit "drift" sev-2
 
 4. **MUST** define table at migration `0003`:
    ```sql
@@ -203,8 +203,7 @@ async fn immutable_no_update() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-CUO-102.
-**Cross-module:** TASK-AI-003 (LLM calls captured), TASK-AUTH-101 (CDO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-CUO-102. **Cross-module:** TASK-AI-003 (LLM calls captured), TASK-AUTH-101 (CDO role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

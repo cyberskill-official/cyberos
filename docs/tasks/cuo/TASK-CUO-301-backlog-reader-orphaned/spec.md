@@ -31,8 +31,7 @@ incident: null
 3. observe: 0 rows, next_eligible = None
 ```
 
-**Environment**: any checkout of this repo, any Python.
-**Frequency**: always.
+**Environment**: any checkout of this repo, any Python. **Frequency**: always.
 
 ## Expected vs observed
 
@@ -50,22 +49,13 @@ incident: null
 
 ## Root cause
 
-`modules/cuo/cuo/core/backlog_reader.py:29` compiles `_TASK_ROW_RE` against a markdown
-**table** row (`^\|\s*(TASK-[A-Z]+-\d+)\s*\|...`). `docs/tasks/BACKLOG.md` contains 0
-table rows and 357 bullet rows. Nothing has generated the table shape in a long time:
-BACKLOG.md's own header declares "Source of truth = task frontmatter", and
-`render-status-hub.mjs:6` names its inputs as "task frontmatter, CHANGELOG.md, VERSION"
-— it never opens BACKLOG.md at all. The reader was left pointing at an orphan.
+`modules/cuo/cuo/core/backlog_reader.py:29` compiles `_TASK_ROW_RE` against a markdown **table** row (`^\|\s*(TASK-[A-Z]+-\d+)\s*\|...`). `docs/tasks/BACKLOG.md` contains 0 table rows and 357 bullet rows. Nothing has generated the table shape in a long time: BACKLOG.md's own header declares "Source of truth = task frontmatter", and `render-status-hub.mjs:6` names its inputs as "task frontmatter, CHANGELOG.md, VERSION" — it never opens BACKLOG.md at all. The reader was left pointing at an orphan.
 
-The failure is silent because an empty parse is not an error: `re.match` returning
-`None` on every line is indistinguishable from an empty backlog.
+The failure is silent because an empty parse is not an error: `re.match` returning `None` on every line is indistinguishable from an empty backlog.
 
 ## Fix
 
-`parse_specs()` hydrates the queue from the 507 `docs/tasks/<module>/TASK-*/spec.md`
-frontmatters — the same source `render-status-hub.mjs` reads, so the CLI and the status
-page can never again disagree about what is eligible. `parse_backlog()` keeps the table
-path for back-compat and falls back to spec mode when the table yields nothing.
+`parse_specs()` hydrates the queue from the 507 `docs/tasks/<module>/TASK-*/spec.md` frontmatters — the same source `render-status-hub.mjs` reads, so the CLI and the status page can never again disagree about what is eligible. `parse_backlog()` keeps the table path for back-compat and falls back to spec mode when the table yields nothing.
 
 ## Regression test
 
@@ -85,7 +75,4 @@ Red at `HEAD~1` (returns 0 rows), green at `HEAD` (returns 507).
 
 ## Prevention
 
-A parser whose "no matches" path is indistinguishable from "empty input" will fail
-silently forever. `parse_specs` now returns a count the caller can assert on, and the
-regression test pins it against the real backlog rather than a fixture — a fixture
-would have kept passing through all of this.
+A parser whose "no matches" path is indistinguishable from "empty input" will fail silently forever. `parse_specs` now returns a count the caller can assert on, and the regression test pins it against the real backlog rather than a fixture — a fixture would have kept passing through all of this.

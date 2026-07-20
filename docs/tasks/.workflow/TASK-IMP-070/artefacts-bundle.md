@@ -17,9 +17,7 @@ Patterns per TASK-IMP-068/069 lineage. files_outside_immediate_domain: 0 -> no A
 null/empty: empty endpoint response -> unknown (t03); repo without .cyberos -> installed=none, repo_stale (matrix in t04B family). bounds: 1.10.0 vs 1.9.0 numeric (t05); installed > latest never advises downgrade (up_to_date fall-through, t04A logic). malformed: HTML/garbage endpoint -> regex-gated unknown (t03); pre-release tag rejected by X.Y.Z regex (code path, same gate as t01/t02). concurrency: none (read-only, single line out). SECURITY: endpoint value echoed verbatim but never executed or eval'd; offline flag cannot be overridden by endpoint (t06). DEGRADATION: curl timeout 3s -> unknown -> local-only verdict + note (t03, t04D).
 
 ## Coverage (branch enumeration)
-check-latest.sh: offline-early, file vs curl branch, bare/JSON/garbage parse, found/unknown output. 7/7 (t01, t02, t03, t06).
-install.sh --check region: latest resolution + skip, three-value output, all 4 verdict branches + note, is_ver/ver_lt comparator, resolver-absent fallback ([-f check-latest.sh] guard). 9/9 (t03, t04A-D, t05).
-Docs: t07, t08. All prior suites green as regression (10/10, 6/6, 9/9).
+check-latest.sh: offline-early, file vs curl branch, bare/JSON/garbage parse, found/unknown output. 7/7 (t01, t02, t03, t06). install.sh --check region: latest resolution + skip, three-value output, all 4 verdict branches + note, is_ver/ver_lt comparator, resolver-absent fallback ([-f check-latest.sh] guard). 9/9 (t03, t04A-D, t05). Docs: t07, t08. All prior suites green as regression (10/10, 6/6, 9/9).
 
 ## §1 -> tests
 #1 resolver contract: t01, t02, t03, t06 | #2 three values + verdicts + next: t04 | #3 numeric semver: t05 | #4 update.md: t07 | #5 changelog.md: t08 | #6 offline first-class: t03, t04D, t06 | #7 read-only: t04 fixtures unmodified (mkrepo-only writes).

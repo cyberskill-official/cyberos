@@ -77,10 +77,10 @@ The OTel collector **MUST** apply tail-based sampling per the following policies
 2. **MUST** sample 100% of traces with any span carrying HTTP status ≥ 500 (`http.status_code` or `http.response.status_code` attribute, depending on OTel semantic-convention version).
 3. **MUST** sample 100% of traces with `tenant_id` in the flagged-tenants list. The list is configured via `deploy/obs/flagged_tenants.yaml` (one tenant_id per line); operators add via `cyberos-ai flag-tenant <id> --confirm` (TASK-AI-021 subcommand). Hot-reload on file change (no collector restart).
 4. **MUST** sample 100% of traces with end-to-end latency above per-route p99 budget. Default budgets per route (loaded from `deploy/obs/route_latency_budgets.yaml`):
-    - `ai-gateway:/v1/chat/completions` → 5000ms
-    - `ai-gateway:/v1/embeddings` → 500ms
-    - `auth-service:/v1/auth/token` → 250ms
-    - default for unspecified routes → 2000ms
+- `ai-gateway:/v1/chat/completions` → 5000ms
+- `ai-gateway:/v1/embeddings` → 500ms
+- `auth-service:/v1/auth/token` → 250ms
+- default for unspecified routes → 2000ms
 5. **MUST** sample 10% of normal traces (no error, no 5xx, not flagged tenant, not slow). Probabilistic sampling on trace_id hash.
 6. **MUST** evaluate policies in order; first-match wins. A trace matching error AND slow AND normal is sampled exactly once (counted as "error" in metrics).
 7. **MUST** emit metric `obs_sampled_traces_total{reason}` per sampling decision (reason ∈ `error | http_5xx | flagged_tenant | slow | normal_sample | dropped`).

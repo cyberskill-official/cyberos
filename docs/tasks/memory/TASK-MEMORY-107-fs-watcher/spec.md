@@ -98,27 +98,27 @@ The memory capture daemon **MUST** be an event-driven filesystem watcher per wat
 3. **MUST** compute a `blake3` content hash on the post-debounce file body BEFORE emitting any audit row. The hash becomes the memory's content key (DEC-141): same hash = same memory.
 4. **MUST** maintain an in-process LRU cache (10K entries, 5-minute TTL) mapping `content_hash → last_path_seen + last_seq`. A cache hit on (a) the same path = no-op (idempotent), (b) a different path = `memory.capture_renamed` audit row referencing the prior seq.
 5. **MUST** enforce per-folder + per-tenant token-bucket rate limits via `governor@0.6`:
-    - Per-folder: 50 events/sec sustained, 200 burst.
-    - Per-tenant: 500 events/sec sustained, 2000 burst.
-    - First exceeded limit wins (the stricter one applies).
+- Per-folder: 50 events/sec sustained, 200 burst.
+- Per-tenant: 500 events/sec sustained, 2000 burst.
+- First exceeded limit wins (the stricter one applies).
 6. **MUST** route post-debounce + post-dedup + post-rate-limit events through a bounded `tokio::sync::mpsc` queue of capacity 10000. The producer (watcher) backpressures when full; the consumer (emitter) drains as fast as `memory_writer` can absorb.
 7. **MUST** emit a `memory.capture_dropped` memory audit row when the queue overflows (producer cannot enqueue within 100ms). The dropped row carries `folder_path`, `event_kind` (Create | Modify | Delete | Rename), `content_hash`, `dropped_at_ns`, `reason: queue_overflow` so the operator can see "the daemon dropped N events in the last minute and here's why."
 8. **MUST** propagate W3C TraceContext per TASK-AI-022: every capture batch carries a `traceparent`; if the upstream tool (Cowork session, Claude Code hook) injects one via the environment, use it; otherwise generate a fresh trace_id at the daemon boundary. The trace_id appears in every emitted audit row's `payload.trace_id`.
 9. **MUST** support per-folder include/exclude globs from `manifest.watched_folders[N].include` and `exclude` (default include: `**/*`; default exclude: `node_modules/**`, `target/**`, `.git/**`, `*.tmp`, `*.swp`, `.DS_Store`). Globs use the `globset@0.4` crate.
 10. **MUST** emit one canonical row per surviving event:
-    - File created → `memory.capture_created` with `{folder_path, relative_path, content_hash, byte_count, mtime_ns, trace_id}`.
-    - File modified → `memory.capture_modified` with same fields plus `prior_content_hash`.
-    - File renamed → `memory.capture_renamed` with `{folder_path, from_relative_path, to_relative_path, content_hash, trace_id}`.
-    - File deleted → `memory.capture_deleted` with `{folder_path, relative_path, last_content_hash, last_seen_at, trace_id}`.
+- File created → `memory.capture_created` with `{folder_path, relative_path, content_hash, byte_count, mtime_ns, trace_id}`.
+- File modified → `memory.capture_modified` with same fields plus `prior_content_hash`.
+- File renamed → `memory.capture_renamed` with `{folder_path, from_relative_path, to_relative_path, content_hash, trace_id}`.
+- File deleted → `memory.capture_deleted` with `{folder_path, relative_path, last_content_hash, last_seen_at, trace_id}`.
 11. **MUST** be crash-safe: on daemon startup, perform a full scan of every watched folder, hash every file, compare to last-known state (recovered from the memory chain via `memory_reader`), and emit catch-up rows for any divergence. The scan emits a single `memory.capture_resync_started` row at start, a `memory.capture_resync_completed` at end with `{files_scanned, captures_emitted, duration_ms}`.
 12. **MUST** complete the startup resync in ≤ 60s for ≤ 100K files; assertion in `end_to_end_test::resync_latency`. Folders exceeding this size print a sev-2 warning at boot.
 13. **MUST** integrate with TASK-MEMORY-105's doctor invariants: `cyberos memory capture status` invokes `doctor --only watched-folders`; refuses to start if any error-severity invariant fails.
 14. **MUST** emit OTel metrics:
-    - `memory_capture_events_total{folder_id, kind, outcome}` (counter; outcome ∈ emitted | dedup_skip | rate_limited | dropped).
-    - `memory_capture_emit_latency_seconds{folder_id}` (histogram; TASK-OBS-003 buckets).
-    - `memory_capture_queue_depth{folder_id}` (gauge).
-    - `memory_capture_dedup_cache_hit_ratio` (gauge; cache hits / (hits + misses)).
-    - `memory_capture_resync_files_total` (counter).
+- `memory_capture_events_total{folder_id, kind, outcome}` (counter; outcome ∈ emitted | dedup_skip | rate_limited | dropped).
+- `memory_capture_emit_latency_seconds{folder_id}` (histogram; TASK-OBS-003 buckets).
+- `memory_capture_queue_depth{folder_id}` (gauge).
+- `memory_capture_dedup_cache_hit_ratio` (gauge; cache hits / (hits + misses)).
+- `memory_capture_resync_files_total` (counter).
 15. **MUST** receive SIGHUP to reload `manifest.watched_folders`; new folders begin watching, removed folders stop (event handles dropped, dedup cache entries pruned). No restart required for folder add/remove.
 16. **SHOULD** support `cyberos memory capture --foreground` for ops debugging (no daemonisation; logs to stderr).
 17. **SHOULD** support `cyberos memory capture --dry-run` (don't emit; just print what would emit) for operator-facing change preview.

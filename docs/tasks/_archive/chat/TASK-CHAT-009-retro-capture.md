@@ -62,16 +62,16 @@ The retro-capture flow **MUST** offer per-message opt-in capture of the last N c
 3. **MUST** fetch the last N messages from the same channel (excluding the @lumi command itself and system messages).
 4. **MUST** generate an ephemeral Mattermost message (visible only to invoker) with a checkbox per fetched message + "Capture selected" button.
 5. **MUST** on submit:
-   - Aggregate selected messages into markdown body: `[2026-05-16T14:32 @alice] ...\n[2026-05-16T14:35 @bob] ...`.
-   - PII-redact aggregated body via TASK-MEMORY-111.
-   - Save as memory memory at `memories/chat/<channel_id>/captures/<unix_ts>.md` with frontmatter `{kind: chat_capture, sync_class: <channel_sync_class>, captured_by: <subject_id>, captured_at: <iso>, source_channel_id: <id>, source_message_ids: [...], message_count: <n>}`.
+- Aggregate selected messages into markdown body: `[2026-05-16T14:32 @alice] ...\n[2026-05-16T14:35 @bob] ...`.
+- PII-redact aggregated body via TASK-MEMORY-111.
+- Save as memory memory at `memories/chat/<channel_id>/captures/<unix_ts>.md` with frontmatter `{kind: chat_capture, sync_class: <channel_sync_class>, captured_by: <subject_id>, captured_at: <iso>, source_channel_id: <id>, source_message_ids: [...], message_count: <n>}`.
 6. **MUST** emit memory audit `chat.retro_capture_completed` with payload `{channel_id, captured_by, message_count_requested, message_count_selected, memory_path, trace_id}`.
 7. **MUST** reply to the user (threaded to original command): "✓ Captured N messages → [memory link]".
 8. **MUST** support cancellation: ephemeral picker has "Cancel" button → no capture, no memory write, audit `chat.retro_capture_cancelled`.
 9. **MUST** RLS-enforce: channel access required (TASK-AUTH-003).
 10. **MUST** emit OTel metrics:
-    - `chat_retro_captures_total{outcome}` (outcome ∈ completed | cancelled | over_limit).
-    - `chat_retro_messages_per_capture` (histogram).
+- `chat_retro_captures_total{outcome}` (outcome ∈ completed | cancelled | over_limit).
+- `chat_retro_messages_per_capture` (histogram).
 11. **MUST NOT** include the `@lumi remember ...` command post itself in the fetched messages (it would self-include and inflate the count).
 12. **MUST NOT** include system / bot messages (post.type starting with `system_`, `system_join_channel`, etc.) in the picker — they're noise.
 13. **MUST** preview each message in the picker with the first 200 characters of body + author display name + relative timestamp ("3 minutes ago"); full body stored in memory if selected.
@@ -767,9 +767,7 @@ When `split_if_oversized` returns > 1 part:
 
 ### §6.8 — Picker state Redis schema
 
-Key: `retro:picker:<picker_post_id>`
-Value: msgpack-serialised `PickerState`
-TTL: 3600s (1h, per §1 #16)
+Key: `retro:picker:<picker_post_id>` Value: msgpack-serialised `PickerState` TTL: 3600s (1h, per §1 #16)
 
 We use msgpack rather than JSON for compactness; pickers with 100 messages × 200-char preview can approach 50KB per state record.
 

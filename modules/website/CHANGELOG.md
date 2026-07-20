@@ -30,12 +30,12 @@ Stephen flagged five UI bugs from live deploy screenshots; all fixed.
 
 **Bug 4 — Mobile horizontal overflow:**
 - Added 70-line mobile safety net at `assets/styles.css:1017–1085`:
-  - `html, body { overflow-x: hidden; max-width: 100vw; }` to clamp viewport
-  - `.container { min-width: 0 }` so flex/grid children can shrink
-  - `.bbg-card { overflow-wrap: anywhere }` so long URLs/codes wrap
-  - `@media (max-width: 768px)`: tables wrap their card in scroll, code blocks pre-wrap, fact-grid `minmax(140px, 1fr)`, h-display clamp 1.875–2.5rem
-  - `@media (max-width: 480px)`: tighter container padding + 120px fact-card minimum
-  - Mermaid `max-height: 70vh` on mobile to prevent monstrous portrait diagrams
+- `html, body { overflow-x: hidden; max-width: 100vw; }` to clamp viewport
+- `.container { min-width: 0 }` so flex/grid children can shrink
+- `.bbg-card { overflow-wrap: anywhere }` so long URLs/codes wrap
+- `@media (max-width: 768px)`: tables wrap their card in scroll, code blocks pre-wrap, fact-grid `minmax(140px, 1fr)`, h-display clamp 1.875–2.5rem
+- `@media (max-width: 480px)`: tighter container padding + 120px fact-card minimum
+- Mermaid `max-height: 70vh` on mobile to prevent monstrous portrait diagrams
 
 **Bug 5 — Lingering PRD/SRS references:**
 - 47 textual edits across 28 HTML files in `website/docs/` (per Agent sweep). Removed: "PRD/SRS narrative remains authoritative" disclaimers (23), "PRD coverage" eyebrows, broken `<a href="#"></a>` empty anchors, "Generated from PRD + SRS source" footer, "DEC-NNN in SRS" → "DEC-NNN" rewrites (5 in infrastructure.html + 1 in ten.html), persona "draft PRD/SRS" chip rephrases. Preserved: the two intentional github.com canonical-spec links in `task-catalog.html` lines 56–57.
@@ -161,4 +161,3 @@ See per-module CHANGELOG.md files for module-specific history:
 - `cuo/docs/CHANGELOG.md`
 - `design-system/CHANGELOG.md`
 - `website/docs/index.html` (the rendered changelog page)
-

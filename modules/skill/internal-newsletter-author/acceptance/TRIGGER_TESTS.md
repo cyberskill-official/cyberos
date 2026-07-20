@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a internal newsletter"
+- "Draft a internal newsletter"
 - "Create the internal newsletter"
 - "Author a new internal newsletter"
 - "Generate the internal newsletter"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this internal newsletter" → internal-newsletter-audit
+- "Audit this internal newsletter" → internal-newsletter-audit
 - "Check the internal newsletter for completeness" → internal-newsletter-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

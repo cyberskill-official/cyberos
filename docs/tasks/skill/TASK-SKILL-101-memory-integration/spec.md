@@ -91,9 +91,9 @@ The SKILL host **MUST** emit memory audit rows before AND after every skill invo
 9. **MUST** include `tenant_id` in both rows for tenant-scoped audit queries.
 10. **MUST** record duration even on panic/error (clock measurement around `catch_unwind`); `duration_ms` reflects actual runtime.
 11. **SHOULD** emit OTel metrics:
-    - `skill_invoked_total{skill_id, outcome}` (counter).
-    - `skill_invoked_duration_ms{skill_id}` (histogram).
-    - `skill_audit_emit_failures_total{stage}` (counter; stage ∈ start | completed; sev-1).
+- `skill_invoked_total{skill_id, outcome}` (counter).
+- `skill_invoked_duration_ms{skill_id}` (histogram).
+- `skill_audit_emit_failures_total{stage}` (counter; stage ∈ start | completed; sev-1).
 
 ---
 

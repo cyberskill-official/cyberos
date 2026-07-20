@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a compliance program"
+- "Draft a compliance program"
 - "Create the compliance program"
 - "Author a new compliance program"
 - "Generate the compliance program"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this compliance program" → compliance-program-audit
+- "Audit this compliance program" → compliance-program-audit
 - "Check the compliance program for completeness" → compliance-program-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

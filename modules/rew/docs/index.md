@@ -50,18 +50,7 @@ NEVER INGESTED · DEC-036"] HR --> REW TIME --> REW PROJ -- "aggregate signals v
 
 ### Auto vs human-in-loop operations matrix
 
-Operation| How it happens| Why this split
----|---|---
-Monthly payroll compute| **Auto** at close; **CFO+CHRO co-sign** to commit| Determinism + dual approval; never one-person commit.
-Parameter version publish| **Manual** CFO + CHRO + CEO sign-off| Effective-period parameters are gravely consequential; tri-sign.
-P1 floor enforcement| **Auto** reject at constraint check| Hard invariant; sev-0 if bypassed.
-P2 tier change| **Manual** AM proposal -> CHRO approve| Role-tier change is policy decision.
-P3 quarterly distribution| **Auto** draft from BP + calibration; **CEO+CFO sign-off**| Variable comp; needs dual approval.
-BP accrual + interest| **Auto** nightly| Deterministic formula; ACB rate snapshot.
-Statutory deduction (BHXH etc.)| **Auto** per Decree 152/2020 rates| VN law specifies rates; version-pinned.
-Payroll bank batch send| **Manual** CFO confirm + VietQR batch| Money movement; human final.
-Old payslip replay (audit)| **Auto** deterministic| Byte-identical reproduction required; CI test.
-memory ingestion of comp data| **BLOCKED** by schema| DEC-036 structural exclusion; CI rejects comp fields in any memory-ingested path.
+Operation| How it happens| Why this split ---|---|--- Monthly payroll compute| **Auto** at close; **CFO+CHRO co-sign** to commit| Determinism + dual approval; never one-person commit. Parameter version publish| **Manual** CFO + CHRO + CEO sign-off| Effective-period parameters are gravely consequential; tri-sign. P1 floor enforcement| **Auto** reject at constraint check| Hard invariant; sev-0 if bypassed. P2 tier change| **Manual** AM proposal -> CHRO approve| Role-tier change is policy decision. P3 quarterly distribution| **Auto** draft from BP + calibration; **CEO+CFO sign-off**| Variable comp; needs dual approval. BP accrual + interest| **Auto** nightly| Deterministic formula; ACB rate snapshot. Statutory deduction (BHXH etc.)| **Auto** per Decree 152/2020 rates| VN law specifies rates; version-pinned. Payroll bank batch send| **Manual** CFO confirm + VietQR batch| Money movement; human final. Old payslip replay (audit)| **Auto** deterministic| Byte-identical reproduction required; CI test. memory ingestion of comp data| **BLOCKED** by schema| DEC-036 structural exclusion; CI rejects comp fields in any memory-ingested path.
 
 ## Why REW exists
 
@@ -77,21 +66,7 @@ The bet (Bet 5 in the strategy) is that _treating Total Rewards as a moat_ is it
 
 A structured decomposition of REW's scope.
 
-Axis| Question| Answer
----|---|---
-**5W - What**| What is REW?| An append-only compensation ledger + deterministic payroll compute + BP (Bonus Points) ledger with anti-inflation interest. Encrypted PDF payslip output with cryptographic SHA-256 integrity. Read-only narrator surface (`payslip_explain`) for the CUO/CFO-skill agent.
-**5W - Who**| Who is touched?| **Members:** every employee gets a monthly payslip. **Owners:** HR/Ops Lead initiates close; CFO + CHRO co-sign commit; CEO approves final publication. **Forbidden:** agents never write to REW; agents read only the `payslip_explain` narrative.
-**5W - When**| When does REW act?| (a) Monthly close cycle (D-3 to D+2 around month-end); (b) per-grant bonus award (Founder approval gate); (c) anti-retroactive replay job at every parameter change (CI); (d) annual SI/PIT remittance prep; (e) Member termination -> final-pay compute.
-**5W - Where**| Where does it run?| P1: single region (Singapore SG-1) backed by AWS RDS Postgres with REW-specific KMS key (separate from HR's CCCD key, separate from memory's signing key). PDFs at rest with retention lock = 10 years.
-**5W - Why**| Why a separate, isolated module?| Because comp data leaking into memory is the worst privacy outcome possible. Because retroactive parameter changes are an audit-failure / fraud signal. Because P1-cut bugs are existential to trust.
-**1H - How**| How does it work?| (1) Parameter table append-only, every row carries `effective_from + effective_to + superseded_by + version_hash`. (2) Compute kernel is a pure function with a serde-stable input snapshot. (3) PDF generation is deterministic (LaTeX with frozen fonts, fixed timestamp metadata). (4) PDF SHA-256 stored alongside row; integrity verifiable forever. (5) Co-sign predicate at AUTH (CFO + CHRO scopes both required for commit).
-**2C - Cost**| Cost budget?| P1: ~$30/month (RDS schema + Fargate task + S3 with object-lock). 50-tenant: ~$100/month. Per-payslip cost: ~$0.01 amortised (LaTeX rendering dominates).
-**2C - Constraints**| Constraints?| (a) P1 invariant - sev-0 if violated. (b) Anti-retroactive - sev-0 if violated. (c) memory exclusion (DEC-036) - CI gate. (d) Vietnamese SI/PIT line-items per Decree 152/2020 + Circular 111/2013. (e) 10-year retention. (f) EU AI Act high-risk - conformity pack at P2.
-**5M - Materials**| Stack?| Rust 1.81, axum 0.7, sqlx, PostgreSQL 16, LaTeX (tectonic) for deterministic PDF, ring for SHA-256, serde for canonical-JSON input snapshots, AWS KMS for per-payslip encryption, S3 with object-lock for archival.
-**5M - Methods**| Method choices?| Append-only with supersession (no UPDATE). Pure-function compute kernel with property tests for determinism. Tectonic for deterministic LaTeX. Co-sign predicate at AUTH gateway. CI replay job that recomputes the full retained payslip history on every parameter change.
-**5M - Machines**| Deployment?| Fargate task in SG-1 (P1). Multi-AZ Postgres RDS. S3 retention lock = 10 years. SG HoldCo branch: SGD payroll mode (P2 stretch).
-**5M - Manpower**| Who maintains?| HR/Ops Lead (R for operations) + CEO (A for sign-off) + CFO (R for commit co-sign) + CHRO (R for co-sign, P3+ seat).
-**5M - Measurement**| How measured?| (task pending)..010. KPIs: close-cycle completion days, recompute-determinism CI pass rate, memory-leak incident count, P1-cut-attempt blocked count.
+Axis| Question| Answer ---|---|--- **5W - What**| What is REW?| An append-only compensation ledger + deterministic payroll compute + BP (Bonus Points) ledger with anti-inflation interest. Encrypted PDF payslip output with cryptographic SHA-256 integrity. Read-only narrator surface (`payslip_explain`) for the CUO/CFO-skill agent. **5W - Who**| Who is touched?| **Members:** every employee gets a monthly payslip. **Owners:** HR/Ops Lead initiates close; CFO + CHRO co-sign commit; CEO approves final publication. **Forbidden:** agents never write to REW; agents read only the `payslip_explain` narrative. **5W - When**| When does REW act?| (a) Monthly close cycle (D-3 to D+2 around month-end); (b) per-grant bonus award (Founder approval gate); (c) anti-retroactive replay job at every parameter change (CI); (d) annual SI/PIT remittance prep; (e) Member termination -> final-pay compute. **5W - Where**| Where does it run?| P1: single region (Singapore SG-1) backed by AWS RDS Postgres with REW-specific KMS key (separate from HR's CCCD key, separate from memory's signing key). PDFs at rest with retention lock = 10 years. **5W - Why**| Why a separate, isolated module?| Because comp data leaking into memory is the worst privacy outcome possible. Because retroactive parameter changes are an audit-failure / fraud signal. Because P1-cut bugs are existential to trust. **1H - How**| How does it work?| (1) Parameter table append-only, every row carries `effective_from + effective_to + superseded_by + version_hash`. (2) Compute kernel is a pure function with a serde-stable input snapshot. (3) PDF generation is deterministic (LaTeX with frozen fonts, fixed timestamp metadata). (4) PDF SHA-256 stored alongside row; integrity verifiable forever. (5) Co-sign predicate at AUTH (CFO + CHRO scopes both required for commit). **2C - Cost**| Cost budget?| P1: ~$30/month (RDS schema + Fargate task + S3 with object-lock). 50-tenant: ~$100/month. Per-payslip cost: ~$0.01 amortised (LaTeX rendering dominates). **2C - Constraints**| Constraints?| (a) P1 invariant - sev-0 if violated. (b) Anti-retroactive - sev-0 if violated. (c) memory exclusion (DEC-036) - CI gate. (d) Vietnamese SI/PIT line-items per Decree 152/2020 + Circular 111/2013. (e) 10-year retention. (f) EU AI Act high-risk - conformity pack at P2. **5M - Materials**| Stack?| Rust 1.81, axum 0.7, sqlx, PostgreSQL 16, LaTeX (tectonic) for deterministic PDF, ring for SHA-256, serde for canonical-JSON input snapshots, AWS KMS for per-payslip encryption, S3 with object-lock for archival. **5M - Methods**| Method choices?| Append-only with supersession (no UPDATE). Pure-function compute kernel with property tests for determinism. Tectonic for deterministic LaTeX. Co-sign predicate at AUTH gateway. CI replay job that recomputes the full retained payslip history on every parameter change. **5M - Machines**| Deployment?| Fargate task in SG-1 (P1). Multi-AZ Postgres RDS. S3 retention lock = 10 years. SG HoldCo branch: SGD payroll mode (P2 stretch). **5M - Manpower**| Who maintains?| HR/Ops Lead (R for operations) + CEO (A for sign-off) + CFO (R for commit co-sign) + CHRO (R for co-sign, P3+ seat). **5M - Measurement**| How measured?| (task pending)..010. KPIs: close-cycle completion days, recompute-determinism CI pass rate, memory-leak incident count, P1-cut-attempt blocked count.
 
 ## Architecture
 
@@ -130,22 +105,7 @@ co-sign predicate"] end HR --> AR CFO --> AR CHRO --> AR MEMBER --> AR CUO --> A
 
 ### Internal components
 
-Component| Path (planned)| Responsibility
----|---|---
-`compute_kernel.rs`| services/rew/src/compute_kernel.rs| Pure deterministic function. Input: `(parameters_version, member_snapshot, timesheet, leave, bp_balance)`. Output: `(P1, P2, P3, SI, PIT, net)`. No I/O. No clock. No randomness.
-`parameters.rs`| services/rew/src/parameters.rs| Append-only parameter store. Every row carries `effective_from + effective_to + superseded_by + version_hash`. Rejects UPDATE at DB layer.
-`bp_ledger.rs`| services/rew/src/bp_ledger.rs| BP (Bonus Points) ledger. Append-only credits + debits + monthly interest accrual at ACB savings rate (versioned parameter).
-`payslip.rs`| services/rew/src/payslip.rs| Payslip row writer. Calls kernel, persists computed values + parameter version hash + SHA-256 of PDF.
-`pdf_renderer.rs`| services/rew/src/pdf_renderer.rs| Deterministic PDF via tectonic. Frozen fonts (Inter, Vietnamese Pro), fixed timestamp metadata, no creator field, no PRODUCER drift.
-`cosign_guard.rs`| services/rew/src/cosign_guard.rs| Predicate check at commit boundary: requires both `rew.commit_co_sign:cfo` and `rew.commit_co_sign:chro` within a 5-minute window. Single-signer commits rejected.
-`narrator.rs`| services/rew/src/narrator.rs| Read-only MCP surface for the CUO/CFO-skill: explains a payslip in prose. Never proposes changes. Never writes.
-`anomaly_surface.rs`| services/rew/src/anomaly_surface.rs| Surfaces deltas vs prior month - flags +/-20% swings for HR review during close. Narrative-only output.
-`replay_check.rs`| services/rew/src/replay_check.rs| CI replay job. On every parameter change, recomputes the full retained payslip history; asserts byte-identical SHA-256.
-`p1_guard.rs`| services/rew/src/p1_guard.rs| P1-protection invariant enforcer. Rejects any `compensation_change` row that would result in a smaller P1 cash value than the prior period.
-`si_pit.rs`| services/rew/src/si_pit.rs| Vietnamese SI (BHXH + BHYT + BHTN) and PIT line-item computation per Decree 152/2020 + Circular 111/2013. Versioned along with other parameters.
-`sg_branch.rs`| services/rew/src/sg_branch.rs| SGD payroll branch for Singapore HoldCo. Activated only when tenant's `data_residency = "sg-1"` and member's `jurisdiction = "SG"`. (P2 stretch.)
-`memory_bridge.rs`| services/rew/src/memory_bridge.rs| Writes opaque event refs to memory (e.g. `rew.payslip.published:opaque_id_01HZJ...`). Never writes comp numbers. CI gate inspects emitted-row JSON for blocklist keys.
-`migrations/`| services/rew/migrations/| sqlx migrations. Append-only constraints (no DELETE / UPDATE on ledger tables). Separate KMS key from HR + memory.
+Component| Path (planned)| Responsibility ---|---|--- `compute_kernel.rs`| services/rew/src/compute_kernel.rs| Pure deterministic function. Input: `(parameters_version, member_snapshot, timesheet, leave, bp_balance)`. Output: `(P1, P2, P3, SI, PIT, net)`. No I/O. No clock. No randomness. `parameters.rs`| services/rew/src/parameters.rs| Append-only parameter store. Every row carries `effective_from + effective_to + superseded_by + version_hash`. Rejects UPDATE at DB layer. `bp_ledger.rs`| services/rew/src/bp_ledger.rs| BP (Bonus Points) ledger. Append-only credits + debits + monthly interest accrual at ACB savings rate (versioned parameter). `payslip.rs`| services/rew/src/payslip.rs| Payslip row writer. Calls kernel, persists computed values + parameter version hash + SHA-256 of PDF. `pdf_renderer.rs`| services/rew/src/pdf_renderer.rs| Deterministic PDF via tectonic. Frozen fonts (Inter, Vietnamese Pro), fixed timestamp metadata, no creator field, no PRODUCER drift. `cosign_guard.rs`| services/rew/src/cosign_guard.rs| Predicate check at commit boundary: requires both `rew.commit_co_sign:cfo` and `rew.commit_co_sign:chro` within a 5-minute window. Single-signer commits rejected. `narrator.rs`| services/rew/src/narrator.rs| Read-only MCP surface for the CUO/CFO-skill: explains a payslip in prose. Never proposes changes. Never writes. `anomaly_surface.rs`| services/rew/src/anomaly_surface.rs| Surfaces deltas vs prior month - flags +/-20% swings for HR review during close. Narrative-only output. `replay_check.rs`| services/rew/src/replay_check.rs| CI replay job. On every parameter change, recomputes the full retained payslip history; asserts byte-identical SHA-256. `p1_guard.rs`| services/rew/src/p1_guard.rs| P1-protection invariant enforcer. Rejects any `compensation_change` row that would result in a smaller P1 cash value than the prior period. `si_pit.rs`| services/rew/src/si_pit.rs| Vietnamese SI (BHXH + BHYT + BHTN) and PIT line-item computation per Decree 152/2020 + Circular 111/2013. Versioned along with other parameters. `sg_branch.rs`| services/rew/src/sg_branch.rs| SGD payroll branch for Singapore HoldCo. Activated only when tenant's `data_residency = "sg-1"` and member's `jurisdiction = "SG"`. (P2 stretch.) `memory_bridge.rs`| services/rew/src/memory_bridge.rs| Writes opaque event refs to memory (e.g. `rew.payslip.published:opaque_id_01HZJ...`). Never writes comp numbers. CI gate inspects emitted-row JSON for blocklist keys. `migrations/`| services/rew/migrations/| sqlx migrations. Append-only constraints (no DELETE / UPDATE on ledger tables). Separate KMS key from HR + memory.
 
 ## Data model
 
@@ -159,12 +119,7 @@ erDiagram TENANT ||--o{ POSITION: "defines" TENANT ||--o{ PARAMETER_VERSION: "pu
 
 ### 3P income structure - schedule example
 
-Component| What it is| Source of value| Variability| Tax treatment (VN)
----|---|---|---|---
-`P1 Base`| Contractual base salary in cash, paid monthly. **Floor invariant - never reduced by evaluation.**| Position x Level schedule (parameter)| Only raised; never lowered| PIT progressive; SI bases on capped portion (Decree 152)
-`P2 Allowance`| Cash allowance - tied to role tier (e.g. mentorship allowance for L3+, leadership allowance for managers). Can move up or down with tier changes.| Position-tier schedule (parameter)| Tier-up = raise; tier-down (rare) = adjust| PIT progressive; SI excluded for designated allowance kinds
-`P3 Performance`| Cash overflow from the annual bonus pool, distributed via `POOL_DISTRIBUTION` with a performance factor.| BP fund x Voting Power x performance factor| Variable; can be 0 in any period| PIT progressive at the time of payout
-`BP (Bonus Points)`| Unit-of-account ledger, monthly interest at ACB savings rate. Members can convert BP -> cash (P3) at specified windows.| Awarded via founder approval; accumulates interest| BP balance grows over time even idle| PIT due on conversion to cash, not on accrual
+Component| What it is| Source of value| Variability| Tax treatment (VN) ---|---|---|---|--- `P1 Base`| Contractual base salary in cash, paid monthly. **Floor invariant - never reduced by evaluation.**| Position x Level schedule (parameter)| Only raised; never lowered| PIT progressive; SI bases on capped portion (Decree 152) `P2 Allowance`| Cash allowance - tied to role tier (e.g. mentorship allowance for L3+, leadership allowance for managers). Can move up or down with tier changes.| Position-tier schedule (parameter)| Tier-up = raise; tier-down (rare) = adjust| PIT progressive; SI excluded for designated allowance kinds `P3 Performance`| Cash overflow from the annual bonus pool, distributed via `POOL_DISTRIBUTION` with a performance factor.| BP fund x Voting Power x performance factor| Variable; can be 0 in any period| PIT progressive at the time of payout `BP (Bonus Points)`| Unit-of-account ledger, monthly interest at ACB savings rate. Members can convert BP -> cash (P3) at specified windows.| Awarded via founder approval; accumulates interest| BP balance grows over time even idle| PIT due on conversion to cash, not on accrual
 
 ## API surface
 
@@ -219,29 +174,11 @@ type Query {
 
 ### REST admin surface (planned, co-sign required)
 
-Method| Path| Purpose| Co-sign?
----|---|---|---
-POST| `/admin/cycles`| Open a monthly close cycle.| HR/Ops
-POST| `/admin/cycles/{period}/draft`| Compute draft payslips (kernel, no commit).| HR/Ops
-GET| `/admin/cycles/{period}/anomalies`| Surface +/-20% deltas vs prior month.| readonly
-POST| `/admin/cycles/{period}/commit`| Commit cycle: locks payslip rows.| **CFO + CHRO**
-POST| `/admin/cycles/{period}/publish`| Publish payslips: emit opaque memory refs + notify Members.| CEO (final)
-POST| `/admin/parameters`| Publish a new parameter version (e.g. annual review).| **CFO + CHRO + CEO**
-POST| `/admin/compensation/{member_id}/change`| Append a compensation change (hire, promotion, annual review). P1-guard checked.| **CFO + CHRO**
-POST| `/admin/bonus-pool/{year}`| Allocate the annual bonus pool.| **CEO + CFO**
-POST| `/admin/bp/award`| Award BP to a Member. Founder approval gate.| **Founder**
-POST| `/admin/bp/convert`| Convert BP -> P3 cash (member-initiated, windowed).| Member self
-POST| `/admin/replay-check`| Run the phased replay; CI hook.| internal, CI
-POST| `/admin/dsar/{member_id}/export`| DSAR comp bundle (own only; managers blocked).| DPO
+Method| Path| Purpose| Co-sign? ---|---|---|--- POST| `/admin/cycles`| Open a monthly close cycle.| HR/Ops POST| `/admin/cycles/{period}/draft`| Compute draft payslips (kernel, no commit).| HR/Ops GET| `/admin/cycles/{period}/anomalies`| Surface +/-20% deltas vs prior month.| readonly POST| `/admin/cycles/{period}/commit`| Commit cycle: locks payslip rows.| **CFO + CHRO** POST| `/admin/cycles/{period}/publish`| Publish payslips: emit opaque memory refs + notify Members.| CEO (final) POST| `/admin/parameters`| Publish a new parameter version (e.g. annual review).| **CFO + CHRO + CEO** POST| `/admin/compensation/{member_id}/change`| Append a compensation change (hire, promotion, annual review). P1-guard checked.| **CFO + CHRO** POST| `/admin/bonus-pool/{year}`| Allocate the annual bonus pool.| **CEO + CFO** POST| `/admin/bp/award`| Award BP to a Member. Founder approval gate.| **Founder** POST| `/admin/bp/convert`| Convert BP -> P3 cash (member-initiated, windowed).| Member self POST| `/admin/replay-check`| Run the phased replay; CI hook.| internal, CI POST| `/admin/dsar/{member_id}/export`| DSAR comp bundle (own only; managers blocked).| DPO
 
 ### MCP tool catalogue (narrator-only, no write tools)
 
-Tool name| Inputs| Outputs| Annotations
----|---|---|---
-`cyberos.rew.payslip_explain`| payslip_id| narrative text (no numbers in raw response - uses opaque tokens like "your P1 component")| readonly, scope=rew.narrator
-`cyberos.rew.anomalies_summary`| period| narrative deltas| readonly, for HR/Ops during close
-`cyberos.rew.bp_balance_explain`| member_id (own only)| narrative BP growth explanation| readonly, self-scope
-`cyberos.rew.policy_lookup`| policy_topic| quoted Total Rewards Appendix paragraph| readonly, scope=rew.policy_read
+Tool name| Inputs| Outputs| Annotations ---|---|---|--- `cyberos.rew.payslip_explain`| payslip_id| narrative text (no numbers in raw response - uses opaque tokens like "your P1 component")| readonly, scope=rew.narrator `cyberos.rew.anomalies_summary`| period| narrative deltas| readonly, for HR/Ops during close `cyberos.rew.bp_balance_explain`| member_id (own only)| narrative BP growth explanation| readonly, self-scope `cyberos.rew.policy_lookup`| policy_topic| quoted Total Rewards Appendix paragraph| readonly, scope=rew.policy_read
 
 **Forbidden:** no `cyberos.rew.compute_payslip`, no `cyberos.rew.commit_cycle`, no `cyberos.rew.change_compensation`. Compute is owned by HR/Ops via the REST admin path with co-sign. Agents narrate; humans decide.
 
@@ -304,15 +241,7 @@ stateDiagram-v2 [*] --> Open: HR/Ops opens cycle for period Open --> Drafted: ke
 
 ### Cycle calendar (default, configurable)
 
-Day| Activity| Owner
----|---|---
-D-3 (month-end - 3)| Open cycle. Timesheet freeze warning to Members.| HR/Ops
-D-1| Timesheet hard freeze. Leave reconciliation.| HR/Ops
-D (month-end)| Draft compute. Anomaly surface to HR. CUO/CFO-skill narrative.| HR/Ops + Agent (read-only)
-D+1| HR adjustments. Anomaly resolution.| HR/Ops
-D+2| Commit: CFO + CHRO co-sign. CEO approves publish.| CFO, CHRO, CEO
-D+3| Publish: PDFs render -> S3 -> Member notified.| REW (auto)
-D+5 (VN)| BHXH remittance schedule (P3 stretch).| HR/Ops
+Day| Activity| Owner ---|---|--- D-3 (month-end - 3)| Open cycle. Timesheet freeze warning to Members.| HR/Ops D-1| Timesheet hard freeze. Leave reconciliation.| HR/Ops D (month-end)| Draft compute. Anomaly surface to HR. CUO/CFO-skill narrative.| HR/Ops + Agent (read-only) D+1| HR adjustments. Anomaly resolution.| HR/Ops D+2| Commit: CFO + CHRO co-sign. CEO approves publish.| CFO, CHRO, CEO D+3| Publish: PDFs render -> S3 -> Member notified.| REW (auto) D+5 (VN)| BHXH remittance schedule (P3 stretch).| HR/Ops
 
 ## Functional requirements
 
@@ -324,21 +253,7 @@ Previous task enumerations were archived 2026-05-14 and are no longer reflected 
 
 Security and usability / explainability NFRs (§11.2.5) bind on REW. Cross-referenced at [nfr-catalog.html#rew](../../reference/nfr-catalog.html#rew).
 
-NFR ID| Concern| Target| Measurement
----|---|---|---
-(NFR pending)| Comp number in memory ledger row| = 0 - sev-0| CI: memory_bridge emit JSON inspected against blocklist of keys + numeric value patterns
-(NFR pending)| P1 reduction attempts blocked| = 100% (zero leak)| p1_guard property test; chaos test injects p1 cut and asserts rejection
-(NFR pending)| Single-signer commit attempts blocked| = 100%| cosign_guard integration test
-(NFR pending)| KMS-key isolation (REW key distinct from HR + memory)| 3 distinct key handles| KMS policy inspection; cross-key access blocked
-(NFR pending)| Determinism - same inputs -> same PDF SHA-256| 100% (phased replay)| replay_check.rs CI on every parameter change
-(NFR pending)| Append-only at DB layer (no UPDATE / DELETE grant on ledger tables)| enforced| DB role inspection, CI gate on migrations
-(NFR pending)| Cycle draft compute p95 (50 members)| <= 8 s| bench/cycle.rs
-(NFR pending)| PDF render p95 (per payslip)| <= 600 ms| bench/pdf.rs
-(NFR pending)| Cycle-day availability| >= 99.9% during D-3..D+5| SLO monitor
-(NFR pending)| Payslip durability (10-year retention)| 0 lost PDFs| S3 object-lock + quarterly inventory
-(NFR pending)| Payslip explainability (EU AI Act Art. 14)| narrator covers all line items| policy review + member usability test
-(NFR pending)| Member dispute path SLO| <= 5 working days to CEO adjudication| dispute queue dashboard
-(NFR pending)| EU AI Act Annex III §4 conformity at P2| full conformity pack signed by DPO + CLO| P2 release gate
+NFR ID| Concern| Target| Measurement ---|---|---|--- (NFR pending)| Comp number in memory ledger row| = 0 - sev-0| CI: memory_bridge emit JSON inspected against blocklist of keys + numeric value patterns (NFR pending)| P1 reduction attempts blocked| = 100% (zero leak)| p1_guard property test; chaos test injects p1 cut and asserts rejection (NFR pending)| Single-signer commit attempts blocked| = 100%| cosign_guard integration test (NFR pending)| KMS-key isolation (REW key distinct from HR + memory)| 3 distinct key handles| KMS policy inspection; cross-key access blocked (NFR pending)| Determinism - same inputs -> same PDF SHA-256| 100% (phased replay)| replay_check.rs CI on every parameter change (NFR pending)| Append-only at DB layer (no UPDATE / DELETE grant on ledger tables)| enforced| DB role inspection, CI gate on migrations (NFR pending)| Cycle draft compute p95 (50 members)| <= 8 s| bench/cycle.rs (NFR pending)| PDF render p95 (per payslip)| <= 600 ms| bench/pdf.rs (NFR pending)| Cycle-day availability| >= 99.9% during D-3..D+5| SLO monitor (NFR pending)| Payslip durability (10-year retention)| 0 lost PDFs| S3 object-lock + quarterly inventory (NFR pending)| Payslip explainability (EU AI Act Art. 14)| narrator covers all line items| policy review + member usability test (NFR pending)| Member dispute path SLO| <= 5 working days to CEO adjudication| dispute queue dashboard (NFR pending)| EU AI Act Annex III §4 conformity at P2| full conformity pack signed by DPO + CLO| P2 release gate
 
 ## Dependencies
 
@@ -365,82 +280,25 @@ DSAR exports"] end AUTH --> REW HRMOD --> REW TIME --> REW LEARN --> REW KMS -->
 
 REW is the EU AI Act Annex III §4 high-risk module (employment-decision automation). It has to defend against Vietnamese labour-law audits, PDPL DSAR requests, and EU AI Act conformity assessments simultaneously.
 
-Regulation / standard| Article / clause| REW feature that satisfies it
----|---|---
-EU AI Act (Reg. 2024/1689)| Annex III §4 - Employment & worker management| REW is the high-risk system. P2 conformity pack: risk management, data governance, technical docs, transparency, human oversight (task pending), accuracy/robustness ((task pending) determinism).
-EU AI Act| Art. 14 - Human oversight| Member can dispute -> CEO adjudicates within 5 working days; CEO can override any automated computation.
-EU AI Act| Art. 13 - Transparency| `cyberos.rew.payslip_explain` narrator; user-facing PDF includes parameter version + computation explanation.
-Vietnam Labour Code (2019)| Art. 90 - Wage / salary| P1 floor is the contractual base; P1-guard invariant enforces.
-Vietnam Labour Code| Art. 96 - Pay period| Monthly cycle by default; per-tenant override (weekly / bi-weekly) supported.
-Decree 152/2020/NĐ-CP| Art. 5 - SI contribution rates| BHXH 8%/17.5%, BHYT 1.5%/3%, BHTN 1%/1% encoded as versioned parameter `si-rates-vn`.
-Circular 111/2013/TT-BTC| Art. 7 - Personal income tax| PIT progressive schedule encoded as versioned parameter `pit-schedule-vn`.
-VN Tax Law| 10-year retention| S3 object-lock 10-year + DB row append-only.
-Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Member-self DSAR (task pending); managers structurally blocked from cross-member comp views.
-Vietnam PDPL| Art. 7 - Sensitive data| Comp classified `restricted`; separate KMS; access requires `rew.payslip_read` scope.
-GDPR (EU 2016/679)| Art. 22 - Automated individual decision-making| EU AI Act conformity pack + Art. 14 human override (task pending).
-GDPR| Art. 32 - Security of processing| KMS-wrapped at rest, co-sign at commit, append-only ledger.
-ISO/IEC 27001:2022| A.5.13 - Information labelling| Comp fields classified; cross-module exfiltration blocked at gateway.
-SOC 2 Type II| CC6.1, CC8.1| RBAC + co-sign + audit chain + deterministic replay.
+Regulation / standard| Article / clause| REW feature that satisfies it ---|---|--- EU AI Act (Reg. 2024/1689)| Annex III §4 - Employment & worker management| REW is the high-risk system. P2 conformity pack: risk management, data governance, technical docs, transparency, human oversight (task pending), accuracy/robustness ((task pending) determinism). EU AI Act| Art. 14 - Human oversight| Member can dispute -> CEO adjudicates within 5 working days; CEO can override any automated computation. EU AI Act| Art. 13 - Transparency| `cyberos.rew.payslip_explain` narrator; user-facing PDF includes parameter version + computation explanation. Vietnam Labour Code (2019)| Art. 90 - Wage / salary| P1 floor is the contractual base; P1-guard invariant enforces. Vietnam Labour Code| Art. 96 - Pay period| Monthly cycle by default; per-tenant override (weekly / bi-weekly) supported. Decree 152/2020/NĐ-CP| Art. 5 - SI contribution rates| BHXH 8%/17.5%, BHYT 1.5%/3%, BHTN 1%/1% encoded as versioned parameter `si-rates-vn`. Circular 111/2013/TT-BTC| Art. 7 - Personal income tax| PIT progressive schedule encoded as versioned parameter `pit-schedule-vn`. VN Tax Law| 10-year retention| S3 object-lock 10-year + DB row append-only. Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Member-self DSAR (task pending); managers structurally blocked from cross-member comp views. Vietnam PDPL| Art. 7 - Sensitive data| Comp classified `restricted`; separate KMS; access requires `rew.payslip_read` scope. GDPR (EU 2016/679)| Art. 22 - Automated individual decision-making| EU AI Act conformity pack + Art. 14 human override (task pending). GDPR| Art. 32 - Security of processing| KMS-wrapped at rest, co-sign at commit, append-only ledger. ISO/IEC 27001:2022| A.5.13 - Information labelling| Comp fields classified; cross-module exfiltration blocked at gateway. SOC 2 Type II| CC6.1, CC8.1| RBAC + co-sign + audit chain + deterministic replay.
 
 ## Risk entries
 
 REW's risks are largely about integrity (determinism, append-only) and privacy (memory leakage). The P1-cut and memory-leak risks are both rated catastrophic.
 
-ID| Risk| Likelihood| Impact| Owner| Mitigation
----|---|---|---|---|---
-`R-REW-001`| Comp number leaks into memory audit row| Low| Catastrophic| CSO| memory_bridge.rs emit JSON inspected by CI gate against numeric blocklist; integration test asserts opaque ref pattern only.
-`R-REW-002`| P1 cut proposed by buggy evaluation| Low| Catastrophic (legal)| CEO| p1_guard at app layer + DB CHECK constraint; property test attempts P1 cut and asserts rejection.
-`R-REW-003`| Retroactive parameter change breaks old payslip recomputation| Medium| High| CTO| replay_check.rs CI on every parameter change; rejects publish if any retained payslip drifts.
-`R-REW-004`| Single-signer commit slips through| Low| High| CFO| cosign_guard with 5-min window; both signatures required; integration test asserts blockage.
-`R-REW-005`| Deterministic PDF render breaks (font/timestamp drift)| Medium| High| CTO| Tectonic with pinned font versions; PDF metadata stripped to {producer:none, creation_date:fixed}; CI byte-identical assertion.
-`R-REW-006`| Cross-tenant comp leakage via manager scope| Low| Catastrophic| CSO| Manager role has NO `rew.payslip_read` scope; can only see HR data; DSAR queries reject if subject != self.
-`R-REW-007`| BP interest accrual drift (compounding bug)| Medium| Medium| CFO| BP interest is a deterministic function of (period, rate version); replay_check covers BP too.
-`R-REW-008`| EU AI Act conformity gap discovered at audit| Medium| High| CLO + DPO| P2 conformity pack drafted at design time; gap analysis annually; legal-counsel sign-off.
-`R-REW-009`| Agent attempts compute via narrator surface (excessive agency)| Low| Medium| CSO| MCP catalogue has ZERO write tools; narrator is read-only; CI gate verifies tool catalogue surface.
-`R-REW-010`| 10-year retention violated by S3 lifecycle bug| Low| High| CTO| Object-lock governance mode; lifecycle policy review at every deploy; quarterly inventory audit.
-`R-REW-011`| HR-aggregated calibration signal weaponised as sole basis for P3 cut| Medium| High| CHRO| P3 distribution requires CEO + CFO sign-off + per-Member manager narrative; calibration is one input, never the only input.
-`R-REW-012`| BHXH/BHYT rate change mid-month (Decree amendment) creates partial-month inconsistency| Medium| Medium| CLO| Parameter version effective-from supports mid-month boundary; pro-rated computation per partial period; CI replay verifies.
-`R-REW-013`| Lumi cross-tenant synthesis attempts to read REW data (impossible by design, but CI must verify)| Low| Catastrophic| CSO| REW has zero MCP tools exposed; CI gate verifies absence of comp data path to memory/Lumi; quarterly red-team.
-`R-REW-014`| Member self-service payslip view leaks Member-Y data via cache| Low| High| CSO| Per-Member subject-bound cache keys; CI test asserts cross-Member cache miss; pen-test quarterly.
-`R-REW-015`| Co-signers (CFO + CHRO) collude -> P1 cut slips through| Low| Critical| CEO| P1 protection is enforced at DB CHECK constraint, NOT at app layer alone; even both co-signers cannot commit a P1-cutting row. Hard structural floor.
+ID| Risk| Likelihood| Impact| Owner| Mitigation ---|---|---|---|---|--- `R-REW-001`| Comp number leaks into memory audit row| Low| Catastrophic| CSO| memory_bridge.rs emit JSON inspected by CI gate against numeric blocklist; integration test asserts opaque ref pattern only. `R-REW-002`| P1 cut proposed by buggy evaluation| Low| Catastrophic (legal)| CEO| p1_guard at app layer + DB CHECK constraint; property test attempts P1 cut and asserts rejection. `R-REW-003`| Retroactive parameter change breaks old payslip recomputation| Medium| High| CTO| replay_check.rs CI on every parameter change; rejects publish if any retained payslip drifts. `R-REW-004`| Single-signer commit slips through| Low| High| CFO| cosign_guard with 5-min window; both signatures required; integration test asserts blockage. `R-REW-005`| Deterministic PDF render breaks (font/timestamp drift)| Medium| High| CTO| Tectonic with pinned font versions; PDF metadata stripped to {producer:none, creation_date:fixed}; CI byte-identical assertion. `R-REW-006`| Cross-tenant comp leakage via manager scope| Low| Catastrophic| CSO| Manager role has NO `rew.payslip_read` scope; can only see HR data; DSAR queries reject if subject != self. `R-REW-007`| BP interest accrual drift (compounding bug)| Medium| Medium| CFO| BP interest is a deterministic function of (period, rate version); replay_check covers BP too. `R-REW-008`| EU AI Act conformity gap discovered at audit| Medium| High| CLO + DPO| P2 conformity pack drafted at design time; gap analysis annually; legal-counsel sign-off. `R-REW-009`| Agent attempts compute via narrator surface (excessive agency)| Low| Medium| CSO| MCP catalogue has ZERO write tools; narrator is read-only; CI gate verifies tool catalogue surface. `R-REW-010`| 10-year retention violated by S3 lifecycle bug| Low| High| CTO| Object-lock governance mode; lifecycle policy review at every deploy; quarterly inventory audit. `R-REW-011`| HR-aggregated calibration signal weaponised as sole basis for P3 cut| Medium| High| CHRO| P3 distribution requires CEO + CFO sign-off + per-Member manager narrative; calibration is one input, never the only input. `R-REW-012`| BHXH/BHYT rate change mid-month (Decree amendment) creates partial-month inconsistency| Medium| Medium| CLO| Parameter version effective-from supports mid-month boundary; pro-rated computation per partial period; CI replay verifies. `R-REW-013`| Lumi cross-tenant synthesis attempts to read REW data (impossible by design, but CI must verify)| Low| Catastrophic| CSO| REW has zero MCP tools exposed; CI gate verifies absence of comp data path to memory/Lumi; quarterly red-team. `R-REW-014`| Member self-service payslip view leaks Member-Y data via cache| Low| High| CSO| Per-Member subject-bound cache keys; CI test asserts cross-Member cache miss; pen-test quarterly. `R-REW-015`| Co-signers (CFO + CHRO) collude -> P1 cut slips through| Low| Critical| CEO| P1 protection is enforced at DB CHECK constraint, NOT at app layer alone; even both co-signers cannot commit a P1-cutting row. Hard structural floor.
 
 ## KPIs
 
 REW health rolls up into 15 KPIs across throughput, integrity, and compliance.
 
-KPI| Formula| Source| Target
----|---|---|---
-**Close-cycle completion (days)**| `published_at - cycle.opened_at`| REW DB| <= 5 working days
-**Determinism replay pass rate**| replay_check pass / runs| CI| = 100%
-**P1-cut attempts blocked**| p1_guard rejections / period| OBS| tracked; alert on any > 0 in prod
-**Single-signer commit attempts blocked**| cosign_guard rejections| OBS| tracked; alert on prod attempts
-**Comp-in-memory incidents**| CI gate failures| CI| = 0
-**Member disputes resolved (5 working days)**| disputes resolved within SLO / total| REW DB| >= 95%
-**PDF render p95**| histogram| OBS| <= 600 ms
-**Anomaly false-positive rate**| flagged but unchanged / flagged| REW DB| <= 30%
-**BP interest precision (drift)**| computed - expected (basis points)| property test| = 0 bps
-**EU AI Act conformity score**| conformity items passed / total| P2 audit| = 100% at P2 release
-**P3 distribution sign-off completeness**| quarterly P3 distributions with CEO + CFO + manager narrative / total| memory audit| = 1.0 (hard floor)
-**Parameter version mid-month transition correctness**| pro-rated periods passing replay / total| CI replay| = 100%
-**Lumi-attempted REW reads**| count| OBS| = 0 (hard floor; CI verifies)
-**Cross-Member cache leak attempts**| count| OBS + CI| = 0
-**P1 DB-CHECK constraint violations attempted**| count of CHECK rejections| Postgres logs| tracked; any > 0 in prod = sev-0 incident
+KPI| Formula| Source| Target ---|---|---|--- **Close-cycle completion (days)**| `published_at - cycle.opened_at`| REW DB| <= 5 working days **Determinism replay pass rate**| replay_check pass / runs| CI| = 100% **P1-cut attempts blocked**| p1_guard rejections / period| OBS| tracked; alert on any > 0 in prod **Single-signer commit attempts blocked**| cosign_guard rejections| OBS| tracked; alert on prod attempts **Comp-in-memory incidents**| CI gate failures| CI| = 0 **Member disputes resolved (5 working days)**| disputes resolved within SLO / total| REW DB| >= 95% **PDF render p95**| histogram| OBS| <= 600 ms **Anomaly false-positive rate**| flagged but unchanged / flagged| REW DB| <= 30% **BP interest precision (drift)**| computed - expected (basis points)| property test| = 0 bps **EU AI Act conformity score**| conformity items passed / total| P2 audit| = 100% at P2 release **P3 distribution sign-off completeness**| quarterly P3 distributions with CEO + CFO + manager narrative / total| memory audit| = 1.0 (hard floor) **Parameter version mid-month transition correctness**| pro-rated periods passing replay / total| CI replay| = 100% **Lumi-attempted REW reads**| count| OBS| = 0 (hard floor; CI verifies) **Cross-Member cache leak attempts**| count| OBS + CI| = 0 **P1 DB-CHECK constraint violations attempted**| count of CHECK rejections| Postgres logs| tracked; any > 0 in prod = sev-0 incident
 
 ## RACI matrix
 
 REW is operationally owned by HR/Ops Lead; legally accountable to the CEO; compute-co-signed by CFO + CHRO. DPO owns DSAR; CLO owns EU AI Act conformity.
 
-Activity| CEO| HR/Ops| CFO| CHRO| CSO| DPO| CLO
----|---|---|---|---|---|---|---
-Monthly close cycle| A| R| R| R| I| I| I
-Compensation change (hire/promo)| C| R| R| R| I| I| I
-Parameter version publish| A| R| R| R| C| C| C
-Bonus pool allocation| A/R| I| R| C| I| I| I
-BP award (founder approval)| A/R| R| C| C| I| I| I
-Member dispute adjudication| A/R| R| R| R| I| C| C
-EU AI Act conformity pack| C| I| I| C| C| R| A
-DSAR fulfilment (comp scope)| I| C| I| I| C| A/R| C
-Determinism CI gate maintenance| I| I| I| I| A/R| I| I
+Activity| CEO| HR/Ops| CFO| CHRO| CSO| DPO| CLO ---|---|---|---|---|---|---|--- Monthly close cycle| A| R| R| R| I| I| I Compensation change (hire/promo)| C| R| R| R| I| I| I Parameter version publish| A| R| R| R| C| C| C Bonus pool allocation| A/R| I| R| C| I| I| I BP award (founder approval)| A/R| R| C| C| I| I| I Member dispute adjudication| A/R| R| R| R| I| C| C EU AI Act conformity pack| C| I| I| C| C| R| A DSAR fulfilment (comp scope)| I| C| I| I| C| A/R| C Determinism CI gate maintenance| I| I| I| I| A/R| I| I
 
 R = Responsible, A = Accountable, C = Consulted, I = Informed.
 
@@ -560,25 +418,7 @@ $ cyberos-rew dsar-export --self --output mycomp.zip
 | CLI subcommands | ~22 planned (`cyberos-rew` entrypoint) |
 | P1 budget | ~$30/mo (RDS schema + Fargate + S3 obj-lock) |
 
-Capability| Status
----|---
-3P income compute kernel (deterministic)| planned - P1
-Append-only parameter store + supersession| planned - P1
-P1-protection invariant (p1_guard)| planned - P1
-CFO + CHRO co-sign predicate| planned - P1
-Monthly close cycle UX| planned - P1
-Anomaly surface (+/-20% delta)| planned - P1
-Deterministic PDF render (tectonic)| planned - P1
-Phased replay CI gate| planned - P1
-BP ledger + ACB interest accrual| planned - P1
-Payslip narrator MCP (read-only)| planned - P1
-Vietnamese SI/PIT line-items| planned - P1
-Member self-DSAR comp export| planned - P1
-BP -> P3 conversion windows| planned - P2
-Singapore HoldCo SGD branch| planned - P2
-EU AI Act Annex III §4 conformity pack| planned - P2
-BHXH remittance integration| planned - P3
-Member-dispute -> CEO adjudication flow| planned - P2
+Capability| Status ---|--- 3P income compute kernel (deterministic)| planned - P1 Append-only parameter store + supersession| planned - P1 P1-protection invariant (p1_guard)| planned - P1 CFO + CHRO co-sign predicate| planned - P1 Monthly close cycle UX| planned - P1 Anomaly surface (+/-20% delta)| planned - P1 Deterministic PDF render (tectonic)| planned - P1 Phased replay CI gate| planned - P1 BP ledger + ACB interest accrual| planned - P1 Payslip narrator MCP (read-only)| planned - P1 Vietnamese SI/PIT line-items| planned - P1 Member self-DSAR comp export| planned - P1 BP -> P3 conversion windows| planned - P2 Singapore HoldCo SGD branch| planned - P2 EU AI Act Annex III §4 conformity pack| planned - P2 BHXH remittance integration| planned - P3 Member-dispute -> CEO adjudication flow| planned - P2
 
 ## References
 

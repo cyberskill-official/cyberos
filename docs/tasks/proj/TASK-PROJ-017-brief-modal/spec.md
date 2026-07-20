@@ -75,44 +75,42 @@ risk_if_skipped: "Brief Modal is the deep-edit surface; without it, descriptions
 The Brief Modal **MUST** be a unified deep-view for one issue with collaborative description + comments + meta sidebar. The contract:
 
 1. **MUST** open via:
-    - Click on issue card in any view (Kanban / Timeline / Gantt).
-    - Enter key on focused card.
-    - Direct URL `/proj/issues/:id/brief`.
-   Opening updates URL (history.pushState) so back-button + share-link work.
+- Click on issue card in any view (Kanban / Timeline / Gantt).
+- Enter key on focused card.
+- Direct URL `/proj/issues/:id/brief`. Opening updates URL (history.pushState) so back-button + share-link work.
 2. **MUST** render responsively:
-    - Mobile (< 1024px): full-screen overlay; sidebar collapses to expandable section.
-    - Desktop (≥ 1024px): right-side panel 480px wide; sidebar always-visible.
+- Mobile (< 1024px): full-screen overlay; sidebar collapses to expandable section.
+- Desktop (≥ 1024px): right-side panel 480px wide; sidebar always-visible.
 3. **MUST** bind description to Y.Text via TASK-PROJ-003 YjsProvider and TipTap + `@tiptap/extension-collaboration`. Concurrent edits converge per Yjs.
 4. **MUST** render comments as Y.Array; each comment is `Y.Map { id, author_id, body: Y.Text, created_at }`. New comment composer adds element to array; edit binds to body Y.Text.
 5. **MUST** render meta sidebar with LWW scalars (TASK-PROJ-003 §1 #6):
-    - Status (uses TASK-PROJ-014 StatusPicker).
-    - Assignee dropdown.
-    - Priority radio.
-    - Estimate number input.
-    - Labels multi-select.
-    - Dates (starts_at + ends_at).
-   Each field PATCHes via LWW endpoint; stale-write → toast + revert.
+- Status (uses TASK-PROJ-014 StatusPicker).
+- Assignee dropdown.
+- Priority radio.
+- Estimate number input.
+- Labels multi-select.
+- Dates (starts_at + ends_at). Each field PATCHes via LWW endpoint; stale-write → toast + revert.
 6. **MUST** render presence cursors:
-    - Other users editing this modal → their cursor position in description shown as labeled flag (name + color).
-    - Cursor flag throttled at 30 Hz per TASK-PROJ-003 awareness.
-    - Cursor expires 30s after last awareness heartbeat.
+- Other users editing this modal → their cursor position in description shown as labeled flag (name + color).
+- Cursor flag throttled at 30 Hz per TASK-PROJ-003 awareness.
+- Cursor expires 30s after last awareness heartbeat.
 7. **MUST** provide a history drawer toggle (button + `H` shortcut):
-    - When open, side panel shows TASK-PROJ-008 history_event timeline.
-    - Chain_anchor verification status per row (green check or red warn).
-    - Click on history row scrolls description to that mutation's snapshot.
+- When open, side panel shows TASK-PROJ-008 history_event timeline.
+- Chain_anchor verification status per row (green check or red warn).
+- Click on history row scrolls description to that mutation's snapshot.
 8. **MUST** support kbd shortcuts:
-    - Esc closes modal (no confirmation; CRDT auto-saves).
-    - T puts cursor in title field (inline-edit).
-    - C focuses new-comment composer.
-    - H toggles history drawer.
-    - Cmd+S explicit save (no-op visual feedback; "auto-saved" indicator).
+- Esc closes modal (no confirmation; CRDT auto-saves).
+- T puts cursor in title field (inline-edit).
+- C focuses new-comment composer.
+- H toggles history drawer.
+- Cmd+S explicit save (no-op visual feedback; "auto-saved" indicator).
 9. **MUST** emit memory audit `proj.brief_modal_opened` per open with `{issue_id, by_subject_id, opened_from, trace_id}` where opened_from ∈ kanban | timeline | gantt | url | search.
 10. **MUST** RLS-enforce (issue + comments + history).
 11. **MUST** pass axe-core (focus-trap inside modal; restore focus on close; aria-modal=true).
 12. **MUST** emit OTel:
-    - `proj_brief_modal_opens_total{opened_from}` (counter).
-    - `proj_brief_modal_render_p95_ms` (histogram).
-    - `proj_brief_modal_session_seconds` (histogram — engagement signal).
+- `proj_brief_modal_opens_total{opened_from}` (counter).
+- `proj_brief_modal_render_p95_ms` (histogram).
+- `proj_brief_modal_session_seconds` (histogram — engagement signal).
 13. **MUST** support comment threading: each comment can be a reply to another via `reply_to_comment_id`; threading rendered with visual indentation (max depth 5).
 14. **MUST** support comment mentions: `@username` in comment body resolves to user; sends in-app notification to mentioned user via CUO triage.
 15. **MUST** support attachments on comments: file upload via task-FILES (max 25MB per file, 5 files per comment); previewable images/PDFs inline.

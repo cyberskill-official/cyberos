@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this onboarding pack"
+- "Audit this onboarding pack"
 - "Check the onboarding pack for completeness"
 - "Verify the onboarding pack meets the rubric"
 - "Re-audit the onboarding pack"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a onboarding pack" → onboarding-pack-author
+- "Draft a onboarding pack" → onboarding-pack-author
 - "Create the onboarding pack" → onboarding-pack-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

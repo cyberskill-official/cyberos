@@ -105,5 +105,4 @@ chain_profile: standard          # lean | standard | full — see CONTRACT.md §
 (Required when triage_verdict ∈ {revise, reject}.)
 
 - Why the verdict was set: <reason>
-- What would change it: <observable signal or threshold>
--->
+- What would change it: <observable signal or threshold> -->

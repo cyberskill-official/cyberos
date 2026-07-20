@@ -1,15 +1,12 @@
 # `common` — rule families that apply to every task, whatever its `type`
 
-Loaded by `task-audit` for all values of `type` (FM-108), then composed with the
-per-type family:
+Loaded by `task-audit` for all values of `type` (FM-108), then composed with the per-type family:
 
 ```
 rubrics/common.md   +   rubrics/{type}.md   =   the gate for this task
 ```
 
-The authoritative rule text lives in `modules/skill/task-audit/RUBRIC.md`. This file
-is the **composition contract**: it declares which families are universal, which are
-type-scoped, and what a new type must do to join.
+The authoritative rule text lives in `modules/skill/task-audit/RUBRIC.md`. This file is the **composition contract**: it declares which families are universal, which are type-scoped, and what a new type must do to join.
 
 ---
 
@@ -34,25 +31,18 @@ type-scoped, and what a new type must do to join.
 | `improvement` | — | — |
 | `chore` | — | — |
 
-`improvement` and `chore` share the feature skeleton today. That is deliberate: adding
-a rule family costs nothing later, and inventing rules for a type nobody has filed yet
-is how you get a taxonomy nobody fills in correctly.
+`improvement` and `chore` share the feature skeleton today. That is deliberate: adding a rule family costs nothing later, and inventing rules for a type nobody has filed yet is how you get a taxonomy nobody fills in correctly.
 
 ## §3  Adding a type
 
 The dispatch is data, not code. A new type costs:
 
-1. `templates/<type>.md` — the body skeleton. **Required.** `task-author` HALTS if it
-   is missing rather than falling back to `feature`, because a silent fallback
-   produces an artefact that passes a gate which never knew what to ask.
+1. `templates/<type>.md` — the body skeleton. **Required.** `task-author` HALTS if it is missing rather than falling back to `feature`, because a silent fallback produces an artefact that passes a gate which never knew what to ask.
 2. `rubrics/<type>.md` — **optional.** Absent means "common families only".
 3. one row in the FM-108 enum in `modules/skill/task-audit/RUBRIC.md`.
 
-No skill code changes. If you find yourself editing `task-author` to add a type, the
-dispatch has been hardcoded somewhere and that is the bug.
+No skill code changes. If you find yourself editing `task-author` to add a type, the dispatch has been hardcoded somewhere and that is the bug.
 
 ## §4  Scoring
 
-Composed families score into the same 10-point verdict. `task-audit` refuses to pass
-below 10/10 regardless of type. A bug is not held to a lower bar than a feature — it
-is held to a *different* one.
+Composed families score into the same 10-point verdict. `task-audit` refuses to pass below 10/10 regardless of type. A bug is not held to a lower bar than a feature — it is held to a *different* one.

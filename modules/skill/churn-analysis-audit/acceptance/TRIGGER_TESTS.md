@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this churn analysis"
+- "Audit this churn analysis"
 - "Check the churn analysis for completeness"
 - "Verify the churn analysis meets the rubric"
 - "Re-audit the churn analysis"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a churn analysis" → churn-analysis-author
+- "Draft a churn analysis" → churn-analysis-author
 - "Create the churn analysis" → churn-analysis-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

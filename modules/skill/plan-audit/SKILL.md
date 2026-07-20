@@ -61,8 +61,7 @@ CUO routes a request here when the user wants to:
 - "Check the plan before I hand it to create-tasks."
 - "Would this plan pass?"
 
-Also invoked automatically when `plan-author` chains to it (the default). If the user wants to
-*draft* a plan, route to `plan-author`.
+Also invoked automatically when `plan-author` chains to it (the default). If the user wants to *draft* a plan, route to `plan-author`.
 
 ## Self-test preamble — emit BEFORE any file action
 
@@ -83,18 +82,13 @@ phase:                           AUDIT
 
 ## §1  Purpose
 
-Make plan verdicts reproducible: an auditor cites `PLAN-*` / `FM-*` / `SEC-*` rule ids from
-`plan_rubric@1.0` instead of paraphrasing prose. Only 10/10 passes. Evidence is checked by
-**RESOLUTION** (does the cited file path / command output / URL actually check out at audit time),
-not by presence — an option whose evidence does not resolve carries zero evidence.
+Make plan verdicts reproducible: an auditor cites `PLAN-*` / `FM-*` / `SEC-*` rule ids from `plan_rubric@1.0` instead of paraphrasing prose. Only 10/10 passes. Evidence is checked by **RESOLUTION** (does the cited file path / command output / URL actually check out at audit time), not by presence — an option whose evidence does not resolve carries zero evidence.
 
 ## §2  Verdict semantics
 
 - **pass** = every rubric rule green (**10/10**).
 - **fail** = any `error` rule red. Findings name each `rule_id` + location + what resolves it.
-- **needs_human** = ambiguity the rubric cannot decide: unknown artefact version, contradictory
-  frontmatter, or the `PLAN-GATE-001` operator-verdict question (a HITL halt the suite cannot
-  simulate — verified against the recorded gate-log transcript).
+- **needs_human** = ambiguity the rubric cannot decide: unknown artefact version, contradictory frontmatter, or the `PLAN-GATE-001` operator-verdict question (a HITL halt the suite cannot simulate — verified against the recorded gate-log transcript).
 
 ## §3  The three rules that RED an incomplete plan (traces_to spec #1.4 / AC 3)
 
@@ -106,10 +100,7 @@ These are the load-bearing checks — a plan that trips any ONE of them fails:
 | `PLAN-DEC-001` | `## 4. Decision` records **zero** decisions, or more than one — there is no single call. |
 | `PLAN-OUT-001` | `## 5. Scope` has no `### Out of scope`, or it is **empty** — scope with no boundary. |
 
-Beyond these, the full rubric also enforces: checkable evidence on every option (`PLAN-OPT-002`),
-confidence-vs-evidence depth (`PLAN-OPT-003`), the confidence grade (`PLAN-DEC-002`), the
-create-tasks-consumable proposed task set (`PLAN-SET-001..004`), the no-write-to-tasks discipline
-(`PLAN-SAFE-001..004`), and the verifiable BRAIN chain (`PLAN-BRAIN-001..002`).
+Beyond these, the full rubric also enforces: checkable evidence on every option (`PLAN-OPT-002`), confidence-vs-evidence depth (`PLAN-OPT-003`), the confidence grade (`PLAN-DEC-002`), the create-tasks-consumable proposed task set (`PLAN-SET-001..004`), the no-write-to-tasks discipline (`PLAN-SAFE-001..004`), and the verifiable BRAIN chain (`PLAN-BRAIN-001..002`).
 
 ## §4  Audit loop (per artefact)
 
@@ -117,8 +108,7 @@ create-tasks-consumable proposed task set (`PLAN-SET-001..004`), the no-write-to
 2. **Hash** the artefact (UTF-8 NFC).
 3. **Load or initialise** the audit report.
 4. **Run rubric** — every rule in `plan_rubric@1.0`.
-5. **Attempt fixes** — auto-fixable rules apply minimal textual changes; skeleton rules insert TODO
-   markers; `needs_human`-only rules (PLAN-GATE-001) halt with a Question.
+5. **Attempt fixes** — auto-fixable rules apply minimal textual changes; skeleton rules insert TODO markers; `needs_human`-only rules (PLAN-GATE-001) halt with a Question.
 6. **Re-audit** — recompute hash, re-run.
 7. **Termination** — PASS (10/10) / FAIL / HITL_PAUSE / NO_PROGRESS.
 8. **Write audit report** — always, even on HITL pause.

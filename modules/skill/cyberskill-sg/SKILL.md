@@ -18,5 +18,4 @@ allowed_mcp_tools:
 
 # cyberskill-sg
 
-Validate UEN-shaped identifiers, prepare GST invoice references, and estimate
-CPF amounts from configured rates.
+Validate UEN-shaped identifiers, prepare GST invoice references, and estimate CPF amounts from configured rates.

@@ -85,10 +85,10 @@ The CUO service **MUST** ship per-step rollback at `services/cuo/src/rollback/` 
 2. **MUST** trigger on TASK-CUO-104 step failure (chain status=failed) per DEC-2370.
 
 3. **MUST** execute at `executor.rs::rollback(chain_id)` per DEC-2370:
-   - Fetch completed steps in REVERSE order
-   - For each: look up compensating action via TASK-SKILL-001 registry
-   - If registered: invoke compensation; mark compensated
-   - If not registered: mark no_compensation_registered + audit (don't fail rollback)
+- Fetch completed steps in REVERSE order
+- For each: look up compensating action via TASK-SKILL-001 registry
+- If registered: invoke compensation; mark compensated
+- If not registered: mark no_compensation_registered + audit (don't fail rollback)
 
 4. **MUST** lookup compensation at `compensation_registry.rs::get(skill_id)` per DEC-2372 — returns Option<compensating_skill_id>.
 
@@ -204,8 +204,7 @@ async fn compensation_failure_isolated() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-CUO-104.
-**Cross-module:** TASK-SKILL-001 (compensation registry), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-CUO-104. **Cross-module:** TASK-SKILL-001 (compensation registry), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

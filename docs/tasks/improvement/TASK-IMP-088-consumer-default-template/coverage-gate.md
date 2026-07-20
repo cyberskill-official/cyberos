@@ -31,8 +31,6 @@ TRACE-004 closure - every §1 clause's cited test is `passed`:
 - 1.3 -> t06_existing_config_untouched: passed
 - 1.4 -> suite summary counts t06 (ops check): 17 passed, 0 failed
 
-Edge-case matrix rows without a test: none. Rows 1-3 map to the t06 scenarios; the
-platform-marker row is exercised directly by t06_platform_keeps_comment.
+Edge-case matrix rows without a test: none. Rows 1-3 map to the t06 scenarios; the platform-marker row is exercised directly by t06_platform_keeps_comment.
 
-Live-consumer evidence (beyond the suite): fresh scratch install from the rebuilt payload
--> `.cyberos/config.yaml:10 task_template: task@1`, rc=0.
+Live-consumer evidence (beyond the suite): fresh scratch install from the rebuilt payload -> `.cyberos/config.yaml:10 task_template: task@1`, rc=0.

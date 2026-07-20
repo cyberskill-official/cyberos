@@ -96,9 +96,9 @@ Every CyberOS service **MUST** propagate W3C TraceContext via HTTP headers AND e
 10. **MUST** generate W3C-compliant trace_id (16 random bytes, hex-encoded as 32-char string) when no incoming header. The `opentelemetry::trace::TraceId::from_random()` produces this.
 11. **MUST** validate parsed `traceparent` strictly per W3C spec: `00-{32hex}-{16hex}-01` format. Malformed → generate new trace_id + log WARN with hash of bad value (NOT raw — bad values may be malicious).
 12. **SHOULD** emit OTel metrics:
-    - `obs_tracecontext_extracted_total{outcome}` (counter; outcome ∈ extracted | malformed | missing_generated_new).
-    - `obs_log_enrichment_total{service}` (counter; tracks how many logs were enriched).
-    - `obs_exemplar_emission_total` (counter; tracks histogram exemplar emissions).
+- `obs_tracecontext_extracted_total{outcome}` (counter; outcome ∈ extracted | malformed | missing_generated_new).
+- `obs_log_enrichment_total{service}` (counter; tracks how many logs were enriched).
+- `obs_exemplar_emission_total` (counter; tracks histogram exemplar emissions).
 
 ---
 

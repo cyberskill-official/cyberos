@@ -70,27 +70,27 @@ The blocker detector **MUST** parse Issue comments for "blocked by" patterns and
 
 1. **MUST** parse comments on insert/edit (TASK-PROJ-003 CRDT events) for the regex `(?i)\b(block(?:ed|s|ing))\s+by[:\s]+([^\n,;.]+)`. Captures: keyword (blocked|blocks|blocking) + target reference.
 2. **MUST** classify target as:
-    - `IssueMention`: matches `#<uuid>` or `#<readable-id>`; resolved via TASK-PROJ-001 issue table.
-    - `MemoryPath`: matches `memories/...`; resolved via TASK-MEMORY-101.
-    - `FreeText`: anything else; stored verbatim ("waiting on customer", "needs design review").
+- `IssueMention`: matches `#<uuid>` or `#<readable-id>`; resolved via TASK-PROJ-001 issue table.
+- `MemoryPath`: matches `memories/...`; resolved via TASK-MEMORY-101.
+- `FreeText`: anything else; stored verbatim ("waiting on customer", "needs design review").
 3. **MUST** record blockers in `blocker_state` table: `(issue_id, comment_id, blocker_kind, target_ref, detected_at, detected_by, resolved_at, resolved_by_comment_id, tenant_id)`. Active = `resolved_at IS NULL`.
 4. **MUST** auto-resolve a blocker when:
-    - Target Issue transitions to `Done` (forward-direction unblock).
-    - A subsequent comment on the blocking issue matches `(?i)\bunblocked\b` or `(?i)\bresolved\b`.
-    - The issue itself transitions to Done | Cancelled (block becomes moot).
+- Target Issue transitions to `Done` (forward-direction unblock).
+- A subsequent comment on the blocking issue matches `(?i)\bunblocked\b` or `(?i)\bresolved\b`.
+- The issue itself transitions to Done | Cancelled (block becomes moot).
 5. **MUST** compute `dwell_business_days` since `detected_at`, excluding Sat/Sun and configured VN public holidays (`CYBEROS_HOLIDAYS_VN` env: comma-separated YYYY-MM-DD). ≥ 3 business days → mark stale.
 6. **MUST** emit memory audit rows:
-    - `proj.blocker_detected` on new blocker.
-    - `proj.blocker_resolved` on auto-resolution (carries reason).
-    - `proj.blocker_stale` once dwell ≥ 3 business days (idempotent — once per blocker).
+- `proj.blocker_detected` on new blocker.
+- `proj.blocker_resolved` on auto-resolution (carries reason).
+- `proj.blocker_stale` once dwell ≥ 3 business days (idempotent — once per blocker).
 7. **MUST** notify via TASK-CUO-101 webhook on stale events (placeholder URL `https://cuo-internal.cyberos.world/notify`; OPSEC: not exposed publicly). Payload: `{tenant_id, issue_id, blocker_id, target_ref, dwell_business_days, assignee_subject_id}`.
 8. **MUST** run hourly dwell scan; on-demand via `cyberos blocker scan [--tenant <uuid>]` CLI.
 9. **MUST** RLS-enforce.
 10. **MUST** emit OTel metrics:
-    - `proj_blockers_active{tenant_id_bucket}` (gauge).
-    - `proj_blockers_detected_total{kind}` (counter).
-    - `proj_blockers_resolved_total{auto_reason}` (counter).
-    - `proj_blockers_stale_total` (counter).
+- `proj_blockers_active{tenant_id_bucket}` (gauge).
+- `proj_blockers_detected_total{kind}` (counter).
+- `proj_blockers_resolved_total{auto_reason}` (counter).
+- `proj_blockers_stale_total` (counter).
 11. **MUST** redact PII from `target_ref` (especially FreeText kind) before memory audit emit via TASK-MEMORY-111 ruleset.
 12. **MUST** support manual operator override: `POST /api/proj/blockers/:id/resolve` with reason; emits `proj.blocker_resolved` with `auto_reason="manual"`.
 13. **MUST** support manual creation: `POST /api/proj/issues/:id/blockers` for cases where parser missed (e.g. blocker discussed verbally). Tracks `detected_by_subject_id` as the operator.

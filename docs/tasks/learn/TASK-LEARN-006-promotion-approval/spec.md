@@ -86,14 +86,14 @@ The LEARN service **MUST** ship promotion workflow at `services/learn/src/promot
 2. **MUST** initiate per DEC-2130 when TASK-LEARN-004 council completes with recommendation=promote.
 
 3. **MUST** enforce dual-sign at `dual_sign_gate.rs::can_execute(promotion)` per DEC-2133:
-   - Both CEO + CHRO signed
-   - Same person can't sign both (separation of duties)
+- Both CEO + CHRO signed
+- Same person can't sign both (separation of duties)
 
 4. **MUST** cascade on executed at `cascade.rs::execute(promotion)` per DEC-2132:
-   - TASK-HR-001 update member.mastery_level (transactional)
-   - TASK-REW-001 update comp_band (transactional)
-   - TASK-CHAT-005 announce in #all (non-blocking)
-   - Rollback all on any failure
+- TASK-HR-001 update member.mastery_level (transactional)
+- TASK-REW-001 update comp_band (transactional)
+- TASK-CHAT-005 announce in #all (non-blocking)
+- Rollback all on any failure
 
 5. **MUST** define table at migration `0006`:
    ```sql
@@ -215,8 +215,7 @@ async fn cascade_updates_hr_and_rew() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-LEARN-004.
-**Cross-module:** TASK-LEARN-005 (recommendation source), TASK-HR-001, TASK-REW-001, TASK-CHAT-005, TASK-AUTH-101 (CEO/CHRO), TASK-MEMORY-111.
+**Upstream:** TASK-LEARN-004. **Cross-module:** TASK-LEARN-005 (recommendation source), TASK-HR-001, TASK-REW-001, TASK-CHAT-005, TASK-AUTH-101 (CEO/CHRO), TASK-MEMORY-111.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

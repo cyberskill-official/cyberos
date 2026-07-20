@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this board deck"
+- "Audit this board deck"
 - "Check the board deck for completeness"
 - "Verify the board deck meets the rubric"
 - "Re-audit the board deck"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a board deck" → board-deck-author
+- "Draft a board deck" → board-deck-author
 - "Create the board deck" → board-deck-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

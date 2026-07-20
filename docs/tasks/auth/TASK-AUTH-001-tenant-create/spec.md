@@ -107,9 +107,9 @@ The AUTH service **MUST** expose `POST /v1/admin/tenants` for creating new tenan
 13. **MUST** emit OTel span `auth.create_tenant` with attributes `slug`, `created_by_subject_id`, `outcome` (created | idempotent_replay | conflict | forbidden | invalid_input). Span propagates W3C TraceContext per TASK-AI-022.
 14. **MUST NOT** create the root tenant (i.e. a tenant whose `id == Uuid::nil()`) via this endpoint — the bootstrap CLI per TASK-AUTH-006 owns that creation. The handler explicitly rejects `slug == "root"` AND any attempt to create a tenant with `id == Uuid::nil()` (which is unreachable in practice since UUIDs are randomly generated server-side, but the rejection is retained as a defence-in-depth check).
 15. **SHOULD** emit OTel metrics:
-    - `auth_tenant_create_total{outcome}` (counter; outcome ∈ created | idempotent_replay | conflict | forbidden | invalid_input | error).
-    - `auth_tenant_create_latency_ms` (histogram; SLO p95 < 100ms).
-    - `auth_tenant_count` (gauge; total tenants).
+- `auth_tenant_create_total{outcome}` (counter; outcome ∈ created | idempotent_replay | conflict | forbidden | invalid_input | error).
+- `auth_tenant_create_latency_ms` (histogram; SLO p95 < 100ms).
+- `auth_tenant_count` (gauge; total tenants).
 
 ---
 

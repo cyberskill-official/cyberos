@@ -18,11 +18,11 @@ Concrete Python runners that execute the 11 chain skills under [`../skills/cuo/`
 
 1. Copy `task_with_subtasks.py` to `<skill_id>.py` (e.g. `task_audit.py`).
 2. Override:
-   - `skill_id` — matches the SKILL.md location under `docs/skills/`.
-   - `output_filename_pattern` — what the emitted artefact is called.
-   - `interview_questions` — standalone-mode prompts (used only when run outside a chain).
-   - `build_prompt(inputs, prior_artefacts)` — compose the prompt from SKILL.md + contract templates + inputs.
-   - `validate_emit(body, inputs)` — run that skill's INVARIANTS against the emitted body. Return a list of findings.
+- `skill_id` — matches the SKILL.md location under `docs/skills/`.
+- `output_filename_pattern` — what the emitted artefact is called.
+- `interview_questions` — standalone-mode prompts (used only when run outside a chain).
+- `build_prompt(inputs, prior_artefacts)` — compose the prompt from SKILL.md + contract templates + inputs.
+- `validate_emit(body, inputs)` — run that skill's INVARIANTS against the emitted body. Return a list of findings.
 3. `cyberos chain run --with-llm` discovers runners by `skill_id` and dispatches automatically (`base.load_runner(...)`).
 
 ## Invocation

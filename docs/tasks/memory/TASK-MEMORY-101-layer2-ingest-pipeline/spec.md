@@ -100,11 +100,11 @@ A long-lived Rust process **MUST** tail every `<memory-root>/audit/*.binlog` and
 5. **MUST** be idempotent — re-ingesting the same seq is a no-op (UPSERT on `(tenant_id, seq)`). Restart-mid-batch can re-process some rows; the UPSERT prevents duplicates.
 6. **MUST** target ingest staleness ≤ 1 second p95 from binlog append to Layer 2 visibility (DEC-074). Steady-state SLO measured via `memory_layer2_ingest_lag_seconds` histogram.
 7. **MUST** emit OTel metrics:
-    - `memory_layer2_ingest_lag_seconds{tenant_id}` (histogram; SLO p95 < 1s).
-    - `memory_layer2_ingest_failures_total{tenant_id, reason}` (counter; reason ∈ bge_down | age_fail | postgres_error | chain_anchor_mismatch).
-    - `memory_layer2_throughput_rows_per_sec{tenant_id}` (gauge).
-    - `memory_layer2_cursor_advance_total{tenant_id}` (counter).
-    - `memory_layer2_age_pending_retry_total{tenant_id}` (gauge; entries needing AGE backfill).
+- `memory_layer2_ingest_lag_seconds{tenant_id}` (histogram; SLO p95 < 1s).
+- `memory_layer2_ingest_failures_total{tenant_id, reason}` (counter; reason ∈ bge_down | age_fail | postgres_error | chain_anchor_mismatch).
+- `memory_layer2_throughput_rows_per_sec{tenant_id}` (gauge).
+- `memory_layer2_cursor_advance_total{tenant_id}` (counter).
+- `memory_layer2_age_pending_retry_total{tenant_id}` (gauge; entries needing AGE backfill).
 8. **MUST** support tenant isolation via `tenant_id` column + RLS (TASK-AUTH-003 pattern). The `layer2_memories` table is in `TENANT_SCOPED_TABLES` registry; RLS USING + WITH CHECK clauses applied per TASK-AUTH-003 §1 #2.
 9. **MUST NOT** be the source of truth — DEC-070 invariant: Layer 1 wins on any conflict. Read paths comparing Layer 1 vs Layer 2 (e.g., on chain_anchor mismatch) MUST trust Layer 1 + flag Layer 2 row as `stale`.
 10. **MUST** retry BGE-M3 sidecar failures with exponential backoff (100ms, 250ms, 500ms, 1s, 2s) up to 5 attempts before marking the row as `pending_embed_retry`. Retry job (slice 2 follow-up) reprocesses such rows.

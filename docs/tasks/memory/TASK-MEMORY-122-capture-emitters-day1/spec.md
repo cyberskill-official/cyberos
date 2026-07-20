@@ -105,18 +105,17 @@ This task makes day-1 wide capture real: it wires the first two live modules (AU
 1. **MUST** provide a shared emitter in a new crate `cyberos-capture`: a `Capturer` that holds the brain audit pool and a `capture()` method which builds an TASK-MEMORY-121 `InteractionEvent` (via that task's typed builder) and calls TASK-MEMORY-121 `emit()`. Every module emits through this one path; no module constructs an `l1_audit_log` row directly. The `Capturer::capture` signature is best-effort: it returns the TASK-MEMORY-121 `EmitOutcome`/`EmitError`, and callers log + swallow.
 2. **MUST** define a `CaptureEmitter` convention (DEC-2714): each module owns a thin `capture.rs` that exposes typed helpers (e.g. `emit_signed_in(...)`, `emit_message_created(...)`) translating that module's domain event into a built `InteractionEvent`. The helper set is the per-module surface; the crate is the shared mechanism. New modules add a `capture.rs`, not a new shape.
 3. **MUST** wire AUTH to emit, next to the existing `emit_token_issued` / `emit_token_failed` in `handlers.rs`:
-    - `auth.signed_in` (`event_class: auth`, `source_channel` from the request, `target_ref: session{jti}`, `content_ref: none`, `attributes: {source_ip_hash16, method}` where method ∈ `password | oidc | passkey`) on a successful token issue.
-    - `auth.sign_in_failed` (`event_class: auth`, `content_ref: none`, `attributes: {reason, source_ip_hash16}`) on a failed attempt. `subject_id` is `null` when the email did not resolve (no person to attribute), mirroring `emit_token_failed`.
-    - These reuse AUTH's existing audit pool (the same one `memory_bridge` writes to); no new connection.
+- `auth.signed_in` (`event_class: auth`, `source_channel` from the request, `target_ref: session{jti}`, `content_ref: none`, `attributes: {source_ip_hash16, method}` where method ∈ `password | oidc | passkey`) on a successful token issue.
+- `auth.sign_in_failed` (`event_class: auth`, `content_ref: none`, `attributes: {reason, source_ip_hash16}`) on a failed attempt. `subject_id` is `null` when the email did not resolve (no person to attribute), mirroring `emit_token_failed`.
+- These reuse AUTH's existing audit pool (the same one `memory_bridge` writes to); no new connection.
 4. **MUST** wire CHAT to emit, in `messages.rs` / `channels.rs` / `realtime.rs`:
-    - `chat.message_created` (`event_class: content`, `target_ref: channel{id}` or `dm{id}`, `content_ref: pointer{store:"chat_messages", id:<message_id>}`, `attributes: {channel_kind, has_attachment}`).
-    - `chat.message_edited` (`content`, same target, `content_ref: pointer{chat_messages,id}`).
-    - `chat.message_deleted` (`content`, `content_ref: none` — the body is gone; the pointer would dangle).
-    - `chat.channel_created` (`admin`, `target_ref: channel{id}`).
-    - `chat.channel_joined` / `chat.channel_left` (`activity`, `target_ref: channel{id}`).
-    - `chat.dm_opened` (`activity`, `target_ref: dm{id}`).
-    - `chat.presence_changed` (`presence`, `target_ref: channel{id}`, `attributes: {state}` where state ∈ `online | offline`).
-    Message bodies are NEVER inlined; the `content_ref` points at chat's own `chat_messages` row (migration 0005's attachment link is reused for the attachment flag only).
+- `chat.message_created` (`event_class: content`, `target_ref: channel{id}` or `dm{id}`, `content_ref: pointer{store:"chat_messages", id:<message_id>}`, `attributes: {channel_kind, has_attachment}`).
+- `chat.message_edited` (`content`, same target, `content_ref: pointer{chat_messages,id}`).
+- `chat.message_deleted` (`content`, `content_ref: none` — the body is gone; the pointer would dangle).
+- `chat.channel_created` (`admin`, `target_ref: channel{id}`).
+- `chat.channel_joined` / `chat.channel_left` (`activity`, `target_ref: channel{id}`).
+- `chat.dm_opened` (`activity`, `target_ref: dm{id}`).
+- `chat.presence_changed` (`presence`, `target_ref: channel{id}`, `attributes: {state}` where state ∈ `online | offline`). Message bodies are NEVER inlined; the `content_ref` points at chat's own `chat_messages` row (migration 0005's attachment link is reused for the attachment flag only).
 5. **MUST** turn ON the chat→brain audit link (DEC-2713). CHAT already reads `CHAT_AUDIT_DATABASE_URL` into `audit_pool` and logs `"unset; chat audit events are logged, not chained"` when absent (P0 left it unset). This task sets that variable to the brain's audit DB (the MEMORY `l1_audit_log` database, Supabase Postgres in prod) so chat interaction-events chain into MEMORY, changes the `unset` log from `warn` to `info`, and documents the variable as required in production. The chat capture path routes through `cyberos-capture` → TASK-MEMORY-121 `emit()` over that pool.
 6. **MUST** route every emitter through TASK-MEMORY-121 `emit()` so the consent gate (TASK-MEMORY-121 §1 #8) and validation apply uniformly. An emitter physically cannot skip the gate, because it has no other way to write the row. A subject who has not acknowledged the TASK-EVAL-001 notice produces `Skipped` outcomes and zero rows, regardless of which module emitted.
 7. **MUST** keep capture best-effort and off the critical path: a capture failure (audit pool down, validation error, `Skipped`) MUST NOT fail or delay the underlying interaction — the sign-in still issues its token, the message still sends. Emitters call `capture()`, match the outcome for metrics, and swallow errors with a `tracing::warn!`, exactly as AUTH's `emit_token_issued` and chat's `audit::emit` already do.

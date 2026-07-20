@@ -11,4 +11,3 @@ Key changes:
 - Risks +5 (R-CRM-011..015): bridge fails partially · wrong billing mode · CUO next-action inappropriate · vertical-pack drift · merge data loss
 - KPIs +6: deal-to-Engagement conversion rate · conversion bridge p95 · win/loss memory citation rate · next-action acceptance · stage-stuck deal alert · forecast accuracy
 - References expanded: §0 + 7 cross-module links + PROJ §2.5 join contract link + SKILL §3.6 vertical-pack pattern + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + task-audit skill + expanded PDPL articles
-

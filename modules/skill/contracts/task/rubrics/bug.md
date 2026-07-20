@@ -1,8 +1,6 @@
 # `BUG-*` — per-type rule family for `type: bug`
 
-Loaded by `task-audit` when `type: bug` (FM-108). Applies **in addition to** the
-common `FM-*` / `SEC-*` / `SAFE-*` / `TRACE-*` families, and **replaces** the
-feature-only edge-case-matrix floor (`total_rows >= 8`).
+Loaded by `task-audit` when `type: bug` (FM-108). Applies **in addition to** the common `FM-*` / `SEC-*` / `SAFE-*` / `TRACE-*` families, and **replaces** the feature-only edge-case-matrix floor (`total_rows >= 8`).
 
 Scored out of 10 like every other rubric. `task-audit` refuses to pass below 10/10.
 
@@ -30,8 +28,7 @@ Scored out of 10 like every other rubric. `task-audit` refuses to pass below 10/
 
 ## §10.3  REGRESSION — the load-bearing rule
 
-Run by `coverage-gate-audit` during the `testing -> done` transition, alongside the
-`TRACE-004` clause-to-test check that features get.
+Run by `coverage-gate-audit` during the `testing -> done` transition, alongside the `TRACE-004` clause-to-test check that features get.
 
 | rule_id | Rule | Severity |
 |---|---|---|
@@ -41,13 +38,9 @@ Run by `coverage-gate-audit` during the `testing -> done` transition, alongside 
 
 ### Why REGRESSION-002 exists
 
-A test written *after* a fix, against the *fixed* code, will pass. That proves
-nothing at all — it does not test the bug, it tests the absence of the bug in a
-world where the bug was never there. The only way to know a regression test tests
-the regression is to watch it fail on the broken commit.
+A test written *after* a fix, against the *fixed* code, will pass. That proves nothing at all — it does not test the bug, it tests the absence of the bug in a world where the bug was never there. The only way to know a regression test tests the regression is to watch it fail on the broken commit.
 
-This is the bug-type analogue of the feature-type edge-case matrix, and it is
-strictly stronger, because it is machine-checkable:
+This is the bug-type analogue of the feature-type edge-case matrix, and it is strictly stronger, because it is machine-checkable:
 
 ```bash
 git worktree add /tmp/bugcheck "${first_bad_commit:-HEAD~1}"
@@ -56,31 +49,22 @@ git worktree add /tmp/bugcheck "${first_bad_commit:-HEAD~1}"
 ( cd .              && <test-runner> "$regression_test" )   # MUST be zero
 ```
 
-Non-zero then zero, with both terminals captured. Anything else and the task does
-not reach `done`.
+Non-zero then zero, with both terminals captured. Anything else and the task does not reach `done`.
 
 ### The one exception
 
-If the bug **cannot** be reproduced in a test (an infra failure, a vendor outage, a
-data-corruption event with no code path), `regression_test` may be `null` **only**
-with an explicit `no_regression_test_reason:` field carrying an operator-recorded
-justification. `REGRESSION-004` then requires that reason to be non-empty and
-signed by a human, and the task carries the exemption in its audit row forever.
+If the bug **cannot** be reproduced in a test (an infra failure, a vendor outage, a data-corruption event with no code path), `regression_test` may be `null` **only** with an explicit `no_regression_test_reason:` field carrying an operator-recorded justification. `REGRESSION-004` then requires that reason to be non-empty and signed by a human, and the task carries the exemption in its audit row forever.
 
-Making the exemption *possible* but *loud* is the point. A gate you cannot ever
-bypass gets bypassed by disabling the gate.
+Making the exemption *possible* but *loud* is the point. A gate you cannot ever bypass gets bypassed by disabling the gate.
 
 ## §10.4  What a bug does NOT need
 
-Bugs skip these phases unless `repo-context-map` reports the fix crosses a module
-boundary (`blast_radius.module_count > 1`):
+Bugs skip these phases unless `repo-context-map` reports the fix crosses a module boundary (`blast_radius.module_count > 1`):
 
 - `architectural-spike-author`
 - `architecture-decision-record-author`
 - `software-design-document-author`
 
-A one-line null check does not need an ADR. Forcing one is how you teach people to
-route around the process.
+A one-line null check does not need an ADR. Forcing one is how you teach people to route around the process.
 
-`edge-case-matrix-author` still runs, but the `total_rows >= 8` floor is lifted:
-the matrix is scoped to the cause's neighbourhood, not the whole feature surface.
+`edge-case-matrix-author` still runs, but the `total_rows >= 8` floor is lifted: the matrix is scoped to the cause's neighbourhood, not the whole feature surface.

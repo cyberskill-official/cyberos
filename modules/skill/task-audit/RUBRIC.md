@@ -126,23 +126,9 @@ These rules apply to tasks that use the cyberos template (numbered §1 normative
 
 ### TRACE-006 — the cited test must exercise its clause's verb (judgment)
 
-Added 2026-07-18 (TASK-IMP-118) after external review found TASK-IMP-108 §1.7 shipped `done`
-through both human gates with its clause unsatisfied and its cited test green. TRACE-004 checks that
-a cited test PASSES; nothing checked that it tests the CLAUSE. An author who writes both the clause
-and its test can satisfy every existing rule while asserting something strictly weaker than the
-clause promised — and the weaker test is the one most likely to be written, because it is the one
-that passes first. TRACE-006 points a check at that gap: for every §1 clause with a cited test,
-compare the test's ASSERTION to the clause's PROMISE.
+Added 2026-07-18 (TASK-IMP-118) after external review found TASK-IMP-108 §1.7 shipped `done` through both human gates with its clause unsatisfied and its cited test green. TRACE-004 checks that a cited test PASSES; nothing checked that it tests the CLAUSE. An author who writes both the clause and its test can satisfy every existing rule while asserting something strictly weaker than the clause promised — and the weaker test is the one most likely to be written, because it is the one that passes first. TRACE-006 points a check at that gap: for every §1 clause with a cited test, compare the test's ASSERTION to the clause's PROMISE.
 
-**How the auditor runs it (per clause).** (1) Read the clause and name its VERB — what observable
-evidence the verb demands. (2) Read the cited test and name what it actually asserts. (3) Compare; if
-the assertion is weaker than the verb demands, TRACE-006 fails and the task routes back. A clause
-carrying two verbs ("MUST render AND MUST NOT change status") is compared against each verb
-separately, and either one weaker fails. A test asserting MORE than the verb demands is never a
-finding — stronger is fine. A clause with no BCP-14 verb, or citing no test, is out of TRACE-006's
-scope (that is TRACE-001/004 territory). Record BOTH halves — the verb's demand and the test's actual
-assertion — in the audit body per `REPORT_FORMAT.md`, for every clause compared (PASS or FAIL), so the
-comparison is legible to the next reader and not just its verdict.
+**How the auditor runs it (per clause).** (1) Read the clause and name its VERB — what observable evidence the verb demands. (2) Read the cited test and name what it actually asserts. (3) Compare; if the assertion is weaker than the verb demands, TRACE-006 fails and the task routes back. A clause carrying two verbs ("MUST render AND MUST NOT change status") is compared against each verb separately, and either one weaker fails. A test asserting MORE than the verb demands is never a finding — stronger is fine. A clause with no BCP-14 verb, or citing no test, is out of TRACE-006's scope (that is TRACE-001/004 territory). Record BOTH halves — the verb's demand and the test's actual assertion — in the audit body per `REPORT_FORMAT.md`, for every clause compared (PASS or FAIL), so the comparison is legible to the next reader and not just its verdict.
 
 **Verb → evidence table.** What discharges each recurring verb, and what does NOT:
 
@@ -155,39 +141,14 @@ comparison is legible to the next reader and not just its verdict.
 | **emit** | the artefact was actually produced and is observable at its sink — the row is in the log, the event on the bus, the file on disk | the emitting function was called, or the intent was recorded, without reading the sink |
 | **preserve** | the value is UNCHANGED across the operation — compares before to after (byte- or value-equal) | the value still exists afterward, or was copied, with no comparison to the original |
 
-These six are the recurring cases, not a closed set: a clause verb not in the table is judged by the
-same standard — name what the verb demands as observable evidence, then check the test asserts that
-and nothing weaker.
+These six are the recurring cases, not a closed set: a clause verb not in the table is judged by the same standard — name what the verb demands as observable evidence, then check the test asserts that and nothing weaker.
 
 **Worked anti-example — TASK-IMP-108 §1.7 (render vs present-in-payload).**
-- The clause (108 §1.7, verbatim): "The status page MUST render a staleness report: drafts grouped by
-  `draft_reason` with age. It MUST NOT change any task's status." Two verbs: **render** and **MUST NOT
-  change**.
-- The original cited test asserted `grep -q '"draft_staleness"'` against the built HTML — that the
-  string `draft_staleness` appears somewhere in the page bytes.
-- Why the assertion was weaker than the verb: the string appears only inside a JSON blob injected into
-  the payload that no code reads — `status-app.js` has zero references to the key, so nothing renders
-  it. `grep`-in-payload proves PRESENT-IN-PAYLOAD; **render** demands PRESENT-IN-RENDERED-VIEW. The
-  test passes on an implementation that computes the report, ships it in the JSON, and never draws it —
-  which is exactly what shipped `done`. Under TRACE-006 the original assertion FAILS the **render** row
-  above. Its replacement discharges the verb: it strips the data island and asserts the report is
-  visible markup outside the payload ("Drafts awaiting triage", a reason column, an age column) — the
-  DOM a reader sees. (External review 2026-07-17;
-  `tools/docs-site/tests/test_render_status_hub.sh::t11_draft_staleness_report` carries both the
-  history and the fix.)
+- The clause (108 §1.7, verbatim): "The status page MUST render a staleness report: drafts grouped by `draft_reason` with age. It MUST NOT change any task's status." Two verbs: **render** and **MUST NOT change**.
+- The original cited test asserted `grep -q '"draft_staleness"'` against the built HTML — that the string `draft_staleness` appears somewhere in the page bytes.
+- Why the assertion was weaker than the verb: the string appears only inside a JSON blob injected into the payload that no code reads — `status-app.js` has zero references to the key, so nothing renders it. `grep`-in-payload proves PRESENT-IN-PAYLOAD; **render** demands PRESENT-IN-RENDERED-VIEW. The test passes on an implementation that computes the report, ships it in the JSON, and never draws it — which is exactly what shipped `done`. Under TRACE-006 the original assertion FAILS the **render** row above. Its replacement discharges the verb: it strips the data island and asserts the report is visible markup outside the payload ("Drafts awaiting triage", a reason column, an age column) — the DOM a reader sees. (External review 2026-07-17; `tools/docs-site/tests/test_render_status_hub.sh::t11_draft_staleness_report` carries both the history and the fix.)
 
-**TRACE-006 is judgment-family and is ABSENT from `task-lint`.** Like TRACE-004 and TRACE-005 — and
-unlike the structural halves TRACE-001..003, which the machine floor `task-lint.mjs` implements —
-TRACE-006 cannot be mechanised: deciding whether a test exercises a clause's verb means reading a test
-and a sentence and comparing their meaning. It therefore lives with the judgment families and MUST NOT
-be added to `task-lint` (TASK-IMP-118 §1.5). A structural check that appeared to enforce it — e.g. "the
-clause's key string appears in the cited test" — would PASS TASK-IMP-108 §1.7's original test (the
-string genuinely is in the file) and restore exactly the false assurance TRACE-006 exists to remove.
-The auditor runs it under "TRACE semantic sufficiency" (task-audit skill §3); the coverage gate does
-not — TRACE-004's mechanical pass/fail is a different job at a different gate. TRACE-006 fails a test
-that asserts less than its clause's VERB; a spec that cannot fail its own motivating case is
-decoration, so re-auditing 108 §1.7 against this rule MUST fail the original assertion and pass its
-replacement.
+**TRACE-006 is judgment-family and is ABSENT from `task-lint`.** Like TRACE-004 and TRACE-005 — and unlike the structural halves TRACE-001..003, which the machine floor `task-lint.mjs` implements — TRACE-006 cannot be mechanised: deciding whether a test exercises a clause's verb means reading a test and a sentence and comparing their meaning. It therefore lives with the judgment families and MUST NOT be added to `task-lint` (TASK-IMP-118 §1.5). A structural check that appeared to enforce it — e.g. "the clause's key string appears in the cited test" — would PASS TASK-IMP-108 §1.7's original test (the string genuinely is in the file) and restore exactly the false assurance TRACE-006 exists to remove. The auditor runs it under "TRACE semantic sufficiency" (task-audit skill §3); the coverage gate does not — TRACE-004's mechanical pass/fail is a different job at a different gate. TRACE-006 fails a test that asserts less than its clause's VERB; a spec that cannot fail its own motivating case is decoration, so re-auditing 108 §1.7 against this rule MUST fail the original assertion and pass its replacement.
 
 ---
 
@@ -210,8 +171,4 @@ replacement.
 
 ## §10  Template detection (TASK-CUO-208)
 
-Family applicability is selected per file by detection - `template: task@1` key ->
-FM+SEC+COND+QA+SAFE (+TRACE per §9); `## §1 - Description`..`## §11` grammar -> engineering-spec@1
-(author §12 sub-rules + TRACE+QA+SAFE). Both/neither -> needs_human (`template_ambiguous`).
-Profiles normative in `../task-author/references/TEMPLATE_PROFILES.md`.
-
+Family applicability is selected per file by detection - `template: task@1` key -> FM+SEC+COND+QA+SAFE (+TRACE per §9); `## §1 - Description`..`## §11` grammar -> engineering-spec@1 (author §12 sub-rules + TRACE+QA+SAFE). Both/neither -> needs_human (`template_ambiguous`). Profiles normative in `../task-author/references/TEMPLATE_PROFILES.md`.

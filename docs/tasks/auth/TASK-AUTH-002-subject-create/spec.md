@@ -83,11 +83,10 @@ The AUTH service **MUST** expose `POST /v1/admin/subjects` for creating new auth
 2. **MUST** accept request body `{ "tenant_id": <uuid>, "email": <string>, "password": <string>, "roles": [<string>] }`. Validation: email matches `^[^@\s]+@[^@\s]+\.[^@\s]+$`; password meets complexity rules per §1 #4; roles are all in the allow-list per §1 #5.
 3. **MUST** hash the password using bcrypt at cost 12 (DEC-115; matches NIST SP 800-63B floor). The plaintext password is zeroised from memory immediately after hashing (using the `zeroize` crate). The bcrypt hash is the ONLY representation written to disk.
 4. **MUST** validate password complexity:
-    - Length: 12 ≤ len ≤ 128 (NIST SP 800-63B; longer than 8 floor; cap protects against bcrypt input limits).
-    - Must contain at least 3 of: lowercase, uppercase, digit, special char.
-    - Must NOT match the user's email local-part (case-insensitive).
-    - Must NOT be in the top-10K-common-passwords list embedded at compile time.
-   Failures return `400 BAD_REQUEST` with body `{"error":"weak_password","reasons":["too_short","no_digit"]}` — multiple reasons reported in one response.
+- Length: 12 ≤ len ≤ 128 (NIST SP 800-63B; longer than 8 floor; cap protects against bcrypt input limits).
+- Must contain at least 3 of: lowercase, uppercase, digit, special char.
+- Must NOT match the user's email local-part (case-insensitive).
+- Must NOT be in the top-10K-common-passwords list embedded at compile time. Failures return `400 BAD_REQUEST` with body `{"error":"weak_password","reasons":["too_short","no_digit"]}` — multiple reasons reported in one response.
 5. **MUST** restrict assignable roles to a closed allow-list defined in `roles.rs`. Slice 1: `{"tenant-admin", "tenant-member"}`. Unknown role returns `400 BAD_REQUEST` with `{"error":"unknown_role","role":"<name>","allowed":[...]}`. The allow-list expands in TASK-AUTH-101 to 22 roles.
 6. **MUST** support idempotency via `Idempotency-Key` header (same semantics as TASK-AUTH-001 §1 #5). Repeat POST with same key + same body → return prior subject (same id); same key + different body → `409` with `idempotency_key_reuse`.
 7. **MUST** emit exactly one `auth.subject_created` memory audit row per new subject. The row carries `subject_id`, `tenant_id`, `email_hash16` (SHA-256[..16] of email — privacy-preserving identifier), `roles`, `created_by_subject_id`, `request_id`. The row MUST NOT contain plaintext password, password hash, OR the full email — `email_hash16` is the privacy-safe identifier.
@@ -98,9 +97,9 @@ The AUTH service **MUST** expose `POST /v1/admin/subjects` for creating new auth
 12. **MUST** atomically apply `subjects` insert + idempotency record + audit row in a SINGLE Postgres transaction (mirrors TASK-AUTH-001 §1 #12).
 13. **MUST** emit OTel span `auth.create_subject` with attributes `tenant_id`, `email_hash16`, `roles_count`, `outcome` (created | idempotent_replay | conflict | forbidden | invalid_input | weak_password). Span MUST NOT carry email or password.
 14. **SHOULD** emit OTel metrics:
-    - `auth_subject_create_total{outcome, tenant_id}` (counter).
-    - `auth_subject_create_latency_ms` (histogram; SLO p95 < 200ms **net of hashing**, per §1 #10 as amended).
-    - `auth_subject_count{tenant_id}` (gauge).
+- `auth_subject_create_total{outcome, tenant_id}` (counter).
+- `auth_subject_create_latency_ms` (histogram; SLO p95 < 200ms **net of hashing**, per §1 #10 as amended).
+- `auth_subject_count{tenant_id}` (gauge).
 
 ---
 
@@ -566,13 +565,9 @@ All resolved. Deferred:
 
 ### A1 — 2026-07-11 — the p95 SLO was arithmetically impossible (§1 #10, §5, §11)
 
-**Approved by:** Stephen Cheng (CTO), 2026-07-11.
-**Found by:** TASK-AUTH-111's gate run, where `create_subject_p95_latency_under_200ms` failed persistently on a
-change that does not touch this endpoint.
+**Approved by:** Stephen Cheng (CTO), 2026-07-11. **Found by:** TASK-AUTH-111's gate run, where `create_subject_p95_latency_under_200ms` failed persistently on a change that does not touch this endpoint.
 
-**What was wrong.** §1 #10 required p95 ≤ 200ms *including* the bcrypt hash, on the stated basis that "bcrypt
-cost 12 ≈ 150ms; remaining 50ms for DB + validation + audit". That figure was wrong. Measured on a
-server-class core:
+**What was wrong.** §1 #10 required p95 ≤ 200ms *including* the bcrypt hash, on the stated basis that "bcrypt cost 12 ≈ 150ms; remaining 50ms for DB + validation + audit". That figure was wrong. Measured on a server-class core:
 
 | bcrypt cost | time per hash |
 |---|---|
@@ -581,36 +576,15 @@ server-class core:
 | **12 (ours)** | **209 ms** |
 | 13 | 421 ms |
 
-Cost 12 alone exceeds the entire 200ms budget. The remaining budget for the DB write, the breach check, the
-audit row and validation was **negative**. No implementation could have satisfied this SLO; the test was not
-detecting slow code, it was reporting that the arithmetic did not close. It had been failing locally and
-passing in CI only because CI silently applied a 500ms threshold — so the gate was green on the machine that
-gates merges and red on every developer's machine, which is the worst of both worlds.
+Cost 12 alone exceeds the entire 200ms budget. The remaining budget for the DB write, the breach check, the audit row and validation was **negative**. No implementation could have satisfied this SLO; the test was not detecting slow code, it was reporting that the arithmetic did not close. It had been failing locally and passing in CI only because CI silently applied a 500ms threshold — so the gate was green on the machine that gates merges and red on every developer's machine, which is the worst of both worlds.
 
-**Second defect, found on the way.** The test timed a live HTTPS call to `api.pwnedpasswords.com` on each of
-its 100 iterations. A build gate whose verdict depends on the round-trip time from the developer's chair to
-Cloudflare is not a gate. Worse, the code behind it built a **new `reqwest::Client` per call** — discarding
-the connection pool and paying a fresh DNS + TCP + TLS handshake on *every password set in production*. Fixed
-in `hibp.rs`; the client is now built once and reused. That is a real latency win for every signup and
-password change, and it existed only because a latency test nobody could satisfy was being tolerated.
+**Second defect, found on the way.** The test timed a live HTTPS call to `api.pwnedpasswords.com` on each of its 100 iterations. A build gate whose verdict depends on the round-trip time from the developer's chair to Cloudflare is not a gate. Worse, the code behind it built a **new `reqwest::Client` per call** — discarding the connection pool and paying a fresh DNS + TCP + TLS handshake on *every password set in production*. Fixed in `hibp.rs`; the client is now built once and reused. That is a real latency win for every signup and password change, and it existed only because a latency test nobody could satisfy was being tolerated.
 
-**What we did NOT do: lower the cost factor.** The original §1 #10 offered "switch to cost 10 ONLY via task
-amendment" as the escape hatch. This amendment explicitly closes that hatch. [OWASP's Password Storage Cheat
-Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) sets bcrypt's
-minimum work factor at 10 and says it should be "as large as verification server performance will allow";
-OWASP now treats bcrypt itself as the legacy choice and recommends Argon2 for new systems, with 2026
-commentary pointing at work factors of 13-14. Dropping 12 → 10 would walk backwards to OWASP's floor to
-satisfy a budget that was miscalculated in the first place. **The SLO was wrong, not the hashing.**
+**What we did NOT do: lower the cost factor.** The original §1 #10 offered "switch to cost 10 ONLY via task amendment" as the escape hatch. This amendment explicitly closes that hatch. [OWASP's Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) sets bcrypt's minimum work factor at 10 and says it should be "as large as verification server performance will allow"; OWASP now treats bcrypt itself as the legacy choice and recommends Argon2 for new systems, with 2026 commentary pointing at work factors of 13-14. Dropping 12 → 10 would walk backwards to OWASP's floor to satisfy a budget that was miscalculated in the first place. **The SLO was wrong, not the hashing.**
 
-**The amended rule.** §1 #10 now budgets 200ms p95 for everything the endpoint does *besides* hashing.
-`create_subject_p95_overhead_under_200ms_above_hashing` enforces it by (a) serving HIBP from a local stub, so
-the number contains no internet, and (b) **calibrating bcrypt on the host at run time** and subtracting it,
-so the verdict is identical on a laptop, a CI runner and a prod cell. The hash cost is a feature we are
-choosing to pay for, not a regression to be detected.
+**The amended rule.** §1 #10 now budgets 200ms p95 for everything the endpoint does *besides* hashing. `create_subject_p95_overhead_under_200ms_above_hashing` enforces it by (a) serving HIBP from a local stub, so the number contains no internet, and (b) **calibrating bcrypt on the host at run time** and subtracting it, so the verdict is identical on a laptop, a CI runner and a prod cell. The hash cost is a feature we are choosing to pay for, not a regression to be detected.
 
-**Open question deliberately left open.** Whether to migrate from bcrypt to Argon2id, per OWASP's current
-recommendation for new systems. That is a security decision with a migration path attached (rehash-on-login),
-and it is not this amendment's business. Logged in §9.
+**Open question deliberately left open.** Whether to migrate from bcrypt to Argon2id, per OWASP's current recommendation for new systems. That is a security decision with a migration path attached (rehash-on-login), and it is not this amendment's business. Logged in §9.
 
 ---
 

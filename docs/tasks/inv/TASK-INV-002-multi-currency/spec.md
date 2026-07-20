@@ -100,16 +100,16 @@ The INV service **MUST** ship multi-currency FX support at `services/inv/src/fx/
 3. **MUST** invoice currency immutable per DEC-1510 — already enforced by TASK-INV-001 + engagement.billing_currency immutability per TASK-TEN-003.
 
 4. **MUST** snapshot SBV daily at 09:00 UTC per DEC-1511 via `snapshot_job.rs`:
-   - Fetch SBV reference rates (VND base; USD/EUR/JPY/CNY/etc cross-rates).
-   - Persist all (VND, X) pairs.
-   - Fetch ECB rates as cross-validation + non-SBV pairs.
-   - Failure → emit `inv.fx_snapshot_failed` sev-2; retry hourly.
+- Fetch SBV reference rates (VND base; USD/EUR/JPY/CNY/etc cross-rates).
+- Persist all (VND, X) pairs.
+- Fetch ECB rates as cross-validation + non-SBV pairs.
+- Failure → emit `inv.fx_snapshot_failed` sev-2; retry hourly.
 
 5. **MUST** support deterministic as-of conversion per DEC-1513 via `converter.rs::convert(amount_minor, from, to, as_of_date)`:
-   - Lookup `fx_rates(as_of_date, from, to)`.
-   - If direct rate missing, compute via VND base: `from→VND→to`.
-   - Returns same value on every call with same inputs.
-   - If no rate available for date → 412 + `no_fx_for_date`.
+- Lookup `fx_rates(as_of_date, from, to)`.
+- If direct rate missing, compute via VND base: `from→VND→to`.
+- Returns same value on every call with same inputs.
+- If no rate available for date → 412 + `no_fx_for_date`.
 
 6. **MUST** support CFO manual override via `POST /v1/admin/inv/fx/override` body `{ snapshot_date, base, quote, rate, reason }`. Caller has `cfo`. Inserts row with source='manual_override' + emits `inv.fx_manual_override` sev-1.
 
@@ -205,8 +205,7 @@ async fn manual_override_cfo_only() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-INV-001.
-**Cross-module:** TASK-AUTH-101 (cfo role), TASK-AI-003, TASK-MEMORY-111. **Consumed by:** TASK-INV-011, TASK-TEN-003, TASK-TEN-102 reporting.
+**Upstream:** TASK-INV-001. **Cross-module:** TASK-AUTH-101 (cfo role), TASK-AI-003, TASK-MEMORY-111. **Consumed by:** TASK-INV-011, TASK-TEN-003, TASK-TEN-102 reporting.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

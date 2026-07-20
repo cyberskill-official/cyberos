@@ -90,36 +90,35 @@ The capability broker **MUST** be the sole tool dispatcher for skills. Skills co
 1. **MUST** listen on a per-skill Unix socket `/tmp/cyberos-skill-broker.<skill_invocation_id>.sock` created at invoke time and removed at termination. The socket is the ONLY IPC channel — the skill subprocess has no other access to broker state.
 2. **MUST** speak JSON-RPC 2.0 over length-prefixed framing (4-byte BE u32 length || JSON body). Methods: `tool.call`, `tool.list`, `broker.status`. Request size capped at 1 MB; response size capped at 16 MB.
 3. **MUST** enforce frontmatter at every `tool.call`:
-    - `tool.method` MUST be in the skill's `allowed_tools` list AND in the global `MCP_TOOL_REGISTRY`.
-    - `tool.method` MUST NOT be in the skill's `disallowed_tools` list (denylist overrides).
-    - For `MemoryRead` + `MemorySearch`: every requested `path` MUST match at least one glob in `allowed_memory_scopes`.
-    - For `Read` + `Edit` + `Write`: paths MUST match `allowed_files` (`x-allowed-files: [...]` frontmatter extension; default deny).
-    - For `HttpFetch` + `HttpPost`: hostnames MUST match `allowed_domains` (`x-allowed-domains: [...]` extension; default deny).
-    - Violation → return JSON-RPC error `{"code": -32603, "data": {"reason": "tool_not_allowed" | "scope_violation" | "domain_violation" | "file_violation"}}`; broker emits `skill.tool_denied` audit row carrying the violation details.
+- `tool.method` MUST be in the skill's `allowed_tools` list AND in the global `MCP_TOOL_REGISTRY`.
+- `tool.method` MUST NOT be in the skill's `disallowed_tools` list (denylist overrides).
+- For `MemoryRead` + `MemorySearch`: every requested `path` MUST match at least one glob in `allowed_memory_scopes`.
+- For `Read` + `Edit` + `Write`: paths MUST match `allowed_files` (`x-allowed-files: [...]` frontmatter extension; default deny).
+- For `HttpFetch` + `HttpPost`: hostnames MUST match `allowed_domains` (`x-allowed-domains: [...]` extension; default deny).
+- Violation → return JSON-RPC error `{"code": -32603, "data": {"reason": "tool_not_allowed" | "scope_violation" | "domain_violation" | "file_violation"}}`; broker emits `skill.tool_denied` audit row carrying the violation details.
 4. **MUST** sandbox the skill subprocess:
-    - `close_fds(3..MAX)` — close all inherited file descriptors except stdin/stdout/stderr.
-    - `env_clear()` then re-set only `CYBEROS_BROKER_SOCKET`, `CYBEROS_SKILL_ID`, `CYBEROS_INVOCATION_ID`, `CYBEROS_TENANT_ID`, `RUST_LOG=warn`.
-    - Set `unshare(CLONE_NEWPID)` on Linux when broker has CAP_SYS_ADMIN; otherwise skip with WARN log.
-    - Set `setrlimit(RLIMIT_AS, 512MB)`, `RLIMIT_CPU, 60s)` (override per frontmatter `effort_minutes * 60`), `RLIMIT_NPROC, 8)`.
+- `close_fds(3..MAX)` — close all inherited file descriptors except stdin/stdout/stderr.
+- `env_clear()` then re-set only `CYBEROS_BROKER_SOCKET`, `CYBEROS_SKILL_ID`, `CYBEROS_INVOCATION_ID`, `CYBEROS_TENANT_ID`, `RUST_LOG=warn`.
+- Set `unshare(CLONE_NEWPID)` on Linux when broker has CAP_SYS_ADMIN; otherwise skip with WARN log.
+- Set `setrlimit(RLIMIT_AS, 512MB)`, `RLIMIT_CPU, 60s)` (override per frontmatter `effort_minutes * 60`), `RLIMIT_NPROC, 8)`.
 5. **MUST** enforce `allowed_memory_scopes` path-glob check using `globset` (same crate TASK-SKILL-103 uses for parse-time validation). Globs are evaluated against the post-canonicalisation memory path (per AGENTS.md §0.4). The check happens AT EVERY `MemoryRead`/`MemorySearch`/`MemoryEmit` call — even within the same invocation; this prevents glob bypass via mid-session reconfiguration.
 6. **MUST** enforce `effort_minutes` timeout:
-    - At T=0, start a tokio timer of `effort_minutes * 60 * 0.9` seconds.
-    - At T=90%, send SIGTERM to subprocess; broker continues to accept the tool.call response on the socket for up to 10s.
-    - At T=100%, send SIGKILL; broker closes socket; emits `skill.timeout` audit row.
-6.5. **MUST** treat default `effort_minutes` as 30 minutes (1800s) when frontmatter doesn't specify.
+- At T=0, start a tokio timer of `effort_minutes * 60 * 0.9` seconds.
+- At T=90%, send SIGTERM to subprocess; broker continues to accept the tool.call response on the socket for up to 10s.
+- At T=100%, send SIGKILL; broker closes socket; emits `skill.timeout` audit row. 6.5. **MUST** treat default `effort_minutes` as 30 minutes (1800s) when frontmatter doesn't specify.
 7. **MUST** emit memory audit rows for every tool dispatch:
-    - `skill.tool_call_started` BEFORE dispatch with `{invocation_id, skill_id, tool_name, args_hash, trace_id}`.
-    - `skill.tool_call_completed` AFTER with `{invocation_id, tool_name, outcome (success|error|denied|timeout), duration_ms, result_hash, trace_id}`.
-    - `skill.tool_denied` on enforcement violation with `{invocation_id, skill_id, tool_name, reason, attempted_args_hash, trace_id}`.
-    - `skill.timeout` when SIGKILL fires with `{invocation_id, skill_id, elapsed_ms, last_tool_call, trace_id}`.
+- `skill.tool_call_started` BEFORE dispatch with `{invocation_id, skill_id, tool_name, args_hash, trace_id}`.
+- `skill.tool_call_completed` AFTER with `{invocation_id, tool_name, outcome (success|error|denied|timeout), duration_ms, result_hash, trace_id}`.
+- `skill.tool_denied` on enforcement violation with `{invocation_id, skill_id, tool_name, reason, attempted_args_hash, trace_id}`.
+- `skill.timeout` when SIGKILL fires with `{invocation_id, skill_id, elapsed_ms, last_tool_call, trace_id}`.
 8. **MUST** propagate W3C TraceContext (per TASK-AI-022) — every tool.call includes a `traceparent` field; the broker injects this into the underlying tool (e.g. `HttpFetch` adds it as a request header; `MemoryEmit` writes it into the row payload).
 9. **MUST** register the canonical tool set at broker startup. The registry is a static `MCP_TOOL_REGISTRY: BTreeMap<ToolName, Box<dyn Tool>>`. Native tools: `Bash`, `Read`, `Write`, `Edit`, `Glob`, `Grep`, `MemoryRead`, `MemorySearch`, `MemoryEmit`, `HttpFetch`, `HttpPost`. MCP-server-provided tools are registered dynamically when the broker connects to an MCP server (slice-3+).
 10. **MUST** emit OTel span `skill.broker.tool_call` per call with attributes `skill_id`, `tool_name`, `outcome`, `duration_ms`, `args_size_bytes`, `result_size_bytes`. Per-tool spans cascade — e.g. `Bash` further emits `skill.tool.bash.exec`.
 11. **MUST** emit OTel metrics:
-    - `skill_broker_tool_calls_total{tool_name, outcome}` (counter; outcome ∈ success | error | denied | timeout).
-    - `skill_broker_tool_duration_seconds{tool_name}` (histogram).
-    - `skill_broker_active_invocations` (gauge).
-    - `skill_broker_socket_bytes_total{direction}` (counter; direction ∈ tx | rx).
+- `skill_broker_tool_calls_total{tool_name, outcome}` (counter; outcome ∈ success | error | denied | timeout).
+- `skill_broker_tool_duration_seconds{tool_name}` (histogram).
+- `skill_broker_active_invocations` (gauge).
+- `skill_broker_socket_bytes_total{direction}` (counter; direction ∈ tx | rx).
 12. **MUST** expose `cyberos skill broker status` showing active invocations, total tool calls today, denied calls today (alerting signal).
 13. **MUST** support `cyberos skill broker tail --invocation <id>` to live-stream tool calls for one invocation (operator debugging).
 14. **SHOULD** support `cyberos skill broker replay --invocation <id>` reconstructing a past invocation's tool-call sequence from memory audit rows (slice-3+; placeholder).

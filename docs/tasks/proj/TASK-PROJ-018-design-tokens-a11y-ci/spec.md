@@ -79,32 +79,32 @@ risk_if_skipped: "Without token enforcement, components drift to hardcoded hex c
 The PROJ design-tokens + a11y CI layer **MUST** provide a single source of truth for visual design and enforce accessibility quality. The contract:
 
 1. **MUST** publish `tokens.proj.css` with the following token categories:
-    - **Color**: brand-primary, brand-secondary, status-* (one per IssueStatus), priority-* (low/med/high/urgent), surface-* (panel/elevated/translucent), border-*, text-* (primary/secondary/disabled).
-    - **Typography**: font-family-sans, font-family-mono, font-size-{xs|sm|base|lg|xl|2xl|3xl}, font-weight-{normal|medium|semibold|bold}, line-height-{tight|normal|relaxed}.
-    - **Spacing**: space-{0|1|2|3|4|5|6|8|10|12|16|24}, on 4px grid.
-    - **Radius**: radius-{none|sm|md|lg|full}.
-    - **Shadow**: shadow-{sm|md|lg} — translucent with Liquid-Glass blur backdrops.
-    - **Motion**: duration-{fast|normal|slow}, easing-{in|out|in-out}.
+- **Color**: brand-primary, brand-secondary, status-* (one per IssueStatus), priority-* (low/med/high/urgent), surface-* (panel/elevated/translucent), border-*, text-* (primary/secondary/disabled).
+- **Typography**: font-family-sans, font-family-mono, font-size-{xs|sm|base|lg|xl|2xl|3xl}, font-weight-{normal|medium|semibold|bold}, line-height-{tight|normal|relaxed}.
+- **Spacing**: space-{0|1|2|3|4|5|6|8|10|12|16|24}, on 4px grid.
+- **Radius**: radius-{none|sm|md|lg|full}.
+- **Shadow**: shadow-{sm|md|lg} — translucent with Liquid-Glass blur backdrops.
+- **Motion**: duration-{fast|normal|slow}, easing-{in|out|in-out}.
 2. **MUST** use CSS custom properties for runtime theming: light vs dark via `[data-theme="dark"]` body attribute.
 3. **MUST** enforce token-only usage via stylelint plugin `stylelint-no-hardcoded-values` (custom rule); CI fails on PRs introducing raw colors / spacings.
 4. **MUST** publish each top-level component as a Storybook story:
-    - At minimum: Board, Column, IssueCard, Timeline bar, Gantt arrow, BriefModal, StatusPicker, MetaSidebar.
-    - Each story exports the component in 3 variants minimum: default, focused, error.
+- At minimum: Board, Column, IssueCard, Timeline bar, Gantt arrow, BriefModal, StatusPicker, MetaSidebar.
+- Each story exports the component in 3 variants minimum: default, focused, error.
 5. **MUST** run Chromatic visual regression on every PR; new snapshots auto-baseline; diffs require human review.
 6. **MUST** run axe-core via Playwright on every PR (CI workflow `proj-a11y-gate.yml`):
-    - Visits each Storybook story.
-    - Runs `@axe-core/playwright` injection.
-    - Fails build on `critical` or `serious` violations.
-    - Reports warning on `moderate` (logged but doesn't fail).
+- Visits each Storybook story.
+- Runs `@axe-core/playwright` injection.
+- Fails build on `critical` or `serious` violations.
+- Reports warning on `moderate` (logged but doesn't fail).
 7. **MUST** define WCAG AA contrast minimums:
-    - Body text: 4.5:1.
-    - Large text (18pt+ or 14pt+ bold): 3:1.
-    - Non-text UI (icons, focus rings): 3:1.
-    - All token combinations validated by a `contrast_test.ts` Jest run.
+- Body text: 4.5:1.
+- Large text (18pt+ or 14pt+ bold): 3:1.
+- Non-text UI (icons, focus rings): 3:1.
+- All token combinations validated by a `contrast_test.ts` Jest run.
 8. **MUST** provide keyboard-focus-ring tokens (`outline-focus`, `outline-focus-width`) used by every interactive component; never `:focus { outline: none }` without `:focus-visible` alternative.
 9. **MUST** ship a Liquid-Glass shader/blur primitive:
-    - `backdrop-filter: blur(20px) saturate(180%);` on translucent surfaces.
-    - Fallback solid color when backdrop-filter unsupported.
+- `backdrop-filter: blur(20px) saturate(180%);` on translucent surfaces.
+- Fallback solid color when backdrop-filter unsupported.
 10. **MUST** document tokens in `design-system` workspace cross-reference (per CLAUDE.md `@AGENTS.md`) for shared use across modules.
 11. **SHOULD** export tokens.proj.json for non-CSS consumers (mobile native renderer slice 4+; Figma sync).
 12. **MUST** support `prefers-color-scheme: dark` media query: when user OS prefers dark, default to dark theme without manual toggle. Explicit `[data-theme]` attribute overrides OS preference.

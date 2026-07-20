@@ -65,22 +65,22 @@ The MEMORY_LINK layer **MUST** model typed edges between Issues and memory memor
 
 1. **MUST** define `memory_links` table: `id UUID PK`, `issue_id UUID FK`, `memory_path TEXT`, `memory_row_id TEXT` (nullable; for non-path linkable rows), `link_type` (`cites|implements|supersedes`), `created_at TIMESTAMPTZ`, `created_by_subject_id UUID`, `removed_at TIMESTAMPTZ` (nullable; soft-delete), `removed_by_subject_id UUID`, `removal_reason TEXT`, `tenant_id UUID`.
 2. **MUST** support 3 link types:
-    - `cites`: Issue references the memory (no semantic obligation).
-    - `implements`: Issue is the concrete work realising the memory's intent (e.g. decision row → impl issue).
-    - `supersedes`: Issue makes the memory obsolete; consumers should prefer Issue.
+- `cites`: Issue references the memory (no semantic obligation).
+- `implements`: Issue is the concrete work realising the memory's intent (e.g. decision row → impl issue).
+- `supersedes`: Issue makes the memory obsolete; consumers should prefer Issue.
 3. **MUST** validate at link-create:
-    - `memory_path` MUST exist (calls TASK-MEMORY-108 search; 404 if missing → `Err(LinkError::TargetMissing)`).
-    - Caller's frontmatter `allowed_memory_scopes` (TASK-SKILL-103) MUST cover the path; otherwise `Err(LinkError::ScopeDenied)`.
-    - For `supersedes`: memory's `created_at_ns < issue.created_at_ns` (forward-only); else `Err(LinkError::SupersedeViolatesTime)`.
+- `memory_path` MUST exist (calls TASK-MEMORY-108 search; 404 if missing → `Err(LinkError::TargetMissing)`).
+- Caller's frontmatter `allowed_memory_scopes` (TASK-SKILL-103) MUST cover the path; otherwise `Err(LinkError::ScopeDenied)`.
+- For `supersedes`: memory's `created_at_ns < issue.created_at_ns` (forward-only); else `Err(LinkError::SupersedeViolatesTime)`.
 4. **MUST** soft-delete via `removed_at + removed_by_subject_id + removal_reason`. Removed rows persist for audit; queries filter by default unless `?include_removed=true`.
 5. **MUST** expose REST endpoints:
-    - `POST /api/proj/issues/:id/memory-links` — create.
-    - `DELETE /api/proj/issues/:id/memory-links/:link_id` with `reason` body — soft-remove.
-    - `GET /api/proj/issues/:id/memory-links` — outgoing edges.
-    - `GET /api/proj/memory-memories/:path/issues` — incoming edges (bidirectional traversal).
+- `POST /api/proj/issues/:id/memory-links` — create.
+- `DELETE /api/proj/issues/:id/memory-links/:link_id` with `reason` body — soft-remove.
+- `GET /api/proj/issues/:id/memory-links` — outgoing edges.
+- `GET /api/proj/memory-memories/:path/issues` — incoming edges (bidirectional traversal).
 6. **MUST** emit memory audit rows:
-    - `proj.memory_link_created` on create.
-    - `proj.memory_link_removed` on soft-delete.
+- `proj.memory_link_created` on create.
+- `proj.memory_link_removed` on soft-delete.
 7. **MUST** prevent duplicate active links of same `(issue_id, memory_path, link_type)` (one of each type at a time). Same `memory_path` MAY have multiple link types from same issue (e.g. cites AND implements).
 8. **MUST** RLS per tenant; the linked memory's tenant_id MUST match issue's tenant_id (cross-tenant links forbidden).
 9. **MUST** emit OTel metric `proj_memory_links_total{link_type, outcome}`; outcome ∈ created | removed | denied | dangling.

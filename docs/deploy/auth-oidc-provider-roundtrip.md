@@ -1,21 +1,13 @@
 # AUTH OIDC provider - local round-trip proof (TASK-AUTH-110)
 
-Prove the unified-path provider end to end on your Mac: register a relying party (Mattermost stands in
-as `cyberos-chat`), seed a sign-in session, then watch `/authorize` hand back a code and `/token` turn it
-into a real id_token plus access_token, and `/userinfo` read the identity back. This is the owner-run
-live test, the same way the Google sign-in in `auth-google-sso-runbook.md` is owner-run.
+Prove the unified-path provider end to end on your Mac: register a relying party (Mattermost stands in as `cyberos-chat`), seed a sign-in session, then watch `/authorize` hand back a code and `/token` turn it into a real id_token plus access_token, and `/userinfo` read the identity back. This is the owner-run live test, the same way the Google sign-in in `auth-google-sso-runbook.md` is owner-run.
 
-The provider is the inverse of TASK-AUTH-104: there AUTH is Google's client; here AUTH is the provider that
-first-party apps federate to. Endpoints: `/.well-known/openid-configuration`, `/v1/auth/op/authorize`,
-`/v1/auth/op/token`, `/v1/auth/op/userinfo`, and the admin registry `/v1/admin/op/rp-clients`.
+The provider is the inverse of TASK-AUTH-104: there AUTH is Google's client; here AUTH is the provider that first-party apps federate to. Endpoints: `/.well-known/openid-configuration`, `/v1/auth/op/authorize`, `/v1/auth/op/token`, `/v1/auth/op/userinfo`, and the admin registry `/v1/admin/op/rp-clients`.
 
 ## Prerequisites
 
-1. Postgres up and migrations applied, including the new `0027`-`0030`, via your usual
-   `scripts/local_verify.sh`.
-2. A signing key bootstrapped (so the id_token can be signed) - the same `cyberos-auth bootstrap` you run
-   before any minting flow. This also creates the root tenant and a root-admin subject we reuse as the
-   test user.
+1. Postgres up and migrations applied, including the new `0027`-`0030`, via your usual `scripts/local_verify.sh`.
+2. A signing key bootstrapped (so the id_token can be signed) - the same `cyberos-auth bootstrap` you run before any minting flow. This also creates the root tenant and a root-admin subject we reuse as the test user.
 3. AUTH running on `:7700` exactly as in the Google runbook (Step 2 there):
 
    ```bash
@@ -37,9 +29,7 @@ curl -s http://localhost:7700/.well-known/openid-configuration | python3 -m json
 
 ## Step 1 - register the relying party + seed a sign-in session (SQL)
 
-The broker that mints an SSO session from a Google login is the slice-1b follow-up, so for this test we
-seed the session row directly (the honest stand-in). We store only the SHA-256 hash of the client secret,
-so compute it and insert it. Run from `services/`:
+The broker that mints an SSO session from a Google login is the slice-1b follow-up, so for this test we seed the session row directly (the honest stand-in). We store only the SHA-256 hash of the client secret, so compute it and insert it. Run from `services/`:
 
 ```bash
 ROOT='00000000-0000-0000-0000-000000000000'
@@ -95,9 +85,7 @@ curl -s -o /dev/null -D - \
 #         location: http://localhost:9999/callback?code=<CODE>&state=xyz
 ```
 
-If you see `error=login_required` the session id is wrong or expired; `error=access_denied` means the
-subject is revoked; an error page (not a redirect) means an unknown client or a redirect_uri mismatch -
-all the gates working. Copy the `code` value out of the location.
+If you see `error=login_required` the session id is wrong or expired; `error=access_denied` means the subject is revoked; an error page (not a redirect) means an unknown client or a redirect_uri mismatch - all the gates working. Copy the `code` value out of the location.
 
 ## Step 3 - exchange the code for tokens
 
@@ -115,8 +103,7 @@ curl -s -X POST http://localhost:7700/v1/auth/op/token \
 #           "expires_in": 3600, "scope": "openid" }
 ```
 
-Replay the exact same curl: the second time returns `{"error":"invalid_grant"}` - single-use codes
-working. A wrong `code_verifier` or `client_secret` returns `invalid_grant` / `invalid_client`.
+Replay the exact same curl: the second time returns `{"error":"invalid_grant"}` - single-use codes working. A wrong `code_verifier` or `client_secret` returns `invalid_grant` / `invalid_client`.
 
 Decode the id_token payload to see the identity it carries:
 
@@ -139,11 +126,7 @@ curl -s http://localhost:7700/v1/auth/op/userinfo \
 
 ## Step 5 - prove the kick
 
-Revoke the subject, then re-run Step 2. The authorize redirect now carries `error=access_denied`, and
-userinfo with the old access token returns `401 revoked`. That is kick-by-revoke into the provider: a
-revoked person cannot get a new session in any first-party app, and the existing token is refused at
-userinfo. (Killing an already-open downstream app session in real time is the back-channel-logout
-follow-up.)
+Revoke the subject, then re-run Step 2. The authorize redirect now carries `error=access_denied`, and userinfo with the old access token returns `401 revoked`. That is kick-by-revoke into the provider: a revoked person cannot get a new session in any first-party app, and the existing token is refused at userinfo. (Killing an already-open downstream app session in real time is the back-channel-logout follow-up.)
 
 ```bash
 SUBJECT_ID=<the seeded_subject from Step 1>
@@ -154,26 +137,20 @@ curl -s -X POST "http://localhost:7700/v1/admin/subjects/$SUBJECT_ID/revoke" \
 
 ## What this proves, and what is still open
 
-Green here means the unified-path provider works end to end against a real database: an RP federates to
-one CyberOS identity, PKCE and the single-use code and the revoke gate all hold, and the id_token is
-signed by the same TASK-AUTH-004 key the JWKS publishes.
+Green here means the unified-path provider works end to end against a real database: an RP federates to one CyberOS identity, PKCE and the single-use code and the revoke gate all hold, and the id_token is signed by the same TASK-AUTH-004 key the JWKS publishes.
 
 Deferred, to close after this live run:
 
 - Duplicate `client_id` on register currently returns 500 rather than 409 (a one-line error mapping).
-- The seven `op_*` audit rows are built but not yet anchored into the l1 chain (the payload builders are
-  done and tested; wiring them mirrors `memory_bridge::emit_subject_revoked`).
-- The upstream-Google broker-and-resume that creates the SSO session from a real Google login, replacing
-  the seeded session in Step 1.
+- The seven `op_*` audit rows are built but not yet anchored into the l1 chain (the payload builders are done and tested; wiring them mirrors `memory_bridge::emit_subject_revoked`).
+- The upstream-Google broker-and-resume that creates the SSO session from a real Google login, replacing the seeded session in Step 1.
 
 ## Wiring the real Mattermost
 
-Once the curl round-trip is green, point Mattermost's native OIDC connector (the open-source build's
-GitLab/OpenID connector, configured with explicit endpoint URLs) at:
+Once the curl round-trip is green, point Mattermost's native OIDC connector (the open-source build's GitLab/OpenID connector, configured with explicit endpoint URLs) at:
 
 - discovery / issuer: `http://localhost:7700` (`/.well-known/openid-configuration`)
 - authorize: `/v1/auth/op/authorize`, token: `/v1/auth/op/token`, userinfo: `/v1/auth/op/userinfo`
-- client_id `cyberos-chat`, the client_secret from registration, redirect_uri the Mattermost
-  `signin/oidc/complete` URL (registered exactly, byte for byte).
+- client_id `cyberos-chat`, the client_secret from registration, redirect_uri the Mattermost `signin/oidc/complete` URL (registered exactly, byte for byte).
 
 That is the moment chat starts trusting the one CyberOS identity.

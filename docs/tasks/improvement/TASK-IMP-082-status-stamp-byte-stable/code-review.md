@@ -1,10 +1,6 @@
 # TASK-IMP-082 — code review packet
 
-Files under review: `tools/docs-site/render-status-hub.mjs` (stamp derivation), new suite
-`scripts/tests/test_render_stamp.sh`, and two one-assertion ripples in the peer suites
-(disclosed below). Suite state at review: stamp 6/6, status-hub 10/10, roadmap 7/7, 0 failed.
-Other dirt in the same working tree (`tools/install/*`) belongs to batch sibling
-TASK-IMP-083 and is covered by that task's own packet.
+Files under review: `tools/docs-site/render-status-hub.mjs` (stamp derivation), new suite `scripts/tests/test_render_stamp.sh`, and two one-assertion ripples in the peer suites (disclosed below). Suite state at review: stamp 6/6, status-hub 10/10, roadmap 7/7, 0 failed. Other dirt in the same working tree (`tools/install/*`) belongs to batch sibling TASK-IMP-083 and is covered by that task's own packet.
 
 ## §1 clause → proof
 
@@ -21,62 +17,33 @@ TASK-IMP-083 and is covered by that task's own packet.
 
 ## Acceptance criteria
 
-AC 1 `t01_fingerprint_on_all_surfaces` ok · AC 2 `t02_double_render_stable` ok ·
-AC 3 `t03_commit_chase_ended` ok · AC 4 `t04_corpus_edit_changes_once` ok ·
-AC 5 `t05_env_pin_wins` ok · AC 6 `t06_no_git_needed` ok ·
-AC 7 run_all discovery (ops check in the batch parent's gate log).
+AC 1 `t01_fingerprint_on_all_surfaces` ok · AC 2 `t02_double_render_stable` ok · AC 3 `t03_commit_chase_ended` ok · AC 4 `t04_corpus_edit_changes_once` ok · AC 5 `t05_env_pin_wins` ok · AC 6 `t06_no_git_needed` ok · AC 7 run_all discovery (ops check in the batch parent's gate log).
 
 ## Diff size
 
-Production surface is one file: `render-status-hub.mjs` +21/−18 (net +3 — `gitCommit()`
-−13, `corpusFingerprint()` +11, the :304 comment rewritten in place, one header-claim line,
-one `node:crypto` import, two lines collecting `specFiles` in the existing discovery loop).
-Tests: one new 142-line suite plus 3 changed lines across the two peer suites (+1/−1 and
-+2/−1 — the latter only because one assertion line was split for length). Task numstat total:
-+24/−20 across 3 modified files, 1 new file. No new dependencies; no caller, template, or
-hook changed. `dist/` untouched here — rebuild, version-sync and full suite before commit
-are the batch parent's step per payload-sync doctrine.
+Production surface is one file: `render-status-hub.mjs` +21/−18 (net +3 — `gitCommit()` −13, `corpusFingerprint()` +11, the :304 comment rewritten in place, one header-claim line, one `node:crypto` import, two lines collecting `specFiles` in the existing discovery loop). Tests: one new 142-line suite plus 3 changed lines across the two peer suites (+1/−1 and +2/−1 — the latter only because one assertion line was split for length). Task numstat total: +24/−20 across 3 modified files, 1 new file. No new dependencies; no caller, template, or hook changed. `dist/` untouched here — rebuild, version-sync and full suite before commit are the batch parent's step per payload-sync doctrine.
 
 ## Peer-suite modifications (disclosure)
 
-Both peer fixtures plant a fake checkout — `echo "abcdef1234567890" > "$d/.git/refs/heads/main"` —
-and each had exactly one assertion pinning `abcdef123456`, the first 12 chars of that planted
-HEAD. That is the old derivation itself (`COMMIT = … || gitCommit(ROOT)`), the thing §1.1/§1.6
-delete, so under the new default those two greps fail by design. Changed minimally:
+Both peer fixtures plant a fake checkout — `echo "abcdef1234567890" > "$d/.git/refs/heads/main"` — and each had exactly one assertion pinning `abcdef123456`, the first 12 chars of that planted HEAD. That is the old derivation itself (`COMMIT = … || gitCommit(ROOT)`), the thing §1.1/§1.6 delete, so under the new default those two greps fail by design. Changed minimally:
 
 - `tools/docs-site/tests/test_render_status_hub.sh` — `t01_deck_true`, one assertion:
-  - was: `&& grep -q 'VERSION <span class="code">2.0.0</span>' "$h" && grep -q 'abcdef123456' "$h" \`
-  - now: `&& grep -q 'VERSION <span class="code">2.0.0</span>' "$h"` and, on its own line,
-    `&& grep -Eq 'built from <span class="code">fp-[0-9a-f]{12}</span>' "$h" \`
+- was: `&& grep -q 'VERSION <span class="code">2.0.0</span>' "$h" && grep -q 'abcdef123456' "$h" \`
+- now: `&& grep -q 'VERSION <span class="code">2.0.0</span>' "$h"` and, on its own line, `&& grep -Eq 'built from <span class="code">fp-[0-9a-f]{12}</span>' "$h" \`
 - `tools/docs-site/tests/test_render_roadmap.sh` — `t02_board_counts_and_release_order`, one assertion:
-  - was: `grep -q 'VERSION' "$h" && grep -q 'abcdef123456' "$h" \`
-  - now: `grep -q 'VERSION' "$h" && grep -Eq 'built from <span class="code">fp-[0-9a-f]{12}</span>' "$h" \`
+- was: `grep -q 'VERSION' "$h" && grep -q 'abcdef123456' "$h" \`
+- now: `grep -q 'VERSION' "$h" && grep -Eq 'built from <span class="code">fp-[0-9a-f]{12}</span>' "$h" \`
 
-The replacements are strictly tighter: the old greps matched the sha anywhere in the page;
-the new ones anchor to the `built from` meta and its grammar. The planted `.git` fixtures
-were deliberately left in place — they now prove the planted HEAD does NOT leak into the
-page (the `fp-` assertion would fail if it did), i.e. the peer suites carry a free copy of
-1.6's semantics. Nothing else in either file changed; both suites' `t05_deterministic`
-byte-compares were already derivation-agnostic and keep gating 1.3 from outside this task.
-This ripple was declared in impl-plan slice 4; no production surface is involved.
+The replacements are strictly tighter: the old greps matched the sha anywhere in the page; the new ones anchor to the `built from` meta and its grammar. The planted `.git` fixtures were deliberately left in place — they now prove the planted HEAD does NOT leak into the page (the `fp-` assertion would fail if it did), i.e. the peer suites carry a free copy of 1.6's semantics. Nothing else in either file changed; both suites' `t05_deterministic` byte-compares were already derivation-agnostic and keep gating 1.3 from outside this task. This ripple was declared in impl-plan slice 4; no production surface is involved.
 
 ## Implementer notes / issues for the reviewer
 
-- Hash choice per edge-case matrix: sha256 via `node:crypto` `createHash`, not homegrown;
-  streaming per-file `h.update`, no concat buffer (the large-corpora inspection note).
-- Path order is `Buffer.compare` on the repo-relative path — locale-independent by
-  construction; `t02` exercises C and C.UTF-8 anyway.
-- CRLF / trailing-whitespace edits move the stamp by definition (content is the contract);
-  documented in the suite header so nobody "fixes" it.
-- ISS-1 (accepted semantics, flagging for the record): `specFiles` is collected before the
-  frontmatter parse, so in `CYBEROS_HUB_LENIENT=1` mode a spec whose frontmatter fails still
-  counts toward the fingerprint while being excluded from the corpus — the stamp can move
-  without visible page change. Conforms to §1.1 ("every task spec file's raw bytes") and
-  errs toward over-invalidation, never staleness; strict mode dies on such a file anyway.
-- The fingerprint identifies the input corpus, not the output bytes — that is the freshness
-  check the old :304 comment asked for ("compare CONTENT"), per the spec's rationale.
-- Protected invariants re-checked: no wall clock, no randomness, no environment-dependent
-  output beyond the documented pin; the page stays a pure function of the corpus.
+- Hash choice per edge-case matrix: sha256 via `node:crypto` `createHash`, not homegrown; streaming per-file `h.update`, no concat buffer (the large-corpora inspection note).
+- Path order is `Buffer.compare` on the repo-relative path — locale-independent by construction; `t02` exercises C and C.UTF-8 anyway.
+- CRLF / trailing-whitespace edits move the stamp by definition (content is the contract); documented in the suite header so nobody "fixes" it.
+- ISS-1 (accepted semantics, flagging for the record): `specFiles` is collected before the frontmatter parse, so in `CYBEROS_HUB_LENIENT=1` mode a spec whose frontmatter fails still counts toward the fingerprint while being excluded from the corpus — the stamp can move without visible page change. Conforms to §1.1 ("every task spec file's raw bytes") and errs toward over-invalidation, never staleness; strict mode dies on such a file anyway.
+- The fingerprint identifies the input corpus, not the output bytes — that is the freshness check the old :304 comment asked for ("compare CONTENT"), per the spec's rationale.
+- Protected invariants re-checked: no wall clock, no randomness, no environment-dependent output beyond the documented pin; the page stays a pure function of the corpus.
 
 ## Verdict
 

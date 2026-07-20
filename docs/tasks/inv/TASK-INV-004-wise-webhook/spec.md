@@ -120,14 +120,14 @@ The INV service **MUST** accept Wise webhook events at `POST /v1/webhooks/wise/{
 13. **MUST** scrub all Wise event body fields containing customer names, account numbers, or bank references through TASK-MEMORY-111 before memory audit emission (DEC-849). Postgres holds raw (RLS-scoped); chain holds scrubbed.
 
 14. **MUST** emit 7 closed memory audit kinds:
-    - `inv.wise_received` (sev-3, per valid event)
-    - `inv.wise_matched` (sev-3, on successful cash-app match)
-    - `inv.wise_signature_invalid` (sev-2, per verification fail)
-    - `inv.wise_stale_event` (sev-2, per occurred_at > 5d)
-    - `inv.wise_currency_mismatch` (sev-2, per mismatch)
-    - `inv.wise_dead_lettered` (sev-1, per 3-fail)
-    - `inv.wise_profile_unknown` (sev-1, per unmapped profile_id)
-    - `inv.wise_key_rotated` (sev-2, per cache refresh due to verification failure)
+- `inv.wise_received` (sev-3, per valid event)
+- `inv.wise_matched` (sev-3, on successful cash-app match)
+- `inv.wise_signature_invalid` (sev-2, per verification fail)
+- `inv.wise_stale_event` (sev-2, per occurred_at > 5d)
+- `inv.wise_currency_mismatch` (sev-2, per mismatch)
+- `inv.wise_dead_lettered` (sev-1, per 3-fail)
+- `inv.wise_profile_unknown` (sev-1, per unmapped profile_id)
+- `inv.wise_key_rotated` (sev-2, per cache refresh due to verification failure)
 
 15. **MUST** support concurrent webhook delivery without deadlock. Each request opens a short transaction (insert + WAL push). The background processor uses `pg_advisory_xact_lock(event_id)` to prevent double-processing of the same event from a retry storm.
 

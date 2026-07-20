@@ -117,16 +117,16 @@ The MCP service **MUST** expose RFC 9728 Protected Resource Metadata at `/.well-
 1. **MUST** expose `GET /.well-known/oauth-protected-resource` returning the gateway-aggregate PRM as `application/json; charset=utf-8` per RFC 9728 §3.1. Unauthenticated per DEC-896.
 
 2. **MUST** include in the gateway-aggregate PRM the following fields per RFC 9728 §2:
-   - `resource`: `https://api.cyberos.world/mcp/v1` (canonical gateway URI per DEC-898).
-   - `authorization_servers`: array of per-residency AUTH issuer URLs per DEC-899 (4 entries: us-1, eu-1, sg-1, vn-1).
-   - `bearer_methods_supported`: `["header"]` per DEC-900 (header-only; body/query forbidden).
-   - `resource_signing_alg_values_supported`: `["RS256", "EdDSA"]` per DEC-901.
-   - `resource_documentation`: `https://api.cyberos.world/mcp/v1/docs` per DEC-902.
+- `resource`: `https://api.cyberos.world/mcp/v1` (canonical gateway URI per DEC-898).
+- `authorization_servers`: array of per-residency AUTH issuer URLs per DEC-899 (4 entries: us-1, eu-1, sg-1, vn-1).
+- `bearer_methods_supported`: `["header"]` per DEC-900 (header-only; body/query forbidden).
+- `resource_signing_alg_values_supported`: `["RS256", "EdDSA"]` per DEC-901.
+- `resource_documentation`: `https://api.cyberos.world/mcp/v1/docs` per DEC-902.
 
 3. **MUST** expose per-module PRM at `GET /.well-known/oauth-protected-resource/cyberos.{module}` for each module registered via TASK-MCP-002 per DEC-897. The per-module PRM differs from the aggregate by:
-   - `resource`: `https://api.cyberos.world/mcp/v1/{module}` per DEC-898.
-   - `scopes_supported`: array of tool-level scopes the module exposes (derived from TASK-MCP-002 registration record per DEC-907 + DEC-905).
-   - All other fields identical to aggregate (same auth servers, same bearer methods, same signing algs).
+- `resource`: `https://api.cyberos.world/mcp/v1/{module}` per DEC-898.
+- `scopes_supported`: array of tool-level scopes the module exposes (derived from TASK-MCP-002 registration record per DEC-907 + DEC-905).
+- All other fields identical to aggregate (same auth servers, same bearer methods, same signing algs).
 
 4. **MUST** GENERATE per-module PRMs from the TASK-MCP-002 registration record per DEC-907. The `services/mcp/src/server_registry.rs` ModuleRegistration struct is extended with PRM-relevant fields (`exposed_scopes: Vec<String>`) populated at registration. The per-module PRM handler reads from this registry — never from a hand-written JSON file. If the registry has no entry for the requested `{module}`, return 404 + emit `mcp.prm_unknown_module_requested` informational row.
 
@@ -145,9 +145,9 @@ The MCP service **MUST** expose RFC 9728 Protected Resource Metadata at `/.well-
 11. **MUST** complete PRM response in < 50 ms p95 per DEC-909. The PRM bodies are small (<2 KB) and built from in-memory registry data; sub-50ms is straightforward. OTel histogram `mcp_prm_serve_duration_seconds`; alarm sev-3 if p95 > 200 ms sustained 5 min.
 
 12. **MUST** emit 3 memory audit row kinds (DEC-906 + task-audit skill rule 6 namespace pattern):
-    - `mcp.prm_served` (sev-3 — high-volume; sampled at 1% per task-audit skill tail-sampling pattern via TASK-OBS-006)
-    - `mcp.prm_unknown_module_requested` (sev-3 — informational; could indicate client misconfig or scanner)
-    - `mcp.prm_aggregate_drift` (sev-2 — should never happen; indicates registry corruption)
+- `mcp.prm_served` (sev-3 — high-volume; sampled at 1% per task-audit skill tail-sampling pattern via TASK-OBS-006)
+- `mcp.prm_unknown_module_requested` (sev-3 — informational; could indicate client misconfig or scanner)
+- `mcp.prm_aggregate_drift` (sev-2 — should never happen; indicates registry corruption)
 
 13. **MUST** be Content-Type `application/json` with `charset=utf-8` per DEC-904 + RFC 9728 §3.1.
 

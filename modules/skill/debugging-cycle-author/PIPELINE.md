@@ -1,7 +1,6 @@
 # `debugging-cycle-author` - pipeline
 
-Multi-vector debugging when the coverage gate trips: classify the failure vector, state a targeted hypothesis + exact file:line change, re-run, one attempt-row per cycle, circuit-break at 5.
-Artefact: `debug-trace@1`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
+Multi-vector debugging when the coverage gate trips: classify the failure vector, state a targeted hypothesis + exact file:line change, re-run, one attempt-row per cycle, circuit-break at 5. Artefact: `debug-trace@1`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
 
 ## Upstream
 

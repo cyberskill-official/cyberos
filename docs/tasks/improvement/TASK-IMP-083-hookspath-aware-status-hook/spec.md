@@ -49,8 +49,7 @@ The installer writes its status-sync pre-commit hook to `.git/hooks/pre-commit` 
 Step 6b hardcodes the location:
 
 <untrusted_content source="tools/install/install.sh step 6b">
-hk="$root/.git/hooks/pre-commit"
-mkdir -p "$root/.git/hooks"
+hk="$root/.git/hooks/pre-commit" mkdir -p "$root/.git/hooks"
 </untrusted_content>
 
 `git config core.hooksPath` is never read (zero matches in the file). A repo configured with, say, `.githooks` - a common pattern, and exactly how the cyberos repo is set up - receives a hook git will never execute. The failure is silent: install prints "pre-commit hook v2 installed", the operator believes status sync is live, and `docs/status/` quietly lags every backlog write. The install.sh authors have already documented this exact bug class elsewhere in the file ("a guard that skips when its own tool is missing is indistinguishable from success").

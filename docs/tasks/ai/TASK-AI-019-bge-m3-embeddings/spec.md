@@ -128,12 +128,12 @@ The AI Gateway service **SHOULD** offer a self-hosted BGE-M3 embeddings provider
     Per-region deployment is required to satisfy TASK-AI-016 residency pinning. The router selects the sidecar matching the resolved region; absence of a sidecar in the required region is a `ResidencyViolation` (handled by TASK-AI-016).
 15. **MUST** detect mid-run GPU failure: if the sidecar's `device` field flips from `"cuda"` to `"cpu"` between two consecutive responses, the gateway emits sev-2 OBS event `ai_bge_gpu_failed` and adjusts its latency-budget alerting (300ms p95 instead of 50ms). The failover itself is sidecar-internal (PyTorch fallback to CPU); the gateway just observes.
 16. **SHOULD** emit OTel metrics:
-    - `ai_bge_requests_total{tenant_id, batch_size_bucket, device, outcome}` (counter; outcome ∈ ok | input_too_long | sidecar_unreachable | breaker_open).
-    - `ai_bge_latency_ms{device, batch_size_bucket}` (histogram; SLO 50ms p95 GPU / 300ms p95 CPU).
-    - `ai_bge_gpu_utilization_pct{sidecar_url}` (gauge from `nvidia-smi` polling within the sidecar; 0 when CPU mode).
-    - `ai_bge_fallback_to_cpu_total{sidecar_url}` (counter; sev-2 alarm on increment).
-    - `ai_bge_batch_buffer_depth{tenant_id}` (gauge; high values indicate buffering saturation).
-    - `ai_bge_checksum_failed_total` (counter; sev-1 — model corruption or supply-chain attack).
+- `ai_bge_requests_total{tenant_id, batch_size_bucket, device, outcome}` (counter; outcome ∈ ok | input_too_long | sidecar_unreachable | breaker_open).
+- `ai_bge_latency_ms{device, batch_size_bucket}` (histogram; SLO 50ms p95 GPU / 300ms p95 CPU).
+- `ai_bge_gpu_utilization_pct{sidecar_url}` (gauge from `nvidia-smi` polling within the sidecar; 0 when CPU mode).
+- `ai_bge_fallback_to_cpu_total{sidecar_url}` (counter; sev-2 alarm on increment).
+- `ai_bge_batch_buffer_depth{tenant_id}` (gauge; high values indicate buffering saturation).
+- `ai_bge_checksum_failed_total` (counter; sev-1 — model corruption or supply-chain attack).
 
 ---
 

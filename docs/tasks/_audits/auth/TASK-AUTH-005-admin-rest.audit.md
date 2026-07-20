@@ -42,10 +42,7 @@ All 6 mechanical revisions applied. **Score = 10/10.**
 
 ## §10 — Implementation audit (code-vs-spec)
 
-**Audit date:** 2026-05-19 (Cowork session — post-TASK-AUTH-001/006 close)
-**Audit context:** `ship-tasks` workflow against `services/auth/` head.
-**Reference commit:** services/auth/{handlers.rs, memory_bridge.rs, migrations/}
-**Auditor:** CTO persona (this session)
+**Audit date:** 2026-05-19 (Cowork session — post-TASK-AUTH-001/006 close) **Audit context:** `ship-tasks` workflow against `services/auth/` head. **Reference commit:** services/auth/{handlers.rs, memory_bridge.rs, migrations/} **Auditor:** CTO persona (this session)
 
 ### §10.1 — Verdict
 

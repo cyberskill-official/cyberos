@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this automation roadmap"
+- "Audit this automation roadmap"
 - "Check the automation roadmap for completeness"
 - "Verify the automation roadmap meets the rubric"
 - "Re-audit the automation roadmap"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a automation roadmap" → automation-roadmap-author
+- "Draft a automation roadmap" → automation-roadmap-author
 - "Create the automation roadmap" → automation-roadmap-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

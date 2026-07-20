@@ -35,15 +35,7 @@ audit_kind:                "independent (auditor did not author the spec)"
 
 ## §1 — Verdict summary
 
-`spec.md` is a **184-line, `template: task@1`** improvement spec with **4 normative §1
-clauses (1.1–1.4)**, **4 acceptance criteria (AC1–AC4)** in clean 1:1 clause→AC→test
-correspondence, a documented §3 edge-case set (5 items incl. a security-class row), and 7
-required sections all present and non-empty. The deterministic lint exits **0** (zero
-error-severity findings). **All five factual citations about `install.sh` / `uninstall.sh`
-were opened at the cited lines and independently confirmed TRUE** — including that the
-hook-strip newline-leak is a real, *current* bug (not already healed). No citation error,
-no missing trace, no weak family, no security/safety gap. Two INFO-level clarity
-observations recorded (both non-blocking, neither an error-severity rule hit).
+`spec.md` is a **184-line, `template: task@1`** improvement spec with **4 normative §1 clauses (1.1–1.4)**, **4 acceptance criteria (AC1–AC4)** in clean 1:1 clause→AC→test correspondence, a documented §3 edge-case set (5 items incl. a security-class row), and 7 required sections all present and non-empty. The deterministic lint exits **0** (zero error-severity findings). **All five factual citations about `install.sh` / `uninstall.sh` were opened at the cited lines and independently confirmed TRUE** — including that the hook-strip newline-leak is a real, *current* bug (not already healed). No citation error, no missing trace, no weak family, no security/safety gap. Two INFO-level clarity observations recorded (both non-blocking, neither an error-severity rule hit).
 
 **Verdict: PASS — score 10 / 10.**
 
@@ -63,9 +55,7 @@ observations recorded (both non-blocking, neither an error-severity rule hit).
 
 ## §3 — Citation verification (independent — the crux)
 
-Each source_pages / §Problem claim was opened in the working-tree files (`git
---no-optional-locks status`: install.sh & uninstall.sh both clean, worktree == HEAD, 1055 /
-230 lines) and confirmed at the cited lines.
+Each source_pages / §Problem claim was opened in the working-tree files (`git --no-optional-locks status`: install.sh & uninstall.sh both clean, worktree == HEAD, 1055 / 230 lines) and confirmed at the cited lines.
 
 | # | Spec claim | Confirmed in code | Verdict |
 | - | ---------- | ----------------- | ------- |
@@ -75,44 +65,18 @@ Each source_pages / §Problem claim was opened in the working-tree files (`git
 | 4 | `uninstall.sh:98-127` removes only the `.agents/skills` trio + `.claude/skills` create-tasks pair; `:125` leaves `.claude/skills/ship-tasks`; never touches grok/command-code/codex/opencode | Section 2b (L97–135). **L106** loops exactly `ship-tasks task-author task-audit`; `.agents/skills` handled L107–123; **L126** guards `.claude/skills` with `[ "$_sc" != "ship-tasks" ]` (so only task-author + task-audit), L124-125 comment states ship-tasks is left in place. No `.grok/.commandcode/.codex/.opencode` path appears anywhere in the file → those four families' `ship-tasks` entries are never removed. | **TRUE** — exact |
 | 5 | `install.sh:860-861` heredoc's FIRST line is a blank separator before the `# >>> cyberos-status-hook v2 … >>>` marker; `uninstall.sh:78` strips `>>>`…`<<<` INCLUSIVE — the leading blank is OUTSIDE the range → accumulates each cycle | **L860** `cat >> "$hk" <<'HOOK'`; **L861** confirmed **empty** (`cat -A` → bare `$`); **L862** `# >>> …v2… >>>`; **L894** `# <<< cyberos-status-hook <<<`. **uninstall.sh L78** `sed '/# >>> cyberos-status-hook/,/# <<< cyberos-status-hook <<</d'` deletes marker-to-marker inclusive — the L861-style blank is not in the range and survives. v1→v2 upgrade path (install.sh L855-857, cited `:856`) shares the shape and the same inclusive strip. | **TRUE** — real & CURRENT bug, not healed |
 
-**Citation findings: none.** All five claims hold at (or within 0–2 lines of) the cited
-locations; the line numbers are accurate against the current worktree. The author also
-correctly declined to adopt the handoff's unverifiable "5 dangling symlinks" count,
-specifying the invariant (zero dangling links, clause 1.2) instead — sound discipline.
+**Citation findings: none.** All five claims hold at (or within 0–2 lines of) the cited locations; the line numbers are accurate against the current worktree. The author also correctly declined to adopt the handoff's unverifiable "5 dangling symlinks" count, specifying the invariant (zero dangling links, clause 1.2) instead — sound discipline.
 
 ## §4 — TRACE-006 per-clause records (verb demanded vs. assertion described)
 
-Tests are unwritten (draft gate), so each clause verb is compared against the assertion the
-AC *describes* its arm will make.
+Tests are unwritten (draft gate), so each clause verb is compared against the assertion the AC *describes* its arm will make.
 
-- **1.1 — verbs `remove` + `MUST NOT remove`.** Demands: cyberos-written `.mcp.json`
-  absent after uninstall; operator's own file present. **AC1** asserts uninstall removes the
-  written `.mcp.json` AND a pre-existing operator `.mcp.json` is left untouched → both verbs
-  discharged (absence of ours; preservation of theirs). Secondary limb `.cursor/mcp.json`
-  removal: carried by the arm name `t_mcp_registration_removed` + §3 edge case, not spelled
-  out in AC1 prose (see ISS-001, non-blocking).
-- **1.2 — verb `remove … leaving zero`.** Demands: zero symlinks resolve into
-  `.cyberos/plugin/skills` after machine removal, across every family install writes.
-  **AC2** asserts exactly that ("zero skill links resolve … checked across every family") —
-  discharges the observable, not a mere "logged removed". The "unmarked operator dir left in
-  place" limb is discharged by **AC4**. ✓
-- **1.3 — verb `preserve` (exact inverse / byte-identical across cycles).** Demands: foreign
-  hook byte-identical to pre-install content, and stable across cycles. **AC3** runs
-  install→uninstall→install→uninstall and asserts byte-identity with "no accumulated blank
-  line" — a before/after equality that specifically witnesses the per-cycle accumulation the
-  bug produces (2 cycles is a sufficient witness: buggy code shows 2 stray blanks, fixed
-  shows 0). ✓
-- **1.4 — verb `survive` (preserve).** Demands: operator `.mcp.json`, unmarked
-  `.agents/skills/<cmd>` dir, and foreign-hook lines outside the managed block all survive.
-  **AC4** asserts all three survive uninstall — direct 1:1 with the clause's three limbs. ✓
+- **1.1 — verbs `remove` + `MUST NOT remove`.** Demands: cyberos-written `.mcp.json` absent after uninstall; operator's own file present. **AC1** asserts uninstall removes the written `.mcp.json` AND a pre-existing operator `.mcp.json` is left untouched → both verbs discharged (absence of ours; preservation of theirs). Secondary limb `.cursor/mcp.json` removal: carried by the arm name `t_mcp_registration_removed` + §3 edge case, not spelled out in AC1 prose (see ISS-001, non-blocking).
+- **1.2 — verb `remove … leaving zero`.** Demands: zero symlinks resolve into `.cyberos/plugin/skills` after machine removal, across every family install writes. **AC2** asserts exactly that ("zero skill links resolve … checked across every family") — discharges the observable, not a mere "logged removed". The "unmarked operator dir left in place" limb is discharged by **AC4**. ✓
+- **1.3 — verb `preserve` (exact inverse / byte-identical across cycles).** Demands: foreign hook byte-identical to pre-install content, and stable across cycles. **AC3** runs install→uninstall→install→uninstall and asserts byte-identity with "no accumulated blank line" — a before/after equality that specifically witnesses the per-cycle accumulation the bug produces (2 cycles is a sufficient witness: buggy code shows 2 stray blanks, fixed shows 0). ✓
+- **1.4 — verb `survive` (preserve).** Demands: operator `.mcp.json`, unmarked `.agents/skills/<cmd>` dir, and foreign-hook lines outside the managed block all survive. **AC4** asserts all three survive uninstall — direct 1:1 with the clause's three limbs. ✓
 
-**Security-class edge case (SAFE/adequacy).** §3's final row states uninstall reads paths
-and content and executes nothing, and confines paths under the repo root on the same
-`relUnderRoot` rule the other helpers use ("a crafted target cannot walk out"). Adequate for
-a task that mutates the destructive uninstall path: it names the threat (path traversal via a
-crafted target), the invariant (repo-root confinement), and the no-exec property. The
-operator-file-preservation safety (clause 1.4 / AC4, reinforced by the Success-Metrics
-Guardrail) is present and adequate.
+**Security-class edge case (SAFE/adequacy).** §3's final row states uninstall reads paths and content and executes nothing, and confines paths under the repo root on the same `relUnderRoot` rule the other helpers use ("a crafted target cannot walk out"). Adequate for a task that mutates the destructive uninstall path: it names the threat (path traversal via a crafted target), the invariant (repo-root confinement), and the no-exec property. The operator-file-preservation safety (clause 1.4 / AC4, reinforced by the Success-Metrics Guardrail) is present and adequate.
 
 ## §5 — Findings (itemised)
 
@@ -156,9 +120,7 @@ resolution:      "Left to author discretion; non-blocking."
 opened_at:       "2026-07-19T00:00:00Z"
 ```
 
-No error-severity or `needs_human` issues were found. Per the skill's MUST-NOT ("invent rule
-violations"), no findings were manufactured to pad a count — the spec is clean and the two
-items above are the genuine, non-blocking observations.
+No error-severity or `needs_human` issues were found. Per the skill's MUST-NOT ("invent rule violations"), no findings were manufactured to pad a count — the spec is clean and the two items above are the genuine, non-blocking observations.
 
 ```
 SUMMARY

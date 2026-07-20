@@ -145,8 +145,8 @@ The LEARN service **MUST** ship Hội đồng Chuyên môn at `services/learn/sr
    ```
 
 4. **MUST** aggregate at `aggregator.rs::aggregate(council)` per DEC-2114:
-   - For each dimension: median of judge scores
-   - Overall recommendation: promote if median >= 4 on technical + leadership; hold if median 3; decline if median <3.
+- For each dimension: median of judge scores
+- Overall recommendation: promote if median >= 4 on technical + leadership; hold if median 3; decline if median <3.
 
 5. **MUST** mark complete only when all judges submitted all 5 dimensions.
 
@@ -266,9 +266,7 @@ async fn double_score_rejected() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-LEARN-001.
-**Downstream:** TASK-LEARN-005 (isolation), TASK-LEARN-006 (promotion approval).
-**Cross-module:** TASK-AUTH-101 (CHRO + judge roles), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-LEARN-001. **Downstream:** TASK-LEARN-005 (isolation), TASK-LEARN-006 (promotion approval). **Cross-module:** TASK-AUTH-101 (CHRO + judge roles), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

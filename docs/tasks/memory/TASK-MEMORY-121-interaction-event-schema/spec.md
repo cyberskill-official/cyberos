@@ -86,25 +86,25 @@ This task defines **one** interaction-event shape that every CyberOS module emit
 
 1. **MUST** define the row kind `memory.interaction_event` and enumerate it in `services/memory/contracts/interaction-event.schema.json` (JSON Schema draft 2020-12), alongside the existing aux audit kinds (`memory.precondition_failed`, `memory.acl_denied`, `memory.status_overridden`, `memory.awh_gate_result`). The schema is the published contract other modules depend on.
 2. **MUST** define the event field set, frozen for `schema_version: 1`:
-    - `schema_version` (int, const `1` for this task) — downstream emitters pin it.
-    - `event_id` (UUIDv7) — globally unique; v7 so it is time-sortable and dedup-safe across replay.
-    - `tenant_id` (UUID) — the emitting subject's tenant; drives RLS.
-    - `subject_id` (UUID) — the person who acted (TASK-AUTH-002 subject); the unit of evaluation. `null` only for genuine system actors (e.g. a scheduled job), never to hide a person.
-    - `occurred_at_ns` (int64) — nanoseconds since epoch at the moment of the interaction (not ingest time).
-    - `module` (enum) — the emitting module: one of `auth | chat | proj | email | app | mcp | memory | ai | obs | cuo`. Closed set; unknown values rejected at emit (§1 #9).
-    - `event_type` (string, namespaced `"<module>.<verb>"`, e.g. `chat.message_created`, `auth.signed_in`, `proj.issue_assigned`) — the specific interaction. Free-form within the `module.` prefix so modules add verbs without a schema bump.
-    - `event_class` (enum) — `auth | presence | content | activity | admin | read`. Coarse class for ingestion + the `op` derivation (§1 #6); stable even as `event_type` grows.
-    - `target_ref` (object, nullable) — what the interaction was about: `{kind, id}` where `kind` ∈ `channel | dm | message | issue | document | thread | tool | session | subject | none` and `id` is the target's UUID or stable id. Not raw content — a reference.
-    - `content_ref` (object, nullable) — a pointer or hash of any content the interaction carried, per §1 #4. NEVER the raw body where a pointer/hash suffices.
-    - `session_id` (UUID, nullable) — the AUTH session (TASK-AUTH-004 jti-derived) the action happened in.
-    - `trace_id` (string, nullable) — the W3C traceparent trace-id (TASK-OBS-003) so an interaction correlates with its request span.
-    - `source_channel` (enum) — `web | desktop | mobile | api | cli | system | import` — how the interaction reached the platform.
-    - `attributes` (object, optional) — a small, bounded bag of module-specific scalars (e.g. `{prev_status, new_status}` for a status change). MUST NOT carry raw content; MUST be ≤ 2 KiB serialised (§1 #10).
+- `schema_version` (int, const `1` for this task) — downstream emitters pin it.
+- `event_id` (UUIDv7) — globally unique; v7 so it is time-sortable and dedup-safe across replay.
+- `tenant_id` (UUID) — the emitting subject's tenant; drives RLS.
+- `subject_id` (UUID) — the person who acted (TASK-AUTH-002 subject); the unit of evaluation. `null` only for genuine system actors (e.g. a scheduled job), never to hide a person.
+- `occurred_at_ns` (int64) — nanoseconds since epoch at the moment of the interaction (not ingest time).
+- `module` (enum) — the emitting module: one of `auth | chat | proj | email | app | mcp | memory | ai | obs | cuo`. Closed set; unknown values rejected at emit (§1 #9).
+- `event_type` (string, namespaced `"<module>.<verb>"`, e.g. `chat.message_created`, `auth.signed_in`, `proj.issue_assigned`) — the specific interaction. Free-form within the `module.` prefix so modules add verbs without a schema bump.
+- `event_class` (enum) — `auth | presence | content | activity | admin | read`. Coarse class for ingestion + the `op` derivation (§1 #6); stable even as `event_type` grows.
+- `target_ref` (object, nullable) — what the interaction was about: `{kind, id}` where `kind` ∈ `channel | dm | message | issue | document | thread | tool | session | subject | none` and `id` is the target's UUID or stable id. Not raw content — a reference.
+- `content_ref` (object, nullable) — a pointer or hash of any content the interaction carried, per §1 #4. NEVER the raw body where a pointer/hash suffices.
+- `session_id` (UUID, nullable) — the AUTH session (TASK-AUTH-004 jti-derived) the action happened in.
+- `trace_id` (string, nullable) — the W3C traceparent trace-id (TASK-OBS-003) so an interaction correlates with its request span.
+- `source_channel` (enum) — `web | desktop | mobile | api | cli | system | import` — how the interaction reached the platform.
+- `attributes` (object, optional) — a small, bounded bag of module-specific scalars (e.g. `{prev_status, new_status}` for a status change). MUST NOT carry raw content; MUST be ≤ 2 KiB serialised (§1 #10).
 3. **MUST** carry no raw sensitive content in the row where a reference suffices (DEC-2701). Specifically: message bodies, document/IP text, email subjects+bodies, and file contents are referenced via `content_ref`, never inlined. Privacy-safe digests follow the AUTH `*_hash16` precedent (e.g. an email address that must appear is a 16-hex SHA-256 prefix, never plaintext).
 4. **MUST** define `content_ref` as a closed union:
-    - `pointer` — `{kind:"pointer", store, id}` where `store` ∈ `chat_messages | proj_documents | email_objects | memory | attachments` and `id` is the row/object id. The raw content stays in the owning store (e.g. chat's own DB), under that store's own RLS; the BRAIN holds only the pointer.
-    - `hash` — `{kind:"hash", sha256, bytes, preview_len}` where `sha256` is the lowercase-hex digest of the canonical content, `bytes` is its length, and `preview_len` is `0` by default (a non-zero preview is opt-in per module and MUST be a short, non-sensitive prefix only).
-    - `none` — `{kind:"none"}` for interactions with no content (e.g. a sign-in, a presence change, opening a module).
+- `pointer` — `{kind:"pointer", store, id}` where `store` ∈ `chat_messages | proj_documents | email_objects | memory | attachments` and `id` is the row/object id. The raw content stays in the owning store (e.g. chat's own DB), under that store's own RLS; the BRAIN holds only the pointer.
+- `hash` — `{kind:"hash", sha256, bytes, preview_len}` where `sha256` is the lowercase-hex digest of the canonical content, `bytes` is its length, and `preview_len` is `0` by default (a non-zero preview is opt-in per module and MUST be a short, non-sensitive prefix only).
+- `none` — `{kind:"none"}` for interactions with no content (e.g. a sign-in, a presence change, opening a module).
 5. **MUST** chain each interaction-event into the existing hash-chained `l1_audit_log` via the shared `cyberos-audit-chain` writer (DEC-2703) — byte-identical anchor `SHA-256(prev_hash_hex ‖ body)` so the memory reconcile invariant (TASK-MEMORY-101) and the layer-2 ingest accept it with no special case. The event body is the canonical-JSON serialisation of §1 #2 with `"event_type"` set to the row kind `memory.interaction_event` at the audit-row level and the interaction's own `event_type` inside the payload (so the existing TASK-OBS-008 `event_type` generated column and the TASK-APP-005 viewer keep working).
 6. **MUST** derive the audit-row `op` from `event_class`: `read → 'view'`; everything else → `'put'`. This requires `cyberos-audit-chain::emit_genesis_with_op` (an `op` parameter; the existing `emit_genesis` stays as a `'put'` shim). Read interactions (e.g. opening a document, viewing a channel) are recorded as `view` so they are distinguishable from mutations and so the chain's `op` enum stays meaningful.
 7. **MUST** expose the emit API in `services/memory/src/interaction/emit.rs`:
@@ -118,10 +118,10 @@ This task defines **one** interaction-event shape that every CyberOS module emit
 11. **MUST** make the event body canonical and deterministic: a fixed field order, no insignificant whitespace, UTF-8, so the same logical interaction produces the same bytes (and the same chain anchor) on any host. The canonicaliser is shared with the rest of the memory chain (matches `chain_anchor::canonicalise`).
 12. **MUST** cache the consent-gate verdict per `(tenant_id, subject_id)` for ≤ 60 s in-process, so a burst of interactions from one signed-in person does not issue a consent-ledger query per event. A revocation (subject withdraws acknowledgment) takes effect within the TTL; the 60 s window is the documented bound.
 13. **MUST** emit OTel metrics:
-    - `memory_interaction_events_total{module, event_class, outcome}` (counter; outcome ∈ `recorded | skipped_consent | invalid | emit_error`).
-    - `memory_interaction_event_emit_seconds{module}` (histogram).
-    - `memory_interaction_consent_skipped_total{module}` (counter — visibility into how much is suppressed by the gate; a sudden spike means a notice-version bump locked people out).
-    - `memory_interaction_event_body_bytes{module}` (histogram — watches for content leaking through `attributes`).
+- `memory_interaction_events_total{module, event_class, outcome}` (counter; outcome ∈ `recorded | skipped_consent | invalid | emit_error`).
+- `memory_interaction_event_emit_seconds{module}` (histogram).
+- `memory_interaction_consent_skipped_total{module}` (counter — visibility into how much is suppressed by the gate; a sudden spike means a notice-version bump locked people out).
+- `memory_interaction_event_body_bytes{module}` (histogram — watches for content leaking through `attributes`).
 14. **MUST** be tenant-scoped on read via the existing `l1_audit_log` RLS path (TASK-AUTH-003 pattern); interaction-events inherit it because they ARE `l1_audit_log` rows. There is no second table and therefore no second RLS policy to drift.
 15. **MUST** publish the contract as a versioned, frozen artifact: `interaction-event.schema.json` carries `schema_version` const `1` and an explicit `additive-only` evolution rule (new optional fields and new `event_type` verbs are allowed without a bump; removing/retyping a field or changing the required set requires `schema_version: 2` and a migration note). Downstream emitter tasks (TASK-MEMORY-122 and beyond) depend on this file, not on each other.
 16. **MUST** provide a typed builder so emitters cannot construct an invalid event: `InteractionEvent::builder(module, event_type, event_class).subject(..).occurred_now().target(..).content(ContentRef::..).source(..).build()` validates §1 #9–#10 at `build()` and returns `Result`. The free `emit` re-validates (defence in depth) but the builder is the ergonomic, misuse-resistant front door for TASK-MEMORY-122's emitters.

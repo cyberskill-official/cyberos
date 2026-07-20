@@ -91,9 +91,9 @@ A shared Rust crate `cyberos-obs-sdk` **MUST** expose RED-metric helpers; every 
 
 1. **MUST** expose `red::record_request(service, route, tenant_id, status, duration_ms, extra_labels)` API. The first 5 params are mandatory; `extra_labels: &[(&str, String)]` is optional per-service customisation.
 2. **MUST** emit 3 metrics per request:
-    - `cyberos_requests_total{service, route, tenant_id, status_class}` (counter; increments by 1 per call).
-    - `cyberos_errors_total{service, route, tenant_id, error_class}` (counter; increments only on errors; `error_class` ∈ `client_error | server_error`).
-    - `cyberos_duration_ms{service, route, tenant_id}` (histogram; bucket boundaries in §1 #4).
+- `cyberos_requests_total{service, route, tenant_id, status_class}` (counter; increments by 1 per call).
+- `cyberos_errors_total{service, route, tenant_id, error_class}` (counter; increments only on errors; `error_class` ∈ `client_error | server_error`).
+- `cyberos_duration_ms{service, route, tenant_id}` (histogram; bucket boundaries in §1 #4).
 3. **MUST** label by `status_class` (string: `"2xx" | "3xx" | "4xx" | "5xx" | "other"`) NOT raw status code. Per DEC-152: raw status (200, 201, 204, ...) would multiply cardinality by ~30; the class-level granularity is sufficient for SLO calculation.
 4. **MUST** use standardised histogram bucket boundaries: `[1, 2.5, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000]` ms. Per DEC-153: cross-service p95 aggregation requires identical bucket boundaries (Prometheus's `histogram_quantile` won't merge differently-bucketed histograms correctly).
 5. **MUST** be called from every HTTP/RPC handler in every CyberOS service. The `#[red_instrument(service = "...", route = "...")]` proc macro on axum handlers is the standard application path; manual calls are reserved for non-HTTP code paths (background jobs, scheduled tasks).
@@ -104,9 +104,9 @@ A shared Rust crate `cyberos-obs-sdk` **MUST** expose RED-metric helpers; every 
 10. **MUST** init OTel SDK at service boot via `obs_sdk::init(service_name, version)`. The init function configures the OTLP exporter to point at the OBS collector (TASK-OBS-001) using the per-service bearer token from env.
 11. **MUST** be CI-gated by `instrument_completeness_test`: an integration test in `cyberos-obs-sdk/tests/` AST-walks every CyberOS service's handler files and asserts each axum-handler-shaped function has `#[red_instrument]`. Missing macro → CI failure with file:line of the offending handler.
 12. **SHOULD** emit OTel metrics about itself:
-    - `obs_sdk_record_calls_total{service}` (counter; total record_request calls).
-    - `obs_sdk_record_latency_ns` (histogram; per-call overhead).
-    - `obs_sdk_cardinality_blocked_total{service, metric}` (counter; sev-2 alarm).
+- `obs_sdk_record_calls_total{service}` (counter; total record_request calls).
+- `obs_sdk_record_latency_ns` (histogram; per-call overhead).
+- `obs_sdk_cardinality_blocked_total{service, metric}` (counter; sev-2 alarm).
 
 ---
 

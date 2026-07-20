@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this emissions inventory"
+- "Audit this emissions inventory"
 - "Check the emissions inventory for completeness"
 - "Verify the emissions inventory meets the rubric"
 - "Re-audit the emissions inventory"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a emissions inventory" → emissions-inventory-author
+- "Draft a emissions inventory" → emissions-inventory-author
 - "Create the emissions inventory" → emissions-inventory-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

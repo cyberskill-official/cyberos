@@ -86,14 +86,14 @@ The REW service **MUST** ship monthly payroll compute at `services/rew/src/payro
 1. **MUST** validate `payroll_status` against closed enum per DEC-2191.
 
 2. **MUST** compute at `compute.rs::compute(tenant, period)` per DEC-2190:
-   - For each active member: gross = P1 + P2 + P3 accruals
-   - Call TASK-REW-004 deductions
-   - net = gross - total_deductions
-   - Store per-member payslip data
+- For each active member: gross = P1 + P2 + P3 accruals
+- Call TASK-REW-004 deductions
+- net = gross - total_deductions
+- Store per-member payslip data
 
 3. **MUST** require CFO + CHRO dual-sign at `dual_sign_gate.rs::can_commit(payroll)` per DEC-2192:
-   - Both signed
-   - Same person rejected
+- Both signed
+- Same person rejected
 
 4. **MUST** make immutable post-committed per DEC-2193 — REVOKE UPDATE on payroll_runs after status=committed (via trigger or app-layer check).
 
@@ -238,8 +238,7 @@ async fn deterministic_replay() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-REW-001.
-**Cross-module:** TASK-REW-002 (versioning), TASK-REW-004 (deductions), TASK-REW-006 (PDF render), TASK-REW-009 (bank send), TASK-AUTH-101 (CFO/CHRO), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-REW-001. **Cross-module:** TASK-REW-002 (versioning), TASK-REW-004 (deductions), TASK-REW-006 (PDF render), TASK-REW-009 (bank send), TASK-AUTH-101 (CFO/CHRO), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

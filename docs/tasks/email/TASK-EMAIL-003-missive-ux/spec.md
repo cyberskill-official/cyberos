@@ -113,9 +113,9 @@ The EMAIL service + portal-web frontend **MUST** ship Missive-style UX — share
    ```
 
 3. **MUST** support internal comments at `threads/internal_comments.rs`:
-   - `POST /v1/email/threads/{id}/comments` body `{ body, mentions[] }`
-   - Renders in thread view inline (visual distinction)
-   - NEVER included in email reply quote per DEC-1612
+- `POST /v1/email/threads/{id}/comments` body `{ body, mentions[] }`
+- Renders in thread view inline (visual distinction)
+- NEVER included in email reply quote per DEC-1612
 
 4. **MUST** define table extension at migration `0012`:
    ```sql
@@ -148,23 +148,23 @@ The EMAIL service + portal-web frontend **MUST** ship Missive-style UX — share
 5. **MUST** wake snoozed threads at `snoozed_until` via TASK-MCP-007 cron — flip `state` to `open`, notify assignee via TASK-CHAT-005.
 
 6. **MUST** render frontend at `services/portal-web/src/email/`:
-   - `InboxView.tsx`: channel selector (left), thread list (middle)
-   - `ThreadView.tsx`: thread rendering + reply composer (right or full)
-   - `AssignmentPicker.tsx`: avatar grid + search
-   - `SnoozePicker.tsx`: chips (1h, 4h, tomorrow, next week, custom)
-   - `InternalCommentEditor.tsx`: separate composer, visual distinction
-   - `GenieActionsPanel.tsx`: streams from TASK-EMAIL-008 + quick-actions
+- `InboxView.tsx`: channel selector (left), thread list (middle)
+- `ThreadView.tsx`: thread rendering + reply composer (right or full)
+- `AssignmentPicker.tsx`: avatar grid + search
+- `SnoozePicker.tsx`: chips (1h, 4h, tomorrow, next week, custom)
+- `InternalCommentEditor.tsx`: separate composer, visual distinction
+- `GenieActionsPanel.tsx`: streams from TASK-EMAIL-008 + quick-actions
 
 7. **MUST** wire keyboard shortcuts per DEC-1615 at `keyboard_shortcuts.ts`:
-   - `j/k` navigate
-   - `r` reply, `R` reply-all
-   - `f` forward
-   - `a` assign focus
-   - `z` snooze focus
-   - `e` archive/close
-   - `g` Genie panel focus
-   - `Escape` clears focus
-   - All disabled when text input focused
+- `j/k` navigate
+- `r` reply, `R` reply-all
+- `f` forward
+- `a` assign focus
+- `z` snooze focus
+- `e` archive/close
+- `g` Genie panel focus
+- `Escape` clears focus
+- All disabled when text input focused
 
 8. **MUST** emit 5 memory audit kinds per DEC-1616. PII per TASK-MEMORY-111: comment body SHA-256 hashed; mentions (uuids) ok.
 
@@ -270,8 +270,7 @@ test('keyboard shortcut r opens reply composer', async ({page}) => {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-EMAIL-001, TASK-EMAIL-009.
-**Cross-module:** TASK-EMAIL-008 (Genie panel), TASK-EMAIL-006 (CRM contact display), TASK-EMAIL-007 (convert button), TASK-CHAT-005 (mention notif), TASK-CUO-101 (panel embedding), TASK-MCP-007 (snooze cron), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-EMAIL-001, TASK-EMAIL-009. **Cross-module:** TASK-EMAIL-008 (Genie panel), TASK-EMAIL-006 (CRM contact display), TASK-EMAIL-007 (convert button), TASK-CHAT-005 (mention notif), TASK-CUO-101 (panel embedding), TASK-MCP-007 (snooze cron), TASK-MEMORY-111 (PII).
 
 ## §8 — Sample payloads (see §3)
 

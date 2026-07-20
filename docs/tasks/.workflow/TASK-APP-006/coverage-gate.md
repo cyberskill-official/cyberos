@@ -6,7 +6,6 @@
 - T20/T21: render dry-run both ecosystems (fake artifact → version/sha substituted, placeholders gone, outputs stay valid). PASS
 - Floor: run-gates.sh GREEN. Coverage N/A (declared).
 
-TRACE closure: §1 #1✅ #2✅(always-on desktop-job artifacts only) #3✅(T17 fields) #4✅(T18, hedges in-file) #5✅(nothing submits) #6✅(T19 standing guard) #7✅(T20/T21 re-derivation) #8✅(answer sheet) #9✅(zap real-test requirement recorded).
-Deferred: AC #1 brew audit / AC #2 winget validate (tools absent here — pre-PR requirements vs RENDERED drafts); AC #8 NSIS switch real test (human).
+TRACE closure: §1 #1✅ #2✅(always-on desktop-job artifacts only) #3✅(T17 fields) #4✅(T18, hedges in-file) #5✅(nothing submits) #6✅(T19 standing guard) #7✅(T20/T21 re-derivation) #8✅(answer sheet) #9✅(zap real-test requirement recorded). Deferred: AC #1 brew audit / AC #2 winget validate (tools absent here — pre-PR requirements vs RENDERED drafts); AC #8 NSIS switch real test (human).
 
 **Machine gates green → HALTED at HITL gate 2. Final acceptance verdict is yours.**

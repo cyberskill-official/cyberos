@@ -56,9 +56,9 @@ risk_if_skipped: "Without signal, tenants pay for two chat tools indefinitely. W
 The decommission signal **MUST** compute the share of CyberOS-CHAT vs. legacy sources and fire when threshold met. The contract:
 
 1. **MUST** count messages over a rolling 14-day window, partitioned by source:
-   - CyberOS-CHAT: count of `posts` rows where `create_at >= now() - 14d` AND `props.cyberos_source IS NULL OR props.cyberos_source != 'imported_*'`.
-   - Slack import: count from `posts WHERE props.cyberos_source = 'imported_slack' AND props.original_ts >= now() - 14d`.
-   - Zalo import: count from `posts WHERE props.cyberos_source = 'imported_zalo' AND props.original_ts >= now() - 14d`.
+- CyberOS-CHAT: count of `posts` rows where `create_at >= now() - 14d` AND `props.cyberos_source IS NULL OR props.cyberos_source != 'imported_*'`.
+- Slack import: count from `posts WHERE props.cyberos_source = 'imported_slack' AND props.original_ts >= now() - 14d`.
+- Zalo import: count from `posts WHERE props.cyberos_source = 'imported_zalo' AND props.original_ts >= now() - 14d`.
 2. **MUST** compute ratio = `chat / (chat + slack + zalo)`. If denominator < 100 messages → insufficient data; return `Status::InsufficientData`.
 3. **MUST** mark `Status::Ready` when ratio ≥ 0.95 AND window is full 14 days AND total ≥ 100.
 4. **MUST** mark `Status::NotReady` otherwise; payload includes current ratio + gap to threshold.
@@ -68,8 +68,8 @@ The decommission signal **MUST** compute the share of CyberOS-CHAT vs. legacy so
 8. **MUST** support on-demand CLI: `cyberos-chat decommission check --tenant <id>` → prints status JSON.
 9. **MUST** notify via TASK-OBS-007 when status transitions from NotReady → Ready (sev-3 info).
 10. **MUST** emit OTel metrics:
-    - `chat_decommission_ratio{tenant_id}` (gauge).
-    - `chat_decommission_status_total{status}` (counter).
+- `chat_decommission_ratio{tenant_id}` (gauge).
+- `chat_decommission_status_total{status}` (counter).
 11. **MUST** track per-source breakdown so operators can answer "which legacy source is still active": payload contains `{chat_count, slack_count, zalo_count, slack_active_users, zalo_active_users}` (active = posted ≥ 1 message in window).
 12. **MUST** require ratio to be ≥ 0.95 for THREE consecutive nightly checks (not just one) before transitioning to Ready. Single-check transitions are too noisy; consecutive-check requirement smooths over single-day anomalies. Status enum gains `Ready` (after 3 consecutive) + `Approaching` (1 or 2 consecutive ≥ 0.95).
 13. **MUST** persist a per-tenant `decommission_state` row capturing `{tenant_id, current_status, ready_streak_days, first_ready_at, last_check_at, last_ratio}`. Updated atomically with each check.
@@ -77,12 +77,12 @@ The decommission signal **MUST** compute the share of CyberOS-CHAT vs. legacy so
 15. **MUST** detect and signal `Regression` status when a previously-Ready tenant drops below threshold for ≥ 2 consecutive checks. Payload includes `{prior_status, drop_from_ratio, drop_to_ratio, contributing_source}`. SEV-2 alert (regression > novel info).
 16. **MUST** offer per-tenant "snooze" via CLI: `cyberos-chat decommission snooze --tenant <id> --until <date>`. Snoozed tenants skip checks until date; emit `chat.decommission_snoozed` audit at snooze time.
 17. **MUST** include `recommended_action` field in payload:
-    - InsufficientData → "Insufficient data; continue normal operation"
-    - NotReady (ratio < 0.5) → "Substantial legacy traffic; do not decommission"
-    - NotReady (ratio 0.5–0.95) → "Migration in progress; monitor"
-    - Approaching → "Near decommission threshold; review with stakeholders"
-    - Ready → "Safe to decommission legacy sources; coordinate with operations"
-    - Regression → "Legacy traffic returned; investigate cause before decommissioning"
+- InsufficientData → "Insufficient data; continue normal operation"
+- NotReady (ratio < 0.5) → "Substantial legacy traffic; do not decommission"
+- NotReady (ratio 0.5–0.95) → "Migration in progress; monitor"
+- Approaching → "Near decommission threshold; review with stakeholders"
+- Ready → "Safe to decommission legacy sources; coordinate with operations"
+- Regression → "Legacy traffic returned; investigate cause before decommissioning"
 18. **MUST** include a `last_legacy_message_at` timestamp in the payload (max of legacy sources' last message); operators want "the last Slack message was 9 days ago" as a human-meaningful signal.
 19. **MUST** support per-source weights (slice-extension): config `decommission_source_weights = {slack: 1.0, zalo: 1.5}` allows operators to count Zalo more heavily (more SMB-critical in VN market). Default is all 1.0.
 20. **MUST** emit a `chat.decommission_state_changed` memory row WHENEVER status changes (not just on transition to Ready). Operators tracking adoption see every state change.

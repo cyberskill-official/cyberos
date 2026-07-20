@@ -98,44 +98,43 @@ risk_if_skipped: "Without this bridge, the plugin manifest declares tools that h
 The PLUGIN module **MUST** ship the MCP bridge server at `services/plugin-host/` as a single Rust binary `cyberos-mcp-bridge`. The bridge implements MCP 2025-11-25 protocol and exposes 8 CyberOS tools (CUO + memory + SKILL) to any MCP-compliant host.
 
 1. **MUST** ship as single binary supporting BOTH transports per DEC-2410 + DEC-2411:
-   - **stdio** — default for desktop hosts. Binary reads JSON-RPC frames from stdin, writes responses to stdout. Activated via `--transport stdio` or default when no flag.
-   - **HTTP** — for cloud/server hosts. Listens on `--listen 0.0.0.0:8082`. Uses MCP HTTP-streaming transport per spec. Activated via `--transport http`.
+- **stdio** — default for desktop hosts. Binary reads JSON-RPC frames from stdin, writes responses to stdout. Activated via `--transport stdio` or default when no flag.
+- **HTTP** — for cloud/server hosts. Listens on `--listen 0.0.0.0:8082`. Uses MCP HTTP-streaming transport per spec. Activated via `--transport http`.
 
 2. **MUST** implement the MCP 2025-11-25 handshake per TASK-MCP-001 + DEC-2412:
-   - `initialize` request: client sends `protocolVersion`, `capabilities`, `clientInfo`. Bridge responds with own `protocolVersion: "2025-11-25"`, `capabilities: {tools: {listChanged: false}, logging: {}}`, `serverInfo: {name: "cyberos-mcp-bridge", version: <semver>}`.
-   - `initialized` notification from client → bridge marks session ready.
-   - Subsequent `tools/list` and `tools/call` requests proceed.
+- `initialize` request: client sends `protocolVersion`, `capabilities`, `clientInfo`. Bridge responds with own `protocolVersion: "2025-11-25"`, `capabilities: {tools: {listChanged: false}, logging: {}}`, `serverInfo: {name: "cyberos-mcp-bridge", version: <semver>}`.
+- `initialized` notification from client → bridge marks session ready.
+- Subsequent `tools/list` and `tools/call` requests proceed.
 
 3. **MUST** expose exactly 8 tools at first ship per DEC-2413. Names follow SEP-986 per TASK-MCP-003:
-   - `cyberos.cuo.list_personas` — returns the 47 personas + metadata
-   - `cyberos.cuo.list_workflows` — for a given persona, return workflows + skill chains
-   - `cyberos.cuo.route` — two-stage natural-language router; returns persona+workflow
-   - `cyberos.cuo.execute_workflow` — runs a workflow chain (Tasks primitive — see clause 5)
-   - `cyberos.memory.read_audit` — returns audit rows for given (actor, kind, since_seq, limit); read-only
-   - `cyberos.memory.append_audit` — appends one audit row (write — requires `cyberos:memory:write` scope)
-   - `cyberos.skill.list_catalog` — returns 104 author+audit pairs + descriptions
-   - `cyberos.skill.invoke_skill` — invokes one skill by id with given inputs (Tasks primitive)
+- `cyberos.cuo.list_personas` — returns the 47 personas + metadata
+- `cyberos.cuo.list_workflows` — for a given persona, return workflows + skill chains
+- `cyberos.cuo.route` — two-stage natural-language router; returns persona+workflow
+- `cyberos.cuo.execute_workflow` — runs a workflow chain (Tasks primitive — see clause 5)
+- `cyberos.memory.read_audit` — returns audit rows for given (actor, kind, since_seq, limit); read-only
+- `cyberos.memory.append_audit` — appends one audit row (write — requires `cyberos:memory:write` scope)
+- `cyberos.skill.list_catalog` — returns 104 author+audit pairs + descriptions
+- `cyberos.skill.invoke_skill` — invokes one skill by id with given inputs (Tasks primitive)
 
 4. **MUST** wire each tool to its source-of-truth module per architecture:
-   - CUO tools → call `modules/cuo/` Python supervisor via subprocess invocation through `cyberos-cuo` binary, OR via in-process FFI if the supervisor ships as a library by then
-   - memory tools → call `services/memory/` HTTP REST at `MEMORY_ENDPOINT` env var
-   - SKILL tools → call `services/skill-broker/` (in flight per TASK-SKILL-103) OR file-scan `modules/skill/` catalog if broker not ready
+- CUO tools → call `modules/cuo/` Python supervisor via subprocess invocation through `cyberos-cuo` binary, OR via in-process FFI if the supervisor ships as a library by then
+- memory tools → call `services/memory/` HTTP REST at `MEMORY_ENDPOINT` env var
+- SKILL tools → call `services/skill-broker/` (in flight per TASK-SKILL-103) OR file-scan `modules/skill/` catalog if broker not ready
 
 5. **MUST** implement MCP Tasks primitive per TASK-MCP-007 for `cyberos.cuo.execute_workflow` + `cyberos.skill.invoke_skill` per DEC-2414. Long-running tools:
-   - Return `{task_id, status: "running"}` immediately on call
-   - Support `tasks/get?id=<task_id>` for status polling (status: running / completed / failed / cancelled)
-   - Support `tasks/cancel?id=<task_id>`
-   - Persist task state to PostgreSQL (`plugin_host.tasks` table) so reconnects resume in-flight tasks
-   - 10-minute default timeout; tools can override via input field
+- Return `{task_id, status: "running"}` immediately on call
+- Support `tasks/get?id=<task_id>` for status polling (status: running / completed / failed / cancelled)
+- Support `tasks/cancel?id=<task_id>`
+- Persist task state to PostgreSQL (`plugin_host.tasks` table) so reconnects resume in-flight tasks
+- 10-minute default timeout; tools can override via input field
 
 6. **MUST** be stateless across requests per DEC-2415. No in-memory session affinity; every request authenticates via OAuth-PKCE JWT (TASK-PLUGIN-005) carrying `tenant_id` claim. The bridge MUST NOT cache identity between requests. Long-running tasks persist their state in Postgres, not in memory.
 
 7. **MUST** return errors in 4 distinct classes per DEC-2416 + clause 8 error envelope below:
-   - `input_validation` — input doesn't match tool's input_schema; HTTP 422 / JSON-RPC code -32602
-   - `authz_denied` — token scope insufficient for the tool; HTTP 403 / JSON-RPC code -32000
-   - `upstream_unavailable` — downstream service (memory HTTP, CUO subprocess, SKILL broker) failed or timed out; HTTP 503 / JSON-RPC code -32001
-   - `internal_error` — bridge bug; HTTP 500 / JSON-RPC code -32603
-   Every error response carries `error.class`, `error.message`, `error.trace_id`, and an actionable `error.hint`.
+- `input_validation` — input doesn't match tool's input_schema; HTTP 422 / JSON-RPC code -32602
+- `authz_denied` — token scope insufficient for the tool; HTTP 403 / JSON-RPC code -32000
+- `upstream_unavailable` — downstream service (memory HTTP, CUO subprocess, SKILL broker) failed or timed out; HTTP 503 / JSON-RPC code -32001
+- `internal_error` — bridge bug; HTTP 500 / JSON-RPC code -32603 Every error response carries `error.class`, `error.message`, `error.trace_id`, and an actionable `error.hint`.
 
 8. **MUST** emit OpenTelemetry spans per DEC-2417 for every tool call with attributes `cyberos.plugin_id`, `cyberos.tool_name`, `cyberos.tenant_id`, `cyberos.trace_id`, `cyberos.duration_ms`, `cyberos.outcome` (success / error_class). Spans flow to TASK-OBS-001 collector via OTLP gRPC.
 

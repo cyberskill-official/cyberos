@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this implementation plan"
+- "Audit this implementation plan"
 - "Check the implementation plan for completeness"
 - "Verify the implementation plan meets the rubric"
 - "Re-audit the implementation plan"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a implementation plan" → implementation-plan-author
+- "Draft a implementation plan" → implementation-plan-author
 - "Create the implementation plan" → implementation-plan-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

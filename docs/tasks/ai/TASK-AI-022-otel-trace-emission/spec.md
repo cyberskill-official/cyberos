@@ -129,14 +129,14 @@ The AI Gateway service **MUST** emit OpenTelemetry traces for every request (cha
 10. **MUST** sample 100% of error traces at the gateway. The sampling decision is made at root-span start; a request that ends in error MUST emit the full trace (all child spans) regardless of probabilistic sampling. Tail-based downsampling per TASK-OBS-006 happens at the OBS collector, NOT the gateway.
 11. **MUST** add < 1ms overhead per call. Benchmark methodology (`otel_overhead_benchmark_test.rs`): compare 1000 sequential calls with OTel disabled vs. enabled; assert `(p95_enabled - p95_disabled) < 1ms`. The OTel SDK is built for this overhead profile; if exceeded, investigate the exporter (likely a slow OTLP endpoint).
 12. **MUST** apply standardised span status codes per OTel semantic conventions:
-    - `Ok` for successful operations.
-    - `Error` for any operation that returned an error (including refuses like ZdrViolation, ResidencyViolation, CapExceeded — these are operationally errors even if semantically intentional).
-    - `Unset` is not used; every span has an explicit status.
+- `Ok` for successful operations.
+- `Error` for any operation that returned an error (including refuses like ZdrViolation, ResidencyViolation, CapExceeded — these are operationally errors even if semantically intentional).
+- `Unset` is not used; every span has an explicit status.
 13. **MUST** configure OTLP exporter with the following defaults:
-    - `max_queue_size: 10240` (spans buffered when collector is slow).
-    - `max_export_batch_size: 512`.
-    - `export_timeout: 30s`.
-    - Schedule delay: 5s (export on either max_export_batch_size OR 5s elapsed).
+- `max_queue_size: 10240` (spans buffered when collector is slow).
+- `max_export_batch_size: 512`.
+- `export_timeout: 30s`.
+- Schedule delay: 5s (export on either max_export_batch_size OR 5s elapsed).
 14. **MUST** gracefully degrade on collector unreachability: dropped spans increment `ai_gateway_otel_spans_dropped_total{reason}` (reason ∈ `queue_full | export_timeout | collector_unreachable`). Sustained drop rate > 1% over 5 minutes triggers OBS sev-2 alarm. The gateway never blocks on OTel — span emission is fire-and-forget.
 15. **MUST** lint at compile-time (via `pii_lint.rs` AST walk in CI) that EVERY span attribute uses a key declared in `attributes.rs`. New attributes require explicit addition to `attributes.rs` with a comment explaining why it's PII-safe. The lint is the structural defence against accidental PII leakage.
 16. **SHOULD** emit OTel METRICS in parallel to traces (the metrics enumerated in each prior task's `SHOULD emit OTel metrics` clause). Metrics use the same OTLP endpoint; the OBS collector demuxes traces vs. metrics. Histogram metrics report p50, p95, p99 per attribute combination.

@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this hire decision"
+- "Audit this hire decision"
 - "Check the hire decision for completeness"
 - "Verify the hire decision meets the rubric"
 - "Re-audit the hire decision"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a hire decision" → hire-decision-author
+- "Draft a hire decision" → hire-decision-author
 - "Create the hire decision" → hire-decision-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

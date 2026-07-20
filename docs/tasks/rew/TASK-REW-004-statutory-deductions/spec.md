@@ -86,9 +86,9 @@ The REW service **MUST** ship statutory deductions at `services/rew/src/deductio
 1. **MUST** validate `deduction_kind` against closed enum per DEC-2181.
 
 2. **MUST** compute at `computer.rs::compute(member, gross_taxable, period)` per DEC-2180:
-   - Read rates from TASK-REW-002 / TASK-HR-005 policy at period start
-   - Default rates per Decree 152: BHXH 8%, BHYT 1.5%, BHTN 1%
-   - PIT via `pit_progressive.rs::compute(taxable_income, brackets)`
+- Read rates from TASK-REW-002 / TASK-HR-005 policy at period start
+- Default rates per Decree 152: BHXH 8%, BHYT 1.5%, BHTN 1%
+- PIT via `pit_progressive.rs::compute(taxable_income, brackets)`
 
 3. **MUST** check contractor exemption per DEC-2183 — if `member.contract_type='contractor'`, skip BHXH/BHYT/BHTN; still compute PIT.
 
@@ -157,7 +157,7 @@ Sample deduction list (in payroll context):
 ---
 
 ## §4 — Acceptance criteria
-1. **deduction_kind enum cardinality 6**. 2. **BHXH 8% (employee-side, not 17.5%)**. 3. **BHYT 1.5%**. 4. **BHTN 1%**. 5. **PIT progressive brackets**. 6. **Contractor SI-exempt**. 7. **Contractor still PIT'd**. 8. **Versioned policy lookup**. 9. **Deterministic**. 10. **3 memory audit kinds emitted**. 11. **PII scrubbed (amounts SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE**. 15. **Bigint VND (no float)**. 16. **Rate precision (7,6)**. 17. **Bracket edge handling per Decree 152 Art. 7**. 18. **Policy version_id stored per deduction**. 19. **Multiple deductions per member per run**. 20. **Total = sum(deducted_amount_vnd) matches**. 
+1. **deduction_kind enum cardinality 6**. 2. **BHXH 8% (employee-side, not 17.5%)**. 3. **BHYT 1.5%**. 4. **BHTN 1%**. 5. **PIT progressive brackets**. 6. **Contractor SI-exempt**. 7. **Contractor still PIT'd**. 8. **Versioned policy lookup**. 9. **Deterministic**. 10. **3 memory audit kinds emitted**. 11. **PII scrubbed (amounts SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE**. 15. **Bigint VND (no float)**. 16. **Rate precision (7,6)**. 17. **Bracket edge handling per Decree 152 Art. 7**. 18. **Policy version_id stored per deduction**. 19. **Multiple deductions per member per run**. 20. **Total = sum(deducted_amount_vnd) matches**.
 
 ---
 
@@ -198,9 +198,7 @@ async fn pit_progressive_brackets() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-HR-005.
-**Downstream:** TASK-REW-005 (payroll compute uses this).
-**Cross-module:** TASK-REW-002 (versioning), TASK-HR-002 (contract type), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-HR-005. **Downstream:** TASK-REW-005 (payroll compute uses this). **Cross-module:** TASK-REW-002 (versioning), TASK-HR-002 (contract type), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

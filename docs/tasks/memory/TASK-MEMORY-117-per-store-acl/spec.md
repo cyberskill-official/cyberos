@@ -101,13 +101,13 @@ The store-ACL layer **MUST** sit between the canonical `cyberos.core.writer.Writ
     ```
 5. **MUST** resolve `actor` matches with glob-style matching against the active actor identity (`--actor <name>` flag on CLI, or `Writer(actor=...)` arg). First-match-wins, IN ORDER as written in the YAML. An explicit `deny` always blocks regardless of `default_mode`.
 6. **MUST** support these built-in actor literals (no glob needed):
-    - `*` — wildcard (matches any actor)
-    - `dream-runner` — TASK-MEMORY-115's dream runner identity
-    - `dream-applier` — TASK-MEMORY-115's dream applier identity
-    - `scheduled-importer` — reserved for cron-driven `cyberos import` invocations
-    - `claude-code-hook` — TASK-MEMORY-109's hook identity
-    - any literal string matching `^[a-z][a-z0-9_-]*$` for custom actor ids
-    - glob form `user@*` or `*@example.com` matches the literal "@" delimiter
+- `*` — wildcard (matches any actor)
+- `dream-runner` — TASK-MEMORY-115's dream runner identity
+- `dream-applier` — TASK-MEMORY-115's dream applier identity
+- `scheduled-importer` — reserved for cron-driven `cyberos import` invocations
+- `claude-code-hook` — TASK-MEMORY-109's hook identity
+- any literal string matching `^[a-z][a-z0-9_-]*$` for custom actor ids
+- glob form `user@*` or `*@example.com` matches the literal "@" delimiter
 7. **MUST** reject writes that resolve to `deny` or that resolve to `read` with structured error `{outcome: "rejected", reason: "acl_denied", actor: ..., path: ..., store_id: ...}`. Rejected writes do NOT advance HEAD and do NOT emit `put`/`move`/`delete` rows — but they MUST emit a `memory.acl_denied` aux audit row capturing the attempt. The aux row's payload is the same struct as the error.
 8. **MUST** handle `move(src, dst)` by checking ACL on BOTH paths — write capability on `src` (to delete the old location) AND write capability on `dst` (to create the new location). Either failing blocks the move.
 9. **MUST** lazily load `STORE.yaml` on first write to its subtree and cache the parsed result in-memory keyed by `(store_dir, mtime_ns)`. On `STORE.yaml` mtime change (or content change detected by `cyberos doctor`), the cache entry is invalidated automatically on next access.

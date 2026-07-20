@@ -99,10 +99,10 @@ The AI Gateway service **MUST** enforce tenant residency at alias-resolution tim
 
 1. **MUST** expose `residency::matches(policy_residency: Residency, provider_region: &Region) -> bool`. Returns `true` if and only if the provider's region is in the residency's acceptable-region set per the `region_table.rs` mapping.
 2. **MUST** define the residency → acceptable-region mapping in `region_table.rs` as a `frozenset` per residency; changes to the mapping require explicit task amendment:
-   - `Sg1` → `{"ap-southeast-1"}` (Singapore; AWS only at slice 4).
-   - `Eu1` → `{"eu-central-1", "eu-west-1"}` (Frankfurt, Ireland — both adequacy-covered for EU↔EU intra-region transfers).
-   - `Us1` → `{"us-east-1", "us-east-2", "us-west-2"}` (Northern Virginia, Ohio, Oregon).
-   - `Vn1` → `{}` (empty set; no AWS region is in-country for Vietnam at slice 4).
+- `Sg1` → `{"ap-southeast-1"}` (Singapore; AWS only at slice 4).
+- `Eu1` → `{"eu-central-1", "eu-west-1"}` (Frankfurt, Ireland — both adequacy-covered for EU↔EU intra-region transfers).
+- `Us1` → `{"us-east-1", "us-east-2", "us-west-2"}` (Northern Virginia, Ohio, Oregon).
+- `Vn1` → `{}` (empty set; no AWS region is in-country for Vietnam at slice 4).
 3. **MUST** be invoked by `alias::resolve` (TASK-AI-006 §1 #7). When `residency::matches(policy.residency, &resolved_region) == false`, `alias::resolve` returns `Err(AliasError::ResidencyViolation { policy_residency, resolved_region, attempted_alias })`.
 4. **MUST** treat tenants with a missing `policy.ai_policy.residency` field as fail-closed for PDPL-pinned tenants (any tenant with `policy.tenant_jurisdiction == "VN"`); for other tenants the missing-field default is `Sg1` (Asia-Pacific consensus default for the CyberSkill home region). The default is documented in TASK-AI-005's schema; this task consumes the parsed value.
 5. **MUST** strip AZ suffix from the provider-returned region string before matching: `"ap-southeast-1a"` → `"ap-southeast-1"`. The matcher operates on AWS region strings (no AZ); AZ-aware policies are out of scope at slice 4. The strip rule is `^(?P<region>[a-z]{2}-[a-z]+-\d+)[a-z]?$` — stripping a single trailing alpha character if present.
@@ -114,10 +114,10 @@ The AI Gateway service **MUST** enforce tenant residency at alias-resolution tim
 11. **MUST** support a per-alias residency override (`policy.ai_policy.residency_override`) for tenants that need to pin a specific alias to a different residency than the tenant default. Schema: `residency_override: { "<alias-glob>": "<residency>" }`. Example: a SG tenant pinning `chat.eu-customer-data` to `eu-1`. The override is consulted BEFORE the tenant default; ambiguous overrides (multiple globs match) fail with `OverrideAmbiguous`.
 12. **MUST NOT** silently degrade `vn-1` to a "closest available" region. Slice 4 explicitly refuses; the alternative (silent fallback to `sg-1`) is the failure mode that produces a Decree 53 violation on a tenant who pinned `vn-1` precisely to avoid out-of-country routing.
 13. **SHOULD** emit OTel metrics:
-    - `ai_residency_mismatches_total{policy_residency, resolved_region}` (counter; alarm > 0).
-    - `ai_residency_vn1_refused_total{tenant_id}` (counter; tracks `Vn1` refusals separately from generic mismatches; trending this informs TASK-AI-104 prioritisation).
-    - `ai_residency_overrides_used_total{tenant_id, alias}` (counter; how often per-alias overrides fire).
-    - `ai_residency_default_applied_total{outcome}` (counter; outcome ∈ `sg1_default | refused_pdpl_no_pin`; tracks the missing-field fallback path).
+- `ai_residency_mismatches_total{policy_residency, resolved_region}` (counter; alarm > 0).
+- `ai_residency_vn1_refused_total{tenant_id}` (counter; tracks `Vn1` refusals separately from generic mismatches; trending this informs TASK-AI-104 prioritisation).
+- `ai_residency_overrides_used_total{tenant_id, alias}` (counter; how often per-alias overrides fire).
+- `ai_residency_default_applied_total{outcome}` (counter; outcome ∈ `sg1_default | refused_pdpl_no_pin`; tracks the missing-field fallback path).
 14. **SHOULD** log at WARN on every `Vn1` refusal — `vn1 residency refused; TASK-AI-104 Viettel integration needed for tenant=<id>` so the operator dashboard can prioritise the VN-provider build.
 
 ---

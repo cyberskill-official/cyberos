@@ -11,9 +11,7 @@ vacuous: false
 
 # Edge-case matrix — TASK-IMP-115
 
-The deliverable is one enum key per `skill_chain` line plus a doctrine section. The
-attack surface is not execution — nothing runs this field — it is **drift** (the label
-stops matching the work) and **false information** (a host routes on a lie).
+The deliverable is one enum key per `skill_chain` line plus a doctrine section. The attack surface is not execution — nothing runs this field — it is **drift** (the label stops matching the work) and **false information** (a host routes on a lie).
 
 | # | Category | Case | Behaviour required | Covered by |
 |---|---|---|---|---|
@@ -39,9 +37,6 @@ stops matching the work) and **false information** (a host routes on a lie).
 ## SECURITY-class pairing (audit requirement: every SECURITY entry has a test or an ADR)
 
 - **E13** → paired to a test: `test_no_host_specific_literals`.
-- **E14** → paired to AC 4's recorded grep (a negative structural claim; the spec itself
-  routes this to `verify:` with the TASK-IMP-090 rationale) plus the consumer table in
-  context-map §2, which enumerates all nine `skill_chain` readers and shows none reads an
-  unknown key.
+- **E14** → paired to AC 4's recorded grep (a negative structural claim; the spec itself routes this to `verify:` with the TASK-IMP-090 rationale) plus the consumer table in context-map §2, which enumerates all nine `skill_chain` readers and shows none reads an unknown key.
 
 No ADR required: neither entry proposes an architectural deviation.

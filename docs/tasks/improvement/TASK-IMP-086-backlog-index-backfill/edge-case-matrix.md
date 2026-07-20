@@ -7,9 +7,7 @@ verdict: pass (edge-case-matrix-audit: every category >=1 row, covered-by names 
 ---
 # Edge-case matrix - TASK-IMP-086
 
-Covered-by references are evidence items in gate-log-draft.md (E0-E6, E-SPLICE) -
-the spec's ACs 1-4 are ops-verified with recorded evidence; a permanent test is
-explicitly out of scope (it would go red on other sections' pre-existing drift).
+Covered-by references are evidence items in gate-log-draft.md (E0-E6, E-SPLICE) - the spec's ACs 1-4 are ops-verified with recorded evidence; a permanent test is explicitly out of scope (it would go red on other sections' pre-existing drift).
 
 | # | category | trigger | expected behavior | covered by |
 |---|---|---|---|---|
@@ -20,9 +18,4 @@ explicitly out of scope (it would go red on other sections' pre-existing drift).
 | 5 | uniqueness / order | duplicate stem in the pre-image, or one introduced by the splice; block order broken by insertion | pre-check IS AC 4's scan run before writing (0 dups, zero 068-081 rows pre-existed -> insertion cannot double a row); post-image: folder stems 0 dup, row stems 0 dup, whole block still bytewise stem-ascending | E0 (pre-check), E4 (three scans + the explained token hit), E4b (sort -c over the whole 87-row block) |
 | 6 | SECURITY | hostile title bytes attempting to fabricate structure - a title containing a row prefix (`- [draft] FAKE...`), a section heading (`## evil`), or an id token of another task | cannot break out of the tail: the emitter refuses multi-line titles (HALT), so a title can never carry a newline into the index - and without a newline, row/heading grammar cannot start; the payload lands as inline text after the stem on ONE line of inert markdown (no execution surface, spec §3 security-class: none). Foreign id tokens in tails are data - nothing keys on them | E-SPLICE (the `'\n' in title` HALT guard), E5 (each row is exactly one line, byte-equal to grammar + frontmatter), E4/E4c (the real-world instance: 081's tail cites TASK-IMP-080 and alters no scan verdict keyed on stems) |
 
-Documented-by-design: the recomputed header equalling the pre-existing header
-byte-for-byte (E-SPLICE) is not an edge slipped past - the old header already
-forward-counted 068-081 from frontmatter (regen counts unlisted done tasks), so
-row-parity restoration NECESSARILY reproduces it; §1 #1.4 demands recompute-and-
-match, not a byte change. The repo-wide `Totals:` line drift (155 vs 158 done,
-E1) is other sections' pre-existing drift, named out-of-scope by the spec.
+Documented-by-design: the recomputed header equalling the pre-existing header byte-for-byte (E-SPLICE) is not an edge slipped past - the old header already forward-counted 068-081 from frontmatter (regen counts unlisted done tasks), so row-parity restoration NECESSARILY reproduces it; §1 #1.4 demands recompute-and- match, not a byte change. The repo-wide `Totals:` line drift (155 vs 158 done, E1) is other sections' pre-existing drift, named out-of-scope by the spec.

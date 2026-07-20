@@ -1,12 +1,6 @@
 # TASK-IMP-093 — code review packet
 
-Files under review: new `tools/install/docs-tools/memory-append.mjs` (524 lines, the
-doc-driven BRAIN chain appender) and `tools/install/tests/test_memory_append.sh`
-(202 lines, the gating suite), modified `tools/install/build.sh` (+2 lines, guarded
-vendor copy — spec-declared in `modified_files`). Suite state at review:
-test_memory_append 4/4, 0 failed (~2 s including the payload build). build.sh is
-SHARED with batch sibling TASK-IMP-098 per the batch plan (same agent, serial order);
-at this review only the 093 line has landed.
+Files under review: new `tools/install/docs-tools/memory-append.mjs` (524 lines, the doc-driven BRAIN chain appender) and `tools/install/tests/test_memory_append.sh` (202 lines, the gating suite), modified `tools/install/build.sh` (+2 lines, guarded vendor copy — spec-declared in `modified_files`). Suite state at review: test_memory_append 4/4, 0 failed (~2 s including the payload build). build.sh is SHARED with batch sibling TASK-IMP-098 per the batch plan (same agent, serial order); at this review only the 093 line has landed.
 
 ## §1 clause → proof
 
@@ -21,48 +15,22 @@ at this review only the 093 line has landed.
 
 ## §3 edge cases
 
-Interrupted append: t01 seeds `current.binlog.tmp.deadbeef` + `HEAD.tmp` mid-sequence —
-cleaned with a loud note naming both, chain and HEAD stay consistent; the crash window
-rows==HEAD+1 heals by re-publishing HEAD (mirrors writer.py `_recover_tail`), any other
-divergence refuses (exit 4). Stdin payload: t01 append 3 uses `-`. Non-JSON payload:
-t03 arm (plus a non-object arm). Held lock: t02 arm — exit 3, fast, nothing written,
-the foreign lease not clobbered; expired lease reaped loudly. Security class: writes
-only under the store root (all paths computed, task token charset-validated, no
-network/child_process/eval — import block is node:fs/crypto/path/os).
+Interrupted append: t01 seeds `current.binlog.tmp.deadbeef` + `HEAD.tmp` mid-sequence — cleaned with a loud note naming both, chain and HEAD stay consistent; the crash window rows==HEAD+1 heals by re-publishing HEAD (mirrors writer.py `_recover_tail`), any other divergence refuses (exit 4). Stdin payload: t01 append 3 uses `-`. Non-JSON payload: t03 arm (plus a non-object arm). Held lock: t02 arm — exit 3, fast, nothing written, the foreign lease not clobbered; expired lease reaped loudly. Security class: writes only under the store root (all paths computed, task token charset-validated, no network/child_process/eval — import block is node:fs/crypto/path/os).
 
 ## Acceptance criteria
 
-AC 1 `t01_fresh_store_three_appends` ok · AC 2 `t02_verify_and_tamper` ok ·
-AC 3 `t03_bad_kind_refused` ok · AC 4 `t04_payload_vendored` ok · AC 5 run_all glob
-(ops check, gate-log E2) ok. Suite 4/4.
+AC 1 `t01_fresh_store_three_appends` ok · AC 2 `t02_verify_and_tamper` ok · AC 3 `t03_bad_kind_refused` ok · AC 4 `t04_payload_vendored` ok · AC 5 run_all glob (ops check, gate-log E2) ok. Suite 4/4.
 
 ## Diff size
 
-Two new files: `tools/install/docs-tools/memory-append.mjs` (524 lines, self-contained
-ESM, node stdlib only) and `tools/install/tests/test_memory_append.sh` (202 lines,
-executable). One modified file: `tools/install/build.sh` +2/−0 (guarded vendor copy).
-No dependency added anywhere. `dist/` untouched here — rebuild + version-sync before
-commit are the batch parent's step per payload-sync doctrine.
+Two new files: `tools/install/docs-tools/memory-append.mjs` (524 lines, self-contained ESM, node stdlib only) and `tools/install/tests/test_memory_append.sh` (202 lines, executable). One modified file: `tools/install/build.sh` +2/−0 (guarded vendor copy). No dependency added anywhere. `dist/` untouched here — rebuild + version-sync before commit are the batch parent's step per payload-sync doctrine.
 
 ## Design disclosures
 
-1. Layout fidelity over invention: the row layout is NOT a private format — frames,
-   HEAD, chain math, and the non-file-op record shape are lifted from the canonical
-   implementation (writer.py `_FRAME_HDR`/`_HEAD_FMT`/`_chain_hash`, session.py row
-   shape) so the production walker can read doc-driven rows. The spec's §6.3 prose is
-   ambiguous about prev_chain concat (hex text vs raw bytes); the implementation
-   (bytes.fromhex) is authoritative and this tool matches it, documented in the header.
-2. flock caveat: node stdlib exposes no flock(2); the §4.2 lease RECORD is enforced
-   instead (fail-fast on unexpired/unparseable, loud reap on expired). The
-   check-then-write window is documented as a doc-driven single-writer tolerance; the
-   MCP writer remains the arbiter for true concurrency (spec Out of scope).
-3. Append implementation: whole-segment tmp+rename rewrite (old bytes + one frame) —
-   a literal §4.1 two-phase write of the row, O(segment) at doc-driven scale;
-   append-only discipline preserved (prior bytes never modified), every append
-   re-verifies the full chain first and refuses to extend a broken one.
-4. CRC-32C is implemented for real (Castagnoli table, vector-checked) rather than
-   node's zlib CRC-32 — writer.py's own comment marks the zlib fallback "NOT CRC-32C";
-   interop with the hw-crc production walker requires the real polynomial.
+1. Layout fidelity over invention: the row layout is NOT a private format — frames, HEAD, chain math, and the non-file-op record shape are lifted from the canonical implementation (writer.py `_FRAME_HDR`/`_HEAD_FMT`/`_chain_hash`, session.py row shape) so the production walker can read doc-driven rows. The spec's §6.3 prose is ambiguous about prev_chain concat (hex text vs raw bytes); the implementation (bytes.fromhex) is authoritative and this tool matches it, documented in the header.
+2. flock caveat: node stdlib exposes no flock(2); the §4.2 lease RECORD is enforced instead (fail-fast on unexpired/unparseable, loud reap on expired). The check-then-write window is documented as a doc-driven single-writer tolerance; the MCP writer remains the arbiter for true concurrency (spec Out of scope).
+3. Append implementation: whole-segment tmp+rename rewrite (old bytes + one frame) — a literal §4.1 two-phase write of the row, O(segment) at doc-driven scale; append-only discipline preserved (prior bytes never modified), every append re-verifies the full chain first and refuses to extend a broken one.
+4. CRC-32C is implemented for real (Castagnoli table, vector-checked) rather than node's zlib CRC-32 — writer.py's own comment marks the zlib fallback "NOT CRC-32C"; interop with the hw-crc production walker requires the real polynomial.
 
 ## Verdict
 

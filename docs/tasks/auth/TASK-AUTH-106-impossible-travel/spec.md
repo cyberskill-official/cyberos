@@ -105,9 +105,9 @@ The AUTH service **MUST** evaluate every successful credential verification agai
 5. **MUST** flag the login as impossible-travel when the apparent speed exceeds `tenants.impossible_travel_speed_kmh` (default 900 per DEC-741, range [200, 5000] per DEC-742).
 
 6. **MUST** apply the per-tenant `impossible_travel_action` policy (DEC-746):
-   - `challenge`: return `200 OK { result: "challenge_required", challenge_id, methods: [...] }` (mfa challenge linkage); the session JWT is NOT issued until challenge-completion endpoint succeeds (TASK-AUTH-102 challenge flow).
-   - `block`: return `403 FORBIDDEN { error: "impossible_travel_blocked", prior_country, current_country, speed_kmh, threshold_kmh }`. The session JWT is NOT issued; the subject must contact ops.
-   - `warn_only`: issue the session JWT but emit a sev-2 memory audit row `auth.travel_warn_only`. No user friction.
+- `challenge`: return `200 OK { result: "challenge_required", challenge_id, methods: [...] }` (mfa challenge linkage); the session JWT is NOT issued until challenge-completion endpoint succeeds (TASK-AUTH-102 challenge flow).
+- `block`: return `403 FORBIDDEN { error: "impossible_travel_blocked", prior_country, current_country, speed_kmh, threshold_kmh }`. The session JWT is NOT issued; the subject must contact ops.
+- `warn_only`: issue the session JWT but emit a sev-2 memory audit row `auth.travel_warn_only`. No user friction.
 
 7. **MUST** bypass the impossible-travel check when the same-subject's prior login was within 24h AND same ISO country AND same ASN (DEC-749). This guards against carrier-IP roaming false positives (e.g., a Vietnamese subject's mobile session switches from Viettel cell tower at HCMC to one near the Cambodian border — different geo by 100km, same country same ASN, well under 24h, real human movement).
 
@@ -138,16 +138,16 @@ The AUTH service **MUST** evaluate every successful credential verification agai
 20. **MUST** scrub all reason-bearing audit text (policy reason, block error message extensions) via TASK-MEMORY-111 before memory chain emission. Geo coordinates + country + ASN are operational metadata, not PII; they pass through.
 
 21. **MUST** emit 6 closed memory audit kinds (DEC-754):
-    - `auth.travel_allowed` (sev-3, every login under threshold)
-    - `auth.travel_challenged` (sev-2, every login over threshold that triggered challenge)
-    - `auth.travel_allowed_after_challenge` (sev-2, challenge-completion success)
-    - `auth.travel_blocked` (sev-2, action=block tenant policy)
-    - `auth.travel_anonymous_ip` (sev-2, VPN/Tor/proxy)
-    - `auth.travel_geoip_stale` (sev-2, MaxMind DB > 30d old at startup)
-    - `auth.travel_policy_changed` (sev-2, per security_admin mutation)
-    - `auth.travel_allowlist_bypass` (sev-3, allowlisted IP bypass)
-    - `auth.travel_challenge_suppressed_repeat` (sev-3, 30-min window suppression)
-    - `auth.travel_warn_only` (sev-2, action=warn_only would-have-triggered)
+- `auth.travel_allowed` (sev-3, every login under threshold)
+- `auth.travel_challenged` (sev-2, every login over threshold that triggered challenge)
+- `auth.travel_allowed_after_challenge` (sev-2, challenge-completion success)
+- `auth.travel_blocked` (sev-2, action=block tenant policy)
+- `auth.travel_anonymous_ip` (sev-2, VPN/Tor/proxy)
+- `auth.travel_geoip_stale` (sev-2, MaxMind DB > 30d old at startup)
+- `auth.travel_policy_changed` (sev-2, per security_admin mutation)
+- `auth.travel_allowlist_bypass` (sev-3, allowlisted IP bypass)
+- `auth.travel_challenge_suppressed_repeat` (sev-3, 30-min window suppression)
+- `auth.travel_warn_only` (sev-2, action=warn_only would-have-triggered)
 
 22. **MUST** treat IPv4 and IPv6 uniformly — both are geolocated via the same MaxMind DB. NAT64 / dual-stack edge cases that yield different geo for v4 vs v6 from the same client are accepted as-is; the evaluator uses whichever IP the request arrived on.
 

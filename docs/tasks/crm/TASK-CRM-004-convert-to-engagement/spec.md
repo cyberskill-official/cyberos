@@ -213,8 +213,7 @@ async fn bidirectional_backlink() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-CRM-001, TASK-PROJ-005.
-**Cross-module:** TASK-INV-011 (recognition_method enum), TASK-AUTH-101 (CRO/CDO role), TASK-CRM-002 (activity feed event), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-CRM-001, TASK-PROJ-005. **Cross-module:** TASK-INV-011 (recognition_method enum), TASK-AUTH-101 (CRO/CDO role), TASK-CRM-002 (activity feed event), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

@@ -143,21 +143,21 @@ risk_if_skipped: "Every downstream HR task (contract types, CCCD photo encryptio
 The HR service **MUST** ship the Member schema as the canonical single source of truth for "is this person currently employed by this tenant, in what capacity, since when, with what entitlements?". Each requirement:
 
 1. **MUST** define the `members` table with the following columns and constraints (full DDL in §3.1):
-    - `subject_id UUID PRIMARY KEY REFERENCES auth.subjects(id)` — 1:1 with the AUTH credential (per DEC-209).
-    - `tenant_id UUID NOT NULL` — RLS partitioning key.
-    - `full_name TEXT NOT NULL` (1–200 chars; UTF-8 NFC).
-    - `preferred_name TEXT` (nullable; for the display name shown in UIs).
-    - `email TEXT NOT NULL` — mirrors `auth.subjects.email` for join-free lookups; `UNIQUE (tenant_id, email)`.
-    - `cccd_encrypted BYTEA` (nullable; encrypted via TASK-HR-003 KMS keyspace; raw form NEVER stored).
-    - `level member_level NOT NULL` — 7-value closed enum (per DEC-206).
-    - `status member_status NOT NULL DEFAULT 'candidate'` — 6-value closed enum (per DEC-200).
-    - `contract_type contract_type NOT NULL DEFAULT 'probation'` — 5-value closed enum (defined by TASK-HR-002; placeholder enum here).
-    - `start_date DATE` (nullable until transition to `active`; immutable after — per DEC-207).
-    - `end_date DATE` (nullable; set on transition to `terminated`).
-    - `sabbatical_eligible_at DATE` — generated column: `start_date + INTERVAL '5 years'` (per Decree 145/2020 Art. 113).
-    - `leave_balance_days NUMERIC(5,1)` — read-only materialised view of TASK-HR-004 leave_entries; UPDATE blocked by trigger (per DEC-204).
-    - `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`.
-    - `updated_at TIMESTAMPTZ NOT NULL DEFAULT now()`.
+- `subject_id UUID PRIMARY KEY REFERENCES auth.subjects(id)` — 1:1 with the AUTH credential (per DEC-209).
+- `tenant_id UUID NOT NULL` — RLS partitioning key.
+- `full_name TEXT NOT NULL` (1–200 chars; UTF-8 NFC).
+- `preferred_name TEXT` (nullable; for the display name shown in UIs).
+- `email TEXT NOT NULL` — mirrors `auth.subjects.email` for join-free lookups; `UNIQUE (tenant_id, email)`.
+- `cccd_encrypted BYTEA` (nullable; encrypted via TASK-HR-003 KMS keyspace; raw form NEVER stored).
+- `level member_level NOT NULL` — 7-value closed enum (per DEC-206).
+- `status member_status NOT NULL DEFAULT 'candidate'` — 6-value closed enum (per DEC-200).
+- `contract_type contract_type NOT NULL DEFAULT 'probation'` — 5-value closed enum (defined by TASK-HR-002; placeholder enum here).
+- `start_date DATE` (nullable until transition to `active`; immutable after — per DEC-207).
+- `end_date DATE` (nullable; set on transition to `terminated`).
+- `sabbatical_eligible_at DATE` — generated column: `start_date + INTERVAL '5 years'` (per Decree 145/2020 Art. 113).
+- `leave_balance_days NUMERIC(5,1)` — read-only materialised view of TASK-HR-004 leave_entries; UPDATE blocked by trigger (per DEC-204).
+- `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`.
+- `updated_at TIMESTAMPTZ NOT NULL DEFAULT now()`.
 
 2. **MUST** enforce RLS with both `USING` AND `WITH CHECK` clauses on the `members` table (per task-audit skill rule 13). Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`. Reads from one tenant return zero rows of another; INSERTs targeting a different tenant fail with `permission_denied`.
 
@@ -166,18 +166,17 @@ The HR service **MUST** ship the Member schema as the canonical single source of
 4. **MUST** declare the closed `member_level` PostgreSQL enum with exactly 7 values (per DEC-206): `'trainee'`, `'associate'`, `'senior'`, `'lead'`, `'principal'`, `'director'`, `'executive'`. Levels map to VN-1 progression; adding L8 (e.g. fellow) is an ADR.
 
 5. **MUST** ship the status FSM transition matrix in `services/hr/src/fsm/status.rs` as a closed lookup table. The valid transitions are:
-    - `candidate → probation` (offer accepted; HR opens contract).
-    - `candidate → terminated` (offer withdrawn before start).
-    - `probation → active` (probation passed; HR confirms; start_date locks).
-    - `probation → terminated` (probation failed).
-    - `active → on_leave` (long leave: maternity, sabbatical, unpaid).
-    - `on_leave → active` (return from leave).
-    - `active → suspended` (disciplinary or investigation).
-    - `suspended → active` (cleared).
-    - `suspended → terminated` (case closed against member).
-    - `active → terminated` (resignation or termination).
-    - `on_leave → terminated` (resigned during leave).
-   All other transitions return `INVALID_STATUS_TRANSITION` and are rejected at the API boundary AND at the DB level via a transition-validator trigger.
+- `candidate → probation` (offer accepted; HR opens contract).
+- `candidate → terminated` (offer withdrawn before start).
+- `probation → active` (probation passed; HR confirms; start_date locks).
+- `probation → terminated` (probation failed).
+- `active → on_leave` (long leave: maternity, sabbatical, unpaid).
+- `on_leave → active` (return from leave).
+- `active → suspended` (disciplinary or investigation).
+- `suspended → active` (cleared).
+- `suspended → terminated` (case closed against member).
+- `active → terminated` (resignation or termination).
+- `on_leave → terminated` (resigned during leave). All other transitions return `INVALID_STATUS_TRANSITION` and are rejected at the API boundary AND at the DB level via a transition-validator trigger.
 
 6. **MUST** record every status transition as an append-only row in `member_status_history(member_id, tenant_id, from_status, to_status, changed_at, changed_by_subject_id, reason TEXT)`. The table has `REVOKE UPDATE, DELETE FROM cyberos_app` per task-audit skill rule 12; history rows are append-only by SQL grant, not by handler discipline.
 
@@ -190,19 +189,19 @@ The HR service **MUST** ship the Member schema as the canonical single source of
 10. **MUST** treat `leave_balance_days` as a **read-only materialised value** (per DEC-204). The column is updated EXCLUSIVELY by TASK-HR-004's leave_entries trigger; direct UPDATE on this column from any other path is blocked by a `BEFORE UPDATE` trigger that returns `leave_balance_is_materialised`. The handler-side `update_member()` function explicitly omits `leave_balance_days` from its allowed-fields list.
 
 11. **MUST** categorically forbid compensation columns in this schema (per DEC-203). The forbidden column-name set is `{base_salary, salary, base_pay, bonus, p1_base, p2_allowance, p3_performance, equity_units, esop_grant, total_comp, gross_pay, net_pay, comp_band, pay_band}`. Two enforcement layers:
-   - **DB-level CHECK constraint** named `comp_columns_excluded` that asserts the table's `information_schema.columns` row count for any of those names is zero. The constraint fires on schema migration; presence of any column = migration fails.
-   - **CI gate** `comp_exclusion_test` reads `0001_members.sql` + any subsequent migrations and rejects diffs containing those column names in a `CREATE TABLE members` or `ALTER TABLE members ADD COLUMN` statement.
+- **DB-level CHECK constraint** named `comp_columns_excluded` that asserts the table's `information_schema.columns` row count for any of those names is zero. The constraint fires on schema migration; presence of any column = migration fails.
+- **CI gate** `comp_exclusion_test` reads `0001_members.sql` + any subsequent migrations and rejects diffs containing those column names in a `CREATE TABLE members` or `ALTER TABLE members ADD COLUMN` statement.
 
 12. **MUST** declare `cccd_encrypted BYTEA` (nullable) as the only CCCD-related column on this table (per DEC-202). Raw `cccd_id` or `cccd_photo_url` MUST NOT exist; encryption + photo storage is owned by TASK-HR-003 which writes to a separate `member_cccd` table with its own KMS keyspace.
 
 13. **MUST** emit `hr.member_cccd_accessed` memory audit row at sev-1 priority whenever any handler reads the `cccd_encrypted` column (per DEC-208 + PDPL Art. 14). Access without justification triggers OBS sev-1 alarm via TASK-OBS-007.
 
 14. **MUST** expose REST handlers:
-    - `POST /v1/admin/members` (caller MUST have `Resource::HrMember + Action::Admin` per TASK-AUTH-101) — creates a Member with `status='candidate'` initially.
-    - `GET /v1/admin/members/{subject_id}` (caller MUST have `Resource::HrMember + Action::Read`) — returns the member record (omits `cccd_encrypted` field unless caller has `Action::Admin`).
-    - `PATCH /v1/admin/members/{subject_id}` (Admin) — partial update; rejects forbidden field sets (leave_balance_days, comp fields, locked start_date).
-    - `POST /v1/admin/members/{subject_id}/transition` (Admin) — body `{"to_status":"active","reason":"<text>"}`; validates against FSM; emits status-history row + memory audit row in one transaction.
-    - `GET /v1/admin/members` (caller `Action::Read`) — list with cursor pagination; default filter `status IN ('probation','active','on_leave')`.
+- `POST /v1/admin/members` (caller MUST have `Resource::HrMember + Action::Admin` per TASK-AUTH-101) — creates a Member with `status='candidate'` initially.
+- `GET /v1/admin/members/{subject_id}` (caller MUST have `Resource::HrMember + Action::Read`) — returns the member record (omits `cccd_encrypted` field unless caller has `Action::Admin`).
+- `PATCH /v1/admin/members/{subject_id}` (Admin) — partial update; rejects forbidden field sets (leave_balance_days, comp fields, locked start_date).
+- `POST /v1/admin/members/{subject_id}/transition` (Admin) — body `{"to_status":"active","reason":"<text>"}`; validates against FSM; emits status-history row + memory audit row in one transaction.
+- `GET /v1/admin/members` (caller `Action::Read`) — list with cursor pagination; default filter `status IN ('probation','active','on_leave')`.
 
 15. **MUST** ensure 1:1 mapping with `auth.subjects` (per DEC-209): `member.subject_id` is FOREIGN KEY REFERENCES `auth.subjects(id)`. Cascading semantics: ON DELETE RESTRICT (a Member record cannot be removed while the Auth subject exists; offboarding goes through the terminated state, not deletion).
 
@@ -213,11 +212,11 @@ The HR service **MUST** ship the Member schema as the canonical single source of
 18. **MUST** emit OTel span `hr.member.{create,get,update,transition}` per handler with attributes: `tenant_id`, `member_id`, `subject_id_hash16`, `outcome` (success | not_found | invalid_transition | comp_field_rejected | permission_denied).
 
 19. **MUST** emit OTel metrics:
-    - `hr_member_create_total{outcome}` (counter).
-    - `hr_member_status_transitions_total{from_status, to_status, outcome}` (counter).
-    - `hr_member_cccd_access_total{requested_by_role}` (counter; cardinality bounded by RBAC roles).
-    - `hr_member_count{tenant_id, status}` (gauge).
-    - `hr_member_sabbatical_eligible_count{tenant_id}` (gauge; computed via `sabbatical_eligible_view`).
+- `hr_member_create_total{outcome}` (counter).
+- `hr_member_status_transitions_total{from_status, to_status, outcome}` (counter).
+- `hr_member_cccd_access_total{requested_by_role}` (counter; cardinality bounded by RBAC roles).
+- `hr_member_count{tenant_id, status}` (gauge).
+- `hr_member_sabbatical_eligible_count{tenant_id}` (gauge; computed via `sabbatical_eligible_view`).
 
 20. **MUST** ship the `member_active_view` SQL view filtering `status IN ('probation','active','on_leave')` (per DEC-205 — `active` is a logical concept covering "currently engaged"). Downstream tasks querying "who is currently employed" SHOULD use this view, not the raw table, to avoid status-filter drift.
 

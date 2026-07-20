@@ -62,13 +62,13 @@ The Zalo importer **MUST** parse a manual Zalo HTML export bundle and import int
 
 1. **MUST** accept zip bundle structure: `messages/<conv>/<date>.html` + `media/<sha>/...` + `metadata.json`.
 2. **MUST** use 6 steps (skip "channel_members" + "threads" — Zalo has no thread primitives):
-   1. Validate, 2. Users, 3. Channels, 4. Messages, 5. Files, 6. Verify.
+1. Validate, 2. Users, 3. Channels, 4. Messages, 5. Files, 6. Verify.
 3. **MUST** parse HTML via `scraper` crate; extract `<div class="msg" data-user-id="..." data-ts="..."><span class="body">...</span></div>` blocks.
 4. **MUST** NFC-normalise all text bodies before insert; Zalo uses mixed NFC/NFD.
 5. **MUST** map Zalo-specific emoji codes (e.g. `:>>` → 😄) via curated table.
 6. **MUST** map conversation types:
-   - Group → MM private channel; channel name = group name; members = group participants.
-   - 1-1 → MM DM channel between the two users.
+- Group → MM private channel; channel name = group name; members = group participants.
+- 1-1 → MM DM channel between the two users.
 7. **MUST** handle Zalo users without email: synthesize MM email `zalo-user-<zalo_id>@imported.cyberos.local`; display_name from Zalo profile.
 8. **MUST** dedup at message level by `(channel_id, zalo_msg_id)` stored in MM post props.
 9. **MUST** reuse TASK-CHAT-006's checkpoint table (`import_jobs` with `source='zalo'`).
@@ -78,9 +78,8 @@ The Zalo importer **MUST** parse a manual Zalo HTML export bundle and import int
 13. **MUST** emit OTel metrics with label `source=zalo`.
 14. **MUST** pin the exporter version in `metadata.json` and refuse to import bundles produced by an unsupported exporter version. Supported set is enumerated in `services/chat-importer/src/zalo/supported_versions.rs`. Unknown version → exit 1 with SEV-1 `chat.import_unsupported_zalo_version` audit.
 15. **MUST** detect Zalo's two HTML schema generations:
-    - **Gen-1** (pre-2023): `<div class="msg" data-...>` with attributes on the div.
-    - **Gen-2** (2023+): `<article data-zalo-msg-id="...">` with semantic HTML.
-    Each generation has its own parser; selection is by metadata.json `schema_version`.
+- **Gen-1** (pre-2023): `<div class="msg" data-...>` with attributes on the div.
+- **Gen-2** (2023+): `<article data-zalo-msg-id="...">` with semantic HTML. Each generation has its own parser; selection is by metadata.json `schema_version`.
 16. **MUST** handle Zalo's per-message reactions: `<div class="reaction" data-emoji="..." data-user-ids="u1,u2">`. Mapped to MM `reactions` row per user.
 17. **MUST** preserve Zalo voice-message audio files: `audio/<msg_id>.m4a` extracted from bundle, uploaded to MM file store, and the parent post body MUST contain `[voice message · <duration>s]` placeholder so the MM UI can render an audio attachment.
 18. **MUST** preserve Zalo video files and image files: bundle structure `media/<sha>/...` with metadata in `metadata.json::media[]`. Files step (#5) uploads each via MM API; dedup by `(zalo_workspace_id, media_sha)`.

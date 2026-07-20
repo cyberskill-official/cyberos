@@ -10,5 +10,4 @@ Batch: {TASK-IMP-074, TASK-IMP-075} — cone-independent (workflow/hooks/CI-docs
 | 8 rules_sha + gate | build.sh fingerprint (V3 deterministic, V6 sensitive) + check-version-sync 5b (V4 pass, V5 negative) | ✅ |
 | 9 hook chain build/release/deploy | pre-commit (existing) + payload-gate (existing) + release payload job (existing) + deploy.yml paths ADDED + documented in Distribution sync section | ✅ |
 | 10 pull-side follow-up | §9 records client-side comparison as designated follow-up | ✅ |
-Machine gates: V1-V7,V9 all PASS (see commit body). Coverage N/A declared (bash/YAML/md).
-Verdict needed: "TASK-IMP-074 review: approved" or rejected+reason.
+Machine gates: V1-V7,V9 all PASS (see commit body). Coverage N/A declared (bash/YAML/md). Verdict needed: "TASK-IMP-074 review: approved" or rejected+reason.

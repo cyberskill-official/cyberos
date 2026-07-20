@@ -31,8 +31,7 @@ incident: null
 3. overall: FAIL (total 13, pass 12, error 1)
 ```
 
-**Environment**: any repo where `ship-tasks` has run at least once.
-**Frequency**: always, once the ADR / code-review / impl-plan / obs-injection appliers have fired.
+**Environment**: any repo where `ship-tasks` has run at least once. **Frequency**: always, once the ADR / code-review / impl-plan / obs-injection appliers have fired.
 
 ## Expected vs observed
 

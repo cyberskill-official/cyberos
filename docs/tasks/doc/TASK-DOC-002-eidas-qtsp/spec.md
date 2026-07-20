@@ -97,14 +97,14 @@ The DOC service **MUST** ship eIDAS QTSP integration at `services/doc/src/qtsp/`
 3. **MUST** validate `qtsp_request_kind` against closed enum per DEC-1772.
 
 4. **MUST** dispatch per partner:
-   - `globalsign_client.rs::request_signature(pdf_hash, signer_cert_id, ts_authority)` — GlobalSign DSS REST
-   - `cryptomathic_client.rs::sign(pdf, signer_cert_id)` — Cryptomathic Signer API
+- `globalsign_client.rs::request_signature(pdf_hash, signer_cert_id, ts_authority)` — GlobalSign DSS REST
+- `cryptomathic_client.rs::sign(pdf, signer_cert_id)` — Cryptomathic Signer API
 
 5. **MUST** validate returned cert chain at `cert_chain_validator.rs::validate(signature)`:
-   - All certs in chain non-expired at signature time.
-   - Issuer chain to EU Trust List root.
-   - OCSP/CRL revocation check.
-   - Timestamp authority signed.
+- All certs in chain non-expired at signature time.
+- Issuer chain to EU Trust List root.
+- OCSP/CRL revocation check.
+- Timestamp authority signed.
 
 6. **MUST** return PAdES-B-LT signature per DEC-1774 — embedded validation data (cert chain + OCSP/CRL + timestamp) per ETSI EN 319 142-1.
 
@@ -250,8 +250,7 @@ async fn padesblt_format_returned() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-DOC-001.
-**Cross-module:** TASK-DOC-005 (caller), TASK-DOC-006 (verification gate), TASK-DOC-011 (LTV re-stamping), TASK-AUTH-105 (KMS), TASK-AUTH-101 (CISO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-DOC-001. **Cross-module:** TASK-DOC-005 (caller), TASK-DOC-006 (verification gate), TASK-DOC-011 (LTV re-stamping), TASK-AUTH-105 (KMS), TASK-AUTH-101 (CISO role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

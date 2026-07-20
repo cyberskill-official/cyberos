@@ -165,9 +165,9 @@ Worse, span status conveys outcome semantics that attributes don't: a `provider_
 #### Suggested fix
 
 1. Add §1 #12 normative requirement: standardised status per OTel conventions:
-   - `Ok` for successful operations.
-   - `Error` for any operation that returned an error (refuses count as errors).
-   - `Unset` is not used; every span has explicit status.
+- `Ok` for successful operations.
+- `Error` for any operation that returned an error (refuses count as errors).
+- `Unset` is not used; every span has explicit status.
 2. Update §3 handler skeleton to show `span.record_status(Status::Ok)` and `Status::error(msg)` calls.
 3. Add AC #13 asserting status set per outcome (success → Ok; ZdrViolation → Error).
 4. Add §5 test `span_status_set_per_outcome` covering both paths.

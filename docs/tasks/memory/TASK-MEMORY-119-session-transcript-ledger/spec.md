@@ -88,16 +88,16 @@ risk_if_skipped: "Without the session transcript ledger, TASK-MEMORY-115 dream's
 The session-transcript ledger is an **opt-in turn-level audit trail** for agent-user conversations. Sessions are stored independently from the main audit chain (separate `sessions/` directory) but emit summary rows on the main chain so downstream consumers (TASK-MEMORY-115 dream) can discover them. The contract:
 
 1. **MUST** support three CLI lifecycle commands:
-    - `cyberos session start --id <slug> [--classification confidential|restricted] [--retention-days <N>]` — emits `session.start` row on the main chain + creates `sessions/<YYYY-MM-DD>/<id>.binlog.zst`
-    - `cyberos session append --id <slug> --role {user|assistant|system|tool} --content <text>` — emits `session.turn` row into the session's own binlog
-    - `cyberos session end --id <slug> [--reason <text>]` — emits `session.end` row on the main chain + seals the session's binlog (compresses, computes final chain hash, marks immutable)
+- `cyberos session start --id <slug> [--classification confidential|restricted] [--retention-days <N>]` — emits `session.start` row on the main chain + creates `sessions/<YYYY-MM-DD>/<id>.binlog.zst`
+- `cyberos session append --id <slug> --role {user|assistant|system|tool} --content <text>` — emits `session.turn` row into the session's own binlog
+- `cyberos session end --id <slug> [--reason <text>]` — emits `session.end` row on the main chain + seals the session's binlog (compresses, computes final chain hash, marks immutable)
 2. **MUST** store session bodies at `<memory-root>/sessions/<YYYY-MM-DD>/<id>.binlog.zst` — date-partitioned for easy retention purge. The binlog format mirrors §6.2 (length-prefixed framed records) so the existing reader code paths can parse it.
 3. **MUST** default `classification: confidential` per DEC-251. Operators MAY override per-session with `--classification restricted` to force encryption envelope per §5.4. The `public` and `internal` classifications are NOT permitted on sessions (they'd undermine the whole purpose of the transcript being sensitive).
 4. **MUST** when `classification: restricted`, encrypt every `session.turn` payload's `content` field via the §5.4 envelope. The meta-frame (role, ts, turn_seq) stays plaintext for fast filtering without decryption.
 5. **MUST** validate session lifecycle invariants via walker rule `session-lifecycle-well-formed`:
-    - Every `session.start` matched by 0 or 1 `session.end` (in-flight sessions are valid; double-end is not)
-    - Within one session's binlog: `turn_seq` strictly monotonically increasing from 0 to N
-    - No `session.turn` row precedes its `session.start` or follows its `session.end`
+- Every `session.start` matched by 0 or 1 `session.end` (in-flight sessions are valid; double-end is not)
+- Within one session's binlog: `turn_seq` strictly monotonically increasing from 0 to N
+- No `session.turn` row precedes its `session.start` or follows its `session.end`
 6. **MUST** reject `append` for a session id that has no preceding `start` OR has a preceding `end`. Error message names the violated state.
 7. **MUST** support `cyberos session read --id <slug> [--decrypt]` to render a session's transcript as a sequence of turn entries. `--decrypt` is required for `restricted` sessions; without the flag, restricted sessions display turn metadata only ("[encrypted content; --decrypt to read]").
 8. **MUST** support `cyberos session list [--since 24h] [--classification ...] [--ended {true|false|all}]` to enumerate sessions. Default returns last 24h of all sessions.

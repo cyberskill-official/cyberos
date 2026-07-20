@@ -1,7 +1,6 @@
 # `edge-case-matrix-author` - pipeline
 
-Enumerate null/bounds/malformed/race/security/degradation edge cases before implementation, one row per category-and-trigger with a covering-test pointer.
-Artefact: `edge-case-matrix@1`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
+Enumerate null/bounds/malformed/race/security/degradation edge cases before implementation, one row per category-and-trigger with a covering-test pointer. Artefact: `edge-case-matrix@1`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
 
 ## Upstream
 

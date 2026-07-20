@@ -85,15 +85,15 @@ The ESOP service **MUST** ship Member dashboard at `services/esop/src/dashboard/
 1. **MUST** validate `dashboard_access_kind` against closed enum per DEC-2311.
 
 2. **MUST** gate at `access_gate.rs::check(requester, viewed_member)` per DEC-2310:
-   - requester == viewed_member → self_view (always allowed)
-   - requester has CFO role AND provides audit_reason → cfo_audit_view (logged)
-   - requester has CEO role AND provides audit_reason → ceo_audit_view (logged)
-   - Otherwise → denied + sev-2 audit
+- requester == viewed_member → self_view (always allowed)
+- requester has CFO role AND provides audit_reason → cfo_audit_view (logged)
+- requester has CEO role AND provides audit_reason → ceo_audit_view (logged)
+- Otherwise → denied + sev-2 audit
 
 3. **MUST** compute estimated value at `value_calculator.rs::compute(member)` per DEC-2312:
-   - For each grant: vested = latest TASK-ESOP-002 accrual
-   - latest_price = TASK-ESOP-003 committed_share_price for current year
-   - estimated_value = vested * latest_price
+- For each grant: vested = latest TASK-ESOP-002 accrual
+- latest_price = TASK-ESOP-003 committed_share_price for current year
+- estimated_value = vested * latest_price
 
 4. **MUST** log access at migration `0007`:
    ```sql
@@ -215,8 +215,7 @@ async fn cfo_with_reason_logged() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-ESOP-001.
-**Cross-module:** TASK-ESOP-002 (vested), TASK-ESOP-003 (valuation), TASK-AUTH-101 (roles), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-ESOP-001. **Cross-module:** TASK-ESOP-002 (vested), TASK-ESOP-003 (valuation), TASK-AUTH-101 (roles), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

@@ -160,19 +160,19 @@ The AUTH service **MUST** ship a first-party OIDC provider (authorization server
 6. **MUST** serve OIDC + RFC 8414 discovery at `GET /.well-known/openid-configuration` (DEC-2492) advertising: `issuer` (the configured canonical AUTH URL, DEC-2498), `authorization_endpoint` (`/v1/auth/op/authorize`), `token_endpoint` (`/v1/auth/op/token`), `userinfo_endpoint` (`/v1/auth/op/userinfo`), `jwks_uri` (the existing `/.well-known/jwks.json`), `end_session_endpoint` (slice 2, advertised as present), `response_types_supported: ["code"]`, `grant_types_supported: ["authorization_code"]` (plus `refresh_token` when any active RP has `allow_refresh`), `code_challenge_methods_supported: ["S256"]`, `scopes_supported: ["openid","profile","email","offline_access"]`, `id_token_signing_alg_values_supported: ["RS256"]`, `subject_types_supported: ["public"]`.
 
 7. **MUST** implement `GET /v1/auth/op/authorize` (DEC-2482, DEC-2484):
-   - Validate `client_id` is an active registered RP; unknown → render error, do NOT redirect.
-   - Validate `redirect_uri` is an exact match of a registered `redirect_uris` entry (DEC-2491); mismatch → render error, do NOT redirect (open-redirect defense).
-   - Require `response_type=code`, `scope` containing `openid`, `code_challenge` + `code_challenge_method=S256`, `state` (echoed), optional `nonce`. Missing PKCE → redirect back with `error=invalid_request`.
-   - Establish the human: if a valid `__Host-cyberos_sso` cookie maps to a non-revoked `auth_sso_sessions` row, use its `subject_id` (silent SSO). Else broker to the tenant's primary upstream IdP via TASK-AUTH-104 `initiate`, preserving the original authorize request; on the TASK-AUTH-104 callback, create an SSO session (§1 #9) and resume this authorize.
-   - Revoke gate (DEC-2488): if the resolved `subject_id` is revoked per TASK-AUTH-005 (deny-list / `subjects.status='revoked'`), deny with `access_denied` + emit `auth.op_authorize_denied`; the person cannot obtain a code.
-   - Issue a single-use code: 32 random bytes base64url; store `code_hash`, bind `rp_client_id`, `subject_id`, `redirect_uri`, `code_challenge`, `nonce`, `scope`, `sso_session_id`, `expires_at = now + 60s`; redirect to `redirect_uri?code=<>&state=<>`.
+- Validate `client_id` is an active registered RP; unknown → render error, do NOT redirect.
+- Validate `redirect_uri` is an exact match of a registered `redirect_uris` entry (DEC-2491); mismatch → render error, do NOT redirect (open-redirect defense).
+- Require `response_type=code`, `scope` containing `openid`, `code_challenge` + `code_challenge_method=S256`, `state` (echoed), optional `nonce`. Missing PKCE → redirect back with `error=invalid_request`.
+- Establish the human: if a valid `__Host-cyberos_sso` cookie maps to a non-revoked `auth_sso_sessions` row, use its `subject_id` (silent SSO). Else broker to the tenant's primary upstream IdP via TASK-AUTH-104 `initiate`, preserving the original authorize request; on the TASK-AUTH-104 callback, create an SSO session (§1 #9) and resume this authorize.
+- Revoke gate (DEC-2488): if the resolved `subject_id` is revoked per TASK-AUTH-005 (deny-list / `subjects.status='revoked'`), deny with `access_denied` + emit `auth.op_authorize_denied`; the person cannot obtain a code.
+- Issue a single-use code: 32 random bytes base64url; store `code_hash`, bind `rp_client_id`, `subject_id`, `redirect_uri`, `code_challenge`, `nonce`, `scope`, `sso_session_id`, `expires_at = now + 60s`; redirect to `redirect_uri?code=<>&state=<>`.
 
 8. **MUST** implement `POST /v1/auth/op/token` (DEC-2490, DEC-2486, DEC-2487):
-   - Authenticate the RP (`client_secret_basic` or POST body `client_id`+`client_secret`); bad secret → 401 `invalid_client`.
-   - `grant_type=authorization_code`: look up `code_hash`; missing/expired/consumed → `invalid_grant`. On a consumed-code replay, ALSO revoke any token already minted from it (RFC 6749 §4.1.2). Verify `redirect_uri` equals the stored value and `code_verifier` satisfies the stored `code_challenge` (S256). Re-check the revoke gate (DEC-2488).
-   - Mint: `access_token` = TASK-AUTH-004 RS256 JWT, scope `openid` + granted, `aud` includes the RP; `id_token` = RS256 JWT per §1 #10 with `nonce` echoed; `token_type=Bearer`, `expires_in`. Mark the code consumed.
-   - `grant_type=refresh_token`: only if the RP has `allow_refresh` (DEC-2499); rotate per TASK-AUTH-004.
-   - Emit `auth.op_token_issued`.
+- Authenticate the RP (`client_secret_basic` or POST body `client_id`+`client_secret`); bad secret → 401 `invalid_client`.
+- `grant_type=authorization_code`: look up `code_hash`; missing/expired/consumed → `invalid_grant`. On a consumed-code replay, ALSO revoke any token already minted from it (RFC 6749 §4.1.2). Verify `redirect_uri` equals the stored value and `code_verifier` satisfies the stored `code_challenge` (S256). Re-check the revoke gate (DEC-2488).
+- Mint: `access_token` = TASK-AUTH-004 RS256 JWT, scope `openid` + granted, `aud` includes the RP; `id_token` = RS256 JWT per §1 #10 with `nonce` echoed; `token_type=Bearer`, `expires_in`. Mark the code consumed.
+- `grant_type=refresh_token`: only if the RP has `allow_refresh` (DEC-2499); rotate per TASK-AUTH-004.
+- Emit `auth.op_token_issued`.
 
 9. **MUST** manage the AUTH SSO browser session (DEC-2489, §1 #3): after any successful human authentication at authorize (silent reuse OR fresh upstream login), ensure an `auth_sso_sessions` row + set `__Host-cyberos_sso` (Secure, HttpOnly, SameSite=Lax, Path=/, no Domain - the `__Host-` prefix forbids Domain and requires Secure+Path=/). Sliding TTL 8h on `last_seen_at`, absolute 24h. This is what makes the second app a one-click login. Emit `auth.op_sso_session_started` on creation.
 

@@ -208,12 +208,12 @@ The TEN service **MUST** ship the public self-serve signup flow at `services/ten
 4. **MUST** define the `disposable_email_domains` table at migration `0014`: `(domain TEXT PRIMARY KEY, source TEXT NOT NULL, added_at TIMESTAMPTZ NOT NULL DEFAULT now(), removed_at TIMESTAMPTZ)`. Initial seed = 10,000-entry list from public sources (`disposable-email-domains` GitHub repo at pinned SHA); refresh job runs monthly + writes a `ten.disposable_email_blocklist_refreshed` memory row (kind not in the 9-kind core list per DEC-839 — informational only).
 
 5. **MUST** enforce 4 rate limits per DEC-837 via Redis sliding-window:
-   - `signup_start`: 10/min/IP, 3/h/IP, 100/d/IP.
-   - `otp_send`: 3/min/email, 10/h/email.
-   - `slug_check`: 50/min/IP (rapid autocomplete legit; > 50 = bot).
-   - `signup_complete`: 1/min/IP (a human completes signup once per minute max).
+- `signup_start`: 10/min/IP, 3/h/IP, 100/d/IP.
+- `otp_send`: 3/min/email, 10/h/email.
+- `slug_check`: 50/min/IP (rapid autocomplete legit; > 50 = bot).
+- `signup_complete`: 1/min/IP (a human completes signup once per minute max).
 
-   Rate-limit hit returns `429 TOO_MANY_REQUESTS` + `{ error: "rate_limited", retry_after_seconds, guard }` + emits `ten.signup_rate_limited` memory row.
+Rate-limit hit returns `429 TOO_MANY_REQUESTS` + `{ error: "rate_limited", retry_after_seconds, guard }` + emits `ten.signup_rate_limited` memory row.
 
 6. **MUST** enforce the disposable-email blocklist at `signup_start` (per DEC-830). Lookup `domain = email.split('@')[1]`. Blocked → return `400 BAD_REQUEST` + `{ error: "disposable_email", suggested_action: "use_work_email" }` + emit `ten.signup_disposable_email_blocked` memory row. The blocklist is loaded into memory at handler startup; refreshed monthly.
 
@@ -230,41 +230,41 @@ The TEN service **MUST** ship the public self-serve signup flow at `services/ten
 12. **MUST** derive `residency` from `billing_currency` per DEC-825: VND→vn-1, SGD→sg-1, EUR→eu-1, GBP→eu-1, USD→us-1. Residency is immutable post-provisioning (TASK-TEN-103 derivative); TASK-TEN-001 carries this through to provisioning.
 
 13. **MUST** expose `POST /v1/signup/payment-intent` that returns either:
-    - For stripe-rail (`billing_currency ∈ {USD, EUR, SGD, GBP}`): `{ stripe_client_secret: "seti_xxx_secret_yyy", publishable_key: "pk_xxx", payment_method_options: { card: { request_three_d_secure: "automatic" } } }`. The frontend uses Stripe Elements to capture card data + SetupIntent confirmation (no PAN at our backend per PCI SAQ-A).
-    - For vietqr-rail (`billing_currency = VND`): `{ vnpay_redirect_url: "https://...", reference: "..." }` — actual VnPay integration ships in TASK-TEN-102 (placeholder; for slice 1 of TEN-101 the VND path returns `503 SERVICE_UNAVAILABLE` + `{ error: "vnd_signup_requires_ten_102" }` until TASK-TEN-102 lands).
+- For stripe-rail (`billing_currency ∈ {USD, EUR, SGD, GBP}`): `{ stripe_client_secret: "seti_xxx_secret_yyy", publishable_key: "pk_xxx", payment_method_options: { card: { request_three_d_secure: "automatic" } } }`. The frontend uses Stripe Elements to capture card data + SetupIntent confirmation (no PAN at our backend per PCI SAQ-A).
+- For vietqr-rail (`billing_currency = VND`): `{ vnpay_redirect_url: "https://...", reference: "..." }` — actual VnPay integration ships in TASK-TEN-102 (placeholder; for slice 1 of TEN-101 the VND path returns `503 SERVICE_UNAVAILABLE` + `{ error: "vnd_signup_requires_ten_102" }` until TASK-TEN-102 lands).
 
 14. **MUST** expose `POST /v1/signup/complete` — the commit-or-rollback orchestrator. Body: `{ signup_session_id, tenant_slug, tenant_display_name, plan_tier, billing_currency, billing_contact_email, stripe_setup_intent_id?, vnpay_reference?, consents: [{kind, version, locale}], turnstile_token }`. The handler runs in three phases — **pre-tx validation** (no DB writes), **external Stripe call** (no DB tx held), then a **single Postgres transaction** that atomically writes consents + tenant + root-admin + session-state. Handler MUST in strict order:
-    - **Phase A — pre-tx validation:**
-      1. Re-verify Turnstile token; reject if missing/invalid.
-      2. Verify `signup_sessions.state == 'email_verified'`; else 409.
-      3. Validate plan_tier ∈ {Starter, Team}; reject Enterprise with 403.
-      4. Validate consents: ToS + Privacy MUST be present at the latest published versions; Marketing OPTIONAL; for VN tenants, `pdpl_vn_data_processing` MUST be present.
-      5. Check duplicate-email guard (per DEC-842): if `tenants` already has a row keyed by `billing_contact_email_hash16 = HMAC(global_salt, email_lower)` AND `status='active'`, return 409 + `{ error: "email_already_associated", magic_link_sent: true }` AND email a magic-link sign-in to the existing tenant; emit `ten.signup_abandoned` with reason='duplicate_email'. The hash16 index on `tenants.billing_contact_email_hash16` is created by this task's migration `0011` ALTER statement.
-    - **Phase B — external Stripe call (outside DB tx to avoid long-held connections):**
-      6. For stripe-rail: confirm the SetupIntent via Stripe API (`POST /v1/setup_intents/{id}/confirm`); on failure, transition `signup_sessions.state='abandoned'` + `abandon_reason='payment_failed'` + return 402 PAYMENT_REQUIRED. The Stripe SetupIntent ID is recorded in `signup_sessions.payment_captured_at` BEFORE the DB tx opens so any subsequent failure can void it (DEC-843 derivative).
-    - **Phase C — atomic provisioning transaction:**
-      7. `BEGIN`; persist consent rows.
-      8. Invoke TASK-TEN-001 `provision_tenant(slug, currency, residency, billing_contact_email)` inside the tx; on collision (lost race on slug) `ROLLBACK` + void Stripe SetupIntent + return 409 + suggestions; transition `signup_sessions.state='abandoned'` reason='slug_collision'.
-      9. Create root-admin subject via TASK-AUTH-002 inside the same tx with auto-generated 24-char password (DEC-834) OR no password if OIDC path (DEC-835); on failure `ROLLBACK` + void Stripe SetupIntent (+ no tenant exists post-rollback — TASK-TEN-104 NOT invoked).
-      10. Back-fill `tenant_consents.tenant_id` + `subject_id`.
-      11. `UPDATE signup_sessions SET state='completed', tenant_id=...` + `COMMIT`.
-    - **Phase D — post-commit side effects (failures here do not undo commit):**
-      12. Invoke TASK-TEN-003 `ensure_customer` + `ensure_subscription(plan_tier)` with the captured payment method as default. On Stripe failure post-commit: log sev-1 + leave tenant in `dunning_state='retry_1'` (TASK-TEN-003 §1 #11 picks up the recovery).
-      13. Mint first-login JWT via TASK-AUTH-004 with `signup_session_id` claim + standard claims.
-      14. Set a Secure HttpOnly SameSite=Lax `cyberos_jwt` cookie scoped to `*.cyberos.world` so the redirect to `<slug>.cyberos.world/onboarding/welcome` arrives authenticated.
-      15. Emit `ten.signup_completed` memory row.
-      16. Trigger welcome email via `welcome_email.rs` with the 7d-TTL deeplink (DEC-845).
-      17. Return `201 CREATED` with `{ tenant_id, tenant_slug, jwt, redirect_url: "https://<slug>.cyberos.world/onboarding/welcome" }`.
+- **Phase A — pre-tx validation:**
+1. Re-verify Turnstile token; reject if missing/invalid.
+2. Verify `signup_sessions.state == 'email_verified'`; else 409.
+3. Validate plan_tier ∈ {Starter, Team}; reject Enterprise with 403.
+4. Validate consents: ToS + Privacy MUST be present at the latest published versions; Marketing OPTIONAL; for VN tenants, `pdpl_vn_data_processing` MUST be present.
+5. Check duplicate-email guard (per DEC-842): if `tenants` already has a row keyed by `billing_contact_email_hash16 = HMAC(global_salt, email_lower)` AND `status='active'`, return 409 + `{ error: "email_already_associated", magic_link_sent: true }` AND email a magic-link sign-in to the existing tenant; emit `ten.signup_abandoned` with reason='duplicate_email'. The hash16 index on `tenants.billing_contact_email_hash16` is created by this task's migration `0011` ALTER statement.
+- **Phase B — external Stripe call (outside DB tx to avoid long-held connections):**
+6. For stripe-rail: confirm the SetupIntent via Stripe API (`POST /v1/setup_intents/{id}/confirm`); on failure, transition `signup_sessions.state='abandoned'` + `abandon_reason='payment_failed'` + return 402 PAYMENT_REQUIRED. The Stripe SetupIntent ID is recorded in `signup_sessions.payment_captured_at` BEFORE the DB tx opens so any subsequent failure can void it (DEC-843 derivative).
+- **Phase C — atomic provisioning transaction:**
+7. `BEGIN`; persist consent rows.
+8. Invoke TASK-TEN-001 `provision_tenant(slug, currency, residency, billing_contact_email)` inside the tx; on collision (lost race on slug) `ROLLBACK` + void Stripe SetupIntent + return 409 + suggestions; transition `signup_sessions.state='abandoned'` reason='slug_collision'.
+9. Create root-admin subject via TASK-AUTH-002 inside the same tx with auto-generated 24-char password (DEC-834) OR no password if OIDC path (DEC-835); on failure `ROLLBACK` + void Stripe SetupIntent (+ no tenant exists post-rollback — TASK-TEN-104 NOT invoked).
+10. Back-fill `tenant_consents.tenant_id` + `subject_id`.
+11. `UPDATE signup_sessions SET state='completed', tenant_id=...` + `COMMIT`.
+- **Phase D — post-commit side effects (failures here do not undo commit):**
+12. Invoke TASK-TEN-003 `ensure_customer` + `ensure_subscription(plan_tier)` with the captured payment method as default. On Stripe failure post-commit: log sev-1 + leave tenant in `dunning_state='retry_1'` (TASK-TEN-003 §1 #11 picks up the recovery).
+13. Mint first-login JWT via TASK-AUTH-004 with `signup_session_id` claim + standard claims.
+14. Set a Secure HttpOnly SameSite=Lax `cyberos_jwt` cookie scoped to `*.cyberos.world` so the redirect to `<slug>.cyberos.world/onboarding/welcome` arrives authenticated.
+15. Emit `ten.signup_completed` memory row.
+16. Trigger welcome email via `welcome_email.rs` with the 7d-TTL deeplink (DEC-845).
+17. Return `201 CREATED` with `{ tenant_id, tenant_slug, jwt, redirect_url: "https://<slug>.cyberos.world/onboarding/welcome" }`.
 
 15. **MUST** support the OIDC sign-up path (DEC-835). Flow:
-    1. UI offers "Sign up with Google" / "Sign up with Microsoft" buttons (delegating to TASK-AUTH-104 OIDC SSO).
-    2. Before redirecting to the IdP, the UI MUST call `POST /v1/signup/oidc-init` with `{ signup_session_id, idp: "google"|"microsoft" }`; the handler binds the session_id to a single-use OIDC `state` nonce stored server-side with 5-min TTL + emits the IdP authorize URL with that nonce.
-    3. OIDC return URL is `/v1/signup/oidc-callback`; the handler validates the `state` nonce against the server-stored binding (CSRF defense), extracts `email` + `email_verified` + `name` from the ID token.
-    4. If `email_verified=true` (Google/Microsoft IdPs both verify), skip the OTP step entirely — transition `signup_sessions.state` directly to `email_verified`.
-    5. Suggest tenant_slug from email domain.
-    6. Continue to plan selection + payment + complete (same orchestrator as #14 but with OIDC marker on the session row).
-    7. Root-admin subject is created without a password; subsequent logins are OIDC-only.
-    8. Emit `ten.signup_oidc_linked` memory row.
+1. UI offers "Sign up with Google" / "Sign up with Microsoft" buttons (delegating to TASK-AUTH-104 OIDC SSO).
+2. Before redirecting to the IdP, the UI MUST call `POST /v1/signup/oidc-init` with `{ signup_session_id, idp: "google"|"microsoft" }`; the handler binds the session_id to a single-use OIDC `state` nonce stored server-side with 5-min TTL + emits the IdP authorize URL with that nonce.
+3. OIDC return URL is `/v1/signup/oidc-callback`; the handler validates the `state` nonce against the server-stored binding (CSRF defense), extracts `email` + `email_verified` + `name` from the ID token.
+4. If `email_verified=true` (Google/Microsoft IdPs both verify), skip the OTP step entirely — transition `signup_sessions.state` directly to `email_verified`.
+5. Suggest tenant_slug from email domain.
+6. Continue to plan selection + payment + complete (same orchestrator as #14 but with OIDC marker on the session row).
+7. Root-admin subject is created without a password; subsequent logins are OIDC-only.
+8. Emit `ten.signup_oidc_linked` memory row.
 
 16. **MUST** persist consent rows BEFORE provisioning (per DEC-832, #14 step 4). The `tenant_consents` table is INSERT'd within the same transaction as the `tenants` row creation, ensuring no orphan tenant-without-consent state. Consent versions are pinned to the strings displayed to the user at signup-time — fetched from `services/ten/web/signup/consents/<locale>/<kind>-v<n>.md` static files.
 
@@ -273,19 +273,19 @@ The TEN service **MUST** ship the public self-serve signup flow at `services/ten
 18. **MUST** detect squatting per DEC-844. The `abuse_guard.rs` module tracks `(ip_addr, started_signups_24h, abandoned_signups_24h)` in Redis. When `abandoned_signups_24h ≥ 5 AND completed_signups_24h = 0`, block the IP for 24h (`signup_start` returns `429 + { error: "abuse_detected_24h_cooloff" }`). The block auto-expires; legitimate users from shared IPs (corp NAT) can request manual unblock via support email.
 
 19. **MUST** emit 9 **core** memory audit row kinds tied to user-visible signup lifecycle (DEC-839 + task-audit skill rule 6 namespace pattern):
-    - `ten.signup_started` (sev-3 informational)
-    - `ten.signup_email_verified` (sev-3)
-    - `ten.signup_consent_recorded` (sev-2 — legal)
-    - `ten.signup_tenant_provisioned` (sev-2 — material commercial event)
-    - `ten.signup_completed` (sev-2)
-    - `ten.signup_abandoned` (sev-3 — funnel analytics)
-    - `ten.signup_rate_limited` (sev-3 — security signal)
-    - `ten.signup_disposable_email_blocked` (sev-3)
-    - `ten.signup_oidc_linked` (sev-3)
+- `ten.signup_started` (sev-3 informational)
+- `ten.signup_email_verified` (sev-3)
+- `ten.signup_consent_recorded` (sev-2 — legal)
+- `ten.signup_tenant_provisioned` (sev-2 — material commercial event)
+- `ten.signup_completed` (sev-2)
+- `ten.signup_abandoned` (sev-3 — funnel analytics)
+- `ten.signup_rate_limited` (sev-3 — security signal)
+- `ten.signup_disposable_email_blocked` (sev-3)
+- `ten.signup_oidc_linked` (sev-3)
 
     Plus **2 supporting** ops-only kinds (not in the core 9 because they're system-emitted, not user-action-triggered):
-    - `ten.disposable_email_blocklist_refreshed` (sev-3 — emitted by monthly refresh job; payload = `domains_added`, `domains_removed`, `source_sha`)
-    - `ten.signup_session_scrubbed` (sev-3 — emitted by daily 90d-PII-scrub job; payload = `scrubbed_count`)
+- `ten.disposable_email_blocklist_refreshed` (sev-3 — emitted by monthly refresh job; payload = `domains_added`, `domains_removed`, `source_sha`)
+- `ten.signup_session_scrubbed` (sev-3 — emitted by daily 90d-PII-scrub job; payload = `scrubbed_count`)
 
     Every row PII-scrubs `email_full` via TASK-MEMORY-111 → `email_hash16`; raw email retained in tenant Postgres (RLS-scoped) only until `signup_sessions.scrubbed_at` is set at 90d.
 
@@ -296,9 +296,9 @@ The TEN service **MUST** ship the public self-serve signup flow at `services/ten
 22. **MUST** support the VN locale at every consent UI step per DEC-833. The Vietnamese-language ToS / Privacy variant is at `services/ten/web/signup/consents/vi/*.md`; the PDPL-VN consent kind `pdpl_vn_data_processing` is required for `billing_currency='VND'` (residency vn-1).
 
 23. **MUST** rollback cleanly on any orchestrator step failure. The rollback path:
-    - If Stripe authorization succeeded but TEN-001 provisioning failed: Stripe Subscription is cancelled (`DELETE /v1/subscriptions/{id}`); SetupIntent is voided; signup_sessions.state='rolled_back' + rolled_back_reason='provisioning_failed'.
-    - If TEN-001 provisioning succeeded but AUTH root-admin failed: invoke TASK-TEN-104 hard-terminate on the just-created tenant (rare path); signup_sessions.state='rolled_back'.
-    - Every rollback emits a `ten.signup_abandoned` memory row with `abandon_reason` populated.
+- If Stripe authorization succeeded but TEN-001 provisioning failed: Stripe Subscription is cancelled (`DELETE /v1/subscriptions/{id}`); SetupIntent is voided; signup_sessions.state='rolled_back' + rolled_back_reason='provisioning_failed'.
+- If TEN-001 provisioning succeeded but AUTH root-admin failed: invoke TASK-TEN-104 hard-terminate on the just-created tenant (rare path); signup_sessions.state='rolled_back'.
+- Every rollback emits a `ten.signup_abandoned` memory row with `abandon_reason` populated.
 
 24. **MUST** rate-limit per `(IP, email_hash16)` pair NOT per-(IP, email_full) (per DEC-840 derivative — avoid storing raw email in rate-limit keys for privacy). The hash16 form is sufficient for de-duplication at the rate-limit boundary.
 

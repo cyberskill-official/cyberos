@@ -88,17 +88,17 @@ The DOC service **MUST** ship renewal proposal generation at `services/doc/src/r
 2. **MUST** validate `renewal_recommendation` against closed enum per DEC-1732.
 
 3. **MUST** generate draft via `draft_generator.rs::generate(parent_doc)`:
-   - Pull parent terms (effective_date, expiry_date, renewal_terms.term_months).
-   - Compute new dates: new_effective = old_expiry + 1d; new_expiry = new_effective + term_months.
-   - CPI adjust price per `cpi_adjuster.rs::adjust(old_price, residency, since_date)`.
-   - AI summarize scope-change recommendation.
+- Pull parent terms (effective_date, expiry_date, renewal_terms.term_months).
+- Compute new dates: new_effective = old_expiry + 1d; new_expiry = new_effective + term_months.
+- CPI adjust price per `cpi_adjuster.rs::adjust(old_price, residency, since_date)`.
+- AI summarize scope-change recommendation.
 
 4. **MUST** queue for AM review per DEC-1733 — NEVER auto-send to customer.
 
 5. **MUST** on approval per DEC-1734:
-   - Create new doc row, `parent_contract_id = original.document_id`.
-   - Status='draft'.
-   - Lifecycle status compute via TASK-DOC-007 (will be 'draft' if effective > now).
+- Create new doc row, `parent_contract_id = original.document_id`.
+- Status='draft'.
+- Lifecycle status compute via TASK-DOC-007 (will be 'draft' if effective > now).
 
 6. **MUST** define table at migration `0004`:
    ```sql
@@ -221,8 +221,7 @@ async fn approve_creates_child_doc() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-DOC-007, TASK-CUO-101.
-**Cross-module:** TASK-DOC-008 (d90 trigger), TASK-EMAIL-009 (send), TASK-AI-003 (draft+rationale), TASK-AUTH-101 (AM/CLO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-DOC-007, TASK-CUO-101. **Cross-module:** TASK-DOC-008 (d90 trigger), TASK-EMAIL-009 (send), TASK-AI-003 (draft+rationale), TASK-AUTH-101 (AM/CLO role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

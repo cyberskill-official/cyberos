@@ -91,41 +91,41 @@ The observability plane **MUST** deploy a self-hosted OpenTelemetry Collector re
 1. **MUST** accept OTLP/gRPC on `:4317` and OTLP/HTTP on `:4318` from all CyberOS services. Both protocols required (services may pick); both configured identically (same processors, same exporters).
 2. **MUST** authenticate ingress via per-service bearer token. Tokens live in `/etc/otelcol/auth.tokens` (mounted from the operator's secret store; NEVER committed to git). One token per service (`ai-gateway`, `auth-service`, `chat-service`, etc.); rotation cadence 90 days via `scripts/rotate_tokens.sh` (TASK-AUTH-006-style sweeper). Missing or invalid token → ingress returns `401 UNAUTHORIZED`.
 3. **MUST** retain backend data per slice-1 floors:
-    - Loki: 30 days (P2 extends to 90 with S3 backend).
-    - Prometheus: 90 days raw (P2 extends to 1 year with downsampling via Mimir).
-    - Tempo full traces: 7 days.
-    - Tempo sampled traces (TASK-OBS-006 tail-sampled): 30 days.
+- Loki: 30 days (P2 extends to 90 with S3 backend).
+- Prometheus: 90 days raw (P2 extends to 1 year with downsampling via Mimir).
+- Tempo full traces: 7 days.
+- Tempo sampled traces (TASK-OBS-006 tail-sampled): 30 days.
 4. **MUST** label every observation with `tenant_id` (from caller's resource attributes). TASK-OBS-002's tenant-aware proxy enforces tenant-scoped queries downstream; this task ensures the label IS present at ingress.
 5. **MUST** ship Grafana with provisioned datasources for all 3 backends (Loki, Prometheus, Tempo) AND a placeholder dashboards directory that TASK-OBS-002 populates.
 6. **MUST** expose `/ready` health endpoints on all 4 services (collector + Loki + Prometheus + Tempo). Docker-compose healthchecks consume these; failure → container restart.
 7. **MUST** survive single-pod restarts without losing buffered data via OTel Collector's `file_storage` extension (1GB on-disk buffer at `/var/lib/otelcol`). Buffer is replayed on restart; data emitted during the restart window is delivered eventually.
 8. **MUST** apply OTel semantic conventions for resource attributes:
-    - `service.name` (e.g., `"ai-gateway"`)
-    - `service.version` (semver)
-    - `deployment.environment` (`development | staging | production`)
-    - `tenant_id` (UUID) — populated by service per request
-    - `host.name`
+- `service.name` (e.g., `"ai-gateway"`)
+- `service.version` (semver)
+- `deployment.environment` (`development | staging | production`)
+- `tenant_id` (UUID) — populated by service per request
+- `host.name`
 9. **MUST** enforce per-pipeline batch + resource processors:
-    - `batch`: timeout 10s, send_batch_size 1024 (efficient backend writes).
-    - `resource`: upserts `deployment.environment` from `${ENV}` (defence against missing env vars).
-    - `attributes/pii_scrub`: drops attributes matching PII regex AS A SAFETY NET (caller-side discipline per TASK-AI-022 §1 #15 is the primary control).
+- `batch`: timeout 10s, send_batch_size 1024 (efficient backend writes).
+- `resource`: upserts `deployment.environment` from `${ENV}` (defence against missing env vars).
+- `attributes/pii_scrub`: drops attributes matching PII regex AS A SAFETY NET (caller-side discipline per TASK-AI-022 §1 #15 is the primary control).
 10. **MUST** emit collector self-telemetry (collector's own logs + metrics about throughput, drops, errors) to the same backends — operators see "is the collector itself healthy?" via Grafana.
 11. **MUST** apply PII-scrub processor at the collector as defence-in-depth: regex against email patterns + Vietnamese PII patterns (CCCD, MST, phone) + arbitrary `password=` substring. Matched attributes are DROPPED (not redacted to placeholder) AND emit `obs_collector_pii_scrub_total{pattern}` counter. Sustained > 0/min triggers sev-1 (PII slipping past caller-side prevention).
 12. **MUST** be horizontally scalable: collector instances behind a load balancer; Loki/Prometheus/Tempo each support replication (slice 1 = single-instance per backend; slice 5 = HA with peering).
 13. **MUST** size at slice-1 baseline:
-    - Collector: 1 vCPU, 1GB RAM.
-    - Loki: 2 vCPU, 4GB RAM.
-    - Prometheus: 2 vCPU, 4GB RAM.
-    - Tempo: 1 vCPU, 2GB RAM.
-    - Grafana: 0.5 vCPU, 512MB RAM.
-    - Total: 6.5 vCPU, 11.5GB RAM, 100GB disk.
+- Collector: 1 vCPU, 1GB RAM.
+- Loki: 2 vCPU, 4GB RAM.
+- Prometheus: 2 vCPU, 4GB RAM.
+- Tempo: 1 vCPU, 2GB RAM.
+- Grafana: 0.5 vCPU, 512MB RAM.
+- Total: 6.5 vCPU, 11.5GB RAM, 100GB disk.
 14. **SHOULD** emit OTel SELF-metrics:
-    - `obs_collector_received_spans_total{service}` (counter).
-    - `obs_collector_received_logs_total{service}` (counter).
-    - `obs_collector_received_metrics_total{service}` (counter).
-    - `obs_collector_dropped_total{reason}` (counter; reason ∈ auth | pii_scrub | backend_error | buffer_full).
-    - `obs_collector_buffer_bytes` (gauge; file_storage usage).
-    - `obs_collector_export_latency_ms{backend}` (histogram).
+- `obs_collector_received_spans_total{service}` (counter).
+- `obs_collector_received_logs_total{service}` (counter).
+- `obs_collector_received_metrics_total{service}` (counter).
+- `obs_collector_dropped_total{reason}` (counter; reason ∈ auth | pii_scrub | backend_error | buffer_full).
+- `obs_collector_buffer_bytes` (gauge; file_storage usage).
+- `obs_collector_export_latency_ms{backend}` (histogram).
 
 ---
 

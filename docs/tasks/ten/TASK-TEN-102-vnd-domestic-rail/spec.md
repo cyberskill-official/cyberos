@@ -246,92 +246,88 @@ The TEN service **MUST** ship the VND domestic billing rail at `services/ten/src
         fn verify_webhook_signature(&self, headers: &HeaderMap, body: &[u8]) -> Result<(), VndError>;
     }
     ```
-   Implementations: `VnPayClient`, `MomoClient`, `ZaloPayClient`.
+Implementations: `VnPayClient`, `MomoClient`, `ZaloPayClient`.
 
 9. **MUST** support the token-bind flow at signup per DEC-963. Flow:
-    1. UI invokes `POST /v1/signup/vnd/token-bind-start` with `{ signup_session_id, psp }`.
-    2. Handler resolves the chosen PSP adapter; calls `token_bind_url(tenant_id, return_url, ...)` to get the PSP-hosted authorisation URL.
-    3. UI redirects user to PSP-hosted page.
-    4. User authorises (SMS-OTP from billing_contact_phone) on PSP page.
-    5. PSP redirects back to `/v1/signup/vnd/token-bind-return?session_id=...&signed_params=...`.
-    6. Handler calls `psp.token_bind_callback(query)` to extract + KMS-encrypt the `payment_token`.
-    7. INSERT into `vnd_payment_tokens` with status='active'.
-    8. Emit `ten.vnd_token_bind_completed`.
-   Total signup-flow target: <30s same as TASK-TEN-101 SLO, accounting for ~10s PSP redirect+auth time.
+1. UI invokes `POST /v1/signup/vnd/token-bind-start` with `{ signup_session_id, psp }`.
+2. Handler resolves the chosen PSP adapter; calls `token_bind_url(tenant_id, return_url, ...)` to get the PSP-hosted authorisation URL.
+3. UI redirects user to PSP-hosted page.
+4. User authorises (SMS-OTP from billing_contact_phone) on PSP page.
+5. PSP redirects back to `/v1/signup/vnd/token-bind-return?session_id=...&signed_params=...`.
+6. Handler calls `psp.token_bind_callback(query)` to extract + KMS-encrypt the `payment_token`.
+7. INSERT into `vnd_payment_tokens` with status='active'.
+8. Emit `ten.vnd_token_bind_completed`. Total signup-flow target: <30s same as TASK-TEN-101 SLO, accounting for ~10s PSP redirect+auth time.
 
 10. **MUST** charge monthly subscription at billing_cycle_anchor per DEC-964. The `billing/vnd/subscription.rs::charge_monthly(tenant_id)` job:
-    - Lookup `tenants.billing_currency = 'VND'` + active payment_token + current plan_tier.
-    - Compute VND amount = `PRICE_CATALOG.price_for(VND, plan_tier).amount_minor`.
-    - Issue PSP charge via `psp.charge(token, amount, description, idempotency_key)` with key `vnd.<tenant_id>.subscription.<period_ts>`.
-    - PSP responds `200 + processing`; real outcome arrives via webhook in <5min per DEC-976.
-    - Emit `ten.vnd_subscription_charged` on webhook success; `ten.vnd_subscription_charge_failed` on failure.
-    - On success: issue hóa đơn (per §1 #16); on failure: advance dunning state.
+- Lookup `tenants.billing_currency = 'VND'` + active payment_token + current plan_tier.
+- Compute VND amount = `PRICE_CATALOG.price_for(VND, plan_tier).amount_minor`.
+- Issue PSP charge via `psp.charge(token, amount, description, idempotency_key)` with key `vnd.<tenant_id>.subscription.<period_ts>`.
+- PSP responds `200 + processing`; real outcome arrives via webhook in <5min per DEC-976.
+- Emit `ten.vnd_subscription_charged` on webhook success; `ten.vnd_subscription_charge_failed` on failure.
+- On success: issue hóa đơn (per §1 #16); on failure: advance dunning state.
 
 11. **MUST** charge overage at period_close per DEC-967. The `vnd/overage.rs::charge_for_period(tenant_id, period_end)`:
-    - Compute aggregate overage = sum of (axis_actual - axis_cap) * per_axis_unit_price across 4 axes.
-    - If aggregate > 0: invoke `psp.charge(token, overage_vnd, "Overage charges for period {period_end}", idempotency_key)` with key `vnd.<tenant_id>.overage.<period_end_unix>`.
-    - On success: issue hóa đơn + emit `ten.vnd_overage_charged`.
-    - 1-hour push window (per TASK-TEN-003 DEC-810); 24h retry deadline.
+- Compute aggregate overage = sum of (axis_actual - axis_cap) * per_axis_unit_price across 4 axes.
+- If aggregate > 0: invoke `psp.charge(token, overage_vnd, "Overage charges for period {period_end}", idempotency_key)` with key `vnd.<tenant_id>.overage.<period_end_unix>`.
+- On success: issue hóa đơn + emit `ten.vnd_overage_charged`.
+- 1-hour push window (per TASK-TEN-003 DEC-810); 24h retry deadline.
 
 12. **MUST** advance dunning per DEC-965. Mirrors TASK-TEN-003 §1 #11:
-    - `ok → retry_1 → retry_2 → retry_3 → suspended` on consecutive `vnd_subscription_charge_failed`.
-    - Recovery: any successful charge → `dunning_state='ok'` + un-suspend if previously suspended.
-    - On `suspended`: trigger TASK-TEN-104 tenant suspension + emit `ten.tenant_billing_suspended_vnd` sev-1.
+- `ok → retry_1 → retry_2 → retry_3 → suspended` on consecutive `vnd_subscription_charge_failed`.
+- Recovery: any successful charge → `dunning_state='ok'` + un-suspend if previously suspended.
+- On `suspended`: trigger TASK-TEN-104 tenant suspension + emit `ten.tenant_billing_suspended_vnd` sev-1.
 
 13. **MUST** expose `POST /v1/admin/tenants/{id}/vnd/refund` for CFO-gated refunds per DEC-966. Body: `{ original_charge_ref, amount_vnd, reason }`. Validations:
-    - Caller has `cfo` role per TASK-AUTH-101.
-    - `amount_vnd ≤ original_charge_amount`.
-    - `tenant.billing_currency == 'VND'`.
-    - Invoke `psp.refund(original_charge_ref, amount_vnd, idempotency_key=vnd.<tenant>.refund.<charge_ref>.<amount>)`.
-    - On success: issue compensating hóa đơn (Decree 123 mandates refund invoices) + emit `ten.vnd_refund_issued` sev-1.
+- Caller has `cfo` role per TASK-AUTH-101.
+- `amount_vnd ≤ original_charge_amount`.
+- `tenant.billing_currency == 'VND'`.
+- Invoke `psp.refund(original_charge_ref, amount_vnd, idempotency_key=vnd.<tenant>.refund.<charge_ref>.<amount>)`.
+- On success: issue compensating hóa đơn (Decree 123 mandates refund invoices) + emit `ten.vnd_refund_issued` sev-1.
 
 14. **MUST** expose `POST /v1/admin/tenants/{id}/vnd/token/revoke` per DEC-985. Caller has `tenant_admin` role. Handler:
-    - Lookup active token.
-    - Call `psp.revoke_token(token)` (best-effort; PSP-side revoke).
-    - UPDATE `vnd_payment_tokens.status='revoked'` + `revoked_at=now()`.
-    - Emit `ten.vnd_token_revoked` sev-2.
-    - Tenant is now without an active token; next monthly charge fails → dunning → suspension unless new token bound.
+- Lookup active token.
+- Call `psp.revoke_token(token)` (best-effort; PSP-side revoke).
+- UPDATE `vnd_payment_tokens.status='revoked'` + `revoked_at=now()`.
+- Emit `ten.vnd_token_revoked` sev-2.
+- Tenant is now without an active token; next monthly charge fails → dunning → suspension unless new token bound.
 
 15. **MUST** support per-PSP webhook ingestion via TASK-INV-005 extension (modified_files: `services/inv/src/webhook/momo.rs` + `zalopay.rs` + their signature verifiers; VnPay already covered by TASK-INV-005). The INV layer:
-    - Verifies signature per DEC-971 (VnPay HMAC-SHA512 over query; Momo HMAC-SHA256 over body; ZaloPay HMAC-SHA256 over key1).
-    - Idempotency dedupe on PSP `event_id`.
-    - NATS-publish to `tenant.<slug>.ten.vnd.<psp>.<event_type>` per DEC-986.
-   The TEN dispatcher (`billing/vnd/dispatch.rs`) consumes the NATS subject + dispatches into per-event handlers (subscription_charged, charge_failed, refund_completed, token_expired). Dispatch idempotency via `vnd_event_dispatch_log` UNIQUE `(psp, psp_event_id)`.
+- Verifies signature per DEC-971 (VnPay HMAC-SHA512 over query; Momo HMAC-SHA256 over body; ZaloPay HMAC-SHA256 over key1).
+- Idempotency dedupe on PSP `event_id`.
+- NATS-publish to `tenant.<slug>.ten.vnd.<psp>.<event_type>` per DEC-986. The TEN dispatcher (`billing/vnd/dispatch.rs`) consumes the NATS subject + dispatches into per-event handlers (subscription_charged, charge_failed, refund_completed, token_expired). Dispatch idempotency via `vnd_event_dispatch_log` UNIQUE `(psp, psp_event_id)`.
 
 16. **MUST** issue a Decree 123 hóa đơn for every successful charge per DEC-968 + DEC-972 + DEC-983 + DEC-984. The `vnd/hoadon.rs::issue_invoice(tenant_id, charge_ref, total_vnd)`:
-    - Allocate next invoice number from `vnd_invoice_sequence` (gap-free, annual reset).
-    - Compute pre_tax = total / 1.10 + vat = total - pre_tax (10% inclusive VAT per VN tax law).
-    - Generate Decree 123 XML with line items (tenant taxpayer info pre-collected at signup + per-period subscription line + overage lines).
-    - Sign via VN tax authority's eHĐĐT API; persist signed XML + tax authority ref in `vnd_invoices`.
-    - Generate PDF on-demand (S3 cache); store S3 key in row.
-    - Emit `ten.vnd_invoice_issued` sev-2.
+- Allocate next invoice number from `vnd_invoice_sequence` (gap-free, annual reset).
+- Compute pre_tax = total / 1.10 + vat = total - pre_tax (10% inclusive VAT per VN tax law).
+- Generate Decree 123 XML with line items (tenant taxpayer info pre-collected at signup + per-period subscription line + overage lines).
+- Sign via VN tax authority's eHĐĐT API; persist signed XML + tax authority ref in `vnd_invoices`.
+- Generate PDF on-demand (S3 cache); store S3 key in row.
+- Emit `ten.vnd_invoice_issued` sev-2.
 
 17. **MUST** use annual gap-free invoice numbering per DEC-983 + Decree 123 §10. The `hoadon_seq.rs::next_invoice_number(year)`:
-    - `SELECT last_sequence FROM vnd_invoice_sequence WHERE year=$1 FOR UPDATE`.
-    - `UPDATE ... SET last_sequence = last_sequence + 1`.
-    - Return `format!("CYBOS-{:02}{:02}{:02}-{:06}", year_2_digit, month, day, new_sequence)`.
-    - On rollback (issue_invoice tx fails after sequence allocated): NUMBER IS LOST. This is intentional — gap-free means "no duplicate", not "no skipped". Skipped numbers are auditable with explanation per Decree 123 §10 (the system logs reason for each skip).
+- `SELECT last_sequence FROM vnd_invoice_sequence WHERE year=$1 FOR UPDATE`.
+- `UPDATE ... SET last_sequence = last_sequence + 1`.
+- Return `format!("CYBOS-{:02}{:02}{:02}-{:06}", year_2_digit, month, day, new_sequence)`.
+- On rollback (issue_invoice tx fails after sequence allocated): NUMBER IS LOST. This is intentional — gap-free means "no duplicate", not "no skipped". Skipped numbers are auditable with explanation per Decree 123 §10 (the system logs reason for each skip).
 
 18. **MUST** thread idempotency keys per DEC-970 + task-audit skill §8.3b. Per-PSP key adapter at `billing/vnd/idempotency.rs`:
-    - VnPay: `vnp_TxnRef` field on request.
-    - Momo: `requestId` field.
-    - ZaloPay: `app_trans_id` field.
-    Internal canonical key format: `vnd.<tenant_id>.<operation>.<period_ts_or_ref>`. Adapter maps canonical → per-PSP shape. Stored in `vnd_idempotency_cache` (additional table — sub-migration into 0018).
+- VnPay: `vnp_TxnRef` field on request.
+- Momo: `requestId` field.
+- ZaloPay: `app_trans_id` field. Internal canonical key format: `vnd.<tenant_id>.<operation>.<period_ts_or_ref>`. Adapter maps canonical → per-PSP shape. Stored in `vnd_idempotency_cache` (additional table — sub-migration into 0018).
 
 19. **MUST** emit 12 memory audit row kinds per DEC-979 (task-audit skill rule 6 + §8 namespace):
-    - `ten.vnd_token_bind_started` (sev-3)
-    - `ten.vnd_token_bind_completed` (sev-2)
-    - `ten.vnd_token_bind_failed` (sev-2)
-    - `ten.vnd_subscription_charged` (sev-2)
-    - `ten.vnd_subscription_charge_failed` (sev-2)
-    - `ten.vnd_overage_charged` (sev-3)
-    - `ten.vnd_refund_issued` (sev-1)
-    - `ten.vnd_dunning_advanced` (sev-1)
-    - `ten.tenant_billing_suspended_vnd` (sev-1)
-    - `ten.vnd_invoice_issued` (sev-2)
-    - `ten.vnd_token_revoked` (sev-2)
-    - `ten.vnd_psp_credential_rotated` (sev-1)
-   PII-scrubbed via TASK-MEMORY-111: `billing_contact_phone_hash16`, `masked_account_hint_hash16`.
+- `ten.vnd_token_bind_started` (sev-3)
+- `ten.vnd_token_bind_completed` (sev-2)
+- `ten.vnd_token_bind_failed` (sev-2)
+- `ten.vnd_subscription_charged` (sev-2)
+- `ten.vnd_subscription_charge_failed` (sev-2)
+- `ten.vnd_overage_charged` (sev-3)
+- `ten.vnd_refund_issued` (sev-1)
+- `ten.vnd_dunning_advanced` (sev-1)
+- `ten.tenant_billing_suspended_vnd` (sev-1)
+- `ten.vnd_invoice_issued` (sev-2)
+- `ten.vnd_token_revoked` (sev-2)
+- `ten.vnd_psp_credential_rotated` (sev-1) PII-scrubbed via TASK-MEMORY-111: `billing_contact_phone_hash16`, `masked_account_hint_hash16`.
 
 20. **MUST NOT** charge any tenant whose `billing_currency != 'VND'` via this rail per DEC-973 (symmetric to TASK-TEN-003 §1 #23). Guard at `vnd::api_client::call()` entry — cross-rail attempts return `400 + { error: "wrong_billing_rail", expected: "stripe", got: "vnd" }`.
 

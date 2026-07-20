@@ -88,10 +88,10 @@ The OKR service **MUST** ship auto-progress batch at `services/okr/src/auto_prog
 2. **MUST** validate `batch_run_status` against closed enum per DEC-1991.
 
 3. **MUST** run at `batch_runner.rs::run(tenant, run_date)`:
-   - SELECT all KRs WHERE progress_source IS NOT NULL AND status='active'
-   - Per KR: call TASK-OKR-003 resolver; update current_value + computed_progress_pct
-   - Catch + log per-KR failures (DEC-1993); continue batch
-   - Final status: completed / partial (if any failed) / failed (if 0 succeeded)
+- SELECT all KRs WHERE progress_source IS NOT NULL AND status='active'
+- Per KR: call TASK-OKR-003 resolver; update current_value + computed_progress_pct
+- Catch + log per-KR failures (DEC-1993); continue batch
+- Final status: completed / partial (if any failed) / failed (if 0 succeeded)
 
 4. **MUST** detect drift at `drift_detector.rs::check(kr, new_value, old_value)` per DEC-1992 — if abs((new-old)/old) > 0.10, emit sev-2 audit.
 
@@ -211,8 +211,7 @@ async fn drift_alert_at_15pct() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-OKR-003.
-**Cross-module:** TASK-MCP-007 (cron), TASK-AUTH-101 (CEO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-OKR-003. **Cross-module:** TASK-MCP-007 (cron), TASK-AUTH-101 (CEO role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

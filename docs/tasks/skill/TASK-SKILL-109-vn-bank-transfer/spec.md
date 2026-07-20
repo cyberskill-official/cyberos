@@ -78,33 +78,33 @@ The `vietnam-bank-transfer@1` skill **MUST** generate VietQR strings conforming 
 2. **MUST** validate `receiver_bank_bin` against the embedded NAPAS bank registry (40+ Vietnamese banks). Unknown BIN → `BankError::UnknownBin(<bin>)`.
 3. **MUST** validate `receiver_account` length (6–18 digits per NAPAS standard); other characters rejected.
 4. **MUST** compose the EMVCo MPM payload per VietQR spec:
-    - Tag `00` — Payload Format Indicator: `01`.
-    - Tag `01` — Point of Initiation: `12` (dynamic) if `amount > 0`, else `11` (static).
-    - Tag `38` — Merchant Account Information (nested TLV):
-      - `00` GUID: `A000000727`.
-      - `01` Beneficiary Organization: nested TLV with `00`=BIN, `01`=account.
-      - `02` Service Code: `QRIBFTTA` (account-based transfer).
-    - Tag `52` — Merchant Category Code: `0000` (general).
-    - Tag `53` — Currency: `704` (VND, ISO 4217).
-    - Tag `54` — Transaction Amount (if specified, no decimals — VND has none).
-    - Tag `58` — Country Code: `VN`.
-    - Tag `59` — Merchant Name: receiver_name (uppercased, ASCII).
-    - Tag `60` — Merchant City: `HOCHIMINHCITY` (default; configurable).
-    - Tag `62` — Additional Data (nested): `08` = memo (if provided).
-    - Tag `63` — CRC16-CCITT-FALSE checksum of the entire prior payload (4 uppercase hex chars).
+- Tag `00` — Payload Format Indicator: `01`.
+- Tag `01` — Point of Initiation: `12` (dynamic) if `amount > 0`, else `11` (static).
+- Tag `38` — Merchant Account Information (nested TLV):
+- `00` GUID: `A000000727`.
+- `01` Beneficiary Organization: nested TLV with `00`=BIN, `01`=account.
+- `02` Service Code: `QRIBFTTA` (account-based transfer).
+- Tag `52` — Merchant Category Code: `0000` (general).
+- Tag `53` — Currency: `704` (VND, ISO 4217).
+- Tag `54` — Transaction Amount (if specified, no decimals — VND has none).
+- Tag `58` — Country Code: `VN`.
+- Tag `59` — Merchant Name: receiver_name (uppercased, ASCII).
+- Tag `60` — Merchant City: `HOCHIMINHCITY` (default; configurable).
+- Tag `62` — Additional Data (nested): `08` = memo (if provided).
+- Tag `63` — CRC16-CCITT-FALSE checksum of the entire prior payload (4 uppercase hex chars).
 5. **MUST** compute CRC16-CCITT-FALSE (polynomial `0x1021`, init `0xFFFF`, no reflection, no final XOR). The CRC is computed over all bytes from the start of the payload through the `6304` (tag 63 + length 04) literal. The 4-hex-char checksum is appended.
 6. **MUST** be deterministic — same `TransferRequest` (including same idempotency_key) produces byte-identical VietQR string. Idempotency_key is ignored in the QR payload itself (banks don't see it); it's only used in the memory audit row + dedup cache.
 7. **MUST** support short-form output as well: `generate_vietqr_image_url(req)` returns a URL pointing to a free QR rendering service (e.g. `https://img.vietqr.io/image/<bin>-<account>-<style>.png?amount=<n>&addInfo=<memo>&accountName=<name>`) for callers who want a PNG directly instead of rendering the QR themselves.
 8. **MUST** transliterate non-ASCII receiver_name + memo per Vietnamese conventions:
-    - `Nguyễn Văn A` → `NGUYEN VAN A`.
-    - `Trịnh Thái Anh` → `TRINH THAI ANH`.
-    - Truncate to 25 chars after transliteration; if truncation occurs, append `~` indicator.
+- `Nguyễn Văn A` → `NGUYEN VAN A`.
+- `Trịnh Thái Anh` → `TRINH THAI ANH`.
+- Truncate to 25 chars after transliteration; if truncation occurs, append `~` indicator.
 9. **MUST** emit memory audit row `vn.qr_generated` per generation with payload `{idempotency_key, receiver_bank_bin, receiver_bank_name, receiver_account_redacted, amount_vnd, memo_hash, qr_string_hash, generated_at_ns, trace_id}`. `receiver_account_redacted` is `****<last_4>`; full account NOT stored (PDPL).
 10. **MUST** support `generate_napas247_transfer_code(req)` as an alternative that produces a 16-char human-typed transfer code (for callers without a camera; mostly legacy). Code format: `<bin:3><account_last_8:8><amount_compressed:5>` with check digit; algorithm per NAPAS Doc 24.
 11. **MUST** emit OTel span `skill.vn_bank_transfer.generate` with attributes `bank_bin`, `bank_name`, `has_amount`, `qr_length_bytes`, `duration_ms`.
 12. **MUST** emit OTel metrics:
-    - `skill_vn_bank_transfer_generations_total{bank, has_amount}` (counter; bank is short name).
-    - `skill_vn_bank_transfer_generation_duration_seconds` (histogram; expected p99 ≤ 5ms — pure-local).
+- `skill_vn_bank_transfer_generations_total{bank, has_amount}` (counter; bank is short name).
+- `skill_vn_bank_transfer_generation_duration_seconds` (histogram; expected p99 ≤ 5ms — pure-local).
 13. **MUST** maintain the bank registry in `src/banks.rs` as a compile-time `&[BankEntry]` slice; quarterly refresh via NAPAS public registry. Adding a bank = code change + PR + new release.
 14. **SHOULD** provide a CLI `cyberos-bank-transfer generate --bin 970422 --account 12345678 --name "X Y" --amount 1500000` for ad-hoc operator use.
 

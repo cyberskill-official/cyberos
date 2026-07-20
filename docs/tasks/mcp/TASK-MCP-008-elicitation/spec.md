@@ -151,48 +151,48 @@ The MCP service **MUST** ship Elicitation primitive at `services/mcp/src/elicita
 4. **MUST** enforce RLS with USING and WITH CHECK on the table: `tenant_id = current_setting('auth.tenant_id')::uuid AND caller_subject_id = current_setting('auth.subject_id')::uuid` (per-caller scope; tenant_admin can see all via separate handler).
 
 5. **MUST** expose tool-side API at `services/mcp/src/elicitation/request.rs::TaskCtx::elicit(elicitation_type, prompt, response_schema, timeout_seconds) -> Result<ElicitationResponse, ElicitationError>` per DEC-1140. The API:
-    - Validates tool's `supports_elicitation=true` per DEC-1146.
-    - Validates `timeout_seconds ≤ 1800` (30 min max) per DEC-1143.
-    - Generates UUIDv7 elicitation_id.
-    - INSERTs `mcp_elicitations` row with status='pending', `expires_at=now()+timeout_seconds`.
-    - Publishes to NATS `tenant.<slug>.mcp.elicitations.<elicitation_id>.requested` per DEC-1145 (push transport).
-    - Awaits caller response via Postgres LISTEN/NOTIFY on `elicitation_responded:<elicitation_id>` channel with timeout.
-    - On NOTIFY: loads row, returns response per type.
-    - On timeout: transitions status='expired', emits `mcp.elicitation_timeout`, returns Err.
-    - On cancellation: transitions status='cancelled', emits `mcp.elicitation_cancelled`, returns Err.
+- Validates tool's `supports_elicitation=true` per DEC-1146.
+- Validates `timeout_seconds ≤ 1800` (30 min max) per DEC-1143.
+- Generates UUIDv7 elicitation_id.
+- INSERTs `mcp_elicitations` row with status='pending', `expires_at=now()+timeout_seconds`.
+- Publishes to NATS `tenant.<slug>.mcp.elicitations.<elicitation_id>.requested` per DEC-1145 (push transport).
+- Awaits caller response via Postgres LISTEN/NOTIFY on `elicitation_responded:<elicitation_id>` channel with timeout.
+- On NOTIFY: loads row, returns response per type.
+- On timeout: transitions status='expired', emits `mcp.elicitation_timeout`, returns Err.
+- On cancellation: transitions status='cancelled', emits `mcp.elicitation_cancelled`, returns Err.
 
 6. **MUST** expose caller polling at `GET /v1/mcp/elicitations?task_id=...&status=pending` per DEC-1145. Returns array of pending elicitations for the caller's session. Rate-limit 60/min/caller (1/sec sufficient).
 
 7. **MUST** expose caller response at `POST /v1/mcp/elicitations/{elicitation_id}/respond` with body `{ response_payload }`. Handler:
-    - Validates RLS + caller ownership.
-    - Validates `response_payload` against `mcp_elicitations.response_schema` via JSON Schema validator per DEC-1142 + DEC-1150.
-    - On validation success: KMS-encrypt + persist `response_payload_kms_blob`; transition status='responded'; `NOTIFY elicitation_responded:<elicitation_id>` to wake the tool.
-    - On validation failure: increment `retry_count`; if `retry_count > 3` → status='validation_failed' (terminal); else return 422 + validation_errors array (caller re-submits within the same elicitation_id).
-    - Emit `mcp.elicitation_responded` (on success) or `mcp.elicitation_validation_failed` (on failure).
+- Validates RLS + caller ownership.
+- Validates `response_payload` against `mcp_elicitations.response_schema` via JSON Schema validator per DEC-1142 + DEC-1150.
+- On validation success: KMS-encrypt + persist `response_payload_kms_blob`; transition status='responded'; `NOTIFY elicitation_responded:<elicitation_id>` to wake the tool.
+- On validation failure: increment `retry_count`; if `retry_count > 3` → status='validation_failed' (terminal); else return 422 + validation_errors array (caller re-submits within the same elicitation_id).
+- Emit `mcp.elicitation_responded` (on success) or `mcp.elicitation_validation_failed` (on failure).
 
 8. **MUST** expose cancellation at `POST /v1/mcp/elicitations/{id}/cancel` per DEC-1148. Handler:
-    - Transitions status='cancelled'; NOTIFY to wake the tool with cancellation signal.
-    - Tool's `elicit()` returns Err(`elicitation_cancelled`); tool MAY decide to fail-task or retry-elicit.
+- Transitions status='cancelled'; NOTIFY to wake the tool with cancellation signal.
+- Tool's `elicit()` returns Err(`elicitation_cancelled`); tool MAY decide to fail-task or retry-elicit.
 
 9. **MUST** apply per-type fixed schemas per DEC-1141 + DEC-1152 + DEC-1160:
-    - **string_input**: schema `{ type: "object", properties: { value: { type: "string", maxLength: 4096 } }, required: ["value"] }`.
-    - **single_choice**: schema `{ type: "object", properties: { value: { enum: [...prompt.choices.map(c => c.value)] } }, required: ["value"] }` (choices declared in prompt).
-    - **multi_choice**: schema `{ type: "object", properties: { values: { type: "array", items: { enum: [...] }, uniqueItems: true } }, required: ["values"] }`.
-    - **confirmation**: schema `{ type: "object", properties: { confirmed: { type: "boolean" }, reason: { type: "string", maxLength: 512 } }, required: ["confirmed"] }`.
-    - **file_upload**: schema `{ type: "object", properties: { s3_key: { type: "string", pattern: "^elicitations/[a-f0-9-]{36}/[a-zA-Z0-9_.-]+$" }, sha256: { type: "string", pattern: "^[a-f0-9]{64}$" }, size_bytes: { type: "integer", minimum: 1, maximum: 104857600 } }, required: ["s3_key", "sha256", "size_bytes"] }`.
+- **string_input**: schema `{ type: "object", properties: { value: { type: "string", maxLength: 4096 } }, required: ["value"] }`.
+- **single_choice**: schema `{ type: "object", properties: { value: { enum: [...prompt.choices.map(c => c.value)] } }, required: ["value"] }` (choices declared in prompt).
+- **multi_choice**: schema `{ type: "object", properties: { values: { type: "array", items: { enum: [...] }, uniqueItems: true } }, required: ["values"] }`.
+- **confirmation**: schema `{ type: "object", properties: { confirmed: { type: "boolean" }, reason: { type: "string", maxLength: 512 } }, required: ["confirmed"] }`.
+- **file_upload**: schema `{ type: "object", properties: { s3_key: { type: "string", pattern: "^elicitations/[a-f0-9-]{36}/[a-zA-Z0-9_.-]+$" }, sha256: { type: "string", pattern: "^[a-f0-9]{64}$" }, size_bytes: { type: "integer", minimum: 1, maximum: 104857600 } }, required: ["s3_key", "sha256", "size_bytes"] }`.
 
 10. **MUST** support file_upload elicitation per DEC-1153 via TASK-DOC-001 presigned S3 URLs. Handler at elicit creation for file_upload type:
-    - Generates per-elicitation S3 key `elicitations/{elicitation_id}/{filename}`.
-    - Generates presigned PUT URL with `expires_at` matching elicitation timeout.
-    - Returns URL in elicitation prompt payload (`prompt.upload_url`).
-    - Caller uploads; then POSTs `respond` with `{s3_key, sha256, size_bytes}` per the schema.
-    - Server verifies S3 object exists + size matches + SHA256 matches the uploaded object's ETag (or computed); on mismatch → 422.
+- Generates per-elicitation S3 key `elicitations/{elicitation_id}/{filename}`.
+- Generates presigned PUT URL with `expires_at` matching elicitation timeout.
+- Returns URL in elicitation prompt payload (`prompt.upload_url`).
+- Caller uploads; then POSTs `respond` with `{s3_key, sha256, size_bytes}` per the schema.
+- Server verifies S3 object exists + size matches + SHA256 matches the uploaded object's ETag (or computed); on mismatch → 422.
 
 11. **MUST** integrate with TASK-MCP-006 gating per DEC-1151. When TASK-MCP-006 policy says `mode=elicit` for a tool:
-    - Gating layer creates a `confirmation` elicitation with prompt describing the action.
-    - Tool execution blocks until elicitation resolved.
-    - `confirmed=true` → tool proceeds; `confirmed=false` → tool fails with `user_rejected`.
-    - De-stubs TASK-MCP-006's 503 placeholder (`elicitation_not_yet_supported`); TASK-MCP-006 `services/mcp/src/gating/elicit.rs` modified here.
+- Gating layer creates a `confirmation` elicitation with prompt describing the action.
+- Tool execution blocks until elicitation resolved.
+- `confirmed=true` → tool proceeds; `confirmed=false` → tool fails with `user_rejected`.
+- De-stubs TASK-MCP-006's 503 placeholder (`elicitation_not_yet_supported`); TASK-MCP-006 `services/mcp/src/gating/elicit.rs` modified here.
 
 12. **MUST** enforce 5-min default timeout + 30-min max per DEC-1143. Tool API enforces upper bound at create time. Daily timeout job per DEC-1144 sweeps expired pending elicitations.
 
@@ -205,11 +205,11 @@ The MCP service **MUST** ship Elicitation primitive at `services/mcp/src/elicita
 16. **MUST** scope elicitation to caller_subject_id per DEC-1159. Cross-caller-subject GET/POST returns 403 + `cross_caller_access_denied` + sev-1 audit.
 
 17. **MUST** emit 5 memory audit row kinds per DEC-1149 (task-audit skill rule 6):
-    - `mcp.elicitation_requested` (sev-3 — informational; can be high-volume)
-    - `mcp.elicitation_responded` (sev-3)
-    - `mcp.elicitation_timeout` (sev-3)
-    - `mcp.elicitation_cancelled` (sev-3)
-    - `mcp.elicitation_validation_failed` (sev-2 — indicates bad tool design or compromised client)
+- `mcp.elicitation_requested` (sev-3 — informational; can be high-volume)
+- `mcp.elicitation_responded` (sev-3)
+- `mcp.elicitation_timeout` (sev-3)
+- `mcp.elicitation_cancelled` (sev-3)
+- `mcp.elicitation_validation_failed` (sev-2 — indicates bad tool design or compromised client)
 
 18. **MUST** preserve trace_id end-to-end per DEC-1158. Parent task trace_id propagates to elicitation row + caller poll responses + audit rows + NATS publishes.
 

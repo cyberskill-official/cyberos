@@ -91,22 +91,22 @@ The PLUGIN module **MUST** implement OAuth 2.1 + RFC 7636 PKCE authentication fo
 1. **MUST** require OAuth 2.1 PKCE per DEC-2440. Other auth methods (api-key, basic, bearer-static) MUST be rejected at install time by the host (manifest schema enforces; bridge double-checks). PKCE prevents code-interception attacks for native + desktop clients.
 
 2. **MUST** issue access tokens as JWT RS256 with these required claims per DEC-2441:
-   - `iss: "https://auth.cyberskill.world"`
-   - `aud: "plugin:<plugin_id>"` (e.g. `"plugin:cyberos"`) — audience-bound prevents cross-plugin token reuse
-   - `sub: "<subject_uuid>"` — the human or service identity
-   - `tenant_id: "<tenant_uuid>"` — tenant scope
-   - `scope: "cyberos:cuo:execute cyberos:memory:read ..."` — space-separated scope list
-   - `exp: <epoch>` — 1 hour from issue
-   - `iat: <epoch>` — issue time
-   - `jti: <uuid>` — JWT id (for revocation cache lookup)
+- `iss: "https://auth.cyberskill.world"`
+- `aud: "plugin:<plugin_id>"` (e.g. `"plugin:cyberos"`) — audience-bound prevents cross-plugin token reuse
+- `sub: "<subject_uuid>"` — the human or service identity
+- `tenant_id: "<tenant_uuid>"` — tenant scope
+- `scope: "cyberos:cuo:execute cyberos:memory:read ..."` — space-separated scope list
+- `exp: <epoch>` — 1 hour from issue
+- `iat: <epoch>` — issue time
+- `jti: <uuid>` — JWT id (for revocation cache lookup)
 
 3. **MUST** sign access tokens with the AUTH service's JWKS-published key per TASK-AUTH-004. Bridge verifies via cached JWKS (5-minute TTL).
 
 4. **MUST** issue opaque refresh tokens per DEC-2442:
-   - 256 bits of CSPRNG entropy
-   - 24-hour default lifetime (configurable per-plugin via manifest `auth.refresh_interval_seconds`, min 600)
-   - Rotated on every use per DEC-2446 — old refresh invalidated, new refresh issued alongside new access
-   - Stored in `services/plugin-host/migrations/0001_plugin_auth_grants.sql` (RLS-protected by tenant_id)
+- 256 bits of CSPRNG entropy
+- 24-hour default lifetime (configurable per-plugin via manifest `auth.refresh_interval_seconds`, min 600)
+- Rotated on every use per DEC-2446 — old refresh invalidated, new refresh issued alongside new access
+- Stored in `services/plugin-host/migrations/0001_plugin_auth_grants.sql` (RLS-protected by tenant_id)
 
 5. **MUST** define and enforce the scope catalogue per DEC-2443:
    ```
@@ -118,34 +118,33 @@ The PLUGIN module **MUST** implement OAuth 2.1 + RFC 7636 PKCE authentication fo
    cyberos:skill:list         — list_catalog
    cyberos:skill:invoke       — invoke_skill
    ```
-   A tool call without the required scope MUST return error class `authz_denied` per TASK-PLUGIN-002 clause 7. Scope-vs-tool matrix lives in `auth/scope_check.rs::REQUIRED_SCOPES`.
+A tool call without the required scope MUST return error class `authz_denied` per TASK-PLUGIN-002 clause 7. Scope-vs-tool matrix lives in `auth/scope_check.rs::REQUIRED_SCOPES`.
 
 6. **MUST** present a consent screen at install time per DEC-2444. Hosts that support consent UI (Claude Code, Cowork) render the manifest's declared capabilities translated to scope list; user grants each capability explicitly. The consent screen MUST be host-rendered, not plugin-rendered (trust boundary).
 
 7. **MUST** store tokens via OS-native secret stores per DEC-2445:
-   - macOS: Keychain via `security` framework
-   - Windows: Credential Manager via `wincred`
-   - Linux: Secret Service via `libsecret` D-Bus
-   - Fallback: encrypted file at `~/.config/cyberos-plugin/tokens.enc` with `0600` permissions and AES-256-GCM
-   The fallback MUST log a warning to TASK-OBS-001 OTel that secret store is unavailable.
+- macOS: Keychain via `security` framework
+- Windows: Credential Manager via `wincred`
+- Linux: Secret Service via `libsecret` D-Bus
+- Fallback: encrypted file at `~/.config/cyberos-plugin/tokens.enc` with `0600` permissions and AES-256-GCM The fallback MUST log a warning to TASK-OBS-001 OTel that secret store is unavailable.
 
 8. **MUST** support token revocation per DEC-2446:
-   - AUTH service exposes `POST /v1/oauth/revoke?token=<jti>`
-   - Bridge maintains a 60-second-TTL revocation cache populated from JWKS-style endpoint
-   - On every JWT verify, bridge checks `jti` against revocation cache
-   - Revoked tokens fail with `authz_denied` (hint: "token revoked")
+- AUTH service exposes `POST /v1/oauth/revoke?token=<jti>`
+- Bridge maintains a 60-second-TTL revocation cache populated from JWKS-style endpoint
+- On every JWT verify, bridge checks `jti` against revocation cache
+- Revoked tokens fail with `authz_denied` (hint: "token revoked")
 
 9. **MUST** emit memory audit rows per TASK-PLUGIN-006 for every auth event:
-   - `plugin.installed` (post-consent, post-first-token-issue)
-   - `plugin.auth_refreshed` (every refresh)
-   - `plugin.scope_denied` (every scope check failure)
-   - `plugin.uninstalled` (revoke + delete tokens)
+- `plugin.installed` (post-consent, post-first-token-issue)
+- `plugin.auth_refreshed` (every refresh)
+- `plugin.scope_denied` (every scope check failure)
+- `plugin.uninstalled` (revoke + delete tokens)
 
 10. **MUST** implement the PKCE handshake exactly:
-    - Client (plugin/bridge) generates 32-byte random `code_verifier`; computes `code_challenge = BASE64URL(SHA256(code_verifier))`
-    - Host opens browser to `${authorize_url}?response_type=code&client_id=plugin:<plugin_id>&redirect_uri=<host_callback>&scope=<requested>&state=<csrf_random>&code_challenge=<challenge>&code_challenge_method=S256`
-    - User authenticates on auth.cyberskill.world; consents to scopes; AUTH redirects to host callback with `?code=<authorization_code>&state=<csrf_echo>`
-    - Host verifies state matches; sends `code_verifier` + `code` to `${token_url}` via POST; AUTH validates challenge ↔ verifier; returns `{access_token, refresh_token, expires_in: 3600}`
+- Client (plugin/bridge) generates 32-byte random `code_verifier`; computes `code_challenge = BASE64URL(SHA256(code_verifier))`
+- Host opens browser to `${authorize_url}?response_type=code&client_id=plugin:<plugin_id>&redirect_uri=<host_callback>&scope=<requested>&state=<csrf_random>&code_challenge=<challenge>&code_challenge_method=S256`
+- User authenticates on auth.cyberskill.world; consents to scopes; AUTH redirects to host callback with `?code=<authorization_code>&state=<csrf_echo>`
+- Host verifies state matches; sends `code_verifier` + `code` to `${token_url}` via POST; AUTH validates challenge ↔ verifier; returns `{access_token, refresh_token, expires_in: 3600}`
 
 11. **MUST NOT** store access tokens longer than their `exp` claim — `auth/token_store.rs` MUST evict expired tokens within 60 seconds.
 

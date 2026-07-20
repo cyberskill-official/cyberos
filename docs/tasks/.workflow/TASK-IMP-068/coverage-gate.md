@@ -28,16 +28,11 @@ pass=10 fail=0
 ```
 
 ## Coverage method (honest statement)
-Line-coverage tooling for bash (kcov) is not installed in this environment; coverage is
-measured by branch enumeration over the touched files - every branch is exercised by a named test:
-- check-version-sync.sh: exit-0 path (t01), all 6 per-artifact DRIFT branches + single-drift-line
-  discipline (t02, t03), exit-2 branches - missing artifact, corrupt zip, bad/missing root VERSION,
-  tool probes exercised by harness preconditions (t02/t03/t04). 13/13 branches = 100%.
-- build.sh (modified region only): valid path (t01 scratch build), missing VERSION, non-semver,
-  pre-release reject, no-payload-written (t04); fallback absence (t05). 5/5 branches = 100%.
+Line-coverage tooling for bash (kcov) is not installed in this environment; coverage is measured by branch enumeration over the touched files - every branch is exercised by a named test:
+- check-version-sync.sh: exit-0 path (t01), all 6 per-artifact DRIFT branches + single-drift-line discipline (t02, t03), exit-2 branches - missing artifact, corrupt zip, bad/missing root VERSION, tool probes exercised by harness preconditions (t02/t03/t04). 13/13 branches = 100%.
+- build.sh (modified region only): valid path (t01 scratch build), missing VERSION, non-semver, pre-release reject, no-payload-written (t04); fallback absence (t05). 5/5 branches = 100%.
 - .githooks/pre-commit: trigger fire, non-trigger no-op (t07), failure aborts commit (t08). 3/3 = 100%.
-- payload-gate.yml / version.yml: structural + parse assertions (t06, t10) - YAML carries no branches.
-Per-file coverage >= 90% threshold: satisfied at branch level on every touched file.
+- payload-gate.yml / version.yml: structural + parse assertions (t06, t10) - YAML carries no branches. Per-file coverage >= 90% threshold: satisfied at branch level on every touched file.
 
 ## TRACE-004 closure (§1 clause -> cited test -> result)
 | §1 | tests | result |

@@ -15,4 +15,3 @@ Key changes:
 - Risks +8 (R-TEN-013..020): P2 slice slip → margin moat delayed (High) · residency change mid-engagement · hostile termination override · Stripe DPA EU residency · plan-downgrade overage surprise · cross-leak CI gap (Critical) · vertical-pack revenue attribution leak · Lumi-pushed pack pricing change
 - KPIs +9: P2 slice ship date adherence (= P2 · exit) · vertical-pack revenue share (≥ 30% of ARR by P4 · mid — the moat) · cross-leak rate (= 0 hard floor) · residency drill MTTR (≤ 72h) · plan-downgrade overage handling (= 1.0) · hostile-termination cycle time · VN-PSP coverage (≥ 0.95 at P4) · PCI-SAQ-A scope (= 0; Stripe handles all) · tenant attestation completeness (= 1.0)
 - References expanded: 4 in-page sections + 6 cross-module links + AUDIT_AND_PLAN §3.3 + RESEARCH_REVIEW §7.3 (explicit cite of the P2 · exit mandate) + MEMORY_AUTOSYNC_DESIGN.md §6 + task-audit skill + EU AI Act Art. 26 + expanded PDPL article citations
-

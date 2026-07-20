@@ -1,20 +1,13 @@
 # Run the core modules locally and verify them one by one
 
-This is the step after the CAF absorption and before building the remaining modules: stand the current
-modules up locally in Docker, then run each one through the real verification chain, one at a time. It
-is the local-dev loop, not the VPS go-live (that is `docs/deploy/cyberos-core-deploy.md`, for later).
+This is the step after the CAF absorption and before building the remaining modules: stand the current modules up locally in Docker, then run each one through the real verification chain, one at a time. It is the local-dev loop, not the VPS go-live (that is `docs/deploy/cyberos-core-deploy.md`, for later).
 
 ## How CyberOS "does work" (read these two first)
 
-- `modules/cuo/chief-technology-officer/workflows/ship-tasks.md` - the ~30-step author/audit
-  chain that drives one task from `ready_to_implement` to `done`. The last gates are step 28 `awh-gate`
-  (rerun the tests) and step 28.5 `caf-gate` (rerun the target's own build/lint/test + audit). The
-  `testing -> done` flip requires `awh GREEN AND caf CLEAN`.
-- `website/docs/architecture/verification-gate.html` - why the gate exists (separate the grader from
-  the author) and how it is wired (CUO workflow, pre-commit, CI, merge gate).
+- `modules/cuo/chief-technology-officer/workflows/ship-tasks.md` - the ~30-step author/audit chain that drives one task from `ready_to_implement` to `done`. The last gates are step 28 `awh-gate` (rerun the tests) and step 28.5 `caf-gate` (rerun the target's own build/lint/test + audit). The `testing -> done` flip requires `awh GREEN AND caf CLEAN`.
+- `website/docs/architecture/verification-gate.html` - why the gate exists (separate the grader from the author) and how it is wired (CUO workflow, pre-commit, CI, merge gate).
 
-"Test a module" here means: run those same two gates against that module by hand. That is exactly what
-the workflow does automatically at 28 / 28.5.
+"Test a module" here means: run those same two gates against that module by hand. That is exactly what the workflow does automatically at 28 / 28.5.
 
 ## Step 0 - prerequisites (once)
 
@@ -35,8 +28,7 @@ cd services/dev && docker compose up -d && cd -     # Postgres 16 (Apache AGE + 
 export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos
 ```
 
-The `ai` module's tests also use this Redis at `127.0.0.1:6379`. Create the per-service databases and
-run each service's sqlx migrations (the names mirror the `*_DB` keys in `deploy/vps/.env.local`):
+The `ai` module's tests also use this Redis at `127.0.0.1:6379`. Create the per-service databases and run each service's sqlx migrations (the names mirror the `*_DB` keys in `deploy/vps/.env.local`):
 
 ```bash
 for db in cyberos_auth cyberos_memory cyberos_proj; do
@@ -48,14 +40,11 @@ DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos_memory sqlx migra
 DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos_proj   sqlx migrate run --source services/proj/migrations
 ```
 
-There is no single all-services compose in the repo (only the infra compose above and
-`services/chat/Dockerfile`). Run the Rust services with `cargo run`, chat from its Dockerfile, and cuo
-from Python - see Step 2.
+There is no single all-services compose in the repo (only the infra compose above and `services/chat/Dockerfile`). Run the Rust services with `cargo run`, chat from its Dockerfile, and cuo from Python - see Step 2.
 
 ## Step 2 - run each core module locally
 
-Order follows the dependencies: AUTH (identity) first, MEMORY (the audit chain everything writes to),
-then PROJ and SKILL, then CHAT, then CUO (it orchestrates the rest).
+Order follows the dependencies: AUTH (identity) first, MEMORY (the audit chain everything writes to), then PROJ and SKILL, then CHAT, then CUO (it orchestrates the rest).
 
 ```bash
 # AUTH - HTTP service (services/auth/src/main.rs), binds AUTH_LISTEN_ADDR
@@ -88,8 +77,7 @@ pip install -e modules/cuo    # exposes the [project.scripts] entrypoint (read p
 
 ## Step 3 - verify each module, one at a time
 
-For each module, run the same two gates the workflow runs at step 28 and 28.5. If a module has no
-sealed awh baseline yet, capture and lock it once (the bootstrap script does every module in one go).
+For each module, run the same two gates the workflow runs at step 28 and 28.5. If a module has no sealed awh baseline yet, capture and lock it once (the bootstrap script does every module in one go).
 
 ```bash
 # One-time: capture + seal every module's awh baseline (green/red report per module)
@@ -101,8 +89,7 @@ awh eval modules/<m>/.awh/goldenset.yaml --base-dir . --seeds 1 \
 bash scripts/caf_gate.sh <m>                                                 # must be CLEAN
 ```
 
-GREEN + CLEAN means that module passes both gates exactly as it would inside a real
-`ship-tasks` run. RED or a dirty gate is the signal to fix that module before moving on.
+GREEN + CLEAN means that module passes both gates exactly as it would inside a real `ship-tasks` run. RED or a dirty gate is the signal to fix that module before moving on.
 
 | Module | Run locally | awh golden set | caf profile | Infra |
 |---|---|---|---|---|
@@ -115,15 +102,11 @@ GREEN + CLEAN means that module passes both gates exactly as it would inside a r
 
 ## When this loop is done
 
-Once AUTH, MEMORY, SKILL, PROJ, CHAT, and CUO each pass GREEN + CLEAN locally, the platform is verified
-end to end against both gates, and you can move to implementing the remaining modules (obs is the
-unblocked next one). Each new module then ships through the same `ship-tasks` chain, so the
-gates apply to it automatically.
+Once AUTH, MEMORY, SKILL, PROJ, CHAT, and CUO each pass GREEN + CLEAN locally, the platform is verified end to end against both gates, and you can move to implementing the remaining modules (obs is the unblocked next one). Each new module then ships through the same `ship-tasks` chain, so the gates apply to it automatically.
 
 ## Notes and the small gaps to confirm
 
-- The caf gate currently runs target-health only (no sealed `.caf/` audit per module yet); that already
-  catches build/lint/test breaks. Add the LLM audit half later via `tools/caf/core/evals/run-audit.sh`.
+- The caf gate currently runs target-health only (no sealed `.caf/` audit per module yet); that already catches build/lint/test breaks. Add the LLM audit half later via `tools/caf/core/evals/run-audit.sh`.
 - PROJ is a library, so "run PROJ" means running the binary that embeds `cyberos_proj` - confirm which.
 - CUO's console-script name is in `modules/cuo/pyproject.toml` `[project.scripts]`.
 - ai is not in the core six but its suite needs the same Redis; it runs serial (`--test-threads=1`).

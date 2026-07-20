@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this intellectual property strategy"
+- "Audit this intellectual property strategy"
 - "Check the intellectual property strategy for completeness"
 - "Verify the intellectual property strategy meets the rubric"
 - "Re-audit the intellectual property strategy"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a intellectual property strategy" → intellectual-property-strategy-author
+- "Draft a intellectual property strategy" → intellectual-property-strategy-author
 - "Create the intellectual property strategy" → intellectual-property-strategy-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

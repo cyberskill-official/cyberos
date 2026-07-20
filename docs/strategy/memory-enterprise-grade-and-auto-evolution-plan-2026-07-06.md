@@ -314,6 +314,3 @@ Mem0 pipeline and ops (docs.mem0.ai; arXiv 2504.19413 ecosystem), Letta memory b
 ## 12. Verification appendix
 
 Findings were grounded in direct reads of: `services/memory/src/brain/{mod,recall,summarize,tiering,ingest_worker,handler,access_scope,embed_client,event_cursor}.rs`, `src/interaction/{emit,consent_gate,content_ref}.rs`, `src/main.rs`, migrations 0001/0003/0005/0006/0007/0008, `desktop/src-tauri/src/sync_supervisor.rs`, the `modules/memory/cyberos/core` module map (decay, importance, mmr, ranking, consolidate, semantic, memory_sync, conflicts, pre_ingest_pii, crypto_mode, sth, episode, dream/*), `memory.invariants.yaml`, `docs/tasks/memory/README.md`, and the two companion strategy docs. Line references are as of commit state on 2026-07-06. Research claims come from the sources in section 11; vendor-reported benchmark numbers are marked contested where they are.
-
-
-

@@ -1,7 +1,6 @@
 # project-cleanup — golden expected output (generic flavor)
 
-For a generic repo without task-audit skill (or the legacy task-audit skill), the skill
-runs the generic verification pipeline.
+For a generic repo without task-audit skill (or the legacy task-audit skill), the skill runs the generic verification pipeline.
 
 ---
 
@@ -46,5 +45,4 @@ Generic-flavor cleanup MUST:
 - Propose absorb to nearest parent
 - Detect the 1 seeded broken link
 - Detect the missing CHANGELOG.md
-- Report overall: WARN (not FAIL — broken link + missing changelog are
-  warnings, not blockers)
+- Report overall: WARN (not FAIL — broken link + missing changelog are warnings, not blockers)

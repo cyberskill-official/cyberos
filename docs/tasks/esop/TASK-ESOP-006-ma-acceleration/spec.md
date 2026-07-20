@@ -86,13 +86,13 @@ The ESOP service **MUST** ship M&A acceleration at `services/esop/src/ma/` with 
 2. **MUST** require board threshold per DEC-2302 (reuse TASK-ESOP-003 board threshold logic).
 
 3. **MUST** run acceleration at `acceleration_runner.rs::accelerate(ma_event)` per DEC-2303:
-   - For all active grants: set vested = total_shares
-   - Insert special accrual row (kind='ma_acceleration')
-   - Update grant.status = 'accelerated'
+- For all active grants: set vested = total_shares
+- Insert special accrual row (kind='ma_acceleration')
+- Update grant.status = 'accelerated'
 
 4. **MUST** notify members within 5 business days at `member_notifier.rs::notify(ma_event)` per DEC-2300:
-   - For each affected member: send email via TASK-EMAIL-009
-   - Track per-member notification_status
+- For each affected member: send email via TASK-EMAIL-009
+- Track per-member notification_status
 
 5. **MUST** define tables at migration `0006`:
    ```sql
@@ -247,8 +247,7 @@ async fn members_notified_in_5_bd() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-ESOP-001.
-**Cross-module:** TASK-ESOP-002 (accrual rows), TASK-EMAIL-009 (notice), TASK-MCP-007 (deadline cron), TASK-AUTH-101 (CEO + board), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-ESOP-001. **Cross-module:** TASK-ESOP-002 (accrual rows), TASK-EMAIL-009 (notice), TASK-MCP-007 (deadline cron), TASK-AUTH-101 (CEO + board), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

@@ -88,11 +88,11 @@ The CRM service **MUST** ship lead scoring at `services/crm/src/scoring/` comput
 2. **MUST** run nightly refresh per DEC-1660 at `nightly_refresh.rs::refresh_all(tenant)` triggered by TASK-MCP-007 cron at 02:00 tenant_tz — refresh all active contacts.
 
 3. **MUST** build signals at `signal_builder.rs::build(contact_id)` per DEC-1662:
-   - Title seniority (Director / VP / C-suite weight higher)
-   - Engagement count last 30d (from TASK-CRM-002 activity feed)
-   - Response rate (replies / sends ratio)
-   - Account tier match (account-level signal)
-   - Deal-history similarity (similar past contacts that won)
+- Title seniority (Director / VP / C-suite weight higher)
+- Engagement count last 30d (from TASK-CRM-002 activity feed)
+- Response rate (replies / sends ratio)
+- Account tier match (account-level signal)
+- Deal-history similarity (similar past contacts that won)
 
 4. **MUST** score at `scorer.rs::score(signals, weights)` returning 0-100 int + tier per DEC-1661.
 
@@ -235,8 +235,7 @@ async fn nightly_refresh_updates_all() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-CRM-001, TASK-CUO-101.
-**Cross-module:** TASK-CRM-002 (signals), TASK-AI-003 (LLM scoring), TASK-MCP-007 (cron), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-CRM-001, TASK-CUO-101. **Cross-module:** TASK-CRM-002 (signals), TASK-AI-003 (LLM scoring), TASK-MCP-007 (cron), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

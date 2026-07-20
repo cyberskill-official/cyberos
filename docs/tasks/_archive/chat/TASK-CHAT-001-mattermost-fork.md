@@ -69,12 +69,12 @@ The CHAT service **MUST** be a fork of Mattermost v9.x at a pinned MIT-Apache co
 2. **MUST** build from this pinned commit via Docker. The Dockerfile fetches the tarball + applies the CyberOS patch series. NO `git pull upstream master`.
 3. **MUST** track CyberOS-specific changes in `CHANGELOG.cyberos.md`. Every PR touching `services/chat/` updates the changelog with category (feature | bug-fix | security | license-cherry-pick).
 4. **MUST** run a weekly license-drift watcher GitHub Actions workflow:
-    - Query the GitHub API for upstream commits since `PINNED_COMMIT`.
-    - Filter for commits touching `LICENSE`, `LICENSE.md`, `licensing/`, or root-level package metadata.
-    - If any commit found → file a GitHub issue labelled `legal-review-needed` with the commit list.
+- Query the GitHub API for upstream commits since `PINNED_COMMIT`.
+- Filter for commits touching `LICENSE`, `LICENSE.md`, `licensing/`, or root-level package metadata.
+- If any commit found → file a GitHub issue labelled `legal-review-needed` with the commit list.
 5. **MUST** require a cherry-pick PR workflow for upstream security fixes:
-    - Operator runs `scripts/cherry-pick-upstream.sh <commit-sha>` which fetches the commit, applies it as a patch, and opens a PR.
-    - PR is gated by GH Action `chat-cherry-pick-review.yml` requiring the `legal-reviewed` label before merge.
+- Operator runs `scripts/cherry-pick-upstream.sh <commit-sha>` which fetches the commit, applies it as a patch, and opens a PR.
+- PR is gated by GH Action `chat-cherry-pick-review.yml` requiring the `legal-reviewed` label before merge.
 6. **MUST** publish the fork as `services/chat/` in the CyberOS monorepo (not a separate git submodule); patches live in `services/chat/patches/*.patch` applied at Docker build time.
 7. **MUST** document the fork's deviation policy in README.md: (a) cherry-picks allowed for security, (b) features-from-upstream blocked, (c) CyberOS-only features welcome.
 8. **MUST** include the pinned commit SHA in every chat image tag: `cyberos/chat:<pinned_sha_short>-<cyberos_patch_version>`.

@@ -81,20 +81,20 @@ The Gantt view **MUST** extend the TASK-PROJ-015 Timeline with directed dependen
 4. **MUST** compute critical path per cycle: longest path through the DAG (where weight = issue.estimate or fallback to days span). Mark all bars on the critical path with a thick gold border.
 5. **MUST** memoise critical-path computation per (cycle_id, dependency-graph-version); recompute on dependency or estimate change.
 6. **MUST** expose CRUD endpoints:
-    - `POST /api/proj/issues/:id/dependencies` body `{predecessor_id, kind}` → 201 or 422 (cycle | duplicate).
-    - `DELETE /api/proj/issues/:id/dependencies/:predecessor_id` → 204.
-    - `GET /api/proj/cycles/:id/dependencies` → list of edges + computed critical-path subset.
+- `POST /api/proj/issues/:id/dependencies` body `{predecessor_id, kind}` → 201 or 422 (cycle | duplicate).
+- `DELETE /api/proj/issues/:id/dependencies/:predecessor_id` → 204.
+- `GET /api/proj/cycles/:id/dependencies` → list of edges + computed critical-path subset.
 7. **MUST** emit memory audit rows:
-    - `proj.dependency_added` on POST.
-    - `proj.dependency_removed` on DELETE.
-    - `proj.critical_path_recomputed` with hash of new path on change.
+- `proj.dependency_added` on POST.
+- `proj.dependency_removed` on DELETE.
+- `proj.critical_path_recomputed` with hash of new path on change.
 8. **MUST** support kbd shortcut: focused bar + `D` → opens dependency dialog (target picker = focus next bar, Enter to confirm).
 9. **MUST** propagate roll-up via `parent_issue_id` (per TASK-PROJ-001): parent's date range = min(child.starts_at) → max(child.ends_at); rendered as a parent bar above the children (collapsible group).
 10. **MUST** RLS-enforce.
 11. **MUST** pass axe-core (a11y for SVG arrows: `role="presentation"` since edges are decorative; navigation via dependency dialog only).
 12. **MUST** emit OTel:
-    - `proj_gantt_critical_path_depth` (histogram).
-    - `proj_gantt_dependencies_total{outcome}` (counter; created | removed | cycle_rejected).
+- `proj_gantt_critical_path_depth` (histogram).
+- `proj_gantt_dependencies_total{outcome}` (counter; created | removed | cycle_rejected).
 13. **MUST** compute and surface "slack" per non-critical-path issue: how many days the issue can slip before becoming critical. Rendered as a subtle ghost extension on the bar's right edge.
 14. **MUST** support `?show_critical_only=true` URL filter — hide non-critical-path bars to focus on the bottleneck chain.
 15. **MUST** support `cyberos gantt validate-graph --cycle <id>` CLI that walks the dependency graph + reports anomalies (disconnected components, near-cycles, very-long paths > 30 days).

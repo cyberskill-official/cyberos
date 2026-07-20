@@ -218,8 +218,7 @@ async fn padesblt_via_doc_011_after_aatl() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-DOC-001.
-**Cross-module:** TASK-DOC-005 (caller), TASK-DOC-006 (verify gate), TASK-DOC-011 (LTV re-stamp), TASK-AUTH-105 (KMS), TASK-AUTH-101 (CISO), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-DOC-001. **Cross-module:** TASK-DOC-005 (caller), TASK-DOC-006 (verify gate), TASK-DOC-011 (LTV re-stamp), TASK-AUTH-105 (KMS), TASK-AUTH-101 (CISO), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes (mirror DOC-002)
 Same shape — partner down, cert expired, AATL list lag, etc.

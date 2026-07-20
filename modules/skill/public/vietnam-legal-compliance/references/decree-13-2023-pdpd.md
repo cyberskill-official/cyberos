@@ -1,8 +1,6 @@
 # Nghị định 13/2023/NĐ-CP — Personal Data Protection Decree (PDPD)
 
-**In force:** 1 July 2023.
-**Issuing authority:** Government of Vietnam (proposed by Bộ Công An).
-**Supervisory authority:** Ministry of Public Security (MoPS) — specifically the Department of Cybersecurity and High-Tech Crime Prevention (A05).
+**In force:** 1 July 2023. **Issuing authority:** Government of Vietnam (proposed by Bộ Công An). **Supervisory authority:** Ministry of Public Security (MoPS) — specifically the Department of Cybersecurity and High-Tech Crime Prevention (A05).
 
 This is Vietnam's principal data-protection regulation. It applies to any organisation that processes the personal data of natural persons located in Vietnam, regardless of the operator's own location — i.e. it has extraterritorial reach similar in spirit to GDPR Article 3.
 

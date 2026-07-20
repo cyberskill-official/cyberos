@@ -21,6 +21,4 @@ allowed_mcp_tools:
 
 # memory-capture
 
-Normalize an input body, classify the target memory kind, and emit a writer
-envelope for the canonical memory writer. Never bypass the writer or mutate
-`.cyberos/memory/store` directly.
+Normalize an input body, classify the target memory kind, and emit a writer envelope for the canonical memory writer. Never bypass the writer or mutate `.cyberos/memory/store` directly.

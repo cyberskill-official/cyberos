@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this definition of ready and done"
+- "Audit this definition of ready and done"
 - "Check the definition of ready and done for completeness"
 - "Verify the definition of ready and done meets the rubric"
 - "Re-audit the definition of ready and done"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a definition of ready and done" → definition-of-ready-and-done-author
+- "Draft a definition of ready and done" → definition-of-ready-and-done-author
 - "Create the definition of ready and done" → definition-of-ready-and-done-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

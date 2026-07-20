@@ -90,21 +90,21 @@ The HR service **MUST** ship leave types at `services/hr/src/leave/` with 8 type
 2. **MUST** validate `leave_status` against closed enum per DEC-1832.
 
 3. **MUST** compute entitlement per DEC-1834 at `entitlement_calc.rs::compute(member, leave_type, year)`:
-   - annual: 12d/yr (TASK-HR-002 type override: contractor=0, part_time=pro-rated)
-   - sick: 30d/yr (SI-funded; doesn't deduct from annual)
-   - maternity: 180d (one-time per pregnancy)
-   - paternity: 14d (one-time per pregnancy of partner)
-   - bereavement: 3d/event (close family)
-   - public_holiday: 11d/yr (auto-applied, no request)
-   - sabbatical: on-request, no auto-entitlement
-   - unpaid: on-request, no auto-entitlement
+- annual: 12d/yr (TASK-HR-002 type override: contractor=0, part_time=pro-rated)
+- sick: 30d/yr (SI-funded; doesn't deduct from annual)
+- maternity: 180d (one-time per pregnancy)
+- paternity: 14d (one-time per pregnancy of partner)
+- bereavement: 3d/event (close family)
+- public_holiday: 11d/yr (auto-applied, no request)
+- sabbatical: on-request, no auto-entitlement
+- unpaid: on-request, no auto-entitlement
 
 4. **MUST** route approval per DEC-1833 at `approval_router.rs::route(request)`:
-   - annual/sick/paternity: manager (member.manager_id)
-   - sabbatical / unpaid >5d: CHRO
-   - public_holiday: auto-approve
-   - bereavement ≤3d: auto-approve
-   - bereavement >3d: manager + CHRO
+- annual/sick/paternity: manager (member.manager_id)
+- sabbatical / unpaid >5d: CHRO
+- public_holiday: auto-approve
+- bereavement ≤3d: auto-approve
+- bereavement >3d: manager + CHRO
 
 5. **MUST** define table at migration `0004`:
    ```sql
@@ -228,8 +228,7 @@ async fn contractor_zero_annual() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-HR-001.
-**Cross-module:** TASK-HR-002 (contract type override), TASK-HR-006 (accrual cron), TASK-AUTH-101 (CHRO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-HR-001. **Cross-module:** TASK-HR-002 (contract type override), TASK-HR-006 (accrual cron), TASK-AUTH-101 (CHRO role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

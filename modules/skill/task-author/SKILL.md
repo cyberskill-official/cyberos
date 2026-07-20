@@ -268,26 +268,20 @@ Pick the next artefact by topological order (`depends_on` resolved → leftmost 
   | hardening, refactor, audit remediation, dependency bump — no user-visible behaviour change | `improvement` |
   | mechanical/operational toil (regenerate, rotate, migrate) | `chore` |
 
-  A `bug` that turns out to need net-new behaviour is **re-typed, not renumbered** — the id is stable, `type` is a field. Record the retype and its reason in the audit row; the rubric that applies changes with it.
+A `bug` that turns out to need net-new behaviour is **re-typed, not renumbered** — the id is stable, `type` is a field. Record the retype and its reason in the audit row; the rubric that applies changes with it.
 
 - **W2 GENERATE** — dispatch on `type` (FM-108) to load the body skeleton. **Never hardcode a template path** — a new `type` must cost one file, not a code change.
 
-  Resolve in this order, first hit wins — the two paths are the same templates in the two
-  places this skill runs:
+Resolve in this order, first hit wins — the two paths are the same templates in the two places this skill runs:
 
   ```
   modules/skill/contracts/task/templates/{type}.md   # inside the cyberos repo
   .cyberos/cuo/templates/{type}.md                   # inside an INSTALLED repo (vendored)
   ```
 
-  Only the first path was documented until 2026-07-15, and the installed tree has no
-  `skill/` or `contracts/` root — so on every installed repo this resolved to nothing and
-  W2 HALTed on the first task authored. The payload did not carry the templates at all
-  (`build.sh` shipped `contracts/task/STATUS-REFERENCE.md` and nothing else from that
-  directory). Both are fixed; `test_template_schema.sh` t07 gates the payload side.
+Only the first path was documented until 2026-07-15, and the installed tree has no `skill/` or `contracts/` root — so on every installed repo this resolved to nothing and W2 HALTed on the first task authored. The payload did not carry the templates at all (`build.sh` shipped `contracts/task/STATUS-REFERENCE.md` and nothing else from that directory). Both are fixed; `test_template_schema.sh` t07 gates the payload side.
 
-  The vendored copy flattens into `cuo/templates/`, matching `STATUS-REFERENCE.md` — which
-  also lives under `contracts/task/` in the repo and installs to `.cyberos/cuo/`.
+The vendored copy flattens into `cuo/templates/`, matching `STATUS-REFERENCE.md` — which also lives under `contracts/task/` in the repo and installs to `.cyberos/cuo/`.
 
   | `type` | template | extra rule family |
   |---|---|---|
@@ -296,14 +290,14 @@ Pick the next artefact by topological order (`depends_on` resolved → leftmost 
   | `improvement` | `templates/feature.md` | — (same shape; `type` carries the distinction) |
   | `chore` | `templates/feature.md` | — |
 
-  If `templates/{type}.md` does not exist, HALT and surface it. Do not silently fall back to the feature skeleton: a bug rendered as a feature has no reproduction, no root cause and no regression test, and it will sail through a gate that never knew to ask.
+If `templates/{type}.md` does not exist, HALT and surface it. Do not silently fall back to the feature skeleton: a bug rendered as a feature has no reproduction, no root cause and no regression test, and it will sail through a gate that never knew to ask.
 
-  Render by adapting the loaded template to this artefact's source_refs, applying anti-fabrication rules (`references/ANTI_FABRICATION.md`).
+Render by adapting the loaded template to this artefact's source_refs, applying anti-fabrication rules (`references/ANTI_FABRICATION.md`).
 - **W3 WRITE** — `write_file(artefact.file_path, body)`. Compute `artefact_hash`. Append one `artefact_write` row to `genie.action_log`.
 - **W4 EMIT EVENT** — publish a NATS subject `task_author.task_written` carrying `(artefact_id, artefact_path, artefact_hash)`.
 - **W5 ROUTE** — depending on whether the chained audit is wired:
-  - If chained to `task-audit`: invoke it with the just-written artefact's path. Forward its `overall_status` into `artefacts[X].status`.
-  - If standalone: leave `artefacts[X].status = PASS` and continue.
+- If chained to `task-audit`: invoke it with the just-written artefact's path. Forward its `overall_status` into `artefacts[X].status`.
+- If standalone: leave `artefacts[X].status = PASS` and continue.
 
 The audit step is OUT of this author skill. The author writes; the audit audits.
 
@@ -890,9 +884,9 @@ To support seamless workflow execution, resumption, and manual intervention, the
 ### §11.2 — In-Flight Deliverable Detection (Keep vs. Discard)
 1. During a resume or rework run, the supervisor and agent MUST scan the work directory to detect existing, half-way, or in-construction deliverables (such as step outputs, draft specs, or partial code files).
 2. For each detected deliverable:
-   - The agent MUST evaluate whether the asset matches the current requirements.
-   - The agent/supervisor MUST explicitly decide whether to **keep** (reuse, adapt, or build upon) or **discard** (clean up and overwrite) the deliverable.
-   - This prevents starting from scratch, avoids wasting token budgets, and ensures no duplicate or conflicting deliverables are left in the repository.
+- The agent MUST evaluate whether the asset matches the current requirements.
+- The agent/supervisor MUST explicitly decide whether to **keep** (reuse, adapt, or build upon) or **discard** (clean up and overwrite) the deliverable.
+- This prevents starting from scratch, avoids wasting token budgets, and ensures no duplicate or conflicting deliverables are left in the repository.
 
 ### §11.3 — Status-Aware Restart
 1. Except when the target task is in a terminal state (`done`, `on_hold`, `closed`), the workflow execution engine MUST support restarting the current phase's work (e.g., resuming from the first step of the active state).
@@ -904,15 +898,8 @@ To support seamless workflow execution, resumption, and manual intervention, the
 
 ## Template profiles (TASK-CUO-208)
 
-The input envelope's `template` field selects the emitted profile: `engineering-spec@1` (default; §12
-authoring rules below apply) or `task@1` (authoring rules in
-`references/TEMPLATE_PROFILES.md`, the normative side-by-side profile doc). Resolution chain:
-invocation override > `.cyberos/config.yaml` `task_template` > default. The resolved template is echoed
-in the PLAN so the operator approves template + content together.
+The input envelope's `template` field selects the emitted profile: `engineering-spec@1` (default; §12 authoring rules below apply) or `task@1` (authoring rules in `references/TEMPLATE_PROFILES.md`, the normative side-by-side profile doc). Resolution chain: invocation override > `.cyberos/config.yaml` `task_template` > default. The resolved template is echoed in the PLAN so the operator approves template + content together.
 
 ## Folder layout + presentation (TASK-SKILL-120)
 
-Artefact layout: `docs/tasks/<module>/<STEM>/spec.md` + `audit.md` + `assets/`
-(on demand; own-folder assets only, referenced as `assets/<file>`). Presentation is rendered
-through `modules/templates/contracts/TEMPLATE.md` (deliverable@1) by the docs-site pipeline -
-informative pointer: authoring remains markdown per TASK-DOCS-002.
+Artefact layout: `docs/tasks/<module>/<STEM>/spec.md` + `audit.md` + `assets/` (on demand; own-folder assets only, referenced as `assets/<file>`). Presentation is rendered through `modules/templates/contracts/TEMPLATE.md` (deliverable@1) by the docs-site pipeline - informative pointer: authoring remains markdown per TASK-DOCS-002.

@@ -1,11 +1,8 @@
 # project-cleanup — golden expected output (cyberos flavor)
 
-This is the expected structural shape of the cleanup report for a cyberos
-repo with 4 stale fragments in `docs/tasks/ai/`.
+This is the expected structural shape of the cleanup report for a cyberos repo with 4 stale fragments in `docs/tasks/ai/`.
 
-The skill is NOT byte-deterministic (timestamps + sha varies per run).
-Acceptance check is **structural**: the run MUST produce a report that
-matches the categories + counts below.
+The skill is NOT byte-deterministic (timestamps + sha varies per run). Acceptance check is **structural**: the run MUST produce a report that matches the categories + counts below.
 
 ---
 

@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this customer success engagement"
+- "Audit this customer success engagement"
 - "Check the customer success engagement for completeness"
 - "Verify the customer success engagement meets the rubric"
 - "Re-audit the customer success engagement"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a customer success engagement" → customer-success-engagement-author
+- "Draft a customer success engagement" → customer-success-engagement-author
 - "Create the customer success engagement" → customer-success-engagement-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

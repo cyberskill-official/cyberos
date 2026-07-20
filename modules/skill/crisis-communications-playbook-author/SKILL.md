@@ -256,8 +256,8 @@ Pick the next artefact by topological order (`depends_on` resolved → leftmost 
 - **W3 WRITE** — `write_file(artefact.file_path, body)`. Compute `artefact_hash`. Append one `artefact_write` row to `genie.action_log`.
 - **W4 EMIT EVENT** — publish a NATS subject `crisis-comms-playbook_author.crisis-comms-playbook_written` carrying `(artefact_id, artefact_path, artefact_hash)`.
 - **W5 ROUTE** — depending on whether the chained audit is wired:
-  - If chained to `crisis-communications-playbook-audit`: invoke it with the just-written artefact's path. Forward its `overall_status` into `artefacts[X].status`.
-  - If standalone: leave `artefacts[X].status = PASS` and continue.
+- If chained to `crisis-communications-playbook-audit`: invoke it with the just-written artefact's path. Forward its `overall_status` into `artefacts[X].status`.
+- If standalone: leave `artefacts[X].status = PASS` and continue.
 
 The audit step is OUT of this author skill. The author writes; the audit audits.
 

@@ -87,16 +87,16 @@ The AI Gateway **MUST** emit LangSmith traces for every LLM call, linked to the 
 
 1. **MUST** create a LangSmith trace per AI call. The LangSmith `trace_id` field is set to the OTel `trace_id` (W3C TraceContext) — same value, same hex format, enabling cross-tool correlation: opening a Tempo trace AND a LangSmith trace for the same call shows both views of the same operation.
 2. **MUST** include in the exported payload:
-    - Model alias + resolved model + provider.
-    - REDACTED prompt (post-TASK-AI-011 redaction; placeholders only — no raw PII).
-    - REDACTED response (placeholders only).
-    - LLM hints actually sent (temperature, max_tokens, stop sequences).
-    - Latency (request → response total).
-    - Cost (USD; from cost_ledger).
-    - Persona handle (TASK-AI-014).
-    - Trace_id (matches OTel).
-    - Tenant_id (which tenant; auditable).
-    - Tool calls (if any) with tool name + redacted args + tool result outcome.
+- Model alias + resolved model + provider.
+- REDACTED prompt (post-TASK-AI-011 redaction; placeholders only — no raw PII).
+- REDACTED response (placeholders only).
+- LLM hints actually sent (temperature, max_tokens, stop sequences).
+- Latency (request → response total).
+- Cost (USD; from cost_ledger).
+- Persona handle (TASK-AI-014).
+- Trace_id (matches OTel).
+- Tenant_id (which tenant; auditable).
+- Tool calls (if any) with tool name + redacted args + tool result outcome.
 3. **MUST** respect per-tenant `policy.ai_policy.langsmith_export: bool`; default `false`. Only enable for tenants who explicitly opt in via `cyberos-ai policy set <tenant> --langsmith-export=true --confirm`. The opt-in is logged via TASK-AI-021's CLI audit row + a separate `obs.langsmith_export_enabled` memory row.
 4. **MUST** route to self-hosted LangSmith at `https://langsmith.cyberos.world` (per-region deployment for TASK-AI-016 residency). The langchain.com SaaS endpoint is forbidden — it routes data to US infrastructure, violating PDPL/GDPR for VN/EU tenants. Per-region URL config in `deploy/obs/langsmith-config.yaml`.
 5. **MUST** assert at the export boundary that the prompt + response passed in are the REDACTED versions. The export function signature accepts `RedactedPrompt(String)` newtype (from TASK-AI-011); raw `String` is a compile error. Defense-in-depth against accidental raw export.
@@ -105,9 +105,9 @@ The AI Gateway **MUST** emit LangSmith traces for every LLM call, linked to the 
 8. **MUST** retry up to 3 attempts with exponential backoff (100ms, 250ms, 500ms) before dropping. After 3 failures, drop with WARN; metric `ai_langsmith_exports_total{outcome=dropped_after_retries}`.
 9. **MUST** authenticate to LangSmith via bearer token (per-environment, rotated quarterly per TASK-AUTH-006-style sweeper). Token in env var `LANGSMITH_API_TOKEN`; never logged.
 10. **MUST** emit OTel metrics:
-    - `ai_langsmith_exports_total{outcome, tenant_id}` (counter; outcome ∈ ok | dropped_opt_out | dropped_after_retries | langsmith_unreachable | invalid_payload).
-    - `ai_langsmith_export_latency_ms` (histogram; the async export's wall-clock).
-    - `ai_langsmith_queue_depth` (gauge; pending tokio::spawn'd exports).
+- `ai_langsmith_exports_total{outcome, tenant_id}` (counter; outcome ∈ ok | dropped_opt_out | dropped_after_retries | langsmith_unreachable | invalid_payload).
+- `ai_langsmith_export_latency_ms` (histogram; the async export's wall-clock).
+- `ai_langsmith_queue_depth` (gauge; pending tokio::spawn'd exports).
 11. **MUST** include `Idempotency-Key` header per export (the OTel trace_id is a natural unique key) to prevent duplicate ingestion if a retry succeeds after the original eventually delivers.
 12. **SHOULD** truncate redacted prompts > 100KB to first 100KB + `"...[truncated by TASK-OBS-004]"` marker. LangSmith UI degrades on huge payloads; truncation preserves the diagnostic value.
 

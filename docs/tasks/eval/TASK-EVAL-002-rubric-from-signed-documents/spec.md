@@ -82,54 +82,53 @@ The rubric layer **MUST** turn the three signed employment documents into a stru
 1. **MUST** define three tables — `rubric`, `rubric_version`, `rubric_item` — in `services/eval/migrations/0002_rubric.sql`, all tenant-scoped (`tenant_id UUID NOT NULL`) and all under RLS (TASK-AUTH-003). A `rubric` is the named framework for a tenant (e.g. "CyberSkill employment rubric"); a `rubric_version` is one immutable, effective-dated published cut of it; a `rubric_item` is one checkable obligation, working term, KPI, or milestone within a version.
 
 2. **MUST** make every `rubric_item` cite its exact source in the signed documents (DEC-2600):
-    - `source_doc TEXT NOT NULL CHECK (source_doc IN ('labor_contract','nda_ip','total_rewards_appendix'))` — the closed set of the three documents and nothing else.
-    - `clause_ref TEXT NOT NULL` — the exact clause/article identifier within that document (e.g. `art.3.1`, `§5(b)`, `appendix-B.KPI-2`).
-    - `source_quote_vi TEXT` and `source_quote_en TEXT` — the verbatim clause text in each language, so a reviewer and the employee can read the standard at its source.
-    - An INSERT or update that leaves `source_doc` or `clause_ref` null **MUST** be rejected (`422 rubric_item_uncited`); an item that cannot name its clause is not a rubric item.
+- `source_doc TEXT NOT NULL CHECK (source_doc IN ('labor_contract','nda_ip','total_rewards_appendix'))` — the closed set of the three documents and nothing else.
+- `clause_ref TEXT NOT NULL` — the exact clause/article identifier within that document (e.g. `art.3.1`, `§5(b)`, `appendix-B.KPI-2`).
+- `source_quote_vi TEXT` and `source_quote_en TEXT` — the verbatim clause text in each language, so a reviewer and the employee can read the standard at its source.
+- An INSERT or update that leaves `source_doc` or `clause_ref` null **MUST** be rejected (`422 rubric_item_uncited`); an item that cannot name its clause is not a rubric item.
 
 3. **MUST** classify each item by what kind of thing it checks:
-    - `item_kind TEXT NOT NULL CHECK (item_kind IN ('obligation','working_term','kpi','career_milestone'))`.
-    - For `item_kind='obligation'`, a further `obligation_kind TEXT CHECK (obligation_kind IN ('confidentiality','non_compete','ip_assignment'))` — the three NDA obligation families called out in the brain-evaluation plan. Non-obligation items leave `obligation_kind` null.
+- `item_kind TEXT NOT NULL CHECK (item_kind IN ('obligation','working_term','kpi','career_milestone'))`.
+- For `item_kind='obligation'`, a further `obligation_kind TEXT CHECK (obligation_kind IN ('confidentiality','non_compete','ip_assignment'))` — the three NDA obligation families called out in the brain-evaluation plan. Non-obligation items leave `obligation_kind` null.
 
 4. **MUST** carry, per item, a machine-usable check descriptor that TASK-EVAL-003 consumes:
-    - `check_type TEXT NOT NULL CHECK (check_type IN ('evidence_presence','threshold_numeric','attestation','periodic_review','milestone_reached'))` — how the item is evaluated (is there evidence of X; is a number at/above a threshold; is there a signed attestation; was a review done on cadence; was a milestone reached).
-    - `check_params JSONB NOT NULL DEFAULT '{}'` — typed parameters for the check (e.g. `{"metric":"on_time_delivery","operator":">=","target":0.9}` for a `threshold_numeric` KPI). The schema of `check_params` is keyed by `check_type`; an unknown shape for a given `check_type` **MUST** be rejected at write time.
-    - `weight NUMERIC(5,2) NOT NULL CHECK (weight >= 0)` — the item's contribution to its section's roll-up. Weights are relative within a version, not a promise of a global 0..100.
+- `check_type TEXT NOT NULL CHECK (check_type IN ('evidence_presence','threshold_numeric','attestation','periodic_review','milestone_reached'))` — how the item is evaluated (is there evidence of X; is a number at/above a threshold; is there a signed attestation; was a review done on cadence; was a milestone reached).
+- `check_params JSONB NOT NULL DEFAULT '{}'` — typed parameters for the check (e.g. `{"metric":"on_time_delivery","operator":">=","target":0.9}` for a `threshold_numeric` KPI). The schema of `check_params` is keyed by `check_type`; an unknown shape for a given `check_type` **MUST** be rejected at write time.
+- `weight NUMERIC(5,2) NOT NULL CHECK (weight >= 0)` — the item's contribution to its section's roll-up. Weights are relative within a version, not a promise of a global 0..100.
 
 5. **MUST** be fully bilingual VN/EN (the documents are bilingual, dated 2026-01-01, under Labor Code 45/2019/QH14 + Decree 145/2020). Every human-facing item field **MUST** exist as a `_vi` / `_en` pair: `title_vi`/`title_en`, `description_vi`/`description_en`, plus the `source_quote_vi`/`source_quote_en` of clause 2. Vietnamese is the primary, legally-operative text; English is the working translation. An item missing the `_vi` side **MUST** be rejected (`422 rubric_item_missing_vi`).
 
 6. **MUST** version the rubric and treat a published version as immutable (DEC-2603):
-    - `rubric_version` carries `version_no INT`, `state TEXT CHECK (state IN ('draft','approved','published','superseded'))`, `effective_from DATE`, `effective_to DATE` (null = open-ended), `published_at_ns BIGINT`, `published_by_subject_id UUID`.
-    - Once `state='published'`, the version's items and its `effective_from` **MUST NOT** be mutated. Re-curation (a contract amendment, a corrected reading) creates a NEW `rubric_version` with `version_no + 1`; the prior version is moved to `superseded` and its `effective_to` is set. A migration **MUST** `REVOKE UPDATE, DELETE` on published `rubric_version` / `rubric_item` rows from the `cyberos_app` role.
+- `rubric_version` carries `version_no INT`, `state TEXT CHECK (state IN ('draft','approved','published','superseded'))`, `effective_from DATE`, `effective_to DATE` (null = open-ended), `published_at_ns BIGINT`, `published_by_subject_id UUID`.
+- Once `state='published'`, the version's items and its `effective_from` **MUST NOT** be mutated. Re-curation (a contract amendment, a corrected reading) creates a NEW `rubric_version` with `version_no + 1`; the prior version is moved to `superseded` and its `effective_to` is set. A migration **MUST** `REVOKE UPDATE, DELETE` on published `rubric_version` / `rubric_item` rows from the `cyberos_app` role.
 
 7. **MUST** resolve, for any date, the single version that was effective then: `resolve_effective(rubric_id, at_date) → rubric_version` returns the published version whose `[effective_from, effective_to)` contains `at_date`. TASK-EVAL-003 calls this so an assessment for a period uses the standard that was actually in force then, not whatever is current.
 
 8. **MUST** enforce the human-approval (HITL) gate before any item or version becomes effective (DEC-2602):
-    - GENIE/Lumi MAY create items in `state='draft'` only (clause 9), and MAY suggest edits, but **MUST NOT** approve or publish.
-    - A `rubric_version` transition to `approved` or `published` **MUST** record a human `approver_subject_id UUID NOT NULL` and an `approved_at_ns`. A transition with a null or service-account approver **MUST** be rejected (`403 rubric_requires_human_approver`).
-    - Only an item that belongs to a `published` version is visible to TASK-EVAL-003; a `draft`/`approved`-but-unpublished item **MUST NOT** be evaluable.
+- GENIE/Lumi MAY create items in `state='draft'` only (clause 9), and MAY suggest edits, but **MUST NOT** approve or publish.
+- A `rubric_version` transition to `approved` or `published` **MUST** record a human `approver_subject_id UUID NOT NULL` and an `approved_at_ns`. A transition with a null or service-account approver **MUST** be rejected (`403 rubric_requires_human_approver`).
+- Only an item that belongs to a `published` version is visible to TASK-EVAL-003; a `draft`/`approved`-but-unpublished item **MUST NOT** be evaluable.
 
 9. **MUST** support a GENIE DRAFT path that proposes items from the three documents without ever setting the standard (DEC-2602):
-    - `draft_genie.rs` calls Lumi (the TASK-EVAL-001-governed analysis path) to read the three documents and propose `rubric_item` rows — each pre-filled with a candidate `source_doc`, `clause_ref`, `item_kind`, `check_type`, and bilingual title/description — into `state='draft'`.
-    - Every GENIE-drafted item **MUST** carry `authored_by = 'genie'` and a `genie_confidence NUMERIC(4,3)`; a human-authored item carries `authored_by = 'human'`. The provenance is never erased on later human edit (an `edited_by_subject_id` is added; `authored_by` stays).
-    - A GENIE draft that cannot ground an item in a specific clause **MUST** leave it flagged `needs_clause_ref` rather than inventing a citation; the human supplies the clause before approval. The model **MUST NOT** fabricate a `clause_ref` that is not in the document.
+- `draft_genie.rs` calls Lumi (the TASK-EVAL-001-governed analysis path) to read the three documents and propose `rubric_item` rows — each pre-filled with a candidate `source_doc`, `clause_ref`, `item_kind`, `check_type`, and bilingual title/description — into `state='draft'`.
+- Every GENIE-drafted item **MUST** carry `authored_by = 'genie'` and a `genie_confidence NUMERIC(4,3)`; a human-authored item carries `authored_by = 'human'`. The provenance is never erased on later human edit (an `edited_by_subject_id` is added; `authored_by` stays).
+- A GENIE draft that cannot ground an item in a specific clause **MUST** leave it flagged `needs_clause_ref` rather than inventing a citation; the human supplies the clause before approval. The model **MUST NOT** fabricate a `clause_ref` that is not in the document.
 
 10. **MUST** be access-gated by the TASK-EVAL-001 governance layer, not by an access rule this task invents (DEC-2601). Authoring (create/edit/approve/publish) **MUST** require the TASK-EVAL-001 grant for rubric administration (founder + designated rubric admins); reading the rubric **MUST** require a valid grant. The rubric tables **MUST NOT** ship before TASK-EVAL-001 exists.
 
 11. **MUST** emit one hash-chained memory audit row per rubric mutation through `services/eval/src/audit.rs` (DEC-2604): `eval.rubric_drafted`, `eval.rubric_edited`, `eval.rubric_approved`, `eval.rubric_published`, `eval.rubric_superseded`. Each payload carries `{rubric_id, rubric_version_id, version_no, item_id?, actor_subject_id, authored_by?, source_doc?, clause_ref?, trace_id}`. These chain into the same `l1_audit_log` the rest of CyberOS uses (TASK-PROJ-008 / TASK-MEMORY-123 pattern), so the rubric's full curation history is tamper-evident.
 
 12. **MUST** expose a minimal authoring + read API, tenant-scoped and TASK-EVAL-001-gated:
-    - `POST /v1/eval/rubrics/{id}/versions` — open a new draft version.
-    - `POST /v1/eval/rubrics/{id}/versions/{vid}/items` — add/edit a draft item (clause-citation + bilingual + check-shape validated).
-    - `POST /v1/eval/rubrics/{id}/versions/{vid}/draft-from-documents` — trigger the GENIE draft path (clause 9), returns the proposed items in `draft`.
-    - `POST /v1/eval/rubrics/{id}/versions/{vid}/approve` and `.../publish` — the HITL transitions (human approver required).
-    - `GET /v1/eval/rubrics/{id}?at=<date>` — read the version effective on a date (defaults to today), with all items and their citations.
+- `POST /v1/eval/rubrics/{id}/versions` — open a new draft version.
+- `POST /v1/eval/rubrics/{id}/versions/{vid}/items` — add/edit a draft item (clause-citation + bilingual + check-shape validated).
+- `POST /v1/eval/rubrics/{id}/versions/{vid}/draft-from-documents` — trigger the GENIE draft path (clause 9), returns the proposed items in `draft`.
+- `POST /v1/eval/rubrics/{id}/versions/{vid}/approve` and `.../publish` — the HITL transitions (human approver required).
+- `GET /v1/eval/rubrics/{id}?at=<date>` — read the version effective on a date (defaults to today), with all items and their citations.
 
 13. **MUST** validate, at publish time, that the version is coherent before it can become the standard:
-    - Every item is clause-cited (clause 2), bilingual (clause 5), and has a check shape valid for its `check_type` (clause 4).
-    - `effective_from` does not overlap an existing published version's open interval for the same `rubric` (no two versions effective on the same day).
-    - At least one item exists. Publishing an empty version **MUST** be rejected (`422 rubric_version_empty`).
-    A publish that fails any check **MUST** return the specific failure and leave the version unpublished.
+- Every item is clause-cited (clause 2), bilingual (clause 5), and has a check shape valid for its `check_type` (clause 4).
+- `effective_from` does not overlap an existing published version's open interval for the same `rubric` (no two versions effective on the same day).
+- At least one item exists. Publishing an empty version **MUST** be rejected (`422 rubric_version_empty`). A publish that fails any check **MUST** return the specific failure and leave the version unpublished.
 
 14. **MUST** keep the rubric independent of any one person — a rubric and its versions describe the *standard*, not an assessment of an individual. Per-person scoring lives in TASK-EVAL-003 and references `rubric_version_id`; this task **MUST NOT** store any per-employee score, evidence, or assessment. (Separation of the standard from the judgement is what lets the same version fairly measure everyone.)
 

@@ -25,16 +25,10 @@ classifier_version: 3.0.0-a4
 
 ## Authoring notes
 
-- Positive 1-3 anchor on the canonical PRD inputs: brief, SOW,
-  project-brief. Verb cues are "draft", "turn into", "expand".
-- Positive 4 is a specific-feature framing — operators often request a
-  PRD for a named feature rather than a generic "draft a PRD".
-- Negative 1-2 catch the most common confusion: PRD author vs auditor.
-  These ARE the auditor's positive triggers — verb cues ("audit",
-  "check") MUST route to the auditor.
-- Negative 3 catches the downstream-chain confusion: PRD → task backlog is
-  a separate skill (task-author), not this one.
-- Negative 4 catches the upstream-chain confusion: PRD → SRS is also a
-  separate skill (software-requirements-specification-author).
+- Positive 1-3 anchor on the canonical PRD inputs: brief, SOW, project-brief. Verb cues are "draft", "turn into", "expand".
+- Positive 4 is a specific-feature framing — operators often request a PRD for a named feature rather than a generic "draft a PRD".
+- Negative 1-2 catch the most common confusion: PRD author vs auditor. These ARE the auditor's positive triggers — verb cues ("audit", "check") MUST route to the auditor.
+- Negative 3 catches the downstream-chain confusion: PRD → task backlog is a separate skill (task-author), not this one.
+- Negative 4 catches the upstream-chain confusion: PRD → SRS is also a separate skill (software-requirements-specification-author).
 - Negative 5 is canonical "no skill" sanity.
 - Re-author when classifier_version MAJOR-bumps.

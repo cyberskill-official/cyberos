@@ -1,7 +1,6 @@
 # core/improve/ — the self-improvement loop, mapped on one screen
 
-Six things live here. One is a procedure, two are templates/ledgers you append
-to, one is a register you re-verify, and two are append-only history.
+Six things live here. One is a procedure, two are templates/ledgers you append to, one is a register you re-verify, and two are append-only history.
 
 | File / dir | What it is | When you touch it |
 |---|---|---|
@@ -14,14 +13,10 @@ to, one is a register you re-verify, and two are append-only history.
 
 ## The flow in one line
 
-run AUDIT.md somewhere → score it (`retros/`) → log what went wrong
-(`FAILURE_LOG.md`) → when evidence recurs, run `CRITIC.md` → one change to
-`AUDIT.md`, gated by `core/evals/`, snapshotted to `versions/`, logged in
-`CHANGELOG.md` → repeat until a campaign stop rule fires.
+run AUDIT.md somewhere → score it (`retros/`) → log what went wrong (`FAILURE_LOG.md`) → when evidence recurs, run `CRITIC.md` → one change to `AUDIT.md`, gated by `core/evals/`, snapshotted to `versions/`, logged in `CHANGELOG.md` → repeat until a campaign stop rule fires.
 
 ## Rules that keep this folder trustworthy
 
 - One protocol change per cycle — attribution is the whole point.
-- Everything here is append-only except `BLINDSPOTS.md` statuses and
-  `FAILURE_LOG.md` promotion columns.
+- Everything here is append-only except `BLINDSPOTS.md` statuses and `FAILURE_LOG.md` promotion columns.
 - No retro → no edit. Evidence first, wording second.

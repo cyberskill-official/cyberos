@@ -119,12 +119,11 @@ risk_if_skipped: "Lumi is the cross-tenant synthesis identity — the persona th
 The AUTH service **MUST** extend TASK-AUTH-004 JWT shape with Lumi-specific claims for cross-tenant sync identity. Each requirement:
 
 1. **MUST** add the following 5 claims to JWTs issued via the `/v1/auth/lumi/issue` endpoint (per DEC-420):
-    - `agent_persona: TEXT` — format `cuo-<persona-key>@<semver>` per DEC-421.
-    - `tenant_residency: TEXT` — one of `vn-1 | sg-1 | eu-1 | us-1` per DEC-422.
-    - `lumi_org_tenant: TEXT` — slug of the org-tenant this Lumi persona represents (per DEC-423).
-    - `persona_version: TEXT` — semver matching TASK-AI-014 pinned version (per DEC-424).
-    - `sync_class_allowed: TEXT[]` — closed-set array per DEC-425.
-   Existing TASK-AUTH-004 claims (`sub`, `tid`, `iss`, `iat`, `exp`, `nbf`, `roles`, `rbac_v`) preserved unchanged.
+- `agent_persona: TEXT` — format `cuo-<persona-key>@<semver>` per DEC-421.
+- `tenant_residency: TEXT` — one of `vn-1 | sg-1 | eu-1 | us-1` per DEC-422.
+- `lumi_org_tenant: TEXT` — slug of the org-tenant this Lumi persona represents (per DEC-423).
+- `persona_version: TEXT` — semver matching TASK-AI-014 pinned version (per DEC-424).
+- `sync_class_allowed: TEXT[]` — closed-set array per DEC-425. Existing TASK-AUTH-004 claims (`sub`, `tid`, `iss`, `iat`, `exp`, `nbf`, `roles`, `rbac_v`) preserved unchanged.
 
 2. **MUST** issue Lumi tokens with distinct `iss: https://lumi.cyberos.world` and `aud: https://memory.cyberos.world/sync` (per DEC-426 + DEC-427). Per-tenant tokens (TASK-AUTH-004) continue using `iss: https://auth.<tenant>.cyberos.world` and tenant-specific audiences. Mismatch on either → 401 + `auth.lumi_token_rejected` memory row.
 
@@ -151,10 +150,10 @@ The AUTH service **MUST** extend TASK-AUTH-004 JWT shape with Lumi-specific clai
 13. **MUST** ship `GET /v1/auth/lumi/verify` handler used by memory sync + downstream consumers. Header: `Authorization: Bearer <token>`. Returns `{valid: bool, claims: <object>, reason: <text?>}`. Internal-use only (not exposed externally); the verifier library is the canonical path.
 
 14. **MUST** emit 4 memory audit row kinds (per DEC-428):
-    - `auth.lumi_token_issued` — every successful issuance; carries persona, version, residency, sync_class, ttl, jti.
-    - `auth.lumi_token_verified` — sampled at 1% for cost reasons (high-volume); 100% on outcome != success.
-    - `auth.lumi_token_rejected` — every verification failure; carries reason (residency_mismatch | chain_diverged | persona_version_stale | unsupported_alg | aud_mismatch | iss_mismatch | sync_class_unknown | agent_persona_unknown).
-    - `auth.lumi_persona_version_stale` — sev-2 alarm trigger; emitted when verifier sees a persona_version > 2 minor versions behind.
+- `auth.lumi_token_issued` — every successful issuance; carries persona, version, residency, sync_class, ttl, jti.
+- `auth.lumi_token_verified` — sampled at 1% for cost reasons (high-volume); 100% on outcome != success.
+- `auth.lumi_token_rejected` — every verification failure; carries reason (residency_mismatch | chain_diverged | persona_version_stale | unsupported_alg | aud_mismatch | iss_mismatch | sync_class_unknown | agent_persona_unknown).
+- `auth.lumi_persona_version_stale` — sev-2 alarm trigger; emitted when verifier sees a persona_version > 2 minor versions behind.
 
 15. **MUST** PII-scrub `lumi_org_tenant` slug via TASK-MEMORY-111 before chain commit (treated as PII at the cross-tenant boundary).
 
@@ -163,11 +162,11 @@ The AUTH service **MUST** extend TASK-AUTH-004 JWT shape with Lumi-specific clai
 17. **MUST** emit OTel span `auth.lumi.{issue,verify}` with attributes: `tenant_id`, `agent_persona`, `persona_version`, `lumi_org_tenant`, `outcome` (success | residency_mismatch | chain_diverged | persona_version_stale | aud_mismatch | iss_mismatch | unsupported_alg | sync_class_unknown | agent_persona_unknown | human_cannot_issue).
 
 18. **MUST** emit OTel metrics:
-    - `auth_lumi_issuance_total{tenant_id, agent_persona, outcome}` (counter).
-    - `auth_lumi_verification_total{outcome, reason}` (counter).
-    - `auth_lumi_persona_version_stale_total{persona, stale_versions_behind}` (counter; sev-2 alarm at sustained > 5/h).
-    - `auth_lumi_active_tokens{tenant_id, persona}` (gauge — periodic count of unexpired tokens from log).
-    - `auth_lumi_token_latency_ms{op}` (histogram; op ∈ {issue, verify}).
+- `auth_lumi_issuance_total{tenant_id, agent_persona, outcome}` (counter).
+- `auth_lumi_verification_total{outcome, reason}` (counter).
+- `auth_lumi_persona_version_stale_total{persona, stale_versions_behind}` (counter; sev-2 alarm at sustained > 5/h).
+- `auth_lumi_active_tokens{tenant_id, persona}` (gauge — periodic count of unexpired tokens from log).
+- `auth_lumi_token_latency_ms{op}` (histogram; op ∈ {issue, verify}).
 
 19. **MUST** sign Lumi JWT with the SAME RS256 keypair used by TASK-AUTH-004 (issuer-distinct via the `iss` claim; key-distinct deferred to slice 2). The kid is the same; the iss differs — verifiers must check both.
 

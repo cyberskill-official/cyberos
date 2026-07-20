@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this investment thesis"
+- "Audit this investment thesis"
 - "Check the investment thesis for completeness"
 - "Verify the investment thesis meets the rubric"
 - "Re-audit the investment thesis"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a investment thesis" → investment-thesis-author
+- "Draft a investment thesis" → investment-thesis-author
 - "Create the investment thesis" → investment-thesis-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

@@ -77,14 +77,14 @@ The rate-card layer **MUST** persist per-engagement billing rates with effective
 5. **MUST** enforce uniqueness: only ONE active rate card per `(engagement_id, role, currency)` tuple AT ANY GIVEN TIME. Overlapping intervals → 409 CONFLICT.
 6. **MUST** expose `lookup_at(engagement_id, role, currency, at_date)` returning the rate card row whose `effective_from <= at_date AND (effective_to IS NULL OR effective_to > at_date)`. None → 404.
 7. **MUST** expose REST endpoints:
-    - `POST /api/proj/engagements/:eng/rate-cards` — create or supersede. Idempotent on `Idempotency-Key`.
-    - `GET /api/proj/engagements/:eng/rate-cards?at=YYYY-MM-DD&role=engineer&currency=VND` — lookup.
-    - `GET /api/proj/engagements/:eng/rate-cards/history` — full versioned history.
-    - `PATCH /api/proj/engagements/:eng/rate-cards/:id` — ONLY `billable_default` mutable (rate fields immutable per #4); other PATCH fields rejected.
+- `POST /api/proj/engagements/:eng/rate-cards` — create or supersede. Idempotent on `Idempotency-Key`.
+- `GET /api/proj/engagements/:eng/rate-cards?at=YYYY-MM-DD&role=engineer&currency=VND` — lookup.
+- `GET /api/proj/engagements/:eng/rate-cards/history` — full versioned history.
+- `PATCH /api/proj/engagements/:eng/rate-cards/:id` — ONLY `billable_default` mutable (rate fields immutable per #4); other PATCH fields rejected.
 8. **MUST** emit memory audit rows:
-    - `proj.rate_card_created` on new row.
-    - `proj.rate_card_superseded` on supersession with payload `{old_card_id, new_card_id, old_rate_minor, new_rate_minor, currency, role, effective_from}`.
-    - `proj.rate_card_billable_default_changed` on PATCH.
+- `proj.rate_card_created` on new row.
+- `proj.rate_card_superseded` on supersession with payload `{old_card_id, new_card_id, old_rate_minor, new_rate_minor, currency, role, effective_from}`.
+- `proj.rate_card_billable_default_changed` on PATCH.
 9. **MUST** enforce RLS per TASK-AUTH-003 — operators can only see/write rate cards for their tenant's engagements.
 10. **MUST** validate amounts non-negative (`hourly_rate_minor >= 0`); zero allowed (pro bono work).
 11. **MUST** emit OTel metric `proj_rate_cards_active{currency, role}` (gauge — count of currently-active cards per cell).

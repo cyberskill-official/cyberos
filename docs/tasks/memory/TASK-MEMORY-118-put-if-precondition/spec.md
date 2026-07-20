@@ -80,11 +80,11 @@ The `put_if` operation **MUST** extend the canonical-op list in AGENTS.md §3.1 
 
 1. **MUST** add `put_if` to the canonical-op enum in `memory.schema.json`. Signature: `put_if(path, body, meta, precondition_body_hash: Optional[str]) -> PutIfResult`. The two-arg path/body shape mirrors `put`; the new third arg is the precondition.
 2. **MUST** define `precondition_body_hash` as either:
-    - A 64-char lowercase hex SHA-256 string ≡ "the body MUST currently hash to this; this is what I saw"
-    - `null` ≡ "the path MUST NOT currently exist; create-only"
+- A 64-char lowercase hex SHA-256 string ≡ "the body MUST currently hash to this; this is what I saw"
+- `null` ≡ "the path MUST NOT currently exist; create-only"
 3. **MUST** acquire the same `.lock` (exclusive) that `put` does. Inside the lock:
-    - If `precondition_body_hash` is `null`: check the path is absent. If absent → proceed with `put`. If present → return `PutIfResult(outcome="rejected", reason="precondition_failed", expected=null, actual=<current_hash>)`.
-    - If `precondition_body_hash` is a hash: read the current body, compute its SHA-256, compare. Match → proceed with `put`. Mismatch → return `PutIfResult(outcome="rejected", reason="precondition_failed", expected=<provided>, actual=<observed>)`.
+- If `precondition_body_hash` is `null`: check the path is absent. If absent → proceed with `put`. If present → return `PutIfResult(outcome="rejected", reason="precondition_failed", expected=null, actual=<current_hash>)`.
+- If `precondition_body_hash` is a hash: read the current body, compute its SHA-256, compare. Match → proceed with `put`. Mismatch → return `PutIfResult(outcome="rejected", reason="precondition_failed", expected=<provided>, actual=<observed>)`.
 4. **MUST NOT** advance HEAD on rejection. The audit chain remains unchanged. A `memory.precondition_failed` aux audit row IS emitted (HEAD advances by exactly 1 for the aux row); see §1 #7. The `put` payload itself is never written.
 5. **MUST** honour the TASK-MEMORY-117 store ACL check IN ADDITION to the precondition check. ACL check runs FIRST: if ACL rejects, return `rejected` with `reason: "acl_denied"`. Only if ACL allows does the precondition check fire. Rationale: ACL is policy; precondition is concurrency control; policy must clear before concurrency control matters.
 6. **MUST** preserve all existing `put` semantics on success: same canonical row emission, same `extra.body_hash` annotation, same `extra` field passthrough. From the audit chain's perspective, a successful `put_if` is indistinguishable from a `put` — only the writer's pre-step differs.

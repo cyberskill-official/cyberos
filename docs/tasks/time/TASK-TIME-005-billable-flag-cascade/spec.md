@@ -87,26 +87,26 @@ The TIME service **MUST** ship 4-step billable-flag cascade at `services/time/sr
 3. **MUST** add `billable_default BOOLEAN` columns to: `projects` (NULL = inherit), `engagements` (NULL = inherit), `tenants` (NOT NULL — required).
 
 4. **MUST** resolve billable flag per `cascade.rs::resolve(entry_override, project_id, engagement_id, tenant_id)` per DEC-1412:
-   - If `entry_override IS NOT NULL` → return (override, 'entry_override').
-   - Else SELECT projects.billable_default; if NOT NULL → return (project_default, 'project_default').
-   - Else SELECT engagements.billable_default; if NOT NULL → return (engagement_policy, 'engagement_policy').
-   - Else SELECT tenants.billable_default → return (tenant_default, 'tenant_default').
-   - Sets `entries.is_billable` + `entries.billable_source`.
+- If `entry_override IS NOT NULL` → return (override, 'entry_override').
+- Else SELECT projects.billable_default; if NOT NULL → return (project_default, 'project_default').
+- Else SELECT engagements.billable_default; if NOT NULL → return (engagement_policy, 'engagement_policy').
+- Else SELECT tenants.billable_default → return (tenant_default, 'tenant_default').
+- Sets `entries.is_billable` + `entries.billable_source`.
 
 5. **MUST** snapshot at write per DEC-1414. Post-write `is_billable` is IMMUTABLE — never re-cascaded.
 
 6. **MUST** support per-level override per DEC-1413:
-   - Member: `entry.billable_override BOOLEAN` at create-time.
-   - engagement_admin: `PATCH /v1/projects/{id}` body `{ billable_default }` (project-level).
-   - cfo: `PATCH /v1/engagements/{id}` body `{ billable_default }` (engagement-level).
-   - cfo: `PATCH /v1/admin/tenants/{id}` body `{ billable_default }` (tenant-level).
-   - Each level change emits respective memory audit row.
+- Member: `entry.billable_override BOOLEAN` at create-time.
+- engagement_admin: `PATCH /v1/projects/{id}` body `{ billable_default }` (project-level).
+- cfo: `PATCH /v1/engagements/{id}` body `{ billable_default }` (engagement-level).
+- cfo: `PATCH /v1/admin/tenants/{id}` body `{ billable_default }` (tenant-level).
+- Each level change emits respective memory audit row.
 
 7. **MUST** emit 4 memory audit kinds per DEC-1415:
-   - `time.billable_resolved` (sev-3 — informational; sampled 1%)
-   - `time.billable_overridden_at_entry` (sev-3 — when Member uses checkbox)
-   - `time.project_default_changed` (sev-2)
-   - `time.engagement_policy_changed` (sev-2)
+- `time.billable_resolved` (sev-3 — informational; sampled 1%)
+- `time.billable_overridden_at_entry` (sev-3 — when Member uses checkbox)
+- `time.project_default_changed` (sev-2)
+- `time.engagement_policy_changed` (sev-2)
 
 8. **MUST** thread trace_id end-to-end.
 
@@ -219,8 +219,7 @@ async fn snapshot_immutable() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-TIME-001 (entry write), TASK-PROJ-006 (project billable_default column).
-**Cross-module:** TASK-AUTH-101 (engagement_admin + cfo roles), TASK-AI-003, TASK-MEMORY-111.
+**Upstream:** TASK-TIME-001 (entry write), TASK-PROJ-006 (project billable_default column). **Cross-module:** TASK-AUTH-101 (engagement_admin + cfo roles), TASK-AI-003, TASK-MEMORY-111.
 
 ---
 

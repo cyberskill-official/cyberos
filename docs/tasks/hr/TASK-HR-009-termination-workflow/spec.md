@@ -89,20 +89,20 @@ The HR service **MUST** ship termination workflow at `services/hr/src/terminatio
 1. **MUST** validate `termination_kind` against closed enum per DEC-1871, `termination_stage` per DEC-1872.
 
 2. **MUST** require dual sign-off per DEC-1873 at `dual_sign_gate.rs::can_execute(termination)`:
-   - Both CFO + CEO must sign.
-   - Either rejection halts.
-   - Same person cannot sign both roles (separation of duties).
+- Both CFO + CEO must sign.
+- Either rejection halts.
+- Same person cannot sign both roles (separation of duties).
 
 3. **MUST** branch GL/BL per DEC-1870:
-   - Good Leaver (voluntary/redundancy/retirement): full ESOP vesting up to termination_date; standard severance.
-   - Bad Leaver (misconduct/breach): ESOP forfeiture per board policy; severance per VN Art. 41 (no severance if cause).
-   - Mutual: negotiated.
+- Good Leaver (voluntary/redundancy/retirement): full ESOP vesting up to termination_date; standard severance.
+- Bad Leaver (misconduct/breach): ESOP forfeiture per board policy; severance per VN Art. 41 (no severance if cause).
+- Mutual: negotiated.
 
 4. **MUST** cascade on executed per DEC-1874 at `cascade_executor.rs::execute(termination)`:
-   - TASK-ESOP-005 vesting halt + forfeiture per GL/BL
-   - TASK-AUTH-101 deprovision (all roles revoked)
-   - TASK-PORTAL-008 offer DSAR export to ex-member
-   - TASK-PROJ-013 reassign open issues to manager
+- TASK-ESOP-005 vesting halt + forfeiture per GL/BL
+- TASK-AUTH-101 deprovision (all roles revoked)
+- TASK-PORTAL-008 offer DSAR export to ex-member
+- TASK-PROJ-013 reassign open issues to manager
 
 5. **MUST** define table at migration `0008`:
    ```sql
@@ -238,8 +238,7 @@ async fn good_leaver_full_vesting() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-HR-001.
-**Cross-module:** TASK-AUTH-101 (CFO/CEO/CHRO roles + deprovision), TASK-ESOP-005 (GL/BL branch), TASK-PORTAL-008 (DSAR), TASK-PROJ-013 (issue reassign), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-HR-001. **Cross-module:** TASK-AUTH-101 (CFO/CEO/CHRO roles + deprovision), TASK-ESOP-005 (GL/BL branch), TASK-PORTAL-008 (DSAR), TASK-PROJ-013 (issue reassign), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

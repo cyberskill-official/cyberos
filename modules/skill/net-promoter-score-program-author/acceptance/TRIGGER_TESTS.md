@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a net promoter score program"
+- "Draft a net promoter score program"
 - "Create the net promoter score program"
 - "Author a new net promoter score program"
 - "Generate the net promoter score program"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this net promoter score program" → net-promoter-score-program-audit
+- "Audit this net promoter score program" → net-promoter-score-program-audit
 - "Check the net promoter score program for completeness" → net-promoter-score-program-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

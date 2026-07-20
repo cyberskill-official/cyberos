@@ -43,16 +43,11 @@ All six findings addressed as cited. Sequencing note (land before TASK-CUO-205's
 
 ## §4 - Ship record (2026-07-12)
 
-- Implementation: 86 files across 8 pairs (six §1 pairs + debugging-cycle full-raise + spike acceptance
-  READMEs), check-pair-parity.sh + build.sh hookup + test_pair_parity.sh; commits 247f021, e63f0fd.
-  Phase artefacts: docs/tasks/.workflow/TASK-SKILL-118/.
-- Recorded deviation (newest wins): BSU rubric versioned @2.0 - TASK-CUO-205 landed first; its §7
-  migration path followed. ISS-003's override hook present in every rubric header.
+- Implementation: 86 files across 8 pairs (six §1 pairs + debugging-cycle full-raise + spike acceptance READMEs), check-pair-parity.sh + build.sh hookup + test_pair_parity.sh; commits 247f021, e63f0fd. Phase artefacts: docs/tasks/.workflow/TASK-SKILL-118/.
+- Recorded deviation (newest wins): BSU rubric versioned @2.0 - TASK-CUO-205 landed first; its §7 migration path followed. ISS-003's override hook present in every rubric header.
 - Review: human verdict at gate 1 APPROVE + pre-authorize done (Stephen Cheng, in-chat).
-- Testing: t01-t06 6/6, all 6 cyberos-install suites, full-profile build green with parity gate live
-  (52 skills, plugin 1.09 MB < 2 MB). Gate 2 recorded per pre-authorization.
-- Field findings folded back: t04B repo-VERSION dependence fixed (TASK-IMP-070 audit note); first
-  manifest-tracked ship run (TASK-CUO-206 dogfood) - manifest created, stepped, finalized-deleted at done.
+- Testing: t01-t06 6/6, all 6 cyberos-install suites, full-profile build green with parity gate live (52 skills, plugin 1.09 MB < 2 MB). Gate 2 recorded per pre-authorization.
+- Field findings folded back: t04B repo-VERSION dependence fixed (TASK-IMP-070 audit note); first manifest-tracked ship run (TASK-CUO-206 dogfood) - manifest created, stepped, finalized-deleted at done.
 
 Verdict unchanged: PASS, Score = 10/10.
 

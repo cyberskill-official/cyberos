@@ -1,14 +1,6 @@
 # TASK-IMP-084 — code review packet
 
-Files under review: new `tools/install/docs-tools/task-lint.mjs` (the lint) and
-`tools/install/tests/test_task_lint.sh` (the gating suite), modified
-`modules/skill/task-audit/SKILL.md` (+4 lines, §1 #1.8 wiring) and
-`tools/install/build.sh` (+2 lines, vendor copy — disclosed below). Suite state at
-review: test_task_lint 8/8, 0 failed (~2 s including payload build + scratch install).
-Other dirt in the same working tree (`tools/docs-site/*`, `tools/install/install.sh`,
-`tools/install/uninstall.sh`, `tools/install/tests/test_install_hygiene.sh`,
-`scripts/tests/test_render_stamp.sh`) belongs to batch siblings TASK-IMP-082/083 and is
-covered by their own packets.
+Files under review: new `tools/install/docs-tools/task-lint.mjs` (the lint) and `tools/install/tests/test_task_lint.sh` (the gating suite), modified `modules/skill/task-audit/SKILL.md` (+4 lines, §1 #1.8 wiring) and `tools/install/build.sh` (+2 lines, vendor copy — disclosed below). Suite state at review: test_task_lint 8/8, 0 failed (~2 s including payload build + scratch install). Other dirt in the same working tree (`tools/docs-site/*`, `tools/install/install.sh`, `tools/install/uninstall.sh`, `tools/install/tests/test_install_hygiene.sh`, `scripts/tests/test_render_stamp.sh`) belongs to batch siblings TASK-IMP-082/083 and is covered by their own packets.
 
 ## §1 clause → proof
 
@@ -26,30 +18,15 @@ covered by their own packets.
 
 ## Acceptance criteria
 
-AC 1 `t01_cli_and_determinism` ok · AC 2 `t02_fm_family` ok · AC 3 `t03_sec_family` ok ·
-AC 4 `t04_cond_family` ok · AC 5 `t05_trace_family` ok · AC 6 `t06_green_corpus` ok
-(TASK-IMP-082/083/084 specs: exit 0, zero findings — no genuine spec defects surfaced) ·
-AC 7 `t07_payload_and_install` ok · AC 8 `t08_skill_wiring_present` ok. Suite 8/8.
+AC 1 `t01_cli_and_determinism` ok · AC 2 `t02_fm_family` ok · AC 3 `t03_sec_family` ok · AC 4 `t04_cond_family` ok · AC 5 `t05_trace_family` ok · AC 6 `t06_green_corpus` ok (TASK-IMP-082/083/084 specs: exit 0, zero findings — no genuine spec defects surfaced) · AC 7 `t07_payload_and_install` ok · AC 8 `t08_skill_wiring_present` ok. Suite 8/8.
 
 ## Diff size
 
-Two new files: `tools/install/docs-tools/task-lint.mjs` (588 lines, self-contained ESM,
-node stdlib only) and `tools/install/tests/test_task_lint.sh` (289 lines, executable).
-Two modified files, +6/−0 total: `modules/skill/task-audit/SKILL.md` +4 (the §3 machine-floor
-passage) and `tools/install/build.sh` +2 (guarded vendor copy in the docs-tools block).
-No dependency added anywhere. `dist/` untouched here — rebuild, version-sync and full suite
-before commit are the batch parent's step per payload-sync doctrine.
+Two new files: `tools/install/docs-tools/task-lint.mjs` (588 lines, self-contained ESM, node stdlib only) and `tools/install/tests/test_task_lint.sh` (289 lines, executable). Two modified files, +6/−0 total: `modules/skill/task-audit/SKILL.md` +4 (the §3 machine-floor passage) and `tools/install/build.sh` +2 (guarded vendor copy in the docs-tools block). No dependency added anywhere. `dist/` untouched here — rebuild, version-sync and full suite before commit are the batch parent's step per payload-sync doctrine.
 
 ## build.sh modification (disclosure)
 
-The spec's `modified_files` lists only SKILL.md, and its source_pages row reads
-"build.sh:165-171 (docs-tools vendors what exists — a new .mjs lands in the payload
-automatically)". That block in fact copies NAMED files under `[ -f ] &&` guards — nothing
-globs the docs-tools source dir — so without a change the payload could never carry the
-lint and §1 #1.9 / AC 7 would be unimplementable. Changed minimally in the block's own
-idiom: one comment line + one guarded copy (build.sh:173-174). t07 pins both halves
-(payload presence, byte-parity with the source) so the vendoring can no longer silently
-regress. The sibling `install.sh:61` dir-copy needed no change and was not touched.
+The spec's `modified_files` lists only SKILL.md, and its source_pages row reads "build.sh:165-171 (docs-tools vendors what exists — a new .mjs lands in the payload automatically)". That block in fact copies NAMED files under `[ -f ] &&` guards — nothing globs the docs-tools source dir — so without a change the payload could never carry the lint and §1 #1.9 / AC 7 would be unimplementable. Changed minimally in the block's own idiom: one comment line + one guarded copy (build.sh:173-174). t07 pins both halves (payload presence, byte-parity with the source) so the vendoring can no longer silently regress. The sibling `install.sh:61` dir-copy needed no change and was not touched.
 
 ## Verdict
 

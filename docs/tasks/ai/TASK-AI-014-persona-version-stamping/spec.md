@@ -112,22 +112,22 @@ The AI Gateway service **MUST** load persona definitions from `<memory-root>/mem
 7. **MUST** verify `source_hash` matches the cached body before injection on EVERY load (cache-hit AND cache-miss path). The check is cheap (~5µs SHA-256 of body bytes). On mismatch: return `Err(PersonaError::Tampered { handle, expected_hash, actual_hash })`; emit a sev-1 OBS event `ai_persona_tampered{handle}`; refuse the call with `503 PERSONA_TAMPERED`. Tamper detection MUST NOT be skipped via a "trust cache" flag — this is the boundary check that catches on-disk modification after init.
 8. **MUST** canonicalise the body BEFORE hashing AND before injection: (a) normalise line endings CRLF → LF, (b) strip a leading BOM if present, (c) apply Unicode NFC normalisation, (d) right-trim trailing whitespace on each line, (e) ensure exactly one terminating LF. This canonicalisation is the source-hash domain; without it, a benign LF↔CRLF flip on a Windows checkout would false-positive as tampering.
 9. **MUST** include the persona handle in EVERY downstream artefact:
-   - `ai.precheck` memory row (TASK-AI-001 already carries `agent_persona`; this task ensures the value is a full handle, not bare id).
-   - `ai.invocation` row (TASK-AI-002).
-   - Response header `X-CyberOS-Persona-Handle: <id>@<version>` on every HTTP 200.
-   - Response header `X-CyberOS-Persona-Source-Hash: <hex16>` (first 16 hex of SHA-256) for client-side tamper-correlation.
-   - User-facing badge metadata field `{"made_by_genie":{"id":"<id>","version":"<version>"}}` in the response JSON body (EU AI Act Art. 50 transparency requirement; UI surfaces render the badge from this field).
+- `ai.precheck` memory row (TASK-AI-001 already carries `agent_persona`; this task ensures the value is a full handle, not bare id).
+- `ai.invocation` row (TASK-AI-002).
+- Response header `X-CyberOS-Persona-Handle: <id>@<version>` on every HTTP 200.
+- Response header `X-CyberOS-Persona-Source-Hash: <hex16>` (first 16 hex of SHA-256) for client-side tamper-correlation.
+- User-facing badge metadata field `{"made_by_genie":{"id":"<id>","version":"<version>"}}` in the response JSON body (EU AI Act Art. 50 transparency requirement; UI surfaces render the badge from this field).
 10. **MUST** complete `persona::load(handle)` in ≤ 100µs on cache hit (registry HashMap lookup + hash verify) and ≤ 50ms on cache miss (first init + memory_writer disk read). After warm-up, cache miss is rare; the 50ms is a budget for the boot-time `init_persona_registry` per-persona cost.
 11. **MUST** integrate with `policy.ai_policy.allowed_personas` from TASK-AI-005 — if the tenant policy declares an allow-list, TASK-AI-001 §1 #13 already enforces it. This task DOES NOT replicate the check; it only loads. A request that passes TASK-AI-001's persona-allow check and arrives at the injection point MUST always succeed (or fail tamper/missing-handle). No silent policy re-check at injection.
 12. **MUST** debounce file-watch events on `<memory-root>/memories/personas/` with a 250ms window: rapid bursts (editor save sequences write 3-5 events) collapse to one reparse. The watcher uses the `notify` crate's `RecommendedWatcher` with `RecursiveMode::Recursive`. On debounce-flush, the watcher re-runs `init_persona_registry`'s parsing pass against the current disk state and `ArcSwap::store`s the new map atomically.
 13. **MUST** keep the LLM-hints (`temperature`, `max_tokens`, `stop_sequences`) from the persona as the per-request DEFAULT — caller-supplied values in the request body OVERRIDE the persona hint. This rule is documented in §2; the merge order is `request.body.llm_hints` > `persona.llm_hints` > provider default.
 14. **MUST** validate semver in `PersonaVersion::parse` using the `semver` crate. A version string like `0.4` (missing patch) or `0.4.1-alpha` (pre-release) is REJECTED at parse time. Slice 3 supports plain `MAJOR.MINOR.PATCH` only; pre-release support is out of scope (TASK-AI-022 follow-up).
 15. **SHOULD** emit OTel metrics:
-   - `ai_persona_loads_total{handle, outcome}` (counter; outcome ∈ `hit | miss | unknown | tampered`).
-   - `ai_persona_cache_hits_total{handle}` (counter).
-   - `ai_persona_tampered_total{handle}` (counter; sev-1 alarm fires on any increment).
-   - `ai_persona_reload_total{outcome}` (counter; outcome ∈ `success | parse_error | filename_mismatch`).
-   - `ai_persona_registry_size` (gauge; current registry entry count).
+- `ai_persona_loads_total{handle, outcome}` (counter; outcome ∈ `hit | miss | unknown | tampered`).
+- `ai_persona_cache_hits_total{handle}` (counter).
+- `ai_persona_tampered_total{handle}` (counter; sev-1 alarm fires on any increment).
+- `ai_persona_reload_total{outcome}` (counter; outcome ∈ `success | parse_error | filename_mismatch`).
+- `ai_persona_registry_size` (gauge; current registry entry count).
 16. **SHOULD** log at INFO level on every successful hot-reload: `persona_reloaded handle=<h> source_hash=<hex16> registry_size=<N>` — operator visibility into "did my edit actually load?".
 
 ---

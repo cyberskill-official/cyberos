@@ -206,8 +206,7 @@ async fn non_cfo_rejected_on_config_write() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-CRM-001.
-**Cross-module:** TASK-SKILL-108 (skill registry), TASK-AUTH-101 (CFO role), TASK-INV-005 (reconciliation memo regex), TASK-TEN-102 (>1B rail), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-CRM-001. **Cross-module:** TASK-SKILL-108 (skill registry), TASK-AUTH-101 (CFO role), TASK-INV-005 (reconciliation memo regex), TASK-TEN-102 (>1B rail), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

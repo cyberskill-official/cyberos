@@ -46,18 +46,7 @@ VP → BP fund distribution"] PROJ --> LEARN TIME --> LEARN KB --> LEARN LEARN -
 
 ### Auto vs human-in-loop operations matrix
 
-Operation| How it happens| Why this split
----|---|---
-Skill level proposal| **Auto** from evidence; **Manager confirm**| Evidence (KB doc count, PROJ contributions) proposes; manager decides.
-VP roll-up nightly| **Auto** deterministic| Formula + parameter version; CI replay.
-BP distribution (REW handoff)| **Auto** at quarter close| VP x BP-fund proportion; REW does final write.
-Promotion case open| **Manual** manager nomination| Promotion is intent; never auto-triggered.
-Council judge assignment| **Auto** with conflict-check; **CHRO confirm**| Conflicts (direct report, recent collab) filtered; CHRO confirms final panel.
-Per-judge scoring| **Manual** in private LEARN UI| Individual judgment; private workspace.
-Per-judge -> aggregate| **Auto** in LEARN; **never exported**| Aggregation deterministic; individual rows isolated to LEARN.
-Recommendation -> HR| **Auto** after council close| Summary + recommendation only; per-judge scores excluded.
-Career-path visualisation| **Auto** per Member view| Read-only; helps Member plan; never used as evaluation.
-Certification expiry alert| **Auto** 90 days pre-expiry| Vietnamese context: many chứng chỉ have validity periods.
+Operation| How it happens| Why this split ---|---|--- Skill level proposal| **Auto** from evidence; **Manager confirm**| Evidence (KB doc count, PROJ contributions) proposes; manager decides. VP roll-up nightly| **Auto** deterministic| Formula + parameter version; CI replay. BP distribution (REW handoff)| **Auto** at quarter close| VP x BP-fund proportion; REW does final write. Promotion case open| **Manual** manager nomination| Promotion is intent; never auto-triggered. Council judge assignment| **Auto** with conflict-check; **CHRO confirm**| Conflicts (direct report, recent collab) filtered; CHRO confirms final panel. Per-judge scoring| **Manual** in private LEARN UI| Individual judgment; private workspace. Per-judge -> aggregate| **Auto** in LEARN; **never exported**| Aggregation deterministic; individual rows isolated to LEARN. Recommendation -> HR| **Auto** after council close| Summary + recommendation only; per-judge scores excluded. Career-path visualisation| **Auto** per Member view| Read-only; helps Member plan; never used as evaluation. Certification expiry alert| **Auto** 90 days pre-expiry| Vietnamese context: many chứng chỉ have validity periods.
 
 ## Why LEARN exists
 
@@ -73,21 +62,7 @@ LEARN is also a sabbatical-eligibility partner: the "every 5 continuous years" t
 
 A structured decomposition of LEARN's scope.
 
-Axis| Question| Answer
----|---|---
-**5W - What**| What is LEARN?| A skill catalogue + mastery ledger + VP computation engine + Hội đồng Chuyên môn peer-review workflow + course/training records + career-path visualiser.
-**5W - Who**| Who is touched?| **Members:** own skill profile, learning plan, promotion cases. **Council judges:** 3-5 peers per case. **Owners:** HR/Ops operates; CHRO (P3 seat) accountable; CEO is final promotion approver.
-**5W - When**| When does LEARN act?| (a) Skill registration / mastery upgrade (continuous); (b) VP recompute (monthly, deterministic); (c) Promotion request (Member-initiated or HR-initiated, quarterly windows); (d) Performance review cycle (HR-initiated, quarterly); (e) Certification expiry tick (90/30/7 days).
-**5W - Where**| Where does it run?| P1: single region (SG-1) backed by AWS RDS Postgres. Per-tenant isolation via row-level security on `tenant_id`.
-**5W - Why**| Why a separate module?| Because promotion + skills is the most subjective decision in any company, and the only defence against bias is evidence and process. LEARN is the evidence layer.
-**1H - How**| How does it work?| Skill catalogue as Rust + sqlx-backed closed enum per discipline. Mastery claim = row with evidence FK (PROJ contribution id / KB post id / certificate id / endorsement id). VP = pure function of inputs; deterministic. Council workflow is a state-machine per case; per-judge rows stored in LEARN-private table with RLS that excludes HR's read role.
-**2C - Cost**| Cost budget?| P1: ~$20/month. 50-tenant: ~$70/month.
-**2C - Constraints**| Constraints?| (a) Per-judge scores never exported (task pending). (b) Promotion gate criteria immutable per parameter version (anti-retroactive, task pending). (c) EU AI Act Annex III §4 high-risk; P2 conformity pack. (d) Vietnamese bằng cấp / chứng chỉ fields supported.
-**5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, async-graphql, NATS for VP-recompute triggers, S3 for certificate PDFs with QR-provenance.
-**5M - Methods**| Method choices?| Closed-enum skill catalogue (no free-text skills). Multi-judge aggregation = median of N scores (resilient to one extreme). Anti-retroactive parameter versioning identical to REW pattern.
-**5M - Machines**| Deployment?| Fargate task in SG-1. Multi-AZ Postgres RDS. S3 for cert PDFs.
-**5M - Manpower**| Who maintains?| 0.25 FTE today (HR/Ops). By P3: CHRO seat + 1 engineer.
-**5M - Measurement**| How measured?| KPIs: promotion-case turnaround (open -> closed), per-judge score privacy (= 100%), VP determinism (replay-identical), certification expiry surface rate.
+Axis| Question| Answer ---|---|--- **5W - What**| What is LEARN?| A skill catalogue + mastery ledger + VP computation engine + Hội đồng Chuyên môn peer-review workflow + course/training records + career-path visualiser. **5W - Who**| Who is touched?| **Members:** own skill profile, learning plan, promotion cases. **Council judges:** 3-5 peers per case. **Owners:** HR/Ops operates; CHRO (P3 seat) accountable; CEO is final promotion approver. **5W - When**| When does LEARN act?| (a) Skill registration / mastery upgrade (continuous); (b) VP recompute (monthly, deterministic); (c) Promotion request (Member-initiated or HR-initiated, quarterly windows); (d) Performance review cycle (HR-initiated, quarterly); (e) Certification expiry tick (90/30/7 days). **5W - Where**| Where does it run?| P1: single region (SG-1) backed by AWS RDS Postgres. Per-tenant isolation via row-level security on `tenant_id`. **5W - Why**| Why a separate module?| Because promotion + skills is the most subjective decision in any company, and the only defence against bias is evidence and process. LEARN is the evidence layer. **1H - How**| How does it work?| Skill catalogue as Rust + sqlx-backed closed enum per discipline. Mastery claim = row with evidence FK (PROJ contribution id / KB post id / certificate id / endorsement id). VP = pure function of inputs; deterministic. Council workflow is a state-machine per case; per-judge rows stored in LEARN-private table with RLS that excludes HR's read role. **2C - Cost**| Cost budget?| P1: ~$20/month. 50-tenant: ~$70/month. **2C - Constraints**| Constraints?| (a) Per-judge scores never exported (task pending). (b) Promotion gate criteria immutable per parameter version (anti-retroactive, task pending). (c) EU AI Act Annex III §4 high-risk; P2 conformity pack. (d) Vietnamese bằng cấp / chứng chỉ fields supported. **5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, async-graphql, NATS for VP-recompute triggers, S3 for certificate PDFs with QR-provenance. **5M - Methods**| Method choices?| Closed-enum skill catalogue (no free-text skills). Multi-judge aggregation = median of N scores (resilient to one extreme). Anti-retroactive parameter versioning identical to REW pattern. **5M - Machines**| Deployment?| Fargate task in SG-1. Multi-AZ Postgres RDS. S3 for cert PDFs. **5M - Manpower**| Who maintains?| 0.25 FTE today (HR/Ops). By P3: CHRO seat + 1 engineer. **5M - Measurement**| How measured?| KPIs: promotion-case turnaround (open -> closed), per-judge score privacy (= 100%), VP determinism (replay-identical), certification expiry surface rate.
 
 ## Architecture
 
@@ -126,23 +101,7 @@ course materials"] end SPA --> AR MEM --> AR JUDGE --> AR CUO --> AR AR --> GQL 
 
 ### Internal components
 
-Component| Path (planned)| Responsibility
----|---|---
-`skill_catalogue.rs`| services/learn/src/skill_catalogue.rs| Closed-enum catalogue. Disciplines: engineering, design, ops, biz, finance. ~150 skills total at P1.
-`mastery.rs`| services/learn/src/mastery.rs| Mastery claim + evidence FK. Levels 1-5; level upgrade requires (evidence + peer endorsement OR council review).
-`vp.rs`| services/learn/src/vp.rs| VP roll-up: deterministic pure function over (mastery x discipline weight + PROJ contribution x project weight + KB authorship x kb weight). Versioned parameters.
-`council.rs`| services/learn/src/council.rs| Hội đồng Chuyên môn workflow. 3-5 judges per case. Anonymous to other judges. Median aggregation. Per-judge rows in vault schema.
-`promotion.rs`| services/learn/src/promotion.rs| Promotion case state machine: `draft -> submitted -> council_assigned -> in_review -> recommended -> approved -> promoted` or `rejected`.
-`career_path.rs`| services/learn/src/career_path.rs| Career-path visualiser - Member's next-level requirements rendered as a checklist.
-`cert.rs`| services/learn/src/cert.rs| Internal certification PDF generator. QR-signed provenance; verify endpoint resolves to LEARN's signed claim.
-`expiry.rs`| services/learn/src/expiry.rs| Certification expiry tick - fires `learn.cert.expiring` at 90/30/7 days. CUO/CHRO-skill notifies Member.
-`endorsement.rs`| services/learn/src/endorsement.rs| Peer endorsement of a mastery claim. Cheap and asynchronous; many endorsements; each is a row.
-`plan.rs`| services/learn/src/plan.rs| Personal learning plan - Member-owned, optional council mentor.
-`training_record.rs`| services/learn/src/training_record.rs| Internal & external courses; external cert PDFs stored in S3 with member-uploaded metadata.
-`parameter_version.rs`| services/learn/src/parameter_version.rs| Anti-retroactive parameter store (mirrors REW pattern). Promotion gate criteria, VP weights, mastery thresholds - all versioned.
-`narrator.rs`| services/learn/src/narrator.rs| Read-only MCP narrator - explains promotion criteria, career-path gaps, certification readiness. NEVER reveals per-judge data.
-`audit_bridge.rs`| services/learn/src/audit_bridge.rs| Writes lifecycle rows to memory. Per-judge data is structurally absent.
-`migrations/`| services/learn/migrations/| sqlx migrations. Vault schema with stricter RLS - only LEARN admin can read per-judge.
+Component| Path (planned)| Responsibility ---|---|--- `skill_catalogue.rs`| services/learn/src/skill_catalogue.rs| Closed-enum catalogue. Disciplines: engineering, design, ops, biz, finance. ~150 skills total at P1. `mastery.rs`| services/learn/src/mastery.rs| Mastery claim + evidence FK. Levels 1-5; level upgrade requires (evidence + peer endorsement OR council review). `vp.rs`| services/learn/src/vp.rs| VP roll-up: deterministic pure function over (mastery x discipline weight + PROJ contribution x project weight + KB authorship x kb weight). Versioned parameters. `council.rs`| services/learn/src/council.rs| Hội đồng Chuyên môn workflow. 3-5 judges per case. Anonymous to other judges. Median aggregation. Per-judge rows in vault schema. `promotion.rs`| services/learn/src/promotion.rs| Promotion case state machine: `draft -> submitted -> council_assigned -> in_review -> recommended -> approved -> promoted` or `rejected`. `career_path.rs`| services/learn/src/career_path.rs| Career-path visualiser - Member's next-level requirements rendered as a checklist. `cert.rs`| services/learn/src/cert.rs| Internal certification PDF generator. QR-signed provenance; verify endpoint resolves to LEARN's signed claim. `expiry.rs`| services/learn/src/expiry.rs| Certification expiry tick - fires `learn.cert.expiring` at 90/30/7 days. CUO/CHRO-skill notifies Member. `endorsement.rs`| services/learn/src/endorsement.rs| Peer endorsement of a mastery claim. Cheap and asynchronous; many endorsements; each is a row. `plan.rs`| services/learn/src/plan.rs| Personal learning plan - Member-owned, optional council mentor. `training_record.rs`| services/learn/src/training_record.rs| Internal & external courses; external cert PDFs stored in S3 with member-uploaded metadata. `parameter_version.rs`| services/learn/src/parameter_version.rs| Anti-retroactive parameter store (mirrors REW pattern). Promotion gate criteria, VP weights, mastery thresholds - all versioned. `narrator.rs`| services/learn/src/narrator.rs| Read-only MCP narrator - explains promotion criteria, career-path gaps, certification readiness. NEVER reveals per-judge data. `audit_bridge.rs`| services/learn/src/audit_bridge.rs| Writes lifecycle rows to memory. Per-judge data is structurally absent. `migrations/`| services/learn/migrations/| sqlx migrations. Vault schema with stricter RLS - only LEARN admin can read per-judge.
 
 ## Data model
 
@@ -264,30 +223,11 @@ type Mutation {
 
 ### REST admin surface
 
-Method| Path| Purpose
----|---|---
-POST| `/admin/council/panel`| Assign judges to a promotion case (HR scope).
-POST| `/admin/council/{panel_id}/vote`| Judge submits score + private feedback (vault).
-POST| `/admin/council/{panel_id}/close`| Close the panel; compute median; emit outcome.
-POST| `/admin/promotion/{case_id}/recommend`| Council chair issues recommendation.
-POST| `/admin/promotion/{case_id}/approve`| CEO approves; HR receives outcome summary; REW notified for compensation_change.
-POST| `/admin/parameters`| Publish a new parameter version (gate criteria, VP weights). Anti-retroactive replay required.
-POST| `/admin/vp/recompute`| Trigger VP recompute for a Member or all Members.
-GET| `/admin/vault/{case_id}`| Per-judge votes (LEARN admin only; HR scope rejected).
-POST| `/admin/cert/issue`| Issue internal certification (QR-signed PDF).
-POST| `/admin/dsar/{member_id}/export`| DSAR export - own data + endorsements given/received; per-judge scores excluded.
+Method| Path| Purpose ---|---|--- POST| `/admin/council/panel`| Assign judges to a promotion case (HR scope). POST| `/admin/council/{panel_id}/vote`| Judge submits score + private feedback (vault). POST| `/admin/council/{panel_id}/close`| Close the panel; compute median; emit outcome. POST| `/admin/promotion/{case_id}/recommend`| Council chair issues recommendation. POST| `/admin/promotion/{case_id}/approve`| CEO approves; HR receives outcome summary; REW notified for compensation_change. POST| `/admin/parameters`| Publish a new parameter version (gate criteria, VP weights). Anti-retroactive replay required. POST| `/admin/vp/recompute`| Trigger VP recompute for a Member or all Members. GET| `/admin/vault/{case_id}`| Per-judge votes (LEARN admin only; HR scope rejected). POST| `/admin/cert/issue`| Issue internal certification (QR-signed PDF). POST| `/admin/dsar/{member_id}/export`| DSAR export - own data + endorsements given/received; per-judge scores excluded.
 
 ### MCP tool catalogue (narrator + recommender, read-only)
 
-Tool name| Inputs| Outputs| Annotations
----|---|---|---
-`cyberos.learn.explain_career_path`| member_id (own), target_level| narrative checklist| readonly, scope=learn.read
-`cyberos.learn.recommend_learning_plan`| member_id (own)| plan suggestions| readonly, narrator-only
-`cyberos.learn.explain_vp`| member_id (own)| narrative VP breakdown| readonly, self-scope
-`cyberos.learn.explain_promotion_outcome`| case_id| narrative summary (outcome-only, NEVER per-judge)| readonly, scope=learn.read
-`cyberos.learn.list_skills`| discipline?| Skill| readonly
-`cyberos.learn.upcoming_cert_expiry`| member_id (own)| Certification expiring <90d| readonly, self-scope
-`cyberos.learn.draft_endorsement`| endorsee_id, skill_code, level| endorsement draft| destructive=false, requires human-confirm
+Tool name| Inputs| Outputs| Annotations ---|---|---|--- `cyberos.learn.explain_career_path`| member_id (own), target_level| narrative checklist| readonly, scope=learn.read `cyberos.learn.recommend_learning_plan`| member_id (own)| plan suggestions| readonly, narrator-only `cyberos.learn.explain_vp`| member_id (own)| narrative VP breakdown| readonly, self-scope `cyberos.learn.explain_promotion_outcome`| case_id| narrative summary (outcome-only, NEVER per-judge)| readonly, scope=learn.read `cyberos.learn.list_skills`| discipline?| Skill| readonly `cyberos.learn.upcoming_cert_expiry`| member_id (own)| Certification expiring <90d| readonly, self-scope `cyberos.learn.draft_endorsement`| endorsee_id, skill_code, level| endorsement draft| destructive=false, requires human-confirm
 
 ## Key flows
 
@@ -339,15 +279,7 @@ stateDiagram-v2 [*] --> Draft: member starts request Draft --> Submitted: member
 
 ### Promotion gate criteria - example (L2 -> L3 engineering)
 
-Criterion| Threshold| Source
----|---|---
-VP total| >= 140 points| `vp_snapshot`
-At least 3 skills at mastery >= 4| 3 skills| `mastery_claim`
-Lead role on >= 1 project| 1 project| PROJ `contribution.role`
-At least 5 endorsements (peers >= L2)| 5 endorsements| `endorsement`
-Council median score| >= 4 / 5| `council_vote` (vault)
-Time in current level| >= 18 months| HR contract / level history
-Sabbatical knowledge-share post (if eligible)| >= 1| KB authorship
+Criterion| Threshold| Source ---|---|--- VP total| >= 140 points| `vp_snapshot` At least 3 skills at mastery >= 4| 3 skills| `mastery_claim` Lead role on >= 1 project| 1 project| PROJ `contribution.role` At least 5 endorsements (peers >= L2)| 5 endorsements| `endorsement` Council median score| >= 4 / 5| `council_vote` (vault) Time in current level| >= 18 months| HR contract / level history Sabbatical knowledge-share post (if eligible)| >= 1| KB authorship
 
 Criteria are versioned. Changing them does not retroactively re-judge open cases (anti-retroactive).
 
@@ -361,19 +293,7 @@ Previous task enumerations were archived 2026-05-14 and are no longer reflected 
 
 Usability / explainability and security NFRs bind on LEARN. Cross-referenced at [nfr-catalog.html#learn](../../reference/nfr-catalog.html#learn).
 
-NFR ID| Concern| Target| Measurement
----|---|---|---
-(NFR pending)| Per-judge data exposed beyond Council Vault| = 0 occurrences| integration test asserts GraphQL + REST never returns council_vote rows; HR DB role inspection
-(NFR pending)| Council Vault schema isolation| HR + Member roles lack SELECT| DB role test in CI
-(NFR pending)| VP deterministic replay (phased history)| 100% byte-identical| replay job runs nightly, asserts vp_total stable for last 12 snapshots
-(NFR pending)| Parameter version supersession (no UPDATE on published rows)| enforced at DB layer| migration grep + DB role inspection
-(NFR pending)| Career-path next-level checklist completeness| covers 100% of gate criteria| spec test; usability review
-(NFR pending)| Promotion-case explanation (EU AI Act Art. 13)| narrator covers outcome + recommendation + summary| narrator output review at P2 conformity
-(NFR pending)| VP single-Member compute p95| <= 150 ms| bench/vp.rs
-(NFR pending)| VP batch compute (50 Members)| <= 4 s| bench/vp_batch.rs
-(NFR pending)| LEARN availability| >= 99.5%| SLO monitor
-(NFR pending)| Cert expiry alert delivery (post NATS)| <= 60s end-to-end| chaos test
-(NFR pending)| EU AI Act Annex III §4 conformity at P2| full conformity pack| P2 release gate, DPO + CLO sign-off
+NFR ID| Concern| Target| Measurement ---|---|---|--- (NFR pending)| Per-judge data exposed beyond Council Vault| = 0 occurrences| integration test asserts GraphQL + REST never returns council_vote rows; HR DB role inspection (NFR pending)| Council Vault schema isolation| HR + Member roles lack SELECT| DB role test in CI (NFR pending)| VP deterministic replay (phased history)| 100% byte-identical| replay job runs nightly, asserts vp_total stable for last 12 snapshots (NFR pending)| Parameter version supersession (no UPDATE on published rows)| enforced at DB layer| migration grep + DB role inspection (NFR pending)| Career-path next-level checklist completeness| covers 100% of gate criteria| spec test; usability review (NFR pending)| Promotion-case explanation (EU AI Act Art. 13)| narrator covers outcome + recommendation + summary| narrator output review at P2 conformity (NFR pending)| VP single-Member compute p95| <= 150 ms| bench/vp.rs (NFR pending)| VP batch compute (50 Members)| <= 4 s| bench/vp_batch.rs (NFR pending)| LEARN availability| >= 99.5%| SLO monitor (NFR pending)| Cert expiry alert delivery (post NATS)| <= 60s end-to-end| chaos test (NFR pending)| EU AI Act Annex III §4 conformity at P2| full conformity pack| P2 release gate, DPO + CLO sign-off
 
 ## Dependencies
 
@@ -397,78 +317,25 @@ milestone grants (optional)"] CUO["🤖 CUO/CHRO-skill"] end AUTH --> LEARN HRMO
 
 LEARN is in EU AI Act high-risk scope because promotion is employment-decision automation. Same Annex III §4 classification as REW.
 
-Regulation / standard| Article / clause| LEARN feature that satisfies it
----|---|---
-EU AI Act (Reg. 2024/1689)| Annex III §4 - Worker management| LEARN is in scope. P2 conformity pack covers risk mgmt, data governance, transparency, human oversight.
-EU AI Act| Art. 13 - Transparency| Career-path visualiser; narrator explains promotion criteria; outcome summary disclosed to candidate.
-EU AI Act| Art. 14 - Human oversight| (task pending): CEO can override council recommendation; council is advisory + Member can dispute.
-EU AI Act| Art. 9 - Risk management| Per-judge data segregation; anti-retroactive parameter versioning; multi-judge aggregation (no single-judge decision).
-Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Member DSAR returns own claims/endorsements/cases; per-judge data excluded.
-Vietnam Labour Code| Art. 6 - Equal treatment| Council judges anonymised to each other; gate criteria identical per level; bias-audit annual.
-GDPR (EU 2016/679)| Art. 22 - Automated decision-making| Council is human-driven; CEO override; right to explanation via narrator.
-ISO/IEC 27001:2022| A.5.13 - Information labelling| Council vault classified `restricted`; per-judge rows tagged.
-ISO/IEC 27001:2022| A.6.3 - Information security awareness| Skill catalogue includes "security awareness" track at all levels.
-SOC 2 Type II| CC6.6 - Restricted access| Per-judge data isolated to Council Vault role.
-Vietnam Decree 71/2020/NĐ-CP| Art. 17 - Foreign degree recognition| External certification field with issuer + recognition status.
+Regulation / standard| Article / clause| LEARN feature that satisfies it ---|---|--- EU AI Act (Reg. 2024/1689)| Annex III §4 - Worker management| LEARN is in scope. P2 conformity pack covers risk mgmt, data governance, transparency, human oversight. EU AI Act| Art. 13 - Transparency| Career-path visualiser; narrator explains promotion criteria; outcome summary disclosed to candidate. EU AI Act| Art. 14 - Human oversight| (task pending): CEO can override council recommendation; council is advisory + Member can dispute. EU AI Act| Art. 9 - Risk management| Per-judge data segregation; anti-retroactive parameter versioning; multi-judge aggregation (no single-judge decision). Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Member DSAR returns own claims/endorsements/cases; per-judge data excluded. Vietnam Labour Code| Art. 6 - Equal treatment| Council judges anonymised to each other; gate criteria identical per level; bias-audit annual. GDPR (EU 2016/679)| Art. 22 - Automated decision-making| Council is human-driven; CEO override; right to explanation via narrator. ISO/IEC 27001:2022| A.5.13 - Information labelling| Council vault classified `restricted`; per-judge rows tagged. ISO/IEC 27001:2022| A.6.3 - Information security awareness| Skill catalogue includes "security awareness" track at all levels. SOC 2 Type II| CC6.6 - Restricted access| Per-judge data isolated to Council Vault role. Vietnam Decree 71/2020/NĐ-CP| Art. 17 - Foreign degree recognition| External certification field with issuer + recognition status.
 
 ## Risk entries
 
 Per-judge data leakage and council bias are the principal risks tracked in the [risk register](../../reference/risk-register.html#learn).
 
-ID| Risk| Likelihood| Impact| Owner| Mitigation
----|---|---|---|---|---
-`R-LEARN-001`| Per-judge score leaks via GraphQL or audit row| Low| Catastrophic| CSO| Vault schema, stricter RLS, HR + Member roles lack SELECT, integration test asserts no council_vote in any API response.
-`R-LEARN-002`| Council bias (judges from same team, same gender, ...)| Medium| High| CHRO| Panel-assignment diversity heuristic; annual bias audit; chair-selection rotates.
-`R-LEARN-003`| VP drift (kernel non-determinism)| Medium| High| CTO| vp.rs is a pure fn, no clock, no randomness; CI replay asserts byte-identical phased history.
-`R-LEARN-004`| Retroactive gate-criteria change mid-case| Low| High| CHRO| parameter_version snapshotted at submission; CASE judged against snapshot, not current parameters.
-`R-LEARN-005`| Free-text skill creep (catalogue drift)| Medium| Low| HR/Ops| Closed-enum at DB layer; new skills require parameter publish (3-way co-sign).
-`R-LEARN-006`| External certification fraud (faked PDF)| Medium| Medium| HR/Ops| Issuer field + verify URL; HR follow-up on randomly sampled 10%/year; QR-signed provenance for internal certs.
-`R-LEARN-007`| Council fatigue (same judges chosen repeatedly)| Medium| Low| CHRO| Judge-rotation heuristic; max N cases/judge/year; warning if any judge exceeds.
-`R-LEARN-008`| EU AI Act conformity gap discovered at audit| Medium| High| DPO + CLO| P2 conformity pack drafted at design; legal review annually.
-`R-LEARN-009`| Promotion approval bypasses council (CEO unilateral)| Low| Medium| CEO| EU AI Act Art. 14 permits override but requires logged rationale; audit row distinguishes "council-approved" vs "override".
-`R-LEARN-010`| VP weights tuned to favour incumbent leadership| Low| High| CEO + CHRO| Weight changes require 3-way co-sign (CEO + CFO + CHRO); anti-retroactive replay; annual fairness audit.
-`R-LEARN-011`| Per-judge score leaks to HR via misconfigured export| Low| Critical| CSO| Hard schema boundary at LEARN-HR export; CI gate on schema-diff bot; export fixture-test asserts per-judge fields absent.
-`R-LEARN-012`| VP signal weaponised - REW BP distribution skews to PROJ-dominant Members| Medium| Medium| CHRO| VP weights span 3 dimensions (PROJ + TIME + KB); cross-Member variance audited quarterly; annual fairness review across role/team/tenure.
-`R-LEARN-013`| Lumi-promoted skill catalogue update conflicts with tenant-specific role bands| Medium| Low| CHRO| Skill catalogue version pinned per tenant; Lumi pushes are candidate version; tenant opts in explicitly.
-`R-LEARN-014`| memory ingestion of Council deliberation transcripts violates psychological safety| Low| High| DPO| Council deliberations have sync_class=private (DEC-036 extension); never ingested to memory; transcripts retained 30 days post-decision then purged.
-`R-LEARN-015`| Skill self-claim spam (Member claims every skill to inflate VP)| Medium| Low| HR/Ops| Claim requires evidence ref (PROJ issue, KB doc, cert); unclaimed-evidence claims dropped from VP; manager endorsement required for level > 3.
+ID| Risk| Likelihood| Impact| Owner| Mitigation ---|---|---|---|---|--- `R-LEARN-001`| Per-judge score leaks via GraphQL or audit row| Low| Catastrophic| CSO| Vault schema, stricter RLS, HR + Member roles lack SELECT, integration test asserts no council_vote in any API response. `R-LEARN-002`| Council bias (judges from same team, same gender, ...)| Medium| High| CHRO| Panel-assignment diversity heuristic; annual bias audit; chair-selection rotates. `R-LEARN-003`| VP drift (kernel non-determinism)| Medium| High| CTO| vp.rs is a pure fn, no clock, no randomness; CI replay asserts byte-identical phased history. `R-LEARN-004`| Retroactive gate-criteria change mid-case| Low| High| CHRO| parameter_version snapshotted at submission; CASE judged against snapshot, not current parameters. `R-LEARN-005`| Free-text skill creep (catalogue drift)| Medium| Low| HR/Ops| Closed-enum at DB layer; new skills require parameter publish (3-way co-sign). `R-LEARN-006`| External certification fraud (faked PDF)| Medium| Medium| HR/Ops| Issuer field + verify URL; HR follow-up on randomly sampled 10%/year; QR-signed provenance for internal certs. `R-LEARN-007`| Council fatigue (same judges chosen repeatedly)| Medium| Low| CHRO| Judge-rotation heuristic; max N cases/judge/year; warning if any judge exceeds. `R-LEARN-008`| EU AI Act conformity gap discovered at audit| Medium| High| DPO + CLO| P2 conformity pack drafted at design; legal review annually. `R-LEARN-009`| Promotion approval bypasses council (CEO unilateral)| Low| Medium| CEO| EU AI Act Art. 14 permits override but requires logged rationale; audit row distinguishes "council-approved" vs "override". `R-LEARN-010`| VP weights tuned to favour incumbent leadership| Low| High| CEO + CHRO| Weight changes require 3-way co-sign (CEO + CFO + CHRO); anti-retroactive replay; annual fairness audit. `R-LEARN-011`| Per-judge score leaks to HR via misconfigured export| Low| Critical| CSO| Hard schema boundary at LEARN-HR export; CI gate on schema-diff bot; export fixture-test asserts per-judge fields absent. `R-LEARN-012`| VP signal weaponised - REW BP distribution skews to PROJ-dominant Members| Medium| Medium| CHRO| VP weights span 3 dimensions (PROJ + TIME + KB); cross-Member variance audited quarterly; annual fairness review across role/team/tenure. `R-LEARN-013`| Lumi-promoted skill catalogue update conflicts with tenant-specific role bands| Medium| Low| CHRO| Skill catalogue version pinned per tenant; Lumi pushes are candidate version; tenant opts in explicitly. `R-LEARN-014`| memory ingestion of Council deliberation transcripts violates psychological safety| Low| High| DPO| Council deliberations have sync_class=private (DEC-036 extension); never ingested to memory; transcripts retained 30 days post-decision then purged. `R-LEARN-015`| Skill self-claim spam (Member claims every skill to inflate VP)| Medium| Low| HR/Ops| Claim requires evidence ref (PROJ issue, KB doc, cert); unclaimed-evidence claims dropped from VP; manager endorsement required for level > 3.
 
 ## KPIs
 
 LEARN health rolls up into 14 KPIs across throughput, integrity, and fairness.
 
-KPI| Formula| Source| Target
----|---|---|---
-**Promotion case turnaround (median)**| median(`closed_at - opened_at`)| LEARN DB| <= 6 weeks
-**Council judge diversity (gender + team)**| panels with >= 2 dimensions / total| LEARN DB| >= 90%
-**Per-judge data leak incidents**| integration-test failures| CI| = 0
-**VP determinism replay pass**| replay passes / runs| CI| = 100%
-**Promotion approval rate**| approved / submitted| LEARN DB| tracked, benchmark vs industry
-**Cert-expiry surface latency**| median(notification - expiry_date_threshold)| OBS| <= 1 day
-**Mastery claim -> endorsement (median)**| median(`first_endorsed_at - claimed_at`)| LEARN DB| <= 14 days
-**Endorsement coverage**| endorsed claims / total claims| LEARN DB| >= 80%
-**EU AI Act conformity score**| items passed / total| P2 audit| = 100%
-**Per-judge score export attempts blocked**| schema-boundary CI rejections| CI| tracked; spike = active misconfig
-**VP fairness variance (cross-role)**| stddev(VP_role_X) / mean(VP_role_X)| quarterly audit| <= 0.40 per role-cohort
-**Skill claim evidence rate**| claims with evidence ref / total claims| LEARN DB| >= 0.95
-**Council deliberation transcript purge p95**| retention compliance - deliberations purged <= 30 d| nightly batch| <= 30 d hard floor
-**HR-to-LEARN-to-REW signal latency p95**| histogram (Member active -> VP rolled -> REW BP credit)| OBS| <= 24 h
+KPI| Formula| Source| Target ---|---|---|--- **Promotion case turnaround (median)**| median(`closed_at - opened_at`)| LEARN DB| <= 6 weeks **Council judge diversity (gender + team)**| panels with >= 2 dimensions / total| LEARN DB| >= 90% **Per-judge data leak incidents**| integration-test failures| CI| = 0 **VP determinism replay pass**| replay passes / runs| CI| = 100% **Promotion approval rate**| approved / submitted| LEARN DB| tracked, benchmark vs industry **Cert-expiry surface latency**| median(notification - expiry_date_threshold)| OBS| <= 1 day **Mastery claim -> endorsement (median)**| median(`first_endorsed_at - claimed_at`)| LEARN DB| <= 14 days **Endorsement coverage**| endorsed claims / total claims| LEARN DB| >= 80% **EU AI Act conformity score**| items passed / total| P2 audit| = 100% **Per-judge score export attempts blocked**| schema-boundary CI rejections| CI| tracked; spike = active misconfig **VP fairness variance (cross-role)**| stddev(VP_role_X) / mean(VP_role_X)| quarterly audit| <= 0.40 per role-cohort **Skill claim evidence rate**| claims with evidence ref / total claims| LEARN DB| >= 0.95 **Council deliberation transcript purge p95**| retention compliance - deliberations purged <= 30 d| nightly batch| <= 30 d hard floor **HR-to-LEARN-to-REW signal latency p95**| histogram (Member active -> VP rolled -> REW BP credit)| OBS| <= 24 h
 
 ## RACI matrix
 
 LEARN is operationally owned by HR/Ops; accountable to CHRO (P3 seat); CEO is the final promotion approver.
 
-Activity| CEO| HR/Ops| CHRO| Council Chair| CSO| DPO| CLO
----|---|---|---|---|---|---|---
-Skill catalogue maintenance| I| R| A| C| I| I| I
-Promotion case opening| I| R| C| I| I| I| I
-Panel assignment| I| R| A| I| I| I| I
-Council voting| I| I| C| A/R| I| I| I
-Promotion approval| A/R| C| R| C| I| I| I
-VP weights change| A| R| R| C| I| C| C
-EU AI Act conformity pack| C| I| C| I| C| R| A
-Bias audit (annual)| I| R| A| C| I| C| C
-DSAR (own data)| I| R| I| I| C| A| C
+Activity| CEO| HR/Ops| CHRO| Council Chair| CSO| DPO| CLO ---|---|---|---|---|---|---|--- Skill catalogue maintenance| I| R| A| C| I| I| I Promotion case opening| I| R| C| I| I| I| I Panel assignment| I| R| A| I| I| I| I Council voting| I| I| C| A/R| I| I| I Promotion approval| A/R| C| R| C| I| I| I VP weights change| A| R| R| C| I| C| C EU AI Act conformity pack| C| I| C| I| C| R| A Bias audit (annual)| I| R| A| C| I| C| C DSAR (own data)| I| R| I| I| C| A| C
 
 R = Responsible, A = Accountable, C = Consulted, I = Informed.
 
@@ -596,24 +463,7 @@ $ cyberos-learn vp recompute --member mai@cyberskill.com
 | CLI subcommands | ~18 planned (`cyberos-learn` entrypoint) |
 | P1 budget | ~$20/mo (RDS schema + Fargate share) |
 
-Capability| Status
----|---
-Skill catalogue (closed enum per discipline)| planned - P1
-Mastery claim + endorsement| planned - P1
-VP deterministic roll-up| planned - P1
-Hội đồng Chuyên môn council workflow| planned - P1
-Per-judge data vault isolation| planned - P1
-Career-path visualiser| planned - P1
-Promotion case state machine| planned - P1
-Anti-retroactive parameter versioning| planned - P1
-External certification + bằng cấp fields| planned - P1
-Cert expiry tick (90/30/7)| planned - P1
-Personal learning plans + mentor| planned - P1
-Training records + course catalog| planned - P1
-QR-signed internal certification PDFs| planned - P2
-EU AI Act Annex III §4 conformity pack| planned - P2
-Annual bias audit framework| planned - P2
-External LMS content providers| planned - P4
+Capability| Status ---|--- Skill catalogue (closed enum per discipline)| planned - P1 Mastery claim + endorsement| planned - P1 VP deterministic roll-up| planned - P1 Hội đồng Chuyên môn council workflow| planned - P1 Per-judge data vault isolation| planned - P1 Career-path visualiser| planned - P1 Promotion case state machine| planned - P1 Anti-retroactive parameter versioning| planned - P1 External certification + bằng cấp fields| planned - P1 Cert expiry tick (90/30/7)| planned - P1 Personal learning plans + mentor| planned - P1 Training records + course catalog| planned - P1 QR-signed internal certification PDFs| planned - P2 EU AI Act Annex III §4 conformity pack| planned - P2 Annual bias audit framework| planned - P2 External LMS content providers| planned - P4
 
 ## References
 

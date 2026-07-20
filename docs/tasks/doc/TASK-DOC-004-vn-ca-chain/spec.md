@@ -103,9 +103,9 @@ The DOC service **MUST** ship VN CA integration at `services/doc/src/vn_ca/` wit
 3. **MUST** validate `vn_ca_request_kind` enum cardinality 5 per DEC-1792.
 
 4. **MUST** support VNeID identity linkage per DEC-1793 at `vneid_linker.rs::link(signer, vneid_token)`:
-   - Verify VNeID token via gov OAuth (TASK-DOC-006 vneid handler shared).
-   - Submit verified identity to chosen CA for qualified cert enrollment.
-   - Store cert in tenant's KMS for signer reuse.
+- Verify VNeID token via gov OAuth (TASK-DOC-006 vneid handler shared).
+- Submit verified identity to chosen CA for qualified cert enrollment.
+- Store cert in tenant's KMS for signer reuse.
 
 5. **MUST** dispatch per partner — each implements `enroll_cert(signer, vneid_verified)`, `sign(pdf_hash, cert_id)`, `validate_chain(cert)`, `revoke(cert_id)`.
 
@@ -255,8 +255,7 @@ async fn non_vn_root_chain_rejected() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-DOC-001.
-**Cross-module:** TASK-DOC-005 (caller), TASK-DOC-006 (VNeID handler shared), TASK-DOC-011 (LT extend), TASK-AUTH-105 (KMS), TASK-AUTH-101 (CISO), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-DOC-001. **Cross-module:** TASK-DOC-005 (caller), TASK-DOC-006 (VNeID handler shared), TASK-DOC-011 (LT extend), TASK-AUTH-105 (KMS), TASK-AUTH-101 (CISO), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes (similar to DOC-002/003)
 | Failure | Detection | Outcome | Recovery |

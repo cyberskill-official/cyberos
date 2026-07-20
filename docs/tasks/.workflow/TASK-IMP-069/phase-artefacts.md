@@ -7,9 +7,7 @@ verdicts: all pass (respective audit skills)
 # Phase artefacts - TASK-IMP-069
 
 ## Repo context map
-Patterns: exit 0/10/2 + `cyberos:` prefix (TASK-IMP-068 lineage); release.yml = tag-driven job set (desktop/android/ios), top-level permissions contents: write; bootstrap legacy env CYBEROS_PACK_URL + top-level-dir tarballs; rollout takes payload dir as $1.
-files_outside_immediate_domain: 2 (.github/workflows/release.yml, docs/deploy/RELEASE.md) -> <= 3, no ADR (channel decision recorded in task source_decisions + operator plan approval).
-has_external_dependency: false (GitHub Releases is the deploy target, not a runtime dependency; tests run on file:// fixtures) -> steps 7-8 skip.
+Patterns: exit 0/10/2 + `cyberos:` prefix (TASK-IMP-068 lineage); release.yml = tag-driven job set (desktop/android/ios), top-level permissions contents: write; bootstrap legacy env CYBEROS_PACK_URL + top-level-dir tarballs; rollout takes payload dir as $1. files_outside_immediate_domain: 2 (.github/workflows/release.yml, docs/deploy/RELEASE.md) -> <= 3, no ADR (channel decision recorded in task source_decisions + operator plan approval). has_external_dependency: false (GitHub Releases is the deploy target, not a runtime dependency; tests run on file:// fixtures) -> steps 7-8 skip.
 
 ## Edge-case matrix (10 rows)
 | # | category | trigger | expected | covered by |

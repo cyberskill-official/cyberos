@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this diversity equity inclusion program"
+- "Audit this diversity equity inclusion program"
 - "Check the diversity equity inclusion program for completeness"
 - "Verify the diversity equity inclusion program meets the rubric"
 - "Re-audit the diversity equity inclusion program"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a diversity equity inclusion program" → diversity-equity-inclusion-program-author
+- "Draft a diversity equity inclusion program" → diversity-equity-inclusion-program-author
 - "Create the diversity equity inclusion program" → diversity-equity-inclusion-program-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

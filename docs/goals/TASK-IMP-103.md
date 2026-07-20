@@ -10,7 +10,6 @@ predicates:
 ---
 # TASK-IMP-103 - install concurrency lock
 
-Graduated at the `done` flip (2026-07-17). The predicate is the task's §1 cited test - the same
-suite TRACE-004 verified, so this goal claims nothing the acceptance did not already prove.
+Graduated at the `done` flip (2026-07-17). The predicate is the task's §1 cited test - the same suite TRACE-004 verified, so this goal claims nothing the acceptance did not already prove.
 
 Every AC on this task cited a `test:`, so there are no `verify:`-only ACs to exclude.

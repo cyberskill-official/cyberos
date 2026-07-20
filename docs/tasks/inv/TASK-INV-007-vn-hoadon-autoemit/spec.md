@@ -258,9 +258,7 @@ pub async fn emit(invoice_id: Uuid, tenant: &Tenant, db: &Db) -> Result<HoadonId
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-INV-001.
-**Cross-module:** TASK-MCP-007 (async task), TASK-AUTH-101 (KMS), TASK-MEMORY-111 (PII scrub), TASK-INV-008 (cancellation flow).
-**Tenant config:** TASK-SKILL-109 placeholder (signing_cert_kms_arn admin UI — created on first VN tenant signup).
+**Upstream:** TASK-INV-001. **Cross-module:** TASK-MCP-007 (async task), TASK-AUTH-101 (KMS), TASK-MEMORY-111 (PII scrub), TASK-INV-008 (cancellation flow). **Tenant config:** TASK-SKILL-109 placeholder (signing_cert_kms_arn admin UI — created on first VN tenant signup).
 
 ## §8 — Sample payloads
 

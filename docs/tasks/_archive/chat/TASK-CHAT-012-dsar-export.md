@@ -63,32 +63,32 @@ The DSAR export **MUST** generate a tamper-evident archive of every message a su
 
 1. **MUST** define `dsar_requests` table: `(id UUID PK, subject_id UUID, requested_by UUID, justification TEXT, status TEXT (`pending|exporting|delivered|failed`), s3_url TEXT, expires_at TIMESTAMPTZ, created_at, completed_at, tenant_id)`.
 2. **MUST** expose REST `POST /api/dsar/request` with body `{subject_id: <UUID>}` AND auth header. Authorisation:
-   - `requested_by == subject_id` (subject self-request): always allowed.
-   - `requested_by` is `tenant_admin` AND body includes non-empty `justification`: allowed; logged with extra audit detail.
-   - Otherwise: 403.
+- `requested_by == subject_id` (subject self-request): always allowed.
+- `requested_by` is `tenant_admin` AND body includes non-empty `justification`: allowed; logged with extra audit detail.
+- Otherwise: 403.
 3. **MUST** the exporter:
-   - Query `SELECT * FROM posts WHERE user_id = $subject AND tenant_id = $tenant`; include channels metadata.
-   - For each post, fetch chain_anchor from TASK-CHAT-005 memory row (joined by `props.memory_anchor`).
+- Query `SELECT * FROM posts WHERE user_id = $subject AND tenant_id = $tenant`; include channels metadata.
+- For each post, fetch chain_anchor from TASK-CHAT-005 memory row (joined by `props.memory_anchor`).
 4. **MUST** compose the zip:
-   - `messages.jsonl`: one JSON line per message `{post_id, channel_id, channel_name, body, created_at, edited_at, memory_chain_anchor}`.
-   - `manifest.json`: counts + zip_sha256 + total_messages + export_signing_hash.
-   - `README.md`: explains chain_anchor verification procedure for recipient.
-   - `verify.sh`: bundled script that recomputes chain hashes locally.
+- `messages.jsonl`: one JSON line per message `{post_id, channel_id, channel_name, body, created_at, edited_at, memory_chain_anchor}`.
+- `manifest.json`: counts + zip_sha256 + total_messages + export_signing_hash.
+- `README.md`: explains chain_anchor verification procedure for recipient.
+- `verify.sh`: bundled script that recomputes chain hashes locally.
 5. **MUST** upload to S3 with KMS encryption (tenant's CMK); generate presigned URL with 7-day TTL.
 6. **MUST** deliver URL to subject's registered email + post in their DM channel; URL is one-time-use (S3 access logs detect re-use; revoke on second hit).
 7. **MUST** emit memory audit rows:
-    - `chat.dsar_requested` on request creation.
-    - `chat.dsar_exporting` when export starts.
-    - `chat.dsar_delivered` with payload `{subject_id, message_count, zip_sha256, expires_at, requested_by, justification}`.
-    - `chat.dsar_failed` on error.
+- `chat.dsar_requested` on request creation.
+- `chat.dsar_exporting` when export starts.
+- `chat.dsar_delivered` with payload `{subject_id, message_count, zip_sha256, expires_at, requested_by, justification}`.
+- `chat.dsar_failed` on error.
 8. **MUST** support up to 100K messages per export; > 100K → split into 100K-msg shards.
 9. **MUST** complete within 1h for ≤ 10K messages; sev-2 alarm above.
 10. **MUST** include the chain_anchor verification procedure in README.md so subject can independently verify export authenticity using public verification tools.
 11. **MUST** RLS-enforce: exporter queries scoped to (subject, tenant).
 12. **MUST** emit OTel metrics:
-    - `chat_dsar_requests_total{outcome}` (outcome ∈ delivered | failed | over_limit).
-    - `chat_dsar_export_duration_seconds`.
-    - `chat_dsar_messages_exported` (histogram).
+- `chat_dsar_requests_total{outcome}` (outcome ∈ delivered | failed | over_limit).
+- `chat_dsar_export_duration_seconds`.
+- `chat_dsar_messages_exported` (histogram).
 13. **MUST** include all messages the subject WROTE AND messages the subject WAS MENTIONED IN, as two separate sections of the export. PDPL Art. 14 covers "data about the subject" which includes mentions.
 14. **MUST** include channel memberships (channels the subject ever joined/left): `channel_memberships.jsonl` with `{channel_id, channel_name, joined_at, left_at}`. Pulls from TASK-CHAT-005 `chat.user_joined_channel`/`chat.user_left_channel` memory rows.
 15. **MUST** include reactions the subject placed (their emoji reactions to other people's messages) and reactions placed on the subject's messages.

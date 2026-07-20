@@ -102,12 +102,12 @@ The EMAIL service **MUST** ship bulk send (≥10 recipients) at `services/email/
 5. **MUST** CFO sign `POST /v1/email/bulk/{id}/sign-cfo`. `cfo` or `marketing_admin`. CHECK distinct from AM. Status → ready_to_send. Emits `email.bulk_cfo_signed` sev-1.
 
 6. **MUST** dispatch `POST /v1/email/bulk/{id}/dispatch`. Either signer. Transitions to 'sending'. For each recipient:
-   - Check suppression list per DEC-1493; skip + count suppressed.
-   - Rate-pace per DEC-1492 (max 5000/hour/tenant via Redis sliding-window).
-   - Invoke TASK-EMAIL-009 send.
-   - Track sent_count/failed_count.
-   - Final: status='completed'.
-   - Emits `email.bulk_sending_started` + per-suppressed `email.bulk_recipient_suppressed_skipped` (sampled 1%) + `email.bulk_completed`.
+- Check suppression list per DEC-1493; skip + count suppressed.
+- Rate-pace per DEC-1492 (max 5000/hour/tenant via Redis sliding-window).
+- Invoke TASK-EMAIL-009 send.
+- Track sent_count/failed_count.
+- Final: status='completed'.
+- Emits `email.bulk_sending_started` + per-suppressed `email.bulk_recipient_suppressed_skipped` (sampled 1%) + `email.bulk_completed`.
 
 7. **MUST** support cancel `POST /v1/email/bulk/{id}/cancel`. AM or CFO. Allowed in {pending_am_sign, pending_cfo_sign, ready_to_send}; not in sending/completed. Emits `email.bulk_cancelled` sev-1.
 
@@ -218,8 +218,7 @@ async fn rate_pace_5000_per_hour() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-EMAIL-009.
-**Cross-module:** TASK-AUTH-101 (chief-financial-officer/marketing_admin roles), TASK-AI-003, TASK-MEMORY-111.
+**Upstream:** TASK-EMAIL-009. **Cross-module:** TASK-AUTH-101 (chief-financial-officer/marketing_admin roles), TASK-AI-003, TASK-MEMORY-111.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

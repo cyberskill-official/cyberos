@@ -1,7 +1,6 @@
 # TASK-IMP-083 — edge-case matrix (edge-case-matrix@1)
 
-task_id: TASK-IMP-083 · total_rows: 8 · categories_covered: 6/6 · security_class_count: 2
-planned_test_paths: `tools/install/tests/test_install_hygiene.sh` (all rows)
+task_id: TASK-IMP-083 · total_rows: 8 · categories_covered: 6/6 · security_class_count: 2 planned_test_paths: `tools/install/tests/test_install_hygiene.sh` (all rows)
 
 | # | Category | Trigger | Expected | Covered by |
 |---|---|---|---|---|
@@ -14,7 +13,4 @@ planned_test_paths: `tools/install/tests/test_install_hygiene.sh` (all rows)
 | 7 | SECURITY | foreign hook clobber/data-loss class: (a) install must never replace a foreign hook in the hooksPath dir; (b) uninstall must never delete a foreign hook that merely contains our block | (a) append-only with markers, first line byte-preserved, foreign exit code 7 re-raised by the POSIX block (no new execution surface); (b) exact line-2 ownership — ours-outright removed, foreign stripped-only | `t05_hookspath_foreign_append`, `t05_short_foreign_uninstall_preserved` |
 | 8 | DEGRADATION | hooksPath configured but the directory does not exist yet; page never rendered at install (`CYBEROS_NO_MIGRATE=1`) | `mkdir -p` creates the dir exactly as `.git/hooks` is treated today; the hook itself then fires on the first backlog-touching commit and renders+stages `docs/status/` (firing assert node-gated, mirroring t03) | `t05_hookspath_standalone` |
 
-Known leftover (accepted, spec §3): a hooksPath repo carrying an inert CyberOS hook at
-`.git/hooks/pre-commit` from an older install is not migrated — git ignores that path; the
-summary's named path makes the situation visible. `t05_hookspath_uninstall` additionally
-pins that uninstall never touches `.git/hooks/pre-commit` when hooksPath points elsewhere.
+Known leftover (accepted, spec §3): a hooksPath repo carrying an inert CyberOS hook at `.git/hooks/pre-commit` from an older install is not migrated — git ignores that path; the summary's named path makes the situation visible. `t05_hookspath_uninstall` additionally pins that uninstall never touches `.git/hooks/pre-commit` when hooksPath points elsewhere.

@@ -121,16 +121,16 @@ The Metering service **MUST** emit one append-only `metering_events` row per qua
 8. **MUST** snapshot seats at billing-period-close (last calendar day of the billing month at 23:59:59 UTC of the tenant's billing timezone, per DEC-705). The snapshot job queries `SELECT COUNT(*) FROM members WHERE tenant_id = $1 AND active_at IS NOT NULL AND deactivated_at IS NULL` and writes ONE `seats` event with `quantity = N`, `unit = "seat"`. Seats are NOT metered as join/leave events — the closing snapshot is authoritative. If a member is added and removed within the period, neither shows up in metering.
 
 9. **MUST** snapshot storage at billing-period-close via two sub-counts (DEC-706):
-   - **S3 bytes**: queries the S3 inventory report (CSV-format daily inventory delivered to `s3://cyberos-inventory/<tenant>/<date>.csv`) and sums `Size` column. The inventory is delivered with up to 24h lag, so the close job runs at +24h after period end.
-   - **Postgres bytes**: queries `pg_total_relation_size` summed across the tenant's RLS-scoped tables. The query joins `pg_class` to `cyberos.tenants` to derive size per tenant.
-   - Emits ONE `storage_bytes` event with `quantity = s3_bytes + postgres_bytes`, `unit = "byte"`.
+- **S3 bytes**: queries the S3 inventory report (CSV-format daily inventory delivered to `s3://cyberos-inventory/<tenant>/<date>.csv`) and sums `Size` column. The inventory is delivered with up to 24h lag, so the close job runs at +24h after period end.
+- **Postgres bytes**: queries `pg_total_relation_size` summed across the tenant's RLS-scoped tables. The query joins `pg_class` to `cyberos.tenants` to derive size per tenant.
+- Emits ONE `storage_bytes` event with `quantity = s3_bytes + postgres_bytes`, `unit = "byte"`.
 
 10. **MUST** define a closed 3-value `metering_overage_policy` enum (`block`, `warn`, `allow`). The per-tenant policy lives in `tenants.metering_overage_policy_yaml` and defaults to `warn`. Mutation requires `cfo` role per TASK-AUTH-101 + a sev-2 memory audit row with a non-empty reason (DEC-710). The CI cardinality test asserts exactly 3 enum values.
 
 11. **MUST** enforce overage policy at the API-call middleware:
-    - `block`: when `current_period_api_calls + 1 > monthly_cap`, return `402 PAYMENT_REQUIRED` with body `{error: "overage_blocked", axis: "api_calls", current, cap}`. No `metering_events` row is emitted (the call is rejected upstream).
-    - `warn`: when crossing `monthly_cap × warn_threshold` (default 0.80), emit a `metering.warn_threshold_crossed` memory audit row at sev-2. The metric event proceeds normally.
-    - `allow`: no enforcement; metric event proceeds; CFO reviews at period close.
+- `block`: when `current_period_api_calls + 1 > monthly_cap`, return `402 PAYMENT_REQUIRED` with body `{error: "overage_blocked", axis: "api_calls", current, cap}`. No `metering_events` row is emitted (the call is rejected upstream).
+- `warn`: when crossing `monthly_cap × warn_threshold` (default 0.80), emit a `metering.warn_threshold_crossed` memory audit row at sev-2. The metric event proceeds normally.
+- `allow`: no enforcement; metric event proceeds; CFO reviews at period close.
 
 12. **MUST** define a `metering_holds` table parallel to TASK-AI-001's `cost_ledger_holds` for high-value operations (e.g., a bulk API ingest claims a 10,000-call hold before issuing). The hold uses the same 60s TTL + idempotency contract as the cost-ledger hold and emits a `metering.hold_claimed` memory audit row.
 
@@ -160,22 +160,21 @@ The Metering service **MUST** emit one append-only `metering_events` row per qua
 18. **MUST** define a closed 3-value `metering_event_state` enum (`active`, `corrected`, `superseded`). On insertion, state = `active`. A correction_to event flips the parent to `superseded` via a trigger. A double-correction (correction of a correction) sets state = `corrected` on the intermediate row. Aggregation views filter on `state = 'active'` only.
 
 19. **MUST** validate `quantity` per axis at the recorder API:
-    - `seats`: integer ≥ 0, ≤ 100,000.
-    - `api_calls`: integer ≥ 1 (corrections are negative; recorded as opposite-sign row, not negative quantity at recorder), ≤ 1,000,000 per single event (bulk write).
-    - `ai_tokens`: integer ≥ 1, ≤ 10,000,000 per single event.
-    - `storage_bytes`: integer ≥ 0, ≤ 10 TiB (10^13).
-    Out-of-range MUST return `400 BAD_REQUEST` with `{error: "metering_quantity_out_of_range", axis, quantity, max}`.
+- `seats`: integer ≥ 0, ≤ 100,000.
+- `api_calls`: integer ≥ 1 (corrections are negative; recorded as opposite-sign row, not negative quantity at recorder), ≤ 1,000,000 per single event (bulk write).
+- `ai_tokens`: integer ≥ 1, ≤ 10,000,000 per single event.
+- `storage_bytes`: integer ≥ 0, ≤ 10 TiB (10^13). Out-of-range MUST return `400 BAD_REQUEST` with `{error: "metering_quantity_out_of_range", axis, quantity, max}`.
 
 20. **MUST** define a `metering_current_period` materialized view that aggregates `SUM(quantity) FILTER (WHERE state = 'active')` by `(tenant_id, axis, period_start, period_end)`. Refresh schedule: every 5 minutes via pg_cron. The refresh is `CONCURRENTLY` to avoid blocking read queries. The view carries a `last_refreshed_at` column for staleness detection (DEC-713).
 
 21. **MUST** emit one of 7 closed memory audit kinds per metering event:
-    - `metering.event_recorded` (sev-3, per metric event)
-    - `metering.warn_threshold_crossed` (sev-2, per crossing)
-    - `metering.overage_blocked` (sev-2, per blocked request)
-    - `metering.correction_issued` (sev-2, per refund)
-    - `metering.policy_changed` (sev-2, per CFO policy update)
-    - `metering.reconciliation_divergence` (sev-1, per close-job divergence)
-    - `metering.wal_queue_overflow` (sev-1, per queue-full event)
+- `metering.event_recorded` (sev-3, per metric event)
+- `metering.warn_threshold_crossed` (sev-2, per crossing)
+- `metering.overage_blocked` (sev-2, per blocked request)
+- `metering.correction_issued` (sev-2, per refund)
+- `metering.policy_changed` (sev-2, per CFO policy update)
+- `metering.reconciliation_divergence` (sev-1, per close-job divergence)
+- `metering.wal_queue_overflow` (sev-1, per queue-full event)
 
 22. **MUST** expose `POST /v1/metering/period/close` as an ops-only handler (no tenant access; `bookkeeper` role only). The handler runs the seats + storage snapshot jobs for one tenant + emits the final aggregate memory audit row + freezes the period (writes to `metering_periods.frozen_at`). After freeze, no `metering_events` row may carry a timestamp inside the frozen period — the recorder rejects with `409 PERIOD_FROZEN`. Frozen periods are reopened only via a sev-1 ops manual action (no API path).
 

@@ -1,8 +1,6 @@
 # TASK-IMP-092 code review
 
-Reviewer: parent ship-tasks agent (batch 3). Diff: `tools/install/docs-tools/backlog-mutate.mjs`
-(retally), `tools/install/tests/test_workflow_helpers.sh` (t10-t12), `modules/cuo/chief-technology-officer/workflows/ship-tasks.md`
-(two doctrine passages, 2.6.2 -> 2.6.3).
+Reviewer: parent ship-tasks agent (batch 3). Diff: `tools/install/docs-tools/backlog-mutate.mjs` (retally), `tools/install/tests/test_workflow_helpers.sh` (t10-t12), `modules/cuo/chief-technology-officer/workflows/ship-tasks.md` (two doctrine passages, 2.6.2 -> 2.6.3).
 
 ## Clause -> proof
 
@@ -16,21 +14,12 @@ Reviewer: parent ship-tasks agent (batch 3). Diff: `tools/install/docs-tools/bac
 
 ## Judgment
 
-- **Correctness vs incident**: the two enablers of the 086 lost-update incident are closed at
-  their mechanism. Incremental adjust preserved a 14-off header through six mutations; a full
-  retally cannot inherit a lie because it never reads the old counts. The doctrine passages name
-  the environment fact (two views, self-consistent reads) and the only evidence that survives it
-  (`git show <commit>:<path>`).
-- **Blast radius**: the retally reads the section it was already allowed to rewrite; bare headers
-  stay untouched (t06 regression green), so the footprint guarantee is unchanged (1.3).
-- **Failure mode if wrong**: a header naming a status the section no longer carries, or counts
-  drifting again - t10 asserts the correction, t11 asserts it stays inside the footprint.
-- **Dogfooding**: this task's own BACKLOG rows were inserted and flipped by the tool under
-  review; the counts above are its live output, verified on the committed object per the rule
-  the same task introduces.
+- **Correctness vs incident**: the two enablers of the 086 lost-update incident are closed at their mechanism. Incremental adjust preserved a 14-off header through six mutations; a full retally cannot inherit a lie because it never reads the old counts. The doctrine passages name the environment fact (two views, self-consistent reads) and the only evidence that survives it (`git show <commit>:<path>`).
+- **Blast radius**: the retally reads the section it was already allowed to rewrite; bare headers stay untouched (t06 regression green), so the footprint guarantee is unchanged (1.3).
+- **Failure mode if wrong**: a header naming a status the section no longer carries, or counts drifting again - t10 asserts the correction, t11 asserts it stays inside the footprint.
+- **Dogfooding**: this task's own BACKLOG rows were inserted and flipped by the tool under review; the counts above are its live output, verified on the committed object per the rule the same task introduces.
 - **Security**: none. Tool and prose changes; no new execution surface, no secrets.
-- **AI-specific**: version bump is deliberate and asserted (t12), not silent; passages are two
-  short bullets in the file's existing voice, not a rewrite.
+- **AI-specific**: version bump is deliberate and asserted (t12), not silent; passages are two short bullets in the file's existing voice, not a rewrite.
 
 Verdict: no open findings.
 

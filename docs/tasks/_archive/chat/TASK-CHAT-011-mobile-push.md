@@ -67,30 +67,30 @@ The mobile push service **MUST** deliver chat-message notifications to APNS + FC
 2. **MUST** expose `POST /api/push/register` (auth required per TASK-AUTH-004) with body `{platform, device_token, app_version}` → upserts row.
 3. **MUST** expose `DELETE /api/push/register/:token` → soft-delete.
 4. **MUST** the Mattermost plugin `cyberos-push-trigger` on post.create:
-   - Fetch channel subscribers (excluding sender) who have devices registered.
-   - Filter out users with muted channel/user preferences.
-   - POST webhook to chat-push service per recipient.
+- Fetch channel subscribers (excluding sender) who have devices registered.
+- Filter out users with muted channel/user preferences.
+- POST webhook to chat-push service per recipient.
 5. **MUST** the chat-push service receives webhook with `{post_id, channel_id, channel_name, sender_display_name, recipient_subject_id, tenant_id}`.
 6. **MUST** construct privacy-preserving payload:
-   - APNS: `{"aps": {"alert": {"title": "<channel_name>", "body": "@<sender_display_name>"}, "sound": "default", "thread-id": "<channel_id>"}, "cyberos": {"post_id": "<id>", "tenant_id": "<id>"}}`.
-   - FCM: equivalent `{notification: {title, body}, data: {post_id, tenant_id, channel_id}, android: {priority: "high"}}`.
-   - NEVER include message body content (DEC-520).
+- APNS: `{"aps": {"alert": {"title": "<channel_name>", "body": "@<sender_display_name>"}, "sound": "default", "thread-id": "<channel_id>"}, "cyberos": {"post_id": "<id>", "tenant_id": "<id>"}}`.
+- FCM: equivalent `{notification: {title, body}, data: {post_id, tenant_id, channel_id}, android: {priority: "high"}}`.
+- NEVER include message body content (DEC-520).
 7. **MUST** use APNS HTTP/2 with JWT auth (Apple .p8 key); FCM v1 with service-account JWT (no legacy server key).
 8. **MUST** handle delivery errors:
-   - APNS 410 (unregistered) → soft-delete device.
-   - APNS 429 (rate limit) → exp backoff + retry 3×.
-   - FCM `UNREGISTERED` → soft-delete.
-   - FCM `INVALID_ARGUMENT` → log; do NOT retry.
+- APNS 410 (unregistered) → soft-delete device.
+- APNS 429 (rate limit) → exp backoff + retry 3×.
+- FCM `UNREGISTERED` → soft-delete.
+- FCM `INVALID_ARGUMENT` → log; do NOT retry.
 9. **MUST** emit memory audit `chat.push_delivered` or `chat.push_failed` per attempt with `{post_id, recipient_subject_id, platform, latency_ms, outcome, trace_id}`.
 10. **MUST** respect user mute settings (Mattermost preferences API):
-    - `notify_props.push = "none"` → no push.
-    - `notify_props.push = "mention"` → push only if mentioned.
-    - Channel-level mute → no push for that channel.
+- `notify_props.push = "none"` → no push.
+- `notify_props.push = "mention"` → push only if mentioned.
+- Channel-level mute → no push for that channel.
 11. **MUST** complete fan-out within 1s p95 for ≤ 100 recipients per message.
 12. **MUST** emit OTel metrics:
-    - `chat_push_delivered_total{platform, outcome}`.
-    - `chat_push_latency_seconds{platform}`.
-    - `chat_push_registered_devices` (gauge).
+- `chat_push_delivered_total{platform, outcome}`.
+- `chat_push_latency_seconds{platform}`.
+- `chat_push_registered_devices` (gauge).
 13. **MUST** dedup duplicate pushes per recipient: a per-(subject, channel) suppression window of 1s collapses rapid-fire messages into one delivery. Operator-visible via `chat_push_suppressed_total` counter.
 14. **MUST** include sound + badge in the payload as configurable per-platform: `aps.sound = "default"` AND `aps.badge` = unread count (queried from MM API). FCM payload includes `android.notification.sound` + `android.notification.notification_count`.
 15. **MUST** support DnD (Do Not Disturb) windows per user via `notify_props.push_status_quiet_hours = {start, end, timezone}`. Pushes during DnD are queued OR suppressed based on `notify_props.push_status_strategy = queue|drop`. Default = `drop`.

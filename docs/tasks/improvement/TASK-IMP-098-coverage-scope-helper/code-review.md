@@ -1,14 +1,6 @@
 # TASK-IMP-098 — code review packet
 
-Files under review: new `tools/install/docs-tools/coverage-scope.mjs` (338 lines, the
-task-diff -> per-file-coverage skeleton emitter) and
-`tools/install/tests/test_coverage_scope.sh` (191 lines, the gating suite), modified
-`tools/install/build.sh` (+2 lines, guarded vendor copy — spec-declared in
-`modified_files`). Suite state at review: test_coverage_scope 4/4, 0 failed (~3 s
-including the payload build). build.sh is SHARED with batch sibling TASK-IMP-093 (same
-agent, serial order per the batch plan); after this task's line landed, the sibling
-suites were re-run green (test_memory_append 4/4, test_workflow_helpers 13/13 —
-gate-log E4), so the shared-file edit regressed nothing.
+Files under review: new `tools/install/docs-tools/coverage-scope.mjs` (338 lines, the task-diff -> per-file-coverage skeleton emitter) and `tools/install/tests/test_coverage_scope.sh` (191 lines, the gating suite), modified `tools/install/build.sh` (+2 lines, guarded vendor copy — spec-declared in `modified_files`). Suite state at review: test_coverage_scope 4/4, 0 failed (~3 s including the payload build). build.sh is SHARED with batch sibling TASK-IMP-093 (same agent, serial order per the batch plan); after this task's line landed, the sibling suites were re-run green (test_memory_append 4/4, test_workflow_helpers 13/13 — gate-log E4), so the shared-file edit regressed nothing.
 
 ## §1 clause → proof
 
@@ -23,45 +15,22 @@ gate-log E4), so the shared-file edit regressed nothing.
 
 ## §3 edge cases
 
-Touched-but-unreported file: `no-coverage-data` row, byte-compared (t02). Deletion:
-excluded + named (t02). Multiple entry-flip subjects: earliest wins + reported (t01).
-Exactly 90: not below, strict less-than (t02, `ok` status + absent from the list).
-Security class: git via argv-array spawnSync, read-only verbs only; --coverage and
---out refused outside the repo root (`relUnderRoot` guards); no network, no eval;
-report keys that do not normalize under the root drop to visible no-coverage-data.
+Touched-but-unreported file: `no-coverage-data` row, byte-compared (t02). Deletion: excluded + named (t02). Multiple entry-flip subjects: earliest wins + reported (t01). Exactly 90: not below, strict less-than (t02, `ok` status + absent from the list). Security class: git via argv-array spawnSync, read-only verbs only; --coverage and --out refused outside the repo root (`relUnderRoot` guards); no network, no eval; report keys that do not normalize under the root drop to visible no-coverage-data.
 
 ## Acceptance criteria
 
-AC 1 `t01_base_resolution` ok · AC 2 `t02_skeleton_from_fixture` ok ·
-AC 3 `t03_unknown_report_refused` ok · AC 4 `t04_payload_vendored` ok (+ glob half,
-gate-log E2) · AC 5 (sachviet batch-1 reproduction) — PARENT-RUN, recorded in the gate
-log by the parent per the spec's verify wording; not claimed here. Suite 4/4.
+AC 1 `t01_base_resolution` ok · AC 2 `t02_skeleton_from_fixture` ok · AC 3 `t03_unknown_report_refused` ok · AC 4 `t04_payload_vendored` ok (+ glob half, gate-log E2) · AC 5 (sachviet batch-1 reproduction) — PARENT-RUN, recorded in the gate log by the parent per the spec's verify wording; not claimed here. Suite 4/4.
 
 ## Diff size
 
-Two new files: `tools/install/docs-tools/coverage-scope.mjs` (338 lines, self-contained
-ESM, node stdlib only — git via child_process argv arrays) and
-`tools/install/tests/test_coverage_scope.sh` (191 lines, executable; fixture git repos
-built under mktemp in-test, isolated from user/system git config, never touching the
-enclosing repo's git state). One modified file: `tools/install/build.sh` +2/−0. No
-dependency added anywhere. `dist/` untouched here — rebuild + version-sync before
-commit are the batch parent's step per payload-sync doctrine.
+Two new files: `tools/install/docs-tools/coverage-scope.mjs` (338 lines, self-contained ESM, node stdlib only — git via child_process argv arrays) and `tools/install/tests/test_coverage_scope.sh` (191 lines, executable; fixture git repos built under mktemp in-test, isolated from user/system git config, never touching the enclosing repo's git state). One modified file: `tools/install/build.sh` +2/−0. No dependency added anywhere. `dist/` untouched here — rebuild + version-sync before commit are the batch parent's step per payload-sync doctrine.
 
 ## Design disclosures
 
-1. Exit-code split: base-unresolvable is exit 3 (not 2) so a wrapper can distinguish
-   "prompt the operator for --base" from plain usage errors; unsupported-report-by-name
-   is exit 4. Both documented in --help alongside the docs-tools exit-code discipline.
-2. files_below_90pct excludes no-coverage-data rows: a file without a percentage
-   cannot be claimed "below 90"; it stays VISIBLE in the table and in a count note,
-   and judgment stays with coverage-gate-author (spec Out of scope). The alternative —
-   listing unmeasured files as failures — would fake a measurement the input never made.
-3. The skeleton is markdown with coverage-gate@1 frontmatter (the "skeleton ready for
-   the author skill to complete" the spec's Proposed Solution names), not the full §2
-   YAML of the author skill's output — tests_failed/ecm_rows_uncovered/raw_terminal are
-   the author's judgment surface and are emitted as literal TODO markers.
-4. lcov LF:0 counts as pct 100, matching istanbul's treatment of empty files —
-   documented in --help and the header so the convention is inspectable.
+1. Exit-code split: base-unresolvable is exit 3 (not 2) so a wrapper can distinguish "prompt the operator for --base" from plain usage errors; unsupported-report-by-name is exit 4. Both documented in --help alongside the docs-tools exit-code discipline.
+2. files_below_90pct excludes no-coverage-data rows: a file without a percentage cannot be claimed "below 90"; it stays VISIBLE in the table and in a count note, and judgment stays with coverage-gate-author (spec Out of scope). The alternative — listing unmeasured files as failures — would fake a measurement the input never made.
+3. The skeleton is markdown with coverage-gate@1 frontmatter (the "skeleton ready for the author skill to complete" the spec's Proposed Solution names), not the full §2 YAML of the author skill's output — tests_failed/ecm_rows_uncovered/raw_terminal are the author's judgment surface and are emitted as literal TODO markers.
+4. lcov LF:0 counts as pct 100, matching istanbul's treatment of empty files — documented in --help and the header so the convention is inspectable.
 
 ## Verdict
 

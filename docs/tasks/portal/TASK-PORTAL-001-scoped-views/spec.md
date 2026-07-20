@@ -157,80 +157,78 @@ The PORTAL service **MUST** ship scoped read-only views at `services/portal/src/
 3. **MUST** define `portal_view_read_log` at migration `0015`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID NOT NULL, engagement_id UUID NOT NULL, caller_subject_id UUID NOT NULL, view_kind portal_view_kind NOT NULL, resource_id UUID, action TEXT NOT NULL CHECK (action IN ('list','detail','search','export_initiated','export_completed')), filter_hash16 TEXT, result_count INT, trace_id CHAR(32), occurred_at TIMESTAMPTZ NOT NULL DEFAULT now())`. Append-only per task-audit skill rule 12. RLS-scoped.
 
 4. **MUST** expose list endpoint `GET /v1/portal/views/{view_kind}?engagement_id=...&filters=...&fields=...&cursor=...&limit=...` per DEC-1205. Handler:
-    - Validates JWT + extracts caller_subject_id + tenant_id.
-    - Validates engagement_id is in caller's `engagement_memberships`; else 403 + `engagement_access_denied`.
-    - Validates `view_kind` is in closed enum.
-    - Applies per-view-kind filters per DEC-1211.
-    - Applies field projection per §1 #10.
-    - Returns rows from the SQL view (RLS auto-applies sync_class + engagement filter).
-    - Paginate via cursor (default limit 50; max 200).
-    - Emit `portal.view_read` (sev-3 sampled 1%).
-    - ETag + Cache-Control per §1 #13.
+- Validates JWT + extracts caller_subject_id + tenant_id.
+- Validates engagement_id is in caller's `engagement_memberships`; else 403 + `engagement_access_denied`.
+- Validates `view_kind` is in closed enum.
+- Applies per-view-kind filters per DEC-1211.
+- Applies field projection per §1 #10.
+- Returns rows from the SQL view (RLS auto-applies sync_class + engagement filter).
+- Paginate via cursor (default limit 50; max 200).
+- Emit `portal.view_read` (sev-3 sampled 1%).
+- ETag + Cache-Control per §1 #13.
 
 5. **MUST** expose detail endpoint `GET /v1/portal/views/{view_kind}/{id}` per DEC-1207. Handler:
-    - Same auth + engagement check.
-    - Returns single row PLUS related sub-resources:
-      - `projects/{id}` → includes tasks, comments, status_history (all filtered by sync_class).
-      - `invoices/{id}` → includes line_items, payment_history.
-      - `documents/{id}` → includes versions, comments.
-      - `channels/{id}` → includes recent messages (last 50, also sync_class filtered).
-    - Emit `portal.view_detail_read` (sev-2 — always, not sampled).
+- Same auth + engagement check.
+- Returns single row PLUS related sub-resources:
+- `projects/{id}` → includes tasks, comments, status_history (all filtered by sync_class).
+- `invoices/{id}` → includes line_items, payment_history.
+- `documents/{id}` → includes versions, comments.
+- `channels/{id}` → includes recent messages (last 50, also sync_class filtered).
+- Emit `portal.view_detail_read` (sev-2 — always, not sampled).
 
 6. **MUST** expose search endpoint `POST /v1/portal/views/{view_kind}/search` per DEC-1206 with body `{ query: <string>, filters?: {...}, fields?: [...], cursor?: ... }`. Handler:
-    - Uses PostgreSQL `tsvector` index on per-view searchable columns (e.g. project name + description).
-    - Combines with view's existing RLS filters.
-    - Returns ranked results.
-    - Emit `portal.view_search_executed` (sev-3 — sampled).
+- Uses PostgreSQL `tsvector` index on per-view searchable columns (e.g. project name + description).
+- Combines with view's existing RLS filters.
+- Returns ranked results.
+- Emit `portal.view_search_executed` (sev-3 — sampled).
 
 7. **MUST** expose export endpoint `GET /v1/portal/views/{view_kind}/export?format=csv|xlsx&filters=...&fields=...` per DEC-1213. Handler:
-    - Same auth + filter.
-    - Streams response (chunked transfer encoding); rows fetched + serialised in 100-row batches.
-    - Caps at 10,000 rows; over-cap returns 413 + `export_too_large; use_dsar`.
-    - Content-Type `text/csv` or `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`.
-    - Emit `portal.view_export_initiated` at start + `portal.view_export_completed` at end (both sev-2 — material data movement).
+- Same auth + filter.
+- Streams response (chunked transfer encoding); rows fetched + serialised in 100-row batches.
+- Caps at 10,000 rows; over-cap returns 413 + `export_too_large; use_dsar`.
+- Content-Type `text/csv` or `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`.
+- Emit `portal.view_export_initiated` at start + `portal.view_export_completed` at end (both sev-2 — material data movement).
 
 8. **MUST** apply per-row redaction per DEC-1203 + DEC-1215. Rows with `sync_class='client-visible-redacted'` returned with internal-only fields blanked:
-    - `projects`: blank `internal_notes`, `assignee_internal_id`, `internal_priority`.
-    - `invoices`: blank `internal_notes`, `cost_breakdown`.
-    - `documents`: blank `internal_summary`, `internal_classification`.
-    - `channels`: blank `internal_pin_count`, `internal_archive_reason`.
-   Redaction tracked: each redacted row emits sampled `portal.view_redaction_applied` informational row (sev-3, sampled 5%) so operators can monitor what's being redacted.
+- `projects`: blank `internal_notes`, `assignee_internal_id`, `internal_priority`.
+- `invoices`: blank `internal_notes`, `cost_breakdown`.
+- `documents`: blank `internal_summary`, `internal_classification`.
+- `channels`: blank `internal_pin_count`, `internal_archive_reason`. Redaction tracked: each redacted row emits sampled `portal.view_redaction_applied` informational row (sev-3, sampled 5%) so operators can monitor what's being redacted.
 
 9. **MUST** support per-view kind-specific filters per DEC-1211. Filter param format `?filters=<base64-JSON>` decodes to:
-    - `projects`: `{ status: ["active","pending"], assignee_external_id: "...", date_range: {from: "...", to: "..."} }`.
-    - `invoices`: `{ status: ["sent","paid","overdue"], date_range: {...}, amount_range: {min: ..., max: ...} }`.
-    - `documents`: `{ tag: ["contract","report"], type: ["pdf","docx"], date_range: {...} }`.
-    - `channels`: `{ tag: ["project-X"], last_message_date_range: {...} }`.
-   Invalid filter keys for the view kind → 400 + `invalid_filter_key` + valid_keys array.
+- `projects`: `{ status: ["active","pending"], assignee_external_id: "...", date_range: {from: "...", to: "..."} }`.
+- `invoices`: `{ status: ["sent","paid","overdue"], date_range: {...}, amount_range: {min: ..., max: ...} }`.
+- `documents`: `{ tag: ["contract","report"], type: ["pdf","docx"], date_range: {...} }`.
+- `channels`: `{ tag: ["project-X"], last_message_date_range: {...} }`. Invalid filter keys for the view kind → 400 + `invalid_filter_key` + valid_keys array.
 
 10. **MUST** apply GraphQL-style field projection per DEC-1204. The `fields` query param decodes to a comma-separated list (or JSON array via base64). Handler:
-    - If absent: returns the default safe set per view kind.
-    - If present: validates each field is in the allowed set; rejects unknown fields with 400 + `unknown_field`.
-    - SELECT only those fields from the view (avoids SELECT * cost on wide tables).
-    - Default safe sets:
-      - `projects`: `id, title, status, owner_external_id, created_at, last_activity_at`.
-      - `invoices`: `id, invoice_number, status, amount, currency, issued_at, due_at`.
-      - `documents`: `id, title, type, size_bytes, tag, created_at, updated_at`.
-      - `channels`: `id, name, tag, last_message_at, member_count`.
+- If absent: returns the default safe set per view kind.
+- If present: validates each field is in the allowed set; rejects unknown fields with 400 + `unknown_field`.
+- SELECT only those fields from the view (avoids SELECT * cost on wide tables).
+- Default safe sets:
+- `projects`: `id, title, status, owner_external_id, created_at, last_activity_at`.
+- `invoices`: `id, invoice_number, status, amount, currency, issued_at, due_at`.
+- `documents`: `id, title, type, size_bytes, tag, created_at, updated_at`.
+- `channels`: `id, name, tag, last_message_at, member_count`.
 
 11. **MUST** enforce per-Engagement context per DEC-1209. `engagement_id` query param REQUIRED on every endpoint. Without it → 400 + `engagement_id_required`. Caller member of N Engagements switches via UI engagement-picker; views never aggregate.
 
 12. **MUST** apply cursor pagination per DEC-1219. The cursor is base64(JSON `{last_id: uuid, last_sort_value: <value>}`). Pagination handler:
-    - Validates cursor signature (HMAC-signed to prevent forgery).
-    - Applies `WHERE (sort_value, id) > (cursor.last_sort_value, cursor.last_id)` (keyset pagination per task-audit skill rule 16 derivative).
-    - Returns `{ rows: [...], next_cursor: <base64> | null }`.
+- Validates cursor signature (HMAC-signed to prevent forgery).
+- Applies `WHERE (sort_value, id) > (cursor.last_sort_value, cursor.last_id)` (keyset pagination per task-audit skill rule 16 derivative).
+- Returns `{ rows: [...], next_cursor: <base64> | null }`.
 
 13. **MUST** include ETag + Cache-Control headers per DEC-1217 + DEC-1218. ETag = SHA-256 truncated 16 hex of canonical-JSON response body; `If-None-Match` match → 304. Cache-Control `private, max-age=30` allows browser-side cache; per-user RLS prevents shared-cache leak.
 
 14. **MUST** rate-limit at 600 reads/min/caller per DEC-1210 + task-audit skill §8.2d derivative. Exceeded → 429 + Retry-After.
 
 15. **MUST** emit 6 memory audit row kinds per DEC-1214:
-    - `portal.view_read` (sev-3 — high-volume; sampled 1%)
-    - `portal.view_detail_read` (sev-2 — material; always emitted)
-    - `portal.view_search_executed` (sev-3 — sampled 5%)
-    - `portal.view_export_initiated` (sev-2 — material data movement)
-    - `portal.view_export_completed` (sev-2 — paired with initiated)
-    - `portal.view_redaction_applied` (sev-3 — sampled 5%)
+- `portal.view_read` (sev-3 — high-volume; sampled 1%)
+- `portal.view_detail_read` (sev-2 — material; always emitted)
+- `portal.view_search_executed` (sev-3 — sampled 5%)
+- `portal.view_export_initiated` (sev-2 — material data movement)
+- `portal.view_export_completed` (sev-2 — paired with initiated)
+- `portal.view_redaction_applied` (sev-3 — sampled 5%)
 
 16. **MUST** PII-scrub per task-audit skill rule 18. Audit rows carry `filter_hash16` + `resource_id` (UUID; non-PII per TASK-PORTAL-004 §1 #18 rationale); raw filter values + result content NOT in chain.
 

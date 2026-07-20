@@ -57,10 +57,10 @@ Stripe-based dedup with halt-on-repeat threads the needle: dedup is automatic (o
 6. **MUST** emit `cuo.refinement_proposal_emitted` memory aux row for each new proposal; payload `{stripe_id, skill_name, signal_id, evidence_row_ids, proposal_path}`. *(traces_to: §1 #6 → AC #1)*
 7. **MUST** emit `cuo.stripe_repeat_halt` memory aux row when a repeat fires; payload `{stripe_id, existing_proposal_path, new_evidence_row_ids, halted_workflow_id}`. The supervisor MUST surface this as outcome `HITL_HALT` (interop with TASK-CUO-200's drain command). *(traces_to: §1 #7 → AC #2, #10)*
 8. **MUST** support operator workflow:
-   - `cyberos-cuo proposal list` — open / applied / rejected lists with stripes
-   - `cyberos-cuo proposal show <stripe_id>` — open the markdown
-   - `cyberos-cuo proposal apply <stripe_id>` — moves file to `applied/`, optionally runs the diff (Wave 3 — TASK-CUO-202)
-   - `cyberos-cuo proposal reject <stripe_id> --reason "<text>"` — moves file to `rejected/<stripe_id>-<ts>.md` with `## Rejection rationale` appended
+- `cyberos-cuo proposal list` — open / applied / rejected lists with stripes
+- `cyberos-cuo proposal show <stripe_id>` — open the markdown
+- `cyberos-cuo proposal apply <stripe_id>` — moves file to `applied/`, optionally runs the diff (Wave 3 — TASK-CUO-202)
+- `cyberos-cuo proposal reject <stripe_id> --reason "<text>"` — moves file to `rejected/<stripe_id>-<ts>.md` with `## Rejection rationale` appended
 9. **MUST** treat `<proposals_root>/{applied,rejected}/` as "resolved": stripe-dedup only checks `open/`, so a previously-applied stripe can naturally re-fire if the issue recurs after the fix.
 10. **MUST** treat the proposal output `## Suggested change` as informational only — Wave 3 (TASK-CUO-202) decides which proposals auto-apply vs require HITL. Wave 2 (this task) never mutates a skill/RUBRIC/contract automatically. *(traces_to: §1 #10 → AC #5)*
 

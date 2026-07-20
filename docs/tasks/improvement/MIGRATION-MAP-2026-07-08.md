@@ -1,9 +1,6 @@
 # Improvement backlog migration map (2026-07-08)
 
-One-time renumber of the three docs/improvement backlogs into tasks as
-`class: improvement` tasks. No `legacy_id` was kept on the tasks (operator choice); this
-table is the only record linking old ids to new. Use it to reconcile the in-flight
-`auto/memory-enterprise` and `auto/chat-enterprise` branches after merge.
+One-time renumber of the three docs/improvement backlogs into tasks as `class: improvement` tasks. No `legacy_id` was kept on the tasks (operator choice); this table is the only record linking old ids to new. Use it to reconcile the in-flight `auto/memory-enterprise` and `auto/chat-enterprise` branches after merge.
 
 ## memory
 

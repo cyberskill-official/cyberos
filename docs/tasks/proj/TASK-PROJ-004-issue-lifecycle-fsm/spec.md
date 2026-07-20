@@ -100,33 +100,31 @@ The issue lifecycle **MUST** be a strict FSM with the following 5 states and 13 
 
 1. **MUST** define `IssueStatus` enum with exactly 6 variants: `Backlog`, `Todo`, `InProgress`, `InReview`, `Done`, `Cancelled`. No other variants permitted in v1.
 2. **MUST** allow ONLY these transitions:
-    - **Forward**: `Backlog → Todo`, `Backlog → InProgress`, `Todo → InProgress`, `Todo → Cancelled`, `InProgress → InReview`, `InProgress → Cancelled`, `InProgress → Done`, `InReview → Done`, `InReview → InProgress` (revisions), `InReview → Cancelled`.
-    - **Re-open**: `Done → InProgress`, `Cancelled → InProgress`. BOTH require non-empty `reason` field (per DEC-253).
-    - **No-op**: same-state → same-state (allowed; treated as `Idempotent` not Transition).
-   All other pairs MUST be rejected with `FsmError::IllegalTransition { from, to, allowed_from }` where `allowed_from` is the list of legal targets from current state.
+- **Forward**: `Backlog → Todo`, `Backlog → InProgress`, `Todo → InProgress`, `Todo → Cancelled`, `InProgress → InReview`, `InProgress → Cancelled`, `InProgress → Done`, `InReview → Done`, `InReview → InProgress` (revisions), `InReview → Cancelled`.
+- **Re-open**: `Done → InProgress`, `Cancelled → InProgress`. BOTH require non-empty `reason` field (per DEC-253).
+- **No-op**: same-state → same-state (allowed; treated as `Idempotent` not Transition). All other pairs MUST be rejected with `FsmError::IllegalTransition { from, to, allowed_from }` where `allowed_from` is the list of legal targets from current state.
 3. **MUST** validate transitions server-side BEFORE the LWW scalar write. Validation order:
-    1. FSM check (this task).
-    2. LWW timestamp check (TASK-PROJ-003 §1 #6).
-    3. Apply.
-   FSM failure → 422 UNPROCESSABLE_ENTITY with body `{"error":"illegal_transition","from":<s>,"to":<s>,"allowed_to":[...]}`.
+1. FSM check (this task).
+2. LWW timestamp check (TASK-PROJ-003 §1 #6).
+3. Apply. FSM failure → 422 UNPROCESSABLE_ENTITY with body `{"error":"illegal_transition","from":<s>,"to":<s>,"allowed_to":[...]}`.
 4. **MUST** persist transition history in `issue_status_history` (per-tenant, append-only):
-    - `(issue_id, transition_seq, from_status, to_status, by_subject_id, reason, transitioned_at_ns)`.
-    - `transition_seq` is monotonic per issue.
-    - `reason` REQUIRED for re-open transitions (Done|Cancelled → InProgress); SHOULD-be-empty otherwise (operators MAY annotate non-re-open transitions for context).
+- `(issue_id, transition_seq, from_status, to_status, by_subject_id, reason, transitioned_at_ns)`.
+- `transition_seq` is monotonic per issue.
+- `reason` REQUIRED for re-open transitions (Done|Cancelled → InProgress); SHOULD-be-empty otherwise (operators MAY annotate non-re-open transitions for context).
 5. **MUST** emit `proj.issue_status_changed` memory audit row per accepted transition with payload `{issue_id, from, to, by_subject_id, reason, transition_seq, transitioned_at_ns, trace_id}`.
 6. **MUST** support `cyberos issue history <id>` CLI returning the full transition log for an issue (operator + auditor view).
 7. **MUST** expose REST endpoint `POST /api/proj/issues/:id/transition` with body `{to: IssueStatus, reason?: string}`. Returns 200 with `{transition_seq, applied_at_ns, current_status}` or 422 with FSM error.
 8. **MUST** share the FSM definition between Rust + TypeScript via build-time codegen:
-    - `build.rs` writes `web/proj-client/src/lifecycle/allowed_transitions.ts` from the Rust source-of-truth.
-    - CI gate (`ts-fsm-fresh`) asserts the generated file matches `cargo build`'s output (no drift).
+- `build.rs` writes `web/proj-client/src/lifecycle/allowed_transitions.ts` from the Rust source-of-truth.
+- CI gate (`ts-fsm-fresh`) asserts the generated file matches `cargo build`'s output (no drift).
 9. **MUST** track per-status time-in-state for analytics (downstream of TASK-PROJ-013 estimate calibration):
-    - On transition out of status X, compute `elapsed_ns = transitioned_at_ns - prior_transitioned_at_ns_for_this_issue`.
-    - Emit metric `proj_issue_time_in_status_seconds{from_status}` (histogram).
+- On transition out of status X, compute `elapsed_ns = transitioned_at_ns - prior_transitioned_at_ns_for_this_issue`.
+- Emit metric `proj_issue_time_in_status_seconds{from_status}` (histogram).
 10. **MUST** emit OTel span `proj.issue.transition` with attributes `issue_id`, `from`, `to`, `had_reason`, `transition_seq`, `duration_ms`.
 11. **MUST** emit OTel metrics:
-    - `proj_issue_transitions_total{from, to}` (counter; bounded cardinality 5×6=30).
-    - `proj_issue_transitions_rejected_total{reason}` (counter; reason ∈ illegal_transition | reason_required | stale_write | unauthorised).
-    - `proj_issue_reopens_total` (counter — operator visibility into re-open frequency per tenant).
+- `proj_issue_transitions_total{from, to}` (counter; bounded cardinality 5×6=30).
+- `proj_issue_transitions_rejected_total{reason}` (counter; reason ∈ illegal_transition | reason_required | stale_write | unauthorised).
+- `proj_issue_reopens_total` (counter — operator visibility into re-open frequency per tenant).
 12. **MUST** emit `proj.issue_reopened` row (separate kind from generic status_changed) on every Done|Cancelled → InProgress transition, with payload `{issue_id, from, reason, by_subject_id, reopen_seq, trace_id}` so dashboards can pivot on re-open patterns.
 13. **SHOULD** support per-engagement extended states via `state_groups[]` config (slice-3+; placeholder). v1 only ships the canonical 6.
 

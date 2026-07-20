@@ -7,9 +7,7 @@ verdict: pass (edge-case-matrix-audit: every category >=1 row; Covered-by names 
 ---
 # Edge-case matrix - TASK-IMP-087
 
-Covered-by references G1-G9 = the recorded greps in
-`docs/tasks/improvement/TASK-IMP-087-release-checklist/gate-log-draft.md` (each listed with its
-verbatim command so any reviewer can re-run it against the living document).
+Covered-by references G1-G9 = the recorded greps in `docs/tasks/improvement/TASK-IMP-087-release-checklist/gate-log-draft.md` (each listed with its verbatim command so any reviewer can re-run it against the living document).
 
 | # | category | trigger | expected behavior | covered by |
 |---|---|---|---|---|
@@ -22,7 +20,4 @@ verbatim command so any reviewer can re-run it against the living document).
 | 7 | DEGRADATION | cross-link off-layout: `../IMPROVEMENT_HANDOFF.md` is a sibling of the checkout, deliberately untracked - a clone elsewhere breaks the link | detection: the doc names the canonical location (`~/Projects/CyberSkill/IMPROVEMENT_HANDOFF.md`) and marks it "deliberately not tracked in-repo"; G9 records the layout dependency explicitly rather than hiding it; recovery: place the handoff beside the checkout or read the seven lines quoted into this checklist (they are self-contained) | G9 (existence check OK on the stated layout + the six evidence commits resolving via `git cat-file -t`) |
 | 8 | order | matrix-vs-checklist confusion: the 3-column channel matrix could be misread as malformed checklist rows by a naive whole-file structure check | checklist rows are keyed by the row-id pattern `^\| [A-E][0-9]+ \|`; the matrix is §1.4 reference content with its own 3-column shape by design - the gate log states the distinction so the structure check cannot false-positive | G1/G2 (pattern-scoped) + gate-log preamble sentence naming the split |
 
-Documented-by-design: executing the checklist lines is not an edge case of this task - it is the
-release run itself, operator-owned (spec Non-Goals); the 15 `open` states are the correct
-current truth, not gaps. Security class beyond row 6: none - the document executes nothing
-(spec §3 last bullet).
+Documented-by-design: executing the checklist lines is not an edge case of this task - it is the release run itself, operator-owned (spec Non-Goals); the 15 `open` states are the correct current truth, not gaps. Security class beyond row 6: none - the document executes nothing (spec §3 last bullet).

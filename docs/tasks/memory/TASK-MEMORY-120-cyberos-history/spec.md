@@ -92,13 +92,12 @@ The history projection is a **read-only** view over the existing audit chain tha
         extra:           dict             # extra fields from the row (dream_id, session_id, etc.)
     ```
 4. **MUST** render the `extra` field's content inline in the human-formatted output, with these recognised annotation patterns:
-    - `extra.dream_id` → "via dream <id>"
-    - `extra.proposal_id` → "(proposal <id>)"
-    - `extra.session_id` → "during session <id>"
-    - `extra.invocation` (e.g. "consolidate") → "via <invocation>"
-    - `extra.imported_from` → "imported from <fingerprint>"
-    - `extra.merged_into` → "merged into <path>"
-    These annotations make the audit-chain richness operator-readable without requiring `--json` raw inspection.
+- `extra.dream_id` → "via dream <id>"
+- `extra.proposal_id` → "(proposal <id>)"
+- `extra.session_id` → "during session <id>"
+- `extra.invocation` (e.g. "consolidate") → "via <invocation>"
+- `extra.imported_from` → "imported from <fingerprint>"
+- `extra.merged_into` → "merged into <path>" These annotations make the audit-chain richness operator-readable without requiring `--json` raw inspection.
 5. **MUST** follow move chains by default. `cyberos history dst.md` walks back; when a `move(src, dst)` row is encountered, history continues walking under `src.md`'s prior history. Repeats for chained moves. `--no-follow-moves` cuts the walk at the move boundary.
 6. **MUST** support `--since 24h | 7d | 30d | <ISO timestamp>` to bound the walk. Default: no time bound (full chain history for that path).
 7. **MUST** compute per-version body diffs from adjacent `put` rows on the same path. The diff format default is **unified-diff** (operator-readable); `--json` returns structured `{added: [line, ...], removed: [line, ...], context: [...]}`. Frontmatter diffs are always structured (field-level adds / removes / changes).

@@ -52,5 +52,4 @@ Source tech-spec: [<title>](<tech_spec_ref>).
 ## Architecture Note (required when chain_profile: lean)
 Lean profile skipped tech-spec authoring. Architectural assumptions:
 - ...
-- ...
--->
+- ... -->

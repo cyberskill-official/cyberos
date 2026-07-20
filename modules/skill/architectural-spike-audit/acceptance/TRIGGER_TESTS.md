@@ -22,14 +22,14 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this architectural spike"
+- "Audit this architectural spike"
 - "Check the architectural spike"
 - "Score the spike against the rubric"
 - "Does this spike pass?"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft an architectural spike" → architectural-spike-author
+- "Draft an architectural spike" → architectural-spike-author
 - "Run a spike on X vs Y" → architectural-spike-author
 - "Audit this ADR" → architecture-decision-record-audit
 - "What is our company holiday schedule" → none

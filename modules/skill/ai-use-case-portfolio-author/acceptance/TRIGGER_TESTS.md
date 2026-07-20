@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a ai use case portfolio"
+- "Draft a ai use case portfolio"
 - "Create the ai use case portfolio"
 - "Author a new ai use case portfolio"
 - "Generate the ai use case portfolio"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this ai use case portfolio" → ai-use-case-portfolio-audit
+- "Audit this ai use case portfolio" → ai-use-case-portfolio-audit
 - "Check the ai use case portfolio for completeness" → ai-use-case-portfolio-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

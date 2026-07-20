@@ -9,4 +9,3 @@ Key changes:
 - Risks +5 (R-RES-010..014): RES forecast becomes CEO-decision dependency · Member-preference flags ignored under high-priority · VN OT-cap version drift · cross-Engagement reallocation rate-card mismatch · Lumi RES synthesis leaks Engagement intel
 - KPIs +6: hiring memo CEO acceptance rate · Member-preference override rate (= 1.0) · cross-Engagement rate-card alignment · cap version stamp coverage (= 1.0) · Lumi cross-tenant sign-off (= 1.0)
 - References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + task-audit skill
-

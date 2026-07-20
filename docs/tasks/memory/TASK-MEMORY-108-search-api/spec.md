@@ -99,31 +99,30 @@ The memory service **MUST** expose `GET /v1/memory/search` returning ranked memo
 
 1. **MUST** accept `?q=<query>&kind=<filter>&ts_since=<ns>&ts_until=<ns>&limit=<int>&explain=<bool>`. Limit default 10, max 100.
 2. **MUST** dispatch to 3 backends in parallel via `tokio::try_join!`:
-    - **Vector**: BGE-M3 embed query (TASK-AI-019) → cosine similarity search in `layer2_memories` HNSW index.
-    - **Graph**: Cypher query on Apache AGE finding semantically-related entities (within 2 hops).
-    - **Full-text**: PGroonga search with Vietnamese-aware tokenisation (mecab + custom dictionary).
+- **Vector**: BGE-M3 embed query (TASK-AI-019) → cosine similarity search in `layer2_memories` HNSW index.
+- **Graph**: Cypher query on Apache AGE finding semantically-related entities (within 2 hops).
+- **Full-text**: PGroonga search with Vietnamese-aware tokenisation (mecab + custom dictionary).
 3. **MUST** combine via Reciprocal Rank Fusion (RRF) with k=60 (standard parameter); take top 50 candidates; rerank via TASK-AI-020 BGE-reranker-v2-m3 → final top-N.
 4. **MUST** apply RLS at the DB layer — caller's tenant_id (from JWT) scopes `layer2_memories` queries via `current_setting('app.tenant_id')`. RLS USING clause filters; cross-tenant queries return 0 rows.
 5. **MUST** consult `meta.acl[]` per memory at result-filtering time — if non-empty AND caller's actor_id NOT in list, exclude from results. ACL applied AFTER RLS (defense-in-depth: RLS at DB, ACL at API).
 6. **MUST** return `[{id, kind, path, ts_ns, snippet, score, related_count}]`. Snippet is a 200-char excerpt around the match (full-text) OR a synthesized summary (vector); `related_count` = entities linked via graph.
 7. **MUST** complete p95 ≤ 250ms on 1M-chunk tenant fixture (NFR-PERF-01). Above 250ms, OBS sev-3 alarm.
 8. **MUST** fall back gracefully on backend failures:
-    - BGE sidecar down → vector backend skipped; results from graph + fulltext only.
-    - AGE query timeout (5s) → graph skipped.
-    - PGroonga error → fulltext skipped.
-   When all 3 fail, return `503 SERVICE_UNAVAILABLE`. When at least one succeeds, return results + surface degradation in `?explain=true` response.
+- BGE sidecar down → vector backend skipped; results from graph + fulltext only.
+- AGE query timeout (5s) → graph skipped.
+- PGroonga error → fulltext skipped. When all 3 fail, return `503 SERVICE_UNAVAILABLE`. When at least one succeeds, return results + surface degradation in `?explain=true` response.
 9. **SHOULD** support `?explain=true` returning per-backend scores + RRF computation + rerank input/output for debugging.
 10. **MUST** verify `chain_anchor` for each returned result against Layer 1 (per TASK-MEMORY-101 §1 #4). Mismatch → drop the result + emit sev-1 OBS event `memory_search_chain_anchor_mismatch{tenant_id, seq}`.
 11. **MUST** authenticate via TASK-AUTH-004 JWT; extract tenant_id + actor_id from claims.
 12. **MUST** support empty results — return `[]` with HTTP 200; NOT 404 (search semantics: "no matches" is normal, not an error).
 13. **MUST** support multi-language (Vietnamese + English) queries. PGroonga's VN tokenisation handles Vietnamese; BGE-M3 multilingual embedding handles cross-language.
 14. **SHOULD** emit OTel metrics:
-    - `memory_search_requests_total{tenant_id, outcome}` (counter; outcome ∈ ok | partial_degrade | full_failure | empty).
-    - `memory_search_latency_ms{tenant_id}` (histogram; SLO p95 < 250ms).
-    - `memory_search_backend_latency_ms{backend}` (histogram per vector/graph/fulltext).
-    - `memory_search_chain_anchor_mismatch_total{tenant_id}` (counter; sev-1 alarm).
-    - `memory_search_acl_filtered_total{tenant_id}` (counter; how many results filtered).
-    - `memory_search_rerank_improvement` (histogram; rerank-position-delta tracking).
+- `memory_search_requests_total{tenant_id, outcome}` (counter; outcome ∈ ok | partial_degrade | full_failure | empty).
+- `memory_search_latency_ms{tenant_id}` (histogram; SLO p95 < 250ms).
+- `memory_search_backend_latency_ms{backend}` (histogram per vector/graph/fulltext).
+- `memory_search_chain_anchor_mismatch_total{tenant_id}` (counter; sev-1 alarm).
+- `memory_search_acl_filtered_total{tenant_id}` (counter; how many results filtered).
+- `memory_search_rerank_improvement` (histogram; rerank-position-delta tracking).
 
 ---
 

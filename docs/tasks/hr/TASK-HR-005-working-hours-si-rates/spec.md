@@ -86,8 +86,8 @@ The HR service **MUST** ship policy constants at `services/hr/src/policy/` with 
 2. **MUST** seed initial Decree 145 + 152 values at `seed_decree_145_152.rs::seed()` — Phase 1 migration.
 
 3. **MUST** lookup at `loader.rs::get(tenant_id, kind, effective_at)`:
-   - Returns version effective at the date (handles annual refresh).
-   - Determinism: same params → same result (critical for TASK-REW-004 replay).
+- Returns version effective at the date (handles annual refresh).
+- Determinism: same params → same result (critical for TASK-REW-004 replay).
 
 4. **MUST** define tables at migration `0005`:
    ```sql
@@ -216,9 +216,7 @@ async fn statutory_override_rejected() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-HR-001.
-**Downstream:** TASK-TIME-007 (OT caps), TASK-REW-004 (SI rates).
-**Cross-module:** TASK-AUTH-101 (CHRO + sys-admin roles), TASK-MEMORY-111.
+**Upstream:** TASK-HR-001. **Downstream:** TASK-TIME-007 (OT caps), TASK-REW-004 (SI rates). **Cross-module:** TASK-AUTH-101 (CHRO + sys-admin roles), TASK-MEMORY-111.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

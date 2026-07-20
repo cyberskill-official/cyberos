@@ -1,8 +1,6 @@
 # INSERT_ROW_CASES - executable case table for backlog-state-update@2 insert-row (TASK-CUO-205 §5)
 
-Each case: pre-image fixture -> mutation -> expected verdict (+ rule id). CASE-08 is the
-byte-authority proof: delete an existing regenerated row, re-insert it per §2b (sorted by task STEM, not row string - the status prefix would
-reorder otherwise), and the file MUST be byte-identical to the original.
+Each case: pre-image fixture -> mutation -> expected verdict (+ rule id). CASE-08 is the byte-authority proof: delete an existing regenerated row, re-insert it per §2b (sorted by task STEM, not row string - the status prefix would reorder otherwise), and the file MUST be byte-identical to the original.
 
 | case | fixture | mutation | expected |
 |---|---|---|---|
@@ -15,8 +13,7 @@ reorder otherwise), and the file MUST be byte-identical to the original.
 | CASE-07 | @1 artefact, no mutation_kind | status-cell rewrite | pass with transition note (AC 1) |
 | CASE-08 | live BACKLOG.md: remove one existing row, re-insert per §2b | insert row | pass AND `diff` empty vs the original file (AC 3 round-trip) |
 
-Run CASE-08 concretely (the regenerator produced every current row, so re-insertion per §2b
-must reproduce the file):
+Run CASE-08 concretely (the regenerator produced every current row, so re-insertion per §2b must reproduce the file):
 
     python3 - <<'PY'
     import re, subprocess

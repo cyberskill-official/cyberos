@@ -77,32 +77,32 @@ The CHAT search layer **MUST** provide Vietnamese-aware full-text search via PGr
 
 1. **MUST** enable the PGroonga extension on the tenant_chat RDS instance via `CREATE EXTENSION IF NOT EXISTS pgroonga` in the init migration.
 2. **MUST** define two PL/pgSQL functions in `services/chat/sql/cyberos-vn-tokenizer.sql`:
-    - `detect_vn(input TEXT) -> BOOLEAN` — returns true iff > 5% of input characters fall in the Vietnamese tonal-mark Unicode range. Pure function; `IMMUTABLE`.
-    - `bigram_split(input TEXT) -> TEXT[]` — returns overlapping 2-character shingles of the lowercased input. Pure function; `IMMUTABLE`.
+- `detect_vn(input TEXT) -> BOOLEAN` — returns true iff > 5% of input characters fall in the Vietnamese tonal-mark Unicode range. Pure function; `IMMUTABLE`.
+- `bigram_split(input TEXT) -> TEXT[]` — returns overlapping 2-character shingles of the lowercased input. Pure function; `IMMUTABLE`.
 3. **MUST** create two PostgreSQL indexes on the `posts` table:
-    - `posts_message_pgroonga_idx` — `USING pgroonga (message)` with the default `TokenBigramSplitSymbolAlphaDigit` tokeniser; serves English + mixed-language queries.
-    - `posts_vn_bigrams_idx` — `USING gin (bigram_split(message)) WHERE detect_vn(message)` — partial index for VN-detected messages.
+- `posts_message_pgroonga_idx` — `USING pgroonga (message)` with the default `TokenBigramSplitSymbolAlphaDigit` tokeniser; serves English + mixed-language queries.
+- `posts_vn_bigrams_idx` — `USING gin (bigram_split(message)) WHERE detect_vn(message)` — partial index for VN-detected messages.
 4. **MUST** intercept Mattermost's `POST /api/v4/posts/search` endpoint via the `cyberos-vn-search` plugin (TASK-CHAT-001 patch `020-search-route.patch` redirects to plugin handler).
 5. **MUST** route incoming queries through hybrid detection:
-    - VN detected (≥ 5% tonal-mark codepoints) → use bigram-array overlap (`bigram_split(message) && <query_bigrams>`).
-    - Otherwise → use PGroonga `&@~` full-text operator.
+- VN detected (≥ 5% tonal-mark codepoints) → use bigram-array overlap (`bigram_split(message) && <query_bigrams>`).
+- Otherwise → use PGroonga `&@~` full-text operator.
 6. **MUST** respect Mattermost ACL filters in every query:
-    - `team_id` MUST match caller's team membership (TASK-CHAT-002 propagates from JWT).
-    - `deleted_at IS NULL` MUST filter soft-deleted posts.
-    - Results MUST honour TASK-AUTH-003 RLS (channel privacy + tenant scope).
+- `team_id` MUST match caller's team membership (TASK-CHAT-002 propagates from JWT).
+- `deleted_at IS NULL` MUST filter soft-deleted posts.
+- Results MUST honour TASK-AUTH-003 RLS (channel privacy + tenant scope).
 7. **MUST** support pagination via Mattermost-standard `page` + `per_page` parameters with default `per_page=20`, max `per_page=100`.
 8. **MUST** order results by `create_at DESC` (newest first); secondary sort by `id` for stability.
 9. **MUST** complete query in ≤ 200ms p95 for a 100K-message corpus on the standard tier (TASK-CHAT-003 `cache.t4g.small` + RDS `db.t4g.small`).
 10. **MUST** maintain a labelled VN corpus at `services/chat/test-fixtures/vn-message-corpus.jsonl` with ≥ 500 labelled cases. Each line is `{"query": "<str>", "expected_post_ids": ["p1", ...]}`. Fixture covers single-word, multi-word, compound, accented-vs-unaccented forms, partial matches, and known-edge-case patterns (Vietnamese loan-words, diacritic-stripping inputs).
 11. **MUST** pass a CI gate (`chat-search-recall-gate.yml`) running `measure-recall.py` against the VN corpus:
-    - Recall ≥ 0.80 (true-positive / (true-positive + false-negative)).
-    - False-positive rate ≤ 0.05 (false-positive / (false-positive + true-negative)).
-    - Both thresholds enforced; either failure = CI red.
+- Recall ≥ 0.80 (true-positive / (true-positive + false-negative)).
+- False-positive rate ≤ 0.05 (false-positive / (false-positive + true-negative)).
+- Both thresholds enforced; either failure = CI red.
 12. **MUST** emit memory audit row `chat.search_query` per non-trivial search (queries ≥ 3 chars) with payload `{user_id, team_id, query_hash, query_lang (vn|en), result_count, latency_ms, trace_id}`. Query hashed (not raw) for PII safety.
 13. **MUST** emit OTel metrics:
-    - `chat_search_queries_total{lang, outcome}` (counter; outcome ∈ ok | empty | error | rate_limited).
-    - `chat_search_latency_seconds{lang}` (histogram, TASK-OBS-003 standardised buckets).
-    - `chat_search_recall` (gauge, set by CI gate run; alerts TASK-OBS-007 sev-2 below 0.80).
+- `chat_search_queries_total{lang, outcome}` (counter; outcome ∈ ok | empty | error | rate_limited).
+- `chat_search_latency_seconds{lang}` (histogram, TASK-OBS-003 standardised buckets).
+- `chat_search_recall` (gauge, set by CI gate run; alerts TASK-OBS-007 sev-2 below 0.80).
 14. **MUST** enforce per-tenant rate limits (governor crate or PostgreSQL `pg_stat_statements`-aware throttle): 100 queries/min sustained, 300 burst. Over-limit returns `429 TOO_MANY_REQUESTS`.
 15. **SHOULD** support `cyberos chat search debug --query "<str>" --tenant <id>` CLI for operator diagnostics; prints detected language + chosen index + result IDs + per-stage latency.
 

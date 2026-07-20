@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this thirteen week cash flow"
+- "Audit this thirteen week cash flow"
 - "Check the thirteen week cash flow for completeness"
 - "Verify the thirteen week cash flow meets the rubric"
 - "Re-audit the thirteen week cash flow"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a thirteen week cash flow" → thirteen-week-cash-flow-author
+- "Draft a thirteen week cash flow" → thirteen-week-cash-flow-author
 - "Create the thirteen week cash flow" → thirteen-week-cash-flow-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

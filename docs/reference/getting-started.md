@@ -23,7 +23,7 @@ CyberOS vendors itself into any repository under a single gitignored `.cyberos/`
    bash /path/to/dist/cyberos/install.sh /path/to/your/repo
    ```
 
-   This vendors `.cyberos/cuo` (the task workflow engine), `.cyberos/memory` (the BRAIN protocol) and `.cyberos/plugin`, detects your build/lint/test gates into `.cyberos/gates.env`, scaffolds `docs/tasks/BACKLOG.md`, creates the local BRAIN store at `.cyberos/memory/store/`, and stamps `.cyberos/VERSION`.
+This vendors `.cyberos/cuo` (the task workflow engine), `.cyberos/memory` (the BRAIN protocol) and `.cyberos/plugin`, detects your build/lint/test gates into `.cyberos/gates.env`, scaffolds `docs/tasks/BACKLOG.md`, creates the local BRAIN store at `.cyberos/memory/store/`, and stamps `.cyberos/VERSION`.
 
 3. Stay current:
 

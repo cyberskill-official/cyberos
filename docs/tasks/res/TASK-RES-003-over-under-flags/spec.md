@@ -80,10 +80,10 @@ The RES service **MUST** ship flag computation + weekly digest at `services/res/
 1. **MUST** validate `allocation_flag` against closed enum per DEC-2051.
 
 2. **MUST** compute flag at `computer.rs::compute(matrix_row)` per DEC-2050:
-   - utilization_pct = allocated_hours / capacity_hours
-   - >= 110% → over_allocated
-   - >= 60% AND < 110% → healthy
-   - < 60% → under_utilized
+- utilization_pct = allocated_hours / capacity_hours
+- >= 110% → over_allocated
+- >= 60% AND < 110% → healthy
+- < 60% → under_utilized
 
 3. **MUST** cache flag on TASK-RES-001 matrix row:
    ```sql
@@ -196,8 +196,7 @@ async fn weekly_digest_sent_friday() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-RES-001.
-**Cross-module:** TASK-RES-002 (UI hook to recompute), TASK-EMAIL-009, TASK-CHAT-005, TASK-MCP-007, TASK-AUTH-101, TASK-MEMORY-111.
+**Upstream:** TASK-RES-001. **Cross-module:** TASK-RES-002 (UI hook to recompute), TASK-EMAIL-009, TASK-CHAT-005, TASK-MCP-007, TASK-AUTH-101, TASK-MEMORY-111.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

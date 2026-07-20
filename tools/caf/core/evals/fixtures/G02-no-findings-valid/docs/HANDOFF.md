@@ -1,8 +1,7 @@
 # HANDOFF
 
 ## 1. Summary
-No qualifying findings in 2 consecutive loops.
-Stop condition: (b) — last 2 consecutive loops produced zero findings >= High.
+No qualifying findings in 2 consecutive loops. Stop condition: (b) — last 2 consecutive loops produced zero findings >= High.
 
 ## 2. Audit vectors covered
 Architecture, Security, Testing.

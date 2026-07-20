@@ -169,12 +169,12 @@ The KB service **MUST** ship the Document schema as the canonical structured-kno
 18. **MUST** maintain `current_version_id` pointer atomically on every version save: in one transaction, INSERT into `document_versions` AND UPDATE `documents.current_version_id`. The FK is `DEFERRABLE INITIALLY IMMEDIATE` so the document row can be UPDATEd with a still-uncommitted version id within the same transaction (Postgres-specific).
 
 19. **MUST** expose REST handlers:
-    - `POST /v1/kb/documents` — create document + initial version. Caller `Resource::KbDocument + Action::Write`.
-    - `GET /v1/kb/documents/{id}` — return doc + current version. Caller `Action::Read`; permission tier additionally gates (public always allowed; org_only requires same-tenant subject; role_restricted requires intersection of caller roles with `allowed_role_codes`).
-    - `GET /v1/kb/documents?slug=<>&language=<>&category=<>&status=<>` — list with cursor pagination.
-    - `POST /v1/kb/documents/{id}/versions` — new version (same permission as create).
-    - `PATCH /v1/kb/documents/{id}` — update metadata (title, permission, allowed_role_codes, owner_subject_id, translation_of); MUST NOT modify markdown_body (use POST versions for body changes).
-    - `POST /v1/kb/documents/{id}/archive` — transition status to archived; reason required.
+- `POST /v1/kb/documents` — create document + initial version. Caller `Resource::KbDocument + Action::Write`.
+- `GET /v1/kb/documents/{id}` — return doc + current version. Caller `Action::Read`; permission tier additionally gates (public always allowed; org_only requires same-tenant subject; role_restricted requires intersection of caller roles with `allowed_role_codes`).
+- `GET /v1/kb/documents?slug=<>&language=<>&category=<>&status=<>` — list with cursor pagination.
+- `POST /v1/kb/documents/{id}/versions` — new version (same permission as create).
+- `PATCH /v1/kb/documents/{id}` — update metadata (title, permission, allowed_role_codes, owner_subject_id, translation_of); MUST NOT modify markdown_body (use POST versions for body changes).
+- `POST /v1/kb/documents/{id}/archive` — transition status to archived; reason required.
 
 20. **MUST** complete create/get handlers in ≤ 100 ms p95. `documents_perf_test` asserts.
 
@@ -183,11 +183,11 @@ The KB service **MUST** ship the Document schema as the canonical structured-kno
 22. **MUST** emit OTel span `kb.document.{create,get,list,version,archive,patch}` with attributes: `tenant_id`, `document_id`, `slug`, `category`, `permission`, `outcome` (success | unknown_category | unknown_role | translation_cross_tenant | translation_same_language | body_too_large | permission_denied | not_found).
 
 23. **MUST** emit OTel metrics:
-    - `kb_document_create_total{outcome, category, permission}` (counter).
-    - `kb_document_version_total{outcome}` (counter).
-    - `kb_document_count{tenant_id, category, status}` (gauge).
-    - `kb_document_acl_changes_total{from_tier, to_tier}` (counter).
-    - `kb_document_archives_total{tenant_id}` (counter).
+- `kb_document_create_total{outcome, category, permission}` (counter).
+- `kb_document_version_total{outcome}` (counter).
+- `kb_document_count{tenant_id, category, status}` (gauge).
+- `kb_document_acl_changes_total{from_tier, to_tier}` (counter).
+- `kb_document_archives_total{tenant_id}` (counter).
 
 24. **MUST** ship `current_documents_view` filtering `status != 'archived'` and `active_documents_view` filtering `status = 'active'`. Downstream tasks querying "what is searchable?" use `active_documents_view`; "what is still resolvable for rendering?" uses `current_documents_view`.
 

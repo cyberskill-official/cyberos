@@ -91,20 +91,20 @@ The TEN service + portal-web frontend **MUST** ship admin SPA at `services/porta
 1. **MUST** validate `admin_section` against closed enum per DEC-2391.
 
 2. **MUST** render 6 sections per DEC-2390:
-   - seats: list members, manage active seats (read from TASK-TEN-101)
-   - billing: subscription status, invoices, payment method (TASK-TEN-003)
-   - audit: memory audit log filter view (read-only)
-   - residency: current + change residency (TASK-TEN-103)
-   - retention: per-module retention policies (TASK-TEN-106)
-   - danger_zone: cancel subscription, delete tenant (TASK-TEN-106 attestation)
+- seats: list members, manage active seats (read from TASK-TEN-101)
+- billing: subscription status, invoices, payment method (TASK-TEN-003)
+- audit: memory audit log filter view (read-only)
+- residency: current + change residency (TASK-TEN-103)
+- retention: per-module retention policies (TASK-TEN-106)
+- danger_zone: cancel subscription, delete tenant (TASK-TEN-106 attestation)
 
 3. **MUST** show ConfirmDialog per DEC-2392 for any write action — explicit type-tenant-name confirmation.
 
 4. **MUST** delegate writes to existing service endpoints per DEC-2393:
-   - SeatsSection → TASK-TEN-101 endpoints
-   - BillingSection → TASK-TEN-003
-   - ResidencySection → TASK-TEN-103
-   - RetentionSection → TASK-TEN-106
+- SeatsSection → TASK-TEN-101 endpoints
+- BillingSection → TASK-TEN-003
+- ResidencySection → TASK-TEN-103
+- RetentionSection → TASK-TEN-106
 
 5. **MUST** restrict SPA access to ROOT-CFO role via TASK-AUTH-101.
 
@@ -178,8 +178,7 @@ async fn non_cfo_blocked() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-TEN-101.
-**Cross-module:** TASK-TEN-003, TASK-TEN-103, TASK-TEN-106, TASK-AUTH-101, TASK-MEMORY-111.
+**Upstream:** TASK-TEN-101. **Cross-module:** TASK-TEN-003, TASK-TEN-103, TASK-TEN-106, TASK-AUTH-101, TASK-MEMORY-111.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

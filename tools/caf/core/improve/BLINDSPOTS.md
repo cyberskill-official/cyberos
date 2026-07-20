@@ -1,22 +1,10 @@
 # Blind-spot register
 
-The single authoritative list of what this protocol + harness **cannot see**.
-Scattered declarations (rules.json coverage notes, core/evals/README, retro
-watchlists, README caveats) point here. One row per blind spot; never delete a
-row — change its status.
+The single authoritative list of what this protocol + harness **cannot see**. Scattered declarations (rules.json coverage notes, core/evals/README, retro watchlists, README caveats) point here. One row per blind spot; never delete a row — change its status.
 
-Statuses: **ACCEPTED** (inherent limit, documented, mitigation is process or
-hooks/CI) · **MITIGATED** (tripwire or check reduces exposure; not a proof) ·
-**CLOSED** (mechanically checked by the harness).
+Statuses: **ACCEPTED** (inherent limit, documented, mitigation is process or hooks/CI) · **MITIGATED** (tripwire or check reduces exposure; not a proof) · **CLOSED** (mechanically checked by the harness).
 
-Last full review: **2026-06-10, campaign 3 start** (structural / production-
-readiness review; written record: the review's gap analysis, adopted here).
-BS-01…BS-11 were re-verified against `core/evals/validate.py`, `run-evals.sh` and
-all fixtures: BS-08's approval check, BS-10's registry cross-check and BS-11's
-record-time drift guard all present and exercised. The review surfaced **five
-additional rows** (BS-12…BS-16): two closed by harness work in this campaign,
-three accepted with named residuals. Prior full review: 2026-06-10
-(post-1.0.0 ownership review, BS-08…BS-11).
+Last full review: **2026-06-10, campaign 3 start** (structural / production- readiness review; written record: the review's gap analysis, adopted here). BS-01…BS-11 were re-verified against `core/evals/validate.py`, `run-evals.sh` and all fixtures: BS-08's approval check, BS-10's registry cross-check and BS-11's record-time drift guard all present and exercised. The review surfaced **five additional rows** (BS-12…BS-16): two closed by harness work in this campaign, three accepted with named residuals. Prior full review: 2026-06-10 (post-1.0.0 ownership review, BS-08…BS-11).
 
 | # | Blind spot | First declared | Status |
 |---|---|---|---|
@@ -38,10 +26,6 @@ three accepted with named residuals. Prior full review: 2026-06-10
 | BS-16 | **Offline citation path (R2)** — R2 assumes network access for citation fetching; a sandboxed agent must choose between violating R2 and skipping benchmarks, and the offline case has no named label. | Structural review 2026-06-10 (gap G-H) | ACCEPTED — `INTERNAL TARGET` is the lawful fallback today; an explicit offline clause is the queued PATCH candidate for a future cycle (live-run evidence first, per review §4.1) |
 | BS-17 | **Hostile-target prompt injection** — AUDIT.md instructs the agent to read the target's files and execute its RUN_COMMANDS; a malicious or compromised target repo can embed text the agent may treat as instructions (exfiltrate env, skip the gate, touch protected areas). A live-agent property: no artifact validator can see whether the agent was steered. | Deployment-readiness review 2026-06-10 (risk R-1) | ACCEPTED — mitigation is environmental, not prompt text: sandboxed network-restricted runners, read-only client credentials, no production secrets in the audit env, `MODE: gated` on first engagements (core/evals/TESTING-PROTOCOL.md T1). Prompt-side hardening would burn instruction budget against an attacker who reads the protocol; declined by design |
 
-**Watchlist (not blind spots — nothing is unseen, kept for completeness):**
-Phase 4 stop rule (b) cannot fire before (a) at small LOOP_BUDGET — harmless
-overlap, wording cost exceeds benefit (pre-release retro cycle-4).
+**Watchlist (not blind spots — nothing is unseen, kept for completeness):** Phase 4 stop rule (b) cannot fire before (a) at small LOOP_BUDGET — harmless overlap, wording cost exceeds benefit (pre-release retro cycle-4).
 
-**Review cadence:** re-verify this register at every campaign start and
-whenever validate.py changes. Adding a blind spot here requires the same
-evidence bar as a FAILURE_LOG row.
+**Review cadence:** re-verify this register at every campaign start and whenever validate.py changes. Adding a blind spot here requires the same evidence bar as a FAILURE_LOG row.

@@ -1,7 +1,6 @@
 # `backlog-state-update-author` - pipeline
 
-The ONLY governed write path to BACKLOG.md: status-cell rewrites (ship transitions) and audited row inserts (create), with optimistic concurrency.
-Artefact: `backlog-state-update@2`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
+The ONLY governed write path to BACKLOG.md: status-cell rewrites (ship transitions) and audited row inserts (create), with optimistic concurrency. Artefact: `backlog-state-update@2`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
 
 ## Upstream
 

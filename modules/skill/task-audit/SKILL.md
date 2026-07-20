@@ -253,8 +253,7 @@ See `cyberos/skill/docs/AUDIT_LOOP.md` for the canonical 8-step algorithm. Summa
 
 1. **Locate** `artefact_path` and compute `audit_path` per `audit_path_pattern`.
 2. **Hash** the artefact (UTF-8 NFC).
-3. **Load or initialise** the audit report.
-3a. **Read `type`** from the artefact's frontmatter (FM-108) and **compose the rule set**:
+3. **Load or initialise** the audit report. 3a. **Read `type`** from the artefact's frontmatter (FM-108) and **compose the rule set**:
 
     ```
     contracts/task/rubrics/common.md   +   contracts/task/rubrics/{type}.md
@@ -263,10 +262,10 @@ See `cyberos/skill/docs/AUDIT_LOOP.md` for the canonical 8-step algorithm. Summa
     `rubrics/common.md` §1 is the universal set (`FM-*`, `SEC-*`, `SAFE-*`, `QA-*`, `COND-*`, `TRACE-*`, `FM-112`). The per-type file adds to it. **An absent `rubrics/{type}.md` means "common only" and is not an error** — `feature`, `improvement` and `chore` have no extra family today.
 
     `type: bug` additionally loads `rubrics/bug.md`, which:
-    - adds `BUG-001..005` (reproduction, expected-vs-observed, root-cause-is-a-mechanism, blast radius, prevention)
-    - adds `BUG-010..014` (`severity` distinct from `priority`, `regression_test` resolves, `first_bad_commit` resolves, `incident` required at sev1)
-    - hands `REGRESSION-001..004` to `coverage-gate-audit` for the `testing → done` transition
-    - **relaxes** the edge-case-matrix floor (`total_rows >= 8` does not apply; the matrix is scoped to the cause's neighbourhood)
+- adds `BUG-001..005` (reproduction, expected-vs-observed, root-cause-is-a-mechanism, blast radius, prevention)
+- adds `BUG-010..014` (`severity` distinct from `priority`, `regression_test` resolves, `first_bad_commit` resolves, `incident` required at sev1)
+- hands `REGRESSION-001..004` to `coverage-gate-audit` for the `testing → done` transition
+- **relaxes** the edge-case-matrix floor (`total_rows >= 8` does not apply; the matrix is scoped to the cause's neighbourhood)
 
     If `type` is missing, FM-108 fires and the audit fails before any type-scoped rule runs. If `type` is present but `templates/{type}.md` does not exist, HALT — the artefact was authored against a skeleton that is not in the contract.
 
@@ -278,27 +277,13 @@ See `cyberos/skill/docs/AUDIT_LOOP.md` for the canonical 8-step algorithm. Summa
 
 ### TRACE-006 semantic sufficiency — the cited test must exercise its clause's verb
 
-Part of the model auditor's "TRACE semantic sufficiency" work (the machine floor does the structural
-halves TRACE-001..003 only, per the "Machine floor first" note above; TRACE-006 is judgment and ABSENT
-from `task-lint`). For EVERY §1 clause that cites a test, perform TRACE-006 as a per-clause comparison
-(RUBRIC.md §9):
+Part of the model auditor's "TRACE semantic sufficiency" work (the machine floor does the structural halves TRACE-001..003 only, per the "Machine floor first" note above; TRACE-006 is judgment and ABSENT from `task-lint`). For EVERY §1 clause that cites a test, perform TRACE-006 as a per-clause comparison (RUBRIC.md §9):
 
-1. Read the clause and name its VERB — the observable evidence the verb demands. Use RUBRIC.md §9's
-   verb→evidence table (render / reject / refuse / halt / emit / preserve, and the same standard for any
-   other verb).
+1. Read the clause and name its VERB — the observable evidence the verb demands. Use RUBRIC.md §9's verb→evidence table (render / reject / refuse / halt / emit / preserve, and the same standard for any other verb).
 2. Read the cited test and name what it actually ASSERTS.
-3. Compare. If the assertion is weaker than the verb demands, raise a TRACE-006 finding
-   (`error → needs_human`, `clause_verb_untested`) and route the task back. A clause with two verbs is
-   compared against each separately — either one weaker fails. A test that asserts MORE than the verb is
-   never a finding.
+3. Compare. If the assertion is weaker than the verb demands, raise a TRACE-006 finding (`error → needs_human`, `clause_verb_untested`) and route the task back. A clause with two verbs is compared against each separately — either one weaker fails. A test that asserts MORE than the verb is never a finding.
 
-RECORD BOTH HALVES in the audit body — the clause's verb-demand AND the test's actual assertion — in the
-ISSUE block (`evidence` / `description`, per `REPORT_FORMAT.md`) for every clause you compare, PASS or
-FAIL, so the comparison is auditable by the next reader and not merely its verdict. A passing cited test
-is necessary but not sufficient: TRACE-004 says the test is green; TRACE-006 says it is green FOR THIS
-CLAUSE. This is judgment, not a lint — a structural "the clause's words appear in the test" check would
-pass TASK-IMP-108 §1.7's original present-in-payload assertion (RUBRIC.md §9), which is why it is absent
-from `task-lint` and is yours to perform on every audit.
+RECORD BOTH HALVES in the audit body — the clause's verb-demand AND the test's actual assertion — in the ISSUE block (`evidence` / `description`, per `REPORT_FORMAT.md`) for every clause you compare, PASS or FAIL, so the comparison is auditable by the next reader and not merely its verdict. A passing cited test is necessary but not sufficient: TRACE-004 says the test is green; TRACE-006 says it is green FOR THIS CLAUSE. This is judgment, not a lint — a structural "the clause's words appear in the test" check would pass TASK-IMP-108 §1.7's original present-in-payload assertion (RUBRIC.md §9), which is why it is absent from `task-lint` and is yours to perform on every audit.
 
 ## §4  Mode B aggregation
 
@@ -853,9 +838,9 @@ To support seamless workflow execution, resumption, and manual intervention, the
 ### §11.2 — In-Flight Deliverable Detection (Keep vs. Discard)
 1. During a resume or rework run, the supervisor and agent MUST scan the work directory to detect existing, half-way, or in-construction deliverables (such as step outputs, draft specs, or partial code files).
 2. For each detected deliverable:
-   - The agent MUST evaluate whether the asset matches the current requirements.
-   - The agent/supervisor MUST explicitly decide whether to **keep** (reuse, adapt, or build upon) or **discard** (clean up and overwrite) the deliverable.
-   - This prevents starting from scratch, avoids wasting token budgets, and ensures no duplicate or conflicting deliverables are left in the repository.
+- The agent MUST evaluate whether the asset matches the current requirements.
+- The agent/supervisor MUST explicitly decide whether to **keep** (reuse, adapt, or build upon) or **discard** (clean up and overwrite) the deliverable.
+- This prevents starting from scratch, avoids wasting token budgets, and ensures no duplicate or conflicting deliverables are left in the repository.
 
 ### §11.3 — Status-Aware Restart
 1. Except when the target task is in a terminal state (`done`, `on_hold`, `closed`), the workflow execution engine MUST support restarting the current phase's work (e.g., resuming from the first step of the active state).
@@ -869,66 +854,37 @@ To support seamless workflow execution, resumption, and manual intervention, the
 
 Every audit report MUST record BOTH:
 
-- **`audited_body_sha256_prefix`** (16 hex) — sha256 over the audited spec's **normative half**:
-  the body plus the frontmatter **minus** `status`, `shipped`, `routed_back_count`,
-  `memory_chain_hash`. This is the binding. It covers exactly what the audit judged — clauses,
-  ACs, scope, metrics — and nothing the workflow rewrites afterwards, so it stays verifiable for
-  the life of the task. A mismatch means the spec's normative content changed after the audit:
-  real drift, and the audit no longer describes the task.
-- **`audited_file_sha256_prefix`** (16 hex) — sha256 over the whole file as read. Provenance of
-  the exact bytes seen, NOT a binding: `status` flips at every phase (`draft` →
-  `ready_to_implement` → … → `done`), so this field stops matching the moment the task moves,
-  and when the audit is written before the flip it matches no commit at all.
+- **`audited_body_sha256_prefix`** (16 hex) — sha256 over the audited spec's **normative half**: the body plus the frontmatter **minus** `status`, `shipped`, `routed_back_count`, `memory_chain_hash`. This is the binding. It covers exactly what the audit judged — clauses, ACs, scope, metrics — and nothing the workflow rewrites afterwards, so it stays verifiable for the life of the task. A mismatch means the spec's normative content changed after the audit: real drift, and the audit no longer describes the task.
+- **`audited_file_sha256_prefix`** (16 hex) — sha256 over the whole file as read. Provenance of the exact bytes seen, NOT a binding: `status` flips at every phase (`draft` → `ready_to_implement` → … → `done`), so this field stops matching the moment the task moves, and when the audit is written before the flip it matches no commit at all.
 
-Why the distinction exists: `task-reconcile`'s first live run flagged a task that had shipped
-correctly through both human gates, because the only recorded hash could not mean what it
-claimed (TASK-IMP-100 gate log E4). A hash nobody can check is the same class of defect as a
-status nobody can check — and this skill is the one that hands out the hashes.
+Why the distinction exists: `task-reconcile`'s first live run flagged a task that had shipped correctly through both human gates, because the only recorded hash could not mean what it claimed (TASK-IMP-100 gate log E4). A hash nobody can check is the same class of defect as a status nobody can check — and this skill is the one that hands out the hashes.
 
-Readers (`task-reconcile` R1, §11's rework-mode detection) prefer the body field, fall back to
-the file field via the audit commit for legacy audits, and never upgrade a binding gap into a
-drift verdict. Audits written before this rule stay valid and are read as legacy.
+Readers (`task-reconcile` R1, §11's rework-mode detection) prefer the body field, fall back to the file field via the audit commit for legacy audits, and never upgrade a binding gap into a drift verdict. Audits written before this rule stay valid and are read as legacy.
 
 ---
 
 ## §13 — Skill-trust measurement log (TASK-IMP-113)
 
-Every terminal audit verdict is ALSO recorded — one append-only row per verdict — to the
-skill-trust ledger at `docs/tasks/.workflow/skill-trust.tsv`, naming the skill whose output the
-verdict judges, its `pass`/`fail`, and the task id:
+Every terminal audit verdict is ALSO recorded — one append-only row per verdict — to the skill-trust ledger at `docs/tasks/.workflow/skill-trust.tsv`, naming the skill whose output the verdict judges, its `pass`/`fail`, and the task id:
 
 ```
 node tools/install/docs-tools/skill-log.mjs append --skill <skill-name> --verdict <pass|fail> --task <task-id>
 ```
 
-This is the repo-side measurement helper (`skill-log.mjs --render` prints per-skill runs, passes,
-rate, and a tier label). It answers "which of our skills actually works?" for the OPERATOR — nothing
-more. Three rules bind it, and all three are load-bearing:
+This is the repo-side measurement helper (`skill-log.mjs --render` prints per-skill runs, passes, rate, and a tier label). It answers "which of our skills actually works?" for the OPERATOR — nothing more. Three rules bind it, and all three are load-bearing:
 
-- **It is a LOG, not a gate (spec §1.4).** The tier label is INFORMATIONAL. No workflow, gate, or
-  queue — this audit loop included — reads a tier to decide anything. A skill at 60% is a finding
-  for the operator, never a signal to the machine. Appending the row MUST NOT change the verdict,
-  the rubric, the 10/10 bar, or any `needs_human` halt.
+- **It is a LOG, not a gate (spec §1.4).** The tier label is INFORMATIONAL. No workflow, gate, or queue — this audit loop included — reads a tier to decide anything. A skill at 60% is a finding for the operator, never a signal to the machine. Appending the row MUST NOT change the verdict, the rubric, the 10/10 bar, or any `needs_human` halt.
 - **Append-only (spec §1.2).** The helper only appends; it never rewrites or deletes a row.
-- **Verdicts, not attempts (spec §1.1, §3).** Log only a terminal `pass`/`fail`. A `needs_human`
-  pause is not a verdict and is NOT logged; a run cut mid-flight produces no verdict and no row.
+- **Verdicts, not attempts (spec §1.1, §3).** Log only a terminal `pass`/`fail`. A `needs_human` pause is not a verdict and is NOT logged; a run cut mid-flight produces no verdict and no row.
 
-The ledger is untracked run-state (gitignored by the install seed, TASK-IMP-113 §1.6), alongside the
-ship manifests. It is a measurement surface, not part of the audit contract.
+The ledger is untracked run-state (gitignored by the install seed, TASK-IMP-113 §1.6), alongside the ship manifests. It is a measurement surface, not part of the audit contract.
 
 ---
 
 ## Template detection + family selection (TASK-CUO-208)
 
-Audit each file by its OWN detected template, never the repo default: frontmatter
-`template: task@1` -> FM + SEC + COND + QA + SAFE (+ TRACE only where grafted §4/§5
-sections are present, per RUBRIC.md §9); `## §1 - Description`..`## §11` grammar ->
-engineering-spec@1 (§12 sub-rule set + TRACE-001..005 + QA + SAFE). A file matching BOTH markers or
-NEITHER routes to needs_human naming the conflict. The 10/10 bar and needs_human semantics are
-identical across templates. Profiles: `../task-author/references/TEMPLATE_PROFILES.md`.
+Audit each file by its OWN detected template, never the repo default: frontmatter `template: task@1` -> FM + SEC + COND + QA + SAFE (+ TRACE only where grafted §4/§5 sections are present, per RUBRIC.md §9); `## §1 - Description`..`## §11` grammar -> engineering-spec@1 (§12 sub-rule set + TRACE-001..005 + QA + SAFE). A file matching BOTH markers or NEITHER routes to needs_human naming the conflict. The 10/10 bar and needs_human semantics are identical across templates. Profiles: `../task-author/references/TEMPLATE_PROFILES.md`.
 
 ## Report path resolution (TASK-SKILL-120)
 
-Folder-layout tasks (`<module>/<STEM>/spec.md`): the report is `<STEM>/audit.md`. Legacy flat files
-this skill is explicitly pointed at keep sibling `<stem>.audit.md` resolution for one release
-(transition window opened 2026-07-12; drops with the next MAJOR of this skill).
+Folder-layout tasks (`<module>/<STEM>/spec.md`): the report is `<STEM>/audit.md`. Legacy flat files this skill is explicitly pointed at keep sibling `<stem>.audit.md` resolution for one release (transition window opened 2026-07-12; drops with the next MAJOR of this skill).

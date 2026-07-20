@@ -87,16 +87,16 @@ The CUO service **MUST** ship chain walker at `services/cuo/src/chain/` with top
 1. **MUST** validate `chain_status` against closed enum per DEC-2341.
 
 2. **MUST** sort topologically at `topological_sorter.rs::sort(skills_with_deps)` per DEC-2340:
-   - Build DAG from depends_on edges
-   - Kahn's algorithm or DFS topo
-   - Return ordered list of skills
+- Build DAG from depends_on edges
+- Kahn's algorithm or DFS topo
+- Return ordered list of skills
 
 3. **MUST** detect cycles at `cycle_detector.rs::has_cycle(graph)` per DEC-2342 — reject plan if true.
 
 4. **MUST** walk at `walker.rs::walk(plan)` per DEC-2340:
-   - Execute skills in topo order
-   - Capture per-step sub-row (skill_id, started_at, completed_at, status, result)
-   - Update composite row status
+- Execute skills in topo order
+- Capture per-step sub-row (skill_id, started_at, completed_at, status, result)
+- Update composite row status
 
 5. **MUST** define tables at migration `0004`:
    ```sql
@@ -243,9 +243,7 @@ async fn step_failure_updates_chain() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-CUO-101.
-**Downstream:** TASK-CUO-105 (rollback on failure).
-**Cross-module:** TASK-CUO-102 (checkpoint integration), TASK-SKILL-001 (skill registry), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-CUO-101. **Downstream:** TASK-CUO-105 (rollback on failure). **Cross-module:** TASK-CUO-102 (checkpoint integration), TASK-SKILL-001 (skill registry), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

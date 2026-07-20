@@ -70,20 +70,20 @@ The drift detector **MUST** run a nightly sweep over all active memory_links and
 1. **MUST** schedule a nightly cron task at 02:00 local time (configurable per `CYBEROS_DRIFT_SWEEP_CRON` env var; default `0 2 * * *`).
 2. **MUST** also support on-demand sweep via `cyberos drift sweep [--tenant-id <uuid>]` CLI.
 3. **MUST** detect three drift kinds:
-    - `TargetMissing`: linked memory_path no longer exists in memory (deletion / unwatched folder).
-    - `TargetSuperseded`: linked memory has been superseded by a newer memory (task-AGENTS §8 correction_to row); the link points at the older revision.
-    - `ScopeRevoked`: the issue's tenant lost read scope to the memory (tenant permission change since link was created).
+- `TargetMissing`: linked memory_path no longer exists in memory (deletion / unwatched folder).
+- `TargetSuperseded`: linked memory has been superseded by a newer memory (task-AGENTS §8 correction_to row); the link points at the older revision.
+- `ScopeRevoked`: the issue's tenant lost read scope to the memory (tenant permission change since link was created).
 4. **MUST** emit `proj.citation_drift_detected` memory audit row PER detected drift with payload `{link_id, issue_id, memory_path, drift_kind, detected_at_ns, prior_check_at_ns, trace_id}`.
 5. **MUST** record sweep state in `drift_state` table: per-tenant `last_sweep_at`, `last_total_links_checked`, `last_drift_count_by_kind`. Operators query for "when did the last sweep run."
 6. **MUST** notify via TASK-OBS-007:
-    - If `drift_count >= 10` in one sweep for one tenant → sev-2 alert.
-    - Otherwise → sev-3 (informational; surfaces in daily digest).
+- If `drift_count >= 10` in one sweep for one tenant → sev-2 alert.
+- Otherwise → sev-3 (informational; surfaces in daily digest).
 7. **MUST** NOT auto-remove stale links. Drift is informational; the operator decides whether to remove or accept the stale state.
 8. **MUST** expose REST `GET /api/proj/drift?tenant_id=...&since=...` returning detected drifts (paginated).
 9. **MUST** emit OTel metrics:
-    - `proj_drift_sweep_duration_seconds` (histogram).
-    - `proj_drift_links_checked_total` (counter).
-    - `proj_drift_detected_total{kind}` (counter).
+- `proj_drift_sweep_duration_seconds` (histogram).
+- `proj_drift_links_checked_total` (counter).
+- `proj_drift_detected_total{kind}` (counter).
 10. **MUST** be deterministic given fixed memory state: same input = same drift report (no Date.now()-keyed randomness).
 11. **MUST** complete within 5 minutes for a tenant with ≤ 10K active links; exceeded → sev-2 latency alarm.
 12. **MUST** support delta sweeps: `cyberos drift sweep --since <timestamp>` only re-checks links touched after `<timestamp>`. Used by operators iterating fixes without re-checking everything.

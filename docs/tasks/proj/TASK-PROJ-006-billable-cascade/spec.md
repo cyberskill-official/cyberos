@@ -83,12 +83,12 @@ The resolver:
 5. **MUST** validate `member_id` belongs to the engagement (cross-engagement override invalid).
 6. **MUST** be deterministic per `(member_id, task_class, role, engagement_id, at_date)` snapshot at AT-DATE; cascade reads rate card via `TASK-PROJ-005::lookup_at(at_date)` so the snapshot is reproducible.
 7. **MUST** emit OTel metrics:
-    - `proj_billable_resolutions_total{value, source}` (counter; cardinality 2 × 4 = 8).
-    - `proj_billable_cascade_depth` (histogram).
+- `proj_billable_resolutions_total{value, source}` (counter; cardinality 2 × 4 = 8).
+- `proj_billable_cascade_depth` (histogram).
 8. **MUST** expose REST: `POST /api/proj/engagements/:eng/billable-cascade/resolve` with body `{member_id, task_class, role, at_date}` → 200 `BillableResolution`. Used by clients (Kanban, timeline) for preview before writing.
 9. **MUST** expose admin CRUD for Tier-1 + Tier-2 overrides:
-    - `POST/DELETE /api/proj/engagements/:eng/member-overrides/:member_id`
-    - `POST/DELETE /api/proj/engagements/:eng/task-class/:class`
+- `POST/DELETE /api/proj/engagements/:eng/member-overrides/:member_id`
+- `POST/DELETE /api/proj/engagements/:eng/task-class/:class`
 10. **MUST** emit memory audit on override CRUD: `proj.member_billable_override_set` / `proj.task_class_billable_set`.
 11. **MUST** RLS-enforce per tenant (TASK-AUTH-003).
 12. **MUST** validate the resolver inputs at handler boundary: `member_id` exists in tenant; `engagement_id` exists in tenant; `at_date` is not more than 5 years in the past; `currency` is in the rate-card's enum. Invalid inputs → 400 with structured error.

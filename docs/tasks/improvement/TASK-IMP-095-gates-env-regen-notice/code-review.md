@@ -1,8 +1,6 @@
 # TASK-IMP-095 code review
 
-Reviewer: ship-tasks batch-4 install-trio agent (serial after TASK-IMP-094). Diff:
-`tools/install/install.sh` step 3 (capture `env_bak`, guarded one-line echo),
-`tools/install/tests/test_install_hygiene.sh` (t08_gates_env_regen_notice).
+Reviewer: ship-tasks batch-4 install-trio agent (serial after TASK-IMP-094). Diff: `tools/install/install.sh` step 3 (capture `env_bak`, guarded one-line echo), `tools/install/tests/test_install_hygiene.sh` (t08_gates_env_regen_notice).
 
 ## Clause -> proof
 
@@ -14,20 +12,11 @@ Reviewer: ship-tasks batch-4 install-trio agent (serial after TASK-IMP-094). Dif
 
 ## Judgment
 
-- **Correctness vs ticket**: the recorded IMP-09 gap ("the sachviet run only found the .bak by
-  listing the directory") is closed at the moment of clobber, with zero behavior change to
-  regeneration, backup naming, or the step-1 churn guard (`rm -f gates.env.bak.*` untouched).
-- **Blast radius**: one variable + one guarded echo. The `[ -f ] && cp` -> if-block rewrite is
-  behavior-identical (same cp, same name); under `set -euo pipefail` the `if` form is also the
-  safer shape. Nothing else in step 3 moved - t06_* (config.yaml) and t05_no_hookspath's
-  exact-summary assertions still pass, proving no output drift elsewhere.
-- **Failure mode if wrong**: a false-positive notice on every install (killed by the cmp -s
-  identical arm), a ghost .bak path (killed by t08's `-f "$bak"` + edit grep), or a missed
-  notice (killed by the edited arm). All three arms are suite-asserted every run.
-- **Message audit**: fixed format string + one absolute path; no content of the operator's
-  file is echoed (SEC edge #7). Wording matches the spec byte-for-byte.
-- **Scenario naming**: spec names `t08_gates_env_regen_notice`; hygiene had t01-t07, so t08 was
-  free - landed under exactly that name, no remap.
+- **Correctness vs ticket**: the recorded IMP-09 gap ("the sachviet run only found the .bak by listing the directory") is closed at the moment of clobber, with zero behavior change to regeneration, backup naming, or the step-1 churn guard (`rm -f gates.env.bak.*` untouched).
+- **Blast radius**: one variable + one guarded echo. The `[ -f ] && cp` -> if-block rewrite is behavior-identical (same cp, same name); under `set -euo pipefail` the `if` form is also the safer shape. Nothing else in step 3 moved - t06_* (config.yaml) and t05_no_hookspath's exact-summary assertions still pass, proving no output drift elsewhere.
+- **Failure mode if wrong**: a false-positive notice on every install (killed by the cmp -s identical arm), a ghost .bak path (killed by t08's `-f "$bak"` + edit grep), or a missed notice (killed by the edited arm). All three arms are suite-asserted every run.
+- **Message audit**: fixed format string + one absolute path; no content of the operator's file is echoed (SEC edge #7). Wording matches the spec byte-for-byte.
+- **Scenario naming**: spec names `t08_gates_env_regen_notice`; hygiene had t01-t07, so t08 was free - landed under exactly that name, no remap.
 
 Verdict: no open findings.
 

@@ -86,11 +86,11 @@ The HR service **MUST** ship performance signal aggregator at `services/hr/src/p
 2. **MUST** validate `perf_signal_kind` against closed enum per DEC-1861.
 
 3. **MUST** aggregate at `signal_aggregator.rs::aggregate(member, period)`:
-   - proj_issue_velocity: count issues closed / period (TASK-PROJ-013 read)
-   - time_utilization_pct: billable_hours / total_hours (TASK-TIME-001 read)
-   - learn_completion_rate: courses_completed / assigned (TASK-LEARN-001 read)
-   - project_satisfaction_avg: avg from PROJ retro feedback
-   - ot_burnout_flag: TRUE if OT hours > 80% of cap last 3 months (TASK-TIME-007)
+- proj_issue_velocity: count issues closed / period (TASK-PROJ-013 read)
+- time_utilization_pct: billable_hours / total_hours (TASK-TIME-001 read)
+- learn_completion_rate: courses_completed / assigned (TASK-LEARN-001 read)
+- project_satisfaction_avg: avg from PROJ retro feedback
+- ot_burnout_flag: TRUE if OT hours > 80% of cap last 3 months (TASK-TIME-007)
 
 4. **MUST** run monthly cron at EOM per DEC-1862 via TASK-MCP-007.
 
@@ -210,8 +210,7 @@ async fn read_only_against_sources() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-PROJ-013, TASK-TIME-001.
-**Cross-module:** TASK-LEARN-001 (completion data), TASK-TIME-007 (OT for burnout flag), TASK-MCP-007 (cron), TASK-AUTH-101 (CHRO), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-PROJ-013, TASK-TIME-001. **Cross-module:** TASK-LEARN-001 (completion data), TASK-TIME-007 (OT for burnout flag), TASK-MCP-007 (cron), TASK-AUTH-101 (CHRO), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

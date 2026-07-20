@@ -105,9 +105,9 @@ risk_if_skipped: "Without dreaming, the memory's memory-quality objective is per
 The dreaming subsystem is a **batch asynchronous process** that mines the memory's recent state for memory-quality improvements and produces a reviewable diff. It runs **out of band** from any agent session and has its own audit identity. The contract:
 
 1. **MUST** be triggerable via `cyberos dream` CLI invocation, with a per-run `dream_id` (ULID, 26-char base32) generated at start. Triggers fall into three classes:
-    - **Manual**: `cyberos dream --since 24h` (operator on-demand)
-    - **Cron**: identical CLI invocation via OS-level scheduler (covered by TASK-MEMORY-110-style automation runbook; not part of this task's scope)
-    - **API**: `POST /api/v2/dream` on `cyberos serve` (deferred to slice 4; CLI is the slice-3 surface)
+- **Manual**: `cyberos dream --since 24h` (operator on-demand)
+- **Cron**: identical CLI invocation via OS-level scheduler (covered by TASK-MEMORY-110-style automation runbook; not part of this task's scope)
+- **API**: `POST /api/v2/dream` on `cyberos serve` (deferred to slice 4; CLI is the slice-3 surface)
 2. **MUST NOT** run in-band with any normal `cyberos put` / `cyberos read` / `cyberos search` operation. The dream runner takes a snapshot (HEAD seq + chain tip) at start and operates against that snapshot; concurrent writes from other processes proceed normally and are integrated on the next dream run, not preempted.
 3. **MUST** support the following four detector types (closed enum DEC-214) that produce a `DreamProposal`:
 
@@ -119,8 +119,8 @@ The dreaming subsystem is a **batch asynchronous process** that mines the memory
     | `verify` | `verify` | finds memories whose facts were actually used in recent sessions and didn't trigger correction; proposes annotating `meta.last_verified_at` (no body change) |
 4. **MUST NOT** auto-apply proposals. The runner produces a `DreamDiff` JSON artefact at `dreams/<utc-timestamp>/diff.json` (with `manifest.json:dreams.retention_days` default = 90 governing cleanup). A separate `cyberos dream apply <dream_id>` call is REQUIRED to merge proposals into the chain. Subset application via `--proposal-ids` is supported.
 5. **MUST** emit two audit rows per dream run (regardless of apply state):
-    - `dream.start`: payload `{dream_id, scope, since, detectors, invoker, started_at}`
-    - `dream.complete`: payload `{dream_id, proposals_count, applied_count: 0, duration_ms, quality_metrics: {…}}`
+- `dream.start`: payload `{dream_id, scope, since, detectors, invoker, started_at}`
+- `dream.complete`: payload `{dream_id, proposals_count, applied_count: 0, duration_ms, quality_metrics: {…}}`
 6. **MUST** validate that every `cyberos.core.writer.Writer` operation originating from `dream apply` carries `extra.dream_id` + `extra.proposal_id`. The writer enforces this via constructor flag `dream_origin: bool = False`; the dream applier sets it True. Walker invariant `dream-applied-row-has-provenance` catches drift.
 7. **MUST** support `--dry-run` on `cyberos dream` — runs the full detection pipeline + writes the diff to disk, but emits a `dream.complete` row with `applied_count: 0` and never advances any memory file. The diff file IS written so operators can inspect it.
 8. **MUST** support `--detectors duplicates,stale,patterns,verify` (default: all) and `--scope <path>` (default: full memory) for narrow runs. A scope like `memories/facts/` only walks that subtree.

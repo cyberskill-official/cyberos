@@ -19,6 +19,4 @@ Test functions live in tools/install/tests/test_install_hygiene.sh.
 | 6 | SECURITY | scaffold content lands in a gitignored local config | `cfg_tmpl_line` is one of two FIXED literals chosen by a `-f` test - no operator input flows into the heredoc line, no execution surface (spec §3: security-class none) | inspection (install.sh step 3b, `cfg_tmpl_line=` branch) + t06_consumer_template_default (asserts the exact line with `grep -qx`) |
 | 7 | DEGRADATION | operator wants engineering-spec@1 in a consumer repo after the new default lands | edits the live line in place - the line is inspectable and overridable (the recorded IMP-06 rationale for a config line over an invisible chain default). detection: `cat .cyberos/config.yaml`; recovery: one-line edit, create-once preserves it on every future install | t06_existing_config_untouched (proves an operator-authored file survives re-install byte-for-byte) |
 
-Documented-by-design: migrating existing consumer repos is out of scope (their config.yaml is
-theirs - spec Non-Goals); the resolution chain default when config.yaml is silent stays
-engineering-spec@1 (chain untouched by decision).
+Documented-by-design: migrating existing consumer repos is out of scope (their config.yaml is theirs - spec Non-Goals); the resolution chain default when config.yaml is silent stays engineering-spec@1 (chain untouched by decision).

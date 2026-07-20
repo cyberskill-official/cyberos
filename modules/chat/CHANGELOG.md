@@ -27,4 +27,3 @@ Verified:
 - decommission_signal definition appears verbatim 3× (hero fact-grid, §2.9, §13 KPI table)
 
 The CHAT page now reads as the complete answer to: (1) why CHAT is the P0 dogfood gate not just another module, (2) why Mattermost fork beats Matrix/Phoenix/build-from-scratch under our constraint set, (3) how @lumi mention is the conversational memory-capture mechanism, (4) why we chose per-tenant Postgres encryption-at-rest over E2EE, (5) how Slack/Zalo migration works without losing threads/reactions, and (6) what happens if decommission_signal misses 0.95 by P0 · exit (the platform-thesis review escalation). A new engineer reading this page cold can now pick up the Mattermost fork repo + memory bridge spec + Slack importer spec and start slice 1.
-

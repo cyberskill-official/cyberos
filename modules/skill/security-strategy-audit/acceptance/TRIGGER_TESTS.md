@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this security strategy"
+- "Audit this security strategy"
 - "Check the security strategy for completeness"
 - "Verify the security strategy meets the rubric"
 - "Re-audit the security strategy"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a security strategy" → security-strategy-author
+- "Draft a security strategy" → security-strategy-author
 - "Create the security strategy" → security-strategy-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

@@ -1,11 +1,7 @@
 # HANDOFF
 
 ## 1. Summary
-Loop 1 added auth (L1-T1). At Phase 4 the below-floor CORS watch was re-rated —
-its premise changed once auth existed — and promoted into Loop 2 as L2-T1,
-which restricted the wildcard origin. Both tasks DONE.
-Stop condition: (c) — every task is DONE and the Phase 4 re-evaluation surfaced
-no further below-floor item that crosses the floor.
+Loop 1 added auth (L1-T1). At Phase 4 the below-floor CORS watch was re-rated — its premise changed once auth existed — and promoted into Loop 2 as L2-T1, which restricted the wildcard origin. Both tasks DONE. Stop condition: (c) — every task is DONE and the Phase 4 re-evaluation surfaced no further below-floor item that crosses the floor.
 
 ## 2. Audit vectors covered
 Architecture, Security, Testing.

@@ -120,16 +120,15 @@ The AI Gateway service **MUST** ship a `cyberos-ai` operator CLI binary providin
 5. **MUST** refuse mutating operations without an explicit `--confirm` flag. Without `--confirm`, the command prints a DIFF (current state → proposed state) and exits with code 4 (`DESTRUCTIVE_WITHOUT_CONFIRM`). The diff is human-readable AND parseable (operators can pipe to `tee` to log review evidence).
 6. **MUST** authenticate the operator via `CYBEROS_AI_OPERATOR_TOKEN` environment variable (short-lived JWT signed by the deployment secret). The token carries `operator_id` (kebab-case email) and `roles` (`read | mutate | admin`). Read-only commands accept any role; mutating commands require `mutate` or `admin`; the `failover drill` and `expiry repair` commands require `admin`. Missing or invalid token exits with code 2 (`AUTH_FAILED`); insufficient role exits with code 2 with a clear message.
 7. **MUST** emit standardised exit codes per the shared `cyberos-cli-exit::ExitCode` re-export (cross-CLI contract; see also TASK-AUTH-006):
-    - `0` — success
-    - `1` — user error (invalid args, validation failure, no such tenant)
-    - `2` — auth failed OR insufficient role
-    - `3` — remote unreachable (Postgres, memory, gateway)
-    - `4` — destructive operation without `--confirm`
-    - `5` — already initialised (reserved — bootstrap-only path; not raised by operator CLI commands but value is reserved cluster-wide)
-    - `6` — schema violation (input YAML invalid)
-    - `7` — internal error
-    - `6` — internal error (panic, unexpected state)
-   Exit codes are part of the CLI's stable contract; scripts and CI pipelines depend on them.
+- `0` — success
+- `1` — user error (invalid args, validation failure, no such tenant)
+- `2` — auth failed OR insufficient role
+- `3` — remote unreachable (Postgres, memory, gateway)
+- `4` — destructive operation without `--confirm`
+- `5` — already initialised (reserved — bootstrap-only path; not raised by operator CLI commands but value is reserved cluster-wide)
+- `6` — schema violation (input YAML invalid)
+- `7` — internal error
+- `6` — internal error (panic, unexpected state) Exit codes are part of the CLI's stable contract; scripts and CI pipelines depend on them.
 8. **MUST** version `--json` output schemas. Each command's JSON output starts with `{"schema_version":"v1",...}`; consumers parse the version first and select the appropriate parser. Schema files live in `cli/json_schemas/<command>.v1.json` (JSON Schema draft-07). Bumping a schema requires explicit task amendment AND inclusion of the prior schema for one release cycle.
 9. **MUST** include the subcommand catalogue (each subcommand has `--help` listing its specific flags):
 
@@ -158,9 +157,9 @@ The AI Gateway service **MUST** ship a `cyberos-ai` operator CLI binary providin
 14. **MUST** redact secrets from CLI output: tenant policy fields marked `secret: true` in TASK-AI-005's schema (e.g., API keys for tenant-supplied managed-provider credentials) are displayed as `<REDACTED>` in both human and JSON output. Output of `policy diff` MUST NOT echo the secret value; operators see "secret-changed" indicator without the value.
 15. **SHOULD** generate shell completions for bash, zsh, and fish via `clap_complete`. The `cyberos-ai completions <shell>` subcommand outputs the completion script.
 16. **SHOULD** emit OTel metrics on CLI use:
-    - `cyberos_ai_cli_invocations_total{command, outcome, role}` (counter).
-    - `cyberos_ai_cli_latency_ms{command}` (histogram; surfaces slow commands).
-    - `cyberos_ai_cli_destructive_without_confirm_total{command}` (counter; tracks operator-error frequency).
+- `cyberos_ai_cli_invocations_total{command, outcome, role}` (counter).
+- `cyberos_ai_cli_latency_ms{command}` (histogram; surfaces slow commands).
+- `cyberos_ai_cli_destructive_without_confirm_total{command}` (counter; tracks operator-error frequency).
 
 ---
 

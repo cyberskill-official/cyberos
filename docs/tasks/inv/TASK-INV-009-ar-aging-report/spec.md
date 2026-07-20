@@ -83,18 +83,18 @@ The INV service **MUST** ship AR aging at `services/invoicing/src/reports/aging.
 1. **MUST** expose `POST /v1/inv/reports/aging` body `{ as_of_date, group_by?: 'customer'|'engagement'|'tenant', base_currency? }`. Auth via TASK-AUTH-101 (CFO + accountant roles).
 
 2. **MUST** bucket via `aging_bucketer.rs::bucket(invoice, as_of_date)`:
-   - Compute `days_overdue = as_of_date - invoice.due_date`.
-   - Map to enum per DEC-1542: `current` (≤0), `overdue_30` (1-30), `overdue_60` (31-60), `overdue_90` (61-90), `overdue_120` (91-120), `overdue_120plus` (>120).
-   - Use `invoice.outstanding_balance` (not total) per DEC-1543.
+- Compute `days_overdue = as_of_date - invoice.due_date`.
+- Map to enum per DEC-1542: `current` (≤0), `overdue_30` (1-30), `overdue_60` (31-60), `overdue_90` (61-90), `overdue_120` (91-120), `overdue_120plus` (>120).
+- Use `invoice.outstanding_balance` (not total) per DEC-1543.
 
 3. **MUST** use as_of_date for ALL calculations per DEC-1541 — never `now()`. Same params → same SQL → same result.
 
 4. **MUST** support multi-currency per DEC-1544: when `base_currency` differs from invoice currency, convert via TASK-INV-002 `fx_snapshot(currency_pair, as_of_date)`. Missing FX → fall back to nearest-prior with sev-2 audit.
 
 5. **MUST** return rollup per group_by:
-   - `customer`: `[{customer_id, current, overdue_30, ..., total_outstanding, currency}]`
-   - `engagement`: `[{engagement_id, ..., total_outstanding}]`
-   - `tenant`: single row with bucket sums
+- `customer`: `[{customer_id, current, overdue_30, ..., total_outstanding, currency}]`
+- `engagement`: `[{engagement_id, ..., total_outstanding}]`
+- `tenant`: single row with bucket sums
 
 6. **MUST** exclude `cancelled` and `paid` invoices from buckets; include `sent`, `partial_paid`, `overdue` statuses.
 
@@ -231,9 +231,7 @@ pub async fn generate(req: AgingRequest, db: &Db) -> Result<AgingReport> {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-INV-001, TASK-INV-002.
-**Downstream:** TASK-INV-010 (dunning uses aging output).
-**Cross-module:** TASK-AUTH-101 (role check), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-INV-001, TASK-INV-002. **Downstream:** TASK-INV-010 (dunning uses aging output). **Cross-module:** TASK-AUTH-101 (role check), TASK-MEMORY-111 (PII).
 
 ## §8 — Sample payloads (see §3)
 

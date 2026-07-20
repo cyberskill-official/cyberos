@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this customer health review"
+- "Audit this customer health review"
 - "Check the customer health review for completeness"
 - "Verify the customer health review meets the rubric"
 - "Re-audit the customer health review"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a customer health review" → customer-health-review-author
+- "Draft a customer health review" → customer-health-review-author
 - "Create the customer health review" → customer-health-review-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

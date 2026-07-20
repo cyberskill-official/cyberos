@@ -96,15 +96,15 @@ The DOC service **MUST** ship identity verification at `services/doc/src/verific
 2. **MUST** validate `verification_method` against closed enum per DEC-1741, `verification_result` per DEC-1742.
 
 3. **MUST** dispatch per method:
-   - `webauthn_handler.rs::challenge()` + `verify(response)` — FIDO2/passkey
-   - `vneid_handler.rs::redirect_to_vneid()` + `callback(token)` — VN national ID via gov OAuth
-   - `otp_handler.rs::send_otp(phone)` + `verify(code)` — 6-digit SMS code
-   - `email_link_handler.rs::send_link(email)` + `verify(token)` — magic-link
+- `webauthn_handler.rs::challenge()` + `verify(response)` — FIDO2/passkey
+- `vneid_handler.rs::redirect_to_vneid()` + `callback(token)` — VN national ID via gov OAuth
+- `otp_handler.rs::send_otp(phone)` + `verify(code)` — 6-digit SMS code
+- `email_link_handler.rs::send_link(email)` + `verify(token)` — magic-link
 
 4. **MUST** map to eIDAS assurance level per DEC-1743:
-   - webauthn → 'high'
-   - vneid → 'substantial'
-   - sms_otp / email_link → 'low'
+- webauthn → 'high'
+- vneid → 'substantial'
+- sms_otp / email_link → 'low'
 
 5. **MUST** enforce minimum level per document per DEC-1743 — if document requires 'substantial', sms_otp rejected.
 
@@ -238,9 +238,7 @@ async fn challenge_expiry() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-AUTH-105.
-**Downstream:** TASK-DOC-005 (multi-party signing uses this).
-**Cross-module:** TASK-MEMORY-111 (PII), TASK-DOC-001 (document RLS context).
+**Upstream:** TASK-AUTH-105. **Downstream:** TASK-DOC-005 (multi-party signing uses this). **Cross-module:** TASK-MEMORY-111 (PII), TASK-DOC-001 (document RLS context).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

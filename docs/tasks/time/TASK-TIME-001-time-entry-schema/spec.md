@@ -134,22 +134,22 @@ risk_if_skipped: "TIME is invoice-grade infrastructure — one missed entry brea
 The TIME service **MUST** ship the TimeEntry schema as the canonical append-only record of "Member X spent N minutes on issue Y at time Z". Each requirement:
 
 1. **MUST** define the `time_entries` table with the following columns (full DDL in §3.1):
-    - `id UUID PRIMARY KEY` — row identity.
-    - `tenant_id UUID NOT NULL` — RLS partitioning key.
-    - `member_subject_id UUID NOT NULL REFERENCES auth.subjects(id)` — who performed the work.
-    - `engagement_id UUID NOT NULL` — the engagement billable target (per TASK-PROJ-005; placeholder FK at slice 1).
-    - `issue_id UUID NOT NULL` — the specific issue (per TASK-PROJ-001).
-    - `ts_start TIMESTAMPTZ NOT NULL` — entry start in UTC.
-    - `duration_minutes INT NOT NULL CHECK (duration_minutes BETWEEN 1 AND 1440)` — minimum 1 minute, maximum 24 hours (per DEC-227 + DEC-228).
-    - `entry_kind entry_kind NOT NULL` — closed enum: `regular | overtime | weekend | holiday`.
-    - `entry_status entry_status NOT NULL DEFAULT 'draft'` — closed enum: `draft | submitted | approved | reverted` (TASK-TIME-006 transitions).
-    - `billable BOOLEAN NOT NULL DEFAULT false` — set by TASK-TIME-005's cascade; this task declares the column only (per DEC-223).
-    - `rate_card_snapshot JSONB` — populated at entry creation by TASK-TIME-005; snapshot of the engagement rate-card at the row's instant (per DEC-224); empty `{}` at slice 1.
-    - `entry_currency CHAR(3) NOT NULL` — ISO-4217; defaulted from engagement.invoice_currency at row creation (per DEC-229).
-    - `description TEXT` — nullable; 0–1000 chars; PII-scrubbable.
-    - `correction_to UUID REFERENCES time_entries(id) DEFERRABLE INITIALLY IMMEDIATE` — nullable; non-null on correction rows (per DEC-220 + DEC-225).
-    - `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`.
-    - `created_by_subject_id UUID NOT NULL REFERENCES auth.subjects(id)`.
+- `id UUID PRIMARY KEY` — row identity.
+- `tenant_id UUID NOT NULL` — RLS partitioning key.
+- `member_subject_id UUID NOT NULL REFERENCES auth.subjects(id)` — who performed the work.
+- `engagement_id UUID NOT NULL` — the engagement billable target (per TASK-PROJ-005; placeholder FK at slice 1).
+- `issue_id UUID NOT NULL` — the specific issue (per TASK-PROJ-001).
+- `ts_start TIMESTAMPTZ NOT NULL` — entry start in UTC.
+- `duration_minutes INT NOT NULL CHECK (duration_minutes BETWEEN 1 AND 1440)` — minimum 1 minute, maximum 24 hours (per DEC-227 + DEC-228).
+- `entry_kind entry_kind NOT NULL` — closed enum: `regular | overtime | weekend | holiday`.
+- `entry_status entry_status NOT NULL DEFAULT 'draft'` — closed enum: `draft | submitted | approved | reverted` (TASK-TIME-006 transitions).
+- `billable BOOLEAN NOT NULL DEFAULT false` — set by TASK-TIME-005's cascade; this task declares the column only (per DEC-223).
+- `rate_card_snapshot JSONB` — populated at entry creation by TASK-TIME-005; snapshot of the engagement rate-card at the row's instant (per DEC-224); empty `{}` at slice 1.
+- `entry_currency CHAR(3) NOT NULL` — ISO-4217; defaulted from engagement.invoice_currency at row creation (per DEC-229).
+- `description TEXT` — nullable; 0–1000 chars; PII-scrubbable.
+- `correction_to UUID REFERENCES time_entries(id) DEFERRABLE INITIALLY IMMEDIATE` — nullable; non-null on correction rows (per DEC-220 + DEC-225).
+- `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`.
+- `created_by_subject_id UUID NOT NULL REFERENCES auth.subjects(id)`.
 
 2. **MUST** enforce RLS with both `USING` and `WITH CHECK` (task-audit skill rule 13). Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`. Cross-tenant reads return 0 rows; cross-tenant writes fail `permission_denied`.
 
@@ -160,11 +160,10 @@ The TIME service **MUST** ship the TimeEntry schema as the canonical append-only
 5. **MUST** be **append-only** at the SQL grant layer (per DEC-230 + task-audit skill rule 12). Migration applies `REVOKE UPDATE, DELETE ON time_entries FROM cyberos_app;`. Mutations write a fresh row with `correction_to` pointing at the prior row (per §1 #6 below).
 
 6. **MUST** support **correction via new row** (per DEC-220). The handler `POST /v1/time/entries/{id}/correct` creates a new row with:
-    - `correction_to = <prior_id>`.
-    - All other fields from the body OR copied from prior if unspecified.
-    - `tenant_id`, `engagement_id`, `issue_id`, `member_subject_id` MUST be identical to the prior row (per §1 #11). Cross-engagement correction is forbidden.
-    - The same audit emission contract as `create` but with kind `time.entry_corrected`.
-   Corrections are themselves correctable (chains, not trees — per DEC-226).
+- `correction_to = <prior_id>`.
+- All other fields from the body OR copied from prior if unspecified.
+- `tenant_id`, `engagement_id`, `issue_id`, `member_subject_id` MUST be identical to the prior row (per §1 #11). Cross-engagement correction is forbidden.
+- The same audit emission contract as `create` but with kind `time.entry_corrected`. Corrections are themselves correctable (chains, not trees — per DEC-226).
 
 7. **MUST** enforce **acyclic correction chains** (per DEC-225). A `BEFORE INSERT` trigger walks `correction_to` upward; if the walk visits the new row's `id` (via a future re-correction back), the insert is rejected with `correction_cycle_detected`. A CI test (`correction_acyclic_test`) seeds a 5-row chain + an attempted cycle and asserts the reject.
 
@@ -173,11 +172,11 @@ The TIME service **MUST** ship the TimeEntry schema as the canonical append-only
 9. **MUST** ship the `current_time_entries_view` SQL view filtering to "effective rows only" — rows that no other row supersedes via `correction_to`. Definition: `SELECT * FROM time_entries WHERE id NOT IN (SELECT correction_to FROM time_entries WHERE correction_to IS NOT NULL)`. Downstream tasks (TASK-TIME-005 billable cascade, TASK-TIME-009 rollup) MUST read from the view, not the raw table.
 
 10. **MUST** validate at API layer:
-    - `duration_minutes` between 1 and 1440 (per DEC-227 + DEC-228; the DB CHECK constraint duplicates).
-    - `ts_start` not in the future (clock-skew tolerance: +5 minutes; entries beyond that → 400 `ts_start_in_future`).
-    - `entry_kind` parses to closed enum (`unknown_entry_kind` otherwise).
-    - On correction: `correction_to` row exists, belongs to the same tenant + engagement + issue + member.
-    - `description` length 0–1000 chars.
+- `duration_minutes` between 1 and 1440 (per DEC-227 + DEC-228; the DB CHECK constraint duplicates).
+- `ts_start` not in the future (clock-skew tolerance: +5 minutes; entries beyond that → 400 `ts_start_in_future`).
+- `entry_kind` parses to closed enum (`unknown_entry_kind` otherwise).
+- On correction: `correction_to` row exists, belongs to the same tenant + engagement + issue + member.
+- `description` length 0–1000 chars.
 
 11. **MUST** reject corrections where any of `tenant_id`, `engagement_id`, `issue_id`, `member_subject_id` differ from the prior row. A trigger `enforce_correction_inheritance` raises `correction_cross_scope` on violation. Reasoning: a correction is "I logged this entry wrong" — never "I logged this entry under the wrong engagement"; the latter is a new entry + a `time.entry_recorded` row.
 
@@ -188,21 +187,21 @@ The TIME service **MUST** ship the TimeEntry schema as the canonical append-only
 14. **MUST** complete create/correct/get/list handlers in ≤ 50 ms p95. `entries_perf_test` asserts on 1000 iterations.
 
 15. **MUST** expose REST handlers:
-    - `POST /v1/time/entries` — create new entry; caller `Resource::TimeEntry + Action::Write`.
-    - `POST /v1/time/entries/{id}/correct` — create correction row; same permission.
-    - `GET /v1/time/entries/{id}` — fetch (effective via `current_time_entries_view` by default; `?include=history` walks the chain).
-    - `GET /v1/time/entries?member_subject_id=<>&engagement_id=<>&from=<>&to=<>` — list with cursor pagination; defaults to `current_time_entries_view`.
+- `POST /v1/time/entries` — create new entry; caller `Resource::TimeEntry + Action::Write`.
+- `POST /v1/time/entries/{id}/correct` — create correction row; same permission.
+- `GET /v1/time/entries/{id}` — fetch (effective via `current_time_entries_view` by default; `?include=history` walks the chain).
+- `GET /v1/time/entries?member_subject_id=<>&engagement_id=<>&from=<>&to=<>` — list with cursor pagination; defaults to `current_time_entries_view`.
 
 16. **MUST** support idempotent creation via `Idempotency-Key` header (same semantics as TASK-AUTH-002 §1 #6).
 
 17. **MUST** emit OTel span `time.entry.{create,correct,get,list}` per handler with attributes: `tenant_id`, `member_subject_id_hash16`, `engagement_id`, `entry_id`, `outcome` (success | invalid_duration | invalid_kind | cross_scope_correction | cycle_detected | prior_already_corrected | permission_denied).
 
 18. **MUST** emit OTel metrics:
-    - `time_entry_create_total{outcome, entry_kind}` (counter).
-    - `time_entry_correct_total{outcome}` (counter).
-    - `time_entry_correction_chain_depth` (histogram; alarm at p99 > 5 — a deep chain suggests a workflow issue).
-    - `time_entry_duration_minutes` (histogram per `entry_kind`).
-    - `time_entry_count{tenant_id, entry_status}` (gauge).
+- `time_entry_create_total{outcome, entry_kind}` (counter).
+- `time_entry_correct_total{outcome}` (counter).
+- `time_entry_correction_chain_depth` (histogram; alarm at p99 > 5 — a deep chain suggests a workflow issue).
+- `time_entry_duration_minutes` (histogram per `entry_kind`).
+- `time_entry_count{tenant_id, entry_status}` (gauge).
 
 19. **MUST** ship `entry_chain_walker(entry_id UUID) RETURNS SETOF UUID` SQL function that returns the chain from oldest (original) to newest (effective). Used by `GET ?include=history` and by the cycle-detection trigger. Maximum walk depth 100 (anti-infinite-loop safety floor).
 

@@ -98,14 +98,14 @@ The TEN service **MUST** define exactly three hardcoded plan tiers — Starter, 
 | team | 25 | 500_000 | 5_000_000 | 100 GiB |
 | enterprise | NULL (∞) | NULL (∞) | 50_000_000 | 1 TiB |
 
-   NULL means unlimited for that axis. Enterprise has a finite ai_tokens cap because tokens map to provider pass-through costs and "unlimited" would expose us to cost explosions (DEC-780). Storage above 1 TiB on Enterprise is billed per-GB (out of scope here; see TASK-TEN-003).
+NULL means unlimited for that axis. Enterprise has a finite ai_tokens cap because tokens map to provider pass-through costs and "unlimited" would expose us to cost explosions (DEC-780). Storage above 1 TiB on Enterprise is billed per-GB (out of scope here; see TASK-TEN-003).
 
 3. **MUST** default new tenants to `starter` at TASK-TEN-001 provisioning (DEC-783 ref). The default is wired in `services/ten/src/handlers/tenant_create.rs` — no other code path may write `plan_tier` at insert.
 
 4. **MUST** expose `POST /v1/admin/tenants/{id}/plan` to change a tenant's plan. The handler requires:
-   - The caller's role is `tenant_admin` (per TASK-AUTH-101) for upgrade/downgrade of their own tenant, OR `cyberskill_founder` for any tenant.
-   - The body `{ "target_tier": "team", "effective": "immediate" | "next_period" }` is valid.
-   - For downgrades, the handler checks current period usage against target-tier caps (DEC-774). If usage exceeds target caps on any axis, the handler returns `409 CONFLICT` with `{error: "downgrade_violation", axis, current, target_cap}` and refuses unless the body includes `acknowledge_data_loss: true` AND the target action implies a permitted resolution (e.g., the tenant has deactivated seats to fit).
+- The caller's role is `tenant_admin` (per TASK-AUTH-101) for upgrade/downgrade of their own tenant, OR `cyberskill_founder` for any tenant.
+- The body `{ "target_tier": "team", "effective": "immediate" | "next_period" }` is valid.
+- For downgrades, the handler checks current period usage against target-tier caps (DEC-774). If usage exceeds target caps on any axis, the handler returns `409 CONFLICT` with `{error: "downgrade_violation", axis, current, target_cap}` and refuses unless the body includes `acknowledge_data_loss: true` AND the target action implies a permitted resolution (e.g., the tenant has deactivated seats to fit).
 
 5. **MUST** treat upgrades as immediate (proration applies; see DEC-773). Downgrades default to `effective: "next_period"` (deferred to billing-period boundary) per DEC-773. Setting `effective: "immediate"` on a downgrade is allowed but emits a sev-2 audit row noting the unusual choice.
 
@@ -162,10 +162,10 @@ The TEN service **MUST** define exactly three hardcoded plan tiers — Starter, 
 24. **MUST** support per-tenant `is_founder_tenant` boolean (DEC-777) seeded TRUE at provisioning time for the CyberSkill operator's tenant (via TASK-TEN-001 founder flag). A trigger rejects mutation of `is_founder_tenant` after insert (one-way set at creation).
 
 25. **MUST** emit 4 closed memory audit kinds:
-    - `ten.plan_changed` (sev-2, every plan transition)
-    - `ten.plan_founder_override` (sev-2, founder-only override path)
-    - `ten.plan_change_rejected_violation` (sev-2, downgrade violation)
-    - `ten.plan_change_rejected_rate_limit` (sev-3, 24h rate limit)
+- `ten.plan_changed` (sev-2, every plan transition)
+- `ten.plan_founder_override` (sev-2, founder-only override path)
+- `ten.plan_change_rejected_violation` (sev-2, downgrade violation)
+- `ten.plan_change_rejected_rate_limit` (sev-3, 24h rate limit)
 
 ---
 

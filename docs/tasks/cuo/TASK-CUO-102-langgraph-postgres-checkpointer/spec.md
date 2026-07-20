@@ -84,9 +84,9 @@ The CUO service **MUST** ship Postgres checkpointer at `services/cuo/src/checkpo
 1. **MUST** validate `checkpoint_kind` against closed enum per DEC-2321.
 
 2. **MUST** persist at `postgres_writer.rs::write(run_id, kind, state)` per DEC-2320:
-   - Each node entered + completed; each edge traversed
-   - Full state JSON serialized via `state_serializer.rs`
-   - Trace_id from TASK-CUO-101 supervisor context
+- Each node entered + completed; each edge traversed
+- Full state JSON serialized via `state_serializer.rs`
+- Trace_id from TASK-CUO-101 supervisor context
 
 3. **MUST** define table at migration `0002`:
    ```sql
@@ -191,9 +191,7 @@ async fn per_node_checkpoint_count() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-CUO-101.
-**Downstream:** TASK-CUO-103 (replay uses checkpoints).
-**Cross-module:** TASK-MEMORY-111 (PII), TASK-MCP-007 (archive cron).
+**Upstream:** TASK-CUO-101. **Downstream:** TASK-CUO-103 (replay uses checkpoints). **Cross-module:** TASK-MEMORY-111 (PII), TASK-MCP-007 (archive cron).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

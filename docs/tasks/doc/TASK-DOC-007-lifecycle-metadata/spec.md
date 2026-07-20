@@ -105,8 +105,8 @@ The DOC service **MUST** extend TASK-DOC-001 documents with lifecycle metadata a
 3. **MUST** validate parties JSONB structure per DEC-1713 — array of `{party_id, party_type, role}`. party_type ∈ {tenant, customer, vendor, employee, authority}.
 
 4. **MUST** compute status at `status_computer.rs::compute(doc, now)` per DEC-1712:
-   - Triggered on field change + nightly cron (TASK-MCP-007).
-   - Updates `lifecycle_status` + `status_computed_at`.
+- Triggered on field change + nightly cron (TASK-MCP-007).
+- Updates `lifecycle_status` + `status_computed_at`.
 
 5. **MUST** support parent chain per DEC-1714 — amendments link via `parent_contract_id`; expose tree query endpoint.
 
@@ -206,9 +206,7 @@ async fn parent_chain_returns_ancestors() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-DOC-001.
-**Downstream:** TASK-DOC-008 (expiry alerts), TASK-DOC-009 (renewal proposals).
-**Cross-module:** TASK-MCP-007 (cron), TASK-AI-003 (parties extraction skill — future), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-DOC-001. **Downstream:** TASK-DOC-008 (expiry alerts), TASK-DOC-009 (renewal proposals). **Cross-module:** TASK-MCP-007 (cron), TASK-AI-003 (parties extraction skill — future), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

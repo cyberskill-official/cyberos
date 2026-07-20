@@ -23,10 +23,7 @@ trace_004_closed: true
 | AC 4 | #1.6 | `test_install_version_guard.sh::t04_missing_version_proceeds` | passed |
 | AC 5 | #1.2 | `test_install_version_guard.sh::t05_single_comparator` | passed |
 
-All 6 §1 clauses cited by at least one AC; 5/5 ACs closed. AC 5 was specified as a `verify:`
-(recorded grep) and is implemented as a real `test:` instead - t05 asserts install defines no
-comparator of its own, sources the shared one, and that `ver_lt` is defined in exactly ONE file
-repo-wide. A structural claim that can be a test should not be a verify.
+All 6 §1 clauses cited by at least one AC; 5/5 ACs closed. AC 5 was specified as a `verify:` (recorded grep) and is implemented as a real `test:` instead - t05 asserts install defines no comparator of its own, sources the shared one, and that `ver_lt` is defined in exactly ONE file repo-wide. A structural claim that can be a test should not be a verify.
 
 ## Edge-case matrix coverage (§3)
 
@@ -41,18 +38,11 @@ repo-wide. A structural claim that can be a test should not be a verify.
 
 ## Defects found and fixed during implementation
 
-1. **Two comparators already existed.** `ver_lt`/`is_ver` in `version.sh:77` AND inline in
-   `lib/update-check.sh:62`. The spec's §1.2 assumed one. Extracted to `lib/version-compare.sh`;
-   both callers now source it. t05 pins `ver_lt` to exactly one definition repo-wide, so a third
-   copy reds the suite.
+1. **Two comparators already existed.** `ver_lt`/`is_ver` in `version.sh:77` AND inline in `lib/update-check.sh:62`. The spec's §1.2 assumed one. Extracted to `lib/version-compare.sh`; both callers now source it. t05 pins `ver_lt` to exactly one definition repo-wide, so a third copy reds the suite.
 
-2. **The guard failed OPEN.** A missing comparator skipped the whole check silently. Now exits 1
-   naming the malformed payload. Caught by t01 returning 0 where it had to refuse.
+2. **The guard failed OPEN.** A missing comparator skipped the whole check silently. Now exits 1 naming the malformed payload. Caught by t01 returning 0 where it had to refuse.
 
-3. **`build.sh` never vendored the lib** (explicit copy list), so the guard was in the source and
-   absent from the payload - and `update-check.sh` shipped sourcing a file that did not exist
-   there. Fixed unconditionally. This is the defect the doctrine already names: a rule correct in
-   the source and absent from `dist/` is correct nowhere that matters.
+3. **`build.sh` never vendored the lib** (explicit copy list), so the guard was in the source and absent from the payload - and `update-check.sh` shipped sourcing a file that did not exist there. Fixed unconditionally. This is the defect the doctrine already names: a rule correct in the source and absent from `dist/` is correct nowhere that matters.
 
 ## Suite evidence
 
@@ -64,6 +54,4 @@ test_check_latest            9/9      test_check_version_sync 10/10
 build OK; sync OK 1.0.0 across 7 artifacts; payload carries lib/version-compare.sh
 ```
 
-Live-fire, scratch repo: older payload over a 2.0.0 machine refused with **exit 1** (verified
-unpiped), machine untouched at 2.0.0; `CYBEROS_ALLOW_DOWNGRADE=1` rolled back to 1.0.0 and the
-summary recorded `2.0.0 -> 1.0.0 (operator override)`.
+Live-fire, scratch repo: older payload over a 2.0.0 machine refused with **exit 1** (verified unpiped), machine untouched at 2.0.0; `CYBEROS_ALLOW_DOWNGRADE=1` rolled back to 1.0.0 and the summary recorded `2.0.0 -> 1.0.0 (operator override)`.

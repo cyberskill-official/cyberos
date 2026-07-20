@@ -94,28 +94,28 @@ risk_if_skipped: "Without revenue recognition, financial statements violate ASC 
 The INV service **MUST** ship revenue recognition at `services/invoicing/src/recognition/` supporting 4 methods, monthly EOM rollforward, journal entry pairs, immutable snapshots, 4 memory audit kinds.
 
 1. **MUST** support 4 recognition methods per DEC-1560:
-   - `time_based`: equal monthly amount over engagement.start_date → end_date
-   - `milestone_based`: recognize when milestone achieved (TASK-PROJ-002 milestone marked complete)
-   - `pct_completion`: recognize by % of project hours billed (uses TASK-TIME-002 time entries)
-   - `point_in_time`: full recognition on invoice send (one-off services)
+- `time_based`: equal monthly amount over engagement.start_date → end_date
+- `milestone_based`: recognize when milestone achieved (TASK-PROJ-002 milestone marked complete)
+- `pct_completion`: recognize by % of project hours billed (uses TASK-TIME-002 time entries)
+- `point_in_time`: full recognition on invoice send (one-off services)
 
 2. **MUST** validate `recognition_method` against closed enum per DEC-1561.
 
 3. **MUST** build schedule at engagement creation via `scheduler.rs::build(engagement)`:
-   - time_based → equal split across N months
-   - milestone_based → per-milestone bucket
-   - pct_completion → recompute on hours change
-   - point_in_time → single bucket at send_date
+- time_based → equal split across N months
+- milestone_based → per-milestone bucket
+- pct_completion → recompute on hours change
+- point_in_time → single bucket at send_date
 
 4. **MUST** run rollforward at EOM tenant_timezone per DEC-1562 via TASK-MCP-007 task:
-   - For each engagement, compute period revenue recognized
-   - Emit journal entry pair per DEC-1563
-   - Insert immutable snapshot row
+- For each engagement, compute period revenue recognized
+- Emit journal entry pair per DEC-1563
+- Insert immutable snapshot row
 
 5. **MUST** generate journal entry pairs per DEC-1563:
-   - On invoice issuance: `DR AR / CR Deferred Revenue`
-   - On recognition: `DR Deferred Revenue / CR Revenue`
-   - Pairs balance (sum DR == sum CR per entry)
+- On invoice issuance: `DR AR / CR Deferred Revenue`
+- On recognition: `DR Deferred Revenue / CR Revenue`
+- Pairs balance (sum DR == sum CR per entry)
 
 6. **MUST** define tables at migration `0010`:
    ```sql
@@ -308,8 +308,7 @@ pub async fn rollforward(period_end: NaiveDate, tenant: &Tenant, db: &Db) -> Res
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-INV-001.
-**Cross-module:** TASK-MCP-007 (cron), TASK-TIME-002 (hours for pct_completion), TASK-PROJ-002 (milestones), TASK-MEMORY-111 (PII), TASK-AUTH-101 (CFO role).
+**Upstream:** TASK-INV-001. **Cross-module:** TASK-MCP-007 (cron), TASK-TIME-002 (hours for pct_completion), TASK-PROJ-002 (milestones), TASK-MEMORY-111 (PII), TASK-AUTH-101 (CFO role).
 
 ## §8 — Sample payloads (see §3)
 

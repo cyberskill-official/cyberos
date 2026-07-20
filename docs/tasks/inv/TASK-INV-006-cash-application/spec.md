@@ -135,17 +135,17 @@ The INV service **MUST** ship cash application as a closed 4-step matching casca
 4. **MUST** be **append-only** on `payment_allocations` (per DEC-564). `REVOKE UPDATE, DELETE FROM cyberos_app`. Reversals create new rows with negative `amount_minor` + `reverses_allocation_id` link.
 
 5. **MUST** enforce **over-allocation block** via DB trigger (per DEC-563). On INSERT or UPDATE on `payment_allocations`:
-    - Compute `SUM(amount_minor) WHERE invoice_id = NEW.invoice_id` (positive + negative reversals net).
-    - If `SUM > invoices.amount_minor` for that invoice → RAISE `over_allocation_blocked` ERRCODE P0100.
-    - Compute `SUM(amount_minor) WHERE receipt_id = NEW.receipt_id`.
-    - If `SUM > payment_receipts.amount_minor` for that receipt → RAISE `receipt_over_allocated` ERRCODE P0101.
+- Compute `SUM(amount_minor) WHERE invoice_id = NEW.invoice_id` (positive + negative reversals net).
+- If `SUM > invoices.amount_minor` for that invoice → RAISE `over_allocation_blocked` ERRCODE P0100.
+- Compute `SUM(amount_minor) WHERE receipt_id = NEW.receipt_id`.
+- If `SUM > payment_receipts.amount_minor` for that receipt → RAISE `receipt_over_allocated` ERRCODE P0101.
 
 6. **MUST** ship the `inv_cash_app_job` scheduled job running every 5 minutes (per DEC-561 + DEC-571):
-    - Query: `SELECT id, amount_minor, currency, transfer_memo FROM payment_receipts WHERE invoice_id IS NULL AND received_at > now() - interval '90 days' FOR UPDATE SKIP LOCKED`.
-    - For each receipt: invoke `cascade::try_match(receipt)` running steps 1 → 2 → 3 sequentially; step 4 is operator-driven (never auto-run).
-    - Each step returns `Match { invoice_id, amount_minor_allocated, source }` or `NoMatch`.
-    - On Match: INSERT `payment_allocations` row + UPDATE `payment_receipts.invoice_id` + emit step-specific memory row.
-    - On NoMatch after step 3: emit `inv.cash_app_no_match` memory row sev-3.
+- Query: `SELECT id, amount_minor, currency, transfer_memo FROM payment_receipts WHERE invoice_id IS NULL AND received_at > now() - interval '90 days' FOR UPDATE SKIP LOCKED`.
+- For each receipt: invoke `cascade::try_match(receipt)` running steps 1 → 2 → 3 sequentially; step 4 is operator-driven (never auto-run).
+- Each step returns `Match { invoice_id, amount_minor_allocated, source }` or `NoMatch`.
+- On Match: INSERT `payment_allocations` row + UPDATE `payment_receipts.invoice_id` + emit step-specific memory row.
+- On NoMatch after step 3: emit `inv.cash_app_no_match` memory row sev-3.
 
 7. **MUST** implement **step 1 — exact memo reference match** (per DEC-560). Reuses TASK-INV-005's `extract_invoice_id` parser on `transfer_memo`. Match → INSERT allocation with full receipt amount; `allocation_source='memo_parser'`. Already handled at webhook time for ~80% of cases; this step catches receipts where memo parser deferred (e.g. when `payment_intent.metadata.invoice_id` was absent on Stripe path).
 
@@ -154,23 +154,23 @@ The INV service **MUST** ship cash application as a closed 4-step matching casca
 9. **MUST** implement **step 3 — fuzzy partial match** (per DEC-560 + DEC-567 + DEC-570). Per-tenant `cash_app_fuzzy_threshold_pct` lookup (default 5%, range 1-20%). Query: invoices where `ABS(invoice.amount_minor - receipt.amount_minor) / invoice.amount_minor <= threshold/100 AND status = 'open'`. Match exactly one → INSERT allocation; allocation amount = MIN(receipt.amount_minor, invoice.amount_minor_outstanding); `allocation_source='fuzzy'`. Multiple candidates → skip to manual step.
 
 10. **MUST** implement **step 4 — manual operator match** (per DEC-568). NOT auto-invoked. `POST /v1/inv/cash-app/allocate-manual` handler:
-    - Caller MUST have role `cfo` per TASK-AUTH-101.
-    - Body: `{receipt_id, invoice_id, amount_minor, notes}`.
-    - Validates `amount_minor > 0 AND <= receipt.amount_minor_remaining AND <= invoice.amount_minor_outstanding`.
-    - INSERT allocation with `allocation_source='manual'`.
-    - Emit `inv.cash_app_matched_manual` memory row sev-2 (every manual ledger touch is forensically critical).
+- Caller MUST have role `cfo` per TASK-AUTH-101.
+- Body: `{receipt_id, invoice_id, amount_minor, notes}`.
+- Validates `amount_minor > 0 AND <= receipt.amount_minor_remaining AND <= invoice.amount_minor_outstanding`.
+- INSERT allocation with `allocation_source='manual'`.
+- Emit `inv.cash_app_matched_manual` memory row sev-2 (every manual ledger touch is forensically critical).
 
 11. **MUST** support **partial allocation** (per DEC-562). One receipt MAY split across N invoices; one invoice MAY receive M receipts. Constraint enforced at trigger:
-    - SUM(allocations.amount_minor WHERE receipt_id = R) ≤ receipt.amount_minor.
-    - SUM(allocations.amount_minor WHERE invoice_id = I) ≤ invoice.amount_minor.
-    - Within-receipt overflow → 409 receipt_over_allocated; within-invoice overflow → 409 over_allocation_blocked.
+- SUM(allocations.amount_minor WHERE receipt_id = R) ≤ receipt.amount_minor.
+- SUM(allocations.amount_minor WHERE invoice_id = I) ≤ invoice.amount_minor.
+- Within-receipt overflow → 409 receipt_over_allocated; within-invoice overflow → 409 over_allocation_blocked.
 
 12. **MUST** support **reversal** (per DEC-569). `POST /v1/inv/cash-app/reverse` handler:
-    - Caller MUST have role `cfo`.
-    - Body: `{allocation_id, reason}`.
-    - INSERT new row with `amount_minor = -original.amount_minor`, `reverses_allocation_id = original.id`, `allocation_source='reversal'`, `notes = reason`.
-    - Constraint trigger handles — net sums adjust.
-    - Emit `inv.cash_app_allocation_reversed` memory row sev-2.
+- Caller MUST have role `cfo`.
+- Body: `{allocation_id, reason}`.
+- INSERT new row with `amount_minor = -original.amount_minor`, `reverses_allocation_id = original.id`, `allocation_source='reversal'`, `notes = reason`.
+- Constraint trigger handles — net sums adjust.
+- Emit `inv.cash_app_allocation_reversed` memory row sev-2.
 
 13. **MUST** ship `invoice_outstanding_view` SQL view (per DEC-572):
     ```sql
@@ -189,15 +189,15 @@ The INV service **MUST** ship cash application as a closed 4-step matching casca
 15. **MUST** ship `GET /v1/inv/cash-app/unmatched?from=<ts>&to=<ts>` handler (per DEC-573). Returns unmatched receipts (`invoice_id IS NULL` after step 3 ran). Caller MUST have role `cfo`. Body: `[{receipt_id, amount_minor, currency, transfer_memo, received_at, suggested_matches: [...top 3 fuzzy candidates...]}]`.
 
 16. **MUST** emit 9 memory audit row kinds (per DEC-565):
-    - `inv.cash_app_match_attempted` — every job-run on a receipt (sampled 10%).
-    - `inv.cash_app_matched_step1` — memo_parser hit during scheduled job.
-    - `inv.cash_app_matched_step2` — amount_date hit.
-    - `inv.cash_app_matched_step3` — fuzzy hit.
-    - `inv.cash_app_matched_manual` — CFO manual commit (sev-2).
-    - `inv.cash_app_no_match` — all auto-steps failed (sev-3; sev-2 if unmatched > 24h).
-    - `inv.cash_app_over_allocation_blocked` — trigger fired (sev-1; alarm).
-    - `inv.cash_app_partial_allocated` — receipt split across multiple invoices.
-    - `inv.cash_app_allocation_reversed` — reversal recorded (sev-2).
+- `inv.cash_app_match_attempted` — every job-run on a receipt (sampled 10%).
+- `inv.cash_app_matched_step1` — memo_parser hit during scheduled job.
+- `inv.cash_app_matched_step2` — amount_date hit.
+- `inv.cash_app_matched_step3` — fuzzy hit.
+- `inv.cash_app_matched_manual` — CFO manual commit (sev-2).
+- `inv.cash_app_no_match` — all auto-steps failed (sev-3; sev-2 if unmatched > 24h).
+- `inv.cash_app_over_allocation_blocked` — trigger fired (sev-1; alarm).
+- `inv.cash_app_partial_allocated` — receipt split across multiple invoices.
+- `inv.cash_app_allocation_reversed` — reversal recorded (sev-2).
 
 17. **MUST** PII-scrub `notes` + `transfer_memo` via TASK-MEMORY-111 before chain commit.
 
@@ -208,12 +208,12 @@ The INV service **MUST** ship cash application as a closed 4-step matching casca
 20. **MUST** emit OTel span `inv.cash_app.{cascade,allocate_manual,reverse,unmatched_query}` with attributes: `tenant_id`, `receipt_id`, `invoice_id`, `allocation_source`, `outcome` (matched_step1 | matched_step2 | matched_step3 | matched_manual | no_match | over_allocation | receipt_over_allocated | invalid_amount | not_found | permission_denied).
 
 21. **MUST** emit OTel metrics:
-    - `inv_cash_app_match_total{tenant_id, source, outcome}` (counter).
-    - `inv_cash_app_unmatched_count{tenant_id}` (gauge — receipts with invoice_id NULL after step 3).
-    - `inv_cash_app_partial_allocations_total{tenant_id}` (counter — receipts allocated across > 1 invoice).
-    - `inv_cash_app_reversals_total{tenant_id}` (counter — sev-2 alarm at > 3/h).
-    - `inv_cash_app_over_allocation_blocked_total{tenant_id}` (counter — sev-1 alarm always).
-    - `inv_cash_app_cascade_latency_ms{step}` (histogram).
+- `inv_cash_app_match_total{tenant_id, source, outcome}` (counter).
+- `inv_cash_app_unmatched_count{tenant_id}` (gauge — receipts with invoice_id NULL after step 3).
+- `inv_cash_app_partial_allocations_total{tenant_id}` (counter — receipts allocated across > 1 invoice).
+- `inv_cash_app_reversals_total{tenant_id}` (counter — sev-2 alarm at > 3/h).
+- `inv_cash_app_over_allocation_blocked_total{tenant_id}` (counter — sev-1 alarm always).
+- `inv_cash_app_cascade_latency_ms{step}` (histogram).
 
 22. **MUST** ship `GET /v1/inv/cash-app/allocations?invoice_id=<>` for operator visibility. Returns chronological list including reversals. Caller MUST have role `cfo` or `cdo` (financial visibility roles).
 

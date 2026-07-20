@@ -12,7 +12,7 @@ Run the `workflow-improver` skill. It is bundled with this plugin (`${CLAUDE_PLU
    node .cyberos/docs-tools/workflow-improve.mjs --window ${1:-20}
    ```
 
-   It reads the last N `status: done` tasks, harvests recorded reason / routed-back / `status_overridden` lines from `docs/tasks/BACKLOG.md` and each task's `gate-log*.md` and `reconcile*.md`, clusters them by (target skill, signal), and emits `improvement-window@1` with at most three `skill-amendment@1` proposals. Exit 3 means one or more evidence paths were REFUSED (present but unconfined or untracked at HEAD) - surface those, they are a finding about the corpus, not a hiccup.
+It reads the last N `status: done` tasks, harvests recorded reason / routed-back / `status_overridden` lines from `docs/tasks/BACKLOG.md` and each task's `gate-log*.md` and `reconcile*.md`, clusters them by (target skill, signal), and emits `improvement-window@1` with at most three `skill-amendment@1` proposals. Exit 3 means one or more evidence paths were REFUSED (present but unconfined or untracked at HEAD) - surface those, they are a finding about the corpus, not a hiccup.
 
 2. Draft the two model-owned fields. Each proposal comes back with `target_passage` and `proposed_change` as `<model-drafted>` placeholders. Fill them from the quoted evidence: name the passage precisely enough that a reviewer can open the file and see it, and say what was WRONG rather than what to add. Leave every other field of the proposal exactly as the tool emitted it - the evidence quotes are verbatim and must stay verbatim, with their ids.
 

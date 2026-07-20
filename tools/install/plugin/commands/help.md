@@ -6,13 +6,13 @@ Orient the user. Present concisely:
 1. CyberOS turns work into tasks through implement → review → test → done, with the human holding two acceptance gates.
 
 2. Commands (slash + shell):
-   - `/install` — install or re-vendor (once / when updating)
-   - `/uninstall` — remove the machine
-   - `/version` — check for a newer CyberOS; on yes → install
-   - `/status` — open `docs/status/index.html` in the browser
-   - `/help` — this overview
-   - `/ship-tasks` — drive the next task (HITL)
-   - `/create-tasks` — draft tasks into the backlog
+- `/install` — install or re-vendor (once / when updating)
+- `/uninstall` — remove the machine
+- `/version` — check for a newer CyberOS; on yes → install
+- `/status` — open `docs/status/index.html` in the browser
+- `/help` — this overview
+- `/ship-tasks` — drive the next task (HITL)
+- `/create-tasks` — draft tasks into the backlog
 
 3. Soft update-check runs automatically on any `.cyberos` use. Day-to-day: install once, then forget.
 

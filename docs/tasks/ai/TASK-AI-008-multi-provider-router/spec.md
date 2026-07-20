@@ -101,12 +101,12 @@ The AI Gateway service **MUST** expose `router::call_provider(req, resolved, dea
 12. **MUST** record per-attempt metadata for TASK-AI-002's `ai.invocation` audit row: which provider was called, which attempt number (1..=3), retry reason (`5xx`/`429`/`timeout`/`conn_reset`), total elapsed time per attempt, and the `fallback_position` (mirrors `ResolvedModel.fallback_position`). The `ProviderResponse` carries this in `attempts: Vec<AttemptRecord>` that the memory row reads.
 13. **MUST** cap `attempts` at 16 records. With 5 providers × 3 attempts = 15 max under normal flow; 16 is the safety margin. If the cap is exceeded the router MUST return `Err(InvalidResponse { reason: "attempts cap exceeded; programmer error in failover loop" })` — this catches infinite-loop bugs in the chain construction.
 14. **MUST** emit the following OTel metrics (label sets are closed and rename-safe):
-    - `ai_router_calls_total{provider,model,outcome}` — counter, emitted **once per terminal call decision** (success or final failure). Outcome label set is exactly `succeeded` / `terminal_4xx` / `auth_error` / `all_failed` (4 values). The `retried` and `failed_over` events are NOT emitted on this counter — they live on the per-event counters below to keep `CALLS` "one row per call".
-    - `ai_router_retries_total{provider,reason}` — counter, emitted **on each retry attempt**. Reason label set is `5xx` / `429` / `timeout` / `conn_reset`.
-    - `ai_router_failovers_total{from,to}` — counter, emitted **on each provider switch** (chain transition).
-    - `ai_router_latency_ms{provider,model}` — histogram of **per-attempt** latency.
-    - `ai_router_deadline_exceeded_total` — counter, emitted when the caller deadline elapses.
-    - `ai_router_attempts_per_call{final_outcome}` — histogram of total attempts in this call.
+- `ai_router_calls_total{provider,model,outcome}` — counter, emitted **once per terminal call decision** (success or final failure). Outcome label set is exactly `succeeded` / `terminal_4xx` / `auth_error` / `all_failed` (4 values). The `retried` and `failed_over` events are NOT emitted on this counter — they live on the per-event counters below to keep `CALLS` "one row per call".
+- `ai_router_retries_total{provider,reason}` — counter, emitted **on each retry attempt**. Reason label set is `5xx` / `429` / `timeout` / `conn_reset`.
+- `ai_router_failovers_total{from,to}` — counter, emitted **on each provider switch** (chain transition).
+- `ai_router_latency_ms{provider,model}` — histogram of **per-attempt** latency.
+- `ai_router_deadline_exceeded_total` — counter, emitted when the caller deadline elapses.
+- `ai_router_attempts_per_call{final_outcome}` — histogram of total attempts in this call.
 
     All `provider`/`from`/`to` labels MUST come from `ProviderKind::as_metric_label()` (see ISS pattern from TASK-AI-007 ISS-003). Debug-formatting an enum to a metric label is forbidden.
 15. **MUST** return `Err(RouterError::DeadlineExceeded)` if the deadline elapses; TASK-AI-002 reconcile treats this as `Cancelled { reason: TimeoutBeforeFirstToken }` and refunds. The deadline check happens at three points: (a) before each new attempt within a provider, (b) before each failover to the next provider, (c) on `tokio::time::timeout` elapse during the actual provider call.
@@ -956,11 +956,7 @@ fn record(
 
 ```
 
-Note: `Retry-After` parsing lives in each provider impl, not here. Provider impls call
-`response.headers().get(reqwest::header::RETRY_AFTER).and_then(|v| v.to_str().ok()?.parse().ok())`
-and populate `RouterError::TerminalProviderError.retry_after_secs` on 429 responses. The router
-reads that structured field — see ISS-003 in the audit for why scraping the message body was
-rejected.
+Note: `Retry-After` parsing lives in each provider impl, not here. Provider impls call `response.headers().get(reqwest::header::RETRY_AFTER).and_then(|v| v.to_str().ok()?.parse().ok())` and populate `RouterError::TerminalProviderError.retry_after_secs` on 429 responses. The router reads that structured field — see ISS-003 in the audit for why scraping the message body was rejected.
 
 ```rust
 // services/ai-gateway/src/router/jitter.rs

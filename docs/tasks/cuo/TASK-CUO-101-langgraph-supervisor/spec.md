@@ -178,30 +178,30 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 4. **MUST** make the `rule_score` node run the existing Phase 1 rule scorer (`cyberos.cuo.core.router.score_one_off`) unchanged. The result populates `state['rule_scores']: list[Candidate]` sorted by descending confidence. This guarantees backward-compatibility with the Phase 1 deterministic golden-fixture suite (15 rule-path fixtures still pass).
 
 5. **MUST** make the `branch` node select the next path using the **confidence-band table** (per DEC-162):
-    - top candidate confidence ≥ **0.70** → `auto` path (invoke).
-    - top candidate confidence ∈ [0.50, 0.70) → `ask` path (return top 3 alternatives; no invocation).
-    - top candidate confidence ∈ [0.10, 0.50) **AND** `cascade_taken == false` → `cascade` path (LLM).
-    - top candidate confidence < 0.10 → `defer` path (return decision `{routed: false, alternatives: []}`; no invocation).
-    - `cascade_taken == true` AND LLM-output confidence < 0.70 → fall through to `ask`.
+- top candidate confidence ≥ **0.70** → `auto` path (invoke).
+- top candidate confidence ∈ [0.50, 0.70) → `ask` path (return top 3 alternatives; no invocation).
+- top candidate confidence ∈ [0.10, 0.50) **AND** `cascade_taken == false` → `cascade` path (LLM).
+- top candidate confidence < 0.10 → `defer` path (return decision `{routed: false, alternatives: []}`; no invocation).
+- `cascade_taken == true` AND LLM-output confidence < 0.70 → fall through to `ask`.
 
 6. **MUST** make the `llm_cascade` node call the LLM through the `litellm_proxy` (which routes through AI Gateway TASK-AI-008, never direct provider call — per DEC-161). The cascade:
-   - Sends a structured prompt containing the query envelope + the top 5 rule-scored candidates + the persona-specific system prompt.
-   - Expects a **structured response** validated by Pydantic (per DEC-163): `LlmRoutingPick {skill_name: str, arguments: dict, rationale: str, confidence: float}`. Schema-conformance failure → fall through to `ask` (never silently invoke).
-   - Has a **hard 3-second budget** (per DEC-169). Timeout → fall through to `ask`; emit `cuo.llm_cascade_timeout` memory audit row.
-   - Sets `cascade_taken = true` AND `state['llm_pick'] = LlmRoutingPick(...)` AND re-enters `branch` with the LLM-derived confidence.
+- Sends a structured prompt containing the query envelope + the top 5 rule-scored candidates + the persona-specific system prompt.
+- Expects a **structured response** validated by Pydantic (per DEC-163): `LlmRoutingPick {skill_name: str, arguments: dict, rationale: str, confidence: float}`. Schema-conformance failure → fall through to `ask` (never silently invoke).
+- Has a **hard 3-second budget** (per DEC-169). Timeout → fall through to `ask`; emit `cuo.llm_cascade_timeout` memory audit row.
+- Sets `cascade_taken = true` AND `state['llm_pick'] = LlmRoutingPick(...)` AND re-enters `branch` with the LLM-derived confidence.
 
 7. **MUST** make the `invoke` node delegate skill execution to the skill module's CLI per cuo/docs/AGENTS.md §0.5 (CUO does NOT implement skill execution). The node captures `stdout`, `stderr`, `exit_code`, `duration_ms` into `state['invocation_result']`. If the chosen skill is annotated `destructive: true` in the catalog, the capability broker (TASK-SKILL-104) MUST gate via Elicitation flow; the supervisor refuses to bypass — even at confidence 1.0 (per DEC-170).
 
 8. **MUST** make the `record` node emit exactly one `cuo.routing_decision` memory audit row per request, in EVERY path (auto, ask, cascade, defer). The row carries:
-    - `tenant_id`, `subject_id_hash16`, `persona_key`, `persona_version`, `agent_persona_jwt_iss` (from JWT).
-    - `query` (NFC-normalised; PII-scrubbed via TASK-MEMORY-111 before commit if persona requires).
-    - `rule_scores` (top 3 with confidence values).
-    - `path_taken` ∈ {`auto`, `ask`, `cascade`, `defer`, `cascade_then_ask`}.
-    - `llm_pick` (present iff `path_taken` involved cascade).
-    - `invocation_result` (present iff path = `auto` or `cascade_then_auto`).
-    - `cuo_state_v` (per DEC-167, currently `1`).
-    - `request_id`, `trace_id` (W3C-formatted, lower-hex 32-char per task-audit skill rule 24).
-    - `ts_ns_start`, `ts_ns_end`.
+- `tenant_id`, `subject_id_hash16`, `persona_key`, `persona_version`, `agent_persona_jwt_iss` (from JWT).
+- `query` (NFC-normalised; PII-scrubbed via TASK-MEMORY-111 before commit if persona requires).
+- `rule_scores` (top 3 with confidence values).
+- `path_taken` ∈ {`auto`, `ask`, `cascade`, `defer`, `cascade_then_ask`}.
+- `llm_pick` (present iff `path_taken` involved cascade).
+- `invocation_result` (present iff path = `auto` or `cascade_then_auto`).
+- `cuo_state_v` (per DEC-167, currently `1`).
+- `request_id`, `trace_id` (W3C-formatted, lower-hex 32-char per task-audit skill rule 24).
+- `ts_ns_start`, `ts_ns_end`.
 
 9. **MUST** load the **11-persona catalogue** from `cuo/cuo/supervisor/persona.py`: Genie + 10 C-level (CEO, COO, CFO, CMO, CTO, CHRO, CSO, CLO, CDO, CPO). Each persona has: `key`, `display_name`, `keyword_bank` (list of trigger words), `system_prompt`, `defer_to_human_matrix` (list of operation types the persona MUST refuse to auto-invoke regardless of confidence). The matrix is **intrinsic** to the persona — not overridable by config (per DEC-164 + EU AI Act Art. 26).
 
@@ -218,11 +218,11 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 15. **MUST** emit child spans for each node entry/exit: `cuo.supervisor.node.parse`, `.rule_score`, `.branch`, `.llm_cascade`, `.invoke`, `.record`. Spans carry the W3C `traceparent` propagated from caller; supervisor extends the trace through to the AI Gateway call so a single trace covers query → LLM → invoke → audit.
 
 16. **MUST** emit OTel metrics:
-    - `cuo_supervisor_route_total{outcome, persona, path_taken}` (counter).
-    - `cuo_supervisor_route_latency_ms{path_taken}` (histogram; SLOs: auto p95 < 50ms, ask p95 < 50ms, cascade p95 < 3500ms, defer p95 < 30ms).
-    - `cuo_supervisor_llm_cascade_total{outcome}` (counter; outcome ∈ {success, timeout, schema_violation, gateway_error}).
-    - `cuo_supervisor_persona_defer_blocks_total{persona, operation}` (counter — defer-matrix refusals).
-    - `cuo_supervisor_destructive_block_total{skill}` (counter — capability-broker refusals reflected back).
+- `cuo_supervisor_route_total{outcome, persona, path_taken}` (counter).
+- `cuo_supervisor_route_latency_ms{path_taken}` (histogram; SLOs: auto p95 < 50ms, ask p95 < 50ms, cascade p95 < 3500ms, defer p95 < 30ms).
+- `cuo_supervisor_llm_cascade_total{outcome}` (counter; outcome ∈ {success, timeout, schema_violation, gateway_error}).
+- `cuo_supervisor_persona_defer_blocks_total{persona, operation}` (counter — defer-matrix refusals).
+- `cuo_supervisor_destructive_block_total{skill}` (counter — capability-broker refusals reflected back).
 
 17. **MUST** guarantee **replay-equivalence** for the rule path: same `(query, persona_key, catalog_snapshot_hash)` → identical decision. The `test_supervisor_idempotency` test asserts this on the 15-fixture golden set; CI fails on any non-determinism.
 
@@ -231,9 +231,8 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 19. **MUST** treat the **`defer_to_human_matrix`** as ROLE-INTRINSIC: even if the supervisor scores `vietnam-vat-invoice@1.2 + 0.95` for a CFO persona, if `cfo.defer_to_human_matrix` lists `invoice_emit`, the supervisor refuses to auto-invoke and returns `{routed: false, reason: "persona_defer_matrix", operation: "invoice_emit"}`. Emit `cuo.persona_defer_block` memory audit row.
 
 20. **MUST** support **two invocation modes** via CLI flags:
-    - `--invoke` (default true): runs through to `invoke` node when path = `auto` or `cascade_then_auto`.
-    - `--record` (default true): runs through to `record` node and emits the memory row.
-    Both flags MAY be `--no-invoke` / `--no-record` for dry-run analysis (e.g. "what would the supervisor do without actually invoking?"). Dry-run results are NOT recorded (no memory row); they emit a `cuo.dry_run` OTel span with low sampling.
+- `--invoke` (default true): runs through to `invoke` node when path = `auto` or `cascade_then_auto`.
+- `--record` (default true): runs through to `record` node and emits the memory row. Both flags MAY be `--no-invoke` / `--no-record` for dry-run analysis (e.g. "what would the supervisor do without actually invoking?"). Dry-run results are NOT recorded (no memory row); they emit a `cuo.dry_run` OTel span with low sampling.
 
 21. **MUST** complete the **rule path (auto/ask/defer)** in ≤ 50 ms p95 measured at supervisor entry → return. The LLM cascade path is budgeted at ≤ 3500 ms p95 (3000 ms LLM + 500 ms supervisor overhead). Performance test `test_supervisor_perf_rule_path` asserts the rule path; cascade-path perf is asserted in integration tests via a mocked AI Gateway response.
 

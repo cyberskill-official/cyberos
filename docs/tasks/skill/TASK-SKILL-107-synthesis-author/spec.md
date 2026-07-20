@@ -71,9 +71,9 @@ The `synthesis-author@1` skill **MUST** scaffold the nightly multi-memory synthe
 6. **MUST** exit Ok in P1.
 7. **MUST** emit OTel `skill_synthesis_requests_total{scope, outcome}`.
 8. **SHOULD** P3 slice-1 implementation:
-    - Cluster captures via BGE-M3 embeddings (TASK-AI-019).
-    - Compose summary memory via COO persona (TASK-AI-014).
-    - Emit as `kind: synthesised, sync_class: shareable` memory.
+- Cluster captures via BGE-M3 embeddings (TASK-AI-019).
+- Compose summary memory via COO persona (TASK-AI-014).
+- Emit as `kind: synthesised, sync_class: shareable` memory.
 
 ---
 

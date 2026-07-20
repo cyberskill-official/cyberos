@@ -81,11 +81,11 @@ risk_if_skipped: "Without supervision, a single SEGFAULT or OOM permanently stop
 The capture daemon's runtime supervision **MUST** consist of: (a) an OS-native init unit, (b) a `/healthz` HTTP endpoint, (c) a periodic sweeper for ephemeral state, (d) signal-driven graceful shutdown. The contract:
 
 1. **MUST** ship a systemd unit `cyberos-memory-capture.service` (Linux) AND a launchd plist `world.cyberos.memory-capture.plist` (macOS). The installer (`install-daemon.sh`) detects the OS and copies the appropriate file to:
-    - Linux: `/etc/systemd/system/cyberos-memory-capture.service` (system-scope) OR `~/.config/systemd/user/cyberos-memory-capture.service` (user-scope, default for non-root install).
-    - macOS: `~/Library/LaunchAgents/world.cyberos.memory-capture.plist` (user-scope; system-scope deferred to slice 3).
+- Linux: `/etc/systemd/system/cyberos-memory-capture.service` (system-scope) OR `~/.config/systemd/user/cyberos-memory-capture.service` (user-scope, default for non-root install).
+- macOS: `~/Library/LaunchAgents/world.cyberos.memory-capture.plist` (user-scope; system-scope deferred to slice 3).
 2. **MUST** auto-restart on non-zero exit per OS-native semantics:
-    - systemd: `Restart=on-failure`, `RestartSec=5s`, `RestartSteps=5s 10s 30s 1m 5m` (capped at 5 min).
-    - launchd: `KeepAlive: true`, `ThrottleInterval: 60` (launchd does not natively support exponential backoff; we implement it in the daemon's own startup logic by sleeping `min(2^crash_count, 300)` seconds before binding sockets, where `crash_count` is read from `/tmp/cyberos-memory-capture-crashes`).
+- systemd: `Restart=on-failure`, `RestartSec=5s`, `RestartSteps=5s 10s 30s 1m 5m` (capped at 5 min).
+- launchd: `KeepAlive: true`, `ThrottleInterval: 60` (launchd does not natively support exponential backoff; we implement it in the daemon's own startup logic by sleeping `min(2^crash_count, 300)` seconds before binding sockets, where `crash_count` is read from `/tmp/cyberos-memory-capture-crashes`).
 3. **MUST** expose `GET /healthz` on `127.0.0.1:7777` (no external bind; loopback only). Response schema:
     ```jsonc
     // 200 OK
@@ -109,27 +109,26 @@ The capture daemon's runtime supervision **MUST** consist of: (a) an OS-native i
     }
     ```
 4. **MUST** return 503 when ANY of the following are true:
-    - Any TASK-MEMORY-105 error-severity invariant fails (checked every 60s; result cached).
-    - Queue depth ≥ 95% of capacity (9500 / 10000) for ≥ 30 seconds.
-    - Last successful emit was > 5 minutes ago AND watched folders are non-empty (likely deadlock).
-    - The memory writer subprocess (per TASK-MEMORY-101) is unreachable.
+- Any TASK-MEMORY-105 error-severity invariant fails (checked every 60s; result cached).
+- Queue depth ≥ 95% of capacity (9500 / 10000) for ≥ 30 seconds.
+- Last successful emit was > 5 minutes ago AND watched folders are non-empty (likely deadlock).
+- The memory writer subprocess (per TASK-MEMORY-101) is unreachable.
 5. **MUST** run a sweeper task on a 60-second tokio interval that prunes:
-    - `/tmp/cyberos-memory-claude-traces/<uuid>` files older than 1 hour (TASK-MEMORY-109 trace cache).
-    - Dedup-cache entries whose `stored_at` exceeded TTL (5 minutes per TASK-MEMORY-107 §1 #4).
-    - Old metric snapshots in `/tmp/cyberos-memory-metrics/` older than 24 hours.
-    - Crash-count file `/tmp/cyberos-memory-capture-crashes` if last reset > 1 hour ago (allows recovery from a transient crash storm without sticky exp-backoff).
+- `/tmp/cyberos-memory-claude-traces/<uuid>` files older than 1 hour (TASK-MEMORY-109 trace cache).
+- Dedup-cache entries whose `stored_at` exceeded TTL (5 minutes per TASK-MEMORY-107 §1 #4).
+- Old metric snapshots in `/tmp/cyberos-memory-metrics/` older than 24 hours.
+- Crash-count file `/tmp/cyberos-memory-capture-crashes` if last reset > 1 hour ago (allows recovery from a transient crash storm without sticky exp-backoff).
 6. **MUST** install signal handlers per AGENTS.md operational conventions:
-    - `SIGTERM` → graceful shutdown: stop accepting new events, drain queue (deadline 5s), flush metrics, exit 0.
-    - `SIGINT` → same as SIGTERM (treat Ctrl-C like Stop).
-    - `SIGHUP` → reload manifest (per TASK-MEMORY-107 §1 #15); does not exit.
-    - `SIGUSR1` → dump health snapshot to stderr (operator debugging).
-6.5. **MUST** treat `SIGKILL` as expected (cannot be caught); systemd/launchd restart on the next cycle.
+- `SIGTERM` → graceful shutdown: stop accepting new events, drain queue (deadline 5s), flush metrics, exit 0.
+- `SIGINT` → same as SIGTERM (treat Ctrl-C like Stop).
+- `SIGHUP` → reload manifest (per TASK-MEMORY-107 §1 #15); does not exit.
+- `SIGUSR1` → dump health snapshot to stderr (operator debugging). 6.5. **MUST** treat `SIGKILL` as expected (cannot be caught); systemd/launchd restart on the next cycle.
 7. **MUST** track crash count in `/tmp/cyberos-memory-capture-crashes` (single u32 LE; incremented at startup; reset to 0 after 5 minutes of stable uptime). The daemon uses this to compute its own startup-delay backoff on launchd.
 8. **MUST** emit OTel metrics:
-    - `memory_capture_daemon_uptime_seconds` (gauge).
-    - `memory_capture_daemon_restart_count_total` (counter; survives restart via the crash-count file).
-    - `memory_capture_sweeper_pruned_total{kind}` (counter; kind ∈ trace_cache | dedup | metric_snapshot | crash_count_reset).
-    - `memory_capture_health_endpoint_total{status}` (counter; status ∈ healthy | unhealthy).
+- `memory_capture_daemon_uptime_seconds` (gauge).
+- `memory_capture_daemon_restart_count_total` (counter; survives restart via the crash-count file).
+- `memory_capture_sweeper_pruned_total{kind}` (counter; kind ∈ trace_cache | dedup | metric_snapshot | crash_count_reset).
+- `memory_capture_health_endpoint_total{status}` (counter; status ∈ healthy | unhealthy).
 9. **MUST** emit OTel span `memory.capture.sweeper.tick` per sweep with attributes `pruned_trace_cache`, `pruned_dedup`, `pruned_metric_snapshots`, `duration_ms`.
 10. **MUST** emit a `memory.capture_supervisor_event` memory audit row when the daemon process starts (kind=`started`), reloads manifest (kind=`reloaded`), or exits (kind=`exited`, `exit_code`, `uptime_seconds`). This gives operators a first-class audit trail for "when did the daemon last go down?"
 11. **MUST** integrate with TASK-OBS-007 alert routing: 503 on `/healthz` for ≥ 60 seconds triggers a sev-2 alert; ≥ 5 minutes triggers sev-1 (capture is effectively offline; user actions not being recorded).

@@ -87,14 +87,14 @@ The CRM service **MUST** ship `crm.next-action@1` skill at `services/crm/src/nex
 2. **MUST** validate `next_action_kind` against closed enum per DEC-1651.
 
 3. **MUST** build context at `context_builder.rs::build(deal_id)`:
-   - Deal record (stage, value, age, owner)
-   - Last 20 activities from TASK-CRM-002
-   - Contact engagement (last email reply gap, etc.)
-   - Account history (won/lost recent deals)
+- Deal record (stage, value, age, owner)
+- Last 20 activities from TASK-CRM-002
+- Contact engagement (last email reply gap, etc.)
+- Account history (won/lost recent deals)
 
 4. **MUST** rank at `ranker.rs::rank(context)` via TASK-AI-003 with structured prompt:
-   - Output JSON array of 3 entries, each `{kind, summary, rationale, confidence_score, deep_link}` per DEC-1653.
-   - Validation: each kind in enum; confidence 0-1; deep_link non-empty.
+- Output JSON array of 3 entries, each `{kind, summary, rationale, confidence_score, deep_link}` per DEC-1653.
+- Validation: each kind in enum; confidence 0-1; deep_link non-empty.
 
 5. **MUST** enforce rate limit per DEC-1654 — 100 calls/user/day; return 429 when exceeded.
 
@@ -234,8 +234,7 @@ async fn execute_records_kind() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-CRM-001, TASK-CUO-101.
-**Cross-module:** TASK-CRM-002 (activity context), TASK-AI-003 (LLM), TASK-MCP-007 (expiry cron), TASK-AUTH-101 (role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-CRM-001, TASK-CUO-101. **Cross-module:** TASK-CRM-002 (activity context), TASK-AI-003 (LLM), TASK-MCP-007 (expiry cron), TASK-AUTH-101 (role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

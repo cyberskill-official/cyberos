@@ -33,8 +33,4 @@ TRACE-004 closure:
 
 Edge-case matrix rows without a test: none.
 
-Dogfood evidence (the tool maintained this batch's own rows through 20 mutations):
-`## improvement  (67 draft, 5 ready_to_implement, 20 done)` -> implementing -> reviewing ->
-ready_to_test -> `(67 draft, 5 testing, 20 done)`; every header printed "header retallied",
-counts tracked the rows, no inherited baseline. Verified on committed objects per the rule
-this task introduces.
+Dogfood evidence (the tool maintained this batch's own rows through 20 mutations): `## improvement  (67 draft, 5 ready_to_implement, 20 done)` -> implementing -> reviewing -> ready_to_test -> `(67 draft, 5 testing, 20 done)`; every header printed "header retallied", counts tracked the rows, no inherited baseline. Verified on committed objects per the rule this task introduces.

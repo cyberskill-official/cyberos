@@ -11,8 +11,7 @@ status_note: "The parent owns the status writes (§11a). This task's implementer
 
 ## Suite result — the environment CI sees
 
-CI's target health for this module is `RUN_COMMANDS: python -m pytest -q`, run from
-`modules/cuo` (`modules/cuo/audit-profile.yaml`). Run the same way:
+CI's target health for this module is `RUN_COMMANDS: python -m pytest -q`, run from `modules/cuo` (`modules/cuo/audit-profile.yaml`). Run the same way:
 
 ```
 $ cd modules/cuo && python3 -m pytest -q
@@ -33,14 +32,11 @@ $ cd modules/cuo && python3 -m pytest -q tests/test_workflow_evolution.py
 | `modules/cuo/tests/test_workflow_evolution.py` | **100 %** (178/178 statements) | `python3 -m coverage run --source=. -m pytest -q tests/test_workflow_evolution.py && python3 -m coverage report --include="tests/test_workflow_evolution.py"` |
 | `modules/cuo/chief-technology-officer/workflows/ship-tasks.md` | n/a — markdown, no executable statements | — |
 
-Well above the 90 % floor. Recorded honestly: the only touched file with executable lines
-IS the suite, because the other deliverable is a doc. That is a real 100 %, and also a
-weak one — which is why the arms below were each proven by breaking the thing they guard.
+Well above the 90 % floor. Recorded honestly: the only touched file with executable lines IS the suite, because the other deliverable is a doc. That is a real 100 %, and also a weak one — which is why the arms below were each proven by breaking the thing they guard.
 
 ## Load-bearing proof for every new test (broke it, watched it fail, restored it)
 
-Every mutation was applied to the real file, the real arm was run, and the file was
-restored and re-hashed (`sha256` identical to the original) before the next one.
+Every mutation was applied to the real file, the real arm was run, and the file was restored and re-hashed (`sha256` identical to the original) before the next one.
 
 | # | Mutation (what the clause forbids) | Arm | Result |
 |---|---|---|---|
@@ -57,22 +53,15 @@ restored and re-hashed (`sha256` identical to the original) before the next one.
 | 10 | `supervisor.py` starts READING the key (`step.get("judgment") == "mechanical"` → skip) | `test_judgment_is_advisory_not_read` | **FAIL** ✓ |
 | 11 | §11e stops calling the field advisory | `test_judgment_is_advisory_not_read` | **FAIL** ✓ |
 
-Row **1b** is the TASK-IMP-118 bar, matching IMP-106 §1.4: with one step's annotation
-stripped, the naive "the field is mentioned somewhere" check still PASSED while the real
-guard FAILED. That is the difference between asserting the field exists and asserting a
-host can rely on it.
+Row **1b** is the TASK-IMP-118 bar, matching IMP-106 §1.4: with one step's annotation stripped, the naive "the field is mentioned somewhere" check still PASSED while the real guard FAILED. That is the difference between asserting the field exists and asserting a host can rely on it.
 
-Row **4** is the equivalent for AC 2: the obvious version of that arm ("is the skill in the
-table?") is satisfiable by editing the table, which is the same document being tested. The
-arm therefore requires the delegation to be anchored OUTSIDE §11e — in the skill's own
-`SKILL.md` or the workflow's executor prose — so the table cannot vouch for itself.
+Row **4** is the equivalent for AC 2: the obvious version of that arm ("is the skill in the table?") is satisfiable by editing the table, which is the same document being tested. The arm therefore requires the delegation to be anchored OUTSIDE §11e — in the skill's own `SKILL.md` or the workflow's executor prose — so the table cannot vouch for itself.
 
 ## AC 4 (`verify:`) — the field is advisory and nothing in the payload reads it
 
 Recorded grep, run at `HEAD` of this change.
 
-**1. Does anything READ the key?** A read looks like a subscript, a `.get()`, or an
-attribute — not the bare word, which appears in unrelated prose.
+**1. Does anything READ the key?** A read looks like a subscript, a `.get()`, or an attribute — not the bare word, which appears in unrelated prose.
 
 ```
 $ grep -rnE '\[[[:space:]]*.judgment.[[:space:]]*\]|\.get\([[:space:]]*.judgment.|\.judgment\b' \
@@ -80,8 +69,7 @@ $ grep -rnE '\[[[:space:]]*.judgment.[[:space:]]*\]|\.get\([[:space:]]*.judgment
 (no output — exit 1)
 ```
 
-**2. Every `judgment` occurrence in the payload's code and helpers** — all four are prose
-in comments, none is a read:
+**2. Every `judgment` occurrence in the payload's code and helpers** — all four are prose in comments, none is a read:
 
 ```
 tools/install/docs-tools/batch-select.mjs:19:   // ... No model, no judgment - the ...
@@ -98,25 +86,17 @@ tools/install/docs-tools/coverage-scope.mjs:272: //  TODO markers for the judgme
 428:  the payload reads it to decide anything** — no step, no gate, no helper, no condition.
 ```
 
-**4. Why it is not readable by accident** — context-map §2 enumerates all nine
-`skill_chain` consumers. Every one reaches for a named key (`.get("skill")`,
-`.get("step")`) or greps `skill: *[a-z0-9-]+`. None validates or iterates the key set, so
-an unknown key is inert by construction rather than by promise. This is also why the field
-could be added at all without a version bump.
+**4. Why it is not readable by accident** — context-map §2 enumerates all nine `skill_chain` consumers. Every one reaches for a named key (`.get("skill")`, `.get("step")`) or greps `skill: *[a-z0-9-]+`. None validates or iterates the key set, so an unknown key is inert by construction rather than by promise. This is also why the field could be added at all without a version bump.
 
-**Verdict: PASS.** The claim is negative and structural; the grep above is its evidence,
-and `test_judgment_is_advisory_not_read` re-proves it on every CI run rather than once.
+**Verdict: PASS.** The claim is negative and structural; the grep above is its evidence, and `test_judgment_is_advisory_not_read` re-proves it on every CI run rather than once.
 
 ## AC 5 (`verify:`) — reviewer walk of the assigned levels
 
-The rule the reviewer is asked to check: **no step is `high` without a named reason, and
-anything genuinely ambiguous is `medium`, not a guessed `high`** (§1.5).
+The rule the reviewer is asked to check: **no step is `high` without a named reason, and anything genuinely ambiguous is `medium`, not a guessed `high`** (§1.5).
 
-Distribution: **6 mechanical / 8 high / 18 medium** across 32 steps
-(`python3 -c` over the parsed frontmatter; see the impl-plan).
+Distribution: **6 mechanical / 8 high / 18 medium** across 32 steps (`python3 -c` over the parsed frontmatter; see the impl-plan).
 
-**Every `high` and its named reason** (all eight reasons are in §11e's table, so the walk
-has something to check rather than a bare label):
+**Every `high` and its named reason** (all eight reasons are in §11e's table, so the walk has something to check rather than a bare label):
 
 | Step | Skill | Named reason | Reviewer's question |
 |---|---|---|---|
@@ -129,23 +109,12 @@ has something to check rather than a bare label):
 | 25 | `debugging-cycle-author` | classifies the failure vector and forms the hypothesis | — |
 | 27 | `task-audit` | TRACE-004 closure — the judgment half; `task-lint.mjs` only seeds the mechanical findings | the spec's own named exemplar of `high` |
 
-**The discipline that kept `high` at eight.** Every `-audit` half is `medium` except step
-27 — because 27 is the one the spec names, and the others check structure (a matrix's
-non-vacuity, a plan against the matrix) rather than deciding anything the chain depends
-on. Under §1.5 those are exactly the "genuinely ambiguous" cases, and ambiguous is
-`medium`. No step was marked `high` because it felt important.
+**The discipline that kept `high` at eight.** Every `-audit` half is `medium` except step 27 — because 27 is the one the spec names, and the others check structure (a matrix's non-vacuity, a plan against the matrix) rather than deciding anything the chain depends on. Under §1.5 those are exactly the "genuinely ambiguous" cases, and ambiguous is `medium`. No step was marked `high` because it felt important.
 
 **Levels that were deliberately NOT the intuitive one, with the evidence:**
 
-- **23 `coverage-gate-author` → `medium`, not `mechanical`.** The spec's *Summary* names
-  "coverage-scope" as already-a-script. It is a real helper, but **no skill delegates to
-  it**: `grep -rn 'coverage-scope' modules/` returns nothing outside this task's own spec,
-  and `coverage-scope.mjs:8` reserves the judgment fields for the author skill
-  ("`tests_failed`, `ecm_rows_uncovered`, `raw_terminal` stay with the author skill …
-  never guessed"). §1.2 does not permit the label.
-- **27 `task-audit` → `high`,** although it names a docs-tools helper. `task-lint.mjs` is a
-  "machine floor" that seeds findings while "model diligence is spent on the judgment
-  families only" (`task-audit/SKILL.md:248`). Naming a helper is not being performed by one.
+- **23 `coverage-gate-author` → `medium`, not `mechanical`.** The spec's *Summary* names "coverage-scope" as already-a-script. It is a real helper, but **no skill delegates to it**: `grep -rn 'coverage-scope' modules/` returns nothing outside this task's own spec, and `coverage-scope.mjs:8` reserves the judgment fields for the author skill ("`tests_failed`, `ecm_rows_uncovered`, `raw_terminal` stay with the author skill … never guessed"). §1.2 does not permit the label.
+- **27 `task-audit` → `high`,** although it names a docs-tools helper. `task-lint.mjs` is a "machine floor" that seeds findings while "model diligence is spent on the judgment families only" (`task-audit/SKILL.md:248`). Naming a helper is not being performed by one.
 - **28/29 `awh-gate`/`caf-gate` → `medium`** — see the surfaced fork below.
 
 **Verdict: PASS, with one fork surfaced for the operator (below).**
@@ -154,30 +123,14 @@ on. Under §1.5 those are exactly the "genuinely ambiguous" cases, and ambiguous
 
 Not decided here. Implemented to the narrower reading (the contract), reversible in one edit.
 
-- **§1.2 (normative)** says `mechanical` means "performed by a **deterministic helper** with
-  no model judgment in the result".
-- **AC 2 and the Success Metric** say "a **docs-tools** helper", the metric adding
-  "*precisely* the steps whose work is done by a docs-tools helper".
+- **§1.2 (normative)** says `mechanical` means "performed by a **deterministic helper** with no model judgment in the result".
+- **AC 2 and the Success Metric** say "a **docs-tools** helper", the metric adding "*precisely* the steps whose work is done by a docs-tools helper".
 
-Steps 28 (`awh-gate`) and 29 (`caf-gate`) are the only place the two readings disagree.
-Both are deterministic — `caf-gate/SKILL.md` says "**no LLM**", and the skill's whole job is
-"run `bash scripts/caf_gate.sh <module>`. Read the verdict." — but their executors are
-`tools/awh/` and `scripts/caf_gate.sh`, which are **not** docs-tools helpers (both verified
-present: `ls scripts/caf_gate.sh tools/awh`).
+Steps 28 (`awh-gate`) and 29 (`caf-gate`) are the only place the two readings disagree. Both are deterministic — `caf-gate/SKILL.md` says "**no LLM**", and the skill's whole job is "run `bash scripts/caf_gate.sh <module>`. Read the verdict." — but their executors are `tools/awh/` and `scripts/caf_gate.sh`, which are **not** docs-tools helpers (both verified present: `ls scripts/caf_gate.sh tools/awh`).
 
-- **As implemented (`medium`):** every §1 clause and every AC holds as written. §1.2 is a
-  one-way definition ("`mechanical` MUST mean X"), so it constrains what may wear the label
-  and does not compel the label onto every X. Cost: the field under-informs on two steps —
-  a host routing on it will spend judgment on a step that runs one bash command, which is a
-  small dose of the exact waste the task exists to remove.
-- **The alternative (`mechanical`):** more useful information, but it contradicts AC 2 and
-  the Success Metric as written, so the spec's own suite arm would have to test something
-  the AC does not say.
-- **What I'd suggest:** ship as-is, and let a follow-up widen §1.2's helper family to
-  "a vendored deterministic executor" (docs-tools, `tools/awh`, `scripts/caf_gate.sh`) with
-  AC 2's wording corrected to match. That is a spec change, not an implementation choice,
-  which is why it is here and not in the diff. §11e records the rough edge in the doc so the
-  next reader finds the reasoning rather than re-deriving it.
+- **As implemented (`medium`):** every §1 clause and every AC holds as written. §1.2 is a one-way definition ("`mechanical` MUST mean X"), so it constrains what may wear the label and does not compel the label onto every X. Cost: the field under-informs on two steps — a host routing on it will spend judgment on a step that runs one bash command, which is a small dose of the exact waste the task exists to remove.
+- **The alternative (`mechanical`):** more useful information, but it contradicts AC 2 and the Success Metric as written, so the spec's own suite arm would have to test something the AC does not say.
+- **What I'd suggest:** ship as-is, and let a follow-up widen §1.2's helper family to "a vendored deterministic executor" (docs-tools, `tools/awh`, `scripts/caf_gate.sh`) with AC 2's wording corrected to match. That is a spec change, not an implementation choice, which is why it is here and not in the diff. §11e records the rough edge in the doc so the next reader finds the reasoning rather than re-deriving it.
 
 ## Cone and in-flight-manifest impact (checked because this edits the workflow being executed)
 
@@ -204,20 +157,12 @@ $ pgrep -a git
 (no git process in this sandbox — the lock is stale, 0 bytes, dated 10:47)
 ```
 
-Every git write path needs that lock, and the sandbox mount denies `unlink`, so it cannot
-be cleared from here. Reported rather than fought, per the run's constraints.
+Every git write path needs that lock, and the sandbox mount denies `unlink`, so it cannot be cleared from here. Reported rather than fought, per the run's constraints.
 
 **Two things the operator should know before running the commit:**
 
-1. **The lock must be cleared first** (`rm -f .git/index.lock`) from a context with unlink
-   permission — after confirming no real git process holds it.
-2. **`--no-verify` is required, and this is the evidence for it.** The pre-commit hook's
-   trigger regex is `^(modules/cuo/|modules/skill/|...)` (`.githooks/pre-commit:9`), so
-   staging `modules/cuo/**` fires `cyberos-payload-build.sh` → a `dist/cyberos` rebuild.
-   This run was explicitly scoped not to rebuild `dist/` or run `install.sh`, and letting
-   the hook do it would sweep payload artefacts — including `dist/cyberos/install.sh`,
-   inside **TASK-IMP-106's cone** — into this task's commit. The hook chain therefore
-   cannot complete within this task's cone.
+1. **The lock must be cleared first** (`rm -f .git/index.lock`) from a context with unlink permission — after confirming no real git process holds it.
+2. **`--no-verify` is required, and this is the evidence for it.** The pre-commit hook's trigger regex is `^(modules/cuo/|modules/skill/|...)` (`.githooks/pre-commit:9`), so staging `modules/cuo/**` fires `cyberos-payload-build.sh` → a `dist/cyberos` rebuild. This run was explicitly scoped not to rebuild `dist/` or run `install.sh`, and letting the hook do it would sweep payload artefacts — including `dist/cyberos/install.sh`, inside **TASK-IMP-106's cone** — into this task's commit. The hook chain therefore cannot complete within this task's cone.
 
 The intended commit (artefacts + the two cone files, and nothing else):
 

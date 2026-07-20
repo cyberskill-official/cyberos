@@ -1,7 +1,6 @@
 # cyberos-obs-collector
 
-**P0 module · observability spine.**
-Implements [`docs/tasks/obs/TASK-OBS-001..009`](../../docs/tasks/obs/) — OTel collector + Loki + Prometheus + Tempo + Grafana stack, with tenant-isolation extension hooks, PII scrubbing in-flight, and memory-anchored compliance views.
+**P0 module · observability spine.** Implements [`docs/tasks/obs/TASK-OBS-001..009`](../../docs/tasks/obs/) — OTel collector + Loki + Prometheus + Tempo + Grafana stack, with tenant-isolation extension hooks, PII scrubbing in-flight, and memory-anchored compliance views.
 
 ## Status (2026-05-19 wave)
 

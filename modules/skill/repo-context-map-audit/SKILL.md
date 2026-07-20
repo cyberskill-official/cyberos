@@ -43,9 +43,7 @@ outputs:
 
 ## 2. Pass criterion
 
-10/10 only. Any error-class miss returns the map to the author with a
-fix list. The workflow only proceeds to step 3 (ADR branch) after this
-audit passes.
+10/10 only. Any error-class miss returns the map to the author with a fix list. The workflow only proceeds to step 3 (ADR branch) after this audit passes.
 
 ---
 

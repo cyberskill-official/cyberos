@@ -99,10 +99,10 @@ Every tenant-scoped Postgres table in the CyberOS schema **MUST** have RLS enabl
 10. **MUST** be deterministic: same `(app.tenant_id, query)` pair always returns the same result. Race conditions in setting `app.tenant_id` (e.g., a connection returned to the pool with stale setting) are catastrophic — `with_tenant` uses `SET LOCAL` (transaction-scoped) to ensure no leakage across requests on the same connection.
 11. **MUST** be CI-gated via `.github/workflows/rls-property-gate.yml` on every PR touching `services/auth/migrations/**`, `services/auth/src/rls/**`, OR any file matching `services/*/migrations/*.sql` (any module's migrations might add a tenant-scoped table). The workflow runs property test + registry completeness test + role-separation test; non-skip enforcement per TASK-AI-018 §1 #13 pattern.
 12. **SHOULD** emit OTel metrics:
-    - `auth_rls_policy_count{table}` (gauge; per-table policy count, should equal tenant count).
-    - `auth_rls_check_violations_total{table}` (counter; sev-1 — expected to be near-zero in production).
-    - `auth_rls_bypass_used_total{role}` (counter; sev-2 alarm on increment).
-    - `auth_rls_with_tenant_calls_total{tenant_id}` (counter; tracks helper usage for context-validation audits).
+- `auth_rls_policy_count{table}` (gauge; per-table policy count, should equal tenant count).
+- `auth_rls_check_violations_total{table}` (counter; sev-1 — expected to be near-zero in production).
+- `auth_rls_bypass_used_total{role}` (counter; sev-2 alarm on increment).
+- `auth_rls_with_tenant_calls_total{tenant_id}` (counter; tracks helper usage for context-validation audits).
 
 ---
 

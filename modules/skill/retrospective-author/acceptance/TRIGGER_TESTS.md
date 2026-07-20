@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a retrospective"
+- "Draft a retrospective"
 - "Create the retrospective"
 - "Author a new retrospective"
 - "Generate the retrospective"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this retrospective" → retrospective-audit
+- "Audit this retrospective" → retrospective-audit
 - "Check the retrospective for completeness" → retrospective-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

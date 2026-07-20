@@ -100,9 +100,9 @@ The `cyberos doctor` command **MUST** extend its invariant set with five new inv
 6. **MUST** run the five new invariants AFTER the core invariants (per AGENTS.md §7.2 walk order) and BEFORE consolidation triggers (per §7.6). The execution order is locked in `doctor/mod.rs`'s `INVARIANT_ORDER` slice; tests assert it.
 
 7. **MUST** emit per-invariant output to stdout (human) AND `cyberos doctor --json` (machine):
-   - Human format: `[<severity>] <invariant-id>: <status> — <details>` (one line each, terminal-aware colours).
-   - JSON format: `{ "id": "WatchedFolderManifestPresent", "severity": "error", "status": "pass" | "fail" | "skip", "details": "...", "affected_paths": [...] }`.
-   - Skipping is permitted IFF the dependency invariant has already failed (e.g. `WatchedFolderManifestSchema` skips when `WatchedFolderManifestPresent` failed for the same folder); `status: "skip"` carries `skipped_because: "<dependency-invariant-id>"`.
+- Human format: `[<severity>] <invariant-id>: <status> — <details>` (one line each, terminal-aware colours).
+- JSON format: `{ "id": "WatchedFolderManifestPresent", "severity": "error", "status": "pass" | "fail" | "skip", "details": "...", "affected_paths": [...] }`.
+- Skipping is permitted IFF the dependency invariant has already failed (e.g. `WatchedFolderManifestSchema` skips when `WatchedFolderManifestPresent` failed for the same folder); `status: "skip"` carries `skipped_because: "<dependency-invariant-id>"`.
 
 8. **MUST** be deterministic — running doctor twice on the same on-disk state produces byte-identical JSON output. Folder iteration is sorted by realpath; no `Date.now()`, no map-iteration-order assumptions.
 

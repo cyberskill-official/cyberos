@@ -1,8 +1,6 @@
 # debugging_cycle_rubric@1.0
 
-constants: TOTAL_ROWS_MIN=8 (MUST tasks) | BRANCH_COVERAGE_MIN=80 | COVERAGE_THRESHOLD=90 (config-overridable, TASK-CUO-207)
-families: DBG-GATE | DBG-STRUCT | DBG-TRACE
-verdict: pass requires 10/10; any family failure -> fail; ambiguity -> needs_human
+constants: TOTAL_ROWS_MIN=8 (MUST tasks) | BRANCH_COVERAGE_MIN=80 | COVERAGE_THRESHOLD=90 (config-overridable, TASK-CUO-207) families: DBG-GATE | DBG-STRUCT | DBG-TRACE verdict: pass requires 10/10; any family failure -> fail; ambiguity -> needs_human
 
 ## Rules (prose -> rule mapping, TASK-SKILL-118 AC 2)
 
@@ -18,8 +16,7 @@ Every rule cites the prose gate it encodes. A rule without a prose source is its
 
 ## Scoring
 
-/10 overall. Start at 10; each open finding subtracts per severity (blocker -2, major -1, minor -0.5, rounded toward fail).
-Only 10/10 passes. `needs_human` on structural ambiguity (unparseable artefact, contradictory sources) - never a guessed verdict.
+/10 overall. Start at 10; each open finding subtracts per severity (blocker -2, major -1, minor -0.5, rounded toward fail). Only 10/10 passes. `needs_human` on structural ambiguity (unparseable artefact, contradictory sources) - never a guessed verdict.
 
 ## Changelog
 

@@ -40,14 +40,11 @@ blockers:
 
 1. Reads the task's `building` status timestamp from BACKLOG.md.
 2. `git diff --name-only <building_ts>..HEAD` → the touched-files set.
-3. Picks the right coverage tool per language (rust: `cargo tarpaulin`
-   or `cargo llvm-cov`; python: `pytest --cov`; node: `vitest --coverage`).
+3. Picks the right coverage tool per language (rust: `cargo tarpaulin` or `cargo llvm-cov`; python: `pytest --cov`; node: `vitest --coverage`).
 4. Runs the full test suite.
 5. Reports per-file coverage for every file in the touched set.
-6. Cross-references the edge-case matrix: every row's `planned_test`
-   must exist + must have passed.
-7. **`type: bug` only** — runs the regression proof (§4). Reads `type` from the
-   task's frontmatter; skips entirely for any other type.
+6. Cross-references the edge-case matrix: every row's `planned_test` must exist + must have passed.
+7. **`type: bug` only** — runs the regression proof (§4). Reads `type` from the task's frontmatter; skips entirely for any other type.
 
 ## 2. Output schema
 
@@ -93,9 +90,7 @@ If any of those fails → trip the workflow's debugging-cycle (step 15).
 
 Skip unless the task's frontmatter says `type: bug`.
 
-A test written after a fix, against the fixed code, passes — and proves nothing,
-because it never saw the bug. The only way to know a regression test tests the
-regression is to watch it go red on the broken commit. So run it there:
+A test written after a fix, against the fixed code, passes — and proves nothing, because it never saw the bug. The only way to know a regression test tests the regression is to watch it go red on the broken commit. So run it there:
 
 ```bash
 broken="${first_bad_commit:-HEAD~1}"
@@ -112,23 +107,14 @@ git show "HEAD:${regression_test%%::*}" > "/tmp/regression-proof/${regression_te
 git worktree remove --force /tmp/regression-proof
 ```
 
-Capture **both** terminals into `regression.raw_terminal_red` / `_green`. An
-assertion without its evidence is not evidence — same rule the rest of this gate
-already lives by.
+Capture **both** terminals into `regression.raw_terminal_red` / `_green`. An assertion without its evidence is not evidence — same rule the rest of this gate already lives by.
 
 ### Failure modes worth naming
 
-- **Green at the broken commit** → the test does not test the bug. Do not "fix" it by
-  moving on; the diagnosis is wrong or the test is aimed at the wrong thing.
-- **The test file does not exist at HEAD** → BUG-011 should have caught this at
-  `draft`. Something authored a bug task without a regression test.
-- **The broken commit will not build** → common, and not a failure. If the runtime
-  cannot even start, the test *did* fail there. Record the build error as the red
-  terminal and note it; do not silently pass.
-- **`regression_test: null`** → REGRESSION-004: a non-empty operator-signed
-  `no_regression_test_reason` must be present, and it rides in the audit row forever.
-  Making the exemption possible but loud is deliberate. A gate nobody can ever bypass
-  gets bypassed by deleting the gate.
+- **Green at the broken commit** → the test does not test the bug. Do not "fix" it by moving on; the diagnosis is wrong or the test is aimed at the wrong thing.
+- **The test file does not exist at HEAD** → BUG-011 should have caught this at `draft`. Something authored a bug task without a regression test.
+- **The broken commit will not build** → common, and not a failure. If the runtime cannot even start, the test *did* fail there. Record the build error as the red terminal and note it; do not silently pass.
+- **`regression_test: null`** → REGRESSION-004: a non-empty operator-signed `no_regression_test_reason` must be present, and it rides in the audit row forever. Making the exemption possible but loud is deliberate. A gate nobody can ever bypass gets bypassed by deleting the gate.
 
 ## 5. Contract files
 
@@ -145,6 +131,4 @@ This pair is at full contract parity: `PIPELINE.md` (chain binding + HALT points
 
 ## Threshold override (TASK-CUO-207)
 
-The per-file coverage floor is `CYBEROS_COVERAGE_THRESHOLD` when set (exported by
-`run-gates.sh` from `.cyberos/config.yaml` `coverage_threshold`), defaulting to 90.
-The audit rubric's COVERAGE_THRESHOLD constant names the same hook.
+The per-file coverage floor is `CYBEROS_COVERAGE_THRESHOLD` when set (exported by `run-gates.sh` from `.cyberos/config.yaml` `coverage_threshold`), defaulting to 90. The audit rubric's COVERAGE_THRESHOLD constant names the same hook.

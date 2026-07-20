@@ -120,21 +120,21 @@ The PORTAL service **MUST** ship DSAR self-service at `services/portal/src/dsar/
 5. **MUST** enforce RLS scoped to `tenant_id AND requester_subject_id = current_setting('auth.subject_id')::uuid` (caller sees own DSARs only; tenant_admin via separate handler).
 
 6. **MUST** expose `POST /v1/portal/dsar/request` body `{ dsar_type, scope_description?, passphrase_hash? }`. Handler:
-    - Validates dsar_type in closed enum.
-    - Rate-limit check per DEC-1228 (one per 90 days per subject).
-    - SSO-authenticated caller → status='processing' immediately per DEC-1223.
-    - Email-password caller → status='identity_verification_pending' + email confirmation link via TASK-EMAIL-001.
-    - Enqueues processing via TASK-MCP-007 task per DEC-1224.
-    - Emit `portal.dsar_received` sev-2.
+- Validates dsar_type in closed enum.
+- Rate-limit check per DEC-1228 (one per 90 days per subject).
+- SSO-authenticated caller → status='processing' immediately per DEC-1223.
+- Email-password caller → status='identity_verification_pending' + email confirmation link via TASK-EMAIL-001.
+- Enqueues processing via TASK-MCP-007 task per DEC-1224.
+- Emit `portal.dsar_received` sev-2.
 
 7. **MUST** processor builds bundle per DEC-1225. Aggregates from PROJ/INV/DOC/CHAT/audit:
-    - Per-source JSON dump (all rows where the caller is owner/assignee/author/mentioned).
-    - Per-source CSV for human readability.
-    - Audit history JSON (events ABOUT the caller; never about other subjects per DEC-1229).
-    - Signed manifest with SHA-256 + counts per source.
-    - ZIPs everything; encrypts with age (caller-provided passphrase).
-    - Uploads to S3 with 7-day TTL signed URL.
-    - Transitions status='ready_for_review'.
+- Per-source JSON dump (all rows where the caller is owner/assignee/author/mentioned).
+- Per-source CSV for human readability.
+- Audit history JSON (events ABOUT the caller; never about other subjects per DEC-1229).
+- Signed manifest with SHA-256 + counts per source.
+- ZIPs everything; encrypts with age (caller-provided passphrase).
+- Uploads to S3 with 7-day TTL signed URL.
+- Transitions status='ready_for_review'.
 
 8. **MUST** expose `GET /v1/portal/dsar/{id}` for status polling. Returns current state. On `status='delivered'`: includes signed_url + manifest_sha256.
 
@@ -335,9 +335,7 @@ async fn dsar_type_has_5_values() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-PORTAL-001 (data sources to aggregate).
-**Cross-module:** TASK-PORTAL-003 (SSO identity), TASK-PORTAL-004 (subject lifecycle), TASK-MCP-007 (Tasks for async bundle), TASK-EMAIL-001 (verification + delivery emails), TASK-DOC-001 (S3 bundle storage), TASK-AUTH-101 (cfo + clo roles), TASK-AI-003 (audit kinds), TASK-MEMORY-111 (PII scrub), TASK-OBS-007 (sev-1 SLA alarms).
-**Downstream:** None.
+**Upstream:** TASK-PORTAL-001 (data sources to aggregate). **Cross-module:** TASK-PORTAL-003 (SSO identity), TASK-PORTAL-004 (subject lifecycle), TASK-MCP-007 (Tasks for async bundle), TASK-EMAIL-001 (verification + delivery emails), TASK-DOC-001 (S3 bundle storage), TASK-AUTH-101 (cfo + clo roles), TASK-AI-003 (audit kinds), TASK-MEMORY-111 (PII scrub), TASK-OBS-007 (sev-1 SLA alarms). **Downstream:** None.
 
 ---
 

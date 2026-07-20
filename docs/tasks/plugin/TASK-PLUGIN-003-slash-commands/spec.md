@@ -79,10 +79,10 @@ risk_if_skipped: "Without slash commands, Claude Code + Cowork users have no inl
 The PLUGIN module **MUST** ship 4 canonical slash-commands at `modules/plugin/commands/<name>.md`. Each command is a markdown file with YAML frontmatter binding the command to one or more MCP tools exposed by TASK-PLUGIN-002.
 
 1. **MUST** ship exactly 4 commands in v1 per DEC-2421:
-   - `/cyberos-run <persona> <workflow>` — execute a CUO workflow chain (calls `cyberos.cuo.execute_workflow`)
-   - `/cyberos-memory <read|append> ...` — read or append memory audit rows (calls `cyberos.memory.read_audit` or `cyberos.memory.append_audit`)
-   - `/cyberos-skill-list [filter]` — list available skills from catalog (calls `cyberos.skill.list_catalog`)
-   - `/cyberos-route <query>` — natural-language routing to persona+workflow (calls `cyberos.cuo.route`)
+- `/cyberos-run <persona> <workflow>` — execute a CUO workflow chain (calls `cyberos.cuo.execute_workflow`)
+- `/cyberos-memory <read|append> ...` — read or append memory audit rows (calls `cyberos.memory.read_audit` or `cyberos.memory.append_audit`)
+- `/cyberos-skill-list [filter]` — list available skills from catalog (calls `cyberos.skill.list_catalog`)
+- `/cyberos-route <query>` — natural-language routing to persona+workflow (calls `cyberos.cuo.route`)
 
 2. **MUST** use the frontmatter schema documented at `modules/plugin/commands/SCHEMA.md` (clause 6 below for the schema itself).
 
@@ -115,11 +115,11 @@ The PLUGIN module **MUST** ship 4 canonical slash-commands at `modules/plugin/co
    ```
 
 7. **MUST** validate via `modules/plugin/tests/test_commands_*.py` that:
-   - Every command file parses as YAML frontmatter + markdown body
-   - Every `binds_to[*].tool` matches a tool name registered in TASK-PLUGIN-002's static registry
-   - Every command's `arguments[]` is a subset (by name + type) of the bound tool's input_schema
-   - Every command has `len(description) ∈ [60, 480]`
-   - Every command has `len(triggers) == 4`
+- Every command file parses as YAML frontmatter + markdown body
+- Every `binds_to[*].tool` matches a tool name registered in TASK-PLUGIN-002's static registry
+- Every command's `arguments[]` is a subset (by name + type) of the bound tool's input_schema
+- Every command has `len(description) ∈ [60, 480]`
+- Every command has `len(triggers) == 4`
 
 8. **MUST** include a body section per command that explains: when to invoke, what scopes are required, what side-effects occur, and a worked example. Body is rendered in the host's command-detail view (Claude Code's `?` button on a command).
 
@@ -222,12 +222,7 @@ multi-step chains that run through the CyberOS supervisor and emit memory audit 
 ## Example
 
 ```text
-You: /cyberos-run chief-technology-officer adr-quick-capture
-Plugin: Started task t-abc123. Polling status...
-Plugin: Step 1/3 complete — issue_authored
-Plugin: Step 2/3 complete — adr_drafted
-Plugin: Step 3/3 complete — adr_published
-Plugin: Workflow completed in 4.2s. ADR-2402 published.
+You: /cyberos-run chief-technology-officer adr-quick-capture Plugin: Started task t-abc123. Polling status... Plugin: Step 1/3 complete — issue_authored Plugin: Step 2/3 complete — adr_drafted Plugin: Step 3/3 complete — adr_published Plugin: Workflow completed in 4.2s. ADR-2402 published.
 ```
 ```
 

@@ -1,7 +1,6 @@
 # TASK-IMP-100 code review
 
-Reviewer: parent ship-tasks agent (batch 5). Diff: 3 new files (task-reconcile.mjs 276+,
-test_task_reconcile.sh, modules/skill/task-reconcile/SKILL.md) + tools/install/build.sh (+3).
+Reviewer: parent ship-tasks agent (batch 5). Diff: 3 new files (task-reconcile.mjs 276+, test_task_reconcile.sh, modules/skill/task-reconcile/SKILL.md) + tools/install/build.sh (+3).
 
 ## Clause -> proof
 
@@ -16,34 +15,17 @@ test_task_reconcile.sh, modules/skill/task-reconcile/SKILL.md) + tools/install/b
 
 ## Judgment
 
-- **The design changed under dogfooding, twice, and that is the point.** Run against the live
-  corpus, R1 reds every correctly-shipped task: audits bind a whole-FILE sha while ship-tasks
-  rewrites `status`/`shipped` in that same file. First correction: verify the binding at the
-  audit COMMIT and judge drift on the normative half. That exposed the second, sharper fact -
-  the recorded sha matches no committed version at all, because authoring hashes the spec and
-  then flips status before committing. The audited bytes never existed in history. That is the
-  086 class in miniature, found in our own procedure by our own instrument.
-- **What I did with it**: the binding gap is reported as a NOTE with the substantive check
-  still performed (normative half, audit commit vs HEAD) rather than a red. A tool that reds
-  the entire corpus on a hygiene artifact is a tool nobody runs twice. The gap itself is filed
-  as a follow-up finding (IMP-19) - fixing the audit convention is not this task's cone.
-- **Composition, not reimplementation**: R1 shells to task-lint, R3 to ship-manifest verify.
-  When those tools are absent the rungs say so and never invent a verdict.
+- **The design changed under dogfooding, twice, and that is the point.** Run against the live corpus, R1 reds every correctly-shipped task: audits bind a whole-FILE sha while ship-tasks rewrites `status`/`shipped` in that same file. First correction: verify the binding at the audit COMMIT and judge drift on the normative half. That exposed the second, sharper fact - the recorded sha matches no committed version at all, because authoring hashes the spec and then flips status before committing. The audited bytes never existed in history. That is the 086 class in miniature, found in our own procedure by our own instrument.
+- **What I did with it**: the binding gap is reported as a NOTE with the substantive check still performed (normative half, audit commit vs HEAD) rather than a red. A tool that reds the entire corpus on a hygiene artifact is a tool nobody runs twice. The gap itself is filed as a follow-up finding (IMP-19) - fixing the audit convention is not this task's cone.
+- **Composition, not reimplementation**: R1 shells to task-lint, R3 to ship-manifest verify. When those tools are absent the rungs say so and never invent a verdict.
 - **Read-only is load-bearing**, so it is asserted mechanically (t04), not promised in prose.
-- **Blast radius**: three new files and a vendor line. The one behavioral coupling is the
-  chain: naming a skill in ship-tasks means the payload must carry it in both trees, which
-  build.sh's own gate enforced immediately.
+- **Blast radius**: three new files and a vendor line. The one behavioral coupling is the chain: naming a skill in ship-tasks means the payload must carry it in both trees, which build.sh's own gate enforced immediately.
 
 ## Disclosures
 
-1. **build.sh VENDORED_SKILLS entry** - the spec named build.sh for the docs-tools copy; the
-   chain-coverage gate additionally required the skill in the vendored list. Same file, one
-   more line, mechanically forced by the gate.
-2. **test_full_sdp_payload.sh skill-count pin 52 -> 53** - a deliberate pin (like the version
-   pins) that a new vendored skill legitimately moves. Not in the spec's modified_files;
-   disclosed rather than silently absorbed.
-3. **First SKILL.md frontmatter was rejected by build.sh's schema gate** (name must equal the
-   dir, description bounded). Rewritten to the sibling contract; no scope change.
+1. **build.sh VENDORED_SKILLS entry** - the spec named build.sh for the docs-tools copy; the chain-coverage gate additionally required the skill in the vendored list. Same file, one more line, mechanically forced by the gate.
+2. **test_full_sdp_payload.sh skill-count pin 52 -> 53** - a deliberate pin (like the version pins) that a new vendored skill legitimately moves. Not in the spec's modified_files; disclosed rather than silently absorbed.
+3. **First SKILL.md frontmatter was rejected by build.sh's schema gate** (name must equal the dir, description bounded). Rewritten to the sibling contract; no scope change.
 
 Verdict: no open findings. One follow-up finding filed (IMP-19, audit binding hygiene).
 

@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a objectives and key results set"
+- "Draft a objectives and key results set"
 - "Create the objectives and key results set"
 - "Author a new objectives and key results set"
 - "Generate the objectives and key results set"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this objectives and key results set" → objectives-and-key-results-set-audit
+- "Audit this objectives and key results set" → objectives-and-key-results-set-audit
 - "Check the objectives and key results set for completeness" → objectives-and-key-results-set-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

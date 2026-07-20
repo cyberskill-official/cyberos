@@ -27,4 +27,3 @@ Verified:
 - 39 mentions across the 9 vertical packs (vn / sg / id / th / eu / us / hr / legal / accounting)
 
 The SKILL page now reflects the full strategic surface: open-standard citizen for distribution reach, memory-protocol enabler for cryptographic-grade audit-chain integration on every invocation, and vertical-pack moat as the actual compounding margin (≥30% of ARR at P4 · mid if the pricing+attach-rate math holds). The page reads as a complete answer to the research review's §7.3 GTM critique: the marketplace is deferred, the vertical packs ARE the moat, and the synthesis sub-skill closes the loop into multi-memory auto-evolve.
-

@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this knowledge asset"
+- "Audit this knowledge asset"
 - "Check the knowledge asset for completeness"
 - "Verify the knowledge asset meets the rubric"
 - "Re-audit the knowledge asset"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a knowledge asset" → knowledge-asset-author
+- "Draft a knowledge asset" → knowledge-asset-author
 - "Create the knowledge asset" → knowledge-asset-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

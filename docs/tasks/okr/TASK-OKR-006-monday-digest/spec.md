@@ -86,18 +86,18 @@ The OKR service **MUST** ship Monday digest at `services/okr/src/digest/` trigge
 2. **MUST** validate `digest_delivery` against closed enum per DEC-2011.
 
 3. **MUST** assemble at `assembler.rs::assemble(tenant, week)` per DEC-2012:
-   - Top-3 KRs at risk (low confidence + declining trend)
-   - Top-3 KRs making progress (high confidence + improving)
-   - Missing check-ins from last week
-   - Drift alerts from TASK-OKR-004 last batch run
+- Top-3 KRs at risk (low confidence + declining trend)
+- Top-3 KRs making progress (high confidence + improving)
+- Missing check-ins from last week
+- Drift alerts from TASK-OKR-004 last batch run
 
 4. **MUST** summarize via TASK-CUO-101 + TASK-AI-003 per DEC-2013 — structured prompt with sections.
 
 5. **MUST** deliver per recipient preference per DEC-2010 at `deliverer.rs::deliver`:
-   - email: TASK-EMAIL-009 send
-   - chat: TASK-CHAT-005 message
-   - both: both
-   - none_skipped: log only
+- email: TASK-EMAIL-009 send
+- chat: TASK-CHAT-005 message
+- both: both
+- none_skipped: log only
 
 6. **MUST** define tables at migration `0006`:
    ```sql
@@ -225,8 +225,7 @@ async fn idempotent_per_week() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-OKR-005, TASK-CUO-101.
-**Cross-module:** TASK-OKR-004 (drift alerts), TASK-EMAIL-009 (email), TASK-CHAT-005 (chat), TASK-MCP-007 (cron), TASK-AI-003 (LLM via CUO), TASK-AUTH-101 (CEO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-OKR-005, TASK-CUO-101. **Cross-module:** TASK-OKR-004 (drift alerts), TASK-EMAIL-009 (email), TASK-CHAT-005 (chat), TASK-MCP-007 (cron), TASK-AI-003 (LLM via CUO), TASK-AUTH-101 (CEO role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

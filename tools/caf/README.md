@@ -1,12 +1,6 @@
 # AUDIT.md — an honest, self-improving audit protocol for AI coding agents
 
-**AUDIT.md** is a ~180-line, AI-agnostic master prompt that turns any coding agent
-(Claude Code, Cursor, Gemini CLI, Codex CLI, Windsurf, …) into a rigorous,
-evidence-based codebase auditor that works in loops across multiple sessions —
-and **ships with the machinery to improve its own prompt over time**: a
-versioned changelog, a retrospective rubric, a failure log, an LLM-as-critic
-cycle, and a deterministic regression harness that blocks any change that
-weakens a rule.
+**AUDIT.md** is a ~180-line, AI-agnostic master prompt that turns any coding agent (Claude Code, Cursor, Gemini CLI, Codex CLI, Windsurf, …) into a rigorous, evidence-based codebase auditor that works in loops across multiple sessions — and **ships with the machinery to improve its own prompt over time**: a versioned changelog, a retrospective rubric, a failure log, an LLM-as-critic cycle, and a deterministic regression harness that blocks any change that weakens a rule.
 
 > Visitor-friendly tour: **[cyberskill-official.github.io/code-audit-framework](https://cyberskill-official.github.io/code-audit-framework/)**
 > Built by [CyberSkill](https://cyberskill.world) — *Turn Your Will Into Real*.
@@ -24,9 +18,7 @@ weakens a rule.
 
 ## Why it looks like this (the 60-second story)
 
-The first internal version of this project was a 150 KB, 1,898-line mega-prompt
-with 40+ registered rules. It worked — but four production runs surfaced five
-failure modes that research says are *structural*, not accidental:
+The first internal version of this project was a 150 KB, 1,898-line mega-prompt with 40+ registered rules. It worked — but four production runs surfaced five failure modes that research says are *structural*, not accidental:
 
 | Observed failure | Root cause | The fix |
 |---|---|---|
@@ -36,11 +28,7 @@ failure modes that research says are *structural*, not accidental:
 | All runs stopped arbitrarily at loop 1–2 | "Terminate only when ALL metrics match SOTA Top 5" is unreachable, so the agent stopped on a vibe | **Phase 4** — diminishing-returns stop rule + `LOOP_BUDGET` safety net |
 | "Elite agent, immune to laziness and hallucination" | Persona inflation burns the finite instruction budget | One-sentence role |
 
-The deeper principle (IFScale, arXiv 2507.11538; "curse of instructions",
-arXiv 2509.21051): instruction-following decays measurably as instruction count
-grows, with bias toward earlier instructions. **Every non-essential rule lowers
-compliance with the essential ones.** The protocol is short on purpose, and the
-critical rules come first on purpose.
+The deeper principle (IFScale, arXiv 2507.11538; "curse of instructions", arXiv 2509.21051): instruction-following decays measurably as instruction count grows, with bias toward earlier instructions. **Every non-essential rule lowers compliance with the essential ones.** The protocol is short on purpose, and the critical rules come first on purpose.
 
 ---
 
@@ -53,8 +41,7 @@ critical rules come first on purpose.
 | Launch | `./core/evals/run-audit.sh <target> claude -p` | kickoff prompt inside the target |
 | Use when | you operate audits from the framework (CyberSkill fleet, fine-tuning runs) | the client must reproduce runs without you; air-gapped; contractually pinned engagements |
 
-Precedence is mechanical: if a target has both, its `AUDIT.md` copy wins.
-Either way, artifacts echo `Protocol: vX.Y.Z`, so provenance survives.
+Precedence is mechanical: if a target has both, its `AUDIT.md` copy wins. Either way, artifacts echo `Protocol: vX.Y.Z`, so provenance survives.
 
 ```yaml
 # audit-profile.yaml — the target's complete audit identity (runner mode)
@@ -74,8 +61,7 @@ secret_patterns: []
 
 ## Quickstart for humans (manual mode)
 
-**1. Attach the auditor** — runner mode: write `audit-profile.yaml` (above) in
-the target and skip to step 3. Copy mode:
+**1. Attach the auditor** — runner mode: write `audit-profile.yaml` (above) in the target and skip to step 3. Copy mode:
 
 ```bash
 curl -O https://raw.githubusercontent.com/cyberskill-official/code-audit-framework/main/core/AUDIT.md
@@ -114,12 +100,9 @@ COMPARATORS:     (blank)
 4. The agent executes approved tasks one at a time — implement, re-run the task's verify command, paste raw output, atomic commit (Phase 3). Three failed validations = revert + `BLOCKED` with a root cause (R6).
 5. It loops deeper until a stop condition fires (Phase 4), then writes `docs/HANDOFF.md` with metrics, deltas, debt, and an exact resume protocol (Phase 5).
 
-Set `MODE: autonomous` to skip the approval pause (good for CI or sandboxed
-repos). Everything else is identical.
+Set `MODE: autonomous` to skip the approval pause (good for CI or sandboxed repos). Everything else is identical.
 
-**5. Resuming later** — just run the same instruction again. R4 makes resumes
-idempotent: the agent reads `docs/BACKLOG.md` + `git log` and continues where
-it stopped. Never restarts finished work.
+**5. Resuming later** — just run the same instruction again. R4 makes resumes idempotent: the agent reads `docs/BACKLOG.md` + `git log` and continues where it stopped. Never restarts finished work.
 
 **6. Optionally validate the run's honesty mechanically:**
 
@@ -131,14 +114,9 @@ python3 core/evals/validate.py --run /path/to/target-repo   # checks its docs/ o
 
 ## Quickstart for automated mode (scripted / headless runs)
 
-Automated mode means **you** launch the run from a script, a cron job, or CI —
-no chat session, no human in the loop until the handoff. The protocol is
-model-agnostic: the same two steps work with any coding agent that has a
-non-interactive (headless) mode and your API credentials in its environment.
+Automated mode means **you** launch the run from a script, a cron job, or CI — no chat session, no human in the loop until the handoff. The protocol is model-agnostic: the same two steps work with any coding agent that has a non-interactive (headless) mode and your API credentials in its environment.
 
-**1. Prepare the target repo once** — copy `AUDIT.md` in, fill CONFIG, and set
-`MODE: autonomous` (this is what removes the Phase 2 approval pause; everything
-else is identical to manual mode):
+**1. Prepare the target repo once** — copy `AUDIT.md` in, fill CONFIG, and set `MODE: autonomous` (this is what removes the Phase 2 approval pause; everything else is identical to manual mode):
 
 ```bash
 cd /path/to/target-repo
@@ -146,12 +124,9 @@ curl -O https://raw.githubusercontent.com/cyberskill-official/code-audit-framewo
 $EDITOR AUDIT.md     # fill CONFIG; set MODE: autonomous
 ```
 
-Leave `MODE: gated` instead if you want scripted runs that still stop for a
-human `Approved:` line — the approval is a file artifact, so a teammate can
-grant it hours later and the next scheduled run picks it up (R4).
+Leave `MODE: gated` instead if you want scripted runs that still stop for a human `Approved:` line — the approval is a file artifact, so a teammate can grant it hours later and the next scheduled run picks it up (R4).
 
-**2. Trigger the agent headlessly with one kickoff prompt.** The prompt is the
-same everywhere: `Read AUDIT.md and execute it. Begin at PHASE 0.`
+**2. Trigger the agent headlessly with one kickoff prompt.** The prompt is the same everywhere: `Read AUDIT.md and execute it. Begin at PHASE 0.`
 
 ```bash
 # Claude Code (ANTHROPIC_API_KEY in env)
@@ -164,21 +139,16 @@ codex exec "Read AUDIT.md and execute it. Begin at PHASE 0."
 gemini -p "Read AUDIT.md and execute it. Begin at PHASE 0."
 ```
 
-(Headless flag names are current as of this writing — check your CLI's
-`--help`. Any agent that can read files and run shell commands qualifies.)
+(Headless flag names are current as of this writing — check your CLI's `--help`. Any agent that can read files and run shell commands qualifies.)
 
-**3. Gate the output mechanically.** The run's artifacts are designed to be
-machine-checked — fabricated measurements, uncited targets, gate-skips and
-leaked secrets are detectable from the files alone:
+**3. Gate the output mechanically.** The run's artifacts are designed to be machine-checked — fabricated measurements, uncited targets, gate-skips and leaked secrets are detectable from the files alone:
 
 ```bash
 python3 core/evals/validate.py --run /path/to/target-repo              # exit 1 on violations
 python3 core/evals/validate.py --run /path/to/target-repo --report json  # findings for dashboards
 ```
 
-In CI, run step 2 on a schedule and make step 3 the job's pass/fail — or use
-the GitHub Action below. Re-running the same kickoff prompt resumes idempotently
-(R4): state lives in `docs/BACKLOG.md`, not in the conversation.
+In CI, run step 2 on a schedule and make step 3 the job's pass/fail — or use the GitHub Action below. Re-running the same kickoff prompt resumes idempotently (R4): state lives in `docs/BACKLOG.md`, not in the conversation.
 
 **No clone needed — two distribution channels for step 3:**
 
@@ -200,33 +170,17 @@ uvx --from git+https://github.com/cyberskill-official/code-audit-framework@v1 \
     report: json   # optional; also writes audit-report.json
 ```
 
-(The packaged entry point covers `--run`/`--report`/`--aggregate`; the fixture
-suite `--all` stays repo-only, since fixtures ship with the repo, not the wheel.)
+(The packaged entry point covers `--run`/`--report`/`--aggregate`; the fixture suite `--all` stays repo-only, since fixtures ship with the repo, not the wheel.)
 
-Operational notes for fleets: accepted exceptions go in the target's
-`docs/AUDIT-WAIVERS.yaml` — audit-trailed suppressions with a reason, an
-approver, and a **mandatory expiry** (expired waivers re-raise the finding and
-flag the stale waiver). Stack-specific tools and credential formats extend the
-denylists via an `audit-profile.yaml` at the target root. `--batch targets.yaml`
-validates a whole portfolio and writes per-run reports + `portfolio.json`;
-`--compare` diffs two runs; `--fail-on High` applies a severity policy to the
-exit code (every violation is still reported); `--emit-feedback` generates the
-per-run calibration record ([`core/evals/TESTING-PROTOCOL.md`](./core/evals/TESTING-PROTOCOL.md)).
-And the validator is **offline by design**: stdlib-only, no network calls, no
-telemetry — nothing about the audited codebase leaves the machine, which makes
-it safe for air-gapped and regulated environments (see [`COMPLIANCE.md`](./docs/COMPLIANCE.md)).
+Operational notes for fleets: accepted exceptions go in the target's `docs/AUDIT-WAIVERS.yaml` — audit-trailed suppressions with a reason, an approver, and a **mandatory expiry** (expired waivers re-raise the finding and flag the stale waiver). Stack-specific tools and credential formats extend the denylists via an `audit-profile.yaml` at the target root. `--batch targets.yaml` validates a whole portfolio and writes per-run reports + `portfolio.json`; `--compare` diffs two runs; `--fail-on High` applies a severity policy to the exit code (every violation is still reported); `--emit-feedback` generates the per-run calibration record ([`core/evals/TESTING-PROTOCOL.md`](./core/evals/TESTING-PROTOCOL.md)). And the validator is **offline by design**: stdlib-only, no network calls, no telemetry — nothing about the audited codebase leaves the machine, which makes it safe for air-gapped and regulated environments (see [`COMPLIANCE.md`](./docs/COMPLIANCE.md)).
 
-**Improving the protocol itself, scripted the same way** (Job B in
-[`AGENTS.md`](./AGENTS.md) — the file agents are pointed at once they're
-running in *this* repo):
+**Improving the protocol itself, scripted the same way** (Job B in [`AGENTS.md`](./AGENTS.md) — the file agents are pointed at once they're running in *this* repo):
 
 ```bash
 claude -p "Run one improvement cycle per core/improve/CRITIC.md."
 ```
 
-Hard invariants either job is held to: never edit `core/improve/versions/*`; never
-weaken a fixture; `python3 core/evals/validate.py --all` green before any protocol
-change is done.
+Hard invariants either job is held to: never edit `core/improve/versions/*`; never weaken a fixture; `python3 core/evals/validate.py --all` green before any protocol change is done.
 
 ---
 
@@ -244,8 +198,7 @@ change is done.
 
 ## The self-improvement loop
 
-The prompt is treated like production software: versioned, changelogged,
-regression-tested, and changed only with evidence.
+The prompt is treated like production software: versioned, changelogged, regression-tested, and changed only with evidence.
 
 ```
         run AUDIT.md on a project
@@ -268,11 +221,7 @@ regression-tested, and changed only with evidence.
    CHANGELOG.md + core/improve/versions/AUDIT-vX.Y.Z.md  (immutable release)
 ```
 
-There is **no lifetime cap on cycles** — only per-campaign stop rules
-(2 consecutive zero-High cycles, or all failures promoted/deferred), the same
-diminishing-returns logic the protocol applies to codebases. The protocol has
-already been run on itself; the pre-release hardening campaign (2026-06-10,
-5 cycles) produced:
+There is **no lifetime cap on cycles** — only per-campaign stop rules (2 consecutive zero-High cycles, or all failures promoted/deferred), the same diminishing-returns logic the protocol applies to codebases. The protocol has already been run on itself; the pre-release hardening campaign (2026-06-10, 5 cycles) produced:
 
 | Cycle | One change | Evals |
 |---|---|---|
@@ -281,28 +230,11 @@ already been run on itself; the pre-release hardening campaign (2026-06-10,
 | 3 | One escape-hatch vocabulary across R1 and Phase 5 (compliant runs were flagged as violations) | 15/15 |
 | 4–5 | Zero findings ≥ High, twice → campaign stop (a) | 15/15 |
 
-Campaign 2 (2026-06-10, after the move to CyberSkill ownership) opened with a
-full blind-spot review — the seven declared harness blind spots re-verified and
-four new ones registered ([`core/improve/BLINDSPOTS.md`](./core/improve/BLINDSPOTS.md)) —
-and ran one cycle: **v1.1.0** echoes `Mode:` in every backlog, closing a
-demonstrated gated-mode evasion (BS-08). Evals: 16/16. Stop condition (c):
-fixed cycle count requested by the maintainer.
+Campaign 2 (2026-06-10, after the move to CyberSkill ownership) opened with a full blind-spot review — the seven declared harness blind spots re-verified and four new ones registered ([`core/improve/BLINDSPOTS.md`](./core/improve/BLINDSPOTS.md)) — and ran one cycle: **v1.1.0** echoes `Mode:` in every backlog, closing a demonstrated gated-mode evasion (BS-08). Evals: 16/16. Stop condition (c): fixed cycle count requested by the maintainer.
 
-Campaign 3 (2026-06-10, production-readiness pass) re-verified the register,
-adopted a structural review as its evidence base, and landed the hardening that
-makes the suite trustworthy on hostile output: a template-conformance
-meta-tripwire (non-template output can no longer silently escape every check —
-BS-12), a CONFIG preflight with `PROTECTED_AREAS` auto-load (BS-13), a
-precision fixture pack (G:B ratio 2:14 → 6:18), structured findings export
-(`--report json|sarif`), a retro-score aggregator, and the CI gate. One
-protocol change: **v1.2.0** — Phase 0 now STOPs on placeholder or out-of-set
-CONFIG instead of letting the agent improvise it. Evals: 24/24. Stop condition
-(b): every failure-log row promoted or explicitly deferred.
+Campaign 3 (2026-06-10, production-readiness pass) re-verified the register, adopted a structural review as its evidence base, and landed the hardening that makes the suite trustworthy on hostile output: a template-conformance meta-tripwire (non-template output can no longer silently escape every check — BS-12), a CONFIG preflight with `PROTECTED_AREAS` auto-load (BS-13), a precision fixture pack (G:B ratio 2:14 → 6:18), structured findings export (`--report json|sarif`), a retro-score aggregator, and the CI gate. One protocol change: **v1.2.0** — Phase 0 now STOPs on placeholder or out-of-set CONFIG instead of letting the agent improvise it. Evals: 24/24. Stop condition (b): every failure-log row promoted or explicitly deferred.
 
-Full evidence trail: [`CHANGELOG.md`](./core/CHANGELOG.md),
-[`core/improve/FAILURE_LOG.md`](./core/improve/FAILURE_LOG.md),
-[`core/improve/BLINDSPOTS.md`](./core/improve/BLINDSPOTS.md),
-[`core/improve/retros/`](./core/improve/retros/).
+Full evidence trail: [`CHANGELOG.md`](./core/CHANGELOG.md), [`core/improve/FAILURE_LOG.md`](./core/improve/FAILURE_LOG.md), [`core/improve/BLINDSPOTS.md`](./core/improve/BLINDSPOTS.md), [`core/improve/retros/`](./core/improve/retros/).
 
 ---
 
@@ -315,23 +247,13 @@ python3 core/evals/validate.py --run DIR  # validate any real run's docs/ output
 python3 core/evals/validate.py --run DIR --report json   # structured findings export (or: sarif)
 ```
 
-Zero dependencies (Python stdlib). Each `B*` fixture is a **fault-injection
-trap**: it plants exactly one violation (a fabricated metric, an uncited SOTA
-target, a leaked AWS key, an unapproved execution, …) and the validator must
-report exactly that violation. A trap that stops tripping means a rule has
-silently died — that is what blocks a bad prompt edit. Details:
-[`core/evals/README.md`](./core/evals/README.md). What the validator *cannot* see
-(judgment calls, live-agent behavior) is declared honestly in
-[`core/evals/rules.json`](./core/evals/rules.json) coverage notes.
+Zero dependencies (Python stdlib). Each `B*` fixture is a **fault-injection trap**: it plants exactly one violation (a fabricated metric, an uncited SOTA target, a leaked AWS key, an unapproved execution, …) and the validator must report exactly that violation. A trap that stops tripping means a rule has silently died — that is what blocks a bad prompt edit. Details: [`core/evals/README.md`](./core/evals/README.md). What the validator *cannot* see (judgment calls, live-agent behavior) is declared honestly in [`core/evals/rules.json`](./core/evals/rules.json) coverage notes.
 
 ---
 
 ## Repo layout — divided by nature
 
-Three zones plus a thin root shell. `core/` is the engine and is designed to be
-absorbed wholesale into CyberSkill's CyberOS; `site/` is the community page;
-`docs/` is human documentation; the root holds only what external conventions
-pin there.
+Three zones plus a thin root shell. `core/` is the engine and is designed to be absorbed wholesale into CyberSkill's CyberOS; `site/` is the community page; `docs/` is human documentation; the root holds only what external conventions pin there.
 
 ```
 /                          ← distribution + tooling shell (pinned by conventions)
@@ -384,9 +306,7 @@ docs/                      ← human documents (GitHub surfaces these from docs/
 | Compliance / control mapping | [`docs/COMPLIANCE.md`](./docs/COMPLIANCE.md) |
 | Community standards | [`docs/CODE_OF_CONDUCT.md`](./docs/CODE_OF_CONDUCT.md) |
 
-Note: when AUDIT.md is run **on this repo itself**, its output artifacts
-(`docs/BACKLOG.md`, `docs/HANDOFF.md`, `docs/AUDIT-WAIVERS.yaml`) are
-gitignored by name — the committed documentation in `docs/` is unaffected.
+Note: when AUDIT.md is run **on this repo itself**, its output artifacts (`docs/BACKLOG.md`, `docs/HANDOFF.md`, `docs/AUDIT-WAIVERS.yaml`) are gitignored by name — the committed documentation in `docs/` is unaffected.
 
 ---
 
@@ -412,10 +332,6 @@ gitignored by name — the committed documentation in `docs/` is unaffected.
 
 ## About
 
-Built and maintained by **CyberSkill** — software solutions consultancy and
-development, Ho Chi Minh City, Vietnam. We build AI-first engineering systems
-for clients globally. *Turn Your Will Into Real — Hiện Thực Hoá Ý Chí.*
+Built and maintained by **CyberSkill** — software solutions consultancy and development, Ho Chi Minh City, Vietnam. We build AI-first engineering systems for clients globally. *Turn Your Will Into Real — Hiện Thực Hoá Ý Chí.*
 
-Partnerships & client work: **info@cyberskill.world** · Product feedback: open
-an issue. If AUDIT.md saved you a review cycle, you can
-[buy a fine-tune cycle ☕](https://buymeacoffee.com/zintaen).
+Partnerships & client work: **info@cyberskill.world** · Product feedback: open an issue. If AUDIT.md saved you a review cycle, you can [buy a fine-tune cycle ☕](https://buymeacoffee.com/zintaen).

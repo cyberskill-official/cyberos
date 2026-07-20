@@ -85,9 +85,9 @@ The KB service **MUST** ship server-side renderer at `services/kb/src/renderer/`
 1. **MUST** validate `render_target` against closed enum per DEC-1892.
 
 2. **MUST** render at `markdown_to_html.rs::render(doc, target)`:
-   - Parse via `pulldown-cmark`.
-   - Sanitise via ammonia per DEC-1890 with strict whitelist (no script, no inline event handlers, no javascript: URLs).
-   - Output per target (full HTML, excerpt 200 words, plaintext, JSON AST).
+- Parse via `pulldown-cmark`.
+- Sanitise via ammonia per DEC-1890 with strict whitelist (no script, no inline event handlers, no javascript: URLs).
+- Output per target (full HTML, excerpt 200 words, plaintext, JSON AST).
 
 3. **MUST** extract plaintext at `plaintext_extract.rs::extract(html)` per DEC-1891 — strips tags, decodes entities, normalises whitespace.
 
@@ -202,9 +202,7 @@ async fn cache_invalidated_on_new_version() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-KB-001.
-**Downstream:** TASK-KB-005 (semantic ingest uses plaintext).
-**Cross-module:** TASK-AI-019 (memory Layer 2 ingest), TASK-AUTH-101 (CDO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-KB-001. **Downstream:** TASK-KB-005 (semantic ingest uses plaintext). **Cross-module:** TASK-AI-019 (memory Layer 2 ingest), TASK-AUTH-101 (CDO role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

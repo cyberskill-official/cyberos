@@ -1,8 +1,7 @@
 # HANDOFF
 
 ## 1. Summary
-No qualifying findings; the target baseline was confirmed green after the pass.
-Stop condition: (c) — every task is DONE/BLOCKED and no new real issues remain.
+No qualifying findings; the target baseline was confirmed green after the pass. Stop condition: (c) — every task is DONE/BLOCKED and no new real issues remain.
 
 ## 2. Audit vectors covered
 Architecture, Security, Testing.

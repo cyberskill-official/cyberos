@@ -2,30 +2,22 @@
 
 This is the operational half of the promise made at
 <https://cyberskill.world/en/cyberos/delete-account>. That page is the URL submitted to Google Play
-and the App Store; both stores require a deletion path, and Play checks that the page exists and is
-reachable without signing in. A promise on that page that this runbook cannot execute is a
-compliance failure, so the two move together: **if the data model changes, change both.**
+and the App Store; both stores require a deletion path, and Play checks that the page exists and is reachable without signing in. A promise on that page that this runbook cannot execute is a compliance failure, so the two move together: **if the data model changes, change both.**
 
-Deletion is currently manual and operator-run. Automating it (a self-serve request endpoint plus a
-scheduled purge job) is worth a task; until that lands, this is the path.
+Deletion is currently manual and operator-run. Automating it (a self-serve request endpoint plus a scheduled purge job) is worth a task; until that lands, this is the path.
 
 ## Scope
 
 Two request types, and they are not the same:
 
-- **Subject deletion.** One person asks for their account and data to be removed. Their
-  shared-channel messages are retained but de-attributed, because the content belongs to the
-  organisation, not to them. This is the common case.
-- **Workspace deletion.** An administrator closes the organisation's CyberOS account. Everything in
-  the tenant goes.
+- **Subject deletion.** One person asks for their account and data to be removed. Their shared-channel messages are retained but de-attributed, because the content belongs to the organisation, not to them. This is the common case.
+- **Workspace deletion.** An administrator closes the organisation's CyberOS account. Everything in the tenant goes.
 
 ## Preconditions
 
-1. The request arrived **from the address the person signs in with**, or from an administrator of
-   their workspace. That is the identity check - do not act on a forwarded request.
+1. The request arrived **from the address the person signs in with**, or from an administrator of their workspace. That is the identity check - do not act on a forwarded request.
 2. You have a fresh database backup, and you know how to restore it.
-3. You are running against production knowingly. Everything below is inside an explicit transaction
-   with a preflight count; read the counts before you type `COMMIT`.
+3. You are running against production knowingly. Everything below is inside an explicit transaction with a preflight count; read the counts before you type `COMMIT`.
 
 ## Subject deletion
 
@@ -37,15 +29,13 @@ FROM subjects
 WHERE lower(email) = lower('person@example.com');
 ```
 
-Exactly one row. If zero, the person never had an account (reply and stop). If more than one, they
-belong to several tenants - confirm which workspace the request covers before going further.
+Exactly one row. If zero, the person never had an account (reply and stop). If more than one, they belong to several tenants - confirm which workspace the request covers before going further.
 
 Note the `id` (subject) and `tenant_id`. Everything below is parameterised on those two.
 
 ### 2. Create or find the tenant's tombstone subject
 
-Shared-channel messages are re-pointed at this row rather than deleted, so the conversation stays
-readable for colleagues while ceasing to be attributable to the person.
+Shared-channel messages are re-pointed at this row rather than deleted, so the conversation stays readable for colleagues while ceasing to be attributable to the person.
 
 ```sql
 INSERT INTO subjects (tenant_id, handle, display_name, kind, status)
@@ -74,8 +64,7 @@ SELECT
     WHERE c.kind = 'direct' AND m.subject_id = '<subject_id>')                          AS dm_channels;
 ```
 
-`messages` is the number that will be de-attributed, not deleted. `dm_channels` is the number that
-will be destroyed outright, taking their messages and attachments with them.
+`messages` is the number that will be de-attributed, not deleted. `dm_channels` is the number that will be destroyed outright, taking their messages and attachments with them.
 
 ### 4. Delete
 
@@ -123,13 +112,11 @@ SELECT count(*) FROM chat_messages WHERE sender_subject_id = '<subject_id>'; -- 
 COMMIT;
 ```
 
-If any count is not zero, `ROLLBACK` and work out why before retrying. A partial deletion is worse
-than none: it looks done and is not.
+If any count is not zero, `ROLLBACK` and work out why before retrying. A partial deletion is worse than none: it looks done and is not.
 
 ### 6. Close the loop
 
-Reply to the requester confirming the deletion and the date. Note the request and the date in the
-workspace's admin record. Play and the GDPR both give you 30 days; do it in days, not weeks.
+Reply to the requester confirming the deletion and the date. Note the request and the date in the workspace's admin record. Play and the GDPR both give you 30 days; do it in days, not weeks.
 
 ## Workspace deletion
 
@@ -150,10 +137,6 @@ Confirm to the administrator in writing when it is done.
 
 ## What is NOT covered here
 
-Server access and error logs. They may contain the person's subject id or email for up to 90 days,
-after which they rotate out. This is disclosed on the deletion page, and is permitted: security and
-abuse investigation is a legitimate reason to retain them for a bounded window. Do not extend that
-window without changing the published page first.
+Server access and error logs. They may contain the person's subject id or email for up to 90 days, after which they rotate out. This is disclosed on the deletion page, and is permitted: security and abuse investigation is a legitimate reason to retain them for a bounded window. Do not extend that window without changing the published page first.
 
-Rolling database backups age out within 30 days. A deletion is not re-applied to a backup; if a
-backup is ever restored, re-run this runbook for any request completed since that backup was taken.
+Rolling database backups age out within 30 days. A deletion is not re-applied to a backup; if a backup is ever restored, re-run this runbook for any request completed since that backup was taken.

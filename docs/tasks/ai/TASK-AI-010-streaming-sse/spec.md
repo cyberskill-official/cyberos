@@ -97,14 +97,14 @@ The AI Gateway service **SHOULD** support Server-Sent Events (SSE) streaming for
 9. **MUST** emit a heartbeat `event: heartbeat\ndata: {}\n\n` every **15 seconds** during steady stream to keep proxies (CDNs, corporate firewalls) from timing out idle connections. Heartbeats DO NOT contribute to `usage.completion_tokens` or `cost_ledger`. The heartbeat task MUST stop when the stream closes.
 10. **MUST** propagate the deadline — the streaming provider call inherits the same deadline as the non-streaming variant (TASK-AI-008 §1 #6). The deadline includes the time spent in the SSE pipeline; per-token latency does not extend it.
 11. **MUST** emit OTel metrics with stable label values (use `ReconcileReason::as_metric_label()` and `ProviderKind::as_metric_label()` per TASK-AI-007 ISS-003 pattern):
-    - `ai_streaming_first_token_ms{provider,model}` — histogram, observed once per successful stream
-    - `ai_streaming_total_duration_ms{provider,model,outcome}` — histogram, observed once per stream
-    - `ai_streaming_disconnects_total{provider,model,phase}` — counter (phase ∈ `before_first_token` / `after_first_token`)
-    - `ai_streaming_provider_errors_mid_stream_total{provider,model}` — counter
-    - `ai_streaming_backpressure_events_total{provider,model}` — counter
-    - `ai_streaming_heartbeats_emitted_total{provider,model}` — counter
-    - `ai_streaming_unsupported_fallback_total{model}` — counter
-    - `ai_streaming_reconciles_total{outcome}` — counter (sanity check that reconcile is called exactly once per stream)
+- `ai_streaming_first_token_ms{provider,model}` — histogram, observed once per successful stream
+- `ai_streaming_total_duration_ms{provider,model,outcome}` — histogram, observed once per stream
+- `ai_streaming_disconnects_total{provider,model,phase}` — counter (phase ∈ `before_first_token` / `after_first_token`)
+- `ai_streaming_provider_errors_mid_stream_total{provider,model}` — counter
+- `ai_streaming_backpressure_events_total{provider,model}` — counter
+- `ai_streaming_heartbeats_emitted_total{provider,model}` — counter
+- `ai_streaming_unsupported_fallback_total{model}` — counter
+- `ai_streaming_reconciles_total{outcome}` — counter (sanity check that reconcile is called exactly once per stream)
 12. **MUST** retry on transient failures **only before the first token streams** — once the first token reaches the client, the stream is committed. Pre-first-token retries are handled by `router::call_provider_streaming` invoking the same retry/failover policy as `call_provider` (TASK-AI-008 §1 #3-#5). Post-first-token failures emit `event: error` and close the stream.
 13. **SHOULD NOT** open SSE on aliases whose resolved model doesn't support streaming (e.g., a provider that only offers batch inference). When the resolved model can't stream, MUST silently fall back to the non-streaming response (full JSON via `router::call_provider`) and emit `ai_streaming_unsupported_fallback_total{model}` metric. The HTTP response remains 200 OK with `Content-Type: application/json` (NOT `text/event-stream`).
 14. **MUST** enforce a maximum stream duration of **300 seconds** (5 minutes). After 300s of cumulative wall time (including heartbeats), the stream MUST emit `event: error\ndata: {"code": "max_stream_duration_exceeded"}` and close. This bounds resource use against pathological providers that stream a token every minute.

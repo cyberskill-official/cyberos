@@ -1,7 +1,6 @@
 # TASK-IMP-091 code review
 
-Reviewer: parent ship-tasks agent (batch 3). Diff: `scripts/migrate_improvement_to_task.py`
-(+29/-18), new `scripts/tests/test_regen_backlog.sh` (3 scenarios).
+Reviewer: parent ship-tasks agent (batch 3). Diff: `scripts/migrate_improvement_to_task.py` (+29/-18), new `scripts/tests/test_regen_backlog.sh` (3 scenarios).
 
 ## Clause -> proof
 
@@ -15,22 +14,13 @@ Reviewer: parent ship-tasks agent (batch 3). Diff: `scripts/migrate_improvement_
 
 ## Judgment
 
-- **Correctness vs the recorded failure**: TASK-IMP-086's gate-log E1 is the specification of the
-  bug - regen emitted zero rows for fourteen done tasks and a Totals line three short. t01 now
-  proves the opposite property against the real corpus, and t03 proves the filter cannot creep
-  back for any legal status.
-- **The halt is the real hardening**: the old code printed "EXCLUDED" to stderr and wrote the
-  backlog anyway. A warning that still writes a wrong file is the silent-drift class in disguise;
-  the exit now precedes every write, and t03's halt half asserts the file's sha256 is unchanged.
-- **status_line unification**: header and Totals share one formatter, so they cannot disagree -
-  the drift shape the 086 incident showed (header saying one thing, rows another).
-- **Unlisted statuses**: sorted-append after STATUS_ORDER means a status a task actually carries
-  can never vanish from a count, even if STATUS_ORDER is not updated. Defensive by design.
-- **Suite safety**: every scenario copies the script into a scratch tree because ROOT resolves
-  from `__file__`; the live BACKLOG is proven byte-untouched (`git status --short` empty).
+- **Correctness vs the recorded failure**: TASK-IMP-086's gate-log E1 is the specification of the bug - regen emitted zero rows for fourteen done tasks and a Totals line three short. t01 now proves the opposite property against the real corpus, and t03 proves the filter cannot creep back for any legal status.
+- **The halt is the real hardening**: the old code printed "EXCLUDED" to stderr and wrote the backlog anyway. A warning that still writes a wrong file is the silent-drift class in disguise; the exit now precedes every write, and t03's halt half asserts the file's sha256 is unchanged.
+- **status_line unification**: header and Totals share one formatter, so they cannot disagree - the drift shape the 086 incident showed (header saying one thing, rows another).
+- **Unlisted statuses**: sorted-append after STATUS_ORDER means a status a task actually carries can never vanish from a count, even if STATUS_ORDER is not updated. Defensive by design.
+- **Suite safety**: every scenario copies the script into a scratch tree because ROOT resolves from `__file__`; the live BACKLOG is proven byte-untouched (`git status --short` empty).
 - **Security**: none - read-compute-write over tracked markdown.
-- **AI-specific**: the file's own preamble ("lists ONLY remaining work") was the bug's charter and
-  was rewritten with the code; leaving it would have re-taught the next reader the defect.
+- **AI-specific**: the file's own preamble ("lists ONLY remaining work") was the bug's charter and was rewritten with the code; leaving it would have re-taught the next reader the defect.
 
 Verdict: no open findings.
 

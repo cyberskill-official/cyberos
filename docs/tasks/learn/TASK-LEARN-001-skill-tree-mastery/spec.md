@@ -182,7 +182,7 @@ POST /v1/learn/members/{id}/mastery
 ---
 
 ## §4 — Acceptance criteria
-1. **skill_domain enum cardinality 8**. 2. **mastery_level CHECK 1-5**. 3. **parent depth ≤4**. 4. **Cycle prevention**. 5. **Append-only mastery**. 6. **UNIQUE(tenant, name, parent) on skills**. 7. **3 memory audit kinds emitted**. 8. **PII scrubbed (skill text SHA256)**. 9. **RLS denies cross-tenant**. 10. **CHRO-only skill create**. 11. **assessment_kind tagged (self/peer/council/system)**. 12. **valid_from + valid_to range**. 13. **Trace_id preserved**. 14. **Tree query recursive CTE**. 15. **Current mastery = max valid_from**. 16. **Self-reference parent rejected**. 17. **Skill rename via UPDATE OK**. 18. **Parent change via UPDATE OK (depth recomputed)**. 19. **Cross-tenant parent FK rejected**. 20. **Mastery FK to skill enforced**. 
+1. **skill_domain enum cardinality 8**. 2. **mastery_level CHECK 1-5**. 3. **parent depth ≤4**. 4. **Cycle prevention**. 5. **Append-only mastery**. 6. **UNIQUE(tenant, name, parent) on skills**. 7. **3 memory audit kinds emitted**. 8. **PII scrubbed (skill text SHA256)**. 9. **RLS denies cross-tenant**. 10. **CHRO-only skill create**. 11. **assessment_kind tagged (self/peer/council/system)**. 12. **valid_from + valid_to range**. 13. **Trace_id preserved**. 14. **Tree query recursive CTE**. 15. **Current mastery = max valid_from**. 16. **Self-reference parent rejected**. 17. **Skill rename via UPDATE OK**. 18. **Parent change via UPDATE OK (depth recomputed)**. 19. **Cross-tenant parent FK rejected**. 20. **Mastery FK to skill enforced**.
 
 ---
 
@@ -221,9 +221,7 @@ async fn append_only_no_update() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-HR-001.
-**Downstream:** TASK-LEARN-002 (degrees+certs), TASK-LEARN-003 (VP rollup), TASK-LEARN-004 (Council).
-**Cross-module:** TASK-MEMORY-111 (PII).
+**Upstream:** TASK-HR-001. **Downstream:** TASK-LEARN-002 (degrees+certs), TASK-LEARN-003 (VP rollup), TASK-LEARN-004 (Council). **Cross-module:** TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

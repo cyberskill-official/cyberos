@@ -43,17 +43,17 @@ Without automatic application of low-risk changes, the harness becomes a backlog
 1. **MUST** ship `cuo/core/proposal_applier.py` with `apply_proposal(proposal_path) -> ApplyResult` that reads the proposal, classifies the diff, and either applies-or-queues.
 2. **MUST** ship `cuo/core/version_bump.py` with `bump(skill_path, level: "patch" | "minor" | "major") -> str` that rewrites the `metadata.version` field in SKILL.md frontmatter and returns the new version.
 3. **MUST** classify diffs into 4 buckets:
-   - `cosmetic` (description wording, comments, formatting only) → patch bump, auto-apply.
-   - `rule_addition` (new SEC/QA/TRACE rule entry) → minor bump, **major** review-required class → queue.
-   - `rule_removal` (deletes a rule from RUBRIC) → major bump, queue.
-   - `contract_field_change` (SKILL.md `cyberos-template` or contract `template.md` field shape change) → major bump, queue.
+- `cosmetic` (description wording, comments, formatting only) → patch bump, auto-apply.
+- `rule_addition` (new SEC/QA/TRACE rule entry) → minor bump, **major** review-required class → queue.
+- `rule_removal` (deletes a rule from RUBRIC) → major bump, queue.
+- `contract_field_change` (SKILL.md `cyberos-template` or contract `template.md` field shape change) → major bump, queue.
 4. **MUST** honour the target skill's `human_fine_tune.review_required` flags. Any `True` flag matching the proposal's bucket forces queue regardless of bucket default.
 5. **MUST** write proposals that auto-apply to `<proposals_root>/applied/<stripe>-<ts>.md` after the apply; queued ones to `<proposals_root>/pending_approval/<stripe>-<ts>.md`.
 6. **MUST** emit `cuo.proposal_applied` memory aux row per auto-apply; payload `{stripe_id, skill_path, bump_level, old_version, new_version, diff_summary}`. Emit `cuo.proposal_queued` for queued ones.
 7. **MUST** add CLI subcommands:
-   - `cyberos-cuo proposal apply <stripe>` — runs the applier (auto-apply OR queue depending on classification).
-   - `cyberos-cuo proposal approve <stripe>` — moves a `pending_approval/` proposal to `applied/` AND runs the apply (this is the explicit HITL gate).
-   - `cyberos-cuo proposal classify <stripe>` — dry-run; shows the bucket + bump level + would-be action.
+- `cyberos-cuo proposal apply <stripe>` — runs the applier (auto-apply OR queue depending on classification).
+- `cyberos-cuo proposal approve <stripe>` — moves a `pending_approval/` proposal to `applied/` AND runs the apply (this is the explicit HITL gate).
+- `cyberos-cuo proposal classify <stripe>` — dry-run; shows the bucket + bump level + would-be action.
 8. **MUST** run the skill's acceptance/TRIGGER_TESTS.md tests against the new version BEFORE writing the applied state — if any test fails, abort + queue + emit `cuo.proposal_apply_failed`.
 9. **MUST** append a `CHANGELOG.md` entry per applied proposal with the format: `### YYYY-MM-DD — [SKILL] <skill_name> v<old> → v<new>`, followed by the diff summary.
 10. **MUST NOT** apply ANY proposal whose `## Risk class` body section equals `"safety"` automatically — `on_safety_change: true` is the protocol's defence-in-depth and overrides bucket classification.

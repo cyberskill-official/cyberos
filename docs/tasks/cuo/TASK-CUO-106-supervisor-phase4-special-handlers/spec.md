@@ -103,50 +103,50 @@ The CUO supervisor **MUST** ship 5 workflow Handler subclasses at `modules/cuo/c
 1. **MUST** validate `workflow_pattern` against closed enum per DEC-2381 (cardinality 6, default `linear`).
 
 2. **MUST** dispatch in `dispatch.py::pick_handler(workflow)` per DEC-2387:
-   - Read `workflow.frontmatter.pattern` (default `linear`)
-   - Return matching Handler subclass instance
-   - Linear pattern → existing `execute_chain()` (unchanged path)
-   - All others → new Handler subclass
+- Read `workflow.frontmatter.pattern` (default `linear`)
+- Return matching Handler subclass instance
+- Linear pattern → existing `execute_chain()` (unchanged path)
+- All others → new Handler subclass
 
 3. **MUST** implement `TimeCriticalHandler` per DEC-2382:
-   - Bypass any queueing/batching/work-stealing
-   - Read `workflow.frontmatter.sla_minutes`
-   - Start timer, walk chain
-   - If `total_duration_ms > sla_minutes * 60 * 1000`: emit `cuo.time_critical_sla_breach` memory row with `extra.breach_severity = (actual - sla) / sla`
-   - Affected workflows: `chief-privacy-officer/breach-response-cycle` (sla_minutes: 240 = 4h), `chief-communications-officer/per-crisis-response` (sla_minutes: 120 = 2h), `chief-trust-officer/per-trust-incident-update` (sla_minutes: 240)
+- Bypass any queueing/batching/work-stealing
+- Read `workflow.frontmatter.sla_minutes`
+- Start timer, walk chain
+- If `total_duration_ms > sla_minutes * 60 * 1000`: emit `cuo.time_critical_sla_breach` memory row with `extra.breach_severity = (actual - sla) / sla`
+- Affected workflows: `chief-privacy-officer/breach-response-cycle` (sla_minutes: 240 = 4h), `chief-communications-officer/per-crisis-response` (sla_minutes: 120 = 2h), `chief-trust-officer/per-trust-incident-update` (sla_minutes: 240)
 
 4. **MUST** implement `PerInstanceHandler` per DEC-2383:
-   - Read `workflow.frontmatter.instance_descriptor` (list of dicts)
-   - For each instance: invoke `execute_chain()` with `inputs.merged(instance)`
-   - Collect ChainResults in list; build fan-in summary `ChainResult` with `outcome="COMPLETED_BATCH"`, `per_instance: list[ChainResult]`
-   - Emit one `cuo.per_instance_iteration` row per instance + one `cuo.per_instance_summary` row for the batch
-   - Affected workflow: `chief-sales-officer/quarterly-account-plan` (10–20 top-tier accounts per quarter)
+- Read `workflow.frontmatter.instance_descriptor` (list of dicts)
+- For each instance: invoke `execute_chain()` with `inputs.merged(instance)`
+- Collect ChainResults in list; build fan-in summary `ChainResult` with `outcome="COMPLETED_BATCH"`, `per_instance: list[ChainResult]`
+- Emit one `cuo.per_instance_iteration` row per instance + one `cuo.per_instance_summary` row for the batch
+- Affected workflow: `chief-sales-officer/quarterly-account-plan` (10–20 top-tier accounts per quarter)
 
 5. **MUST** implement `MultiOutputHandler` per DEC-2384:
-   - Run chain end-to-end ONCE
-   - Read `workflow.frontmatter.output_recipients` (list of `{recipient_id, format, delivery_method}`)
-   - For each recipient: render final step's output through `recipient.format`, deliver via `recipient.delivery_method`
-   - Emit one `cuo.multi_output_fanout` memory row per recipient
-   - Affected workflow: `chief-legal-officer/quarterly-regulatory-cycle` (1 source artefact → N regulator filings)
+- Run chain end-to-end ONCE
+- Read `workflow.frontmatter.output_recipients` (list of `{recipient_id, format, delivery_method}`)
+- For each recipient: render final step's output through `recipient.format`, deliver via `recipient.delivery_method`
+- Emit one `cuo.multi_output_fanout` memory row per recipient
+- Affected workflow: `chief-legal-officer/quarterly-regulatory-cycle` (1 source artefact → N regulator filings)
 
 6. **MUST** implement `SequentialApprovalHandler` per DEC-2385:
-   - Read `workflow.frontmatter.gates` (list of `{approver_persona, approver_workflow}`)
-   - Execute the gating workflow first (the approver's chain)
-   - If approver chain `outcome != COMPLETED`: halt parent chain with `outcome=BLOCKED`, emit `cuo.sequential_approval_halted`
-   - If approver chain emits explicit approval audit kind: proceed with gated chain, emit `cuo.sequential_approval_resumed`
-   - Affected pair: `chief-ethics-officer/per-model-card-ethics-sign-off` gates `chief-ai-officer/per-model-card-release`
+- Read `workflow.frontmatter.gates` (list of `{approver_persona, approver_workflow}`)
+- Execute the gating workflow first (the approver's chain)
+- If approver chain `outcome != COMPLETED`: halt parent chain with `outcome=BLOCKED`, emit `cuo.sequential_approval_halted`
+- If approver chain emits explicit approval audit kind: proceed with gated chain, emit `cuo.sequential_approval_resumed`
+- Affected pair: `chief-ethics-officer/per-model-card-ethics-sign-off` gates `chief-ai-officer/per-model-card-release`
 
 7. **MUST** implement `PersonaPairHandler` per DEC-2386:
-   - Read `workflow.frontmatter.peer_persona` + `workflow.frontmatter.shared_artefact`
-   - Run primary chain up to declared handoff step
-   - Pause, dispatch to peer persona's matching workflow (looked up by shared_artefact content_hash)
-   - Receive peer's contribution; resume primary chain
-   - Emit one `cuo.persona_pair_handoff` row per peer-direction transition
-   - Affected pairs:
-     - `chief-revenue-officer/churn-collaboration` ↔ `chief-customer-officer/churn-collaboration` (shared: churn cohort analysis)
-     - `chief-marketing-officer/content-strategy` ↔ `chief-communications-officer/distribution-strategy` (shared: campaign plan)
-     - `chief-risk-officer/postmortem-risk-lens` ↔ `chief-technology-officer/postmortem-engineering-lens` (shared: incident report)
-     - `chief-customer-officer/customer-360-cx-lens` ↔ `chief-data-officer/customer-360-data-lens` (shared: customer profile)
+- Read `workflow.frontmatter.peer_persona` + `workflow.frontmatter.shared_artefact`
+- Run primary chain up to declared handoff step
+- Pause, dispatch to peer persona's matching workflow (looked up by shared_artefact content_hash)
+- Receive peer's contribution; resume primary chain
+- Emit one `cuo.persona_pair_handoff` row per peer-direction transition
+- Affected pairs:
+- `chief-revenue-officer/churn-collaboration` ↔ `chief-customer-officer/churn-collaboration` (shared: churn cohort analysis)
+- `chief-marketing-officer/content-strategy` ↔ `chief-communications-officer/distribution-strategy` (shared: campaign plan)
+- `chief-risk-officer/postmortem-risk-lens` ↔ `chief-technology-officer/postmortem-engineering-lens` (shared: incident report)
+- `chief-customer-officer/customer-360-cx-lens` ↔ `chief-data-officer/customer-360-data-lens` (shared: customer profile)
 
 8. **MUST** preserve audit-chain integrity: all 8 new memory audit kinds (DEC-2388) routed through `cyberos.core.writer.Writer` (no direct file writes).
 

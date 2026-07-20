@@ -1,7 +1,6 @@
 # TASK-IMP-088 code review
 
-Reviewer: parent ship-tasks agent (batch 3). Diff: `tools/install/install.sh` (+~14),
-`tools/install/tests/test_install_hygiene.sh` (t06 block).
+Reviewer: parent ship-tasks agent (batch 3). Diff: `tools/install/install.sh` (+~14), `tools/install/tests/test_install_hygiene.sh` (t06 block).
 
 ## Clause -> proof
 
@@ -14,18 +13,12 @@ Reviewer: parent ship-tasks agent (batch 3). Diff: `tools/install/install.sh` (+
 
 ## Judgment
 
-- **Correctness vs ticket**: the resolution chain is untouched, as the decision required - only
-  the scaffold's literal changes, and only on consumer repos. The platform guard reuses the
-  existing `is_platform_repo()` rather than inventing a second detector.
-- **Blast radius**: one variable and one `printf` line inside a create-once block. A repo that
-  already has config.yaml never enters it (1.3).
-- **Failure mode if wrong**: a consumer whose first authoring run resolves engineering-spec@1 -
-  precisely the state that cost a PLAN-gate override on the sachviet run, now asserted against.
+- **Correctness vs ticket**: the resolution chain is untouched, as the decision required - only the scaffold's literal changes, and only on consumer repos. The platform guard reuses the existing `is_platform_repo()` rather than inventing a second detector.
+- **Blast radius**: one variable and one `printf` line inside a create-once block. A repo that already has config.yaml never enters it (1.3).
+- **Failure mode if wrong**: a consumer whose first authoring run resolves engineering-spec@1 - precisely the state that cost a PLAN-gate override on the sachviet run, now asserted against.
 - **Security**: none. One line of local, gitignored config; no execution surface, no secrets.
-- **Backwards compatibility**: existing consumers are unaffected until they choose to edit;
-  create-once guarantees no silent profile change under a live repo.
-- **AI-specific**: no hallucinated APIs - `is_platform_repo` verified present in the file;
-  diff is 14 lines, reviewable in full.
+- **Backwards compatibility**: existing consumers are unaffected until they choose to edit; create-once guarantees no silent profile change under a live repo.
+- **AI-specific**: no hallucinated APIs - `is_platform_repo` verified present in the file; diff is 14 lines, reviewable in full.
 
 Verdict: no open findings.
 

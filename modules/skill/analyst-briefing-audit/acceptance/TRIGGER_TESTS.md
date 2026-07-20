@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this analyst briefing"
+- "Audit this analyst briefing"
 - "Check the analyst briefing for completeness"
 - "Verify the analyst briefing meets the rubric"
 - "Re-audit the analyst briefing"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a analyst briefing" → analyst-briefing-author
+- "Draft a analyst briefing" → analyst-briefing-author
 - "Create the analyst briefing" → analyst-briefing-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

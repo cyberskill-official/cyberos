@@ -91,10 +91,10 @@ The EMAIL service **MUST** ship CRM auto-link at `services/email/src/crm_link/` 
 3. **MUST** check contact existence by sender email: if exists → link thread to existing contact_id; else create per DEC-1574.
 
 4. **MUST** auto-create contact via `auto_contact_creator.rs::create(tenant_id, from_header)`:
-   - name: from `From:` display name (`"Acme Corp <john@acme.com>"` → `"Acme Corp"`)
-   - email: from `From:` address
-   - company: TASK-AI-003 lookup on domain (24h cached); fallback domain text
-   - link_origin: `auto_tracked_domain` per DEC-1573
+- name: from `From:` display name (`"Acme Corp <john@acme.com>"` → `"Acme Corp"`)
+- email: from `From:` address
+- company: TASK-AI-003 lookup on domain (24h cached); fallback domain text
+- link_origin: `auto_tracked_domain` per DEC-1573
 
 5. **MUST** validate `link_origin` against closed enum per DEC-1573.
 
@@ -218,8 +218,7 @@ async fn existing_contact_reused() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-EMAIL-001, TASK-CRM-001.
-**Cross-module:** TASK-AI-003 (company lookup), TASK-AUTH-101 (CRO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-EMAIL-001, TASK-CRM-001. **Cross-module:** TASK-AI-003 (company lookup), TASK-AUTH-101 (CRO role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

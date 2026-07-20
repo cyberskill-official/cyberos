@@ -51,37 +51,18 @@ This skill is called between **every phase transition** of `ship-tasks`, not jus
 - `ready_to_review → reviewing` (reviewer claims)
 - `reviewing → ready_to_test` (review approved)
 - `ready_to_test → testing` (tester claims)
-- `testing → done` (coverage-gate-audit passes)
-**Declared mutation footprint (TASK-IMP-116).** A `backlog-state-update@2` write declares THREE
-lines: the status cell's row, its section header (retallied from the section's rows; a BARE header
-carries no counts and stays untouched), and the file-top `Totals:` line (retallied from every row
-in the file). Capped at three - a footprint that grows on convenience is not a footprint.
+- `testing → done` (coverage-gate-audit passes) **Declared mutation footprint (TASK-IMP-116).** A `backlog-state-update@2` write declares THREE lines: the status cell's row, its section header (retallied from the section's rows; a BARE header carries no counts and stays untouched), and the file-top `Totals:` line (retallied from every row in the file). Capped at three - a footprint that grows on convenience is not a footprint.
 
-TASK-IMP-092 replaced incremental header adjustment with a retally because "incremental adjustment
-faithfully preserves an inherited lie forever (the 086 incident's 34 vs true 20)". It stopped at
-section headers, and the file's most-read number rotted exactly as that argument predicts: a
-2026-07-17 review found `Totals: 336 draft, 4 ready_to_implement, 176 done` over a file whose
-improvement section alone read 67/9/39. `regen_backlog` owns that line and cannot run. Every
-mutation now emits the whole file's truth, not just its section's.
+TASK-IMP-092 replaced incremental header adjustment with a retally because "incremental adjustment faithfully preserves an inherited lie forever (the 086 incident's 34 vs true 20)". It stopped at section headers, and the file's most-read number rotted exactly as that argument predicts: a 2026-07-17 review found `Totals: 336 draft, 4 ready_to_implement, 176 done` over a file whose improvement section alone read 67/9/39. `regen_backlog` owns that line and cannot run. Every mutation now emits the whole file's truth, not just its section's.
 
-Footprint shapes, all deliberate: counted header -> 3 lines; bare header -> 2 (row + Totals);
-insert -> 1 added row + 2 changed lines. A file with no `Totals:` line is legal and is never given one.
+Footprint shapes, all deliberate: counted header -> 3 lines; bare header -> 2 (row + Totals); insert -> 1 added row + 2 changed lines. A file with no `Totals:` line is legal and is never given one.
 
 - any-stage → `ready_to_implement` (failure/blocker rework path, increments `routed_back_count`, sets `entered_via: rework`)
 - any-stage → `draft` (SPEC-rejected path, TASK-IMP-108 §1.5: increments `routed_back_count`, sets `entered_via: spec_rejected`). Use when the failure is the spec, not the code - re-authoring and re-auditing is the remedy, and `ready_to_implement` would hand an unchanged wrong spec back to an implementer.
 
 ### Ordering contract — write the truth first, then the index (TASK-IMP-120)
 
-The frontmatter `status` is the record of truth; `docs/tasks/BACKLOG.md` is only its index
-(`STATUS-REFERENCE.md` §1). The two writes are ORDERED, and the order is now ENFORCED rather than
-advised: **write the truth first, then the index** — set the task spec.md frontmatter `status` to
-the target FIRST, and only THEN run `backlog-mutate flip` to move the index cell to match. `flip`
-reads the task's spec frontmatter before it writes the index and REFUSES (exit 6, naming both the
-frontmatter's current status and the requested target) unless the frontmatter already carries that
-target; an unfindable, unreadable, or ambiguous truth refuses the same way. The index can only ever
-catch up to the truth, never lead it — so a caller who moves the index first (the TASK-IMP-116
-divergence: two index flips ran while the frontmatter still said `reviewing`) gets a refusal, not a
-silent disagreement. Do it out of order and the tool stops you.
+The frontmatter `status` is the record of truth; `docs/tasks/BACKLOG.md` is only its index (`STATUS-REFERENCE.md` §1). The two writes are ORDERED, and the order is now ENFORCED rather than advised: **write the truth first, then the index** — set the task spec.md frontmatter `status` to the target FIRST, and only THEN run `backlog-mutate flip` to move the index cell to match. `flip` reads the task's spec frontmatter before it writes the index and REFUSES (exit 6, naming both the frontmatter's current status and the requested target) unless the frontmatter already carries that target; an unfindable, unreadable, or ambiguous truth refuses the same way. The index can only ever catch up to the truth, never lead it — so a caller who moves the index first (the TASK-IMP-116 divergence: two index flips ran while the frontmatter still said `reviewing`) gets a refusal, not a silent disagreement. Do it out of order and the tool stops you.
 
 ## 2. Output schema
 
@@ -136,26 +117,19 @@ memory_emit:
 
 ## 2b. Insert-row placement (regenerator-identical)
 
-The inserted row MUST match `regen_backlog()` in `scripts/migrate_improvement_to_task.py`
-byte-for-byte - that function is the byte-authority for row grammar and placement; keep the
-two in sync when either changes:
+The inserted row MUST match `regen_backlog()` in `scripts/migrate_improvement_to_task.py` byte-for-byte - that function is the byte-authority for row grammar and placement; keep the two in sync when either changes:
 
-- row grammar: `- [<status>] <task-ID-slug> - <title>` with a ` (improvement)` suffix when
-  `class: improvement`; product rows untagged.
-- placement: inside the section's CONTIGUOUS row block (the blank line after the header
-  stays outside the block), rows sorted ascending by task STEM (the
-  `task-<MODULE>-<NNN>-<slug>` token) - NOT by the rendered row string, whose `[status]` prefix
-  would reorder rows (regen_backlog() sorts the (stem, ...) tuple). When the module has no
-  section, create `## <module>  (<counts>)` per the regenerator's conventions.
+- row grammar: `- [<status>] <task-ID-slug> - <title>` with a ` (improvement)` suffix when `class: improvement`; product rows untagged.
+- placement: inside the section's CONTIGUOUS row block (the blank line after the header stays outside the block), rows sorted ascending by task STEM (the `task-<MODULE>-<NNN>-<slug>` token) - NOT by the rendered row string, whose `[status]` prefix would reorder rows (regen_backlog() sorts the (stem, ...) tuple). When the module has no section, create `## <module>  (<counts>)` per the regenerator's conventions.
 - whole-file discipline: no other line changes, except that section's header counts when present.
 
 ## 3. Quality gates
 
 - `new_status` is one of the 10 enum values listed in `modules/skill/contracts/task/STATUS-REFERENCE.md` §1 — never freeform, never with embedded modifiers like `+ strict-audited`.
 - `transition_kind` MUST match the direction of the status change:
-  - `forward` — moving down the §1.1 lifecycle (e.g. `implementing → ready_to_review`)
-  - `rework` — moving back to `ready_to_implement` from any downstream state; increments `routed_back_count`; `rework_reason` is required
-  - `off_ramp` — moving to `on_hold` or `closed` from any state
+- `forward` — moving down the §1.1 lifecycle (e.g. `implementing → ready_to_review`)
+- `rework` — moving back to `ready_to_implement` from any downstream state; increments `routed_back_count`; `rework_reason` is required
+- `off_ramp` — moving to `on_hold` or `closed` from any state
 - `line_number` resolves to a real BACKLOG row whose `task_id` matches.
 - `old_line` matches the current contents of that line byte-for-byte (optimistic concurrency check; if the file shifted underneath us, refuse and re-enter the queue).
 - `evidence_artefact_ids` references real memory audit rows from the same workflow run (cross-reference check). Which fields are required depends on the transition — e.g. `coverage_gate_audit` is required for the `testing → done` transition; `task_audit` is required for `draft → ready_to_implement`.

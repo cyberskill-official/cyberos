@@ -68,51 +68,51 @@ The Slack importer **MUST** ingest a Slack export zip via an 8-step idempotent c
 1. **MUST** expose CLI `cyberos-chat import slack <zip-path> --tenant <id> [--resume] [--dry-run]`.
 2. **MUST** define `import_jobs` checkpoint table: `(id UUID PK, source TEXT='slack', tenant_id UUID, zip_sha256 TEXT, last_step_completed INT, total_messages_imported INT, started_at, finished_at, error_message TEXT, tenant_id_meta)`. Composite key `(zip_sha256, tenant_id)` enforces idempotency.
 3. **MUST** execute 8 explicit steps in order:
-    1. **Validate**: zip integrity, expected files present.
-    2. **Users**: parse users.json → JIT-provision Mattermost users (TASK-CHAT-002 pattern; idempotent on slack_user_id).
-    3. **Channels**: parse channels.json → create Mattermost channels (idempotent on slack_channel_id).
-    4. **Channel Members**: parse channel/members.json → add MM users to MM channels.
-    5. **Messages**: parse channels/<name>/*.json → insert MM posts in chronological order.
-    6. **Threads**: link thread replies via `props.root_post_slack_ts` lookup.
-    7. **Files**: download Slack file attachments → upload to MM file store.
-    8. **Verify**: count posts; compare to expected; emit final audit row.
+1. **Validate**: zip integrity, expected files present.
+2. **Users**: parse users.json → JIT-provision Mattermost users (TASK-CHAT-002 pattern; idempotent on slack_user_id).
+3. **Channels**: parse channels.json → create Mattermost channels (idempotent on slack_channel_id).
+4. **Channel Members**: parse channel/members.json → add MM users to MM channels.
+5. **Messages**: parse channels/<name>/*.json → insert MM posts in chronological order.
+6. **Threads**: link thread replies via `props.root_post_slack_ts` lookup.
+7. **Files**: download Slack file attachments → upload to MM file store.
+8. **Verify**: count posts; compare to expected; emit final audit row.
 4. **MUST** checkpoint after EACH step: write `last_step_completed` atomically.
 5. **MUST** support resume: `--resume` reads last checkpoint and skips to step N+1.
 6. **MUST** dedup at every step:
-    - Users: lookup `users WHERE props.slack_user_id = <id>`; reuse if exists.
-    - Channels: lookup by `props.slack_channel_id`.
-    - Messages: dedup by `(channel_id, ts)` — Slack timestamps are unique per channel.
+- Users: lookup `users WHERE props.slack_user_id = <id>`; reuse if exists.
+- Channels: lookup by `props.slack_channel_id`.
+- Messages: dedup by `(channel_id, ts)` — Slack timestamps are unique per channel.
 7. **MUST** emit memory audit rows:
-    - `chat.import_started` at step 1.
-    - `chat.import_step_completed` per step (payload: step N, message_count, duration_ms).
-    - `chat.import_finished` at step 8 (payload: total_messages, total_users, total_channels, duration_total_ms).
+- `chat.import_started` at step 1.
+- `chat.import_step_completed` per step (payload: step N, message_count, duration_ms).
+- `chat.import_finished` at step 8 (payload: total_messages, total_users, total_channels, duration_total_ms).
 8. **MUST** report progress to stderr: `[step 5/8] importing messages: 12,345 / 100,000 (12%)`.
 9. **MUST** support `--dry-run`: parse zip + report what would happen; NO DB writes.
 10. **MUST** be idempotent: re-run with same zip_sha256 + same tenant → CLI exits 0 with message "already imported"; checkpoint row present and finished.
 11. **MUST** fail fast on permanent errors (corrupt zip, schema unrecognised); retry transient (DB lock, Mattermost API rate limit).
 12. **MUST** RLS-enforce tenant scope.
 13. **MUST** emit OTel metrics:
-    - `chat_import_messages_total{source=slack}` (counter).
-    - `chat_import_duration_seconds{source=slack, step}` (histogram).
-    - `chat_import_failures_total{source=slack, step}` (counter).
+- `chat_import_messages_total{source=slack}` (counter).
+- `chat_import_duration_seconds{source=slack, step}` (histogram).
+- `chat_import_failures_total{source=slack, step}` (counter).
 14. **MUST** preserve original message timestamps: Mattermost `posts.create_at = floor(slack_ts × 1000)` (Slack uses float seconds; MM uses integer milliseconds). Insert in chronological order per channel so MM indexes remain efficient.
 15. **MUST** preserve thread structure: a Slack reply has `thread_ts` pointing to the parent's `ts`. Step 6 resolves these into Mattermost `root_id` references after step 5 has populated the post table. Replies whose parent is missing (export gap) are logged + emitted as top-level posts with `props.slack_thread_orphan = true`.
 16. **MUST** dedup file attachments by Slack `file.id`: two posts referencing the same `file.id` MUST point at one MM `FileInfo` row. The dedup is by `(slack_workspace_id, slack_file_id)` because Slack file IDs are workspace-scoped.
 17. **MUST** redact PII from file metadata before upload: filenames + comments + initial_comment in the Slack file payload are routed through TASK-MEMORY-111 redaction. Original content is preserved in the MM FileInfo blob; redacted form goes into the memory audit trail.
 18. **MUST** map Slack channel types to Mattermost types:
-    - Slack `is_general=true` → MM `channel_type=O` named `town-square` (or `general` if `town-square` taken).
-    - Slack `is_private=true` → MM `channel_type=P`.
-    - Slack `is_im=true` → MM `channel_type=D` (direct).
-    - Slack `is_mpim=true` (multi-person IM) → MM `channel_type=G` (group).
-    - Slack `is_archived=true` → MM channel created then `delete_at` set.
+- Slack `is_general=true` → MM `channel_type=O` named `town-square` (or `general` if `town-square` taken).
+- Slack `is_private=true` → MM `channel_type=P`.
+- Slack `is_im=true` → MM `channel_type=D` (direct).
+- Slack `is_mpim=true` (multi-person IM) → MM `channel_type=G` (group).
+- Slack `is_archived=true` → MM channel created then `delete_at` set.
 19. **MUST** map Slack reactions to Mattermost reactions: `reactions[].users[]` enumerated; each becomes one MM `reactions` row. Emoji name carries over verbatim; custom emoji that don't exist in MM map to `:question:` with `props.original_emoji_name`.
 20. **MUST** preserve pinned messages: Slack `pinned_to:[channel_id, ...]` → MM `posts.is_pinned = true`.
 21. **MUST** preserve edited messages: Slack message edit history is opaque in export (only final text shipped). Insert final text as the only version; emit memory audit `chat.import_warning` with `reason="edit_history_unavailable"` for each edited message.
 22. **MUST** mark imported posts: every imported post carries `props.cyberos_imported = true` and `props.cyberos_source = "slack"` and `props.slack_ts = "<original>"` and `props.slack_workspace_id = "<id>"`. Downstream (TASK-CHAT-005 bridge) preserves these in memory payload.
 23. **MUST** cap parallelism per step:
-    - Step 5 (messages): 1 worker (sequential to preserve order).
-    - Step 7 (files): 10 parallel downloads, configurable via `--file-parallelism`.
-    - Step 2/3/4: 4 parallel API calls to MM.
+- Step 5 (messages): 1 worker (sequential to preserve order).
+- Step 7 (files): 10 parallel downloads, configurable via `--file-parallelism`.
+- Step 2/3/4: 4 parallel API calls to MM.
 24. **MUST** respect Mattermost rate limits: detect 429 response; back off with exponential `min(2^attempt × 100ms, 30s)`; honour `Retry-After` header when present. Failure after 8 retries → permanent error.
 25. **MUST** validate zip integrity before step 1 succeeds: every member file checksum matches the zip CRC32; file-list contains `channels.json` + `users.json`; users.json parses as JSON array.
 26. **MUST** support `--abort <job_id>` to cleanly cancel a running import: set `cancellation_requested = true` in `import_jobs`; current step finishes its in-flight unit then exits; checkpoint preserved.
@@ -1392,9 +1392,9 @@ All resolved. Deferred:
 - Why we require `--workspace-id` for Enterprise Grid but not standard exports: standard exports have one workspace; Enterprise Grid has many bundled into one zip. We could've inferred it from `team_id` clusters but explicit flag is unambiguous.
 - The "system_admin promotion + post-import demotion" pattern (§6.3) is operator-driven; we don't auto-demote because the import audit row triggers a separate workflow that includes a human review.
 - We considered shipping the importer as a long-running daemon with HTTP triggers — rejected because:
-  1. Imports are infrequent (per-tenant lifetime ≤ a few).
-  2. Long-running services have to be patched + monitored.
-  3. CLI = ephemeral; runs, completes, dies. No attack surface in between.
+1. Imports are infrequent (per-tenant lifetime ≤ a few).
+2. Long-running services have to be patched + monitored.
+3. CLI = ephemeral; runs, completes, dies. No attack surface in between.
 - Why Postgres-side step_metrics over OBS metrics: OBS retention is 7d; post-mortem on an import that ran 3 weeks ago needs the metrics. Postgres JSONB column lives as long as the job row does (forever, by default).
 - The bot token reused for MM API auth has a 30d expiry; the importer fails fast on 401 because there's no graceful reauth path during a multi-minute run.
 - We chose `sha2` crate over `ring::digest` for SHA-256 because `sha2` ships with no transitive openssl dependency, keeping the importer binary lean.

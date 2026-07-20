@@ -16,14 +16,14 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft an architectural spike"
+- "Draft an architectural spike"
 - "Create the architectural spike"
 - "Run a spike on MMR vs plain hash chain before the ADR"
 - "Time-box an investigation of the two storage options"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this architectural spike" → architectural-spike-audit
+- "Audit this architectural spike" → architectural-spike-audit
 - "Check the spike for evidence gaps" → architectural-spike-audit
 - "Draft an ADR" → architecture-decision-record-author
 - "Deep-map the repo before implementation" → repo-context-map-author

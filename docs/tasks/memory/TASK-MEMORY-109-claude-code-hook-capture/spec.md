@@ -85,20 +85,20 @@ The Claude Code hook capture service **MUST** integrate with Claude Code's docum
 
 1. **MUST** install via `cyberos memory hook claude install <project-path>` which writes to `<project-path>/.claude/settings.json` (project-scope) OR `~/.claude/settings.json` (user-scope, with `--user` flag). The installer is idempotent: re-running with the same args is a no-op.
 2. **MUST** subscribe to exactly three Claude Code hook events:
-    - `UserPromptSubmit` → emit `memory.claude_prompt` row with `{session_id, prompt_hash, prompt_redacted, cwd, trace_id, captured_at_ns}`. The `prompt_redacted` field carries the redacted prompt body (per TASK-MEMORY-111 ruleset); `prompt_hash` is `blake3(raw_prompt)` for dedup.
-    - `PostToolUse` → emit `memory.claude_tool_use` row with `{session_id, tool_name, tool_args_hash, outcome (success | error), duration_ms, trace_id}`. Tool args are HASHED, not stored (per DEC-151).
-    - `Stop` → emit `memory.claude_session_completed` row with `{session_id, prompt_count, tool_use_count, duration_ms, trace_id, last_assistant_message_redacted}`.
+- `UserPromptSubmit` → emit `memory.claude_prompt` row with `{session_id, prompt_hash, prompt_redacted, cwd, trace_id, captured_at_ns}`. The `prompt_redacted` field carries the redacted prompt body (per TASK-MEMORY-111 ruleset); `prompt_hash` is `blake3(raw_prompt)` for dedup.
+- `PostToolUse` → emit `memory.claude_tool_use` row with `{session_id, tool_name, tool_args_hash, outcome (success | error), duration_ms, trace_id}`. Tool args are HASHED, not stored (per DEC-151).
+- `Stop` → emit `memory.claude_session_completed` row with `{session_id, prompt_count, tool_use_count, duration_ms, trace_id, last_assistant_message_redacted}`.
 3. **MUST NOT** subscribe to `PreToolUse`, `Notification`, `SubagentStop`, or `SessionStart` — those are higher-frequency and offer marginal capture value vs the noise they add.
 4. **MUST** redact every prompt + assistant message BEFORE hashing or emitting per TASK-MEMORY-111's ruleset:
-    - AWS access-key / secret-key patterns → `<AWS_KEY>`
-    - `Bearer <token>` → `Bearer <REDACTED>`
-    - GitHub PATs (`ghp_*`, `gho_*`, `ghu_*`, `ghs_*`, `ghr_*`) → `<GH_PAT>`
-    - OpenAI keys (`sk-*`) → `<OPENAI_KEY>`
-    - Anthropic keys (`sk-ant-*`) → `<ANTHROPIC_KEY>`
-    - Generic JWT-like patterns (3 base64 segments joined by dots) → `<JWT>`
-    - Vietnamese CCCD (12-digit) → `<VN_CCCD>`
-    - Email addresses (when not in @company.com allowlist) → `<EMAIL>`
-    - Phone numbers (E.164 or VN local form) → `<PHONE>`
+- AWS access-key / secret-key patterns → `<AWS_KEY>`
+- `Bearer <token>` → `Bearer <REDACTED>`
+- GitHub PATs (`ghp_*`, `gho_*`, `ghu_*`, `ghs_*`, `ghr_*`) → `<GH_PAT>`
+- OpenAI keys (`sk-*`) → `<OPENAI_KEY>`
+- Anthropic keys (`sk-ant-*`) → `<ANTHROPIC_KEY>`
+- Generic JWT-like patterns (3 base64 segments joined by dots) → `<JWT>`
+- Vietnamese CCCD (12-digit) → `<VN_CCCD>`
+- Email addresses (when not in @company.com allowlist) → `<EMAIL>`
+- Phone numbers (E.164 or VN local form) → `<PHONE>`
 5. **MUST** fail-closed on redaction: if the redactor itself errors (regex panic, OOM), the hook emits a `memory.claude_capture_redaction_failed` row with `{session_id, error}` and exits 0 — never blocks Claude Code.
 6. **MUST** complete in ≤ 50ms p95 for the synchronous part (read stdin + redact + spawn emit). The actual memory write is delegated to a background tokio task via the TASK-MEMORY-107 capture daemon's local Unix socket (`/tmp/cyberos-memory-capture.sock`) — fire-and-forget. Hook process exits 0 once the message is enqueued.
 7. **MUST** correlate session-level rows via `session_id` (UUID; provided by Claude Code in the hook payload) AND a per-session W3C `trace_id` (32-char hex). The trace_id is generated at first hook invocation for a given session_id and cached in `/tmp/cyberos-memory-claude-traces/<session_id>` (file persists for 1 hour; pruned by TASK-MEMORY-110 sweeper).
@@ -108,9 +108,9 @@ The Claude Code hook capture service **MUST** integrate with Claude Code's docum
 11. **MUST** be opt-in per project: `cyberos memory hook claude install <project-path>` writes the hook config; absent config = no hook = no capture. There is NO global default that captures every Claude Code project.
 12. **MUST** support `cyberos memory hook claude uninstall <project-path>` (reverse of install) and `cyberos memory hook claude status <project-path>` (prints installed hooks + last capture row for that project).
 13. **MUST** emit OTel metrics:
-    - `memory_claude_hook_total{kind, outcome}` (counter; outcome ∈ emitted | redaction_failed | socket_unavailable | invalid_payload).
-    - `memory_claude_hook_redactions_total{pattern}` (counter — operator visibility into what's being redacted).
-    - `memory_claude_hook_latency_seconds{kind}` (histogram; TASK-OBS-003 buckets).
+- `memory_claude_hook_total{kind, outcome}` (counter; outcome ∈ emitted | redaction_failed | socket_unavailable | invalid_payload).
+- `memory_claude_hook_redactions_total{pattern}` (counter — operator visibility into what's being redacted).
+- `memory_claude_hook_latency_seconds{kind}` (histogram; TASK-OBS-003 buckets).
 14. **SHOULD** support `cyberos memory hook claude tail` — pretty-print the last N `memory.claude_*` rows for operator debugging.
 
 ---

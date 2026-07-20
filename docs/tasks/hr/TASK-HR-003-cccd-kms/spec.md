@@ -86,18 +86,18 @@ The HR service **MUST** ship CCCD photo encryption at `services/hr/src/cccd/` wi
 1. **MUST** validate `cccd_access_kind` against closed enum per DEC-1821.
 
 2. **MUST** encrypt at `kms_wrapper.rs::encrypt(photo_bytes, tenant_id)`:
-   - Use tenant-specific KMS CMK with `KeyUsage=ENCRYPT_DECRYPT`, alias=`hr-cccd-{tenant_id}`.
-   - Key created at tenant provisioning; rotation via CHRO action.
+- Use tenant-specific KMS CMK with `KeyUsage=ENCRYPT_DECRYPT`, alias=`hr-cccd-{tenant_id}`.
+- Key created at tenant provisioning; rotation via CHRO action.
 
 3. **MUST** require consent per DEC-1823 — `consent_token` parameter required at upload; validated against member's prior consent record.
 
 4. **MUST** gate decrypt at `access_gate.rs::check(user, tenant)` per DEC-1820:
-   - Caller must have ROOT-CHRO role via TASK-AUTH-101.
-   - Other roles → 403 + emit `hr.cccd_access_denied` sev-1.
+- Caller must have ROOT-CHRO role via TASK-AUTH-101.
+- Other roles → 403 + emit `hr.cccd_access_denied` sev-1.
 
 5. **MUST** emit sev-1 audit on every decrypt per DEC-1822:
-   - `hr.cccd_decrypted` with severity=1
-   - CHRO email notification dispatched
+- `hr.cccd_decrypted` with severity=1
+- CHRO email notification dispatched
 
 6. **MUST** define tables at migration `0003`:
    ```sql
@@ -221,8 +221,7 @@ async fn upload_without_consent_rejected() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-HR-001.
-**Cross-module:** TASK-AUTH-105 (ROOT-CHRO role), TASK-MEMORY-111 (audit chain), TASK-AUTH-101 (RBAC).
+**Upstream:** TASK-HR-001. **Cross-module:** TASK-AUTH-105 (ROOT-CHRO role), TASK-MEMORY-111 (audit chain), TASK-AUTH-101 (RBAC).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

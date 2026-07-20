@@ -94,18 +94,17 @@ The recall ranking layer **MUST** replace the existing "sort by relevance descen
 2. **MUST** treat `relevance` as the cosine similarity (semantic backend) or BM25-normalised score scaled to `[0.0, 1.0]` (FTS5 backend) returned by the underlying engine. Engines that emit out-of-range values (e.g. SQLite FTS5 raw BM25 returns negative scores) are normalised by the engine adapter, not the ranking layer.
 3. **MUST** treat `importance` as the float `meta.importance ∈ [0.0, 1.0]` declared in the memory file's frontmatter. Absence is exactly 0.5 (DEC-192). The walker invariant `importance-range` rejects out-of-range values (error severity).
 4. **MUST** treat `recency` as the value returned by the active **decay profile** evaluated at `now - last_seen_at` (delta in hours). Two built-in profiles MUST be supported:
-    - **Exponential** (default): `recency = decay_factor^hours_old`, default `decay_factor = 0.995` ⇒ half-life ≈ 138 hours ≈ 5.75 days. Park et al. 2023 form. (Note: the proposal earlier estimated 4 days; the precise math is `t_½ = ln(0.5) / ln(0.995) ≈ 138.3h ≈ 5.76 days`.)
-    - **Ebbinghaus**: `recency = exp(-hours_old / strength)`, default `strength = 240` (i.e. ~10-day characteristic time). MARS framework alignment.
+- **Exponential** (default): `recency = decay_factor^hours_old`, default `decay_factor = 0.995` ⇒ half-life ≈ 138 hours ≈ 5.75 days. Park et al. 2023 form. (Note: the proposal earlier estimated 4 days; the precise math is `t_½ = ln(0.5) / ln(0.995) ≈ 138.3h ≈ 5.76 days`.)
+- **Ebbinghaus**: `recency = exp(-hours_old / strength)`, default `strength = 240` (i.e. ~10-day characteristic time). MARS framework alignment.
 5. **MUST** select the active decay profile via `manifest.json:recall_weights.decay_profile` (string enum `exponential | ebbinghaus`, default `exponential`) with `manifest.json:recall_weights.decay_params` (dict of profile-specific params). CLI override `--decay-profile {exponential|ebbinghaus}` MUST work without modifying the manifest (per-query override is non-persistent).
 6. **MUST** fall back to `recency = 1.0` when the hit's `last_seen_at` is absent or unparseable. This treats unknown-age memories as "as fresh as possible" — the conservative direction, since the alternative (treating them as ancient) would silently suppress legitimate hits.
 7. **MUST** preserve the existing `recall(...)` Python signature except for one new keyword argument `weights: Optional[RecallWeights] = None`. Callers that pass `weights=None` (legacy callers) get the ranking-applied result; callers that explicitly want raw relevance order set `weights=RecallWeights.relevance_only()` (programmatic, not a CLI flag — used only by internal tools that need to inspect raw similarity).
 8. **MUST** annotate every `RecallHit` with the four scalars (`relevance`, `importance`, `recency`, `combined_score`) so downstream consumers (CLI `--json`, TASK-MEMORY-115 dream pipeline) can inspect the score derivation.
 9. **MUST** validate `manifest.json:recall_weights` at writer construction time (`Writer.__init__`), raising `ManifestError` on:
-    - sum of weights outside `[1.0 - 1e-6, 1.0 + 1e-6]`
-    - any weight outside `[0.0, 1.0]`
-    - unknown decay profile name
-    - decay params that fail the profile's validator (e.g. `decay_factor ∉ (0.0, 1.0)` for exponential)
-   Fail-fast means an operator typo doesn't silently degrade ranking quality on every recall.
+- sum of weights outside `[1.0 - 1e-6, 1.0 + 1e-6]`
+- any weight outside `[0.0, 1.0]`
+- unknown decay profile name
+- decay params that fail the profile's validator (e.g. `decay_factor ∉ (0.0, 1.0)` for exponential) Fail-fast means an operator typo doesn't silently degrade ranking quality on every recall.
 10. **MUST** make `cyberos.core.ranking.score_hits()` a **pure function** (no I/O, no time.now() inside) — `now` is injected so tests are deterministic and downstream callers (TASK-MEMORY-115 batch dream) can score against a snapshot timestamp.
 11. **MUST** add a benchmark `bench/bench_recall_latency.py` asserting that the ranking step adds ≤ 10% overhead over the underlying engine's retrieval cost on a 10,000-Episode store (e.g. semantic retrieval ~450 ms p95 → ranked recall ≤ 495 ms p95).
 12. **MUST** add `meta.importance` to the `MemoryFrontmatter` schema (general, not just Episode). The field is optional; semantics same as DEC-192.

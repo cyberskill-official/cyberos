@@ -26,14 +26,10 @@ classifier_version: 3.0.0-a4
 
 ## Authoring notes
 
-- Positive triggers 1-3 derived from author intuition matching the description's
-  trigger phrases (TASK-SKILL-111 enrichment); will be cross-checked against real
-  OBS user phrasings once the runtime ships and OBS dashboards have volume.
+- Positive triggers 1-3 derived from author intuition matching the description's trigger phrases (TASK-SKILL-111 enrichment); will be cross-checked against real OBS user phrasings once the runtime ships and OBS dashboards have volume.
 - Positive trigger 4 is the canonical CyberOS phrasing observed during pilot.
-- Negative triggers 1-2 derived from common author/audit confusion observed
-  during the v0.2.0 pilot (users confused the author/audit pair).
-- Negative trigger 3 derived from the planned task-to-tech-spec routing (when
-  that skill goes from scaffold → accepted in P1).
+- Negative triggers 1-2 derived from common author/audit confusion observed during the v0.2.0 pilot (users confused the author/audit pair).
+- Negative trigger 3 derived from the planned task-to-tech-spec routing (when that skill goes from scaffold → accepted in P1).
 - Negative trigger 4 is a canonical "no skill" sanity case.
 - Re-author when classifier_version MAJOR-bumps (today v3.0.0-a4).
 - TASK-CUO-208 cases (P5/N5, last bullets above): template-profile routing added with TEMPLATE_PROFILES.md.

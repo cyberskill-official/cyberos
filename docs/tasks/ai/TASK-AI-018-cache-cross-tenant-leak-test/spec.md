@@ -90,13 +90,13 @@ The AI Gateway crate **MUST** include a property-based test asserting **zero cro
 4. **MUST** include a second property test at the **key-derivation** level: for any `(A, B)` with `A ≠ B`, `CacheKey::derive(A, prompt, model, persona) ≠ CacheKey::derive(B, prompt, model, persona)` (byte-distinct hashes). This catches collisions BEFORE they manifest as Redis-level leaks; the dual-layer testing (derivation + end-to-end) is defence-in-depth.
 5. **MUST** include a third property test at the **Redis-key namespace** level: scanning `KEYS ai_cache:v1:tenant_a:*` after inserting under both `tenant_a` and `tenant_b` MUST return only tenant_a's entries. This validates the structural prefix invariant (TASK-AI-017 §1 #2).
 6. **MUST** include exactly **7 enumerated regression scenarios** in `cache_isolation_regression_scenarios.rs`, each documenting a historical near-miss bug. The seven (each gets one `#[test]` function with a comment block citing the original incident date + root cause):
-   - `regression_001_underscore_collision` — `"tenant_a"` and `"tenanta"` previously collided due to insufficient input separation.
-   - `regression_002_unicode_normalization` — `"tenant_é"` (NFC) and `"tenant_é"` (NFD) hashed differently → race condition exposed; reverse case.
-   - `regression_003_trailing_whitespace` — `"tenant_a"` and `"tenant_a "` should be DIFFERENT tenants (whitespace is a valid id character).
-   - `regression_004_case_folding` — `"Tenant_A"` and `"tenant_a"` previously folded; tenants are case-sensitive.
-   - `regression_005_empty_prompt` — `tenant_a` + empty prompt should NOT collide with `tenant_a` + single-space prompt.
-   - `regression_006_persona_omitted` — Pre-TASK-AI-017-ISS-001 keys omitted persona; this scenario asserts persona-handle inclusion.
-   - `regression_007_model_substring` — `model = "chat.smart"` and `model = "chat.smartx"` previously hashed similarly under poor concat.
+- `regression_001_underscore_collision` — `"tenant_a"` and `"tenanta"` previously collided due to insufficient input separation.
+- `regression_002_unicode_normalization` — `"tenant_é"` (NFC) and `"tenant_é"` (NFD) hashed differently → race condition exposed; reverse case.
+- `regression_003_trailing_whitespace` — `"tenant_a"` and `"tenant_a "` should be DIFFERENT tenants (whitespace is a valid id character).
+- `regression_004_case_folding` — `"Tenant_A"` and `"tenant_a"` previously folded; tenants are case-sensitive.
+- `regression_005_empty_prompt` — `tenant_a` + empty prompt should NOT collide with `tenant_a` + single-space prompt.
+- `regression_006_persona_omitted` — Pre-TASK-AI-017-ISS-001 keys omitted persona; this scenario asserts persona-handle inclusion.
+- `regression_007_model_substring` — `model = "chat.smart"` and `model = "chat.smartx"` previously hashed similarly under poor concat.
 7. **MUST** include an adversarial-input test (`cache_isolation_adversarial_test.rs`) covering: null bytes (`"\x00"` in tenant id), unit separators (`"\x1f"` — the field separator we use internally; an attacker injecting it shouldn't break key uniqueness), control characters, RTL Unicode (`"‮"` reversal), zero-width joiners, very long strings (10KB tenant id), empty strings, and SQL-injection-shaped payloads (`"tenant'; DROP TABLE--"`).
 8. **MUST** include a concurrent-load test (`cache_isolation_concurrent_test.rs`) — 100 tokio tasks racing `insert`/`lookup` across 50 tenant pairs simultaneously. The test asserts: across 10,000 concurrent operations, ZERO cross-tenant reads. Concurrency catches race conditions that sequential tests miss (e.g., a non-atomic insert path that briefly exposes the wrong tenant's data).
 9. **MUST** complete the entire suite (property + regression + adversarial + concurrent) in ≤ 90 seconds on a standard `ubuntu-22.04` GitHub Actions runner. Budget breakdown: 60s for the main property test, 10s for regression, 10s for adversarial, 10s for concurrent.

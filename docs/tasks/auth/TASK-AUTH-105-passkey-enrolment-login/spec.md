@@ -133,72 +133,72 @@ The AUTH service **MUST** ship passkey enrolment + login via WebAuthn discoverab
 5. **MUST** require discoverable credentials at enrolment (per DEC-540). WebAuthn creation challenge MUST set `authenticatorSelection: { residentKey: "required", userVerification: "required" }`. Authenticators not supporting resident keys (rare in 2026) → 400 `authenticator_unsupported`.
 
 6. **MUST** ship `POST /v1/auth/passkey/enrol/begin` handler (per DEC-545):
-    - Generates WebAuthn creation challenge with `residentKey=required + userVerification=required + attestation=none`.
-    - INSERT `passkey_enrolment_state` row with `state='requested'`, `expires_at = now() + 24 hours`.
-    - Returns `PublicKeyCredentialCreationOptions` for browser to invoke `navigator.credentials.create()`.
-    - Emit `auth.passkey_enrolment_requested` memory row.
+- Generates WebAuthn creation challenge with `residentKey=required + userVerification=required + attestation=none`.
+- INSERT `passkey_enrolment_state` row with `state='requested'`, `expires_at = now() + 24 hours`.
+- Returns `PublicKeyCredentialCreationOptions` for browser to invoke `navigator.credentials.create()`.
+- Emit `auth.passkey_enrolment_requested` memory row.
 
 7. **MUST** ship `POST /v1/auth/passkey/enrol/finish` handler (per DEC-545):
-    - Receives `PublicKeyCredential` from browser.
-    - Validates attestation per TASK-AUTH-102's WebAuthn module.
-    - Detects `passkey_origin` from AAGUID lookup (per origin.rs map).
-    - Creates `mfa_factors` row with `factor_kind = webauthn_platform` or `webauthn_cross_platform` per TASK-AUTH-102.
-    - UPDATE `passkey_enrolment_state` to `state='confirmed', confirmed_at=now()`.
-    - Emit `auth.passkey_enrolment_confirmed` memory row.
-    - If subject has zero recovery codes → return WARNING in response body suggesting recovery-code generation (per DEC-548).
+- Receives `PublicKeyCredential` from browser.
+- Validates attestation per TASK-AUTH-102's WebAuthn module.
+- Detects `passkey_origin` from AAGUID lookup (per origin.rs map).
+- Creates `mfa_factors` row with `factor_kind = webauthn_platform` or `webauthn_cross_platform` per TASK-AUTH-102.
+- UPDATE `passkey_enrolment_state` to `state='confirmed', confirmed_at=now()`.
+- Emit `auth.passkey_enrolment_confirmed` memory row.
+- If subject has zero recovery codes → return WARNING in response body suggesting recovery-code generation (per DEC-548).
 
 8. **MUST** ship background job to mark abandoned enrolments. Hourly: `UPDATE passkey_enrolment_state SET state='abandoned', abandoned_at=now() WHERE state='requested' AND expires_at < now()`. Per row, emit `auth.passkey_enrolment_abandoned` memory row (sev-3 informational).
 
 9. **MUST** ship `POST /v1/auth/passkey/login/begin` handler (per DEC-540):
-    - Generates WebAuthn assertion challenge with `allowCredentials: []` (empty — discoverable credential mode).
-    - `userVerification: "required"`.
-    - Returns `PublicKeyCredentialRequestOptions` for browser.
-    - Does NOT require subject email/username at this step (resident-key resolution).
+- Generates WebAuthn assertion challenge with `allowCredentials: []` (empty — discoverable credential mode).
+- `userVerification: "required"`.
+- Returns `PublicKeyCredentialRequestOptions` for browser.
+- Does NOT require subject email/username at this step (resident-key resolution).
 
 10. **MUST** ship `POST /v1/auth/passkey/login/finish` handler:
-    - Receives assertion from browser including `userHandle` (= subject_id).
-    - Lookup `mfa_factors` by credential_id; validate signature via TASK-AUTH-102's verifier.
-    - Counter-monotonicity check (per TASK-AUTH-102 §1 #10).
-    - On success: issue TASK-AUTH-004 JWT; emit `auth.passkey_login_succeeded`; update `mfa_factors.last_used_at`.
-    - On fail: emit `auth.passkey_login_failed` with reason; counter increment for TASK-AUTH-102 lockout.
+- Receives assertion from browser including `userHandle` (= subject_id).
+- Lookup `mfa_factors` by credential_id; validate signature via TASK-AUTH-102's verifier.
+- Counter-monotonicity check (per TASK-AUTH-102 §1 #10).
+- On success: issue TASK-AUTH-004 JWT; emit `auth.passkey_login_succeeded`; update `mfa_factors.last_used_at`.
+- On fail: emit `auth.passkey_login_failed` with reason; counter increment for TASK-AUTH-102 lockout.
 
 11. **MUST** support **autofill conditional mediation** (per DEC-542 + DEC-551):
-    - `POST /v1/auth/passkey/autofill-options` returns options with `mediation: "conditional"` for browsers supporting WebAuthn autofill (Chrome 108+, Safari 16+).
-    - `user_verification: "required"` is mandatory for conditional mediation per W3C spec — enforced at handler.
-    - On successful autofill login, emit `auth.passkey_autofill_used` memory row (informational; useful for adoption metrics).
+- `POST /v1/auth/passkey/autofill-options` returns options with `mediation: "conditional"` for browsers supporting WebAuthn autofill (Chrome 108+, Safari 16+).
+- `user_verification: "required"` is mandatory for conditional mediation per W3C spec — enforced at handler.
+- On successful autofill login, emit `auth.passkey_autofill_used` memory row (informational; useful for adoption metrics).
 
 12. **MUST** enforce **downgrade-resistance** (per DEC-543 + DEC-550). When subject attempts password-only login:
-    - JWT issuer (TASK-AUTH-004) consults `downgrade_gate::is_passkey_required(subject_id)`.
-    - Predicate: subject has ≥ 1 confirmed passkey AND per-tenant policy doesn't have a per-subject opt-out flag set.
-    - True → 401 `passkey_required` + emit `auth.passkey_downgrade_blocked` memory row (sev-2 per DEC-550).
-    - Repeated attempts: alarm sev-2 at > 5 within 1 hour for a subject (phishing signal).
+- JWT issuer (TASK-AUTH-004) consults `downgrade_gate::is_passkey_required(subject_id)`.
+- Predicate: subject has ≥ 1 confirmed passkey AND per-tenant policy doesn't have a per-subject opt-out flag set.
+- True → 401 `passkey_required` + emit `auth.passkey_downgrade_blocked` memory row (sev-2 per DEC-550).
+- Repeated attempts: alarm sev-2 at > 5 within 1 hour for a subject (phishing signal).
 
 13. **MUST** enforce max 5 active passkeys per subject (per DEC-544). 6th enrolment attempt → 409 `passkey_limit_exceeded` with body listing existing passkey display_names. Removal of an existing passkey first → enrolment proceeds.
 
 14. **MUST** ship `DELETE /v1/auth/passkey/factors/{id}` handler (per DEC-552):
-    - Caller MUST present a fresh MFA proof in the request (header `X-MFA-Challenge-Token: <recently-verified-challenge-id>`). Challenge must be < 5 minutes old AND must have been verified for THIS subject.
-    - Missing/stale proof → 401 `recent_mfa_required`.
-    - On success: soft-delete passkey (mfa_factors.status → 'removed'); emit `auth.passkey_removed` memory row; if this was the last passkey for the subject + per-tenant policy requires passkey → emit warning to operator.
+- Caller MUST present a fresh MFA proof in the request (header `X-MFA-Challenge-Token: <recently-verified-challenge-id>`). Challenge must be < 5 minutes old AND must have been verified for THIS subject.
+- Missing/stale proof → 401 `recent_mfa_required`.
+- On success: soft-delete passkey (mfa_factors.status → 'removed'); emit `auth.passkey_removed` memory row; if this was the last passkey for the subject + per-tenant policy requires passkey → emit warning to operator.
 
 15. **MUST** detect passkey_origin via AAGUID lookup (per DEC-541). The origin.rs module ships a map of well-known AAGUIDs → origin:
-    - Apple iCloud Keychain AAGUID → `platform_synced`.
-    - Google Password Manager (Chrome on Android) → `platform_synced`.
-    - Windows Hello + Microsoft sync → `platform_synced`.
-    - macOS Touch ID local (no iCloud sync) → `platform_local`.
-    - YubiKey series → `cross_platform`.
-    - Unknown AAGUID → `cross_platform` (conservative default; logged for analyst review).
+- Apple iCloud Keychain AAGUID → `platform_synced`.
+- Google Password Manager (Chrome on Android) → `platform_synced`.
+- Windows Hello + Microsoft sync → `platform_synced`.
+- macOS Touch ID local (no iCloud sync) → `platform_local`.
+- YubiKey series → `cross_platform`.
+- Unknown AAGUID → `cross_platform` (conservative default; logged for analyst review).
 
 16. **MUST** consult per-tenant `passkey_required_for_roles: [<role>...]` policy from tenant_policy YAML (per DEC-549). If subject's roles intersect this set AND subject has zero passkeys → JWT issuance returns 401 `passkey_enrolment_required` with hint to call enrol/begin. Founder role always per TASK-AUTH-101 DEC-128.
 
 17. **MUST** emit 8 memory audit row kinds (per DEC-546):
-    - `auth.passkey_enrolment_requested` — enrol/begin.
-    - `auth.passkey_enrolment_confirmed` — enrol/finish success.
-    - `auth.passkey_enrolment_abandoned` — sev-3 informational.
-    - `auth.passkey_login_succeeded` — login/finish success.
-    - `auth.passkey_login_failed` — login/finish failure.
-    - `auth.passkey_removed` — DELETE success.
-    - `auth.passkey_downgrade_blocked` — password-login rejected (sev-2).
-    - `auth.passkey_autofill_used` — conditional mediation success.
+- `auth.passkey_enrolment_requested` — enrol/begin.
+- `auth.passkey_enrolment_confirmed` — enrol/finish success.
+- `auth.passkey_enrolment_abandoned` — sev-3 informational.
+- `auth.passkey_login_succeeded` — login/finish success.
+- `auth.passkey_login_failed` — login/finish failure.
+- `auth.passkey_removed` — DELETE success.
+- `auth.passkey_downgrade_blocked` — password-login rejected (sev-2).
+- `auth.passkey_autofill_used` — conditional mediation success.
 
 18. **MUST** PII-scrub `display_name` (inherited from TASK-AUTH-102's display_name) before chain commit.
 
@@ -211,12 +211,12 @@ The AUTH service **MUST** ship passkey enrolment + login via WebAuthn discoverab
 22. **MUST** emit OTel span `auth.passkey.{enrol_begin,enrol_finish,login_begin,login_finish,remove,downgrade_blocked,autofill}` with `outcome` attribute (success | abandoned | timeout | invalid_attestation | limit_exceeded | downgrade_blocked | recent_mfa_required | passkey_required | passkey_enrolment_required).
 
 23. **MUST** emit OTel metrics:
-    - `auth_passkey_enrolment_total{tenant_id, passkey_origin, outcome}` (counter).
-    - `auth_passkey_login_total{tenant_id, passkey_origin, outcome}` (counter).
-    - `auth_passkey_downgrade_blocked_total{tenant_id, subject_id_hash16}` (counter — sev-2 alarm at > 5/h per subject).
-    - `auth_passkey_active_count{tenant_id, passkey_origin}` (gauge — adoption metric).
-    - `auth_passkey_autofill_used_total{tenant_id}` (counter — UX adoption metric).
-    - `auth_passkey_enrolment_latency_ms` (histogram).
+- `auth_passkey_enrolment_total{tenant_id, passkey_origin, outcome}` (counter).
+- `auth_passkey_login_total{tenant_id, passkey_origin, outcome}` (counter).
+- `auth_passkey_downgrade_blocked_total{tenant_id, subject_id_hash16}` (counter — sev-2 alarm at > 5/h per subject).
+- `auth_passkey_active_count{tenant_id, passkey_origin}` (gauge — adoption metric).
+- `auth_passkey_autofill_used_total{tenant_id}` (counter — UX adoption metric).
+- `auth_passkey_enrolment_latency_ms` (histogram).
 
 24. **MUST** warn during enrolment if subject has zero MFA recovery codes (per DEC-548 + §1 #7). Response body includes `recovery_warning: true, recommended_action: "POST /v1/auth/mfa/recovery-codes/regen"`. Frontend SHOULD display warning prominently.
 

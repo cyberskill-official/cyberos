@@ -85,14 +85,14 @@ The RES service **MUST** ship OT cap hard-block at `services/res/src/ot_cap/` en
 1. **MUST** validate `ot_cap_decision` against closed enum per DEC-2061.
 
 2. **MUST** check at `checker.rs::check(member, week, proposed_hours)` per DEC-2060:
-   - Compute proposed weekly OT = max(0, proposed_total - regular_weekly_cap)
-   - Compute YTD annual OT from TASK-TIME-007 history
-   - Read caps from TASK-HR-005 policy lookup
-   - Decision per DEC-2061:
-     - proposed_weekly_ot > regular_cap (12h) AND no consent → blocked_consent_missing
-     - proposed_weekly_ot > consent_cap (30h) → blocked_weekly
-     - YTD + proposed > annual_cap (200h) → blocked_annual
-     - Else allowed
+- Compute proposed weekly OT = max(0, proposed_total - regular_weekly_cap)
+- Compute YTD annual OT from TASK-TIME-007 history
+- Read caps from TASK-HR-005 policy lookup
+- Decision per DEC-2061:
+- proposed_weekly_ot > regular_cap (12h) AND no consent → blocked_consent_missing
+- proposed_weekly_ot > consent_cap (30h) → blocked_weekly
+- YTD + proposed > annual_cap (200h) → blocked_annual
+- Else allowed
 
 3. **MUST** define consent table at migration `0005`:
    ```sql
@@ -204,8 +204,7 @@ async fn annual_cap_blocks_at_201h() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-HR-005.
-**Cross-module:** TASK-RES-002 (validator integration), TASK-TIME-007 (YTD), TASK-DOC-001 (consent doc), TASK-AUTH-101 (CHRO), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-HR-005. **Cross-module:** TASK-RES-002 (validator integration), TASK-TIME-007 (YTD), TASK-DOC-001 (consent doc), TASK-AUTH-101 (CHRO), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

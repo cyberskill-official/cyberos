@@ -13,5 +13,4 @@ Lean profile, justified (two-attribute Rust change + one CI flag). 4 clauses, 5 
 - ISS-001: draft asserted "3 cfg sites" without a pinning mechanism → AC #1 dual-grep (count==3 AND zero bare #[cfg(desktop)] remain) makes the count machine-checked, not prose.
 - ISS-002: dead-code residual (dependency still compiled) was unstated → clause 4 + §9/§10 rows disclose it and scope the optional-dep shrink as a later, non-blocking follow-up.
 ## §3 — Resolution
-All resolved same pass. Score = 10/10.
-*End of TASK-IMP-075 audit.*
+All resolved same pass. Score = 10/10. *End of TASK-IMP-075 audit.*

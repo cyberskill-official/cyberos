@@ -99,20 +99,20 @@ risk_if_skipped: "Without skill playbooks, hosts know HOW to call the tools (man
 The PLUGIN module **MUST** ship 12 skill playbooks at `modules/plugin/skills/<name>/SKILL.md` following the Anthropic Agent Skills spec. Each playbook is a markdown file with YAML frontmatter teaching hosts WHEN and HOW to chain the MCP tools exposed in TASK-PLUGIN-002. Playbooks do NOT add new MCP tools — they are documentation that the host's skill router uses to inject just-in-time discipline into the model's prompt.
 
 1. **MUST** ship exactly 12 playbooks in v1 per DEC-2430 + DEC-2435, grouped by use-case:
-   - **Orchestration (3)**: `run-cuo-workflow`, `route-natural-language`, `cross-workflow-chain`
-   - **Memory (3)**: `audit-trail-query`, `audit-trail-append`, `memory-write-discipline`
-   - **Discovery (3)**: `discover-skills`, `persona-discovery`, `workflow-inspection`
-   - **Governance (3)**: `invoke-cyberos-skill`, `auth-and-scopes`, `audit-emission-discipline`
+- **Orchestration (3)**: `run-cuo-workflow`, `route-natural-language`, `cross-workflow-chain`
+- **Memory (3)**: `audit-trail-query`, `audit-trail-append`, `memory-write-discipline`
+- **Discovery (3)**: `discover-skills`, `persona-discovery`, `workflow-inspection`
+- **Governance (3)**: `invoke-cyberos-skill`, `auth-and-scopes`, `audit-emission-discipline`
 
 2. **MUST** conform to SKILL_BUNDLE_RUBRIC SKB-020..023 per DEC-2432 + TASK-SKILL-111/113:
-   - SKB-020: description 60-480 chars
-   - SKB-021: description contains ≥4 quoted trigger examples
-   - SKB-022: description has no XML/HTML tags
-   - SKB-023: description verb stems are recognised (router fingerprint)
+- SKB-020: description 60-480 chars
+- SKB-021: description contains ≥4 quoted trigger examples
+- SKB-022: description has no XML/HTML tags
+- SKB-023: description verb stems are recognised (router fingerprint)
 
 3. **MUST** carry `acceptance/TRIGGER_TESTS.md` per DEC-2433 + TASK-SKILL-112 with at least:
-   - 4 positive fixtures (user-input strings that SHOULD trigger this playbook)
-   - 4 negative fixtures (strings that should NOT trigger it, especially adjacent-skill confusables)
+- 4 positive fixtures (user-input strings that SHOULD trigger this playbook)
+- 4 negative fixtures (strings that should NOT trigger it, especially adjacent-skill confusables)
 
 4. **MUST** reference only tools registered in TASK-PLUGIN-002 — validator test `test_playbooks_reference_valid_tools.py` checks every tool name mentioned in the playbook body against the 8-tool registry.
 
@@ -229,15 +229,11 @@ pair, then come here.
 ## Worked example
 
 ```text
-User: Run the ADR quick-capture workflow for the CTO with title "Adopt PostgreSQL 16"
-You: { tool: cyberos.cuo.execute_workflow,
+User: Run the ADR quick-capture workflow for the CTO with title "Adopt PostgreSQL 16" You: { tool: cyberos.cuo.execute_workflow,
        args: { persona: "chief-technology-officer",
                workflow: "adr-quick-capture",
                inputs: { title: "Adopt PostgreSQL 16" } } }
-Host: { task_id: "t-abc123", status: "running" }
-[host polls via tasks/get; you tell user "started, polling..."]
-Host: { status: "completed", output: { adr_number: "ADR-2402", artifact_uri: "..." } }
-You: "ADR-2402 published: Adopt PostgreSQL 16. Took 4.2s."
+Host: { task_id: "t-abc123", status: "running" } [host polls via tasks/get; you tell user "started, polling..."] Host: { status: "completed", output: { adr_number: "ADR-2402", artifact_uri: "..." } } You: "ADR-2402 published: Adopt PostgreSQL 16. Took 4.2s."
 ```
 ```
 

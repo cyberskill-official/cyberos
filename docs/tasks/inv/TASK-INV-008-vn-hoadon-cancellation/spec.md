@@ -256,8 +256,7 @@ pub async fn cancel(req: CancelRequest, actor: &CfoActor, db: &Db) -> Result<Can
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-INV-007.
-**Cross-module:** TASK-AUTH-101 (CFO role), TASK-DOC-001 (agreement upload), TASK-MCP-007 (async), TASK-MEMORY-111 (PII), TASK-CHAT-010 (customer notification).
+**Upstream:** TASK-INV-007. **Cross-module:** TASK-AUTH-101 (CFO role), TASK-DOC-001 (agreement upload), TASK-MCP-007 (async), TASK-MEMORY-111 (PII), TASK-CHAT-010 (customer notification).
 
 ## §8 — Sample payloads (see §3)
 

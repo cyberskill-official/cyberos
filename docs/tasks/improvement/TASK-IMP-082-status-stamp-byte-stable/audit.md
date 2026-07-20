@@ -15,26 +15,11 @@ caller_persona: "operator:stephen-cheng"
 
 # TASK-IMP-082-status-stamp-byte-stable spec audit - audit_rubric@2.0
 
-Families walked: FM (all pass - task@1, title <=72, closed enums, ISO created_at, no
-UNREVIEWED markers, corpus extras additive), SEC (seven H2s present and non-empty, one H1),
-COND (COND-004 three labeled bullets present; others not triggered), QA (metrics carry
-baseline/target/deadline grounded in run evidence; >=3 distinct alternatives; Out-of-scope
-subsection; no unsourced numeric targets; no cross-team claims), SAFE (one sourced block,
-closed, unnested, clean scan), TRACE (every numbered clause cited by >=1 AC; every AC names
-a test or a justified ops verification; every test path is in new_files or exists on disk;
-draft status exempts TRACE-004; no deferred slices).
+Families walked: FM (all pass - task@1, title <=72, closed enums, ISO created_at, no UNREVIEWED markers, corpus extras additive), SEC (seven H2s present and non-empty, one H1), COND (COND-004 three labeled bullets present; others not triggered), QA (metrics carry baseline/target/deadline grounded in run evidence; >=3 distinct alternatives; Out-of-scope subsection; no unsourced numeric targets; no cross-team claims), SAFE (one sourced block, closed, unnested, clean scan), TRACE (every numbered clause cited by >=1 AC; every AC names a test or a justified ops verification; every test path is in new_files or exists on disk; draft status exempts TRACE-004; no deferred slices).
 
-ISSUE ISS-001 (TRACE-001, fixed): the empty-corpus edge case cited t02 without the AC
-naming that shape - AC 2 now says "on a populated AND an empty corpus".
-ISSUE ISS-002 (QA-004, wontfix-info): the fp- prefix length choice (12 hex) is a design
-constant, not a metric; documented in 1.1, no target fabricated.
+ISSUE ISS-001 (TRACE-001, fixed): the empty-corpus edge case cited t02 without the AC naming that shape - AC 2 now says "on a populated AND an empty corpus". ISSUE ISS-002 (QA-004, wontfix-info): the fp- prefix length choice (12 hex) is a design constant, not a metric; documented in 1.1, no target fabricated.
 
-SUMMARY
-verdict:         pass
-issues_open:     0
-issues_human:    0
-iterations:      2
-next_action:     ship
+SUMMARY verdict:         pass issues_open:     0 issues_human:    0 iterations:      2 next_action:     ship
 
 ## §gate-log
 

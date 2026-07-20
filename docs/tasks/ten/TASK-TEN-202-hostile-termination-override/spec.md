@@ -217,8 +217,7 @@ async fn ciso_challenge_reverses() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-TEN-104.
-**Cross-module:** TASK-HR-009 (termination cascade), TASK-AUTH-101 (roles), TASK-DOC-001 (legal doc), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-TEN-104. **Cross-module:** TASK-HR-009 (termination cascade), TASK-AUTH-101 (roles), TASK-DOC-001 (legal doc), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

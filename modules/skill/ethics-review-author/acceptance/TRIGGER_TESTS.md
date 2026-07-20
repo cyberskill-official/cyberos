@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a ethics review"
+- "Draft a ethics review"
 - "Create the ethics review"
 - "Author a new ethics review"
 - "Generate the ethics review"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this ethics review" → ethics-review-audit
+- "Audit this ethics review" → ethics-review-audit
 - "Check the ethics review for completeness" → ethics-review-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

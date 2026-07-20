@@ -96,8 +96,8 @@ The CRM service **MUST** extend Account schema with VN-specific fields at `servi
 2. **MUST** validate `vn_account_type` against closed enum per DEC-1631.
 
 3. **MUST** validate MST format at `vn/mst_format.rs::validate(mst)` per DEC-1632:
-   - 10 digits only OR 10 digits + `-` + 3 digits.
-   - Reject letters, spaces, other separators.
+- 10 digits only OR 10 digits + `-` + 3 digits.
+- Reject letters, spaces, other separators.
 
 4. **MUST** require both fields when `account.residency='vn-1'` per DEC-1633 — at INSERT/UPDATE, if residency=vn-1 and either NULL → reject 400.
 
@@ -194,9 +194,7 @@ async fn invalid_mst_rejected() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-CRM-001.
-**Downstream:** TASK-CRM-008 (validation skill), TASK-INV-007 (reads MST for hóa đơn).
-**Cross-module:** TASK-MEMORY-111 (PII scrub).
+**Upstream:** TASK-CRM-001. **Downstream:** TASK-CRM-008 (validation skill), TASK-INV-007 (reads MST for hóa đơn). **Cross-module:** TASK-MEMORY-111 (PII scrub).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

@@ -124,59 +124,59 @@ The PORTAL service **MUST** ship client-initiated workflows at `services/portal/
 4. **MUST** define `portal_workflow_routing_rules` at migration `0019`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID NOT NULL, workflow_kind client_workflow_kind NOT NULL, engagement_id UUID, assignee_subject_id UUID NOT NULL, priority INT NOT NULL DEFAULT 100, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), created_by_subject_id UUID NOT NULL)`. Per-tenant rules; lower priority number wins; engagement_id NULL = tenant-wide rule.
 
 5. **MUST** expose `POST /v1/portal/workflows/submit` body `{ engagement_id, workflow_kind, title, body, attachment_s3_keys?: [...] }`. Handler:
-    - Validates JWT + Engagement membership.
-    - Rate-limit per DEC-1249.
-    - Validates workflow_kind in closed enum.
-    - INSERTs workflow_submissions row with status='submitted'.
-    - Auto-priority check per DEC-1247 — keyword scan body → if match, set status='escalated' + sev-1 alert.
-    - Invokes router per §1 #6.
-    - Creates CHAT thread per §1 #7.
-    - Computes SLA timestamps from defaults + overrides.
-    - Emit `portal.workflow_submitted` sev-2.
-    - Returns 201 + `{ workflow_id, chat_thread_id, status, sla_acknowledged_by, sla_resolved_by }`.
+- Validates JWT + Engagement membership.
+- Rate-limit per DEC-1249.
+- Validates workflow_kind in closed enum.
+- INSERTs workflow_submissions row with status='submitted'.
+- Auto-priority check per DEC-1247 — keyword scan body → if match, set status='escalated' + sev-1 alert.
+- Invokes router per §1 #6.
+- Creates CHAT thread per §1 #7.
+- Computes SLA timestamps from defaults + overrides.
+- Emit `portal.workflow_submitted` sev-2.
+- Returns 201 + `{ workflow_id, chat_thread_id, status, sla_acknowledged_by, sla_resolved_by }`.
 
 6. **MUST** auto-route per DEC-1242. The `router.rs::route(tenant_id, workflow_kind, engagement_id)`:
-    - Lookup matching rules ordered by `(engagement_id NOT NULL DESC, priority ASC)`.
-    - First match's `assignee_subject_id` wins.
-    - No rule matches → fallback to engagement_admin role-holder.
-    - UPDATE workflow row with `assignee_subject_id`.
-    - Emit `portal.workflow_routed`.
+- Lookup matching rules ordered by `(engagement_id NOT NULL DESC, priority ASC)`.
+- First match's `assignee_subject_id` wins.
+- No rule matches → fallback to engagement_admin role-holder.
+- UPDATE workflow row with `assignee_subject_id`.
+- Emit `portal.workflow_routed`.
 
 7. **MUST** create CHAT thread per DEC-1241 via `chat_bridge.rs::create_thread(workflow_id)`:
-    - Calls TASK-CHAT-005 create-thread API in the Engagement-scoped channel.
-    - Channel selection per workflow_kind: new_project_request→#new-projects; billing_inquiry→#billing; etc.
-    - Thread initial message = workflow body + attachments rendered.
-    - Records `chat_thread_id` on workflow row.
-    - Adds `client_workflow_id` reference on the thread.
+- Calls TASK-CHAT-005 create-thread API in the Engagement-scoped channel.
+- Channel selection per workflow_kind: new_project_request→#new-projects; billing_inquiry→#billing; etc.
+- Thread initial message = workflow body + attachments rendered.
+- Records `chat_thread_id` on workflow row.
+- Adds `client_workflow_id` reference on the thread.
 
 8. **MUST** separate internal vs external messages per DEC-1245. CHAT messages in the thread:
-    - Default visibility = internal (engagement team only).
-    - Messages flagged `client_visible: true` are mirrored back to portal UI for the submitter.
-    - Portal client reply via `POST /v1/portal/workflows/{id}/reply` creates `client_reply` typed CHAT message (auto client_visible=true).
-    - Emit `portal.workflow_client_reply`.
+- Default visibility = internal (engagement team only).
+- Messages flagged `client_visible: true` are mirrored back to portal UI for the submitter.
+- Portal client reply via `POST /v1/portal/workflows/{id}/reply` creates `client_reply` typed CHAT message (auto client_visible=true).
+- Emit `portal.workflow_client_reply`.
 
 9. **MUST** monitor SLA per DEC-1244 via daily job:
-    - For each non-terminal workflow: check `sla_acknowledged_by < now()` AND `acknowledged_at IS NULL` → emit `portal.workflow_sla_breach` sev-1 with breach_type='acknowledgement'.
-    - Check `sla_resolved_by < now()` AND `resolved_at IS NULL` → emit breach with type='resolution'.
-    - Mark workflow `escalated_at = now()`.
+- For each non-terminal workflow: check `sla_acknowledged_by < now()` AND `acknowledged_at IS NULL` → emit `portal.workflow_sla_breach` sev-1 with breach_type='acknowledgement'.
+- Check `sla_resolved_by < now()` AND `resolved_at IS NULL` → emit breach with type='resolution'.
+- Mark workflow `escalated_at = now()`.
 
 10. **MUST** support file attachments per DEC-1246. Handler:
-    - Returns presigned S3 URLs from TASK-DOC-001 for each attachment slot at submission-start.
-    - Validates uploaded files: max 25 MiB each, max 5 per workflow, allowed types only (pdf, png, jpg, docx, xlsx).
-    - Persists S3 keys + SHA-256 in `attachments` JSONB.
+- Returns presigned S3 URLs from TASK-DOC-001 for each attachment slot at submission-start.
+- Validates uploaded files: max 25 MiB each, max 5 per workflow, allowed types only (pdf, png, jpg, docx, xlsx).
+- Persists S3 keys + SHA-256 in `attachments` JSONB.
 
 11. **MUST** auto-prioritise on security keywords per DEC-1247. The `auto_priority.rs::check(body, workflow_kind)`:
-    - For `support_ticket` kind: case-insensitive scan for {down, outage, breach, urgent, security, attack, leak, compromised, data loss}.
-    - Match → status='escalated', escalation_reason='security_keyword_detected: <keyword>', sev-1 PagerDuty alert to engagement_admin.
-    - Emit `portal.workflow_status_changed` with transition to escalated.
+- For `support_ticket` kind: case-insensitive scan for {down, outage, breach, urgent, security, attack, leak, compromised, data loss}.
+- Match → status='escalated', escalation_reason='security_keyword_detected: <keyword>', sev-1 PagerDuty alert to engagement_admin.
+- Emit `portal.workflow_status_changed` with transition to escalated.
 
 12. **MUST** expose `GET /v1/portal/workflows?engagement_id=...&status=...` for submitter list view. Returns own workflows + status mirror.
 
 13. **MUST** expose `GET /v1/portal/workflows/{id}` for detail — shows status + client-visible CHAT messages + SLA timestamps; never internal messages.
 
 14. **MUST** support reopen per DEC-1251. `POST /v1/portal/workflows/{id}/reopen`:
-    - If `now() - closed_at < 30 days` → status='awaiting_client' + audit row.
-    - If beyond → 400 + `reopen_window_expired; submit_new`.
+- If `now() - closed_at < 30 days` → status='awaiting_client' + audit row.
+- If beyond → 400 + `reopen_window_expired; submit_new`.
 
 15. **MUST** send email on status change per DEC-1252 via TASK-EMAIL-001. Per-tenant template overrides apply.
 
@@ -392,9 +392,7 @@ async fn reopen_within_window() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-CHAT-005 (thread + message primitive).
-**Cross-module:** TASK-PORTAL-001 (workflow shown in PORTAL list), TASK-PORTAL-003 (IdP subject), TASK-PORTAL-005 (Genie may surface workflow state), TASK-PROJ-001 (new_project_request creates PROJ entity), TASK-INV-001 (billing_inquiry may reference invoices), TASK-AUTH-101 (engagement_admin role), TASK-EMAIL-001 (notification + template overrides), TASK-AI-003 (audit), TASK-MEMORY-111 (PII scrub), TASK-OBS-007 (sev-1 escalation routing).
-**Downstream:** None.
+**Upstream:** TASK-CHAT-005 (thread + message primitive). **Cross-module:** TASK-PORTAL-001 (workflow shown in PORTAL list), TASK-PORTAL-003 (IdP subject), TASK-PORTAL-005 (Genie may surface workflow state), TASK-PROJ-001 (new_project_request creates PROJ entity), TASK-INV-001 (billing_inquiry may reference invoices), TASK-AUTH-101 (engagement_admin role), TASK-EMAIL-001 (notification + template overrides), TASK-AI-003 (audit), TASK-MEMORY-111 (PII scrub), TASK-OBS-007 (sev-1 escalation routing). **Downstream:** None.
 
 ---
 

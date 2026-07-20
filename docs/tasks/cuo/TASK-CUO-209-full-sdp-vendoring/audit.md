@@ -43,20 +43,13 @@ All six findings addressed as cited. Dependencies on TASK-SKILL-116/117 are decl
 
 ## §10 - Post-implementation gates (2026-07-12, ship run)
 
-- §10.4 coverage: PASS - t01-t08 green on rerun; all five cyberos-install suites green (42 cases).
-  Live: profile=full skills=52 payload=8499200 plugin_zip=1029894 (49% of budget); chain OK.
+- §10.4 coverage: PASS - t01-t08 green on rerun; all five cyberos-install suites green (42 cases). Live: profile=full skills=52 payload=8499200 plugin_zip=1029894 (49% of budget); chain OK.
 - awh/caf: N/A (declared); floor = bash -n + suites + live build with both hook checks.
-- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit
-  operator pre-authorization; gates stayed green.
-- Field finding folded upstream: reduced-profile chain-check exemption recorded on TASK-SKILL-116
-  (§1 #5 + audit §11 + t07).
+- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit operator pre-authorization; gates stayed green.
+- Field finding folded upstream: reduced-profile chain-check exemption recorded on TASK-SKILL-116 (§1 #5 + audit §11 + t07).
 
 *TASK-CUO-209 shipped 2026-07-12. The payload now covers the full 14-stage SDP.*
 
 ## §11 - Post-ship amendment log
 
-- 2026-07-12 (TASK-CUO-206 in flight): t08 `workflows_diff_clean` tripped on TASK-CUO-206's legitimate
-  ship-workflow edit - the AC 8 guard was a point-in-time scope clause implemented as a permanent
-  invariant (same class as the TASK-SKILL-116 reduced-profile finding). Amended: §1 #8 + AC 8 note the
-  temporal scope; t08 repurposed to `workflows_vendored_intact` (both docs present in payload,
-  skill_chain + Resume semantics structure intact). Verdict unchanged: PASS, Score = 10/10.
+- 2026-07-12 (TASK-CUO-206 in flight): t08 `workflows_diff_clean` tripped on TASK-CUO-206's legitimate ship-workflow edit - the AC 8 guard was a point-in-time scope clause implemented as a permanent invariant (same class as the TASK-SKILL-116 reduced-profile finding). Amended: §1 #8 + AC 8 note the temporal scope; t08 repurposed to `workflows_vendored_intact` (both docs present in payload, skill_chain + Resume semantics structure intact). Verdict unchanged: PASS, Score = 10/10.

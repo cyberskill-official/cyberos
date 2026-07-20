@@ -71,26 +71,26 @@ The history-event layer **MUST** record every mutation to issue rows AND link to
 1. **MUST** define `history_event` table with columns: `id UUID PK`, `issue_id UUID FK`, `seq BIGSERIAL`, `field TEXT`, `before JSONB`, `after JSONB`, `mutation_kind TEXT` (`scalar_lww | status_transition | crdt_snapshot | comment_added | comment_edited | comment_deleted`), `by_subject_id UUID`, `occurred_at_ns BIGINT`, `chain_anchor TEXT` (SHA-256 hex from memory row), `memory_row_id TEXT`, `tenant_id UUID`.
 2. **MUST** emit one history_event per mutation. EVERY mutating handler (status transition, scalar LWW, comment CRUD, snapshot persist) MUST call `history::emit_mutation()` AS PART OF THE SAME TRANSACTION.
 3. **MUST** link the history_event ↔ memory row bidirectionally:
-    - history_event row carries `memory_row_id` and `chain_anchor`.
-    - memory audit row's payload carries `history_event_id` and `history_event_seq`.
-    - Operators can pivot from either side.
+- history_event row carries `memory_row_id` and `chain_anchor`.
+- memory audit row's payload carries `history_event_id` and `history_event_seq`.
+- Operators can pivot from either side.
 4. **MUST** compute a per-field diff:
-    - Scalars: `before` = prior value JSON; `after` = new value JSON.
-    - Y.Text fields (`description`, `comment.body`): `before` = SHA-256 of prior content; `after` = SHA-256 of new content; raw content NOT stored (privacy + size). The Y.Doc snapshots (TASK-PROJ-003) are the canonical text history.
-    - Arrays (`labels`, `comments`): `before` and `after` are JSON arrays; diff applied client-side for visualization.
+- Scalars: `before` = prior value JSON; `after` = new value JSON.
+- Y.Text fields (`description`, `comment.body`): `before` = SHA-256 of prior content; `after` = SHA-256 of new content; raw content NOT stored (privacy + size). The Y.Doc snapshots (TASK-PROJ-003) are the canonical text history.
+- Arrays (`labels`, `comments`): `before` and `after` are JSON arrays; diff applied client-side for visualization.
 5. **MUST** make history table APPEND-ONLY:
-    - DELETE forbidden by RLS policy (only `cyberos_admin` role; never `cyberos_app`).
-    - UPDATE forbidden on all fields except none (no field is mutable).
-    - INSERT only via `history::emit_mutation()`.
+- DELETE forbidden by RLS policy (only `cyberos_admin` role; never `cyberos_app`).
+- UPDATE forbidden on all fields except none (no field is mutable).
+- INSERT only via `history::emit_mutation()`.
 6. **MUST** verify `chain_anchor` matches actual memory-chain hash on query:
-    - GET history endpoint walks `chain_anchor` per row → re-fetches memory row → asserts SHA-256(canonical(memory_row_minus_chain) || prev_chain) == chain_anchor.
-    - Mismatch → 500 with `{"error":"chain_tampered","issue_id":..,"event_seq":..}`; sev-1 alarm.
+- GET history endpoint walks `chain_anchor` per row → re-fetches memory row → asserts SHA-256(canonical(memory_row_minus_chain) || prev_chain) == chain_anchor.
+- Mismatch → 500 with `{"error":"chain_tampered","issue_id":..,"event_seq":..}`; sev-1 alarm.
 7. **MUST** expose `GET /api/proj/issues/:id/history` returning the full timeline ordered by `seq ASC`. Response includes both raw history_event data AND verified chain_anchor flag per row.
 8. **MUST** support `?since=<seq>` parameter for incremental loading.
 9. **MUST** emit `proj.issue_mutated` memory audit row per mutation with payload `{issue_id, field, mutation_kind, before_hash, after_hash, by_subject_id, history_event_id, history_event_seq, trace_id}`.
 10. **MUST** emit OTel metrics:
-    - `proj_history_events_total{mutation_kind}` (counter).
-    - `proj_chain_anchor_verifications_total{result}` (counter; result ∈ ok | mismatch).
+- `proj_history_events_total{mutation_kind}` (counter).
+- `proj_chain_anchor_verifications_total{result}` (counter; result ∈ ok | mismatch).
 11. **MUST** RLS-enforce (TASK-AUTH-003).
 12. **MUST** cache `chain_verified` flag per history_event row for 60s in memory (per request worker) to amortise memory round-trips on hot endpoints (issue page load fetches 50+ history events).
 13. **MUST** support a background `chain-anchor-sweep` job (cron, hourly) that walks recent history rows + verifies chain anchors WITHOUT a user-driven query. Mismatches emit SEV-1 audit row `proj.chain_tampered`. This is proactive detection.

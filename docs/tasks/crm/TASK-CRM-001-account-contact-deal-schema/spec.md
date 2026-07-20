@@ -161,11 +161,10 @@ The CRM service **MUST** ship the Account / Contact / Deal Postgres schema with 
 8. **MUST** declare the closed `deal_status` Postgres enum with exactly 4 values (per DEC-344): `'open'`, `'won'`, `'lost'`, `'cancelled'`. Adding a 5th status is an ADR.
 
 9. **MUST** ship the deal-status FSM transition validator at `services/crm/src/fsm/deal_status.rs` as a closed lookup table (per DEC-347). Valid transitions:
-    - `open → won` (requires current_stage to have `is_won = true`).
-    - `open → lost` (requires current_stage to have `is_lost = true` AND `lost_reason` non-empty).
-    - `open → cancelled` (requires `cancelled_reason` non-empty).
-    - `won → cancelled` (rare; refund/clawback; requires `cancelled_reason`).
-   All other transitions return `INVALID_STATUS_TRANSITION` and are rejected at the API boundary AND by the trigger `enforce_deal_status_fsm`.
+- `open → won` (requires current_stage to have `is_won = true`).
+- `open → lost` (requires current_stage to have `is_lost = true` AND `lost_reason` non-empty).
+- `open → cancelled` (requires `cancelled_reason` non-empty).
+- `won → cancelled` (rare; refund/clawback; requires `cancelled_reason`). All other transitions return `INVALID_STATUS_TRANSITION` and are rejected at the API boundary AND by the trigger `enforce_deal_status_fsm`.
 
 10. **MUST** record every deal status transition as an append-only row in `deal_status_history` (per DEC-346): `(id BIGSERIAL, deal_id UUID, tenant_id UUID, from_status deal_status, to_status deal_status, from_stage_id UUID, to_stage_id UUID, changed_at TIMESTAMPTZ, changed_by_subject_id UUID, reason TEXT)`. `REVOKE UPDATE, DELETE ON deal_status_history FROM cyberos_app`.
 
@@ -176,40 +175,38 @@ The CRM service **MUST** ship the Account / Contact / Deal Postgres schema with 
 13. **MUST** store money as BIGINT minor units (per task-audit skill rule 11 + DEC-345). `amount_minor` is the smallest currency unit (e.g. cents for USD, đồng for VND — VND has no minor unit so 1 VND = 1 minor). `amount_currency` is the ISO-4217 code. The conversion to major units for display uses the `Currency::decimals()` helper.
 
 14. **MUST** seed 4 default pipelines per tenant at tenant provisioning (per DEC-341, via TASK-TEN-001's hook). The seed function `seed_default_pipelines(tenant_id, created_by)` creates:
-    - Sales pipeline: stages `Lead → Qualified → Proposal → Negotiation → Won | Lost`.
-    - Partner pipeline: stages `Identified → Engaged → Co-pitching → Signed → Active | Disengaged`.
-    - Inbound pipeline: stages `New → Triaged → Demo → Trial → Converted | Disqualified`.
-    - Outbound pipeline: stages `Researched → Contacted → Replied → Demo → Won | Lost`.
-   Each pipeline has `is_default = true` for its shape; tenants can add custom stages or rename.
+- Sales pipeline: stages `Lead → Qualified → Proposal → Negotiation → Won | Lost`.
+- Partner pipeline: stages `Identified → Engaged → Co-pitching → Signed → Active | Disengaged`.
+- Inbound pipeline: stages `New → Triaged → Demo → Trial → Converted | Disqualified`.
+- Outbound pipeline: stages `Researched → Contacted → Replied → Demo → Won | Lost`. Each pipeline has `is_default = true` for its shape; tenants can add custom stages or rename.
 
 15. **MUST** ship REST handlers:
-    - `POST /v1/crm/accounts` — create account; idempotent via Idempotency-Key.
-    - `GET /v1/crm/accounts/{id}` — fetch account + linked contacts.
-    - `PATCH /v1/crm/accounts/{id}` — update non-immutable fields.
-    - `POST /v1/crm/contacts` — create contact + initial membership(s).
-    - `GET /v1/crm/contacts/{id}` — fetch contact + memberships.
-    - `POST /v1/crm/contacts/{id}/memberships` — add account membership.
-    - `DELETE /v1/crm/contacts/{id}/memberships/{account_id}` — remove (requires ≥1 remaining).
-    - `POST /v1/crm/pipelines` — create pipeline (with initial stages).
-    - `GET /v1/crm/pipelines?shape=<>` — list.
-    - `POST /v1/crm/pipelines/{id}/stages` — add stage.
-    - `POST /v1/crm/deals` — create deal.
-    - `GET /v1/crm/deals/{id}` — fetch.
-    - `PATCH /v1/crm/deals/{id}` — update non-status non-stage fields.
-    - `POST /v1/crm/deals/{id}/stage` — transition stage (within open).
-    - `POST /v1/crm/deals/{id}/status` — transition status (open → won/lost/cancelled).
+- `POST /v1/crm/accounts` — create account; idempotent via Idempotency-Key.
+- `GET /v1/crm/accounts/{id}` — fetch account + linked contacts.
+- `PATCH /v1/crm/accounts/{id}` — update non-immutable fields.
+- `POST /v1/crm/contacts` — create contact + initial membership(s).
+- `GET /v1/crm/contacts/{id}` — fetch contact + memberships.
+- `POST /v1/crm/contacts/{id}/memberships` — add account membership.
+- `DELETE /v1/crm/contacts/{id}/memberships/{account_id}` — remove (requires ≥1 remaining).
+- `POST /v1/crm/pipelines` — create pipeline (with initial stages).
+- `GET /v1/crm/pipelines?shape=<>` — list.
+- `POST /v1/crm/pipelines/{id}/stages` — add stage.
+- `POST /v1/crm/deals` — create deal.
+- `GET /v1/crm/deals/{id}` — fetch.
+- `PATCH /v1/crm/deals/{id}` — update non-status non-stage fields.
+- `POST /v1/crm/deals/{id}/stage` — transition stage (within open).
+- `POST /v1/crm/deals/{id}/status` — transition status (open → won/lost/cancelled).
 
 16. **MUST** validate that **contact has ≥1 membership** at handler boundary. POST `/contacts` with empty `initial_memberships` → 400 `contact_must_have_membership`. DELETE last membership → 409 `cannot_remove_last_membership` (suggest delete contact instead).
 
 17. **MUST** emit memory audit rows for the 8 kinds (per DEC-349):
-    - `crm.account_created`, `crm.account_updated` on account writes.
-    - `crm.contact_created` on contact creation.
-    - `crm.deal_created` on deal creation.
-    - `crm.deal_stage_changed` on stage transition.
-    - `crm.deal_won` on status → won.
-    - `crm.deal_lost` on status → lost (carries `lost_reason`).
-    - `crm.deal_cancelled` on status → cancelled.
-   All audit-before-action per task-audit skill rule 25 (emitted within the same transaction as the DB write).
+- `crm.account_created`, `crm.account_updated` on account writes.
+- `crm.contact_created` on contact creation.
+- `crm.deal_created` on deal creation.
+- `crm.deal_stage_changed` on stage transition.
+- `crm.deal_won` on status → won.
+- `crm.deal_lost` on status → lost (carries `lost_reason`).
+- `crm.deal_cancelled` on status → cancelled. All audit-before-action per task-audit skill rule 25 (emitted within the same transaction as the DB write).
 
 18. **MUST** PII-scrub `email`, `phone`, `full_name` via TASK-MEMORY-111 BEFORE chain commit. The PostgreSQL rows retain raw values (tenant-scoped + RLS-protected); memory audit chain holds only `subject_id_hash16` + `email_hash16` + redacted forms.
 
@@ -226,13 +223,13 @@ The CRM service **MUST** ship the Account / Contact / Deal Postgres schema with 
 24. **MUST** emit OTel span `crm.{account,contact,pipeline,deal}.{create,update,stage,status,...}` with attributes: `tenant_id`, `entity_id`, `outcome` (success | invalid_status_transition | invalid_stage_transition | reason_required | expected_close_in_past | permission_denied | not_found).
 
 25. **MUST** emit OTel metrics:
-    - `crm_account_create_total{outcome}` (counter).
-    - `crm_contact_create_total{outcome}` (counter).
-    - `crm_deal_create_total{outcome, pipeline_shape}` (counter).
-    - `crm_deal_status_transitions_total{from_status, to_status, outcome}` (counter).
-    - `crm_deal_stage_transitions_total{pipeline_shape, outcome}` (counter).
-    - `crm_deal_amount_minor{tenant_id, currency, status}` (gauge — periodic sum compute).
-    - `crm_open_deal_count{tenant_id, pipeline_id}` (gauge).
+- `crm_account_create_total{outcome}` (counter).
+- `crm_contact_create_total{outcome}` (counter).
+- `crm_deal_create_total{outcome, pipeline_shape}` (counter).
+- `crm_deal_status_transitions_total{from_status, to_status, outcome}` (counter).
+- `crm_deal_stage_transitions_total{pipeline_shape, outcome}` (counter).
+- `crm_deal_amount_minor{tenant_id, currency, status}` (gauge — periodic sum compute).
+- `crm_open_deal_count{tenant_id, pipeline_id}` (gauge).
 
 26. **MUST** support cursor pagination on list handlers (max 200 default 50; cursor on `(updated_at DESC, id)`).
 

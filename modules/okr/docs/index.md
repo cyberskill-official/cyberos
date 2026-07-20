@@ -41,16 +41,7 @@ retro memories"] CEO --> OKR PROJ -- "progress_source" --> OKR INV --> OKR HR --
 
 ### Auto vs human-in-loop operations matrix
 
-Operation| How it happens| Why this split
----|---|---
-Objective creation| **Manual** Member / team lead| Strategic intent; never auto-generated.
-Cascade alignment proposal| **Auto** suggest parent O; **Member confirm**| Suggest reduces friction; Member owns alignment.
-KR progress update (auto-source)| **Auto** nightly| Deterministic from progress_source query.
-Weekly confidence check-in| **Manual** Member 1-10 + rationale| Confidence is signal that auto-progress alone can't capture.
-CUO Monday digest| **Auto** from check-ins + auto-progress| Founder reads consolidated summary; never replaces 1:1.
-Quarterly retro draft| **Auto** CUO; **manual** Member edit + manager review| Face-saving framing required; Member owns narrative.
-Failed-KR consequence (REW/promotion)| **Human-in-loop** per EU AI Act Art. 14| Employment decision; OKR is input, never algorithm.
-OKR archival| **Auto** at quarter close| Frozen + chained as a memory entry.
+Operation| How it happens| Why this split ---|---|--- Objective creation| **Manual** Member / team lead| Strategic intent; never auto-generated. Cascade alignment proposal| **Auto** suggest parent O; **Member confirm**| Suggest reduces friction; Member owns alignment. KR progress update (auto-source)| **Auto** nightly| Deterministic from progress_source query. Weekly confidence check-in| **Manual** Member 1-10 + rationale| Confidence is signal that auto-progress alone can't capture. CUO Monday digest| **Auto** from check-ins + auto-progress| Founder reads consolidated summary; never replaces 1:1. Quarterly retro draft| **Auto** CUO; **manual** Member edit + manager review| Face-saving framing required; Member owns narrative. Failed-KR consequence (REW/promotion)| **Human-in-loop** per EU AI Act Art. 14| Employment decision; OKR is input, never algorithm. OKR archival| **Auto** at quarter close| Frozen + chained as a memory entry.
 
 ## Why OKR exists
 
@@ -66,21 +57,7 @@ The bet is that an OKR system that _cannot_ be gamed (because progress is comput
 
 A structured decomposition of OKR's scope.
 
-Axis| Question| Answer
----|---|---
-**5W - What**| What is OKR?| A strategy operating-loop service. Primitives: Cycle, Objective, KeyResult, CheckIn, Alignment, ProgressSource, Retrospective. Rust service with TS SPA dashboard. PostgreSQL store + materialised rollups.
-**5W - Who**| Who uses it?| **Founder / CEO:** owns Company-level Objectives; reads Monday-morning CUO digest. **Team leads:** author Team OKRs aligning up. **Members:** author their own OKRs aligned to a Team. **Agents:** CUO digest; CSO-skill for retro drafting; CEO-skill for cascade-coherence checks.
-**5W - When**| When does it run?| Quarterly cycle (default Q1 / Q2 / Q3 / Q4 anchored to Jan-1). Weekly confidence-band check-ins (every Friday 17:00 ICT). Mid-quarter pulse (week 6). Quarter-close retrospective. Continuous auto-progress refresh (hourly per progress source).
-**5W - Where**| Where does it run?| P3: SG-1 region with VN-residency partition. Read-heavy workload behind PgBouncer; OKR graph queried via federated GraphQL into PROJ/HR/INV.
-**5W - Why**| Why a separate module?| Because the cascade graph is referenced by REW (P3 performance pool depends on team-objective achievement), by HR (promotion review reads Member-OKR history), by CRM (revenue KRs feed pipeline forecast), and by the Founder daily flow. Owning it once means every consumer reads the same source-of-truth.
-**1H - How**| How does it work?| OKR primitives stored in `okr.*` tables. Alignments are FK edges in `okr.alignment` with type in {contributes_to, supports, depends_on}. Confidence check-ins append to `okr.check_in`. Auto-progress: each KR declares `progress_source` (a small DSL) and a refresh job materialises the current value. Retros land in memory under `module/okr/cycle-YYYY-Qn/`.
-**2C - Cost**| Cost budget?| P3: ~$25 / month (PG read replica + small Fargate + nightly refresh job). Low data volume - Cycle x Objective x KR cardinality is bounded.
-**2C - Constraints**| Constraints?| (a) EU AI Act Art. 14 - OKR-driven employment decisions require human approval. (b) GDPR Art. 22 - same. (c) Vietnamese cultural fit: face-saving language; no "missed" / "failed" without "learned". (d) Append-only history - modifications post-cycle-end create supersession entries, never overwrites (task pending).
-**5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, React + visx for cascade tree, DSL parser (nom) for progress-source expressions, OpenTelemetry.
-**5M - Methods**| Method choices?| Cycle is a calendar with explicit phases (planning, execution, check-ins, retro, close). KR is typed (hit-target / improvement / milestone) with type-specific computation. Confidence band is a 1-10 scalar plus rationale text; trend is computed over 4 weeks. Retros are CSV-prompt-driven (5 questions) and CUO-summarised.
-**5M - Machines**| Deployment?| Fargate task in SG-1 (P3). Standard PG read replica. Scheduled jobs for weekly check-in reminders and nightly auto-progress refresh.
-**5M - Manpower**| Who maintains?| 0.2 FTE at P3; CSO seat owns product direction; CEO-skill drives Founder digests.
-**5M - Measurement**| How measured?| (NFR pending) drag-drop cascade p95 <= 200 ms, (NFR pending) auto-progress refresh success >= 99.5%. KPIs: cascade-coverage %, weekly check-in participation %, end-of-quarter retro completion %, average final score.
+Axis| Question| Answer ---|---|--- **5W - What**| What is OKR?| A strategy operating-loop service. Primitives: Cycle, Objective, KeyResult, CheckIn, Alignment, ProgressSource, Retrospective. Rust service with TS SPA dashboard. PostgreSQL store + materialised rollups. **5W - Who**| Who uses it?| **Founder / CEO:** owns Company-level Objectives; reads Monday-morning CUO digest. **Team leads:** author Team OKRs aligning up. **Members:** author their own OKRs aligned to a Team. **Agents:** CUO digest; CSO-skill for retro drafting; CEO-skill for cascade-coherence checks. **5W - When**| When does it run?| Quarterly cycle (default Q1 / Q2 / Q3 / Q4 anchored to Jan-1). Weekly confidence-band check-ins (every Friday 17:00 ICT). Mid-quarter pulse (week 6). Quarter-close retrospective. Continuous auto-progress refresh (hourly per progress source). **5W - Where**| Where does it run?| P3: SG-1 region with VN-residency partition. Read-heavy workload behind PgBouncer; OKR graph queried via federated GraphQL into PROJ/HR/INV. **5W - Why**| Why a separate module?| Because the cascade graph is referenced by REW (P3 performance pool depends on team-objective achievement), by HR (promotion review reads Member-OKR history), by CRM (revenue KRs feed pipeline forecast), and by the Founder daily flow. Owning it once means every consumer reads the same source-of-truth. **1H - How**| How does it work?| OKR primitives stored in `okr.*` tables. Alignments are FK edges in `okr.alignment` with type in {contributes_to, supports, depends_on}. Confidence check-ins append to `okr.check_in`. Auto-progress: each KR declares `progress_source` (a small DSL) and a refresh job materialises the current value. Retros land in memory under `module/okr/cycle-YYYY-Qn/`. **2C - Cost**| Cost budget?| P3: ~$25 / month (PG read replica + small Fargate + nightly refresh job). Low data volume - Cycle x Objective x KR cardinality is bounded. **2C - Constraints**| Constraints?| (a) EU AI Act Art. 14 - OKR-driven employment decisions require human approval. (b) GDPR Art. 22 - same. (c) Vietnamese cultural fit: face-saving language; no "missed" / "failed" without "learned". (d) Append-only history - modifications post-cycle-end create supersession entries, never overwrites (task pending). **5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, React + visx for cascade tree, DSL parser (nom) for progress-source expressions, OpenTelemetry. **5M - Methods**| Method choices?| Cycle is a calendar with explicit phases (planning, execution, check-ins, retro, close). KR is typed (hit-target / improvement / milestone) with type-specific computation. Confidence band is a 1-10 scalar plus rationale text; trend is computed over 4 weeks. Retros are CSV-prompt-driven (5 questions) and CUO-summarised. **5M - Machines**| Deployment?| Fargate task in SG-1 (P3). Standard PG read replica. Scheduled jobs for weekly check-in reminders and nightly auto-progress refresh. **5M - Manpower**| Who maintains?| 0.2 FTE at P3; CSO seat owns product direction; CEO-skill drives Founder digests. **5M - Measurement**| How measured?| (NFR pending) drag-drop cascade p95 <= 200 ms, (NFR pending) auto-progress refresh success >= 99.5%. KPIs: cascade-coverage %, weekly check-in participation %, end-of-quarter retro completion %, average final score.
 
 ## Architecture
 
@@ -115,21 +92,7 @@ traces + metrics"] end SPA --> AUTHOR CHECKIN --> CHECKIN_S RETRO --> RETRO_S AU
 
 ### Internal components
 
-Component| Path (planned)| Responsibility
----|---|---
-`author.rs`| services/okr/src/author.rs| Create / update Objective and KeyResult. KR-phrasing assistant via AI gateway (suggests measurable phrasing).
-`cascade.rs`| services/okr/src/cascade.rs| Manage Alignment edges: contributes_to, supports, depends_on. Detect orphan OKRs (no upward alignment). Cycle detection (no circular alignments).
-`dsl.rs`| services/okr/src/dsl.rs| Nom-based parser for progress-source expressions. Grammar: `source(query) [filter expr] [aggregate fn]`.
-`progress.rs`| services/okr/src/progress.rs| Scheduled auto-progress refresh. Walks each KR's AST, federates to source module, updates current_value with audit trail.
-`checkin.rs`| services/okr/src/checkin.rs| Weekly check-in collector. Confidence 1-10 + rationale per KR. Computes 4-week trend; flags 2+ point drops as risk.
-`retro.rs`| services/okr/src/retro.rs| End-of-cycle retrospective. CSV-prompt-driven. CUO drafts summary; human edits; final lands as a memory entry under `module/okr/cycle-YYYY-Qn/retro.md`.
-`digest.rs`| services/okr/src/digest.rs| Monday-morning CUO digest. Confidence drops, KRs off-track, suggested founder questions.
-`blocker.rs`| services/okr/src/blocker.rs| Blocker detection: monitors CHAT for KR-related "blocked by" mentions and surfaces to digest.
-`cascade_check.rs`| services/okr/src/cascade_check.rs| Cascade-coherence check: every Member OKR must align to a Team OKR; every Team OKR must align to a Company OKR (configurable strict / soft mode).
-`supersession.rs`| services/okr/src/supersession.rs| Append-only history. Mid-cycle KR target changes create supersession rows; originals remain visible (task pending).
-`i18n.rs`| services/okr/src/i18n.rs| Vietnamese face-saving language pack. Maps internal status codes to UI strings: "miss" -> "đã học được" / "learning achieved"; never "fail".
-`audit_bridge.rs`| services/okr/src/audit_bridge.rs| Writes every OKR + check-in event to the memory canonical writer.
-`migrations/`| services/okr/migrations/| sqlx migrations. RLS by `tenant_id`. Indices on (cycle_id, objective_id) and (subject_id, cycle_id).
+Component| Path (planned)| Responsibility ---|---|--- `author.rs`| services/okr/src/author.rs| Create / update Objective and KeyResult. KR-phrasing assistant via AI gateway (suggests measurable phrasing). `cascade.rs`| services/okr/src/cascade.rs| Manage Alignment edges: contributes_to, supports, depends_on. Detect orphan OKRs (no upward alignment). Cycle detection (no circular alignments). `dsl.rs`| services/okr/src/dsl.rs| Nom-based parser for progress-source expressions. Grammar: `source(query) [filter expr] [aggregate fn]`. `progress.rs`| services/okr/src/progress.rs| Scheduled auto-progress refresh. Walks each KR's AST, federates to source module, updates current_value with audit trail. `checkin.rs`| services/okr/src/checkin.rs| Weekly check-in collector. Confidence 1-10 + rationale per KR. Computes 4-week trend; flags 2+ point drops as risk. `retro.rs`| services/okr/src/retro.rs| End-of-cycle retrospective. CSV-prompt-driven. CUO drafts summary; human edits; final lands as a memory entry under `module/okr/cycle-YYYY-Qn/retro.md`. `digest.rs`| services/okr/src/digest.rs| Monday-morning CUO digest. Confidence drops, KRs off-track, suggested founder questions. `blocker.rs`| services/okr/src/blocker.rs| Blocker detection: monitors CHAT for KR-related "blocked by" mentions and surfaces to digest. `cascade_check.rs`| services/okr/src/cascade_check.rs| Cascade-coherence check: every Member OKR must align to a Team OKR; every Team OKR must align to a Company OKR (configurable strict / soft mode). `supersession.rs`| services/okr/src/supersession.rs| Append-only history. Mid-cycle KR target changes create supersession rows; originals remain visible (task pending). `i18n.rs`| services/okr/src/i18n.rs| Vietnamese face-saving language pack. Maps internal status codes to UI strings: "miss" -> "đã học được" / "learning achieved"; never "fail". `audit_bridge.rs`| services/okr/src/audit_bridge.rs| Writes every OKR + check-in event to the memory canonical writer. `migrations/`| services/okr/migrations/| sqlx migrations. RLS by `tenant_id`. Indices on (cycle_id, objective_id) and (subject_id, cycle_id).
 
 **OKR-INV-001 - Post-cycle history is append-only.** After a Cycle reaches `execution` phase, KR target modifications are **supersession entries**, not overwrites. The original target value remains visible in the timeline; the new target carries `superseded_by` linkage. Verification: (task pending) - attempt to modify in-place is rejected with `code: "OKR-IMMUTABLE-POST-CYCLE"`; the supersession path produces a chained memory audit row.
 
@@ -273,29 +236,11 @@ type Mutation {
 
 ### REST + scheduled endpoints
 
-Method| Path| Purpose
----|---|---
-GET| `/okr/cascade.svg?cycle=2026-Q2`| SVG export of cascade tree for board pack.
-POST| `/okr/refresh-progress?kr_id=...`| Force auto-progress refresh for a specific KR.
-POST| `/okr/cycles/{code}/advance`| Advance cycle phase. Admin scope.
-GET| `/okr/digest/weekly.md`| Monday digest in markdown.
-GET| `/okr/orphans?cycle=2026-Q2`| List orphan Member OKRs (no upward alignment).
-GET| `/okr/check-in-status?cycle=2026-Q2&iso_week=2026-W19`| Who has and has not submitted this week's check-in.
-POST| `/okr/retros/{cycle_code}/draft`| CUO drafts a retrospective summary from the cycle's data.
+Method| Path| Purpose ---|---|--- GET| `/okr/cascade.svg?cycle=2026-Q2`| SVG export of cascade tree for board pack. POST| `/okr/refresh-progress?kr_id=...`| Force auto-progress refresh for a specific KR. POST| `/okr/cycles/{code}/advance`| Advance cycle phase. Admin scope. GET| `/okr/digest/weekly.md`| Monday digest in markdown. GET| `/okr/orphans?cycle=2026-Q2`| List orphan Member OKRs (no upward alignment). GET| `/okr/check-in-status?cycle=2026-Q2&iso_week=2026-W19`| Who has and has not submitted this week's check-in. POST| `/okr/retros/{cycle_code}/draft`| CUO drafts a retrospective summary from the cycle's data.
 
 ### MCP tool catalogue
 
-Tool name| Inputs| Outputs| Annotations
----|---|---|---
-`cyberos.okr.list_cycle`| cycle_code| Cycle + Objectives + KRs| readonly, scope=okr.read
-`cyberos.okr.create_objective`| title, narrative, scope| Objective| scope=okr.write
-`cyberos.okr.suggest_kr_phrasing`| objective_text, candidate_kr| 3 suggestions + measurability score| readonly, AI-call
-`cyberos.okr.submit_check_in`| kr_id, confidence, rationale| CheckIn| scope=okr.checkin
-`cyberos.okr.cascade_view`| cycle_code, root_id?| tree| readonly
-`cyberos.okr.find_orphans`| cycle_code| Objective| readonly
-`cyberos.okr.weekly_digest`| cycle_code| Markdown digest| readonly
-`cyberos.okr.draft_retro`| cycle_code| Retro draft| readonly, CSO-confirm before persist
-`cyberos.okr.close_cycle`| cycle_code, retro_memory_path| {cycle}| destructive, scope=okr.close_cycle, founder-confirm
+Tool name| Inputs| Outputs| Annotations ---|---|---|--- `cyberos.okr.list_cycle`| cycle_code| Cycle + Objectives + KRs| readonly, scope=okr.read `cyberos.okr.create_objective`| title, narrative, scope| Objective| scope=okr.write `cyberos.okr.suggest_kr_phrasing`| objective_text, candidate_kr| 3 suggestions + measurability score| readonly, AI-call `cyberos.okr.submit_check_in`| kr_id, confidence, rationale| CheckIn| scope=okr.checkin `cyberos.okr.cascade_view`| cycle_code, root_id?| tree| readonly `cyberos.okr.find_orphans`| cycle_code| Objective| readonly `cyberos.okr.weekly_digest`| cycle_code| Markdown digest| readonly `cyberos.okr.draft_retro`| cycle_code| Retro draft| readonly, CSO-confirm before persist `cyberos.okr.close_cycle`| cycle_code, retro_memory_path| {cycle}| destructive, scope=okr.close_cycle, founder-confirm
 
 ## Key flows
 
@@ -343,15 +288,7 @@ stateDiagram-v2 [*] --> Planning: cycle opened (week -2) Planning --> Execution:
 
 ### Per-phase rules
 
-Phase| Duration| Rules
----|---|---
-Planning| 2 weeks| Objectives + KRs editable freely. Alignments built. Cascade coherence must pass before transition.
-Execution| 10 weeks (quarter)| KR target modifications require supersession (task pending). Auto-progress refresh hourly. Weekly check-ins enforced.
-CheckIns (sub-state)| weekly Fri 17:00| All Members with active KRs receive prompts; missing check-ins flagged in next-week digest.
-MidQuarter (sub-state)| week 6| Mandatory CEO + Team Lead review. Confidence-band review; off-track KRs get rationale entry.
-Retro| 1 week| CUO drafts retro summary; team reviews; final lands in memory under `module/okr/cycle-YYYY-Qn/retro.md`.
-Closed| terminal| All KRs reach final state (achieved / learning). Read-only. Audit chain preserved.
-Cancelled| terminal| Cycle invalidated. Audit chain preserved with reason.
+Phase| Duration| Rules ---|---|--- Planning| 2 weeks| Objectives + KRs editable freely. Alignments built. Cascade coherence must pass before transition. Execution| 10 weeks (quarter)| KR target modifications require supersession (task pending). Auto-progress refresh hourly. Weekly check-ins enforced. CheckIns (sub-state)| weekly Fri 17:00| All Members with active KRs receive prompts; missing check-ins flagged in next-week digest. MidQuarter (sub-state)| week 6| Mandatory CEO + Team Lead review. Confidence-band review; off-track KRs get rationale entry. Retro| 1 week| CUO drafts retro summary; team reviews; final lands in memory under `module/okr/cycle-YYYY-Qn/retro.md`. Closed| terminal| All KRs reach final state (achieved / learning). Read-only. Audit chain preserved. Cancelled| terminal| Cycle invalidated. Audit chain preserved with reason.
 
 ## Functional requirements
 
@@ -363,19 +300,7 @@ Previous task enumerations were archived 2026-05-14 and are no longer reflected 
 
 OKR NFRs cover cascade-tree UX latency, auto-progress reliability, and append-only data-integrity.
 
-NFR ID| Concern| Target| Measurement
----|---|---|---
-(NFR pending)| Cascade-tree drag-drop p95| <= 200 ms| RUM + Lighthouse
-(NFR pending)| Check-in modal open-to-submit p95| <= 60 s end-to-end| RUM
-(NFR pending)| cascade(cycleCode) query p95| <= 350 ms (100-objective cascade)| k6
-(NFR pending)| submitCheckIn server-canonical p95| <= 250 ms| k6 + Apollo Router metrics
-(NFR pending)| Auto-progress refresh success rate| >= 99.5% / day| OBS daily report
-(NFR pending)| Federated query timeout fallback| <= 2 s; on timeout, retain last value + flag| chaos test
-(NFR pending)| Append-only history under modification attempt| = 0 in-place updates after Execution phase| property test + DB audit
-(NFR pending)| Cascade cycle-detection accuracy| = 100% (zero false negatives)| property-based test
-(NFR pending)| OKR availability (28-day)| >= 99.9%| SLO monitor
-(NFR pending)| Cross-tenant cascade leak| = 0| RLS verification harness
-(NFR pending)| Cascade tree keyboard-navigable (WCAG 2.1 AA)| full coverage| axe-core audit
+NFR ID| Concern| Target| Measurement ---|---|---|--- (NFR pending)| Cascade-tree drag-drop p95| <= 200 ms| RUM + Lighthouse (NFR pending)| Check-in modal open-to-submit p95| <= 60 s end-to-end| RUM (NFR pending)| cascade(cycleCode) query p95| <= 350 ms (100-objective cascade)| k6 (NFR pending)| submitCheckIn server-canonical p95| <= 250 ms| k6 + Apollo Router metrics (NFR pending)| Auto-progress refresh success rate| >= 99.5% / day| OBS daily report (NFR pending)| Federated query timeout fallback| <= 2 s; on timeout, retain last value + flag| chaos test (NFR pending)| Append-only history under modification attempt| = 0 in-place updates after Execution phase| property test + DB audit (NFR pending)| Cascade cycle-detection accuracy| = 100% (zero false negatives)| property-based test (NFR pending)| OKR availability (28-day)| >= 99.9%| SLO monitor (NFR pending)| Cross-tenant cascade leak| = 0| RLS verification harness (NFR pending)| Cascade tree keyboard-navigable (WCAG 2.1 AA)| full coverage| axe-core audit
 
 ## Dependencies
 
@@ -404,74 +329,25 @@ hiring objective"] DASH["📊 OBS dashboards"] end AUTH --> OKR memory --> OKR A
 
 OKR touches employment-context data (performance, promotion inputs). EU AI Act Art. 14 and GDPR Art. 22 apply because OKRs feed REW (compensation) and HR (promotion).
 
-Regulation / standard| Article / clause| OKR feature that satisfies it
----|---|---
-EU AI Act (Reg. 2024/1689)| Annex III §4 - Employment| OKR outputs that feed REW or HR are gated by human approval (task pending).
-EU AI Act| Art. 14 - Human oversight| CUO digest is advisory; no automated promotion / compensation action.
-GDPR (EU 2016/679)| Art. 22 - Automated decision-making| Same as Art. 14; explicit human approval predicate.
-GDPR| Art. 15 - Right of access| `cyberos-okr dsar-export` returns full Objective + KR + CheckIn history for a Subject.
-GDPR| Art. 17 - Right to erasure| Tombstone supported on CheckIn; aggregate retro memory retains tenant-level summary.
-Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Same as GDPR Art. 15 surface.
-Vietnam cultural fit| - Face-saving| i18n.rs maps internal "miss" -> "đã học được" UI string; retro framing is "what would change our minds?"
-ISO/IEC 27001:2022| A.5.34 - Privacy in development| Per-Member OKR visible only to Member + Team Lead + CEO by default; broader visibility opt-in.
-SOC 2 Type II| CC7.2 - System monitoring| Auto-progress refresh metrics; confidence-trend monitoring; KPI dashboard.
+Regulation / standard| Article / clause| OKR feature that satisfies it ---|---|--- EU AI Act (Reg. 2024/1689)| Annex III §4 - Employment| OKR outputs that feed REW or HR are gated by human approval (task pending). EU AI Act| Art. 14 - Human oversight| CUO digest is advisory; no automated promotion / compensation action. GDPR (EU 2016/679)| Art. 22 - Automated decision-making| Same as Art. 14; explicit human approval predicate. GDPR| Art. 15 - Right of access| `cyberos-okr dsar-export` returns full Objective + KR + CheckIn history for a Subject. GDPR| Art. 17 - Right to erasure| Tombstone supported on CheckIn; aggregate retro memory retains tenant-level summary. Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Same as GDPR Art. 15 surface. Vietnam cultural fit| - Face-saving| i18n.rs maps internal "miss" -> "đã học được" UI string; retro framing is "what would change our minds?" ISO/IEC 27001:2022| A.5.34 - Privacy in development| Per-Member OKR visible only to Member + Team Lead + CEO by default; broader visibility opt-in. SOC 2 Type II| CC7.2 - System monitoring| Auto-progress refresh metrics; confidence-trend monitoring; KPI dashboard.
 
 ## Risk entries
 
 OKR-specific risks in the [risk register](../../reference/risk-register.html#okr).
 
-ID| Risk| Likelihood| Impact| Owner| Mitigation
----|---|---|---|---|---
-`R-OKR-001`| Tampering - KR target lowered post-cycle to inflate achievement| Low| High| CSO| Append-only history (task pending); supersession-only modification; CI test verifies in-place blocked.
-`R-OKR-002`| Auto-progress source returns stale value silently| Medium| Medium| CTO| last_refreshed_at exposed in UI; freshness alert at > 24 h; manual force-refresh endpoint.
-`R-OKR-003`| OKR-driven employment decision automated without human gate| Low| High| CLO| (task pending) enforced; REW boundary requires human approval; audit alarm on any direct write.
-`R-OKR-004`| Cascade cycle causes infinite-loop in tree render| Low| Medium| CTO| Cycle-detection at alignment-write boundary; rejects with OKR-CYCLE error; integration test.
-`R-OKR-005`| Cross-tenant cascade leak via federated query| Low| Catastrophic| CSO| RLS at Postgres + @requiresScopes on every GraphQL field; cross-tenant test gate.
-`R-OKR-006`| Face-saving language pack drift (English "miss" leaks through)| Medium| Low| CPO| i18n.rs central mapping; lint rule on all UI strings; manual QA per release.
-`R-OKR-007`| Check-in burnout (Members ignore Friday prompts)| High| Medium| CHRO| Friction-minimal modal (<= 60s typical); skip-this-week available; participation tracked as KPI.
-`R-OKR-008`| DSL injection via progress_source field| Low| High| CSO| DSL parser is nom-based with whitelisted source names; no eval / no SQL passthrough.
-`R-OKR-009`| Retro memory tampering post-close| Low| High| CSO| memory canonical write; tombstone-only modification; chain integrity verified on read.
-`R-OKR-010`| Auto-progress source drift - KR queries return stale data after schema change in PROJ/INV/HR| Medium| Medium| CDO| progress_source query carries schema version; nightly batch alerts on version mismatch; KR flagged "data stale" until query rebuilt.
-`R-OKR-011`| Face-saving framing weaponised - frames hide consistent under-performance| Medium| Medium| CHRO| Retro narratives are inputs to manager review; aggregated patterns (3+ "we learned" framings on same KR class) surface for explicit discussion.
-`R-OKR-012`| CUO Monday digest hallucinates progress from incomplete data| Medium| Low| CPO| Digest grounded in auto-progress + check-in rows only; missing data shown explicitly as "no data"; never extrapolated.
-`R-OKR-013`| OKR weight tuning skews REW BP distribution towards strategy-aligned Members at expense of operational excellence| Medium| Medium| CFO + CHRO| VP weights (LEARN) blend OKR alignment + operational signals; OKR alone never > 30% of VP score; quarterly fairness audit.
-`R-OKR-014`| Quarterly retro Lumi-shared as best-practice exposes confidential strategy| Low| High| DPO| Retros default to sync_class=team-public (within tenant); Lumi cross-tenant share requires CDO + CEO sign-off + sync_class=shareable explicit.
+ID| Risk| Likelihood| Impact| Owner| Mitigation ---|---|---|---|---|--- `R-OKR-001`| Tampering - KR target lowered post-cycle to inflate achievement| Low| High| CSO| Append-only history (task pending); supersession-only modification; CI test verifies in-place blocked. `R-OKR-002`| Auto-progress source returns stale value silently| Medium| Medium| CTO| last_refreshed_at exposed in UI; freshness alert at > 24 h; manual force-refresh endpoint. `R-OKR-003`| OKR-driven employment decision automated without human gate| Low| High| CLO| (task pending) enforced; REW boundary requires human approval; audit alarm on any direct write. `R-OKR-004`| Cascade cycle causes infinite-loop in tree render| Low| Medium| CTO| Cycle-detection at alignment-write boundary; rejects with OKR-CYCLE error; integration test. `R-OKR-005`| Cross-tenant cascade leak via federated query| Low| Catastrophic| CSO| RLS at Postgres + @requiresScopes on every GraphQL field; cross-tenant test gate. `R-OKR-006`| Face-saving language pack drift (English "miss" leaks through)| Medium| Low| CPO| i18n.rs central mapping; lint rule on all UI strings; manual QA per release. `R-OKR-007`| Check-in burnout (Members ignore Friday prompts)| High| Medium| CHRO| Friction-minimal modal (<= 60s typical); skip-this-week available; participation tracked as KPI. `R-OKR-008`| DSL injection via progress_source field| Low| High| CSO| DSL parser is nom-based with whitelisted source names; no eval / no SQL passthrough. `R-OKR-009`| Retro memory tampering post-close| Low| High| CSO| memory canonical write; tombstone-only modification; chain integrity verified on read. `R-OKR-010`| Auto-progress source drift - KR queries return stale data after schema change in PROJ/INV/HR| Medium| Medium| CDO| progress_source query carries schema version; nightly batch alerts on version mismatch; KR flagged "data stale" until query rebuilt. `R-OKR-011`| Face-saving framing weaponised - frames hide consistent under-performance| Medium| Medium| CHRO| Retro narratives are inputs to manager review; aggregated patterns (3+ "we learned" framings on same KR class) surface for explicit discussion. `R-OKR-012`| CUO Monday digest hallucinates progress from incomplete data| Medium| Low| CPO| Digest grounded in auto-progress + check-in rows only; missing data shown explicitly as "no data"; never extrapolated. `R-OKR-013`| OKR weight tuning skews REW BP distribution towards strategy-aligned Members at expense of operational excellence| Medium| Medium| CFO + CHRO| VP weights (LEARN) blend OKR alignment + operational signals; OKR alone never > 30% of VP score; quarterly fairness audit. `R-OKR-014`| Quarterly retro Lumi-shared as best-practice exposes confidential strategy| Low| High| DPO| Retros default to sync_class=team-public (within tenant); Lumi cross-tenant share requires CDO + CEO sign-off + sync_class=shareable explicit.
 
 ## KPIs
 
 OKR health rolls up into 14 KPIs covering cascade coverage, check-in participation, end-cycle scoring, and digest engagement.
 
-KPI| Formula| Source| Target
----|---|---|---
-**Cascade coverage %**| `aligned_member_okrs / total_member_okrs`| okr.alignment| >= 95%
-**Weekly check-in participation**| `checkins_submitted / expected`| okr.check_in| >= 80%
-**Cycle close-rate**| `cycles_closed_with_retro / cycles_ended`| okr.cycle| = 100%
-**Average final score**| `AVG(achieved + 0.5 x learning) / total_krs`| okr.key_result| 0.70 (Doerr-band)
-**Confidence-drop alerts / cycle**| count| OBS| tracked
-**Auto-progress refresh success rate**| `successful / attempted`| OBS| >= 99.5%
-**Orphan-OKR count**| `count(no upward alignment)`| okr.objective| <= 5% of total
-**Founder digest engagement rate**| `digests_with_reply / total`| OBS| >= 50%
-**Retro-memory citation rate next cycle**| `citations / total_retros`| memory| >= 1 / retro / next-cycle planning
-**Progress source schema drift**| flagged KRs / total KRs after upstream schema change| nightly batch| <= 0.05 (rebuild within 7 days)
-**Face-saving pattern detection signal**| recurring same-class "we learned" framings / total retros| quarterly CHRO review| flagged; not auto-acted
-**Digest hallucination rate**| digests with unsupported claims / total| weekly red-team sample| <= 0.01
-**OKR-share-of-VP correctness**| VP computations where OKR signal <= 30%| LEARN audit| = 1.0 (hard floor)
-**Retro sync_class default compliance**| retros with sync_class=team-public default / total| memory audit| = 1.0 (cross-tenant share is explicit)
+KPI| Formula| Source| Target ---|---|---|--- **Cascade coverage %**| `aligned_member_okrs / total_member_okrs`| okr.alignment| >= 95% **Weekly check-in participation**| `checkins_submitted / expected`| okr.check_in| >= 80% **Cycle close-rate**| `cycles_closed_with_retro / cycles_ended`| okr.cycle| = 100% **Average final score**| `AVG(achieved + 0.5 x learning) / total_krs`| okr.key_result| 0.70 (Doerr-band) **Confidence-drop alerts / cycle**| count| OBS| tracked **Auto-progress refresh success rate**| `successful / attempted`| OBS| >= 99.5% **Orphan-OKR count**| `count(no upward alignment)`| okr.objective| <= 5% of total **Founder digest engagement rate**| `digests_with_reply / total`| OBS| >= 50% **Retro-memory citation rate next cycle**| `citations / total_retros`| memory| >= 1 / retro / next-cycle planning **Progress source schema drift**| flagged KRs / total KRs after upstream schema change| nightly batch| <= 0.05 (rebuild within 7 days) **Face-saving pattern detection signal**| recurring same-class "we learned" framings / total retros| quarterly CHRO review| flagged; not auto-acted **Digest hallucination rate**| digests with unsupported claims / total| weekly red-team sample| <= 0.01 **OKR-share-of-VP correctness**| VP computations where OKR signal <= 30%| LEARN audit| = 1.0 (hard floor) **Retro sync_class default compliance**| retros with sync_class=team-public default / total| memory audit| = 1.0 (cross-tenant share is explicit)
 
 ## RACI matrix
 
 OKR is owned by CEO (strategy) with CSO seat for cycle operations and CLO for AI-Act compliance.
 
-Activity| CEO| CSO| CTO| CHRO| CLO| CPO
----|---|---|---|---|---|---
-Service design + spec| A| R| C| I| C| C
-Implementation| I| C| A/R| I| I| I
-Company-OKR authorship| A/R| C| I| I| I| C
-Cycle phase advance (Planning -> Execution etc.)| A| R| I| I| I| I
-Retrospective draft + close| A| R| I| C| I| C
-Face-saving language QA| I| C| I| R| I| A
-EU AI Act / GDPR Art. 22 conformity| C| C| I| I| A/R| I
-Founder digest review (Mon)| A/R| C| I| I| I| I
+Activity| CEO| CSO| CTO| CHRO| CLO| CPO ---|---|---|---|---|---|--- Service design + spec| A| R| C| I| C| C Implementation| I| C| A/R| I| I| I Company-OKR authorship| A/R| C| I| I| I| C Cycle phase advance (Planning -> Execution etc.)| A| R| I| I| I| I Retrospective draft + close| A| R| I| C| I| C Face-saving language QA| I| C| I| R| I| A EU AI Act / GDPR Art. 22 conformity| C| C| I| I| A/R| I Founder digest review (Mon)| A/R| C| I| I| I| I
 
 R = Responsible, A = Accountable, C = Consulted, I = Informed.
 
@@ -601,20 +477,7 @@ $ cyberos-okr dsar-export --subject linh@cyberskill.com --output dsar.zip
 | External libs | ~10 (nom, visx, rrule, OpenTelemetry) |
 | P3 budget | ~$25/mo (PG replica + Fargate + scheduler) |
 
-Capability| Status
----|---
-Cycle / Objective / KeyResult primitives| planned - P3
-Company -> Team -> Member cascade| planned - P3
-Confidence-band weekly check-ins| planned - P3
-Auto-progress DSL + scheduled refresh| planned - P3
-KR phrasing assistant (AI gateway)| planned - P3
-Monday CUO digest| planned - P3
-Retrospective composer + memory persistence| planned - P3
-Append-only supersession (task pending)| planned - P3
-Vietnamese face-saving language pack| planned - P3
-Cascade cycle-detection| planned - P3
-OKR-driven REW pool integration| planned - P4
-Public OKR view per workspace| planned - P3
+Capability| Status ---|--- Cycle / Objective / KeyResult primitives| planned - P3 Company -> Team -> Member cascade| planned - P3 Confidence-band weekly check-ins| planned - P3 Auto-progress DSL + scheduled refresh| planned - P3 KR phrasing assistant (AI gateway)| planned - P3 Monday CUO digest| planned - P3 Retrospective composer + memory persistence| planned - P3 Append-only supersession (task pending)| planned - P3 Vietnamese face-saving language pack| planned - P3 Cascade cycle-detection| planned - P3 OKR-driven REW pool integration| planned - P4 Public OKR view per workspace| planned - P3
 
 ## References
 

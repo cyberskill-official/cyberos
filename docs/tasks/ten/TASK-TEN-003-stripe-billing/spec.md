@@ -194,21 +194,21 @@ risk_if_skipped: "Without Stripe billing, every international tenant payment bec
 The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billing/stripe/` — Customer/Subscription/Usage-Record lifecycle for tenants whose `billing_currency ∈ {USD, EUR, SGD, GBP}`, plan-change push from TASK-TEN-002, overage push from TASK-TEN-004, dispatcher for TASK-INV-003 webhook events, dunning state machine, refund flow, and 11 memory audit row kinds.
 
 1. **MUST** add columns to `tenants` via migration `0006_stripe_billing.sql`:
-   - `billing_currency billing_currency_enum NOT NULL DEFAULT 'VND'` — closed enum from migration `0009`.
-   - `billing_rail TEXT NOT NULL CHECK (billing_rail IN ('stripe','vietqr_momo_zalo','internal')) DEFAULT 'vietqr_momo_zalo'` — derived from `billing_currency` at provisioning; `internal` reserved for founder tenant per DEC-805.
-   - `stripe_customer_id TEXT` — nullable; populated lazily per DEC-786.
-   - `stripe_subscription_id TEXT` — nullable; populated on first plan_change_push.
-   - `billing_contact_email TEXT NOT NULL` — collected at provisioning; used as Stripe Customer email.
-   - `dunning_state TEXT NOT NULL CHECK (dunning_state IN ('ok','retry_1','retry_2','retry_3','suspended')) DEFAULT 'ok'`.
-   - Partial unique index `CREATE UNIQUE INDEX uniq_stripe_customer ON tenants(stripe_customer_id) WHERE stripe_customer_id IS NOT NULL`.
-   - Partial unique index `CREATE UNIQUE INDEX uniq_stripe_subscription ON tenants(stripe_subscription_id) WHERE stripe_subscription_id IS NOT NULL`.
+- `billing_currency billing_currency_enum NOT NULL DEFAULT 'VND'` — closed enum from migration `0009`.
+- `billing_rail TEXT NOT NULL CHECK (billing_rail IN ('stripe','vietqr_momo_zalo','internal')) DEFAULT 'vietqr_momo_zalo'` — derived from `billing_currency` at provisioning; `internal` reserved for founder tenant per DEC-805.
+- `stripe_customer_id TEXT` — nullable; populated lazily per DEC-786.
+- `stripe_subscription_id TEXT` — nullable; populated on first plan_change_push.
+- `billing_contact_email TEXT NOT NULL` — collected at provisioning; used as Stripe Customer email.
+- `dunning_state TEXT NOT NULL CHECK (dunning_state IN ('ok','retry_1','retry_2','retry_3','suspended')) DEFAULT 'ok'`.
+- Partial unique index `CREATE UNIQUE INDEX uniq_stripe_customer ON tenants(stripe_customer_id) WHERE stripe_customer_id IS NOT NULL`.
+- Partial unique index `CREATE UNIQUE INDEX uniq_stripe_subscription ON tenants(stripe_subscription_id) WHERE stripe_subscription_id IS NOT NULL`.
 
 2. **MUST** define the closed `billing_currency_enum` Postgres type at migration `0009` with exactly 5 values: `VND, USD, EUR, SGD, GBP`. CI cardinality test asserts 5 (DEC-792 + task-audit skill rule 6 namespace pattern adapted for enum). A 6th value requires a schema migration + DEC entry.
 
 3. **MUST** derive `billing_rail` from `billing_currency` at tenant provisioning (TASK-TEN-001 handler):
-   - `VND` → `vietqr_momo_zalo` (TASK-TEN-102 path).
-   - `USD | EUR | SGD | GBP` → `stripe` (this task's path).
-   - Founder tenant (`is_founder_tenant=true`) → `internal` (DEC-805) regardless of currency; Stripe API calls short-circuit with a no-op + sev-3 memory row `ten.stripe_founder_skip`.
+- `VND` → `vietqr_momo_zalo` (TASK-TEN-102 path).
+- `USD | EUR | SGD | GBP` → `stripe` (this task's path).
+- Founder tenant (`is_founder_tenant=true`) → `internal` (DEC-805) regardless of currency; Stripe API calls short-circuit with a no-op + sev-3 memory row `ten.stripe_founder_skip`.
 
 4. **MUST** lock `billing_currency` at provisioning — `UPDATE tenants SET billing_currency = ...` is REJECTED by a row-level trigger (DEC-798). Changing currency = create new tenant + manual data migration (out-of-scope, task-TEN-2xx).
 
@@ -221,54 +221,54 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
    | SGD | 2_500 (¢) | 13_000 (¢) | 130_000 (¢) |
    | GBP | 1_500 (p) | 7_900 (p) | 79_900 (p) |
 
-   Stripe Price IDs are populated by `cyberos-ten stripe-sync-prices` against the Stripe API (per residency Stripe account per DEC-801) and persisted to migration `0010_stripe_price_map`. CI test `stripe_price_catalog_cardinality_test` asserts exactly 12 entries and every entry has a non-empty `stripe_price_id_prod` after deploy-time sync.
+Stripe Price IDs are populated by `cyberos-ten stripe-sync-prices` against the Stripe API (per residency Stripe account per DEC-801) and persisted to migration `0010_stripe_price_map`. CI test `stripe_price_catalog_cardinality_test` asserts exactly 12 entries and every entry has a non-empty `stripe_price_id_prod` after deploy-time sync.
 
 6. **MUST** create the Stripe Customer lazily on the first billing event for the tenant (subscription create, manual invoice, refund). The path is `services/ten/src/billing/stripe/customer.rs::ensure_customer(tenant_id)`:
-   - Lookup `tenants.stripe_customer_id`. If non-NULL → return.
-   - Else: call Stripe `POST /v1/customers` with `Idempotency-Key: ten.<tenant_id>.customer_create.v1` and body `{ email: <billing_contact_email>, name: <display_name>, metadata: { cyberos_tenant_id: <tenant_id>, cyberos_residency: <residency>, cyberos_billing_currency: <currency> } }`.
-   - On success: `UPDATE tenants SET stripe_customer_id = $1 WHERE id = $2` (partial-unique-guarded; concurrent attempts on same tenant race-safe via SELECT FOR UPDATE).
-   - Emit memory row `ten.stripe_customer_created` with `(tenant_id, stripe_customer_id, currency, residency)`.
+- Lookup `tenants.stripe_customer_id`. If non-NULL → return.
+- Else: call Stripe `POST /v1/customers` with `Idempotency-Key: ten.<tenant_id>.customer_create.v1` and body `{ email: <billing_contact_email>, name: <display_name>, metadata: { cyberos_tenant_id: <tenant_id>, cyberos_residency: <residency>, cyberos_billing_currency: <currency> } }`.
+- On success: `UPDATE tenants SET stripe_customer_id = $1 WHERE id = $2` (partial-unique-guarded; concurrent attempts on same tenant race-safe via SELECT FOR UPDATE).
+- Emit memory row `ten.stripe_customer_created` with `(tenant_id, stripe_customer_id, currency, residency)`.
 
 7. **MUST** create the Stripe Subscription at the first non-Starter plan_change OR at provisioning when `--seed-subscription` flag is set (default: subscription created lazily on plan_change → Team/Enterprise; Starter tenants get subscriptions too since Starter is paid per TASK-TEN-002 DEC-778). Path: `services/ten/src/billing/stripe/subscription.rs::ensure_subscription(tenant_id, plan_tier)`:
-   - Ensure customer exists (per §1 #6).
-   - Resolve Stripe Price ID via `price_catalog.rs` lookup on `(billing_currency, plan_tier)`.
-   - Call Stripe `POST /v1/subscriptions` with `Idempotency-Key: ten.<tenant_id>.subscription_create.<plan_tier_ordinal>` and body `{ customer: <stripe_customer_id>, items: [{ price: <price_id> }, { price: <overage_meter_price_id>, ... per axis }], billing_cycle_anchor: <tenant.provisioned_at unix ts (DEC-788)>, proration_behavior: "create_prorations", metadata: { cyberos_tenant_id, cyberos_plan_tier } }`.
-   - Subscription Items for the 4 overage axes (DEC-789): one Stripe `subscription_item` per `(currency, axis)` with `recurring: { usage_type: "metered" }` — 4 metered prices per currency (api_calls overage, ai_tokens overage, storage overage, seats overage) stored in `stripe_price_map` alongside the base tier prices.
-   - On success: `UPDATE tenants SET stripe_subscription_id = $1`.
-   - Emit `ten.stripe_subscription_created`.
+- Ensure customer exists (per §1 #6).
+- Resolve Stripe Price ID via `price_catalog.rs` lookup on `(billing_currency, plan_tier)`.
+- Call Stripe `POST /v1/subscriptions` with `Idempotency-Key: ten.<tenant_id>.subscription_create.<plan_tier_ordinal>` and body `{ customer: <stripe_customer_id>, items: [{ price: <price_id> }, { price: <overage_meter_price_id>, ... per axis }], billing_cycle_anchor: <tenant.provisioned_at unix ts (DEC-788)>, proration_behavior: "create_prorations", metadata: { cyberos_tenant_id, cyberos_plan_tier } }`.
+- Subscription Items for the 4 overage axes (DEC-789): one Stripe `subscription_item` per `(currency, axis)` with `recurring: { usage_type: "metered" }` — 4 metered prices per currency (api_calls overage, ai_tokens overage, storage overage, seats overage) stored in `stripe_price_map` alongside the base tier prices.
+- On success: `UPDATE tenants SET stripe_subscription_id = $1`.
+- Emit `ten.stripe_subscription_created`.
 
 8. **MUST** push plan changes to Stripe (`services/ten/src/billing/stripe/subscription.rs::push_plan_change`) invoked synchronously from the TASK-TEN-002 `plan_change` handler AFTER the `tenant_plan_history` row commits, IN A SEPARATE TRANSACTION (Stripe API is external; no 2-phase commit). The handler:
-   - If `from_tier < to_tier` (upgrade): Stripe `POST /v1/subscriptions/{id}` with `items: [{ id: <base_item_id>, price: <new_price_id> }]` and `proration_behavior: "create_prorations"` and `Idempotency-Key: ten.<tenant_id>.plan_upgrade.<history_id>`. Prorations land on the next invoice.
-   - If `from_tier > to_tier` (downgrade, deferred per TASK-TEN-002 DEC-773): create a Stripe Subscription Schedule (`POST /v1/subscription_schedules`) anchored to `effective_at` from history, with `proration_behavior: "none"`. `Idempotency-Key: ten.<tenant_id>.plan_downgrade.<history_id>`.
-   - Emit `ten.stripe_subscription_updated` with `(from_tier, to_tier, history_id, stripe_invoice_item_ids[])`.
+- If `from_tier < to_tier` (upgrade): Stripe `POST /v1/subscriptions/{id}` with `items: [{ id: <base_item_id>, price: <new_price_id> }]` and `proration_behavior: "create_prorations"` and `Idempotency-Key: ten.<tenant_id>.plan_upgrade.<history_id>`. Prorations land on the next invoice.
+- If `from_tier > to_tier` (downgrade, deferred per TASK-TEN-002 DEC-773): create a Stripe Subscription Schedule (`POST /v1/subscription_schedules`) anchored to `effective_at` from history, with `proration_behavior: "none"`. `Idempotency-Key: ten.<tenant_id>.plan_downgrade.<history_id>`.
+- Emit `ten.stripe_subscription_updated` with `(from_tier, to_tier, history_id, stripe_invoice_item_ids[])`.
 
 9. **MUST** push overages at billing-period close (`services/ten/src/billing/stripe/overage.rs::push_overage_for_period`) invoked from the TASK-TEN-004 `period_close` hook AFTER the aggregation completes. For each axis where `actual > tier_cap`:
-   - Compute `overage = actual - tier_cap`.
-   - Call Stripe `POST /v1/subscription_items/{item_id}/usage_records` with `{ quantity: <overage>, timestamp: <period_end_unix>, action: "set" }` and `Idempotency-Key: ten.<tenant_id>.overage_push.<axis>.<period_end_unix>`.
-   - Emit `ten.stripe_overage_pushed` with `(axis, overage_quantity, period_end, stripe_usage_record_id)`.
-   - **Push window:** must complete within 1 hour of period_close (DEC-810). On failure → exponential backoff retry up to 24 h; persistent failure → sev-1 alert + memory row `ten.stripe_overage_push_failed`.
+- Compute `overage = actual - tier_cap`.
+- Call Stripe `POST /v1/subscription_items/{item_id}/usage_records` with `{ quantity: <overage>, timestamp: <period_end_unix>, action: "set" }` and `Idempotency-Key: ten.<tenant_id>.overage_push.<axis>.<period_end_unix>`.
+- Emit `ten.stripe_overage_pushed` with `(axis, overage_quantity, period_end, stripe_usage_record_id)`.
+- **Push window:** must complete within 1 hour of period_close (DEC-810). On failure → exponential backoff retry up to 24 h; persistent failure → sev-1 alert + memory row `ten.stripe_overage_push_failed`.
 
 10. **MUST** dispatch TASK-INV-003 Stripe webhook events into TEN-side handlers via NATS subject `tenant.<slug>.ten.stripe.<event_type>` (DEC-793 + DEC-808). The consumer (`services/ten/src/billing/stripe/dispatch.rs`) is idempotent via `(tenant_id, stripe_event_id) UNIQUE` in `stripe_event_dispatch_log`. The relevant events:
-    - `invoice.finalized` → audit only (`ten.stripe_invoice_finalized`).
-    - `invoice.payment_succeeded` → clear dunning + emit `ten.stripe_invoice_paid` + un-suspend tenant if `dunning_state='suspended'` (DEC-804).
-    - `invoice.payment_failed` → advance dunning state (per §1 #11) + emit `ten.stripe_invoice_payment_failed`.
-    - `customer.subscription.updated` → log only if drift from our state (alert sev-2 if Stripe state ≠ tenants.stripe_subscription_id-derived state).
-    - `customer.subscription.deleted` → emit `ten.stripe_subscription_cancelled` + DO NOT auto-terminate tenant (handled by TASK-TEN-104 termination flow which sets `cancel_at_period_end` first).
+- `invoice.finalized` → audit only (`ten.stripe_invoice_finalized`).
+- `invoice.payment_succeeded` → clear dunning + emit `ten.stripe_invoice_paid` + un-suspend tenant if `dunning_state='suspended'` (DEC-804).
+- `invoice.payment_failed` → advance dunning state (per §1 #11) + emit `ten.stripe_invoice_payment_failed`.
+- `customer.subscription.updated` → log only if drift from our state (alert sev-2 if Stripe state ≠ tenants.stripe_subscription_id-derived state).
+- `customer.subscription.deleted` → emit `ten.stripe_subscription_cancelled` + DO NOT auto-terminate tenant (handled by TASK-TEN-104 termination flow which sets `cancel_at_period_end` first).
 
 11. **MUST** advance the dunning state machine on `invoice.payment_failed` (`services/ten/src/billing/dunning.rs`):
-    - `ok → retry_1` on first failure.
-    - `retry_1 → retry_2` on second.
-    - `retry_2 → retry_3` on third.
-    - `retry_3 → suspended` on fourth → trigger TASK-TEN-104 `tenant_suspended` status transition + emit `ten.tenant_billing_suspended` + `ten.stripe_dunning_advanced` with `(prior_state, new_state)`.
-    - Any state + `invoice.payment_succeeded` → `ok` + un-suspend if suspended.
-    - State transitions are OBSERVED via `stripe_event_dispatch_log` rows joined with `tenants.dunning_state` point-in-time snapshots; the canonical history is the immutable inbound webhook log + the memory chain row emitted on each advance (DEC-808 derivative). No separate `tenant_dunning_history` table is created — the existing event log + memory chain row carry the same information without schema duplication.
+- `ok → retry_1` on first failure.
+- `retry_1 → retry_2` on second.
+- `retry_2 → retry_3` on third.
+- `retry_3 → suspended` on fourth → trigger TASK-TEN-104 `tenant_suspended` status transition + emit `ten.tenant_billing_suspended` + `ten.stripe_dunning_advanced` with `(prior_state, new_state)`.
+- Any state + `invoice.payment_succeeded` → `ok` + un-suspend if suspended.
+- State transitions are OBSERVED via `stripe_event_dispatch_log` rows joined with `tenants.dunning_state` point-in-time snapshots; the canonical history is the immutable inbound webhook log + the memory chain row emitted on each advance (DEC-808 derivative). No separate `tenant_dunning_history` table is created — the existing event log + memory chain row carry the same information without schema duplication.
 
 12. **MUST** expose `POST /v1/admin/tenants/{id}/billing/refund` for refunds (`services/ten/src/handlers/billing_refund.rs`). Caller MUST have role `cfo` per TASK-AUTH-101 (DEC-791). Body: `{ stripe_charge_id, amount_minor, currency, reason }`. Validations:
-    - `amount_minor ≤ original_charge_amount` (DEC-791 — no over-refund). Lookup original charge amount via Stripe `GET /v1/charges/{id}`.
-    - `currency == tenant.billing_currency` (DEC-809).
-    - Call Stripe `POST /v1/refunds` with `Idempotency-Key: ten.<tenant_id>.refund.<charge_id>.<amount_minor>` and body `{ charge: <id>, amount: <amount_minor>, reason: requested_by_customer | duplicate | fraudulent }`.
-    - Emit `ten.stripe_refund_issued` at sev-1 with `(tenant_id, stripe_refund_id, charge_id, amount_minor, currency, cfo_subject_id, reason)`.
-    - Returns `201 CREATED` with `{ refund_id, status, expected_settlement_at }`.
+- `amount_minor ≤ original_charge_amount` (DEC-791 — no over-refund). Lookup original charge amount via Stripe `GET /v1/charges/{id}`.
+- `currency == tenant.billing_currency` (DEC-809).
+- Call Stripe `POST /v1/refunds` with `Idempotency-Key: ten.<tenant_id>.refund.<charge_id>.<amount_minor>` and body `{ charge: <id>, amount: <amount_minor>, reason: requested_by_customer | duplicate | fraudulent }`.
+- Emit `ten.stripe_refund_issued` at sev-1 with `(tenant_id, stripe_refund_id, charge_id, amount_minor, currency, cfo_subject_id, reason)`.
+- Returns `201 CREATED` with `{ refund_id, status, expected_settlement_at }`.
 
 13. **MUST** expose `GET /v1/admin/tenants/{id}/billing` (`services/ten/src/handlers/billing_show.rs`). Returns:
     ```json
@@ -291,26 +291,26 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
 18. **MUST** REVOKE UPDATE, DELETE on `stripe_api_calls`, `stripe_event_dispatch_log`, and `stripe_price_map` from `cyberos_app` role (task-audit skill rule 12). Pruning of `stripe_api_calls` past TTL uses a separate `cyberos_pruner` role with DELETE grant only on past-TTL rows.
 
 19. **MUST** emit 11 memory audit row kinds (DEC-784 expansion + task-audit skill rule 6 namespace pattern `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`):
-    - `ten.stripe_customer_created` (sev-2)
-    - `ten.stripe_subscription_created` (sev-2)
-    - `ten.stripe_subscription_updated` (sev-2)
-    - `ten.stripe_subscription_cancelled` (sev-1)
-    - `ten.stripe_invoice_finalized` (sev-3)
-    - `ten.stripe_invoice_paid` (sev-2)
-    - `ten.stripe_invoice_payment_failed` (sev-2)
-    - `ten.stripe_dunning_advanced` (sev-1)
-    - `ten.tenant_billing_suspended` (sev-1)
-    - `ten.stripe_refund_issued` (sev-1)
-    - `ten.stripe_overage_pushed` (sev-3)
+- `ten.stripe_customer_created` (sev-2)
+- `ten.stripe_subscription_created` (sev-2)
+- `ten.stripe_subscription_updated` (sev-2)
+- `ten.stripe_subscription_cancelled` (sev-1)
+- `ten.stripe_invoice_finalized` (sev-3)
+- `ten.stripe_invoice_paid` (sev-2)
+- `ten.stripe_invoice_payment_failed` (sev-2)
+- `ten.stripe_dunning_advanced` (sev-1)
+- `ten.tenant_billing_suspended` (sev-1)
+- `ten.stripe_refund_issued` (sev-1)
+- `ten.stripe_overage_pushed` (sev-3)
 
     Each row carries `trace_id` (32-char W3C hex per task-audit skill rule 23 + 24) and is PII-scrubbed via TASK-MEMORY-111 BEFORE chain commit (task-audit skill rule 18). `billing_contact_email` is hashed (`billing_contact_email_hash16`) in chain; full value retained only in tenant Postgres.
 
 20. **MUST** ship the `cyberos-ten stripe-sync-prices` deploy-time CLI (`services/ten/src/cli/stripe_sync_prices.rs`). Behaviour:
-    - `--dry-run` (default): list every `(residency, currency, tier, axis)` permutation in `PRICE_CATALOG × AXES` (12 base + 48 overage = 60 per residency) and the Stripe Price ID it would create/lookup.
-    - `--apply`: for each entry without an existing Stripe Price ID (looked up via Stripe `GET /v1/prices?lookup_keys=...` with `lookup_key = "cyberos.<currency>.<tier>.<axis>"`), call Stripe `POST /v1/prices` with the catalog amount + `metadata: { cyberos_currency, cyberos_tier, cyberos_axis }`; persist returned Price ID to `stripe_price_map`.
-    - `--residency <sg-1|eu-1|us-1>` REQUIRED on `--apply` (CLI loads only that residency's KMS-encrypted Stripe API key per DEC-801); `--dry-run` defaults to all-residencies for reporting. Cross-residency API misuse is impossible because the loaded API key only addresses one Stripe account.
-    - Idempotent on `(residency, currency, tier, axis)`; re-run is a no-op when all entries already mapped.
-    - Exit codes from `cyberos-cli-exit` shared crate (task-audit skill rule 9): 0 success, 1 nothing-to-do, 64 invalid-arg, 73 stripe-create-failed, 77 perm-denied.
+- `--dry-run` (default): list every `(residency, currency, tier, axis)` permutation in `PRICE_CATALOG × AXES` (12 base + 48 overage = 60 per residency) and the Stripe Price ID it would create/lookup.
+- `--apply`: for each entry without an existing Stripe Price ID (looked up via Stripe `GET /v1/prices?lookup_keys=...` with `lookup_key = "cyberos.<currency>.<tier>.<axis>"`), call Stripe `POST /v1/prices` with the catalog amount + `metadata: { cyberos_currency, cyberos_tier, cyberos_axis }`; persist returned Price ID to `stripe_price_map`.
+- `--residency <sg-1|eu-1|us-1>` REQUIRED on `--apply` (CLI loads only that residency's KMS-encrypted Stripe API key per DEC-801); `--dry-run` defaults to all-residencies for reporting. Cross-residency API misuse is impossible because the loaded API key only addresses one Stripe account.
+- Idempotent on `(residency, currency, tier, axis)`; re-run is a no-op when all entries already mapped.
+- Exit codes from `cyberos-cli-exit` shared crate (task-audit skill rule 9): 0 success, 1 nothing-to-do, 64 invalid-arg, 73 stripe-create-failed, 77 perm-denied.
 
 21. **MUST** support concurrent plan_change events safely. The plan_change handler acquires `SELECT ... FOR UPDATE` on the tenant row before computing the Stripe push; second concurrent plan_change blocks until first commits. Combined with the TASK-TEN-002 24h rate limit, plan_change concurrency is bounded.
 

@@ -90,9 +90,9 @@ The KB service **MUST** ship BGE-M3 semantic search at `services/kb/src/semantic
 1. **MUST** validate `chunk_kind` against closed enum per DEC-1921.
 
 2. **MUST** chunk via `chunker.rs::chunk(doc_plaintext)` per DEC-1922:
-   - Detect semantic boundaries (paragraphs, headings, code blocks).
-   - Each chunk 256-512 tokens; overlap 64.
-   - Tag with kind enum.
+- Detect semantic boundaries (paragraphs, headings, code blocks).
+- Each chunk 256-512 tokens; overlap 64.
+- Tag with kind enum.
 
 3. **MUST** embed via `bge_m3_client.rs::embed(text) → Vec<f32; 1024>` per DEC-1920.
 
@@ -126,10 +126,10 @@ The KB service **MUST** ship BGE-M3 semantic search at `services/kb/src/semantic
 6. **MUST** invalidate on new version per DEC-1923 — DELETE chunks for old version on new version commit.
 
 7. **MUST** query at `vector_query.rs::search(tenant, query, top_k=20)` per DEC-1924:
-   - Embed query via BGE-M3.
-   - Cosine similarity search against chunks_embedding_idx.
-   - Return top-K with chunk + doc context.
-   - Apply RLS tier filter.
+- Embed query via BGE-M3.
+- Cosine similarity search against chunks_embedding_idx.
+- Return top-K with chunk + doc context.
+- Apply RLS tier filter.
 
 8. **MUST** expose endpoint:
    ```text
@@ -231,9 +231,7 @@ async fn top_k_returned() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-AI-019 (memory Layer 2), TASK-KB-001.
-**Downstream:** TASK-KB-006 (rerank).
-**Cross-module:** TASK-KB-002 (plaintext source), TASK-MCP-007 (async ingest), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-AI-019 (memory Layer 2), TASK-KB-001. **Downstream:** TASK-KB-006 (rerank). **Cross-module:** TASK-KB-002 (plaintext source), TASK-MCP-007 (async ingest), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

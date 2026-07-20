@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a soc2 evidence"
+- "Draft a soc2 evidence"
 - "Create the soc2 evidence"
 - "Author a new soc2 evidence"
 - "Generate the soc2 evidence"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this soc2 evidence" → soc2-evidence-audit
+- "Audit this soc2 evidence" → soc2-evidence-audit
 - "Check the soc2 evidence for completeness" → soc2-evidence-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

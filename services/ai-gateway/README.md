@@ -1,7 +1,6 @@
 # cyberos-ai-gateway
 
-**P0 module · the cost-of-everything gate.**
-Implements [`docs/tasks/ai/TASK-AI-001..022`](../../docs/tasks/ai/) — pre-call cost-ledger, multi-provider router, PII redaction, persona injection, residency pinning, audit-row emission. Every LLM call across the platform routes through this service.
+**P0 module · the cost-of-everything gate.** Implements [`docs/tasks/ai/TASK-AI-001..022`](../../docs/tasks/ai/) — pre-call cost-ledger, multi-provider router, PII redaction, persona injection, residency pinning, audit-row emission. Every LLM call across the platform routes through this service.
 
 ## Status (2026-05-19 wave)
 

@@ -77,29 +77,29 @@ The authbridge plugin **MUST** delegate Mattermost authentication to TASK-AUTH-0
 
 1. **MUST** install as a Mattermost plugin (`plugin.json` + Go binary); auto-loaded on Mattermost boot via TASK-CHAT-001 patch `011-load-authbridge-plugin.patch`.
 2. **MUST** intercept Mattermost's `POST /api/v4/users/login`:
-    - Extract JWT from `Authorization: Bearer <token>` header.
-    - Validate against TASK-AUTH-004 JWKS (signature + `exp` + `nbf` + `iss`).
-    - JWT MUST carry custom claim `tenant_id` (UUID); missing → 401.
-    - On success: create Mattermost session bound to JIT-provisioned user.
+- Extract JWT from `Authorization: Bearer <token>` header.
+- Validate against TASK-AUTH-004 JWKS (signature + `exp` + `nbf` + `iss`).
+- JWT MUST carry custom claim `tenant_id` (UUID); missing → 401.
+- On success: create Mattermost session bound to JIT-provisioned user.
 3. **MUST** disable Mattermost's built-in password flow via patch `010-disable-builtin-auth.patch`:
-    - Endpoint `/api/v4/users/login` with password body → 405 METHOD NOT ALLOWED.
-    - Endpoint `/api/v4/users/password/reset/send` → 410 GONE.
-    - Endpoint `/api/v4/users/email/verify` → 410 GONE.
+- Endpoint `/api/v4/users/login` with password body → 405 METHOD NOT ALLOWED.
+- Endpoint `/api/v4/users/password/reset/send` → 410 GONE.
+- Endpoint `/api/v4/users/email/verify` → 410 GONE.
 4. **MUST** cache JWKS in plugin memory with 1h TTL; refresh on cache miss. Background refresh thread at 50min interval (proactive refresh).
 5. **MUST** JIT-provision Mattermost user on first valid JWT:
-    - Lookup `mm_users WHERE props.cyberos_subject_id = <subject>`; if exists → reuse.
-    - Otherwise: insert with username = JWT `email` localpart, props = `{cyberos_subject_id: <subject>, cyberos_tenant_id: <tenant>}`.
-    - Add user to Mattermost team corresponding to `tenant_id` (lookup in `cyberos_chat_tenant_map(tenant_id UUID, mm_team_id TEXT)`).
+- Lookup `mm_users WHERE props.cyberos_subject_id = <subject>`; if exists → reuse.
+- Otherwise: insert with username = JWT `email` localpart, props = `{cyberos_subject_id: <subject>, cyberos_tenant_id: <tenant>}`.
+- Add user to Mattermost team corresponding to `tenant_id` (lookup in `cyberos_chat_tenant_map(tenant_id UUID, mm_team_id TEXT)`).
 6. **MUST** propagate tenant_id to every Mattermost API call via plugin middleware: every request enriches `c.AppContext.Session().Props["tenant_id"] = jwt.tenant_id`; downstream plugins/handlers read it.
 7. **MUST** reject when JWT's tenant_id does NOT match the user's existing Mattermost team:
-    - User switched tenants → 403 with `{"error":"tenant_mismatch","reason":"jwt_tenant_id != mm_user_team"}`.
-    - Operator action: contact admin to re-add user to correct team.
+- User switched tenants → 403 with `{"error":"tenant_mismatch","reason":"jwt_tenant_id != mm_user_team"}`.
+- Operator action: contact admin to re-add user to correct team.
 8. **MUST** validate JWT `jti` against Mattermost's session blocklist (TASK-AUTH-004 revocation list); revoked → 401.
 9. **MUST** emit memory audit row `chat.session_started` per successful login with `{mm_user_id, cyberos_subject_id, tenant_id, jit_provisioned, trace_id}`.
 10. **MUST** emit OTel metrics:
-    - `chat_authbridge_logins_total{outcome}` (outcome ∈ ok | invalid_jwt | tenant_mismatch | revoked).
-    - `chat_authbridge_jit_provisions_total`.
-    - `chat_authbridge_jwks_cache_hits_total{result}`.
+- `chat_authbridge_logins_total{outcome}` (outcome ∈ ok | invalid_jwt | tenant_mismatch | revoked).
+- `chat_authbridge_jit_provisions_total`.
+- `chat_authbridge_jwks_cache_hits_total{result}`.
 11. **MUST** be Mattermost-plugin-compatible (no `init()` side effects; respect plugin lifecycle hooks `OnActivate` + `OnDeactivate`).
 12. **MUST** emit only error envelopes whose `error` field is one of the 9 values in §3 "Error-envelope contract"; any new error value MUST extend the enum AND have a matching CI test (AC #18). The envelope MUST always carry `trace_id` so users can quote it back to support.
 13. **MUST NOT** create more than one Mattermost user per `subject_id` even under concurrent first-login bursts (AC #19). Idempotency is enforced by an in-process per-subject mutex plus a defensive `findUserBySubject` recheck inside the mutex.

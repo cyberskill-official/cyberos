@@ -259,194 +259,90 @@ One-task-at-a-time is no longer the only sanctioned mode. The default is now BAT
 - **Batch selection is a STEP, not a preference (v2.8.0).** This section described batching as the default from v2.5.0 and the outer loop still asked for `next_eligible()` - one task. Nothing computed a batch, so nothing could notice when a batch was skipped, and on 2026-07-17 the workflow shipped TASK-IMP-104 alone while TASK-IMP-106 sat eligible and cone-independent beside it. A default that no step computes is not a default; it is a comment. Step -1 now computes it and records the reasoning.
 - **Batch selection.** The eligible set is every `ready_to_implement` task whose `depends_on` rows are all `done`. A batch is a greedy subset of that set whose members are pairwise independent: no `depends_on`/`blocks` edge between any two members, AND no overlap between their declared cones (frontmatter `new_files` + `modified_files` + `service`). tasks whose cones overlap stay serial relative to each other, in Queue-selection priority order.
 
-  An EMPTY cone ships ALONE - and "alone" means it SHIPS. Two ways to get one, and the rule covers
-  both: the fields are ABSENT (the author said nothing, so nothing is known), or they are PRESENT
-  and declare `(none)` (the author claims the task touches nothing - which is either not a task or
-  not true, since a task that changes no file does nothing). Neither can be proven independent of
-  a batch member, so neither may JOIN a batch. The refusal names WHICH case it is: telling an
-  author their fields are "absent" when they wrote `(none)` sends them looking for a line they
-  already have. (External review, PR #53.) But when nothing declared is eligible, it BECOMES the batch, by
-  itself, at the head of the priority order. Shipping it alone is exactly what its unknown cone
-  permits: there is no sibling to race.
+An EMPTY cone ships ALONE - and "alone" means it SHIPS. Two ways to get one, and the rule covers both: the fields are ABSENT (the author said nothing, so nothing is known), or they are PRESENT and declare `(none)` (the author claims the task touches nothing - which is either not a task or not true, since a task that changes no file does nothing). Neither can be proven independent of a batch member, so neither may JOIN a batch. The refusal names WHICH case it is: telling an author their fields are "absent" when they wrote `(none)` sends them looking for a line they already have. (External review, PR #53.) But when nothing declared is eligible, it BECOMES the batch, by itself, at the head of the priority order. Shipping it alone is exactly what its unknown cone permits: there is no sibling to race.
 
-  The first cut of this rule excluded it and stopped there, so a queue whose only eligible task was
-  undeclared produced an EMPTY batch - and the outer loop above reads an empty batch as
-  `break # backlog drained`. The task never shipped, the loop reported success, and the backlog
-  stalled forever while looking finished. The refusal message said "ships alone" one line above the
-  code that made it never ship. (External review, 2026-07-17, on the fix for the previous review.) Undeclared is
-  UNKNOWN, not empty - and unknown cannot be proven independent of anything. Before 2026-07-17 an
-  empty cone conflicted with nothing by construction, so the silent spec joined EVERY batch:
-  TASK-IMP-117 rewrites 501 specs, TASK-TEMPLATE.md and build.sh, declared none of it, and was
-  admitted alongside a task excluded for touching build.sh. Two sub-agents, one file, one parallel
-  round. TASK-IMP-104 taught the near-miss version (declared install.sh, edited two more files
-  inside its service); the fix folded `service` into the cone and assumed a cone was declared at
-  all. Nothing enforced that. The remedy for an exclusion is to declare the cone, not to widen it.
+The first cut of this rule excluded it and stopped there, so a queue whose only eligible task was undeclared produced an EMPTY batch - and the outer loop above reads an empty batch as `break # backlog drained`. The task never shipped, the loop reported success, and the backlog stalled forever while looking finished. The refusal message said "ships alone" one line above the code that made it never ship. (External review, 2026-07-17, on the fix for the previous review.) Undeclared is UNKNOWN, not empty - and unknown cannot be proven independent of anything. Before 2026-07-17 an empty cone conflicted with nothing by construction, so the silent spec joined EVERY batch: TASK-IMP-117 rewrites 501 specs, TASK-TEMPLATE.md and build.sh, declared none of it, and was admitted alongside a task excluded for touching build.sh. Two sub-agents, one file, one parallel round. TASK-IMP-104 taught the near-miss version (declared install.sh, edited two more files inside its service); the fix folded `service` into the cone and assumed a cone was declared at all. Nothing enforced that. The remedy for an exclusion is to declare the cone, not to widen it.
 
-  `batch-selection@1` shape: each `excluded[]` entry carries `blocked_by` - the id of the member
-  that blocked it, or NULL when the task excluded itself (an empty cone; nothing blocked it, its
-  own silence did). Every entry carried a real id before 2026-07-17, so a consumer written against
-  the older artefact may assume non-null. Nothing reads it that way today, but the shape is part of
-  a named artefact and therefore a contract. (External review, PR #53.)
+`batch-selection@1` shape: each `excluded[]` entry carries `blocked_by` - the id of the member that blocked it, or NULL when the task excluded itself (an empty cone; nothing blocked it, its own silence did). Every entry carried a real id before 2026-07-17, so a consumer written against the older artefact may assume non-null. Nothing reads it that way today, but the shape is part of a named artefact and therefore a contract. (External review, PR #53.)
 
-  Greedy, not maximum: members are admitted in priority order and a task excluded by an earlier
-  admission is never reconsidered, so a strictly larger independent set may exist. That is
-  deliberate - the maximum independent set is NP-hard, and a bigger batch that ignores priority is
-  the wrong batch. This doctrine said "maximal" until 2026-07-17; the word promised a guarantee
-  the loop does not compute, and nothing should be built on it. What batch-select gives you is
-  that the batch is COMPUTED rather than chosen by mood, which is the whole point of §11a.
+Greedy, not maximum: members are admitted in priority order and a task excluded by an earlier admission is never reconsidered, so a strictly larger independent set may exist. That is deliberate - the maximum independent set is NP-hard, and a bigger batch that ignores priority is the wrong batch. This doctrine said "maximal" until 2026-07-17; the word promised a guarantee the loop does not compute, and nothing should be built on it. What batch-select gives you is that the batch is COMPUTED rather than chosen by mood, which is the whole point of §11a.
 - **Batched execution.** Phases MAY run batch-wide (map the repo once, implement all members, review all members, test all members) and commits MAY batch per phase across members. What stays strictly per-task: the artefact set (context map, matrix, plan, review packet, coverage gate), the ship-manifest, the BACKLOG/frontmatter status cells, and the recorded HITL verdicts.
 - **HITL is unchanged by batching.** Both human-acceptance gates apply to every member individually. A single human reply MAY record verdicts for many members at once (one utterance, N recorded per-task verdicts — e.g. "approve all" / "accept all"); batching reduces round-trips, never guarantees.
 - **Unlock rescan.** Whenever any task reaches `done`, re-scan the backlog for tasks whose `depends_on` just became fully satisfied; append the newly-eligible, cone-independent ones to the running batch queue and continue (EXECUTION-DISCIPLINE §1 — no pause to ask). Cone-overlapping unlocks queue serially behind the member they overlap with.
 - **Status-page sync rule (group A).** Every backlog-state-update write rides with a regenerated `docs/status/` page in the same commit — enforced mechanically by the pre-commit hook (`.cyberos/lib/status-page.sh` + auto-stage on any `docs/tasks/**`, `CHANGELOG.md`, or `VERSION` change). A status cell that moves without the page moving is a bug.
 - **Cones are optimistic; `service` is part of the cone and is not decorative (v2.8.0).** A task's declared `modified_files` is what the author EXPECTED to touch, not what the implementer touched. Live evidence: TASK-IMP-104 declared `install.sh` and ended up editing `version.sh` and `lib/update-check.sh` - both inside its `service` (`tools/install`), neither in its `modified_files`. Had the cone been read as files-only, a sibling `tools/install` task could have been batched alongside it and raced on files nobody declared. Two tasks sharing a `service` therefore OVERLAP and MUST stay serial, even when their declared file lists are disjoint.
 - **Swarm execution (v2.6.0; MUST as of v2.8.0).** A batch with more than one member MUST be shipped by a swarm — one sub-agent per member, dispatched in a single parallel round — not by looping the members serially in one agent. Cone-independence is exactly the property that makes this safe: members touch disjoint files, so their edits cannot race. Serialising a batch that was selected for parallelism throws away the only reason to have batched it.
-  - Dispatch every member of the round in ONE message with N parallel calls. N sequential dispatches is a serial loop with extra steps.
-  - Each sub-agent owns its member end-to-end and returns the artefact set. The parent owns what stays per-batch: the branch, the commits, the HITL round-trips, the BACKLOG writes.
-  - Shared-tree gates belong to the PARENT. A sub-agent self-verifies only inside its own cone (its member's test file, lint scoped to its member's files) and MUST NOT run whole-workspace checks — a repo-wide typecheck/build/coverage run while a sibling member is mid-write fails spuriously on the sibling's half-written files. The parent runs the full gate suite exactly once per phase, after every member of the round has landed. (Learned on the 2026-07-16 sachviet consumer-repo run: two cone-disjoint members, per-cone vitest+eslint in the sub-agents, one parent gate run — clean.)
-  - Cap the round at the point where reviewing N diffs stops being possible. Sub-agents are cheap; a human reading 12 unrelated diffs at one gate is not. When the batch exceeds a reviewable round, ship it as consecutive rounds on the same branch.
-  - A sub-agent that hits a §2 halt returns it; the parent collects halts and surfaces them together rather than stopping the whole round on the first one.
-  - Shared files are owned by ONE writer through ONE filesystem view per run — cone-independence includes view-independence (v2.6.3, TASK-IMP-092). Two agents writing one file through different filesystem views produce lost updates even when their writes are time-serialized: each view's reads stay self-consistent while the other view's writes vanish, so every read looks right and the committed truth is wrong. Route every write to a shared file (BACKLOG.md above all) through its one owner on its one view. (Learned 2026-07-16, TASK-IMP-086 incident: the member agent wrote the backlog through one view while the parent's phase flips ran through another — no commit ever carried both.)
-  - Constrained environments: when the run itself is sandboxed (per-command time caps, background processes dying with the call, synced-mount filesystems), follow the environment runbook — “Running CyberOS under sandboxed agents” in the payload GUIDE (source: `tools/install/docs/index.md`); the rules above stay normative there.
+- Dispatch every member of the round in ONE message with N parallel calls. N sequential dispatches is a serial loop with extra steps.
+- Each sub-agent owns its member end-to-end and returns the artefact set. The parent owns what stays per-batch: the branch, the commits, the HITL round-trips, the BACKLOG writes.
+- Shared-tree gates belong to the PARENT. A sub-agent self-verifies only inside its own cone (its member's test file, lint scoped to its member's files) and MUST NOT run whole-workspace checks — a repo-wide typecheck/build/coverage run while a sibling member is mid-write fails spuriously on the sibling's half-written files. The parent runs the full gate suite exactly once per phase, after every member of the round has landed. (Learned on the 2026-07-16 sachviet consumer-repo run: two cone-disjoint members, per-cone vitest+eslint in the sub-agents, one parent gate run — clean.)
+- Cap the round at the point where reviewing N diffs stops being possible. Sub-agents are cheap; a human reading 12 unrelated diffs at one gate is not. When the batch exceeds a reviewable round, ship it as consecutive rounds on the same branch.
+- A sub-agent that hits a §2 halt returns it; the parent collects halts and surfaces them together rather than stopping the whole round on the first one.
+- Shared files are owned by ONE writer through ONE filesystem view per run — cone-independence includes view-independence (v2.6.3, TASK-IMP-092). Two agents writing one file through different filesystem views produce lost updates even when their writes are time-serialized: each view's reads stay self-consistent while the other view's writes vanish, so every read looks right and the committed truth is wrong. Route every write to a shared file (BACKLOG.md above all) through its one owner on its one view. (Learned 2026-07-16, TASK-IMP-086 incident: the member agent wrote the backlog through one view while the parent's phase flips ran through another — no commit ever carried both.)
+- Constrained environments: when the run itself is sandboxed (per-command time caps, background processes dying with the call, synced-mount filesystems), follow the environment runbook — “Running CyberOS under sandboxed agents” in the payload GUIDE (source: `tools/install/docs/index.md`); the rules above stay normative there.
 - **One branch per BATCH, not per task (v2.6.0).** The batch is the unit of review and the unit of merge, so it is the unit of branching. Name it `batch/<n>-<short-theme>` (e.g. `batch/3-auth-hardening`). Every member commits to that branch, per phase, with its own conventional commit — per-task commits stay, per-task branches go. Rationale: N branches for N tasks that were selected *because they are independent* produces N PRs that touch disjoint files and merge in any order — pure ceremony. Cone-overlapping tasks were never in the batch to begin with.
-  - The next batch branches from the previous batch's merge, not from its tip, unless the operator says otherwise. Unlock rescan means batch N+1's eligibility usually depends on batch N being `done`.
-  - A task routed back to `ready_to_implement` mid-batch leaves the batch; it re-enters selection later and MUST NOT hold its batch's branch open.
+- The next batch branches from the previous batch's merge, not from its tip, unless the operator says otherwise. Unlock rescan means batch N+1's eligibility usually depends on batch N being `done`.
+- A task routed back to `ready_to_implement` mid-batch leaves the batch; it re-enters selection later and MUST NOT hold its batch's branch open.
 - **Mixed agent-human and human-only work: the guideline lives IN the task (v2.6.0, operator request).** When a task needs the operator to do something the agent must not (§2) or genuinely cannot, write the step-by-step guideline INTO that task's `spec.md` under `## Operator steps` — never into a new file. Never create `SETUP.md`, `RUNBOOK-<task>.md`, `INSTRUCTIONS.md`, or any sibling artefact for it.
-  - Reason: a separate file is a second place the reader must find, and it rots the moment the task moves. The operator opens the task; the steps are there. Anything else asks them to hold two documents in their head and guess which is current.
-  - Shape: numbered, copy-pasteable, one command or one click per step, with the expected output stated. If a step is GUI-only and the agent has OS/browser control, the agent does it (`EXECUTION-DISCIPLINE.md` §2b) and the guideline records what was driven — it does not ask the operator to repeat it.
-  - The task halts at that gate only if the steps are genuinely operator-only under §2. "The agent wrote a guideline" is not itself a halt.
+- Reason: a separate file is a second place the reader must find, and it rots the moment the task moves. The operator opens the task; the steps are there. Anything else asks them to hold two documents in their head and guess which is current.
+- Shape: numbered, copy-pasteable, one command or one click per step, with the expected output stated. If a step is GUI-only and the agent has OS/browser control, the agent does it (`EXECUTION-DISCIPLINE.md` §2b) and the guideline records what was driven — it does not ask the operator to repeat it.
+- The task halts at that gate only if the steps are genuinely operator-only under §2. "The agent wrote a guideline" is not itself a halt.
 ## 11b. Route-back ceiling (v2.8.0, TASK-IMP-108)
 
-`routed_back_count` has been written on every route-back since it was defined and read as a limit
-exactly nowhere - 18 references in this file, all increments. The 5-fail circuit breaker bounds
-the DEBUGGING cycle inside one testing phase; nothing bounds how many times a task circles the
-whole loop. A task that keeps failing can cycle implement -> review -> test -> route back forever,
-burning budget with no escalation. This session hit the adjacent failure twice (API spend limits)
-and the loop had nothing to say about it.
+`routed_back_count` has been written on every route-back since it was defined and read as a limit exactly nowhere - 18 references in this file, all increments. The 5-fail circuit breaker bounds the DEBUGGING cycle inside one testing phase; nothing bounds how many times a task circles the whole loop. A task that keeps failing can cycle implement -> review -> test -> route back forever, burning budget with no escalation. This session hit the adjacent failure twice (API spend limits) and the loop had nothing to say about it.
 
-- **At `routed_back_count >= 3`, ship-tasks MUST HALT** at an operator gate instead of re-entering.
-  Present every route-back reason on record side by side, and ask for one verdict: re-enter /
-  split the task / `on_hold` / `closed`. Re-entering without a recorded verdict is a violation.
-- **Three is a judgment, not a derivation**, and the workflow says so rather than implying false
-  precision. The reasoning: "the same task failed three DIFFERENT ways" is evidence about the
-  spec, not the implementation - and a spec problem is not fixed by another implementation pass.
-- **The ceiling counts cycles, not causes.** Three route-backs from one flaky test still halt. A
-  human reading three identical reasons decides in seconds; the alternative is a loop that never
-  asks.
-- **The halt belongs to the parent** (§11a): a swarm sub-agent MUST NOT resolve it. The verdict is
-  the operator's.
+- **At `routed_back_count >= 3`, ship-tasks MUST HALT** at an operator gate instead of re-entering. Present every route-back reason on record side by side, and ask for one verdict: re-enter / split the task / `on_hold` / `closed`. Re-entering without a recorded verdict is a violation.
+- **Three is a judgment, not a derivation**, and the workflow says so rather than implying false precision. The reasoning: "the same task failed three DIFFERENT ways" is evidence about the spec, not the implementation - and a spec problem is not fixed by another implementation pass.
+- **The ceiling counts cycles, not causes.** Three route-backs from one flaky test still halt. A human reading three identical reasons decides in seconds; the alternative is a loop that never asks.
+- **The halt belongs to the parent** (§11a): a swarm sub-agent MUST NOT resolve it. The verdict is the operator's.
 - **Under the ceiling, nothing changes.** A task at `routed_back_count: 2` re-enters normally.
-- **`entered_via: spec_rejected` routes to `draft`, not `ready_to_implement`** (STATUS-REFERENCE
-  §1.3). Pairs with this ceiling: three route-backs usually IS a spec problem wearing an
-  implementation problem's clothes.
+- **`entered_via: spec_rejected` routes to `draft`, not `ready_to_implement`** (STATUS-REFERENCE §1.3). Pairs with this ceiling: three route-backs usually IS a spec problem wearing an implementation problem's clothes.
 
 ## 11c. Standing goals: what `done` claimed, re-verified (v2.8.0, TASK-IMP-109)
 
-`done` is terminal and nothing re-checks it. TRACE-004 proves every clause had a passing test ON
-THE DAY IT SHIPPED; nothing looks again. A task shipped in batch 1 could be broken today and the
-corpus would still show it green. A goal you verify once is an assumption with a timestamp.
+`done` is terminal and nothing re-checks it. TRACE-004 proves every clause had a passing test ON THE DAY IT SHIPPED; nothing looks again. A task shipped in batch 1 could be broken today and the corpus would still show it green. A goal you verify once is an assumption with a timestamp.
 
-`task-reconcile` does NOT close this. It measures drift when a task RE-ENTERS the workflow - a
-turnstile, not a sentinel. A `done` task that never comes back is never examined again by anything.
+`task-reconcile` does NOT close this. It measures drift when a task RE-ENTERS the workflow - a turnstile, not a sentinel. A `done` task that never comes back is never examined again by anything.
 
-- **At the `done` flip, ship-tasks MUST write `docs/goals/<task-id>.md`** carrying: `predicates`
-  (the task's §1 cited tests - already collected, because TRACE-004 just verified them, so the
-  predicate is free), `born`, `source`, `status: satisfied`, `last_pass`, `on_violation: report`.
-- **The predicate set is the CITED TESTS, nothing invented.** A goal MUST NOT claim a check the
-  task never made.
-- **ACs whose evidence is a justified `verify:` are NOT enrolled** and the goal names them as not
-  mechanically re-verifiable. A predicate that cannot be re-run is not a predicate.
-- **A task reaching `done` with zero runnable predicates STILL gets a goal**, marked
-  `predicate: none` with the reason. The absence is the finding; it must never read as a pass.
-- **Re-verification is `node .cyberos/docs-tools/verify-goals.mjs`.** DETECTION ONLY: a violated
-  goal changes no status, writes no code, and re-opens no task. The remedy is a new `type: bug`
-  task through create-tasks -> ship-tasks. The sentinel detects; the pipeline fixes. An auto-fix
-  on a violated acceptance is the machine grading its own homework at the moment nobody is watching.
-- **Retirement is a human decision, logged.** A flaky predicate is quarantined
-  (`status: retired`, reason recorded), never deleted - a goal deleted without a reason is the
-  evidence loss this whole mechanism exists to prevent.
+- **At the `done` flip, ship-tasks MUST write `docs/goals/<task-id>.md`** carrying: `predicates` (the task's §1 cited tests - already collected, because TRACE-004 just verified them, so the predicate is free), `born`, `source`, `status: satisfied`, `last_pass`, `on_violation: report`.
+- **The predicate set is the CITED TESTS, nothing invented.** A goal MUST NOT claim a check the task never made.
+- **ACs whose evidence is a justified `verify:` are NOT enrolled** and the goal names them as not mechanically re-verifiable. A predicate that cannot be re-run is not a predicate.
+- **A task reaching `done` with zero runnable predicates STILL gets a goal**, marked `predicate: none` with the reason. The absence is the finding; it must never read as a pass.
+- **Re-verification is `node .cyberos/docs-tools/verify-goals.mjs`.** DETECTION ONLY: a violated goal changes no status, writes no code, and re-opens no task. The remedy is a new `type: bug` task through create-tasks -> ship-tasks. The sentinel detects; the pipeline fixes. An auto-fix on a violated acceptance is the machine grading its own homework at the moment nobody is watching.
+- **Retirement is a human decision, logged.** A flaky predicate is quarantined (`status: retired`, reason recorded), never deleted - a goal deleted without a reason is the evidence loss this whole mechanism exists to prevent.
 - **When it runs is the operator's business.** Scheduling is a host decision; CyberOS is invoked.
 
 ## 11d. Batch economics: what the loop cost (v2.8.0, TASK-IMP-114)
 
-`routed_back_count` is the only cycle metric this loop has ever written, and nothing has ever added
-two of them together. There is no wall-time and no token accounting anywhere, so "was this batch
-worth running" has never had a number — while five batches whose relative cost nobody can compare
-went past. This run supplied the missing data the expensive way: two API spend-limit cutoffs, one
-of them losing three of four swarm agents mid-flight.
+`routed_back_count` is the only cycle metric this loop has ever written, and nothing has ever added two of them together. There is no wall-time and no token accounting anywhere, so "was this batch worth running" has never had a number — while five batches whose relative cost nobody can compare went past. This run supplied the missing data the expensive way: two API spend-limit cutoffs, one of them losing three of four swarm agents mid-flight.
 
-- **At the batch close, ship-tasks MUST write `docs/batches/<batch-id>.md`** — an append-only
-  LEDGER of one batch. It carries `batch`, `members`, `started`, `ended`, `route_backs`,
-  `gate_reasks`, and `tokens` when the harness reports them. The status page renders one row per
-  ledger.
-- **The ledger records ONLY what nothing else knows.** Tasks shipped is NOT written into it: the
-  page DERIVES it from each member's own frontmatter, because `status` already IS "did this task
-  ship". A number copied into a second place is a number that will eventually disagree with the
-  first, and frontmatter is the record of truth either way.
-- **`route_backs` is the batch's own count, NOT a sum of `routed_back_count`.** That counter is a
-  task's LIFETIME total across every batch it ever sat in. The row wants the route-backs that
-  happened in THIS batch — which is where the cost fell — so summing the lifetime counter over the
-  members charges batch 1 for a route-back that happened in batch 2, and charges it retroactively:
-  a closed batch's row would drift upward months later. Two different facts, one word. Record the
-  batch's own; a task that routed back and left (§11a) keeps its route-back on the batch it left,
-  because that batch is what paid for it.
-- **Anything the ledger does not record reads `unknown`, never `0`.** A zero asserts a fact nobody
-  measured. This applies to `route_backs` and `gate_reasks` exactly as it applies to `tokens`.
-- **This is not a new writer on the phase path.** Steps 1-31 are untouched, nothing new is measured
-  inside a task, and no gate consumes any of this. The batch close transcribes instants the run
-  already had — the same shape as §11c's goal write at the `done` flip.
-- **Timestamps belong here and nowhere else.** `started` and `ended` are the two instants that bound
-  the batch; the page computes wall time from them and never from the clock. A ledger is the one
-  artefact where a wall-clock reading is honest, because it records when something happened instead
-  of deriving a fact from now.
-- **A batch cut mid-flight has no `ended`.** Leave the key absent and the page renders `incomplete`.
-  It MUST NOT be back-filled with the time somebody noticed, and the page MUST NOT compute a
-  duration to now. An unfinished batch has no wall time; inventing one is the fabrication the whole
-  corpus exists to refuse.
-- **Tokens are OPTIONAL and MUST NOT be zeroed.** Omit the key when the harness reports nothing — a
-  `0` asserts a fact nobody measured. Only a COMMITTED figure reaches the rendered row: a
-  harness-reported number that varies per read would break the byte-stability TASK-IMP-082's `fp-`
-  stamp depends on, and a metric that requires one specific host is a metric that expires.
+- **At the batch close, ship-tasks MUST write `docs/batches/<batch-id>.md`** — an append-only LEDGER of one batch. It carries `batch`, `members`, `started`, `ended`, `route_backs`, `gate_reasks`, and `tokens` when the harness reports them. The status page renders one row per ledger.
+- **The ledger records ONLY what nothing else knows.** Tasks shipped is NOT written into it: the page DERIVES it from each member's own frontmatter, because `status` already IS "did this task ship". A number copied into a second place is a number that will eventually disagree with the first, and frontmatter is the record of truth either way.
+- **`route_backs` is the batch's own count, NOT a sum of `routed_back_count`.** That counter is a task's LIFETIME total across every batch it ever sat in. The row wants the route-backs that happened in THIS batch — which is where the cost fell — so summing the lifetime counter over the members charges batch 1 for a route-back that happened in batch 2, and charges it retroactively: a closed batch's row would drift upward months later. Two different facts, one word. Record the batch's own; a task that routed back and left (§11a) keeps its route-back on the batch it left, because that batch is what paid for it.
+- **Anything the ledger does not record reads `unknown`, never `0`.** A zero asserts a fact nobody measured. This applies to `route_backs` and `gate_reasks` exactly as it applies to `tokens`.
+- **This is not a new writer on the phase path.** Steps 1-31 are untouched, nothing new is measured inside a task, and no gate consumes any of this. The batch close transcribes instants the run already had — the same shape as §11c's goal write at the `done` flip.
+- **Timestamps belong here and nowhere else.** `started` and `ended` are the two instants that bound the batch; the page computes wall time from them and never from the clock. A ledger is the one artefact where a wall-clock reading is honest, because it records when something happened instead of deriving a fact from now.
+- **A batch cut mid-flight has no `ended`.** Leave the key absent and the page renders `incomplete`. It MUST NOT be back-filled with the time somebody noticed, and the page MUST NOT compute a duration to now. An unfinished batch has no wall time; inventing one is the fabrication the whole corpus exists to refuse.
+- **Tokens are OPTIONAL and MUST NOT be zeroed.** Omit the key when the harness reports nothing — a `0` asserts a fact nobody measured. Only a COMMITTED figure reaches the rendered row: a harness-reported number that varies per read would break the byte-stability TASK-IMP-082's `fp-` stamp depends on, and a metric that requires one specific host is a metric that expires.
 - **A batch of one still gets a ledger.** Small batches are the comparison baseline.
-- **Route-backs count in the batch where they happened**, which is where the cost fell — a task
-  routed back leaves its batch (§11a) and its next attempt is the next batch's cost, not this one's.
-- **This MEASURES; it MUST NOT gate.** No threshold, no budget, no warning, nothing that turns a row
-  red, and no status changes because of a number here. Measuring is not enforcing. A metric that
-  starts blocking is a gate that arrived without anyone deciding to add one; the operator reads the
-  row and makes the call. Spend limits are a real problem, and the answer to them is not a machine
-  that stops itself for a reason nobody agreed to.
+- **Route-backs count in the batch where they happened**, which is where the cost fell — a task routed back leaves its batch (§11a) and its next attempt is the next batch's cost, not this one's.
+- **This MEASURES; it MUST NOT gate.** No threshold, no budget, no warning, nothing that turns a row red, and no status changes because of a number here. Measuring is not enforcing. A metric that starts blocking is a gate that arrived without anyone deciding to add one; the operator reads the row and makes the call. Spend limits are a real problem, and the answer to them is not a machine that stops itself for a reason nobody agreed to.
 
 ## 11e. Judgment tiering: which steps need judgment (v2.8.0, TASK-IMP-115)
 
-Every step above runs at whatever reasoning the host happens to give it. Nothing marked
-which steps deserve expensive judgment (step 27's task-audit, step 3's ADR) and which are
-near-mechanical (the backlog flips — already a script, correctly). So a host had exactly
-one strategy available: spend the same on all 32. This session supplied the argument the
-expensive way, with two API spend-limit cutoffs, one of them losing three of four swarm
-agents mid-flight.
+Every step above runs at whatever reasoning the host happens to give it. Nothing marked which steps deserve expensive judgment (step 27's task-audit, step 3's ADR) and which are near-mechanical (the backlog flips — already a script, correctly). So a host had exactly one strategy available: spend the same on all 32. This session supplied the argument the expensive way, with two API spend-limit cutoffs, one of them losing three of four swarm agents mid-flight.
 
 Each `skill_chain` step therefore carries `judgment: high | medium | mechanical`.
 
-- **It is ADVISORY, and that is the whole design.** A host MAY route on it. **Nothing in
-  the payload reads it to decide anything** — no step, no gate, no helper, no condition. It
-  is information, not instruction. A host that ignores the field entirely is correct, and
-  is the default: the chain runs identically with or without it. The field can only be
-  wrong about the work; it can never break the run.
-- **NO MODEL STRINGS. EVER.** No model name, no price, no host effort level appears here or
-  anywhere in the payload. Those are the host's facts — accurate the day they are written
-  and wrong soon after — and a `<vendor>-<model>-5` literal in a rule is a rule with an
-  expiry date nobody will notice passing. The payload describes the WORK; the host picks
-  the worker. This is the constraint the field exists to respect, not a caveat on it.
-- **`mechanical` = a docs-tools helper produces the step's result.** The agent runs the tool
-  and transcribes; no model is deciding anything. The label is never applied on a
-  feels-deterministic basis — it is anchored to a helper the payload names for that skill:
+- **It is ADVISORY, and that is the whole design.** A host MAY route on it. **Nothing in the payload reads it to decide anything** — no step, no gate, no helper, no condition. It is information, not instruction. A host that ignores the field entirely is correct, and is the default: the chain runs identically with or without it. The field can only be wrong about the work; it can never break the run.
+- **NO MODEL STRINGS. EVER.** No model name, no price, no host effort level appears here or anywhere in the payload. Those are the host's facts — accurate the day they are written and wrong soon after — and a `<vendor>-<model>-5` literal in a rule is a rule with an expiry date nobody will notice passing. The payload describes the WORK; the host picks the worker. This is the constraint the field exists to respect, not a caveat on it.
+- **`mechanical` = a docs-tools helper produces the step's result.** The agent runs the tool and transcribes; no model is deciding anything. The label is never applied on a feels-deterministic basis — it is anchored to a helper the payload names for that skill:
 
   | Steps | Skill | Helper that does the work | Where the payload says so |
   |---|---|---|---|
   | 0 | `task-reconcile` | `docs-tools/task-reconcile.mjs` | `modules/skill/task-reconcile/SKILL.md` frontmatter `tool:` |
   | 13, 15, 19, 21, 30 | `backlog-state-update-author` | `docs-tools/backlog-mutate.mjs` | §1 above — "the byte-discipline executor for `backlog-state-update` mutations … never hand-sed" |
 
-- **`high` = the step's output is a judgment the chain then depends on.** Every one carries
-  its reason here, because a level asserted without a reason is a level that was guessed:
+- **`high` = the step's output is a judgment the chain then depends on.** Every one carries its reason here, because a level asserted without a reason is a level that was guessed:
 
   | Step | Skill | Why a model is deciding |
   |---|---|---|
@@ -459,23 +355,10 @@ Each `skill_chain` step therefore carries `judgment: high | medium | mechanical`
   | 25 | `debugging-cycle-author` | classifies the failure vector and forms the hypothesis |
   | 27 | `task-audit` | TRACE-004 closure — the judgment half; its `task-lint.mjs` floor only seeds the mechanical findings |
 
-- **Ambiguous is `medium`, never `high`.** Overstating a step's need is how the expensive
-  default returns wearing a label. `medium` is also the honest reading of a step whose work
-  a helper only half-owns: step 23's `coverage-scope.mjs` computes the per-file table but
-  its own header reserves the judgment fields (`tests_failed`, `ecm_rows_uncovered`) for the
-  author skill, so step 23 is `medium`, not `mechanical`.
-- **Steps 28-29 are the known rough edge.** Both gates are deterministic — caf-gate's skill
-  says "no LLM" — but their executors (`tools/awh`, `scripts/caf_gate.sh`) are not
-  docs-tools helpers, and TASK-IMP-115's AC 2 scopes `mechanical` to docs-tools backing.
-  They read `medium`: under-informative rather than wrong. Widening the helper family is a
-  follow-up, not a silent reinterpretation here.
-- **Where it does NOT extend yet.** `create-tasks` and the `plan` workflow (TASK-IMP-111)
-  carry no `judgment` field. This is one workflow's experiment; extend it once a host has
-  actually routed on it and said the information was worth having.
-- **A wrong level is a drift bug, not an outage.** A step marked `mechanical` whose helper
-  is later replaced by a model is simply wrong until someone fixes it — the suite arm
-  (`test_mechanical_steps_are_helper_backed`) is what notices, by re-proving the helper
-  exists and is still the thing the payload names for that skill.
+- **Ambiguous is `medium`, never `high`.** Overstating a step's need is how the expensive default returns wearing a label. `medium` is also the honest reading of a step whose work a helper only half-owns: step 23's `coverage-scope.mjs` computes the per-file table but its own header reserves the judgment fields (`tests_failed`, `ecm_rows_uncovered`) for the author skill, so step 23 is `medium`, not `mechanical`.
+- **Steps 28-29 are the known rough edge.** Both gates are deterministic — caf-gate's skill says "no LLM" — but their executors (`tools/awh`, `scripts/caf_gate.sh`) are not docs-tools helpers, and TASK-IMP-115's AC 2 scopes `mechanical` to docs-tools backing. They read `medium`: under-informative rather than wrong. Widening the helper family is a follow-up, not a silent reinterpretation here.
+- **Where it does NOT extend yet.** `create-tasks` and the `plan` workflow (TASK-IMP-111) carry no `judgment` field. This is one workflow's experiment; extend it once a host has actually routed on it and said the information was worth having.
+- **A wrong level is a drift bug, not an outage.** A step marked `mechanical` whose helper is later replaced by a model is simply wrong until someone fixes it — the suite arm (`test_mechanical_steps_are_helper_backed`) is what notices, by re-proving the helper exists and is still the thing the payload names for that skill.
 
 ## 12. No partial-ship-and-pause within a task
 
@@ -493,27 +376,17 @@ See `task-audit` skill §9.1 for the full clause + grandfathered exceptions.
 
 ## Reconcile entry — when a task claims work this workflow did not perform (v2.7.0, TASK-IMP-101)
 
-This workflow trusts two things: its own run manifests (hash-verified — see Resume semantics
-below) and its own gates (route-back on failure). A status cell is neither. A task can arrive
-already implemented — mid-shipping from another session, or long "done" — with no manifest, a
-manifest that no longer verifies, or a phase artefact set that does not exist. Trusting that
-cell is how a claim outruns its evidence (learned 2026-07-16, the TASK-IMP-086 incident: a
-task marked done whose deliverable no commit carried).
+This workflow trusts two things: its own run manifests (hash-verified — see Resume semantics below) and its own gates (route-back on failure). A status cell is neither. A task can arrive already implemented — mid-shipping from another session, or long "done" — with no manifest, a manifest that no longer verifies, or a phase artefact set that does not exist. Trusting that cell is how a claim outruns its evidence (learned 2026-07-16, the TASK-IMP-086 incident: a task marked done whose deliverable no commit carried).
 
-**Trigger.** Before entering the chain for a task, if its status is past `ready_to_implement`
-AND (no ship-manifest exists OR `ship-manifest.mjs verify` fails OR the claimed phase's
-artefact set is missing), run step 0:
+**Trigger.** Before entering the chain for a task, if its status is past `ready_to_implement` AND (no ship-manifest exists OR `ship-manifest.mjs verify` fails OR the claimed phase's artefact set is missing), run step 0:
 
 ```
 node .cyberos/docs-tools/task-reconcile.mjs <task-ID> --run-tests
 ```
 
-A VALID manifest means resume semantics own the task — reconcile does not fire, and the two
-mechanisms never double-handle the same state.
+A VALID manifest means resume semantics own the task — reconcile does not fire, and the two mechanisms never double-handle the same state.
 
-**The gate.** The report carries exactly one recommendation. Present it — claimed status, the
-recommendation, the two or three facts driving it, what each branch costs — and take the
-operator's verdict:
+**The gate.** The report carries exactly one recommendation. Present it — claimed status, the recommendation, the two or three facts driving it, what each branch costs — and take the operator's verdict:
 
 | Verdict | The workflow then |
 |---|---|
@@ -521,71 +394,36 @@ operator's verdict:
 | `route_back` | flips to `ready_to_implement`, `routed_back_count += 1` (STATUS-REFERENCE §1.3), records the report's reasons and emits `task_routed_back` |
 | `adopt_candidate` | backfills the phase artefact set from the evidence, then re-enters at the verified phase |
 
-**The rule.** The agent NEVER executes a branch — resume, route back, or adopt — without the
-recorded human verdict. This is a third, CONDITIONAL human gate; the two acceptance gates
-(reviewing → ready_to_test, testing → done) are untouched and still apply afterwards. An
-operator verdict that departs from the recommendation is legitimate and emits
-`memory.status_overridden` with its reason. Skill contract:
-`modules/skill/task-reconcile/SKILL.md`.
+**The rule.** The agent NEVER executes a branch — resume, route back, or adopt — without the recorded human verdict. This is a third, CONDITIONAL human gate; the two acceptance gates (reviewing → ready_to_test, testing → done) are untouched and still apply afterwards. An operator verdict that departs from the recommendation is legitimate and emits `memory.status_overridden` with its reason. Skill contract: `modules/skill/task-reconcile/SKILL.md`.
 
 ## depends_on evidence gate (v2.7.0, TASK-IMP-101)
 
-Before starting any task, every `depends_on` id whose status is `done` MUST carry evidence:
-a `coverage-gate` artefact in either artefact home (the task folder or
-`docs/tasks/.workflow/<task-ID>/`), or a `reconcile-report@1` whose verdict the operator
-accepted. A dependency that carries neither is a done-by-claim, not a done-by-evidence, and
-the dependent task is BLOCKED — surfaced at a gate where the operator may override.
+Before starting any task, every `depends_on` id whose status is `done` MUST carry evidence: a `coverage-gate` artefact in either artefact home (the task folder or `docs/tasks/.workflow/<task-ID>/`), or a `reconcile-report@1` whose verdict the operator accepted. A dependency that carries neither is a done-by-claim, not a done-by-evidence, and the dependent task is BLOCKED — surfaced at a gate where the operator may override.
 
-Rationale: building on unverified foundations is how one bad claim becomes a subtree of them.
-The check is cheap and the override is always available — what it removes is the SILENT case,
-where nobody knew the foundation was unwitnessed.
+Rationale: building on unverified foundations is how one bad claim becomes a subtree of them. The check is cheap and the override is always available — what it removes is the SILENT case, where nobody knew the foundation was unwitnessed.
 
-- Both artefact homes count, so the historical corpus (bundles under `docs/tasks/.workflow/`)
-  does not false-block.
-- `depends_on` naming an off-ramped task (`closed`, `duplicate`, `cannot_reproduce`) is an
-  unmet dependency under the existing eligibility rules and is surfaced the same way.
-- Every override emits `memory.status_overridden` `{actor, task_id, prior_status, new_status,
-  reason}` — the operator's call, on the record.
+- Both artefact homes count, so the historical corpus (bundles under `docs/tasks/.workflow/`) does not false-block.
+- `depends_on` naming an off-ramped task (`closed`, `duplicate`, `cannot_reproduce`) is an unmet dependency under the existing eligibility rules and is surfaced the same way.
+- Every override emits `memory.status_overridden` `{actor, task_id, prior_status, new_status, reason}` — the operator's call, on the record.
 
 ## Resume semantics (ship-manifest@1) - added by TASK-CUO-206
 
-Every run maintains a per-task run-state manifest at `docs/tasks/.workflow/<task-ID>.ship.json`,
-shaped by `modules/skill/contracts/task/SHIP-MANIFEST.md` (ship-manifest@1). The manifest is a
-CACHE of proven work, never an authority - task frontmatter and BACKLOG.md remain the only record of truth.
+Every run maintains a per-task run-state manifest at `docs/tasks/.workflow/<task-ID>.ship.json`, shaped by `modules/skill/contracts/task/SHIP-MANIFEST.md` (ship-manifest@1). The manifest is a CACHE of proven work, never an authority - task frontmatter and BACKLOG.md remain the only record of truth.
 
-**Write points.** The manifest MUST be rewritten after EVERY completed, failed, or conditionally-skipped
-step - no step's outcome goes unrecorded. Writes are two-phase atomic (`.tmp.<nonce>` then rename),
-mirroring the memory-protocol discipline. Each step entry records `{index, skill, status, artefact_path,
-artefact_sha256, verdict, completed_at}`; `task_sha256` (hash of the task spec at run start) and
-`workflow_version` are pinned at manifest creation.
+**Write points.** The manifest MUST be rewritten after EVERY completed, failed, or conditionally-skipped step - no step's outcome goes unrecorded. Writes are two-phase atomic (`.tmp.<nonce>` then rename), mirroring the memory-protocol discipline. Each step entry records `{index, skill, status, artefact_path, artefact_sha256, verdict, completed_at}`; `task_sha256` (hash of the task spec at run start) and `workflow_version` are pinned at manifest creation.
 
 **Resume.** On invocation for a task whose manifest exists:
 
 1. `workflow_version` mismatch -> needs_human. Never a silent mixed-version run.
-2. `task_sha256` mismatch (task spec edited since run start) -> every step is stale; restart at step 1
-   (history and `routed_back_count` are retained).
-3. Otherwise re-hash EVERY recorded `artefact_sha256` against disk. The earliest mismatch marks that
-   step and all later steps stale - redo from there. All intact -> continue at the first non-done step.
-4. Echo the resume line before running: `resume <task-ID>: steps 1-N verified (K artefacts, hashes OK),
-   continuing at step M/31 (<skill>). routed_back_count=R`.
+2. `task_sha256` mismatch (task spec edited since run start) -> every step is stale; restart at step 1 (history and `routed_back_count` are retained).
+3. Otherwise re-hash EVERY recorded `artefact_sha256` against disk. The earliest mismatch marks that step and all later steps stale - redo from there. All intact -> continue at the first non-done step.
+4. Echo the resume line before running: `resume <task-ID>: steps 1-N verified (K artefacts, hashes OK), continuing at step M/31 (<skill>). routed_back_count=R`.
 
-**Human gates re-ask.** A manifest can never authorize a gate: resuming at a HITL gate step re-requests
-the human approval. A recorded `hitl.requested_at` is when the question was asked - it is NOT the answer,
-and MUST NOT be treated as approval.
+**Human gates re-ask.** A manifest can never authorize a gate: resuming at a HITL gate step re-requests the human approval. A recorded `hitl.requested_at` is when the question was asked - it is NOT the answer, and MUST NOT be treated as approval.
 
-**Terminal handling.** When the task reaches `done` (HITL gate 2 passed), delete the manifest. On route-back
-to `ready_to_implement`, keep it with `routed_back_count += 1` - the next run restarts at step 1 by the
-staleness rule but retains count and history.
+**Terminal handling.** When the task reaches `done` (HITL gate 2 passed), delete the manifest. On route-back to `ready_to_implement`, keep it with `routed_back_count += 1` - the next run restarts at step 1 by the staleness rule but retains count and history.
 
-**Queue selection (no task id given).** Among tasks at `ready_to_implement` whose `depends_on` are all `done`:
-order by priority: `p0` before `p1` before `p2` before `p3` (legacy MoSCoW values map per FM-105), then `created` ascending, then id ascending. Echo the
-selection before step 1: `queue: picked <id> (priority=<p>, created=<d>) over <n> other eligible tasks`.
-Reference implementation: `modules/cuo/cuo/ship_manifest.py` (doc-driven agents apply this section directly).
-The vendored executable of this section is `tools/install/docs-tools/ship-manifest.mjs`
-(`.cyberos/docs-tools/ship-manifest.mjs` in installed repos) - the doc-driven reference
-implementation alongside `ship_manifest.py`: `init` pins, `record` hashes artefacts at write
-time, `verify`/`resume-line` walk the staleness order above with distinct exit codes and echo
-the mandated resume line; reach for it instead of re-deriving the algorithm (TASK-IMP-085).
+**Queue selection (no task id given).** Among tasks at `ready_to_implement` whose `depends_on` are all `done`: order by priority: `p0` before `p1` before `p2` before `p3` (legacy MoSCoW values map per FM-105), then `created` ascending, then id ascending. Echo the selection before step 1: `queue: picked <id> (priority=<p>, created=<d>) over <n> other eligible tasks`. Reference implementation: `modules/cuo/cuo/ship_manifest.py` (doc-driven agents apply this section directly). The vendored executable of this section is `tools/install/docs-tools/ship-manifest.mjs` (`.cyberos/docs-tools/ship-manifest.mjs` in installed repos) - the doc-driven reference implementation alongside `ship_manifest.py`: `init` pins, `record` hashes artefacts at write time, `verify`/`resume-line` walk the staleness order above with distinct exit codes and echo the mandated resume line; reach for it instead of re-deriving the algorithm (TASK-IMP-085).
 
 ## Cross-references
 
@@ -613,9 +451,7 @@ The rules this document (and every `modules/skill/` contract) defines are DISTRI
 
 ### Pre-push / pre-install re-verification (v2.6.0, operator request)
 
-Before `git push`, and before installing the payload onto ANY other repo, re-prove the chain
-end-to-end. The hooks above fire on *staged paths*; they do not prove the built artefact is
-the one a consumer will actually receive.
+Before `git push`, and before installing the payload onto ANY other repo, re-prove the chain end-to-end. The hooks above fire on *staged paths*; they do not prove the built artefact is the one a consumer will actually receive.
 
 Run, in order, and read the output rather than the exit code alone:
 
@@ -630,22 +466,12 @@ Run, in order, and read the output rather than the exit code alone:
    find .cyberos -name 'feature.md'     # non-empty, or task-author HALTs on first task
    ```
 
-**Why the last one is not optional.** On 2026-07-15 `build.sh` shipped no per-type templates
-while `task-author` dispatched on them; reading `build.sh` did not reveal it, and `find` on a
-real install did — in one command. Every channel (`.cyberos/` install, Claude plugin, MCP
-server, npx CLI) receives the payload, not the repo. A rule that is correct in `modules/` and
-absent from `dist/` is correct nowhere that matters.
+**Why the last one is not optional.** On 2026-07-15 `build.sh` shipped no per-type templates while `task-author` dispatched on them; reading `build.sh` did not reveal it, and `find` on a real install did — in one command. Every channel (`.cyberos/` install, Claude plugin, MCP server, npx CLI) receives the payload, not the repo. A rule that is correct in `modules/` and absent from `dist/` is correct nowhere that matters.
 
-The vendored copy under a target's `.cyberos/` is what actually executes. `build.sh` refreshes
-`dist/`; only `install.sh` lays `dist/` into `.cyberos/`. Skipping the install step means the
-target keeps running the OLD rules while `dist/` looks current — the exact failure that made a
-fixed renderer produce stale output for a full session.
+The vendored copy under a target's `.cyberos/` is what actually executes. `build.sh` refreshes `dist/`; only `install.sh` lays `dist/` into `.cyberos/`. Skipping the install step means the target keeps running the OLD rules while `dist/` looks current — the exact failure that made a fixed renderer produce stale output for a full session.
 
 ### Closing report (v2.6.0, operator request)
 
-End every ship run — batch or single — with a short suggestion of next steps or possible
-improvements. Not a recap of what was done; the operator watched that. What is now unblocked,
-what the run exposed that is worth doing next, and what you would do if it were your call.
-Say when the honest answer is "nothing — merge it".
+End every ship run — batch or single — with a short suggestion of next steps or possible improvements. Not a recap of what was done; the operator watched that. What is now unblocked, what the run exposed that is worth doing next, and what you would do if it were your call. Say when the honest answer is "nothing — merge it".
 
 *End of `chief-technology-officer/ship-tasks.md` workflow.*

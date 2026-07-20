@@ -54,6 +54,4 @@ VNeID access is by partner agreement with Bộ Công An. The endpoint URLs in `r
 
 ## Status
 
-CCCD structural validation: production-ready, covers all 63 provinces + century encoding.
-VNeID request shaping: documented to match the partner spec (v1, 2025); ready for hookup once your host has OAuth2 credentials.
-Response parsing: handles the three current intents (verify, esign, profile).
+CCCD structural validation: production-ready, covers all 63 provinces + century encoding. VNeID request shaping: documented to match the partner spec (v1, 2025); ready for hookup once your host has OAuth2 credentials. Response parsing: handles the three current intents (verify, esign, profile).

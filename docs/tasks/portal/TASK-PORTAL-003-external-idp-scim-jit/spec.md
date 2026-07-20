@@ -197,46 +197,46 @@ The PORTAL service **MUST** ship per-Engagement external IdP (SAML 2.0 + OIDC) s
 7. **MUST** expose `POST /v1/admin/engagements/{engagement_id}/idp` for IdP config creation. Caller MUST have role `tenant_admin` at the TENANT level per DEC-882 (not engagement_admin — IdP misconfig has cross-engagement blast radius). Body validates: `idp_kind`, `idp_entity_id`, `idp_metadata_url` (HTTPS-only) OR `idp_signing_cert_pem` (one of two; if URL provided, fetched + parsed inline), `enforcement`, `email_domain_hint`. Handler KMS-encrypts the signing cert + persists, emits `portal.idp_config_created`.
 
 8. **MUST** support SAML 2.0 SP per OASIS SAML 2.0 + DEC-861 + DEC-880. The SP endpoint at `/saml/v2/{engagement_slug}/acs` (Assertion Consumer Service) accepts POST-binding Responses. Verification:
-    - Locate `idp_config` via `engagement_slug`; reject if no active config.
-    - XML-parse the Response; reject if non-well-formed.
-    - Verify the SAML Response signature against `idp_signing_cert_kms_blob` (xmldsig per W3C; cert chain validated against `idp_signing_cert_thumbprint`).
-    - Verify `InResponseTo` matches a server-side pending RequestID (CSRF defense; 5-min TTL).
-    - Verify `Conditions/NotBefore` and `Conditions/NotOnOrAfter` (replay window = 5 min per DEC-870).
-    - Per DEC-864 + #15: only honour AttributeStatements whose containing Assertion is signed; unsigned attributes are dropped + emit `portal.signed_attr_trust_violation`.
-    - Extract `NameID` (subject identifier) + signed AttributeStatement claims.
-    - JIT-provision via #11.
+- Locate `idp_config` via `engagement_slug`; reject if no active config.
+- XML-parse the Response; reject if non-well-formed.
+- Verify the SAML Response signature against `idp_signing_cert_kms_blob` (xmldsig per W3C; cert chain validated against `idp_signing_cert_thumbprint`).
+- Verify `InResponseTo` matches a server-side pending RequestID (CSRF defense; 5-min TTL).
+- Verify `Conditions/NotBefore` and `Conditions/NotOnOrAfter` (replay window = 5 min per DEC-870).
+- Per DEC-864 + #15: only honour AttributeStatements whose containing Assertion is signed; unsigned attributes are dropped + emit `portal.signed_attr_trust_violation`.
+- Extract `NameID` (subject identifier) + signed AttributeStatement claims.
+- JIT-provision via #11.
 
 9. **MUST** support OIDC RP per TASK-AUTH-104 protocol layer + per-Engagement metadata at `/oidc/v1/{engagement_slug}/.well-known/openid-configuration`. The callback at `/oidc/v1/{engagement_slug}/callback` verifies:
-    - PKCE code_verifier matches the stored challenge (per TASK-AUTH-104 DEC-401).
-    - `state` nonce matches the server-issued state (single-use, 5-min TTL).
-    - ID token signature against IdP JWKS (cached 24h, kid-based rotation per TASK-AUTH-104 DEC-402).
-    - `iat` skew ≤ 60 s per DEC-870.
-    - `aud` claim matches the per-Engagement client_id.
-    - JIT-provision via #11.
+- PKCE code_verifier matches the stored challenge (per TASK-AUTH-104 DEC-401).
+- `state` nonce matches the server-issued state (single-use, 5-min TTL).
+- ID token signature against IdP JWKS (cached 24h, kid-based rotation per TASK-AUTH-104 DEC-402).
+- `iat` skew ≤ 60 s per DEC-870.
+- `aud` claim matches the per-Engagement client_id.
+- JIT-provision via #11.
 
 10. **MUST** expose SAML SP metadata at `GET /saml/v2/{engagement_slug}/metadata` per DEC-874 — XML document with `<EntityDescriptor>` + `<SPSSODescriptor>` + AssertionConsumerService URL + signing cert (if encryption requested). IdP admins self-configure their IdP with this URL.
 
 11. **MUST** JIT-provision via TASK-AUTH-002 at first SSO sign-in per DEC-862. Flow:
-    - Lookup existing subject by `(tenant_id, engagement_id, external_id)` where `external_id` = SAML NameID OR OIDC `sub` claim.
-    - If exists: load + update `last_sso_at` + sync claim-derived role per #12 + return.
-    - If not exists: INSERT subject via TASK-AUTH-002 with `auth_method='external_idp'`, `idp_config_id`, `external_id`, `email` (claim), `display_name` (claim), `role` (claim-mapped per #12).
-    - Bind subject to Engagement via TASK-AUTH-101 RBAC grant.
-    - Emit `portal.scim_user_created` (sev-2 — material identity event).
+- Lookup existing subject by `(tenant_id, engagement_id, external_id)` where `external_id` = SAML NameID OR OIDC `sub` claim.
+- If exists: load + update `last_sso_at` + sync claim-derived role per #12 + return.
+- If not exists: INSERT subject via TASK-AUTH-002 with `auth_method='external_idp'`, `idp_config_id`, `external_id`, `email` (claim), `display_name` (claim), `role` (claim-mapped per #12).
+- Bind subject to Engagement via TASK-AUTH-101 RBAC grant.
+- Emit `portal.scim_user_created` (sev-2 — material identity event).
 
 12. **MUST** apply closed claim → role mapping per DEC-863 + DEC-885:
-    - Default role for any JIT-provisioned subject = `client_viewer`.
-    - For each IdP group in the claim's `groups` array (SAML AttributeStatement `Group` attribute OR OIDC `groups` claim), lookup `portal_idp_groups_map(idp_config_id, idp_group_name)` → `cyberos_role`. Highest-privilege match wins (role ordinal: viewer < editor < admin).
-    - Unrecognised groups silently ignored (no role elevation).
-    - Role change at re-auth: if claim-mapped role differs from current, UPDATE subject + emit `portal.scim_user_updated`.
+- Default role for any JIT-provisioned subject = `client_viewer`.
+- For each IdP group in the claim's `groups` array (SAML AttributeStatement `Group` attribute OR OIDC `groups` claim), lookup `portal_idp_groups_map(idp_config_id, idp_group_name)` → `cyberos_role`. Highest-privilege match wins (role ordinal: viewer < editor < admin).
+- Unrecognised groups silently ignored (no role elevation).
+- Role change at re-auth: if claim-mapped role differs from current, UPDATE subject + emit `portal.scim_user_updated`.
 
 13. **MUST** expose SCIM 2.0 endpoints per RFC 7643 + RFC 7644 + DEC-867:
-    - `POST   /scim/v2/{engagement_slug}/Users` — create (idempotent on `externalId`).
-    - `GET    /scim/v2/{engagement_slug}/Users/{id}` — read.
-    - `PATCH  /scim/v2/{engagement_slug}/Users/{id}` — partial update per RFC 7644 §3.5.2.
-    - `PUT    /scim/v2/{engagement_slug}/Users/{id}` — full replace.
-    - `DELETE /scim/v2/{engagement_slug}/Users/{id}` — soft-tombstone (delegate to TASK-PORTAL-004 for full session-invalidation flow).
-    - `POST   /scim/v2/{engagement_slug}/Groups` + analogous CRUD.
-    - Bearer-token auth via Authorization header (DEC-867); token validated against `portal_scim_tokens.token_sha256` SHA-256-hashed lookup.
+- `POST   /scim/v2/{engagement_slug}/Users` — create (idempotent on `externalId`).
+- `GET    /scim/v2/{engagement_slug}/Users/{id}` — read.
+- `PATCH  /scim/v2/{engagement_slug}/Users/{id}` — partial update per RFC 7644 §3.5.2.
+- `PUT    /scim/v2/{engagement_slug}/Users/{id}` — full replace.
+- `DELETE /scim/v2/{engagement_slug}/Users/{id}` — soft-tombstone (delegate to TASK-PORTAL-004 for full session-invalidation flow).
+- `POST   /scim/v2/{engagement_slug}/Groups` + analogous CRUD.
+- Bearer-token auth via Authorization header (DEC-867); token validated against `portal_scim_tokens.token_sha256` SHA-256-hashed lookup.
 
 14. **MUST** enforce SCIM idempotency on `externalId` claim per DEC-876. Duplicate create with same externalId returns 409 + body `{ "detail": "User with this externalId already exists", "existing_id": "<id>" }`. RFC 7644 §3.3 conformant.
 
@@ -251,13 +251,13 @@ The PORTAL service **MUST** ship per-Engagement external IdP (SAML 2.0 + OIDC) s
 19. **MUST** rotate SCIM tokens quarterly per DEC-884. The `POST /v1/admin/engagements/{id}/scim-token/rotate` endpoint generates a new 32-byte token (base64url-encoded), SHA-256-hashes for storage, marks the old token as `rotated`, sets a 60-second overlap window during which BOTH tokens are accepted. Old token cleanup after overlap. Emits `portal.scim_token_rotation` informational row (not in core 7-kind list per DEC-873).
 
 20. **MUST** emit 7 memory audit row kinds per DEC-873 (task-audit skill rule 6 namespace pattern `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`):
-    - `portal.idp_sign_in` (sev-2)
-    - `portal.idp_sign_in_failed` (sev-2 — security signal)
-    - `portal.scim_user_created` (sev-2)
-    - `portal.scim_user_updated` (sev-3)
-    - `portal.idp_config_created` (sev-1 — material security event)
-    - `portal.idp_config_rotated` (sev-1)
-    - `portal.signed_attr_trust_violation` (sev-1)
+- `portal.idp_sign_in` (sev-2)
+- `portal.idp_sign_in_failed` (sev-2 — security signal)
+- `portal.scim_user_created` (sev-2)
+- `portal.scim_user_updated` (sev-3)
+- `portal.idp_config_created` (sev-1 — material security event)
+- `portal.idp_config_rotated` (sev-1)
+- `portal.signed_attr_trust_violation` (sev-1)
 
     Plus 1 supporting kind: `portal.scim_token_rotation` (sev-3 — informational). PII-scrubbed via TASK-MEMORY-111 per DEC-886.
 

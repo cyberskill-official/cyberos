@@ -24,11 +24,11 @@
 
 - **CEO / Board mandates:** Strategic direction (build for scale vs build for speed), capital allocation for infra, M&A technical due diligence asks.
 - **Peer C-suite asks:**
-  - CPO-Product → roadmap commitment, "is X feasible in Q3?"
-  - CFO → infra cost forecast, vendor consolidation opportunities
-  - CRO-Revenue → deal-blocking architectural asks ("we'll lose this deal without SSO")
-  - CISO → threat-model gaps, vuln remediation prioritisation
-  - CHRO → engineering org design, comp-band calibration
+- CPO-Product → roadmap commitment, "is X feasible in Q3?"
+- CFO → infra cost forecast, vendor consolidation opportunities
+- CRO-Revenue → deal-blocking architectural asks ("we'll lose this deal without SSO")
+- CISO → threat-model gaps, vuln remediation prioritisation
+- CHRO → engineering org design, comp-band calibration
 - **Regulator signals:** EU AI Act risk-class assessments for AI-driven features; Vietnam Decree 13/2023 + Decree 53/2022 (CyberSkill home); GDPR Art. 33 (72-hour breach notification readiness) when serving EU customers.
 
 ## §4  Resource inputs

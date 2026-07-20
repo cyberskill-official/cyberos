@@ -90,11 +90,11 @@ The `memory-capture@1` skill bundle **MUST** be the canonical, signed, OCI-distr
 
 1. **MUST** ship as a single `.skill` artifact containing: (a) the Rust skill binary `main` (broker subprocess entrypoint), (b) a Rust SDK crate (`cyberos-memory-capture`), (c) a Python wrapper (`cyberos_memory_capture`), (d) a bash CLI (`cyberos-memory-capture`). All three language frontends route through the same Rust core.
 2. **MUST** carry a valid SKILL.md frontmatter per TASK-SKILL-103 schema v1:
-    - `id: memory-capture`, `version: 1.0.0`, `description: "Canonical entry point for emitting memory capture rows."`
-    - `allowed_tools: [MemoryEmit]` (only — never Bash, Read, HttpFetch).
-    - `allowed_memory_scopes: ["memories/**"]` (broad emit scope; finer-grained scoping is the caller's frontmatter responsibility).
-    - `sync_class: shareable` (rows emitted by this skill MAY sync to Cloud memory per TASK-MEMORY-106).
-    - `signature` populated via TASK-SKILL-102 signing pipeline.
+- `id: memory-capture`, `version: 1.0.0`, `description: "Canonical entry point for emitting memory capture rows."`
+- `allowed_tools: [MemoryEmit]` (only — never Bash, Read, HttpFetch).
+- `allowed_memory_scopes: ["memories/**"]` (broad emit scope; finer-grained scoping is the caller's frontmatter responsibility).
+- `sync_class: shareable` (rows emitted by this skill MAY sync to Cloud memory per TASK-MEMORY-106).
+- `signature` populated via TASK-SKILL-102 signing pipeline.
 3. **MUST** expose the following stable API in the Rust SDK:
     ```rust
     pub struct MemoryCapture { /* opaque */ }
@@ -132,18 +132,18 @@ The `memory-capture@1` skill bundle **MUST** be the canonical, signed, OCI-distr
     ```
 6. **MUST** validate `kind` against the canonical kind regex `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$` (e.g. `notes.captured`, `tool.invoked`). Invalid kind → `CaptureError::InvalidKind`.
 7. **MUST** dedup identical emits at SDK level before broker call:
-    - Compute `content_hash = blake3(canonical_json(kind, payload, scope))`.
-    - Check in-memory LRU (size 1000, TTL 60s).
-    - On hit → return `EmitOutcome { deduped: true, ... }` with the prior outcome's row_id; no broker call.
-    - On miss → call broker; cache result.
+- Compute `content_hash = blake3(canonical_json(kind, payload, scope))`.
+- Check in-memory LRU (size 1000, TTL 60s).
+- On hit → return `EmitOutcome { deduped: true, ... }` with the prior outcome's row_id; no broker call.
+- On miss → call broker; cache result.
 8. **MUST** PII-scrub payload via TASK-MEMORY-111's ruleset BEFORE broker call. Scrub failure → `CaptureError::PiiScrubFailed`; caller can retry with `payload_sanitized = true` flag (telling SDK that caller has already sanitised and we trust the input).
 9. **MUST** auto-discover the broker socket from `CYBEROS_BROKER_SOCKET` env var (set by TASK-SKILL-104 when subprocess is launched). Outside a broker invocation (e.g. ad-hoc CLI use), the SDK connects to the default broker socket `/run/cyberos/broker.sock` (system-scope) or `~/.cyberos/broker.sock` (user-scope).
 10. **MUST** handle broker-down with exponential backoff: 3 retries at 100ms, 500ms, 2s. If all fail → `CaptureError::BrokerDown`; SDK returns immediately (does not block caller indefinitely).
 11. **MUST** propagate W3C TraceContext: read `TRACEPARENT` env var (set by upstream) or generate a new trace_id per `MemoryCapture::new()` call. Every emit carries this trace_id.
 12. **MUST** emit OTel span `skill.memory_capture.emit` per call with attributes `kind`, `dedup_hit`, `payload_size_bytes`, `pii_scrub_match_count`, `duration_ms`.
 13. **MUST** emit OTel metrics:
-    - `skill_memory_capture_emits_total{kind, outcome}` (counter; outcome ∈ emitted | deduped | denied | broker_down | pii_failed).
-    - `skill_memory_capture_dedup_hit_ratio` (gauge).
+- `skill_memory_capture_emits_total{kind, outcome}` (counter; outcome ∈ emitted | deduped | denied | broker_down | pii_failed).
+- `skill_memory_capture_dedup_hit_ratio` (gauge).
 14. **MUST** be signed via TASK-SKILL-102 release pipeline; the OCI tag is `oci://registry.cyberos.world/skills/memory-capture:1.0.0`; immutable.
 15. **SHOULD** provide a TypeScript SDK in slice 3+ (placeholder; web/node integrations).
 
@@ -203,21 +203,17 @@ The canonical entry point for emitting memory capture rows.
 ```rust
 use cyberos_memory_capture::{MemoryCapture, EmitScope};
 
-let cb = MemoryCapture::new().await?;
-let outcome = cb.emit(
+let cb = MemoryCapture::new().await?; let outcome = cb.emit(
     "notes.captured",
     serde_json::json!({ "title": "Auth design", "body": "..." }),
     EmitScope::Shareable { acl: vec!["@alice".into()] },
-).await?;
-println!("emitted row {} (deduped={})", outcome.row_id, outcome.deduped);
+).await?; println!("emitted row {} (deduped={})", outcome.row_id, outcome.deduped);
 ```
 
 ## Quick start (Python)
 
 ```python
-from cyberos_memory_capture import MemoryCapture, EmitScope
-cb = MemoryCapture()
-outcome = cb.emit(kind="notes.captured", payload={"title": "x"}, scope=EmitScope.private())
+from cyberos_memory_capture import MemoryCapture, EmitScope cb = MemoryCapture() outcome = cb.emit(kind="notes.captured", payload={"title": "x"}, scope=EmitScope.private())
 ```
 
 ## Quick start (bash)

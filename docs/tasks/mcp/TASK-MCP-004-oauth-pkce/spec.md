@@ -128,24 +128,23 @@ The MCP Gateway service **MUST** implement OAuth 2.1 + PKCE per the MCP 2025-11-
 6. **MUST** define a closed 6-value `oauth_error_code` Postgres enum (`invalid_request`, `invalid_client`, `invalid_grant`, `unauthorized_client`, `unsupported_grant_type`, `invalid_scope`) per DEC-820 + RFC 6749 §5.2. CI cardinality test asserts exactly 6.
 
 7. **MUST** issue access tokens as signed JWTs using the TASK-AUTH-004 JWKS keys (RS256 or ES256). The token claims MUST include:
-   - `iss`: the MCP-gateway URL.
-   - `aud`: the canonical URL of the MCP resource server (DEC-802 + RFC 8707).
-   - `sub`: the authorizing subject's UUID (TASK-AUTH-002).
-   - `scope`: space-separated scope strings from the client's authorization grant (DEC-813).
-   - `nonce`: 16-byte random hex.
-   - `iat`, `exp`: standard timestamps; exp = iat + 3600 (DEC-805).
-   - `jti`: UUIDv4 — used for revocation list lookup (DEC-817).
-   - `client_id`: the requesting client's UUID.
-   - `tenant_id`: the tenant binding (per TASK-AUTH-108 Lumi pattern).
+- `iss`: the MCP-gateway URL.
+- `aud`: the canonical URL of the MCP resource server (DEC-802 + RFC 8707).
+- `sub`: the authorizing subject's UUID (TASK-AUTH-002).
+- `scope`: space-separated scope strings from the client's authorization grant (DEC-813).
+- `nonce`: 16-byte random hex.
+- `iat`, `exp`: standard timestamps; exp = iat + 3600 (DEC-805).
+- `jti`: UUIDv4 — used for revocation list lookup (DEC-817).
+- `client_id`: the requesting client's UUID.
+- `tenant_id`: the tenant binding (per TASK-AUTH-108 Lumi pattern).
 
 8. **MUST** issue refresh tokens as opaque 256-bit random base64url strings (NOT JWTs). The refresh token is stored hashed (Argon2 or SHA-256) in `oauth_refresh_families` table with `(family_id, token_hash, issued_at, expires_at, parent_token_hash)`. TTL = 30 days (DEC-805).
 
 9. **MUST** enforce refresh-token rotation (DEC-806). On `grant_type=refresh_token`, the server:
-   - Verifies the presented refresh_token matches an active row in `oauth_refresh_families`.
-   - Marks the presented row as `state = used`.
-   - Issues a new refresh_token in the same family with `parent_token_hash` pointing to the just-used row.
-   - Returns the new access + refresh pair.
-   If the presented refresh_token is found but `state = used` already, this is a REUSE — mark the entire family as `state = compromised`, invalidate all descendants, refuse issuance, emit a sev-1 memory audit row `mcp.oauth_refresh_reuse_detected`.
+- Verifies the presented refresh_token matches an active row in `oauth_refresh_families`.
+- Marks the presented row as `state = used`.
+- Issues a new refresh_token in the same family with `parent_token_hash` pointing to the just-used row.
+- Returns the new access + refresh pair. If the presented refresh_token is found but `state = used` already, this is a REUSE — mark the entire family as `state = compromised`, invalidate all descendants, refuse issuance, emit a sev-1 memory audit row `mcp.oauth_refresh_reuse_detected`.
 
 10. **MUST** verify `redirect_uri` via exact-match comparison against the pre-registered URI (DEC-809). The authorization request's `redirect_uri` MUST match one of `oauth_clients.redirect_uris` entries character-for-character. No substring, no regex, no trailing-slash normalization. Mismatch returns `400 invalid_request` with `error_description: "redirect_uri_mismatch"`.
 
@@ -158,25 +157,23 @@ The MCP Gateway service **MUST** implement OAuth 2.1 + PKCE per the MCP 2025-11-
 14. **MUST** enforce authorization code TTL = 30 seconds (DEC-811). The `oauth_codes` row carries `expires_at = issued_at + INTERVAL '30 seconds'`. An expired code at token exchange returns `400 invalid_grant` with `error_description: "code_expired"`.
 
 15. **MUST** enforce authorization code one-time-use (DEC-812). On token exchange, the handler:
-    - SELECTs the row FOR UPDATE.
-    - Verifies `consumed_at IS NULL`.
-    - UPDATEs `consumed_at = now()`.
-    - If `consumed_at IS NOT NULL` (replay), marks the client's most recent refresh family as compromised + emits sev-2 memory audit `mcp.oauth_code_reuse_detected`.
+- SELECTs the row FOR UPDATE.
+- Verifies `consumed_at IS NULL`.
+- UPDATEs `consumed_at = now()`.
+- If `consumed_at IS NOT NULL` (replay), marks the client's most recent refresh family as compromised + emits sev-2 memory audit `mcp.oauth_code_reuse_detected`.
 
 16. **MUST** define a closed 3-value `oauth_code_state` enum (`active`, `consumed`, `expired`). CI cardinality test asserts exactly 3.
 
 17. **MUST** define a closed 3-value `oauth_refresh_state` enum (`active`, `used`, `compromised`). CI cardinality test asserts exactly 3.
 
 18. **MUST** implement RFC 7591 Dynamic Client Registration at `POST /register`. Request body:
-    - `client_type` (required, public | confidential)
-    - `redirect_uris` (required, array of URIs; max 5 per client)
-    - `client_name` (optional, ≤ 64 chars)
-    - `scope` (required, space-separated list of MCP scopes from the registry)
-    Response body:
-    - `client_id`
-    - `client_secret` (only for confidential; cryptographically random 256-bit base64url)
-    - `client_id_issued_at` (unix ts)
-    Public client registration is open (no caller auth); confidential client registration requires `tenant_admin` role per TASK-AUTH-101.
+- `client_type` (required, public | confidential)
+- `redirect_uris` (required, array of URIs; max 5 per client)
+- `client_name` (optional, ≤ 64 chars)
+- `scope` (required, space-separated list of MCP scopes from the registry) Response body:
+- `client_id`
+- `client_secret` (only for confidential; cryptographically random 256-bit base64url)
+- `client_id_issued_at` (unix ts) Public client registration is open (no caller auth); confidential client registration requires `tenant_admin` role per TASK-AUTH-101.
 
 19. **MUST** scope confidential client registration to the requesting subject's tenant. The client row carries `tenant_id` and the issued access tokens carry the same tenant_id. Cross-tenant client lookup returns 404.
 
@@ -199,28 +196,28 @@ The MCP Gateway service **MUST** implement OAuth 2.1 + PKCE per the MCP 2025-11-
     ```
 
 21. **MUST** implement RFC 7009 token revocation at `POST /revoke`. Body: `token=<access_or_refresh>&token_type_hint=...`. The handler:
-    - For access_token: adds the JWT `jti` to a revocation list cached for 1 hour (matches access_token TTL).
-    - For refresh_token: marks the row + family `state = compromised`.
-    - Always returns 200 OK regardless of whether token was active (RFC 7009 §2.2 — prevents probing).
+- For access_token: adds the JWT `jti` to a revocation list cached for 1 hour (matches access_token TTL).
+- For refresh_token: marks the row + family `state = compromised`.
+- Always returns 200 OK regardless of whether token was active (RFC 7009 §2.2 — prevents probing).
 
 22. **MUST** implement RFC 7662 introspection at `POST /introspect` for resource servers only (DEC-818). The endpoint requires the caller to authenticate as a registered confidential client with the `mcp_introspect` scope. Public clients receive 401. Response shape per RFC 7662 §2.2. Introspection enables resource servers to verify the token's audience, scope, subject, tenant — without re-implementing JWT validation.
 
 23. **MUST** verify audience binding at every MCP resource server hot path (DEC-802). The MCP gateway's `tools/call` handler MUST:
-    - Decode the bearer JWT via TASK-AUTH-004 JWKS.
-    - Assert `aud` exactly equals this resource server's canonical URL.
-    - Mismatched aud returns `401 invalid_token` with `WWW-Authenticate: Bearer error="invalid_token", error_description="audience_mismatch"`.
+- Decode the bearer JWT via TASK-AUTH-004 JWKS.
+- Assert `aud` exactly equals this resource server's canonical URL.
+- Mismatched aud returns `401 invalid_token` with `WWW-Authenticate: Bearer error="invalid_token", error_description="audience_mismatch"`.
 
 24. **MUST** verify the JWT signature, exp, and revocation list on every request. Cache the revocation list in-process with 60s TTL; misses fetch from Postgres. Defense-in-depth: signature + exp + jti revocation check + audience check.
 
 25. **MUST** emit 8 closed memory audit kinds:
-    - `mcp.oauth_authorize_started` (sev-3, per /authorize redirect issued)
-    - `mcp.oauth_token_issued` (sev-3, per access_token issued)
-    - `mcp.oauth_token_refreshed` (sev-3, per refresh)
-    - `mcp.oauth_token_revoked` (sev-2, per revocation)
-    - `mcp.oauth_refresh_reuse_detected` (sev-1, family compromise)
-    - `mcp.oauth_code_reuse_detected` (sev-2, code replay)
-    - `mcp.oauth_audience_mismatch` (sev-2, per /tools/call rejection)
-    - `mcp.oauth_client_registered` (sev-2, per DCR call)
+- `mcp.oauth_authorize_started` (sev-3, per /authorize redirect issued)
+- `mcp.oauth_token_issued` (sev-3, per access_token issued)
+- `mcp.oauth_token_refreshed` (sev-3, per refresh)
+- `mcp.oauth_token_revoked` (sev-2, per revocation)
+- `mcp.oauth_refresh_reuse_detected` (sev-1, family compromise)
+- `mcp.oauth_code_reuse_detected` (sev-2, code replay)
+- `mcp.oauth_audience_mismatch` (sev-2, per /tools/call rejection)
+- `mcp.oauth_client_registered` (sev-2, per DCR call)
 
 26. **MUST** route all reason-bearing audit text (error_description, client_name in registration audit) through TASK-MEMORY-111 PII scrubbing.
 

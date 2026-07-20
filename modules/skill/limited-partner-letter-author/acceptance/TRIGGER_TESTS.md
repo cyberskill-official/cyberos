@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a limited partner letter"
+- "Draft a limited partner letter"
 - "Create the limited partner letter"
 - "Author a new limited partner letter"
 - "Generate the limited partner letter"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this limited partner letter" → limited-partner-letter-audit
+- "Audit this limited partner letter" → limited-partner-letter-audit
 - "Check the limited partner letter for completeness" → limited-partner-letter-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

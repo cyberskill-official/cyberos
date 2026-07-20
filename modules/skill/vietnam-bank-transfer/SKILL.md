@@ -17,5 +17,4 @@ allowed_mcp_tools:
 
 # vietnam-bank-transfer
 
-Validate bank prefix and create a payment payload. Rendering the actual QR image
-is delegated to the caller.
+Validate bank prefix and create a payment payload. Rendering the actual QR image is delegated to the caller.

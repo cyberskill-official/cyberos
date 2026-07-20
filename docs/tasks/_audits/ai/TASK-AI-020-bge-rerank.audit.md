@@ -71,12 +71,12 @@ First-pass §4 AC #2 said: *"Scores are descending; relevant docs first."*
 #### Suggested fix
 
 1. Split AC #2 into two ACs:
-   - AC #2: "Scores descending" — `scores[0].1 >= scores[1].1 >= ...` (mechanical assertion).
-   - AC #3: "Indices preserved" — `scores[i].0 ∈ {0, ..., N-1}`; permutation of `0..N`.
+- AC #2: "Scores descending" — `scores[0].1 >= scores[1].1 >= ...` (mechanical assertion).
+- AC #3: "Indices preserved" — `scores[i].0 ∈ {0, ..., N-1}`; permutation of `0..N`.
 2. Add AC #4 "Quality: known relevance" with concrete fixture in `rerank_quality_test.rs`:
-   - 5 candidates: 3 irrelevant + 2 relevant (about Decree 13 / PDPL).
-   - Relevant docs MUST appear in top-3.
-   - Top score MUST be > 0.5 when normalized.
+- 5 candidates: 3 irrelevant + 2 relevant (about Decree 13 / PDPL).
+- Relevant docs MUST appear in top-3.
+- Top score MUST be > 0.5 when normalized.
 3. The fixture is the testable artefact; "relevance" is no longer subjective.
 
 ### ISS-003 — AC #6 "audit row emitted (1 per call)" but no canonical builder shown
@@ -157,9 +157,7 @@ The first-pass §10 had:
 
 > *"Reranker sidecar down | Health check | Failover skips rerank; raw embedding scores used | KB tolerates degraded precision."*
 
-But the API contract (§3) doesn't expose any signal to the caller indicating "rerank was skipped." A `RerankResponse` with empty `scores` could mean two things:
-(a) Rerank ran and found NO candidates above some threshold.
-(b) Rerank wasn't called because the sidecar is down.
+But the API contract (§3) doesn't expose any signal to the caller indicating "rerank was skipped." A `RerankResponse` with empty `scores` could mean two things: (a) Rerank ran and found NO candidates above some threshold. (b) Rerank wasn't called because the sidecar is down.
 
 The caller (KB module) needs to distinguish: case (a) might warrant refusing the query (no relevant content); case (b) should fall back to embedding-similarity ordering. Without the signal, both cases trigger the same fallback path — losing information.
 

@@ -102,12 +102,12 @@ A `memory-sync` Rust daemon **MUST** run on every device, syncing the personal m
 6. **MUST** be device-id-stamped: every sync-emitted row carries `extra.originator_device_id` (UUID generated at first daemon start; persisted to `~/.cyberos/device_id`).
 7. **MUST** maintain offline buffer of up to 10,000 rows when Cloud memory is unreachable. Buffer is FIFO; oldest rows evicted on overflow with sev-2 alert + metric `memory_sync_buffer_overflow_total`. Evicted rows are NOT lost (they're in the local Layer 1 chain) — they just don't propagate until manual reconciliation.
 8. **MUST** emit OTel metrics:
-    - `memory_sync_lag_seconds{device_id}` (histogram; round-trip).
-    - `memory_sync_conflicts_total` (counter).
-    - `memory_sync_buffered_rows{device_id}` (gauge).
-    - `memory_sync_buffer_overflow_total{device_id}` (counter; sev-2 alarm).
-    - `memory_sync_pushed_rows_total{device_id, sync_class}` (counter).
-    - `memory_sync_compensation_rejected_total` (counter; sev-1 alarm — DEC-036 violation attempt).
+- `memory_sync_lag_seconds{device_id}` (histogram; round-trip).
+- `memory_sync_conflicts_total` (counter).
+- `memory_sync_buffered_rows{device_id}` (gauge).
+- `memory_sync_buffer_overflow_total{device_id}` (counter; sev-2 alarm).
+- `memory_sync_pushed_rows_total{device_id, sync_class}` (counter).
+- `memory_sync_compensation_rejected_total` (counter; sev-1 alarm — DEC-036 violation attempt).
 9. **MUST** apply `compensation_guard` at the sync boundary: ANY row whose path matches `meta/people/*/compensation*` OR `meta/people/*/equity*` OR `meta/finance/payroll*` is REJECTED at push time AND NOT added to offline buffer (compensation rows that arrive at sync are a sev-1 — investigate the upstream code that emitted them).
 10. **MUST** not re-import already-imported foreign chains (idempotency on `extra.foreign_chain` value).
 11. **MUST** detect online/offline state via TCP probe to Cloud memory every 30s; transition online→offline → start buffering; offline→online → flush buffer + resume.

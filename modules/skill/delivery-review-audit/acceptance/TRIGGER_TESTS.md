@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this delivery review"
+- "Audit this delivery review"
 - "Check the delivery review for completeness"
 - "Verify the delivery review meets the rubric"
 - "Re-audit the delivery review"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a delivery review" → delivery-review-author
+- "Draft a delivery review" → delivery-review-author
 - "Create the delivery review" → delivery-review-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

@@ -149,32 +149,31 @@ The TEN service **MUST** ship the `cyberos-ten provision` CLI as the canonical o
 3. **MUST** declare the closed `residency_code` Postgres enum with exactly 4 values: `'vn-1'`, `'sg-1'`, `'eu-1'`, `'us-1'`. Adding a 5th is an ADR (mirrors the global-residency pattern).
 
 4. **MUST** ship the `cyberos-ten provision` CLI subcommand accepting flags:
-    - `--slug <slug>` (required) — kebab-case identifier per the regex.
-    - `--display-name <text>` (required) — human-readable name.
-    - `--root-admin-email <email>` (required) — initial root-admin subject's email.
-    - `--root-admin-display-name <text>` (required) — initial root-admin display name.
-    - `--residency <vn-1|sg-1|eu-1|us-1>` (optional; default `vn-1` per DEC-324).
-    - `--plan-tier <starter|team|enterprise>` (optional; default `starter`).
-    - `--json` (optional; print result as JSON instead of human-readable).
+- `--slug <slug>` (required) — kebab-case identifier per the regex.
+- `--display-name <text>` (required) — human-readable name.
+- `--root-admin-email <email>` (required) — initial root-admin subject's email.
+- `--root-admin-display-name <text>` (required) — initial root-admin display name.
+- `--residency <vn-1|sg-1|eu-1|us-1>` (optional; default `vn-1` per DEC-324).
+- `--plan-tier <starter|team|enterprise>` (optional; default `starter`).
+- `--json` (optional; print result as JSON instead of human-readable).
 
 5. **MUST** be **idempotent on slug** (per DEC-329). Re-running with same `--slug` AND same `--residency` AND same `--plan-tier` returns the existing tenant + exit code 1 (idempotent-match). Same slug + different residency or plan_tier → exit code 65 with error `slug_collision_different_attrs`.
 
 6. **MUST** execute the provisioning flow as a **transactional 5-step orchestration** (per DEC-321 + DEC-322 + DEC-323 + DEC-325):
-    - Step 1: validate inputs (slug regex, email format, residency in enum); fail-fast.
-    - Step 2: INSERT into `tenants` with `status='provisioning'` + create initial `tenant_status_history` row.
-    - Step 3: create Postgres schema `tenant_<slug>` via `CREATE SCHEMA` (idempotent — `IF NOT EXISTS`).
-    - Step 4: create NATS account + subject ACL: subject namespace = `tenant.<slug>.>` (NATS multi-level wildcard); ACL grants the tenant-admin role pub/sub on the namespace only.
-    - Step 5: write S3 bucket marker objects: `s3://cyberos-doc-<residency>-<scope>/<tenant_id>/.cyberos-tenant-marker` for each scope (per TASK-DOC-001 + TASK-EMAIL-001 bucket layout); marker contains tenant slug + provisioned_at + provisioned_by; existence of marker is the lookup contract.
-    - Step 6: delegate to TASK-AUTH-001 `POST /v1/admin/tenants` (internal helper) to register tenant in AUTH + create initial root-admin subject with `tenant-admin` role via TASK-AUTH-002 + TASK-AUTH-101.
-    - Step 7: UPDATE tenant status `provisioning` → `active`; UPDATE `provisioned_at = now()`; INSERT a `tenant_status_history` row.
-    - Step 8: emit `ten.tenant_provisioned` memory audit row with full provenance.
-   Any step failure rolls back the entire flow (Postgres transactions for steps 2/3/6/7; compensating actions for NATS + S3).
+- Step 1: validate inputs (slug regex, email format, residency in enum); fail-fast.
+- Step 2: INSERT into `tenants` with `status='provisioning'` + create initial `tenant_status_history` row.
+- Step 3: create Postgres schema `tenant_<slug>` via `CREATE SCHEMA` (idempotent — `IF NOT EXISTS`).
+- Step 4: create NATS account + subject ACL: subject namespace = `tenant.<slug>.>` (NATS multi-level wildcard); ACL grants the tenant-admin role pub/sub on the namespace only.
+- Step 5: write S3 bucket marker objects: `s3://cyberos-doc-<residency>-<scope>/<tenant_id>/.cyberos-tenant-marker` for each scope (per TASK-DOC-001 + TASK-EMAIL-001 bucket layout); marker contains tenant slug + provisioned_at + provisioned_by; existence of marker is the lookup contract.
+- Step 6: delegate to TASK-AUTH-001 `POST /v1/admin/tenants` (internal helper) to register tenant in AUTH + create initial root-admin subject with `tenant-admin` role via TASK-AUTH-002 + TASK-AUTH-101.
+- Step 7: UPDATE tenant status `provisioning` → `active`; UPDATE `provisioned_at = now()`; INSERT a `tenant_status_history` row.
+- Step 8: emit `ten.tenant_provisioned` memory audit row with full provenance. Any step failure rolls back the entire flow (Postgres transactions for steps 2/3/6/7; compensating actions for NATS + S3).
 
 7. **MUST** generate the initial root-admin **password server-side** using a cryptographically secure RNG (per DEC-331). Password shape: 32-char base62 (alphanumerics + safe symbols). The password is:
-   - Hashed (bcrypt cost 12 per TASK-AUTH-002) before persistence.
-   - Printed ONCE to the operator's terminal (stdout, with a clear marker `=== ROOT ADMIN PASSWORD (RECORD IMMEDIATELY) ===`).
-   - **Immediately zeroised** from CLI memory via the `zeroize` crate after print + hash.
-   - NEVER logged to any file, NEVER included in any memory audit row.
+- Hashed (bcrypt cost 12 per TASK-AUTH-002) before persistence.
+- Printed ONCE to the operator's terminal (stdout, with a clear marker `=== ROOT ADMIN PASSWORD (RECORD IMMEDIATELY) ===`).
+- **Immediately zeroised** from CLI memory via the `zeroize` crate after print + hash.
+- NEVER logged to any file, NEVER included in any memory audit row.
 
 8. **MUST** emit `ten.tenant_provisioned` memory audit row at the end of successful provisioning. The row carries `{tenant_id, slug, display_name, status: 'active', plan_tier, residency, provisioned_by_subject_id_hash16, root_admin_subject_id_hash16, ts_ns}`. The row does NOT carry the root-admin password (per DEC-331) or the email (PII-scrubbed to hash16 per TASK-MEMORY-111).
 
@@ -183,21 +182,21 @@ The TEN service **MUST** ship the `cyberos-ten provision` CLI as the canonical o
 10. **MUST** be **append-only** on `tenants` AND `tenant_status_history` at the SQL-grant layer (per DEC-328). `REVOKE UPDATE, DELETE ON tenants, tenant_status_history FROM cyberos_app;`. Status transitions create new rows in history table; the `tenants.status` column is updated via the elevated `cyberos_provisioner` role (used by this task's CLI + TASK-TEN-104's offboarding orchestrator).
 
 11. **MUST** use the `cyberos_provisioner` SQL role for the CLI's writes — distinct from `cyberos_app` (which has REVOKE'd UPDATE/DELETE). The provisioner role:
-    - Has INSERT on `tenants`, `tenant_status_history`, `tenant_residency_map`.
-    - Has UPDATE on `tenants.status`, `tenants.provisioned_at`, `tenants.terminated_at` (only those columns).
-    - Cannot DELETE anything.
-    - Is granted to the CLI's connection role at startup.
+- Has INSERT on `tenants`, `tenant_status_history`, `tenant_residency_map`.
+- Has UPDATE on `tenants.status`, `tenants.provisioned_at`, `tenants.terminated_at` (only those columns).
+- Cannot DELETE anything.
+- Is granted to the CLI's connection role at startup.
 
 12. **MUST** validate slug uniqueness at INSERT time via the `UNIQUE(slug)` constraint. Conflict → 23505 → handler maps to either exit 1 (idempotent match per §1 #5) or exit 65 (collision_different_attrs).
 
 13. **MUST** emit exit codes per task-audit skill rule 9 + DEC-330:
-    - 0 = success (new tenant provisioned).
-    - 1 = success-idempotent (existing tenant returned).
-    - 64 = invalid argument (missing required flag).
-    - 65 = invalid data (slug regex fail; email format fail; residency unknown; slug_collision_different_attrs).
-    - 73 = cant-create (Postgres / NATS / S3 / AUTH step failed; reversible — operator should investigate + retry).
-    - 75 = temp-fail (transient infra failure; retry advised).
-    - 77 = permission-denied (operator lacks root-admin role).
+- 0 = success (new tenant provisioned).
+- 1 = success-idempotent (existing tenant returned).
+- 64 = invalid argument (missing required flag).
+- 65 = invalid data (slug regex fail; email format fail; residency unknown; slug_collision_different_attrs).
+- 73 = cant-create (Postgres / NATS / S3 / AUTH step failed; reversible — operator should investigate + retry).
+- 75 = temp-fail (transient infra failure; retry advised).
+- 77 = permission-denied (operator lacks root-admin role).
 
 14. **MUST** require the operator running the CLI to have the `root-admin` role per TASK-AUTH-101 (cross-tenant superuser). The CLI verifies via the operator's JWT before any state mutation. Missing role → exit 77 immediately.
 
@@ -219,15 +218,15 @@ The TEN service **MUST** ship the `cyberos-ten provision` CLI as the canonical o
      <32-char-password>
      === END ===
    ```
-   With `--json`, output is a single JSON object (omitting the password — it's printed in a dedicated stderr block).
+With `--json`, output is a single JSON object (omitting the password — it's printed in a dedicated stderr block).
 
 17. **MUST** emit OTel span `ten.provision` with attributes: `slug`, `residency`, `plan_tier`, `outcome` (success | idempotent | slug_collision | invalid_input | step_failed_<step> | permission_denied | timeout).
 
 18. **MUST** emit OTel metrics:
-    - `ten_provision_total{outcome, residency}` (counter).
-    - `ten_provision_duration_ms{outcome}` (histogram).
-    - `ten_tenant_count{status, residency}` (gauge — periodic compute).
-    - `ten_active_tenants_total` (gauge — count of `status='active'`).
+- `ten_provision_total{outcome, residency}` (counter).
+- `ten_provision_duration_ms{outcome}` (histogram).
+- `ten_tenant_count{status, residency}` (gauge — periodic compute).
+- `ten_active_tenants_total` (gauge — count of `status='active'`).
 
 19. **MUST** ship the `tenant_residency_map` table for downstream consumers: `(tenant_id UUID PRIMARY KEY REFERENCES tenants(id), residency residency_code NOT NULL, set_at TIMESTAMPTZ, set_by_subject_id UUID)`. TASK-DOC-001's `residency::resolve()` + TASK-EMAIL-001's `residency::resolve()` + TASK-AI-016's residency policy all consume this table. Slice 1 ships the table; provisioning writes the initial row; TASK-TEN-103 ships per-tenant residency change.
 

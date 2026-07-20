@@ -92,42 +92,41 @@ The `memory_writer::emit()` function:
 6. **MUST** validate the payload's canonical form before invoking the subprocess: NFC-normalised UTF-8, sorted keys, no insignificant whitespace, integers in their natural form. Per `AGENTS.md §6.2`.
 7. **MUST** verify the returned `chain` hash equals `SHA-256(canonical(record_minus_chain) || prev_chain)`; refuse to return `Ok` to the caller if the verification fails (catches a corrupted Writer).
 8. **MUST** support the following closed set of `ai.*` row kinds (updated 2026-05-16 as additional tasks were specified):
-    - Slice-1 initial: `ai.precheck`, `ai.invocation`, `ai.invocation_failed`, `ai.hold_expired`, `ai.persona_loaded`.
-    - Added by TASK-AI-009 (circuit breaker): `ai.failover_triggered`.
-    - Added by TASK-AI-015 (ZDR enforcement): `ai.zdr_violation`.
-    - Added by TASK-AI-016 (residency pinning): `ai.residency_violation`.
-    - Added by TASK-AI-017 (per-tenant cache): `ai.cache_hit`.
-    - Added by TASK-AI-021 (operator CLI) — operator-action rows in `ai.cli_*` sub-namespace: `ai.cli_policy_updated`, `ai.cli_failover_drill`, `ai.cli_invoice_exported`, `ai.cli_breaker_reset`, `ai.cli_expiry_repaired`, `ai.cli_memory_emitted`.
-    - Cross-module rows in adjacent namespaces (NOT owned by this bridge but emitted via the module's own writer; registered here per task-audit skill §3.2 rule 8 for the canonical closed-set): `auth.*` per TASK-AUTH-001/002/004/006; `memory.sync_row_filtered` per TASK-MEMORY-106; `skill.invoked_started` + `skill.invoked_completed` per TASK-SKILL-101; `obs.*` per task-OBS module.
-    - **CHAT module rows** (added via the strict-redo 2026-05-16 P.M. expansion of TASK-CHAT-002..012; emitted by services/chat/*, services/chat-memory-bridge/*, services/chat-importer/*, services/chat-lumi/*, services/chat-push/*, services/chat-dsar/*):
-        - TASK-CHAT-002 (authbridge): `chat.session_started`.
-        - TASK-CHAT-003 (Fargate deployment): `chat.deployment_provisioned`, `chat.deployment_inventory`, `chat.deployment_drift_detected`, `chat.tier_upgraded`, `chat.pitr_test_passed`, `chat.deployment_warning`, `chat.maintenance_started`, `chat.deployment_blocked`, `chat.tf_state_recovered`, `chat.module_deprecated`.
-        - TASK-CHAT-005 (memory bridge): `chat.message`, `chat.message_edited`, `chat.message_deleted`, `chat.channel_created`, `chat.channel_archived`, `chat.message_reacted`, `chat.message_unreacted`, `chat.user_joined_channel`, `chat.user_left_channel`, `chat.message_attachment`, `chat.bridge_heartbeat`, `chat.bridge_lag_alert`, `chat.bridge_misconfigured`, `chat.bridge_shutdown`, `chat.bridge_redaction_failed`.
-        - TASK-CHAT-006 (Slack import): `chat.import_started`, `chat.import_step_completed`, `chat.import_finished`, `chat.import_warning`, `chat.import_verification_failed`, `chat.import_aborted`, `chat.import_failed`, `chat.import_rate_limit_exhausted`.
-        - TASK-CHAT-007 (Zalo import): reuses the TASK-CHAT-006 `chat.import_*` family AND adds `chat.import_unsupported_zalo_version`, `chat.import_timestamp_ambiguous`, `chat.import_conversation_completed`.
-        - TASK-CHAT-008 (Lumi mention): `chat.lumi_invoked`, `chat.lumi_skipped`, `chat.lumi_error`.
-        - TASK-CHAT-009 (retro capture): `chat.retro_capture_started`, `chat.retro_capture_completed`, `chat.retro_capture_cancelled`, `chat.retro_capture_expired`, `chat.retro_capture_truncated`.
-        - TASK-CHAT-010 (decommission signal): `chat.decommission_signal`, `chat.decommission_state_changed`, `chat.decommission_snoozed`, `chat.decommission_unsnoozed`.
-        - TASK-CHAT-011 (mobile push): `chat.push_delivered`, `chat.push_failed`, `chat.push_dnd_dropped`.
-        - TASK-CHAT-012 (DSAR export): `chat.dsar_requested`, `chat.dsar_exporting`, `chat.dsar_delivered`, `chat.dsar_fully_delivered`, `chat.dsar_acknowledged`, `chat.dsar_failed`, `chat.dsar_expired`, `chat.dsar_url_reused`.
-    - **PROJ module rows** (added via the strict-redo 2026-05-16 P.M. expansion of TASK-PROJ-002, 005..018; emitted by services/proj-sync/* and web/proj-client/*):
-        - TASK-PROJ-001 (issue schema baseline): `proj.issue_status_changed` (superseded by TASK-PROJ-002's `proj.decision` for status transitions; status_changed retained for non-decision metadata updates).
-        - TASK-PROJ-002 (memory-anchored decision): `proj.decision`, `proj.decision_retracted`.
-        - TASK-PROJ-005 (rate-card schema): `proj.rate_card_created`, `proj.rate_card_superseded`, `proj.rate_card_billable_default_changed`, `proj.rate_card_corrected`, `proj.rate_card_currency_mismatch`.
-        - TASK-PROJ-006 (billable cascade): `proj.billable_resolved`, `proj.member_billable_override_set`, `proj.task_class_billable_set`.
-        - TASK-PROJ-007 (billing modes): `proj.billing_mode_set`, `proj.billing_mode_changed`, `proj.milestone_invoiced`, `proj.milestone_cancelled`, `proj.milestone_added`, `proj.retainer_overage_emitted`, `proj.retainer_overage_streak`, `proj.retainer_rollover_carry_forward`, `proj.billing_mixed_currency_period`.
-        - TASK-PROJ-008 (history events): `proj.issue_mutated`, `proj.chain_tampered`.
-        - TASK-PROJ-009 (memory links): `proj.memory_link_created`, `proj.memory_link_removed`, `proj.memory_link_traversed`.
-        - TASK-PROJ-010 (citation drift): `proj.citation_drift_detected`, `proj.drift_remediated`.
-        - TASK-PROJ-011 (blocker detector): `proj.blocker_detected`, `proj.blocker_resolved`, `proj.blocker_resolved_diff`, `proj.blocker_stale`, `proj.blocker_escalated`, `proj.blocker_cycle_detected`.
-        - TASK-PROJ-012 (cycle review): `proj.cycle_review_drafted`, `proj.cycle_review_accepted`, `proj.cycle_review_iterated`, `proj.cycle_review_skipped`, `proj.cycle_goal_updated`.
-        - TASK-PROJ-013 (estimate calibration): `proj.estimate_calibration_computed`, `proj.calibration_drift_alert`, `proj.calibration_backfilled`.
-        - TASK-PROJ-014 (Kanban): `proj.kanban_card_moved`, `proj.kanban_card_move_undone`, `proj.wip_limit_overridden`.
-        - TASK-PROJ-015 (Timeline): `proj.timeline_bar_moved`.
-        - TASK-PROJ-016 (Gantt): `proj.dependency_added`, `proj.dependency_removed`, `proj.dependency_near_cycle`, `proj.critical_path_recomputed`.
-        - TASK-PROJ-017 (Brief Modal): `proj.brief_modal_opened`.
-        - TASK-PROJ-018 (design tokens): n/a — visual/CI task; no audit rows.
-   Adding a new `ai.*` kind requires (a) a Rust enum variant, (b) a serde-derive update, (c) a unit test, (d) a docs cross-reference to the kind's purpose, (e) a one-line update to this clause. Adding a new `chat.*` or `proj.*` kind requires the same plus a one-line append to the per-task sublist above so this clause stays the closed-set source of truth across the platform.
+- Slice-1 initial: `ai.precheck`, `ai.invocation`, `ai.invocation_failed`, `ai.hold_expired`, `ai.persona_loaded`.
+- Added by TASK-AI-009 (circuit breaker): `ai.failover_triggered`.
+- Added by TASK-AI-015 (ZDR enforcement): `ai.zdr_violation`.
+- Added by TASK-AI-016 (residency pinning): `ai.residency_violation`.
+- Added by TASK-AI-017 (per-tenant cache): `ai.cache_hit`.
+- Added by TASK-AI-021 (operator CLI) — operator-action rows in `ai.cli_*` sub-namespace: `ai.cli_policy_updated`, `ai.cli_failover_drill`, `ai.cli_invoice_exported`, `ai.cli_breaker_reset`, `ai.cli_expiry_repaired`, `ai.cli_memory_emitted`.
+- Cross-module rows in adjacent namespaces (NOT owned by this bridge but emitted via the module's own writer; registered here per task-audit skill §3.2 rule 8 for the canonical closed-set): `auth.*` per TASK-AUTH-001/002/004/006; `memory.sync_row_filtered` per TASK-MEMORY-106; `skill.invoked_started` + `skill.invoked_completed` per TASK-SKILL-101; `obs.*` per task-OBS module.
+- **CHAT module rows** (added via the strict-redo 2026-05-16 P.M. expansion of TASK-CHAT-002..012; emitted by services/chat/*, services/chat-memory-bridge/*, services/chat-importer/*, services/chat-lumi/*, services/chat-push/*, services/chat-dsar/*):
+- TASK-CHAT-002 (authbridge): `chat.session_started`.
+- TASK-CHAT-003 (Fargate deployment): `chat.deployment_provisioned`, `chat.deployment_inventory`, `chat.deployment_drift_detected`, `chat.tier_upgraded`, `chat.pitr_test_passed`, `chat.deployment_warning`, `chat.maintenance_started`, `chat.deployment_blocked`, `chat.tf_state_recovered`, `chat.module_deprecated`.
+- TASK-CHAT-005 (memory bridge): `chat.message`, `chat.message_edited`, `chat.message_deleted`, `chat.channel_created`, `chat.channel_archived`, `chat.message_reacted`, `chat.message_unreacted`, `chat.user_joined_channel`, `chat.user_left_channel`, `chat.message_attachment`, `chat.bridge_heartbeat`, `chat.bridge_lag_alert`, `chat.bridge_misconfigured`, `chat.bridge_shutdown`, `chat.bridge_redaction_failed`.
+- TASK-CHAT-006 (Slack import): `chat.import_started`, `chat.import_step_completed`, `chat.import_finished`, `chat.import_warning`, `chat.import_verification_failed`, `chat.import_aborted`, `chat.import_failed`, `chat.import_rate_limit_exhausted`.
+- TASK-CHAT-007 (Zalo import): reuses the TASK-CHAT-006 `chat.import_*` family AND adds `chat.import_unsupported_zalo_version`, `chat.import_timestamp_ambiguous`, `chat.import_conversation_completed`.
+- TASK-CHAT-008 (Lumi mention): `chat.lumi_invoked`, `chat.lumi_skipped`, `chat.lumi_error`.
+- TASK-CHAT-009 (retro capture): `chat.retro_capture_started`, `chat.retro_capture_completed`, `chat.retro_capture_cancelled`, `chat.retro_capture_expired`, `chat.retro_capture_truncated`.
+- TASK-CHAT-010 (decommission signal): `chat.decommission_signal`, `chat.decommission_state_changed`, `chat.decommission_snoozed`, `chat.decommission_unsnoozed`.
+- TASK-CHAT-011 (mobile push): `chat.push_delivered`, `chat.push_failed`, `chat.push_dnd_dropped`.
+- TASK-CHAT-012 (DSAR export): `chat.dsar_requested`, `chat.dsar_exporting`, `chat.dsar_delivered`, `chat.dsar_fully_delivered`, `chat.dsar_acknowledged`, `chat.dsar_failed`, `chat.dsar_expired`, `chat.dsar_url_reused`.
+- **PROJ module rows** (added via the strict-redo 2026-05-16 P.M. expansion of TASK-PROJ-002, 005..018; emitted by services/proj-sync/* and web/proj-client/*):
+- TASK-PROJ-001 (issue schema baseline): `proj.issue_status_changed` (superseded by TASK-PROJ-002's `proj.decision` for status transitions; status_changed retained for non-decision metadata updates).
+- TASK-PROJ-002 (memory-anchored decision): `proj.decision`, `proj.decision_retracted`.
+- TASK-PROJ-005 (rate-card schema): `proj.rate_card_created`, `proj.rate_card_superseded`, `proj.rate_card_billable_default_changed`, `proj.rate_card_corrected`, `proj.rate_card_currency_mismatch`.
+- TASK-PROJ-006 (billable cascade): `proj.billable_resolved`, `proj.member_billable_override_set`, `proj.task_class_billable_set`.
+- TASK-PROJ-007 (billing modes): `proj.billing_mode_set`, `proj.billing_mode_changed`, `proj.milestone_invoiced`, `proj.milestone_cancelled`, `proj.milestone_added`, `proj.retainer_overage_emitted`, `proj.retainer_overage_streak`, `proj.retainer_rollover_carry_forward`, `proj.billing_mixed_currency_period`.
+- TASK-PROJ-008 (history events): `proj.issue_mutated`, `proj.chain_tampered`.
+- TASK-PROJ-009 (memory links): `proj.memory_link_created`, `proj.memory_link_removed`, `proj.memory_link_traversed`.
+- TASK-PROJ-010 (citation drift): `proj.citation_drift_detected`, `proj.drift_remediated`.
+- TASK-PROJ-011 (blocker detector): `proj.blocker_detected`, `proj.blocker_resolved`, `proj.blocker_resolved_diff`, `proj.blocker_stale`, `proj.blocker_escalated`, `proj.blocker_cycle_detected`.
+- TASK-PROJ-012 (cycle review): `proj.cycle_review_drafted`, `proj.cycle_review_accepted`, `proj.cycle_review_iterated`, `proj.cycle_review_skipped`, `proj.cycle_goal_updated`.
+- TASK-PROJ-013 (estimate calibration): `proj.estimate_calibration_computed`, `proj.calibration_drift_alert`, `proj.calibration_backfilled`.
+- TASK-PROJ-014 (Kanban): `proj.kanban_card_moved`, `proj.kanban_card_move_undone`, `proj.wip_limit_overridden`.
+- TASK-PROJ-015 (Timeline): `proj.timeline_bar_moved`.
+- TASK-PROJ-016 (Gantt): `proj.dependency_added`, `proj.dependency_removed`, `proj.dependency_near_cycle`, `proj.critical_path_recomputed`.
+- TASK-PROJ-017 (Brief Modal): `proj.brief_modal_opened`.
+- TASK-PROJ-018 (design tokens): n/a — visual/CI task; no audit rows. Adding a new `ai.*` kind requires (a) a Rust enum variant, (b) a serde-derive update, (c) a unit test, (d) a docs cross-reference to the kind's purpose, (e) a one-line update to this clause. Adding a new `chat.*` or `proj.*` kind requires the same plus a one-line append to the per-task sublist above so this clause stays the closed-set source of truth across the platform.
 9. **MUST** NOT bypass the Writer to write directly to `<memory-root>/audit/*.binlog` or `<memory-root>/HEAD`. The Writer is the only legal mutator (per `AGENTS.md §14.1`).
 10. **MUST** run a startup health check via `python3 -m cyberos.writer --version` as a synchronous subprocess call during AI Gateway init. Non-zero exit MUST cause the gateway to exit 1 with stderr `memory_writer: Writer subprocess unavailable: <reason>`. This catches misconfigured deploys at deploy time, not first-request time.
 11. **MUST NOT** expose `memory_writer::emit_batch()` in slice 1. Callers needing N rows MUST call `emit()` N times (or use `futures::future::join_all`). TASK-AI-008 (slice 2 PyO3 spike) re-introduces a real batching API.

@@ -88,10 +88,10 @@ A CI job + standalone binary `rebuild_layer2` **MUST** verify that Layer 2 can b
 2. **MUST** spin up a fresh Postgres instance (pgvector + AGE extensions) AND a BGE-M3 sidecar for the rebuild duration. The CI job uses `services` declaration in `.github/workflows/memory-rebuild.yml`.
 3. **MUST** stream every Layer 1 binlog row (per tenant) through `layer2::ingest::run_one_pass` until cursor catches up to the chain head.
 4. **MUST** verify post-rebuild via four checks:
-    - **Row-count check**: `count(layer2_memories WHERE tenant_id = T) == count(layer1_chain WHERE tenant_id = T)`.
-    - **Spot-check**: random-sample 100 Layer 1 rows; recompute BGE embedding via the SAME sidecar version; compare to stored embedding; cosine ≥ 0.99 (allowance for floating-point variance).
-    - **Chain-anchor check**: every layer2_memories row's `chain_anchor` matches `SHA-256(canonical(corresponding Layer 1 row))`.
-    - **Determinism check**: run rebuild twice in succession; assert `SHA-256(sorted(layer2_memories rows))` is byte-identical between runs.
+- **Row-count check**: `count(layer2_memories WHERE tenant_id = T) == count(layer1_chain WHERE tenant_id = T)`.
+- **Spot-check**: random-sample 100 Layer 1 rows; recompute BGE embedding via the SAME sidecar version; compare to stored embedding; cosine ≥ 0.99 (allowance for floating-point variance).
+- **Chain-anchor check**: every layer2_memories row's `chain_anchor` matches `SHA-256(canonical(corresponding Layer 1 row))`.
+- **Determinism check**: run rebuild twice in succession; assert `SHA-256(sorted(layer2_memories rows))` is byte-identical between runs.
 5. **MUST** complete within 30 minutes for a 100K-row tenant binlog on a 4-core GitHub Actions `ubuntu-22.04` runner. SLA for ops-initiated rebuilds.
 6. **MUST** be deterministic — running rebuild twice produces byte-identical layer2_memories state. Non-determinism sources (unsorted iteration, time-dependent values, RNG) MUST be eliminated; determinism check is the enforcement.
 7. **MUST** include `cyberos-memory rebuild-layer2 --tenant <id> [--dry-run]` CLI for operator preview. `--dry-run` shows what would be rebuilt without executing.
@@ -102,10 +102,10 @@ A CI job + standalone binary `rebuild_layer2` **MUST** verify that Layer 2 can b
 12. **MUST** rebuild ALL tenants in parallel via tokio task per tenant (single-tenant serial would not finish 100 tenants × 1000 rows in 30min budget).
 13. **MUST** assert no cross-tenant leakage during rebuild — after multi-tenant rebuild, query each tenant under RLS context; assert each sees only own rows.
 14. **SHOULD** emit OTel metrics:
-    - `memory_rebuild_duration_seconds{tenant_id}` (histogram).
-    - `memory_rebuild_rows_ingested{tenant_id}` (gauge).
-    - `memory_rebuild_spot_check_pass{tenant_id}` (gauge; 0-100).
-    - `memory_rebuild_failures_total{stage}` (counter).
+- `memory_rebuild_duration_seconds{tenant_id}` (histogram).
+- `memory_rebuild_rows_ingested{tenant_id}` (gauge).
+- `memory_rebuild_spot_check_pass{tenant_id}` (gauge; 0-100).
+- `memory_rebuild_failures_total{stage}` (counter).
 
 ---
 

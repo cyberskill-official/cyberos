@@ -7,5 +7,4 @@ Findings table (fail/needs_human only):
 |---|---|---|---|
 | SPK-EVID-002 | options[1].evidence | "X is faster" carries no citation | add command+output or drop the claim |
 
-Closing line, verbatim shape: **Score = N/10.** A pass report ends with the single
-line `spike <spike_id> PASS 10/10` so ship-chain greps stay stable.
+Closing line, verbatim shape: **Score = N/10.** A pass report ends with the single line `spike <spike_id> PASS 10/10` so ship-chain greps stay stable.

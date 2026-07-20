@@ -51,18 +51,7 @@ structurally excluded · DEC-036"] HR -- "active → vest accrual" --> ESOP HR -
 
 ### Auto vs human-in-loop operations matrix
 
-Operation| How it happens| Why this split
----|---|---
-SP grant issuance| **Manual** CEO + CFO + Board sign-off| Cap-table change; tri-sign required.
-Monthly vesting accrual| **Auto** deterministic from vesting schedule| Cliff + monthly formula; CI replay.
-Annual valuation| **Manual** CFO base + Board multiplier sign-off| Major financial event; versioned; immutable after publish.
-Put option exercise| **Manual** Member request -> CFO approve -> wire| Money movement; CFO verifies eligibility (Year 3+, cap not exceeded).
-Good vs Bad Leaver classification| **Manual** CFO + CEO co-sign| Consequential; never algorithmic.
-Cancellation (forfeiture)| **Manual** Board sign-off| Cancelling unvested portion happens on Bad Leaver or termination.
-M&A acceleration trigger| **Manual** Board declaration| Acceleration clauses fire on Board-declared change of control.
-HoldCo flip designation| **Manual** CEO + Board sign-off| Singapore conversion is a one-way operation; deliberate.
-memory ingestion of ESOP value| **BLOCKED**| DEC-036; CI gate verifies absence.
-Member ESOP dashboard view| **Auto** personal view only| Member sees own grants; cross-Member view requires CFO sign-off audit row.
+Operation| How it happens| Why this split ---|---|--- SP grant issuance| **Manual** CEO + CFO + Board sign-off| Cap-table change; tri-sign required. Monthly vesting accrual| **Auto** deterministic from vesting schedule| Cliff + monthly formula; CI replay. Annual valuation| **Manual** CFO base + Board multiplier sign-off| Major financial event; versioned; immutable after publish. Put option exercise| **Manual** Member request -> CFO approve -> wire| Money movement; CFO verifies eligibility (Year 3+, cap not exceeded). Good vs Bad Leaver classification| **Manual** CFO + CEO co-sign| Consequential; never algorithmic. Cancellation (forfeiture)| **Manual** Board sign-off| Cancelling unvested portion happens on Bad Leaver or termination. M&A acceleration trigger| **Manual** Board declaration| Acceleration clauses fire on Board-declared change of control. HoldCo flip designation| **Manual** CEO + Board sign-off| Singapore conversion is a one-way operation; deliberate. memory ingestion of ESOP value| **BLOCKED**| DEC-036; CI gate verifies absence. Member ESOP dashboard view| **Auto** personal view only| Member sees own grants; cross-Member view requires CFO sign-off audit row.
 
 ## Why ESOP exists
 
@@ -78,21 +67,7 @@ The retention bet: a Phantom Stock plan with credible annual valuation, real put
 
 A structured decomposition of ESOP's scope.
 
-Axis| Question| Answer
----|---|---
-**5W - What**| What is ESOP?| A Phantom Stock ledger - grants (founding, milestone, retention), vesting schedules (4-year default), annual valuations (CFO + Board signed), put options (Year 3+), Good/Bad Leaver branches, pool balance + replenishment, optional HoldCo flip to real Singapore shares.
-**5W - Who**| Who is touched?| **Grantees:** Members with at least one grant. **Approvers:** CEO + CFO + Board chair for every grant; CFO + Board + auditor for every valuation. **Read-only:** Members see own vesting + put schedule; never aggregate cap table.
-**5W - When**| When does ESOP act?| (a) Hire - founding grant (if applicable). (b) Milestone - performance / promotion grant. (c) Monthly - vesting compute (idempotent). (d) Annual - valuation cycle (Q4). (e) July annually - put-option exercise window. (f) M&A - acceleration clause fires. (g) Termination - Good/Bad Leaver branch chosen.
-**5W - Where**| Where does it run?| P2: single region (SG-1) backed by AWS RDS Postgres with ESOP-specific KMS key (separate from REW, HR, memory). PDFs at rest with retention lock = 10 years.
-**5W - Why**| Why a separate module?| Because grant + valuation history is sensitive board-level data that must be append-only and dual-signed. Co-mingling with HR or REW would weaken the audit posture and risk leakage.
-**1H - How**| How does it work?| Append-only grant + vesting_event + valuation rows in Postgres. Vesting compute is a deterministic function of (grant, today, valuation). Put-option exercise schedules a wire transfer via Wise (multi-currency) or VietQR (VND). HoldCo flip is a one-way migration - phantom row -> real_share row with full audit trail.
-**2C - Cost**| Cost budget?| P2: ~$25/month (small RDS schema + Fargate share + S3 retention). 50-tenant: ~$80/month. Per-grant cost negligible.
-**2C - Constraints**| Constraints?| (a) Dual sign-off mandatory on grants + valuations (task pending). (b) Append-only (task pending). (c) Zero memory ingestion ((task pending) + DEC-036). (d) 10-year retention. (e) M&A acceleration is Board-only. (f) HoldCo flip is CEO-only designation.
-**5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, tectonic for grant + valuation PDFs, ring for SHA-256, cyberskill-vn skills (vietnam-bank-transfer for put-option wires), AWS S3 with retention lock, KMS.
-**5M - Methods**| Method choices?| Append-only with supersession. Deterministic vesting compute (pure fn). Dual sign-off enforced at AUTH cosign predicate. Annual valuation is a versioned row analogous to REW parameter versioning.
-**5M - Machines**| Deployment?| Fargate in SG-1 (P2). Multi-AZ Postgres RDS. S3 retention 10 years.
-**5M - Manpower**| Who maintains?| CFO (R for valuation + grant) + CEO (A for grants + HoldCo flip) + 0.1 FTE eng for monthly vesting + put-option workflows.
-**5M - Measurement**| How measured?| KPIs: grant audit trail integrity (= 100%), vesting determinism (replay pass), put-option SLO (exercise -> wire <= 10 days), Good Leaver / Bad Leaver branch correctness.
+Axis| Question| Answer ---|---|--- **5W - What**| What is ESOP?| A Phantom Stock ledger - grants (founding, milestone, retention), vesting schedules (4-year default), annual valuations (CFO + Board signed), put options (Year 3+), Good/Bad Leaver branches, pool balance + replenishment, optional HoldCo flip to real Singapore shares. **5W - Who**| Who is touched?| **Grantees:** Members with at least one grant. **Approvers:** CEO + CFO + Board chair for every grant; CFO + Board + auditor for every valuation. **Read-only:** Members see own vesting + put schedule; never aggregate cap table. **5W - When**| When does ESOP act?| (a) Hire - founding grant (if applicable). (b) Milestone - performance / promotion grant. (c) Monthly - vesting compute (idempotent). (d) Annual - valuation cycle (Q4). (e) July annually - put-option exercise window. (f) M&A - acceleration clause fires. (g) Termination - Good/Bad Leaver branch chosen. **5W - Where**| Where does it run?| P2: single region (SG-1) backed by AWS RDS Postgres with ESOP-specific KMS key (separate from REW, HR, memory). PDFs at rest with retention lock = 10 years. **5W - Why**| Why a separate module?| Because grant + valuation history is sensitive board-level data that must be append-only and dual-signed. Co-mingling with HR or REW would weaken the audit posture and risk leakage. **1H - How**| How does it work?| Append-only grant + vesting_event + valuation rows in Postgres. Vesting compute is a deterministic function of (grant, today, valuation). Put-option exercise schedules a wire transfer via Wise (multi-currency) or VietQR (VND). HoldCo flip is a one-way migration - phantom row -> real_share row with full audit trail. **2C - Cost**| Cost budget?| P2: ~$25/month (small RDS schema + Fargate share + S3 retention). 50-tenant: ~$80/month. Per-grant cost negligible. **2C - Constraints**| Constraints?| (a) Dual sign-off mandatory on grants + valuations (task pending). (b) Append-only (task pending). (c) Zero memory ingestion ((task pending) + DEC-036). (d) 10-year retention. (e) M&A acceleration is Board-only. (f) HoldCo flip is CEO-only designation. **5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, tectonic for grant + valuation PDFs, ring for SHA-256, cyberskill-vn skills (vietnam-bank-transfer for put-option wires), AWS S3 with retention lock, KMS. **5M - Methods**| Method choices?| Append-only with supersession. Deterministic vesting compute (pure fn). Dual sign-off enforced at AUTH cosign predicate. Annual valuation is a versioned row analogous to REW parameter versioning. **5M - Machines**| Deployment?| Fargate in SG-1 (P2). Multi-AZ Postgres RDS. S3 retention 10 years. **5M - Manpower**| Who maintains?| CFO (R for valuation + grant) + CEO (A for grants + HoldCo flip) + 0.1 FTE eng for monthly vesting + put-option workflows. **5M - Measurement**| How measured?| KPIs: grant audit trail integrity (= 100%), vesting determinism (replay pass), put-option SLO (exercise -> wire <= 10 days), Good Leaver / Bad Leaver branch correctness.
 
 ## Architecture
 
@@ -133,22 +108,7 @@ timing only"] AUTH["🔐 AUTH"] end CEO --> AR CFO --> AR BOARD --> AR AUDITOR -
 
 ### Internal components
 
-Component| Path (planned)| Responsibility
----|---|---
-`grant.rs`| services/esop/src/grant.rs| Append-only grant issuance. Requires CEO + CFO + Board-designate WebAuthn co-sign before INSERT. Types: founding, milestone, retention.
-`vesting.rs`| services/esop/src/vesting.rs| Pure-function vesting compute. Input: (grant, asof_date). Output: vested_sp count. Phased cliff + monthly thereafter. Deterministic.
-`vesting_cron.rs`| services/esop/src/vesting_cron.rs| Monthly cron that materialises vesting_event rows. Idempotent (UNIQUE by (grant_id, period)).
-`valuation.rs`| services/esop/src/valuation.rs| Annual valuation cycle. CFO inputs base value; Board signs Industry Multiplier; auditor attests. New `valuation` row supersedes prior.
-`put_option.rs`| services/esop/src/put_option.rs| Put-option exercise. Year 3+ window (annual July). Capped by (task pending) per-Member per-year limit. Wires cash via vietnam-bank-transfer or Wise.
-`leaver.rs`| services/esop/src/leaver.rs| Termination handler. Good Leaver: vested retained, future vesting halted, put rights preserved. Bad Leaver: vested retained at appendix discount, put rights frozen. Requires CFO + CEO co-sign.
-`pool.rs`| services/esop/src/pool.rs| Pool balance. Replenishment annually by % of profit (Board-signed parameter). GL/BL split for top-performers vs broad.
-`ma_acceleration.rs`| services/esop/src/ma_acceleration.rs| M&A acceleration. Board fires; bulk vesting event for all open grants. Tax-implication note attached.
-`holdco_flip.rs`| services/esop/src/holdco_flip.rs| HoldCo flip - one-way migration. Phantom row -> real_share row in Singapore HoldCo schema. CEO-only designation; DOC handles paperwork.
-`cosign_guard.rs`| services/esop/src/cosign_guard.rs| Predicate at boundary. Grants: CEO + CFO + Board. Valuations: CFO + Board + auditor.
-`narrator.rs`| services/esop/src/narrator.rs| Read-only narrator - explains a Member's vesting curve + put schedule + valuation history. Never reveals aggregate cap table.
-`memory_bridge.rs`| services/esop/src/memory_bridge.rs| Writes opaque event refs to memory (e.g. `esop.grant.issued:opaque_id`). Never writes numeric values. CI gate inspects.
-`pdf_renderer.rs`| services/esop/src/pdf_renderer.rs| Deterministic grant + valuation PDFs via tectonic. SHA-256 stored.
-`migrations/`| services/esop/migrations/| sqlx migrations. Append-only constraints. Separate KMS key from HR + REW + memory.
+Component| Path (planned)| Responsibility ---|---|--- `grant.rs`| services/esop/src/grant.rs| Append-only grant issuance. Requires CEO + CFO + Board-designate WebAuthn co-sign before INSERT. Types: founding, milestone, retention. `vesting.rs`| services/esop/src/vesting.rs| Pure-function vesting compute. Input: (grant, asof_date). Output: vested_sp count. Phased cliff + monthly thereafter. Deterministic. `vesting_cron.rs`| services/esop/src/vesting_cron.rs| Monthly cron that materialises vesting_event rows. Idempotent (UNIQUE by (grant_id, period)). `valuation.rs`| services/esop/src/valuation.rs| Annual valuation cycle. CFO inputs base value; Board signs Industry Multiplier; auditor attests. New `valuation` row supersedes prior. `put_option.rs`| services/esop/src/put_option.rs| Put-option exercise. Year 3+ window (annual July). Capped by (task pending) per-Member per-year limit. Wires cash via vietnam-bank-transfer or Wise. `leaver.rs`| services/esop/src/leaver.rs| Termination handler. Good Leaver: vested retained, future vesting halted, put rights preserved. Bad Leaver: vested retained at appendix discount, put rights frozen. Requires CFO + CEO co-sign. `pool.rs`| services/esop/src/pool.rs| Pool balance. Replenishment annually by % of profit (Board-signed parameter). GL/BL split for top-performers vs broad. `ma_acceleration.rs`| services/esop/src/ma_acceleration.rs| M&A acceleration. Board fires; bulk vesting event for all open grants. Tax-implication note attached. `holdco_flip.rs`| services/esop/src/holdco_flip.rs| HoldCo flip - one-way migration. Phantom row -> real_share row in Singapore HoldCo schema. CEO-only designation; DOC handles paperwork. `cosign_guard.rs`| services/esop/src/cosign_guard.rs| Predicate at boundary. Grants: CEO + CFO + Board. Valuations: CFO + Board + auditor. `narrator.rs`| services/esop/src/narrator.rs| Read-only narrator - explains a Member's vesting curve + put schedule + valuation history. Never reveals aggregate cap table. `memory_bridge.rs`| services/esop/src/memory_bridge.rs| Writes opaque event refs to memory (e.g. `esop.grant.issued:opaque_id`). Never writes numeric values. CI gate inspects. `pdf_renderer.rs`| services/esop/src/pdf_renderer.rs| Deterministic grant + valuation PDFs via tectonic. SHA-256 stored. `migrations/`| services/esop/migrations/| sqlx migrations. Append-only constraints. Separate KMS key from HR + REW + memory.
 
 ## Data model
 
@@ -162,12 +122,7 @@ erDiagram TENANT ||--|| POOL_BALANCE: "owns" POOL_BALANCE ||--o{ POOL_CONTRIBUTI
 
 ### Grant type catalogue
 
-Kind| When issued| Typical schedule| Notes
----|---|---|---
-`founding`| At hire| 4-year, 12-mo cliff, monthly after| Largest single grant; reflects offer-letter ESOP allocation.
-`milestone`| Achievement-based| 2-year, 6-mo cliff, monthly| Triggered by promotion, project landing, leadership milestone.
-`retention`| Annual top-up| 4-year, no cliff, monthly| Smooth annual top-up to maintain forward vesting trajectory.
-`special`| Board-designated| custom (any)| Founder discretion, requires extra approval; ad-hoc.
+Kind| When issued| Typical schedule| Notes ---|---|---|--- `founding`| At hire| 4-year, 12-mo cliff, monthly after| Largest single grant; reflects offer-letter ESOP allocation. `milestone`| Achievement-based| 2-year, 6-mo cliff, monthly| Triggered by promotion, project landing, leadership milestone. `retention`| Annual top-up| 4-year, no cliff, monthly| Smooth annual top-up to maintain forward vesting trajectory. `special`| Board-designated| custom (any)| Founder discretion, requires extra approval; ad-hoc.
 
 ## API surface
 
@@ -238,29 +193,11 @@ type Mutation {
 
 ### REST admin surface (multi-sign required)
 
-Method| Path| Purpose| Co-sign?
----|---|---|---
-POST| `/admin/grants`| Issue a new grant.| **CEO + CFO + Board**
-POST| `/admin/valuations`| Publish annual valuation.| **CFO + Board chair + auditor**
-POST| `/admin/valuations/{id}/auditor-attest`| External auditor attestation step.| auditor (separate token)
-POST| `/admin/put-exercise/{id}/approve`| Approve a put exercise; trigger wire.| CFO
-POST| `/admin/grants/{id}/terminate`| Trigger Good Leaver or Bad Leaver branch.| **CEO + CFO**
-POST| `/admin/ma-acceleration`| Fire M&A acceleration; bulk vesting event.| **Board**
-POST| `/admin/holdco-flip/designate`| CEO designates HoldCo flip eligibility.| CEO
-POST| `/admin/holdco-flip/{member_id}/execute`| Execute flip for a Member; routes to DOC for SG paperwork.| **CEO + Board**
-POST| `/admin/pool/replenish`| Annual pool replenishment from profit.| **CEO + CFO + Board**
-GET| `/admin/cap-table`| Aggregate cap table (CEO/CFO/Board scope only).| readonly, scope-gated
-POST| `/admin/dsar/{member_id}/export`| DSAR - own grants + put exercises only.| DPO
+Method| Path| Purpose| Co-sign? ---|---|---|--- POST| `/admin/grants`| Issue a new grant.| **CEO + CFO + Board** POST| `/admin/valuations`| Publish annual valuation.| **CFO + Board chair + auditor** POST| `/admin/valuations/{id}/auditor-attest`| External auditor attestation step.| auditor (separate token) POST| `/admin/put-exercise/{id}/approve`| Approve a put exercise; trigger wire.| CFO POST| `/admin/grants/{id}/terminate`| Trigger Good Leaver or Bad Leaver branch.| **CEO + CFO** POST| `/admin/ma-acceleration`| Fire M&A acceleration; bulk vesting event.| **Board** POST| `/admin/holdco-flip/designate`| CEO designates HoldCo flip eligibility.| CEO POST| `/admin/holdco-flip/{member_id}/execute`| Execute flip for a Member; routes to DOC for SG paperwork.| **CEO + Board** POST| `/admin/pool/replenish`| Annual pool replenishment from profit.| **CEO + CFO + Board** GET| `/admin/cap-table`| Aggregate cap table (CEO/CFO/Board scope only).| readonly, scope-gated POST| `/admin/dsar/{member_id}/export`| DSAR - own grants + put exercises only.| DPO
 
 ### MCP tool catalogue (narrator-only, no write tools)
 
-Tool name| Inputs| Outputs| Annotations
----|---|---|---
-`cyberos.esop.explain_my_vesting`| member_id (own)| narrative vest curve| readonly, self-scope
-`cyberos.esop.simulate_put`| grant_id, sp_count| narrative simulation (no commit)| readonly, simulation only
-`cyberos.esop.explain_holdco_flip`| -| narrative policy text| readonly
-`cyberos.esop.upcoming_put_window`| -| "next window opens YYYY-MM-DD"| readonly
-`cyberos.esop.explain_leaver_outcome`| scenario (good/bad)| narrative outcome| readonly, policy lookup
+Tool name| Inputs| Outputs| Annotations ---|---|---|--- `cyberos.esop.explain_my_vesting`| member_id (own)| narrative vest curve| readonly, self-scope `cyberos.esop.simulate_put`| grant_id, sp_count| narrative simulation (no commit)| readonly, simulation only `cyberos.esop.explain_holdco_flip`| -| narrative policy text| readonly `cyberos.esop.upcoming_put_window`| -| "next window opens YYYY-MM-DD"| readonly `cyberos.esop.explain_leaver_outcome`| scenario (good/bad)| narrative outcome| readonly, policy lookup
 
 **Forbidden:** no `cyberos.esop.issue_grant`, no `cyberos.esop.publish_valuation`, no `cyberos.esop.terminate`. All destructive ops go through REST admin with multi-sign.
 
@@ -317,14 +254,7 @@ stateDiagram-v2 [*] --> Issued: CEO + CFO + Board co-sign Issued --> Cliffed: 12
 
 ### Good Leaver vs Bad Leaver branch comparison
 
-Outcome| Good Leaver| Bad Leaver
----|---|---
-Vested SP| Retained at face valuation| Retained at appendix discount (e.g. 40-60% of valuation)
-Unvested SP| Forfeited| Forfeited
-Put rights| Preserved (still exercisable in future windows)| Frozen (no future put exercises)
-HoldCo flip eligibility| Eligible if pre-flip| Excluded from flip
-Trigger| Voluntary resignation, redundancy, contract end, mutual agreement| Termination for cause (per Code of Conduct), competitive breach
-Approval| CFO confirms| CEO + CFO co-sign (mandatory)
+Outcome| Good Leaver| Bad Leaver ---|---|--- Vested SP| Retained at face valuation| Retained at appendix discount (e.g. 40-60% of valuation) Unvested SP| Forfeited| Forfeited Put rights| Preserved (still exercisable in future windows)| Frozen (no future put exercises) HoldCo flip eligibility| Eligible if pre-flip| Excluded from flip Trigger| Voluntary resignation, redundancy, contract end, mutual agreement| Termination for cause (per Code of Conduct), competitive breach Approval| CFO confirms| CEO + CFO co-sign (mandatory)
 
 The branch decision is human-only - no system path selects GL vs BL automatically. The offboarding orchestrator (in HR) surfaces a recommendation; the actual selection is a CEO + CFO signed event in ESOP.
 
@@ -338,20 +268,7 @@ Previous task enumerations were archived 2026-05-14 and are no longer reflected 
 
 Security and reliability NFRs bind on ESOP - particularly grant immutability and valuation auditability.
 
-NFR ID| Concern| Target| Measurement
----|---|---|---
-(NFR pending)| Grant row UPDATE attempted| = 0 - DB role lacks UPDATE| DB role inspection in CI
-(NFR pending)| Valuation row UPDATE attempted| = 0 - DB role lacks UPDATE| DB role inspection in CI
-(NFR pending)| memory row containing ESOP numeric value| = 0 - sev-0| CI: memory_bridge emit JSON inspected against numeric blocklist
-(NFR pending)| Single-signer grant or valuation| = 0 - cosign_guard blocks| integration test injects single-sign attempt
-(NFR pending)| KMS key isolation (esop-key distinct)| 1 distinct key handle| KMS policy inspection
-(NFR pending)| Vesting determinism - replay equality| 100% (property test)| proptest: vest at past dates -> identical output
-(NFR pending)| Cap-table snapshot integrity (quarterly)| SHA-256 stable| chaos test recomputes; asserts equality
-(NFR pending)| Put-option SLO (exercise -> wire)| <= 10 working days p95| OBS dashboard
-(NFR pending)| ESOP availability| >= 99.5%| SLO monitor
-(NFR pending)| Grant + valuation durability (10-year)| 0 lost objects| S3 object-lock + quarterly inventory
-(NFR pending)| Vesting compute p95 (single grant)| <= 5 ms| bench/vesting.rs
-(NFR pending)| Annual vesting cron (50 members, 200 grants)| <= 30 s| bench/vesting_cron.rs
+NFR ID| Concern| Target| Measurement ---|---|---|--- (NFR pending)| Grant row UPDATE attempted| = 0 - DB role lacks UPDATE| DB role inspection in CI (NFR pending)| Valuation row UPDATE attempted| = 0 - DB role lacks UPDATE| DB role inspection in CI (NFR pending)| memory row containing ESOP numeric value| = 0 - sev-0| CI: memory_bridge emit JSON inspected against numeric blocklist (NFR pending)| Single-signer grant or valuation| = 0 - cosign_guard blocks| integration test injects single-sign attempt (NFR pending)| KMS key isolation (esop-key distinct)| 1 distinct key handle| KMS policy inspection (NFR pending)| Vesting determinism - replay equality| 100% (property test)| proptest: vest at past dates -> identical output (NFR pending)| Cap-table snapshot integrity (quarterly)| SHA-256 stable| chaos test recomputes; asserts equality (NFR pending)| Put-option SLO (exercise -> wire)| <= 10 working days p95| OBS dashboard (NFR pending)| ESOP availability| >= 99.5%| SLO monitor (NFR pending)| Grant + valuation durability (10-year)| 0 lost objects| S3 object-lock + quarterly inventory (NFR pending)| Vesting compute p95 (single grant)| <= 5 ms| bench/vesting.rs (NFR pending)| Annual vesting cron (50 members, 200 grants)| <= 30 s| bench/vesting_cron.rs
 
 ## Dependencies
 
@@ -378,82 +295,25 @@ DSAR own scope"] end AUTH --> ESOP HRMOD --> ESOP memory --> ESOP OBS --> ESOP K
 
 ESOP defends against Vietnamese securities law (by being phantom), Decree 38/2020 corporate governance, PIT obligations on put exercises, and Singapore ACRA filings (on HoldCo flip).
 
-Regulation / standard| Article / clause| ESOP feature that satisfies it
----|---|---
-Vietnam Law on Enterprises 59/2020/QH14| Art. 114 - Share issuance| Phantom Stock - no shares issued; not subject to share-issuance regulation.
-Vietnam Decree 38/2020/NĐ-CP| Art. 6 - Corporate governance| Phantom Stock treated as deferred compensation; governance via employment contract.
-Vietnam Securities Law 54/2019/QH14| Art. 30 - Public offering| N/A - phantom plan is not a securities offering.
-Circular 111/2013/TT-BTC| Art. 7 - PIT on deferred comp| Put-exercise cash treated as deferred-comp PIT; line item generated for Vietnamese tax filings.
-Decree 119/2018/NĐ-CP| Art. 4 - Record retention| S3 object-lock 10-year on grant + valuation PDFs.
-Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Member DSAR returns own grant + put schedule; cap table is excluded (not personal data).
-VN Accounting Standards (VAS 17)| Income taxes / deferred| Liability accrued for unvested phantom stock; tax-effect tracked.
-Singapore Companies Act| S 67 - Share issuance| HoldCo flip generates real share issuance; DOC files via ACRA.
-Singapore ACRA filings| Form 24 / Form 45| DOC paperwork includes ACRA Form 24 (allotment) per Member at flip.
-EU AI Act| (N/A)| ESOP decisions are not automated employment decisions - every grant is a 3-sign human action; not in scope.
-GDPR (EU 2016/679)| Art. 32 - Security| KMS-wrapped at rest, distinct key, co-sign + audit chain.
-ISO/IEC 27001:2022| A.8.10 - Information deletion| Grant + valuation rows append-only; supersession not deletion.
-SOC 2 Type II| CC8.1 - Change management| 3-sign + audit chain + 10-year retention.
+Regulation / standard| Article / clause| ESOP feature that satisfies it ---|---|--- Vietnam Law on Enterprises 59/2020/QH14| Art. 114 - Share issuance| Phantom Stock - no shares issued; not subject to share-issuance regulation. Vietnam Decree 38/2020/NĐ-CP| Art. 6 - Corporate governance| Phantom Stock treated as deferred compensation; governance via employment contract. Vietnam Securities Law 54/2019/QH14| Art. 30 - Public offering| N/A - phantom plan is not a securities offering. Circular 111/2013/TT-BTC| Art. 7 - PIT on deferred comp| Put-exercise cash treated as deferred-comp PIT; line item generated for Vietnamese tax filings. Decree 119/2018/NĐ-CP| Art. 4 - Record retention| S3 object-lock 10-year on grant + valuation PDFs. Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Member DSAR returns own grant + put schedule; cap table is excluded (not personal data). VN Accounting Standards (VAS 17)| Income taxes / deferred| Liability accrued for unvested phantom stock; tax-effect tracked. Singapore Companies Act| S 67 - Share issuance| HoldCo flip generates real share issuance; DOC files via ACRA. Singapore ACRA filings| Form 24 / Form 45| DOC paperwork includes ACRA Form 24 (allotment) per Member at flip. EU AI Act| (N/A)| ESOP decisions are not automated employment decisions - every grant is a 3-sign human action; not in scope. GDPR (EU 2016/679)| Art. 32 - Security| KMS-wrapped at rest, distinct key, co-sign + audit chain. ISO/IEC 27001:2022| A.8.10 - Information deletion| Grant + valuation rows append-only; supersession not deletion. SOC 2 Type II| CC8.1 - Change management| 3-sign + audit chain + 10-year retention.
 
 ## Risk entries
 
 ESOP's principal risks are grant-row mutation, single-signer grant issuance, and Bad-Leaver mis-classification (legal exposure).
 
-ID| Risk| Likelihood| Impact| Owner| Mitigation
----|---|---|---|---|---
-`R-ESOP-001`| Grant row mutated in place (audit trail compromised)| Low| Catastrophic| CSO| DB role lacks UPDATE on grant table; migration grep; integration test attempts UPDATE and asserts rejection.
-`R-ESOP-002`| Single-signer grant issuance (CEO unilateral)| Low| Catastrophic| CEO| cosign_guard requires 3 signatures within 24h window; integration test asserts single-sign rejected.
-`R-ESOP-003`| Valuation drift across recompute (non-determinism)| Low| High| CTO| vesting.rs is a pure fn; replay test asserts byte-identical output for historical dates.
-`R-ESOP-004`| Bad Leaver classification disputed (legal exposure)| Medium| High| CLO| BL decision is human-only (CEO + CFO co-sign), with documented reason; appeal path via Board chair.
-`R-ESOP-005`| Put-option wire fails or delays past 10-day SLO| Medium| Low| CFO| vietnam-bank-transfer / Wise integration with retry + alert; manual fallback workflow.
-`R-ESOP-006`| External auditor unavailable for annual valuation| Low| Medium| CFO| Engaged auditor on retainer + secondary auditor relationship for continuity.
-`R-ESOP-007`| ESOP value leaks via memory audit row| Low| Catastrophic| CSO| memory_bridge inspects emit JSON; CI gate rejects numeric values in ESOP rows; opaque refs only.
-`R-ESOP-008`| HoldCo flip fails - Singapore filing rejected| Medium| High| CEO + CLO| DOC integration with ACRA tested in P4 sandbox; flip executed Member-by-Member with rollback path.
-`R-ESOP-009`| Pool over-allocation (issued_sp > total_pool_sp)| Low| High| CFO| DB CHECK constraint on pool_balance; INSERT grant validates pool.available_sp >= requested.
-`R-ESOP-010`| Vietnamese securities-law re-classification (phantom deemed real)| Low| High| CLO| Annual legal review; CLO sign-off on Phantom Stock structure; ready-to-flip path if the regulatory position changes.
-`R-ESOP-011`| Good/Bad Leaver branch chosen by AI without sign-off| Low| Critical| CSO| Branch classification has zero auto-route; CFO + CEO co-sign always required; CI gate verifies no algorithmic path to branch decision.
-`R-ESOP-012`| Put-option request blocked due to ARR-trigger config drift| Medium| Medium| CFO| ARR threshold versioned in tenant config; mismatch with valuation parameters flagged at quarterly review; manual override with audit row.
-`R-ESOP-013`| Vesting accrual stops on maternity/paternity leave (HR statutory leave drift)| Medium| Medium| CLO| Statutory leaves (per HR) accrue vesting; sabbatical / unpaid leave pauses; classification version-pinned with HR; quarterly accrual audit.
-`R-ESOP-014`| M&A acceleration trigger fires on Board declaration without Member notification| Low| High| CEO| Board declaration of change-of-control triggers acceleration + per-Member notice within 5 business days; CI test asserts notification fan-out.
-`R-ESOP-015`| HoldCo flip leaves some Members un-flipped (partial migration state)| Low| High| CEO + CLO| Flip is Member-by-Member with rollback path per R-ESOP-008; ACRA filing batch designed to fully succeed or fully roll back per cohort; partial-state alarm on monitoring.
+ID| Risk| Likelihood| Impact| Owner| Mitigation ---|---|---|---|---|--- `R-ESOP-001`| Grant row mutated in place (audit trail compromised)| Low| Catastrophic| CSO| DB role lacks UPDATE on grant table; migration grep; integration test attempts UPDATE and asserts rejection. `R-ESOP-002`| Single-signer grant issuance (CEO unilateral)| Low| Catastrophic| CEO| cosign_guard requires 3 signatures within 24h window; integration test asserts single-sign rejected. `R-ESOP-003`| Valuation drift across recompute (non-determinism)| Low| High| CTO| vesting.rs is a pure fn; replay test asserts byte-identical output for historical dates. `R-ESOP-004`| Bad Leaver classification disputed (legal exposure)| Medium| High| CLO| BL decision is human-only (CEO + CFO co-sign), with documented reason; appeal path via Board chair. `R-ESOP-005`| Put-option wire fails or delays past 10-day SLO| Medium| Low| CFO| vietnam-bank-transfer / Wise integration with retry + alert; manual fallback workflow. `R-ESOP-006`| External auditor unavailable for annual valuation| Low| Medium| CFO| Engaged auditor on retainer + secondary auditor relationship for continuity. `R-ESOP-007`| ESOP value leaks via memory audit row| Low| Catastrophic| CSO| memory_bridge inspects emit JSON; CI gate rejects numeric values in ESOP rows; opaque refs only. `R-ESOP-008`| HoldCo flip fails - Singapore filing rejected| Medium| High| CEO + CLO| DOC integration with ACRA tested in P4 sandbox; flip executed Member-by-Member with rollback path. `R-ESOP-009`| Pool over-allocation (issued_sp > total_pool_sp)| Low| High| CFO| DB CHECK constraint on pool_balance; INSERT grant validates pool.available_sp >= requested. `R-ESOP-010`| Vietnamese securities-law re-classification (phantom deemed real)| Low| High| CLO| Annual legal review; CLO sign-off on Phantom Stock structure; ready-to-flip path if the regulatory position changes. `R-ESOP-011`| Good/Bad Leaver branch chosen by AI without sign-off| Low| Critical| CSO| Branch classification has zero auto-route; CFO + CEO co-sign always required; CI gate verifies no algorithmic path to branch decision. `R-ESOP-012`| Put-option request blocked due to ARR-trigger config drift| Medium| Medium| CFO| ARR threshold versioned in tenant config; mismatch with valuation parameters flagged at quarterly review; manual override with audit row. `R-ESOP-013`| Vesting accrual stops on maternity/paternity leave (HR statutory leave drift)| Medium| Medium| CLO| Statutory leaves (per HR) accrue vesting; sabbatical / unpaid leave pauses; classification version-pinned with HR; quarterly accrual audit. `R-ESOP-014`| M&A acceleration trigger fires on Board declaration without Member notification| Low| High| CEO| Board declaration of change-of-control triggers acceleration + per-Member notice within 5 business days; CI test asserts notification fan-out. `R-ESOP-015`| HoldCo flip leaves some Members un-flipped (partial migration state)| Low| High| CEO + CLO| Flip is Member-by-Member with rollback path per R-ESOP-008; ACRA filing batch designed to fully succeed or fully roll back per cohort; partial-state alarm on monitoring.
 
 ## KPIs
 
 ESOP KPIs cover grant integrity, retention, and compliance.
 
-KPI| Formula| Source| Target
----|---|---|---
-**Grant audit chain integrity**| grants with full 3-sign / total| ESOP DB| = 100%
-**Valuation auditor-attestation rate**| attested / published| ESOP DB| = 100%
-**Vesting determinism replay pass**| replay passes / runs| CI| = 100%
-**Put-option SLO (exercise -> wire)**| p95 days| OBS| <= 10 working days
-**Single-signer attempts blocked**| cosign_guard rejections| OBS| tracked; alert on prod > 0
-**ESOP-value-in-memory incidents**| CI gate failures| CI| = 0
-**Retention rate (Members with active grants)**| active_grant_holders / member_count| HR + ESOP| tracked; target >= 80%
-**Bad-Leaver appeal rate**| appeals / BL classifications| ESOP DB| tracked
-**Pool over-allocation incidents**| CHECK constraint failures| DB| = 0
-**Annual valuation on-time**| year_end + Q1 completion| ESOP DB| <= Mar 31 each year
-**Good/Bad Leaver co-sign integrity**| branch decisions with CFO + CEO tokens / total| memory audit| = 1.0 (hard floor)
-**Vesting accrual statutory-leave correctness**| maternity/paternity periods correctly accrue / total such periods| quarterly audit| = 1.0
-**M&A acceleration notification SLA**| p95 (Board declare -> Member notice)| OBS| <= 5 business days
-**HoldCo flip cohort success rate**| cohorts fully migrated / total flip cohorts| ACRA logs + ESOP DB| = 1.0 (rollback on partial)
-**Put-option exec query latency**| request -> eligibility check p95| OBS| <= 30 s (Member sees status quickly)
+KPI| Formula| Source| Target ---|---|---|--- **Grant audit chain integrity**| grants with full 3-sign / total| ESOP DB| = 100% **Valuation auditor-attestation rate**| attested / published| ESOP DB| = 100% **Vesting determinism replay pass**| replay passes / runs| CI| = 100% **Put-option SLO (exercise -> wire)**| p95 days| OBS| <= 10 working days **Single-signer attempts blocked**| cosign_guard rejections| OBS| tracked; alert on prod > 0 **ESOP-value-in-memory incidents**| CI gate failures| CI| = 0 **Retention rate (Members with active grants)**| active_grant_holders / member_count| HR + ESOP| tracked; target >= 80% **Bad-Leaver appeal rate**| appeals / BL classifications| ESOP DB| tracked **Pool over-allocation incidents**| CHECK constraint failures| DB| = 0 **Annual valuation on-time**| year_end + Q1 completion| ESOP DB| <= Mar 31 each year **Good/Bad Leaver co-sign integrity**| branch decisions with CFO + CEO tokens / total| memory audit| = 1.0 (hard floor) **Vesting accrual statutory-leave correctness**| maternity/paternity periods correctly accrue / total such periods| quarterly audit| = 1.0 **M&A acceleration notification SLA**| p95 (Board declare -> Member notice)| OBS| <= 5 business days **HoldCo flip cohort success rate**| cohorts fully migrated / total flip cohorts| ACRA logs + ESOP DB| = 1.0 (rollback on partial) **Put-option exec query latency**| request -> eligibility check p95| OBS| <= 30 s (Member sees status quickly)
 
 ## RACI matrix
 
 ESOP is owned by CEO + Board jointly; CFO drives valuation cycle; CLO advises on regulatory posture.
 
-Activity| CEO| CFO| Board| CLO| Auditor| HR/Ops
----|---|---|---|---|---|---
-Grant issuance| A/R| R| R| C| I| C
-Annual valuation| C| A/R| R| C| R| I
-Vesting compute (cron)| I| A| I| I| I| I
-Put-option approval + wire| I| A/R| I| I| I| C
-Good Leaver decision| C| A/R| I| I| I| R
-Bad Leaver decision| A/R| R| C| C| I| C
-M&A acceleration| C| C| A/R| C| I| I
-HoldCo flip designation| A/R| R| R| R| C| I
-Pool replenishment| C| R| A| I| I| I
-Regulatory review (annual)| C| C| C| A/R| I| I
+Activity| CEO| CFO| Board| CLO| Auditor| HR/Ops ---|---|---|---|---|---|--- Grant issuance| A/R| R| R| C| I| C Annual valuation| C| A/R| R| C| R| I Vesting compute (cron)| I| A| I| I| I| I Put-option approval + wire| I| A/R| I| I| I| C Good Leaver decision| C| A/R| I| I| I| R Bad Leaver decision| A/R| R| C| C| I| C M&A acceleration| C| C| A/R| C| I| I HoldCo flip designation| A/R| R| R| R| C| I Pool replenishment| C| R| A| I| I| I Regulatory review (annual)| C| C| C| A/R| I| I
 
 R = Responsible, A = Accountable, C = Consulted, I = Informed.
 
@@ -608,24 +468,7 @@ $ cyberos-esop holdco-flip designate \
 | CLI subcommands | ~22 planned (`cyberos-esop` entrypoint) |
 | P2 budget | ~$25/mo (RDS schema + Fargate share) |
 
-Capability| Status
----|---
-Append-only grant issuance with 3-sign| planned - P2
-Deterministic vesting compute + monthly cron| planned - P2
-Annual valuation cycle (CFO + Board + Auditor)| planned - P2
-Put-option exercise (Year 3+, capped)| planned - P2
-Good Leaver / Bad Leaver branch| planned - P2
-M&A acceleration (Board-fire)| planned - P2
-Pool replenishment (% of profit)| planned - P2
-Member portal: own grants + put schedule| planned - P2
-Cap table (CEO/CFO/Board scope)| planned - P2
-Quarterly cap-table immutable snapshot| planned - P2
-Dilution simulator (read-only)| planned - P2
-vietnam-bank-transfer integration for put VND wires| planned - P2
-Wise integration for SGD wires| planned - P3
-HoldCo flip - phantom -> SG real share| planned - P3
-ACRA Form 24 generation via DOC| planned - P4
-Narrator MCP (read-only, simulation only)| planned - P2
+Capability| Status ---|--- Append-only grant issuance with 3-sign| planned - P2 Deterministic vesting compute + monthly cron| planned - P2 Annual valuation cycle (CFO + Board + Auditor)| planned - P2 Put-option exercise (Year 3+, capped)| planned - P2 Good Leaver / Bad Leaver branch| planned - P2 M&A acceleration (Board-fire)| planned - P2 Pool replenishment (% of profit)| planned - P2 Member portal: own grants + put schedule| planned - P2 Cap table (CEO/CFO/Board scope)| planned - P2 Quarterly cap-table immutable snapshot| planned - P2 Dilution simulator (read-only)| planned - P2 vietnam-bank-transfer integration for put VND wires| planned - P2 Wise integration for SGD wires| planned - P3 HoldCo flip - phantom -> SG real share| planned - P3 ACRA Form 24 generation via DOC| planned - P4 Narrator MCP (read-only, simulation only)| planned - P2
 
 ## References
 

@@ -1,8 +1,6 @@
 # CyberOS PROJ — Issue + Cycle + Engagement model
 
-**Status:** TASK-PROJ-001..018 shipped as service slices — schema + types + FSM + audit row builders + handler orchestration + bidirectional symmetric link writer + memory decision anchoring + rate-card versioning + typed MEMORY_LINK helpers + CRDT/LWW collaboration + billing cascade/modes + mutation history events + citation drift + blocker detection + cycle review + estimate calibration + board/timeline/gantt/brief view models + design tokens/a11y gate.
-**Depends on:** TASK-AUTH-001 (tenants) + TASK-AUTH-003 (RLS pattern) — both shipped.
-**Blocks (downstream):** TASK-EMAIL-007 (convert-to-issue), TASK-RES-001, TASK-TIME-004/005, TASK-HR-008, TASK-LEARN-003.
+**Status:** TASK-PROJ-001..018 shipped as service slices — schema + types + FSM + audit row builders + handler orchestration + bidirectional symmetric link writer + memory decision anchoring + rate-card versioning + typed MEMORY_LINK helpers + CRDT/LWW collaboration + billing cascade/modes + mutation history events + citation drift + blocker detection + cycle review + estimate calibration + board/timeline/gantt/brief view models + design tokens/a11y gate. **Depends on:** TASK-AUTH-001 (tenants) + TASK-AUTH-003 (RLS pattern) — both shipped. **Blocks (downstream):** TASK-EMAIL-007 (convert-to-issue), TASK-RES-001, TASK-TIME-004/005, TASK-HR-008, TASK-LEARN-003.
 
 ---
 

@@ -1,9 +1,6 @@
 # TASK-IMP-083 — code review packet
 
-Files under review: `tools/install/install.sh` (step 6b), `tools/install/uninstall.sh`
-(root resolution + hook section), `tools/install/tests/test_install_hygiene.sh`
-(t05_hookspath_* block). Suite state at review: 13 passed, 0 failed (~9 s), including all
-pre-existing t01–t06.
+Files under review: `tools/install/install.sh` (step 6b), `tools/install/uninstall.sh` (root resolution + hook section), `tools/install/tests/test_install_hygiene.sh` (t05_hookspath_* block). Suite state at review: 13 passed, 0 failed (~9 s), including all pre-existing t01–t06.
 
 ## §1 clause → proof
 
@@ -19,27 +16,14 @@ pre-existing t01–t06.
 
 ## Acceptance criteria
 
-AC 1 `t05_hookspath_standalone` ok · AC 2 `t05_hookspath_foreign_append` ok · AC 3
-`t05_no_hookspath_regression` ok · AC 4 `t05_hookspath_uninstall` ok · AC 5
-`t05_summary_names_path` ok · AC 6 suite-integrated (run_all.sh = parent's gate log) ·
-AC 7 `t05_non_git_skip` ok · AC 8 `t05_short_foreign_uninstall_preserved` ok.
+AC 1 `t05_hookspath_standalone` ok · AC 2 `t05_hookspath_foreign_append` ok · AC 3 `t05_no_hookspath_regression` ok · AC 4 `t05_hookspath_uninstall` ok · AC 5 `t05_summary_names_path` ok · AC 6 suite-integrated (run_all.sh = parent's gate log) · AC 7 `t05_non_git_skip` ok · AC 8 `t05_short_foreign_uninstall_preserved` ok.
 
 ## Implementer notes / issues for the reviewer
 
-- ISS-1 (necessary enabling fix, same owned file): uninstall.sh's `root=` was mis-grouped
-  — `((cd && rev-parse) || cd) && pwd` — so `$root` captured two newline-joined paths and
-  every uninstall on a git repo exited "nothing to do"; the hook section this task
-  modifies was unreachable. Fixed with explicit grouping + comment. Pre-existing, exposed
-  by the first test that ever exercised uninstall; without it ACs 4/8 cannot execute.
-- ISS-2: `t05_summary_names_path` asserts on `t05_hookspath_standalone`'s captured output
-  (same scenario, one fewer install; introduces an intra-block ordering dependency,
-  commented at the capture site).
-- ISS-3: legacy inert hook at `.git/hooks/pre-commit` on hooksPath repos is not migrated
-  (spec §3 known leftover); `t05_hookspath_uninstall` pins that we do not touch it.
-- Protected invariants re-checked: no foreign hook clobbered (exact ownership both sides);
-  append block still POSIX sh, foreign exit code preserved (exit-7 asserts); `dist/`
-  untouched here — rebuild, version-sync and full suite before commit are the batch
-  parent's step per payload-sync doctrine.
+- ISS-1 (necessary enabling fix, same owned file): uninstall.sh's `root=` was mis-grouped — `((cd && rev-parse) || cd) && pwd` — so `$root` captured two newline-joined paths and every uninstall on a git repo exited "nothing to do"; the hook section this task modifies was unreachable. Fixed with explicit grouping + comment. Pre-existing, exposed by the first test that ever exercised uninstall; without it ACs 4/8 cannot execute.
+- ISS-2: `t05_summary_names_path` asserts on `t05_hookspath_standalone`'s captured output (same scenario, one fewer install; introduces an intra-block ordering dependency, commented at the capture site).
+- ISS-3: legacy inert hook at `.git/hooks/pre-commit` on hooksPath repos is not migrated (spec §3 known leftover); `t05_hookspath_uninstall` pins that we do not touch it.
+- Protected invariants re-checked: no foreign hook clobbered (exact ownership both sides); append block still POSIX sh, foreign exit code preserved (exit-7 asserts); `dist/` untouched here — rebuild, version-sync and full suite before commit are the batch parent's step per payload-sync doctrine.
 
 ## Verdict
 

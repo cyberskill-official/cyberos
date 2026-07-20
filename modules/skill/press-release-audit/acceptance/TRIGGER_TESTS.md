@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this press release"
+- "Audit this press release"
 - "Check the press release for completeness"
 - "Verify the press release meets the rubric"
 - "Re-audit the press release"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a press release" → press-release-author
+- "Draft a press release" → press-release-author
 - "Create the press release" → press-release-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

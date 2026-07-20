@@ -120,10 +120,10 @@ A new memory kind `episode` is the **agent's record of one completed task**. It 
       --quality-score 0.92
     ```
 9. **MUST** add a new CLI subcommand `cyberos recall-similar <task-string>` that:
-    - Runs semantic search filtered to `kind: episode` (semantic backend if `sentence-transformers` is installed; FTS5 fallback otherwise — same soft-dep pattern as TASK-MEMORY-108).
-    - Ranks results by the **combined score** `relevance · 0.4 + quality_score · 0.3 + recency · 0.3`. For TASK-MEMORY-112's scope, `recency` is a placeholder mock that returns `1.0` (no decay); TASK-MEMORY-113 plugs in the proper Park-et-al decay function.
-    - Defaults: `--k 3`, `--min-relevance 0.65`.
-    - Output: JSON list of `{path, task, approach, outcome, quality_score, relevance, combined_score, last_seen_at}` ordered by `combined_score` descending.
+- Runs semantic search filtered to `kind: episode` (semantic backend if `sentence-transformers` is installed; FTS5 fallback otherwise — same soft-dep pattern as TASK-MEMORY-108).
+- Ranks results by the **combined score** `relevance · 0.4 + quality_score · 0.3 + recency · 0.3`. For TASK-MEMORY-112's scope, `recency` is a placeholder mock that returns `1.0` (no decay); TASK-MEMORY-113 plugs in the proper Park-et-al decay function.
+- Defaults: `--k 3`, `--min-relevance 0.65`.
+- Output: JSON list of `{path, task, approach, outcome, quality_score, relevance, combined_score, last_seen_at}` ordered by `combined_score` descending.
 10. **MUST** treat absent `quality_score` as exactly `0.5` in the combined-score ranking (the "no opinion" midpoint, per DEC-181). Never silently boost or penalise.
 11. **MUST** preserve current `cyberos recall` (full-text) and `cyberos search` (semantic) semantics. The new `recall-similar` is a strictly additive subcommand; existing call sites in `cyberos.core.semantic.recall(...)` continue to work without the `memory_kind=` kwarg (defaults to `None` ≡ "all kinds").
 12. **MUST** emit one audit row per `episode log` invocation of kind `episode.logged` with payload `{path, outcome, duration_ms, token_cost, quality_score}`. The writer already emits the standard `put` row; the `episode.logged` row is a **lightweight projection** for TASK-MEMORY-115 to consume without re-parsing every `put` payload.

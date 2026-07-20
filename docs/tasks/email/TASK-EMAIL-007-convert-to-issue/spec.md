@@ -90,12 +90,12 @@ The EMAIL service **MUST** ship convert-to-issue at `services/email/src/convert/
 3. **MUST** call AI summarizer per DEC-1581: `ai_summarizer.rs::summarize(message, thread, source)` → `{title, description, priority}`.
 
 4. **MUST** build issue via `issue_builder.rs::build` calling TASK-PROJ-001 create endpoint with:
-   - title (AI summary or override)
-   - description (AI summary + linked thread context)
-   - priority (AI or override)
-   - source_message_id (backlink)
-   - source_thread_id (thread backlink)
-   - project_id
+- title (AI summary or override)
+- description (AI summary + linked thread context)
+- priority (AI or override)
+- source_message_id (backlink)
+- source_thread_id (thread backlink)
+- project_id
 
 5. **MUST** carry attachments per DEC-1583 — query message attachments → create TASK-DOC-001 doc_links rows (same S3 key, new linked_to=issue_id). No file copy.
 
@@ -110,8 +110,8 @@ The EMAIL service **MUST** ship convert-to-issue at `services/email/src/convert/
    ```
 
 7. **MUST** set bi-directional backlink per DEC-1580:
-   - `message.linked_issue_id = issue.id`
-   - issue created with `source_thread_id = thread.id` (TASK-PROJ-001 column)
+- `message.linked_issue_id = issue.id`
+- issue created with `source_thread_id = thread.id` (TASK-PROJ-001 column)
 
 8. **MUST** allow project selection per DEC-1584; default = `user.last_used_project_id` (TASK-AUTH-101 user prefs).
 
@@ -215,8 +215,7 @@ async fn attachments_referenced_not_copied() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-EMAIL-001, TASK-PROJ-001.
-**Cross-module:** TASK-AI-003 (summary), TASK-DOC-001 (attachment refs), TASK-AUTH-101 (user prefs), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-EMAIL-001, TASK-PROJ-001. **Cross-module:** TASK-AI-003 (summary), TASK-DOC-001 (attachment refs), TASK-AUTH-101 (user prefs), TASK-MEMORY-111 (PII).
 
 ## §8 — Sample payloads (see §3)
 

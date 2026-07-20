@@ -191,37 +191,36 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
 2. **MUST** change `tenant_residency_map.residency` column type from TEXT to `residency` enum via migration `0003` modification (single source of truth — no free-text residency anywhere). Existing rows are validated against the enum at migration; non-conforming rows reject migration (fail-fast).
 
 3. **MUST** enforce closed currency → residency mapping per DEC-922 (consistent with TASK-TEN-003 DEC-785 + TASK-TEN-101 DEC-825):
-    - `VND → vn-1`
-    - `SGD → sg-1`
-    - `EUR → eu-1`
-    - `GBP → eu-1`
-    - `USD → us-1`
-   The mapping is a `const fn` in `services/ten/src/residency/mod.rs::derive_residency(billing_currency)`; no other code path may compute the mapping (single source of truth).
+- `VND → vn-1`
+- `SGD → sg-1`
+- `EUR → eu-1`
+- `GBP → eu-1`
+- `USD → us-1` The mapping is a `const fn` in `services/ten/src/residency/mod.rs::derive_residency(billing_currency)`; no other code path may compute the mapping (single source of truth).
 
 4. **MUST** lock `tenant.residency` post-provisioning per DEC-925. Migration `0016` includes a trigger `trg_residency_immutable()` that RAISEs on any UPDATE attempting to change `tenants.residency` (analogous to TASK-TEN-003 `trg_billing_currency_immutable` per DEC-798). Mutation requires new tenant + manual data migration.
 
 5. **MUST** provision per-residency infrastructure via Terraform modules at `infra/terraform/residency/{residency}/main.tf`. Each residency stands up:
-    - One Aurora PostgreSQL cluster in a private VPC (no peering per DEC-928).
-    - One S3 bucket pair: `cyberos-{residency}-tenants` (data) + `cyberos-{residency}-audit` (audit archive); cross-region replication DISABLED per DEC-933.
-    - One NATS cluster (3-node JetStream); subjects local per DEC-932.
-    - One AWS KMS key for envelope encryption (DEC-929: region-pinned).
-    - One OBS stack subset (Loki + Tempo + Prometheus regional shards) per DEC-934.
-    - One Stripe account binding per DEC-935 (TASK-TEN-003 DEC-801 already provisioned; this task consumes).
-    - One AUTH issuer URL per DEC-931 (`https://auth.<residency>.cyberos.world`).
+- One Aurora PostgreSQL cluster in a private VPC (no peering per DEC-928).
+- One S3 bucket pair: `cyberos-{residency}-tenants` (data) + `cyberos-{residency}-audit` (audit archive); cross-region replication DISABLED per DEC-933.
+- One NATS cluster (3-node JetStream); subjects local per DEC-932.
+- One AWS KMS key for envelope encryption (DEC-929: region-pinned).
+- One OBS stack subset (Loki + Tempo + Prometheus regional shards) per DEC-934.
+- One Stripe account binding per DEC-935 (TASK-TEN-003 DEC-801 already provisioned; this task consumes).
+- One AUTH issuer URL per DEC-931 (`https://auth.<residency>.cyberos.world`).
 
 6. **MUST** provide a residency router in `services/ten/src/residency/`:
-    - `pool_router.rs`: `Map<Residency, PgPool>` with per-residency connection strings loaded from KMS-encrypted secrets.
-    - `s3_router.rs`: `Map<Residency, aws_sdk_s3::Client>` configured to the correct AWS region per DEC-929.
-    - `nats_router.rs`: `Map<Residency, async_nats::Client>` connected to per-residency NATS clusters.
-    - `kms_router.rs`: `Map<Residency, aws_sdk_kms::Client>` for envelope decrypt operations.
-    - `issuer_map.rs`: `Map<Residency, IssuerConfig>` mapping residency → AUTH issuer URL + JWKS URL.
+- `pool_router.rs`: `Map<Residency, PgPool>` with per-residency connection strings loaded from KMS-encrypted secrets.
+- `s3_router.rs`: `Map<Residency, aws_sdk_s3::Client>` configured to the correct AWS region per DEC-929.
+- `nats_router.rs`: `Map<Residency, async_nats::Client>` connected to per-residency NATS clusters.
+- `kms_router.rs`: `Map<Residency, aws_sdk_kms::Client>` for envelope decrypt operations.
+- `issuer_map.rs`: `Map<Residency, IssuerConfig>` mapping residency → AUTH issuer URL + JWKS URL.
 
 7. **MUST** route every tenant-scoped operation through the residency router. Service-level handlers MUST:
-    - Receive `tenant_id` from request context.
-    - Lookup `tenants.residency` via a per-residency-fanout query (one cross-residency lookup is permitted at the entry: the JWT carries `residency` claim per TASK-AUTH-004 + this task's modification, so the lookup is JWT-only in 99% of cases).
-    - Select the correct pool/client from the router.
-    - Issue the operation against that pool only.
-    - Mis-route (e.g., handler uses sg-1 pool for an eu-1 tenant) is caught by the trip-wire trigger + emits `ten.residency_pool_misroute` sev-1.
+- Receive `tenant_id` from request context.
+- Lookup `tenants.residency` via a per-residency-fanout query (one cross-residency lookup is permitted at the entry: the JWT carries `residency` claim per TASK-AUTH-004 + this task's modification, so the lookup is JWT-only in 99% of cases).
+- Select the correct pool/client from the router.
+- Issue the operation against that pool only.
+- Mis-route (e.g., handler uses sg-1 pool for an eu-1 tenant) is caught by the trip-wire trigger + emits `ten.residency_pool_misroute` sev-1.
 
 8. **MUST** install a cross-residency-write trip-wire trigger on EVERY tenant-scoped Postgres table per DEC-924 + DEC-939 + task-audit skill rule 13 derivative. The trigger function `trg_cross_residency_write_block()`:
     ```sql
@@ -237,7 +236,7 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
       RETURN NEW;
     END $$ LANGUAGE plpgsql;
     ```
-   Applied via cursor loop in migration `0016` to all 28 tenant-scoped tables identified at migration time. New tables added in future tasks MUST include this trigger.
+Applied via cursor loop in migration `0016` to all 28 tenant-scoped tables identified at migration time. New tables added in future tasks MUST include this trigger.
 
 9. **MUST** set the session-local `auth.residency` Postgres setting at handler entry from the validated JWT's `residency` claim. The TASK-AUTH-004 JWT mint is extended to include this claim; TASK-AUTH-004's `services/auth/src/handlers/login.rs` modification covers the wiring.
 
@@ -246,36 +245,34 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
 11. **MUST** partition the memory audit chain per residency per DEC-926. Each residency's services append to that residency's chain only; the chain head is stored in that residency's Aurora `memory.chain_state` table. Cross-residency memory events are FORBIDDEN — attempting to append a chain row for a tenant in a different residency than the current handler's residency raises `cross_residency_memory_event_blocked` + emits the corresponding memory row in the LOCAL chain.
 
 12. **MUST** provision atomically per residency per DEC-936. The `services/ten/src/provisioning/orchestrator.rs` (modified per TASK-TEN-001 build envelope) runs:
-    1. Open tx in target residency's Aurora.
-    2. Insert tenant row + tenant_residency_map row.
-    3. Create S3 prefix in target residency's bucket (idempotent marker object).
-    4. Register NATS subject in target residency's cluster.
-    5. Verify AUTH bootstrap in target residency.
-    6. Commit tx.
-   On any step failure: ROLLBACK tx + manual cleanup of any partial S3/NATS state via `cyberos-ten residency-cleanup-orphan` (slice 3 CLI; slice 2 = operator runs cleanup manually after sev-1 alert per DEC-944).
+1. Open tx in target residency's Aurora.
+2. Insert tenant row + tenant_residency_map row.
+3. Create S3 prefix in target residency's bucket (idempotent marker object).
+4. Register NATS subject in target residency's cluster.
+5. Verify AUTH bootstrap in target residency.
+6. Commit tx. On any step failure: ROLLBACK tx + manual cleanup of any partial S3/NATS state via `cyberos-ten residency-cleanup-orphan` (slice 3 CLI; slice 2 = operator runs cleanup manually after sev-1 alert per DEC-944).
 
 13. **MUST** add `auth.residency` to AUTH JWT claims per #9 + DEC-931. JWT shape post-this-task: `{ sub, tenant_id, residency, exp, iat, iss, aud, scope_grants, persona }`. Tokens issued before this task ships (legacy) lack the claim; transitional handler accepts them only for 24h post-deploy then enforces presence (fail closed).
 
 14. **MUST** carry `residency=<rid>` field on every log line via `tracing::instrument(fields(residency = %ctx.residency))` per DEC-942. Missing field on any log line emitted from a tenant-scoped handler raises an OBS alarm sev-3 (`ten.residency_logging_context_missing` — informational, ops sweep).
 
 15. **MUST** ship `cyberos-ten residency-status` CLI per DEC-943 — 6-component health check per residency:
-    1. Aurora connectivity (SELECT 1 + < 100ms).
-    2. S3 reachability (PUT/DELETE marker object + < 500ms).
-    3. NATS heartbeat (publish + subscribe round-trip + < 200ms).
-    4. Stripe ping (GET /v1/account + < 1s — only stripe-rail residencies).
-    5. KMS responsiveness (Encrypt 32 bytes + < 200ms).
-    6. AUTH issuer responsiveness (GET JWKS + < 500ms).
-    Output: per-residency score 0-6 with timing per component; exit code 0 if all 4 residencies score ≥ 5, exit code 73 otherwise.
+1. Aurora connectivity (SELECT 1 + < 100ms).
+2. S3 reachability (PUT/DELETE marker object + < 500ms).
+3. NATS heartbeat (publish + subscribe round-trip + < 200ms).
+4. Stripe ping (GET /v1/account + < 1s — only stripe-rail residencies).
+5. KMS responsiveness (Encrypt 32 bytes + < 200ms).
+6. AUTH issuer responsiveness (GET JWKS + < 500ms). Output: per-residency score 0-6 with timing per component; exit code 0 if all 4 residencies score ≥ 5, exit code 73 otherwise.
 
 16. **MUST** emit 8 memory audit row kinds per DEC-941 (task-audit skill rule 6 namespace pattern):
-    - `ten.tenant_residency_assigned` (sev-2 — material commercial event)
-    - `ten.residency_provisioned` (sev-1 — infrastructure event; one per residency standup)
-    - `ten.residency_pool_misroute` (sev-1 — silent-leak prevented)
-    - `ten.cross_residency_access_attempt` (sev-1 — security signal)
-    - `ten.cross_residency_write_blocked` (sev-1 — trip-wire fired)
-    - `ten.cross_residency_memory_event_blocked` (sev-1 — chain pollution prevented)
-    - `ten.residency_health_degraded` (sev-2 — one component failing)
-    - `ten.residency_kms_unavailable` (sev-1 — encryption broken in one region)
+- `ten.tenant_residency_assigned` (sev-2 — material commercial event)
+- `ten.residency_provisioned` (sev-1 — infrastructure event; one per residency standup)
+- `ten.residency_pool_misroute` (sev-1 — silent-leak prevented)
+- `ten.cross_residency_access_attempt` (sev-1 — security signal)
+- `ten.cross_residency_write_blocked` (sev-1 — trip-wire fired)
+- `ten.cross_residency_memory_event_blocked` (sev-1 — chain pollution prevented)
+- `ten.residency_health_degraded` (sev-2 — one component failing)
+- `ten.residency_kms_unavailable` (sev-1 — encryption broken in one region)
 
 17. **MUST** maintain `residency_health_log` table at migration `0017`: `(id BIGSERIAL PRIMARY KEY, residency residency NOT NULL, component TEXT NOT NULL CHECK (component IN ('aurora','s3','nats','stripe','kms','auth_issuer')), status TEXT NOT NULL CHECK (status IN ('healthy','degraded','down')), latency_ms INT, checked_at TIMESTAMPTZ NOT NULL DEFAULT now())`. Append-only via REVOKE per task-audit skill rule 12. Per-residency append + global read (no RLS — health is system-tenant scope).
 

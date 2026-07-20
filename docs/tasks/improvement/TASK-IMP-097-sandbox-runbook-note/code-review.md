@@ -1,9 +1,6 @@
 # TASK-IMP-097 code review
 
-Reviewer: batch-4 ship-tasks sub-agent (serial owner of both ship-tasks.md tasks this round).
-Diff: tools/install/docs/index.md (+47, the runbook section),
-modules/cuo/chief-technology-officer/workflows/ship-tasks.md (+1, the §11a cross-reference line),
-tools/install/tests/test_full_sdp_payload.sh (+23/-1, t09 gate + header note).
+Reviewer: batch-4 ship-tasks sub-agent (serial owner of both ship-tasks.md tasks this round). Diff: tools/install/docs/index.md (+47, the runbook section), modules/cuo/chief-technology-officer/workflows/ship-tasks.md (+1, the §11a cross-reference line), tools/install/tests/test_full_sdp_payload.sh (+23/-1, t09 gate + header note).
 
 ## Clause -> proof
 
@@ -17,25 +14,12 @@ tools/install/tests/test_full_sdp_payload.sh (+23/-1, t09 gate + header note).
 
 ## Judgment
 
-- **Consumer framing**: the section names no session paths, no vendor brands, no tool-specific
-  flags beyond git itself; placeholders are `/mnt/<repo>` and `/tmp/work`. Generic "sandboxed
-  agent" framing as the spec's edge case demands.
-- **Policy surface**: the one sentence that could weaken policy is pinned the other way - the
-  push-back is stated twice to be a local ref move with no remote touched, and t09's third grep
-  keeps that clause in every future payload. The `--no-verify` guidance is conditional on
-  recorded evidence, which strengthens (not weakens) the gate discipline it touches.
-- **Placement**: the cross-reference sits inside §11a's swarm sub-bullets, directly under the
-  one-writer-one-view rule it complements, so a reader meets rule and runbook together; §9's
-  committed-object rule is named in the section's closing line from the GUIDE side.
-- **Test economy**: t09 reuses the suite's existing scratch payload (zero extra builds); the
-  five greps are content-anchored so GUIDE growth cannot break them, and `^##`-anchoring stops
-  an inline mention from satisfying the heading check.
-- **Disclosure (version)**: this task deliberately ships NO workflow_version bump - a prose
-  pointer is not a normative change. The round's single bump (2.6.3 -> 2.6.4) and both suite
-  pin moves land in TASK-IMP-099, reviewed and disclosed in
-  docs/tasks/improvement/TASK-IMP-099-queue-selection-p0-p3/code-review.md.
-- **Security**: none - documentation plus a read-only grep gate; no execution surface, no
-  secrets, no network.
+- **Consumer framing**: the section names no session paths, no vendor brands, no tool-specific flags beyond git itself; placeholders are `/mnt/<repo>` and `/tmp/work`. Generic "sandboxed agent" framing as the spec's edge case demands.
+- **Policy surface**: the one sentence that could weaken policy is pinned the other way - the push-back is stated twice to be a local ref move with no remote touched, and t09's third grep keeps that clause in every future payload. The `--no-verify` guidance is conditional on recorded evidence, which strengthens (not weakens) the gate discipline it touches.
+- **Placement**: the cross-reference sits inside §11a's swarm sub-bullets, directly under the one-writer-one-view rule it complements, so a reader meets rule and runbook together; §9's committed-object rule is named in the section's closing line from the GUIDE side.
+- **Test economy**: t09 reuses the suite's existing scratch payload (zero extra builds); the five greps are content-anchored so GUIDE growth cannot break them, and `^##`-anchoring stops an inline mention from satisfying the heading check.
+- **Disclosure (version)**: this task deliberately ships NO workflow_version bump - a prose pointer is not a normative change. The round's single bump (2.6.3 -> 2.6.4) and both suite pin moves land in TASK-IMP-099, reviewed and disclosed in docs/tasks/improvement/TASK-IMP-099-queue-selection-p0-p3/code-review.md.
+- **Security**: none - documentation plus a read-only grep gate; no execution surface, no secrets, no network.
 
 Verdict: no open findings.
 

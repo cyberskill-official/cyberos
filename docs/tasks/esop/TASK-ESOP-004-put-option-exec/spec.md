@@ -89,17 +89,17 @@ The ESOP service **MUST** ship put-option exec at `services/esop/src/put/` with 
 1. **MUST** validate `put_status` against closed enum per DEC-2281.
 
 2. **MUST** check eligibility at `eligibility.rs::is_eligible(grant)` per DEC-2280:
-   - grant.vest_start_date + 3 years ≤ now
-   - grant.status IN (active, fully_vested)
+- grant.vest_start_date + 3 years ≤ now
+- grant.status IN (active, fully_vested)
 
 3. **MUST** compute price at `price_calculator.rs::price(shares, year)` per DEC-2282:
-   - Read TASK-ESOP-003 committed price for current calendar year
-   - amount = shares × committed_price
+- Read TASK-ESOP-003 committed price for current calendar year
+- amount = shares × committed_price
 
 4. **MUST** enforce cap at `cap_enforcer.rs::check(member, requested_shares, year)` per DEC-2283:
-   - vested_at_year_start = TASK-ESOP-002 accrual at Jan 1
-   - sum(prior exercised this year) + requested ≤ cap_pct × vested_at_year_start
-   - default cap_pct = 0.25 (configurable per tenant)
+- vested_at_year_start = TASK-ESOP-002 accrual at Jan 1
+- sum(prior exercised this year) + requested ≤ cap_pct × vested_at_year_start
+- default cap_pct = 0.25 (configurable per tenant)
 
 5. **MUST** require CFO approve before wire.
 
@@ -225,8 +225,7 @@ async fn wire_initiated_via_inv_005() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-ESOP-003, TASK-INV-005.
-**Cross-module:** TASK-ESOP-002 (vested at Jan 1), TASK-AUTH-101 (CFO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-ESOP-003, TASK-INV-005. **Cross-module:** TASK-ESOP-002 (vested at Jan 1), TASK-AUTH-101 (CFO role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

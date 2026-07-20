@@ -157,15 +157,15 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
 1. **MUST** advertise `protocolVersion: "2025-11-25"` in every `initialize` response (per DEC-260 + DEC-270). On client `initialize` request with a non-matching `protocolVersion`, return JSON-RPC error -32600 `protocol_version_mismatch` with body `{"supported":["2025-11-25"]}`. Future versions will be added to the `supported` array; clients can negotiate the highest mutual version.
 
 2. **MUST** implement the **JSON-RPC 2.0** wire protocol (per DEC-263). Requests, responses, errors, and batch requests conform to https://www.jsonrpc.org/specification. Specifically:
-   - Request: `{"jsonrpc":"2.0","method":"<name>","params":<obj>,"id":<id>}`.
-   - Response: `{"jsonrpc":"2.0","result":<obj>,"id":<id>}`.
-   - Error: `{"jsonrpc":"2.0","error":{"code":<int>,"message":"<text>","data":<obj?>},"id":<id|null>}`.
-   - Batch: a JSON array of request objects; response is a JSON array of response objects in the same order (notifications omitted from response).
+- Request: `{"jsonrpc":"2.0","method":"<name>","params":<obj>,"id":<id>}`.
+- Response: `{"jsonrpc":"2.0","result":<obj>,"id":<id>}`.
+- Error: `{"jsonrpc":"2.0","error":{"code":<int>,"message":"<text>","data":<obj?>},"id":<id|null>}`.
+- Batch: a JSON array of request objects; response is a JSON array of response objects in the same order (notifications omitted from response).
 
 3. **MUST** implement **Streamable HTTP transport** per spec 2025-11-25 (per DEC-261):
-   - POST `/mcp` with `Content-Type: application/json` for client→server requests; response is a single JSON document with `Content-Type: application/json`.
-   - GET `/mcp` with `Accept: text/event-stream` opens a Server-Sent Events stream for server→client messages (notifications, sampling requests, elicitation requests).
-   - The legacy HTTP+SSE (separate POST + GET pair) transport is NOT implemented.
+- POST `/mcp` with `Content-Type: application/json` for client→server requests; response is a single JSON document with `Content-Type: application/json`.
+- GET `/mcp` with `Accept: text/event-stream` opens a Server-Sent Events stream for server→client messages (notifications, sampling requests, elicitation requests).
+- The legacy HTTP+SSE (separate POST + GET pair) transport is NOT implemented.
 
 4. **MUST** support **session resumption** via the `Mcp-Session-Id` request header. Initial `initialize` response sets `Mcp-Session-Id: <uuid>`; subsequent requests carry the same id. Server may reject expired session ids with HTTP 404 (client re-initialises).
 
@@ -187,7 +187,7 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
      "instructions": "Federation of 22 CyberOS modules. All calls audit-chained. OAuth 2.1 PKCE auth via TASK-MCP-004."
    }
    ```
-   `sampling` and `roots` capabilities are deferred (slice 5+).
+`sampling` and `roots` capabilities are deferred (slice 5+).
 
 6. **MUST** implement `tools/list` returning the federated catalog (per DEC-262). Response shape per spec:
    ```json
@@ -210,7 +210,7 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
      "nextCursor": "<opaque>"   // present when paginating
    }
    ```
-   Cursor pagination is mandatory when catalog > 100 tools.
+Cursor pagination is mandatory when catalog > 100 tools.
 
 7. **MUST** implement `tools/call` dispatching to the owning module's MCP server (per DEC-262). Request: `{"name":"cyberos.<module>.<verb>_<noun>", "arguments":<obj>}`. Response per spec:
    ```json
@@ -224,30 +224,29 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
      "structuredContent": <obj?>
    }
    ```
-   `isError: true` on tool-side error; transport-level errors return JSON-RPC error responses instead.
+`isError: true` on tool-side error; transport-level errors return JSON-RPC error responses instead.
 
 8. **MUST** implement closed JSON-RPC error code mapping (per DEC-272):
-   - `-32700 parse_error` — malformed JSON.
-   - `-32600 invalid_request` — request not a valid Request object; includes protocol_version_mismatch.
-   - `-32601 method_not_found` — method not implemented (e.g. `sampling/createMessage` at slice 4).
-   - `-32602 invalid_params` — bad arguments shape.
-   - `-32603 internal_error` — gateway-internal error.
-   - `-32001 unauthorized` — missing or invalid JWT, missing scope (per §1 #11).
-   - `-32002 rate_limited` — per (tenant, tool) rate limit exceeded (per DEC-268).
-   - `-32003 tool_not_found` — tool name not in registry.
-   - `-32004 module_unreachable` — owning module server returned 5xx or timed out.
-   - `-32005 elicitation_required` — destructive tool requires Elicitation flow (per TASK-MCP-006); slice 4 stub returns this when tool annotation `destructiveHint: true` AND `Elicitation-Confirmed: 1` header absent.
+- `-32700 parse_error` — malformed JSON.
+- `-32600 invalid_request` — request not a valid Request object; includes protocol_version_mismatch.
+- `-32601 method_not_found` — method not implemented (e.g. `sampling/createMessage` at slice 4).
+- `-32602 invalid_params` — bad arguments shape.
+- `-32603 internal_error` — gateway-internal error.
+- `-32001 unauthorized` — missing or invalid JWT, missing scope (per §1 #11).
+- `-32002 rate_limited` — per (tenant, tool) rate limit exceeded (per DEC-268).
+- `-32003 tool_not_found` — tool name not in registry.
+- `-32004 module_unreachable` — owning module server returned 5xx or timed out.
+- `-32005 elicitation_required` — destructive tool requires Elicitation flow (per TASK-MCP-006); slice 4 stub returns this when tool annotation `destructiveHint: true` AND `Elicitation-Confirmed: 1` header absent.
 
 9. **MUST** support **JSON-RPC batch requests** (per DEC-263). Server receives a JSON array, dispatches each request concurrently (with per-tool isolation), and returns an array of responses in the **same order**. Notifications (no `id` field) are omitted from the response array.
 
 10. **MUST** implement `notifications/initialized` (client → server, no response expected). After receiving it, the gateway considers the session active and may push server-initiated messages over the SSE stream.
 
 11. **MUST** verify the OAuth 2.1 access token (TASK-AUTH-004 JWT) on every request EXCEPT `initialize`. Verification:
-    - JWT signature valid against the AUTH JWKS.
-    - `aud` claim matches `https://mcp.cyberos.com` (audience-bound per TASK-MCP-004).
-    - `exp` claim not past; `nbf` claim not in future.
-    - `scope` claim contains `mcp:tools` (baseline) AND any tool-specific scope per tool annotation.
-   Missing/invalid → `-32001 unauthorized` with `data: {"reason":"<token_invalid|aud_mismatch|expired|insufficient_scope>", "required_scopes":[...]}`. The `initialize` exemption allows clients to negotiate before auth, but any subsequent method requires the token.
+- JWT signature valid against the AUTH JWKS.
+- `aud` claim matches `https://mcp.cyberos.com` (audience-bound per TASK-MCP-004).
+- `exp` claim not past; `nbf` claim not in future.
+- `scope` claim contains `mcp:tools` (baseline) AND any tool-specific scope per tool annotation. Missing/invalid → `-32001 unauthorized` with `data: {"reason":"<token_invalid|aud_mismatch|expired|insufficient_scope>", "required_scopes":[...]}`. The `initialize` exemption allows clients to negotiate before auth, but any subsequent method requires the token.
 
 12. **MUST** rate-limit per (tenant_id, tool_name) using a sliding window (per DEC-268). Default: 100 calls/min; soft burst: 200 in any 30-sec window. Exceeded → `-32002 rate_limited` with `data: {"retry_after_ms": <int>}`. Per-tenant override via tenant policy YAML (out of scope here; task-MCP-2xx).
 
@@ -274,12 +273,12 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
 23. **MUST** emit OTel span `mcp.gateway.{initialize,tools_list,tools_call}` per request with attributes: `tenant_id`, `subject_id_hash16`, `tool_name`, `outcome`, `duration_ms`.
 
 24. **MUST** emit OTel metrics:
-    - `mcp_gateway_request_total{method, outcome}` (counter).
-    - `mcp_gateway_request_latency_ms{method}` (histogram).
-    - `mcp_gateway_active_sessions{tenant_id}` (gauge — sessions with `Mcp-Session-Id` still valid).
-    - `mcp_gateway_tool_call_total{tool_name, outcome}` (counter).
-    - `mcp_gateway_rate_limit_hits_total{tenant_id, tool_name}` (counter).
-    - `mcp_gateway_module_unreachable_total{module}` (counter).
+- `mcp_gateway_request_total{method, outcome}` (counter).
+- `mcp_gateway_request_latency_ms{method}` (histogram).
+- `mcp_gateway_active_sessions{tenant_id}` (gauge — sessions with `Mcp-Session-Id` still valid).
+- `mcp_gateway_tool_call_total{tool_name, outcome}` (counter).
+- `mcp_gateway_rate_limit_hits_total{tenant_id, tool_name}` (counter).
+- `mcp_gateway_module_unreachable_total{module}` (counter).
 
 25. **MUST** expose `GET /mcp/healthz` returning `{"status":"ok","protocol_version":"2025-11-25","registered_modules":<int>,"registered_tools":<int>}` for liveness checks.
 

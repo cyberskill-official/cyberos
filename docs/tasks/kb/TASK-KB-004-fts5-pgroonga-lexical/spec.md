@@ -103,10 +103,10 @@ The KB service **MUST** ship lexical search at `services/kb/src/search/lexical.r
 3. **MUST** tokenise per DEC-1912 — bigram for VN tenants, Snowball English for others. Detection per tenant.locale.
 
 4. **MUST** query at `lexical.rs::search(tenant, query, engine?, limit)`:
-   - Default engine = pgroonga
-   - Fallback to fts5 on PGroonga error
-   - Apply RLS tier filter (TASK-KB-003)
-   - Return ranked snippets
+- Default engine = pgroonga
+- Fallback to fts5 on PGroonga error
+- Apply RLS tier filter (TASK-KB-003)
+- Return ranked snippets
 
 5. **MUST** update index synchronously on doc version commit per DEC-1913 — TRIGGER ON INSERT/UPDATE kb_documents.
 
@@ -207,9 +207,7 @@ async fn tier_filter_excludes_role_restricted() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-KB-001, TASK-KB-003.
-**Downstream:** TASK-KB-006 (rerank consumes lexical results).
-**Cross-module:** TASK-MEMORY-111 (PII).
+**Upstream:** TASK-KB-001, TASK-KB-003. **Downstream:** TASK-KB-006 (rerank consumes lexical results). **Cross-module:** TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

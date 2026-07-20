@@ -22,10 +22,7 @@ caller_persona:         "cuo-cpo"
 
 Sibling artefact: `../statement-of-work-author/acceptance/golden-happy-path-sow.md` (sow@1).
 
-This is the **golden happy-path fixture** for the statement-of-work-author + statement-of-work-audit pair.
-Demonstrates the audit-fix loop converging on PASS in 2 iterations. The first
-iteration found a minor frontmatter-typo (auto-fixed). The second iteration
-flagged a borderline COND-007 trigger (operator marked wontfix with rationale).
+This is the **golden happy-path fixture** for the statement-of-work-author + statement-of-work-audit pair. Demonstrates the audit-fix loop converging on PASS in 2 iterations. The first iteration found a minor frontmatter-typo (auto-fixed). The second iteration flagged a borderline COND-007 trigger (operator marked wontfix with rationale).
 
 ## ISSUE blocks
 

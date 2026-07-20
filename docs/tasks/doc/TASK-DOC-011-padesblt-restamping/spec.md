@@ -91,10 +91,10 @@ The DOC service **MUST** ship LTV extension at `services/doc/src/ltv/` extending
 2. **MUST** validate `ltv_status` against closed enum per DEC-1803.
 
 3. **MUST** extend B-T → B-LT at `extender.rs::extend(signature)` per DEC-1800:
-   - Fetch cert chain from signature.
-   - Fetch OCSP/CRL responses for each cert at signature time.
-   - Embed validation data into PDF (PAdES VRI dictionary) per ETSI EN 319 142-1.
-   - Re-fetch fresh timestamp per DEC-1804.
+- Fetch cert chain from signature.
+- Fetch OCSP/CRL responses for each cert at signature time.
+- Embed validation data into PDF (PAdES VRI dictionary) per ETSI EN 319 142-1.
+- Re-fetch fresh timestamp per DEC-1804.
 
 4. **MUST** schedule year-9 re-stamping per DEC-1801 — TASK-MCP-007 cron monthly, scans all `doc_documents` with signatures aged ≥9 years.
 
@@ -220,8 +220,7 @@ async fn year_9_cron_picks_up_aging_sigs() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-DOC-002.
-**Cross-module:** TASK-DOC-003 (AATL composability), TASK-DOC-004 (VN CA composability), TASK-DOC-001 (PDF storage), TASK-MCP-007 (cron), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-DOC-002. **Cross-module:** TASK-DOC-003 (AATL composability), TASK-DOC-004 (VN CA composability), TASK-DOC-001 (PDF storage), TASK-MCP-007 (cron), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

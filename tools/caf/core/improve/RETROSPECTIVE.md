@@ -1,11 +1,8 @@
 # Retrospective template — score every run
 
-Copy this file to `core/improve/retros/<date>-<project>.md` after each run of AUDIT.md
-(on a client project, an internal repo, or this repo itself). Score each item
-**0 (bad) / 1 (partial) / 2 (good)**. Target: keep total **>= 16/20**.
+Copy this file to `core/improve/retros/<date>-<project>.md` after each run of AUDIT.md (on a client project, an internal repo, or this repo itself). Score each item **0 (bad) / 1 (partial) / 2 (good)**. Target: keep total **>= 16/20**.
 
-A retrospective takes ~10 minutes and is the raw material for every protocol
-change. No retro → no edit.
+A retrospective takes ~10 minutes and is the raw material for every protocol change. No retro → no edit.
 
 ```markdown
 # Retrospective — Project: <name> | Protocol: v<x.y.z> | Date: <ISO> | Mode: <gated|autonomous>
@@ -33,6 +30,4 @@ Evidence (paths to BACKLOG/HANDOFF, eval results, transcript excerpts): ____
 - **An item scores 0, or the same failure appears in 2+ retros** (Rule of Three: codify only after a pattern recurs) → log it in `core/improve/FAILURE_LOG.md` and propose ONE minimal wording change via `core/improve/CRITIC.md`.
 - **Total < 16/20** → run a critic cycle now.
 
-Machine-checkable items (1, 2, 4, 6, and the redaction half of 8) can be scored
-automatically: run `python3 core/evals/validate.py --run <path-to-docs-dir>` against
-the run's `docs/` output and map violations to the matching question.
+Machine-checkable items (1, 2, 4, 6, and the redaction half of 8) can be scored automatically: run `python3 core/evals/validate.py --run <path-to-docs-dir>` against the run's `docs/` output and map violations to the matching question.

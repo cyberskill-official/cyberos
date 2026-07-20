@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this requirements traceability matrix"
+- "Audit this requirements traceability matrix"
 - "Check the requirements traceability matrix for completeness"
 - "Verify the requirements traceability matrix meets the rubric"
 - "Re-audit the requirements traceability matrix"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a requirements traceability matrix" → requirements-traceability-matrix-author
+- "Draft a requirements traceability matrix" → requirements-traceability-matrix-author
 - "Create the requirements traceability matrix" → requirements-traceability-matrix-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

@@ -1,20 +1,13 @@
 # CyberOS desktop (TASK-APP-002)
 
-A Tauri 2 native app that wraps the live CyberOS console. The window loads
-`https://os.cyberskill.world/`, so the desktop app IS the web app - the same chat, profile, calls, and
-modules in a native window with its own dock icon. Nothing to keep in sync: every web deploy updates the
-desktop app on next launch. The old local-gateway chat/Tools prototype is retired; all app logic now lives
-in the web client (`apps/web`).
+A Tauri 2 native app that wraps the live CyberOS console. The window loads `https://os.cyberskill.world/`, so the desktop app IS the web app - the same chat, profile, calls, and modules in a native window with its own dock icon. Nothing to keep in sync: every web deploy updates the desktop app on next launch. The old local-gateway chat/Tools prototype is retired; all app logic now lives in the web client (`apps/web`).
 
 Two settings make this work cleanly:
 
-- `app.windows[].userAgent` is a standard Safari string, so Google accepts OAuth inside the webview (Google
-  blocks the default embedded-webview user-agent with "disallowed_useragent").
-- `src-tauri/Info.plist` carries `NSCameraUsageDescription` + `NSMicrophoneUsageDescription`, required for
-  the WebRTC calls' `getUserMedia` on macOS.
+- `app.windows[].userAgent` is a standard Safari string, so Google accepts OAuth inside the webview (Google blocks the default embedded-webview user-agent with "disallowed_useragent").
+- `src-tauri/Info.plist` carries `NSCameraUsageDescription` + `NSMicrophoneUsageDescription`, required for the WebRTC calls' `getUserMedia` on macOS.
 
-This is authored, not compiled here - Tauri builds per-OS and there is no Rust/Tauri toolchain in the
-authoring sandbox. Build it on each target OS.
+This is authored, not compiled here - Tauri builds per-OS and there is no Rust/Tauri toolchain in the authoring sandbox. Build it on each target OS.
 
 ## Prerequisites (per build machine)
 
@@ -24,8 +17,7 @@ authoring sandbox. Build it on each target OS.
 
 ## One-time: generate the app icons
 
-`tauri.conf.json` references icon files that must exist before a build. Generate them from the official
-CyberSkill logo (brand doctrine: use the exact logo, do not hand-draw):
+`tauri.conf.json` references icon files that must exist before a build. Generate them from the official CyberSkill logo (brand doctrine: use the exact logo, do not hand-draw):
 
 ```
 cd apps/desktop/src-tauri
@@ -42,18 +34,13 @@ cargo tauri dev      # a dev window loading the live console
 cargo tauri build    # a .dmg (macOS) or .msi/.exe (Windows) under target/release/bundle/
 ```
 
-Distribute the bundle to employees. For Gatekeeper-free installs on macOS, sign + notarize with an Apple
-Developer ID; unsigned builds still run after a right-click then Open.
+Distribute the bundle to employees. For Gatekeeper-free installs on macOS, sign + notarize with an Apple Developer ID; unsigned builds still run after a right-click then Open.
 
 ## Test points on first build (cannot be verified from the authoring sandbox)
 
-1. Google sign-in: the Safari user-agent should let Google's OAuth screen load and hand back. If Google
-   still shows "this browser may not be secure", the fallback is the in-app password sign-in, or routing
-   OAuth to the system browser with a `cyberos://` deep link (a clean follow-up).
-2. Calls: the first call should prompt for camera + microphone (the Info.plist strings). If it does not
-   prompt or fails silently, confirm the app is signed and the entitlements are present.
-3. Everything else (chat, profile, attachments, threads, search) is the web app unchanged, so it behaves
-   exactly as `os.cyberskill.world/`.
+1. Google sign-in: the Safari user-agent should let Google's OAuth screen load and hand back. If Google still shows "this browser may not be secure", the fallback is the in-app password sign-in, or routing OAuth to the system browser with a `cyberos://` deep link (a clean follow-up).
+2. Calls: the first call should prompt for camera + microphone (the Info.plist strings). If it does not prompt or fails silently, confirm the app is signed and the entitlements are present.
+3. Everything else (chat, profile, attachments, threads, search) is the web app unchanged, so it behaves exactly as `os.cyberskill.world/`.
 
 ## Layout
 

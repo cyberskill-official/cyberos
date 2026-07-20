@@ -93,31 +93,30 @@ The evaluation-views panel **MUST** surface TASK-EVAL-003 assessments to a stric
 1. **MUST** be one panel in the same static single-page app as TASK-APP-001, under `apps/console/`, mounted inside the TASK-APP-001 shell and behind its auth gate, using CDS tokens and components (DEC-2624). It **MUST NOT** define its own shell, sign-in flow, or design language; it reuses what TASK-APP-001 established (the TASK-APP-005 pattern).
 
 2. **MUST** be access-restricted to exactly three reader relationships (DEC-2620), enforced server-side in `services/eval/src/views/access.rs`, deny-by-default:
-    - the **founder** (the tenant owner role);
-    - a **manager** viewing only an employee who is their own report, established through AUTH's manager-of relationship (TASK-AUTH-003);
-    - the **employee themselves**, viewing only their own record (the self-view).
-    Any other caller — including a manager requesting a non-report, or any peer — **MUST** receive `403 eval_view_forbidden` and **MUST NOT** see any assessment content, not even existence/metadata.
+- the **founder** (the tenant owner role);
+- a **manager** viewing only an employee who is their own report, established through AUTH's manager-of relationship (TASK-AUTH-003);
+- the **employee themselves**, viewing only their own record (the self-view). Any other caller — including a manager requesting a non-report, or any peer — **MUST** receive `403 eval_view_forbidden` and **MUST NOT** see any assessment content, not even existence/metadata.
 
 3. **MUST** treat the access decision as the TASK-EVAL-001 governance grant plus the AUTH relationship, not a rule this panel invents (DEC-2624). The check **MUST** consult the TASK-EVAL-001 access grants (who may view evaluations at all) and then the manager-of relationship (which specific reports a manager may view). A caller lacking the TASK-EVAL-001 grant is denied even for their own self-view path until governance has provisioned it.
 
 4. **MUST** present a manager view (`apps/console/src/screens/eval_manager.ts` over `services/eval/src/views/manager.rs`) for an authorised manager/founder that shows, for one report: the assessment's rubric mapping (each TASK-EVAL-002 rubric item, with its `source_doc`/`clause_ref`), the evidence TASK-EVAL-003 linked per item, the **auto-score draft**, and the approve/override control. It **MUST NOT** show a report's assessment to a manager who is not that report's manager-of.
 
 5. **MUST** render the TASK-EVAL-003 auto-score as a clearly-marked DRAFT and **MUST NEVER** let it read as final (DEC-2621):
-    - the assessment carries an explicit `state` of `draft | approved | overridden` (sourced from TASK-EVAL-003 / the response flow), and the panel **MUST** show a prominent DRAFT badge whenever `state='draft'`.
-    - a `draft` assessment **MUST** be visually and textually distinguished from an `approved`/`overridden` one (badge, label, and a "not yet reviewed by a human" note); the auto-score **MUST NOT** be displayed as a decided result, a final grade, or anything that reads as an employment decision.
-    - the panel **MUST NOT** offer any "final" or "decided" affordance for a `draft` assessment other than the human approve/override control.
+- the assessment carries an explicit `state` of `draft | approved | overridden` (sourced from TASK-EVAL-003 / the response flow), and the panel **MUST** show a prominent DRAFT badge whenever `state='draft'`.
+- a `draft` assessment **MUST** be visually and textually distinguished from an `approved`/`overridden` one (badge, label, and a "not yet reviewed by a human" note); the auto-score **MUST NOT** be displayed as a decided result, a final grade, or anything that reads as an employment decision.
+- the panel **MUST NOT** offer any "final" or "decided" affordance for a `draft` assessment other than the human approve/override control.
 
 6. **MUST** require a human reviewer's approval before an assessment is final (DEC-2621, EU AI Act Article 14):
-    - the approve/override control (`services/eval/src/views/response.rs`) lets the authorised manager/founder either **approve** the draft (state → `approved`, recording `reviewer_subject_id`) or **override** it (state → `overridden`, recording the reviewer's adjusted outcome + a required `override_reason`).
-    - the transition out of `draft` **MUST** record a human `reviewer_subject_id`; a transition with a null or service-account reviewer **MUST** be rejected (`403 review_requires_human`).
-    - the model's auto-score is never the final word: `approved` means a human endorsed it; `overridden` means a human replaced it; neither happens without a human acting.
+- the approve/override control (`services/eval/src/views/response.rs`) lets the authorised manager/founder either **approve** the draft (state → `approved`, recording `reviewer_subject_id`) or **override** it (state → `overridden`, recording the reviewer's adjusted outcome + a required `override_reason`).
+- the transition out of `draft` **MUST** record a human `reviewer_subject_id`; a transition with a null or service-account reviewer **MUST** be rejected (`403 review_requires_human`).
+- the model's auto-score is never the final word: `approved` means a human endorsed it; `overridden` means a human replaced it; neither happens without a human acting.
 
 7. **MUST** provide an employee self-view (`apps/console/src/screens/eval_self.ts` over `services/eval/src/views/employee.rs`) that shows the signed-in employee their own assessment — the same rubric mapping, evidence, score, and state — and **MUST NOT** expose any other person's record, any manager's private notes not meant for the employee, or any other employee's data through it.
 
 8. **MUST** capture the employee's right to respond (DEC-2622):
-    - the self-view **MUST** let the employee record a free-text response to their own assessment (`POST .../response`), stored against the assessment with the author and timestamp.
-    - the response **MUST** be shown alongside the assessment in both the self-view and the manager view (the manager sees the employee's response).
-    - an assessment **MUST NOT** be marked `closed` until the employee has had the opportunity to respond — either the employee has recorded a response, or an explicit, audited "response window elapsed / waived" event has occurred. A close attempt before that **MUST** be rejected (`409 response_opportunity_pending`).
+- the self-view **MUST** let the employee record a free-text response to their own assessment (`POST .../response`), stored against the assessment with the author and timestamp.
+- the response **MUST** be shown alongside the assessment in both the self-view and the manager view (the manager sees the employee's response).
+- an assessment **MUST NOT** be marked `closed` until the employee has had the opportunity to respond — either the employee has recorded a response, or an explicit, audited "response window elapsed / waived" event has occurred. A close attempt before that **MUST** be rejected (`409 response_opportunity_pending`).
 
 9. **MUST** audit every cross-person read (DEC-2623): when the founder or a manager opens an employee's assessment, the panel's backing endpoint **MUST** emit a hash-chained `eval.assessment_read` memory audit row naming `{reader_subject_id, subject_employee_id, assessment_id, relationship, trace_id}`. Self-views **MUST** also emit an `eval.assessment_read` row (reader == subject). Reads are first-class audited events, never silent.
 

@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a transformation roadmap"
+- "Draft a transformation roadmap"
 - "Create the transformation roadmap"
 - "Author a new transformation roadmap"
 - "Generate the transformation roadmap"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this transformation roadmap" → transformation-roadmap-audit
+- "Audit this transformation roadmap" → transformation-roadmap-audit
 - "Check the transformation roadmap for completeness" → transformation-roadmap-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

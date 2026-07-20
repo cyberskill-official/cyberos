@@ -43,10 +43,8 @@ All six findings addressed as cited. The pair lands vendorable (TASK-CUO-209) an
 
 ## §10 - Post-implementation gates (2026-07-12, ship run)
 
-- §10.4 verification: PASS - 12/12 executable preamble assertions green on rerun; trigger suites
-  9 + 8 cases; ADR wiring grep green. Report: .workflow/TASK-SKILL-117/coverage-and-review.md.
+- §10.4 verification: PASS - 12/12 executable preamble assertions green on rerun; trigger suites 9 + 8 cases; ADR wiring grep green. Report: .workflow/TASK-SKILL-117/coverage-and-review.md.
 - awh/caf: N/A (contract work; declared). Floor: fresh build + chain-coverage + sync checks green.
-- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit
-  operator pre-authorization at the review gate; gates stayed green.
+- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit operator pre-authorization at the review gate; gates stayed green.
 
 *TASK-SKILL-117 shipped 2026-07-12. TASK-CUO-209 unblocked.*

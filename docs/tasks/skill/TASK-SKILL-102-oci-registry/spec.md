@@ -99,8 +99,8 @@ A self-hosted OCI-compliant registry **MUST** host `.skill` bundles. Each intera
 1. **MUST** speak OCI Distribution v1.1 — standard `/v2/<name>/manifests/<reference>` + `/v2/<name>/blobs/<digest>` endpoints. Backend: zot (recommended; OCI-native + small footprint).
 2. **MUST** require cosign signature on every push. Cosign uses Ed25519; per-publisher keypair (private key in publisher's secret store). Publisher signs bundle bytes; registry verifies before storing. Unsigned push → 401 with `signature_required`.
 3. **MUST** emit memory rows:
-    - `skill.published` on successful push: `tenant_id`, `skill_id`, `version`, `digest`, `publisher_subject_id`, `signature_pubkey_id`, `bundle_size_bytes`, `request_id`.
-    - `skill.pulled` on successful pull: `tenant_id`, `skill_id`, `version`, `digest`, `puller_subject_id`, `request_id`.
+- `skill.published` on successful push: `tenant_id`, `skill_id`, `version`, `digest`, `publisher_subject_id`, `signature_pubkey_id`, `bundle_size_bytes`, `request_id`.
+- `skill.pulled` on successful pull: `tenant_id`, `skill_id`, `version`, `digest`, `puller_subject_id`, `request_id`.
 4. **MUST** scope namespace by `tenant_id`: registry path is `/v2/<tenant_id>/<skill_id>/manifests/<version>`. Pulls require valid JWT (TASK-AUTH-004) AND `claims.tenant_id == namespace tenant_id`. Cross-tenant attempts → 403 with `cross_tenant_blocked`.
 5. **MUST** support immutable tags — once `<skill_id>:<version>` is published, re-push same tag returns 409 with `immutable_tag`. Bug-fix releases require version bump (semver discipline).
 6. **MUST** support `cyberos-skill publish <bundle.tar.zst> --version <semver>` CLI for ergonomic pushes. Auto-signs via local cosign keypair.
@@ -126,11 +126,11 @@ A self-hosted OCI-compliant registry **MUST** host `.skill` bundles. Each intera
     }
     ```
 15. **SHOULD** emit OTel metrics:
-    - `skill_registry_pushes_total{tenant_id, outcome}` (counter).
-    - `skill_registry_pulls_total{tenant_id, outcome}` (counter).
-    - `skill_registry_signature_failures_total{stage}` (counter; sev-1 alarm; stage ∈ push | pull).
-    - `skill_registry_bundle_size_bytes` (histogram).
-    - `skill_registry_storage_used_bytes{tenant_id}` (gauge).
+- `skill_registry_pushes_total{tenant_id, outcome}` (counter).
+- `skill_registry_pulls_total{tenant_id, outcome}` (counter).
+- `skill_registry_signature_failures_total{stage}` (counter; sev-1 alarm; stage ∈ push | pull).
+- `skill_registry_bundle_size_bytes` (histogram).
+- `skill_registry_storage_used_bytes{tenant_id}` (gauge).
 
 ---
 

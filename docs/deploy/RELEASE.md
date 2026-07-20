@@ -160,7 +160,7 @@ npm configures a trusted publisher **on a package that already exists**, so the 
        bash tools/install/build.sh dist/cyberos
        cd dist/cyberos && npm publish --access public
 
-   `npm login` first if needed; 2FA applies. This only ever happens once, to claim the name.
+`npm login` first if needed; 2FA applies. This only ever happens once, to claim the name.
 
 2. On npmjs.com go to the package -> **Settings** -> **Trusted Publisher** -> **GitHub Actions**, and enter exactly:
 
@@ -172,7 +172,7 @@ npm configures a trusted publisher **on a package that already exists**, so the 
    | Environment name | *(leave empty)* |
    | Allowed actions | `npm publish` |
 
-   Every field is case-sensitive, and npm does **not** validate this when you save it - a typo only shows up as `ENEEDAUTH` at publish time.
+Every field is case-sensitive, and npm does **not** validate this when you save it - a typo only shows up as `ENEEDAUTH` at publish time.
 
 3. Lock the door behind you: package **Settings** -> **Publishing access** -> **Require two-factor authentication and disallow tokens**. Trusted publishing keeps working (it is OIDC, not a token), and no token can publish this package again.
 
@@ -195,8 +195,8 @@ Three things silently break this, so `tools/install/tests/test_channels.sh` asse
 
 1. Land the work on `main` through PRs - the gates (services, awh-gate, docs-prerender-gate) must be green. It deploys to the web and service surface automatically; nothing else to do for web, PWA, or desktop content, since they all load the live site root.
 2. Bump the platform version and the installer versions to the number you are about to tag:
-   - `VERSION` at the repo root (the single platform version). Enforced, not aspirational (TASK-IMP-068): `.githooks/pre-commit` rebuilds `dist/cyberos` and runs `tools/install/check-version-sync.sh` on payload-source commits; `payload-gate.yml` re-proves the build on push/PR; the version-bump job proves it inline before pushing a bump.
-   - `version` in `apps/desktop/src-tauri/tauri.conf.json` and `version` in `apps/web/package.json` (what the installers report).
+- `VERSION` at the repo root (the single platform version). Enforced, not aspirational (TASK-IMP-068): `.githooks/pre-commit` rebuilds `dist/cyberos` and runs `tools/install/check-version-sync.sh` on payload-source commits; `payload-gate.yml` re-proves the build on push/PR; the version-bump job proves it inline before pushing a bump.
+- `version` in `apps/desktop/src-tauri/tauri.conf.json` and `version` in `apps/web/package.json` (what the installers report).
 3. Record the release in `CHANGELOG.md` (repo level; per-module history lives in each module's `CHANGELOG.md`, rendered to the site's changelog pages).
 4. Commit, tag, and push both:
 
@@ -234,6 +234,4 @@ Turning on macOS signing, Android releases, and iOS TestFlight is its own step-b
 
 ### Release trigger (TASK-IMP-071)
 
-`git tag vX.Y.Z && git push origin vX.Y.Z` now fires `release.yml` directly - the tag points at the
-bump commit, which no longer carries `[skip ci]`. `gh workflow run release.yml --ref main -f tag=vX.Y.Z`
-remains as the manual fallback (and the retry path when a run needs re-cutting).
+`git tag vX.Y.Z && git push origin vX.Y.Z` now fires `release.yml` directly - the tag points at the bump commit, which no longer carries `[skip ci]`. `gh workflow run release.yml --ref main -f tag=vX.Y.Z` remains as the manual fallback (and the retry path when a run needs re-cutting).

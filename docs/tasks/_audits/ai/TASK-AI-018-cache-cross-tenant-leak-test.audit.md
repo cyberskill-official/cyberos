@@ -91,8 +91,8 @@ A code-gen agent has no template for what the other four are. The seven-scenario
 
 1. Enumerate 7 scenarios (one more than the original "5" — added unicode-normalization and persona-omitted; both are TASK-AI-017-related).
 2. Each scenario gets:
-   - A normative clause in §1 #6 (named with the scenario id).
-   - A full Rust test body in §5 with comment block citing incident date + root cause.
+- A normative clause in §1 #6 (named with the scenario id).
+- A full Rust test body in §5 with comment block citing incident date + root cause.
 3. Make the regression file (`cache_isolation_regression_scenarios.rs`) a separate test file in `new_files`.
 4. Add §10 row: "Regression scenario removed/renamed → CI fails on missing-test detection" — preserves the corpus over time.
 

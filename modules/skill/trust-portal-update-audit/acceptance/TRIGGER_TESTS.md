@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this trust portal update"
+- "Audit this trust portal update"
 - "Check the trust portal update for completeness"
 - "Verify the trust portal update meets the rubric"
 - "Re-audit the trust portal update"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a trust portal update" → trust-portal-update-author
+- "Draft a trust portal update" → trust-portal-update-author
 - "Create the trust portal update" → trust-portal-update-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

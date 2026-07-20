@@ -139,13 +139,13 @@ The REW service **MUST** ship P1 protection at `services/rew/src/p1_guard/` with
    ```
 
 3. **MUST** validate at service layer at `validator.rs::validate(member, new_p1)` per DEC-2170:
-   - Fetch current P1
-   - If new < current AND no consent: reject before DB attempt (better UX than trigger fail)
+- Fetch current P1
+- If new < current AND no consent: reject before DB attempt (better UX than trigger fail)
 
 4. **MUST** run consent flow at `demotion_consent.rs::create_request(member, new_p1, consent_doc_id)` per DEC-2172:
-   - Member uploads written consent doc (TASK-DOC-001 ref)
-   - CEO + CFO sign
-   - fully_signed → trigger now allows reduction
+- Member uploads written consent doc (TASK-DOC-001 ref)
+- CEO + CFO sign
+- fully_signed → trigger now allows reduction
 
 5. **MUST** expose endpoints:
    ```text
@@ -230,8 +230,7 @@ async fn demotion_with_full_consent_allowed() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-REW-001.
-**Cross-module:** TASK-AUTH-101 (CEO/CFO roles), TASK-DOC-001 (consent doc), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-REW-001. **Cross-module:** TASK-AUTH-101 (CEO/CFO roles), TASK-DOC-001 (consent doc), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

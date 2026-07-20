@@ -1,7 +1,6 @@
 # `repo-context-map-author` - pipeline
 
-Deep-scan the repo before code generation: existing patterns, schemas, blast radius, module-placement check.
-Artefact: `repo-context-map@1`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
+Deep-scan the repo before code generation: existing patterns, schemas, blast radius, module-placement check. Artefact: `repo-context-map@1`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
 
 ## Upstream
 

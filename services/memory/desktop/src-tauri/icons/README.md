@@ -1,7 +1,6 @@
 # memory app icons
 
-This directory ships **empty** in the scaffold. Tauri 2 expects a fixed set of
-icon files for bundling.
+This directory ships **empty** in the scaffold. Tauri 2 expects a fixed set of icon files for bundling.
 
 Generate them with:
 
@@ -22,8 +21,6 @@ icons/icon.ico         # Windows
 icons/icon.png         # tray + Linux PNG
 ```
 
-Commit the generated icons (they're small, deterministic, and required by
-`tauri.conf.json` → `bundle.icon` + `app.trayIcon.iconPath`).
+Commit the generated icons (they're small, deterministic, and required by `tauri.conf.json` → `bundle.icon` + `app.trayIcon.iconPath`).
 
-Until icons are committed, `pnpm tauri dev` will warn about missing icons but
-still launch with Tauri's default placeholder.
+Until icons are committed, `pnpm tauri dev` will warn about missing icons but still launch with Tauri's default placeholder.

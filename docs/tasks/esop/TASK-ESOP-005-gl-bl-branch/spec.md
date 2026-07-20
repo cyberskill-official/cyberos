@@ -88,11 +88,11 @@ The ESOP service **MUST** ship GL/BL branch at `services/esop/src/leaver/` trigg
 3. **MUST** require CFO+CEO dual-sign at `dual_sign_gate.rs` per DEC-2292 — same-person rejected.
 
 4. **MUST** execute forfeiture at `forfeiture_executor.rs::execute(outcome)` per DEC-2290:
-   - good_leaver_full_vest: vesting halt at term_date; vested = at_term_date
-   - good_leaver_pro_rated: vesting continues for X months post-term
-   - bad_leaver_unvested_forfeit: vested kept; unvested forfeited
-   - bad_leaver_full_forfeit: all shares forfeited (vested + unvested)
-   - mutual_negotiated: per agreement; CFO+CEO specify
+- good_leaver_full_vest: vesting halt at term_date; vested = at_term_date
+- good_leaver_pro_rated: vesting continues for X months post-term
+- bad_leaver_unvested_forfeit: vested kept; unvested forfeited
+- bad_leaver_full_forfeit: all shares forfeited (vested + unvested)
+- mutual_negotiated: per agreement; CFO+CEO specify
 
 5. **MUST** define table at migration `0005`:
    ```sql
@@ -221,8 +221,7 @@ async fn bl_full_forfeit() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-HR-009.
-**Cross-module:** TASK-ESOP-001 (grant), TASK-ESOP-002 (vested calc), TASK-AUTH-101 (CFO/CEO), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-HR-009. **Cross-module:** TASK-ESOP-001 (grant), TASK-ESOP-002 (vested calc), TASK-AUTH-101 (CFO/CEO), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a release notes"
+- "Draft a release notes"
 - "Create the release notes"
 - "Author a new release notes"
 - "Generate the release notes"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this release notes" → release-notes-audit
+- "Audit this release notes" → release-notes-audit
 - "Check the release notes for completeness" → release-notes-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

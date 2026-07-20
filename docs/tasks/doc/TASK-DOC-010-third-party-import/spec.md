@@ -91,9 +91,9 @@ The DOC service **MUST** ship third-party import at `services/doc/src/import/` s
 1. **MUST** validate `import_source` against closed enum per DEC-1761.
 
 2. **MUST** dispatch per provider:
-   - `docusign_client.rs::list_envelopes(creds)` + `fetch_envelope(id) → PDF bytes + metadata`
-   - `adobe_sign_client.rs::list_agreements` + `fetch_agreement`
-   - `hellosign_client.rs::list_signature_requests` + `fetch_request`
+- `docusign_client.rs::list_envelopes(creds)` + `fetch_envelope(id) → PDF bytes + metadata`
+- `adobe_sign_client.rs::list_agreements` + `fetch_agreement`
+- `hellosign_client.rs::list_signature_requests` + `fetch_request`
 
 3. **MUST** preserve LTV per DEC-1762 — verify existing signature is valid at `ltv_verifier.rs::verify(pdf_bytes)`; do NOT add new signature. Store as-is in S3.
 
@@ -241,8 +241,7 @@ async fn ltv_invalid_flagged() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-DOC-001.
-**Cross-module:** TASK-DOC-007 (lifecycle metadata population), TASK-DOC-011 (LTV verifier shared logic), TASK-MCP-007 (async task), TASK-AUTH-101 (CLO role), TASK-AUTH-105 (KMS), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-DOC-001. **Cross-module:** TASK-DOC-007 (lifecycle metadata population), TASK-DOC-011 (LTV verifier shared logic), TASK-MCP-007 (async task), TASK-AUTH-101 (CLO role), TASK-AUTH-105 (KMS), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

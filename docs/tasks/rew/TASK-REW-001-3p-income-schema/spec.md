@@ -232,9 +232,7 @@ async fn immutable_append_only() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-HR-001.
-**Downstream:** TASK-REW-002 (versioning), TASK-REW-003 (P1 invariant), TASK-REW-005 (payroll), TASK-REW-007 (BP), TASK-REW-010 (memory exclusion).
-**Cross-module:** TASK-AUTH-105 (KMS), TASK-AUTH-101 (CFO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-HR-001. **Downstream:** TASK-REW-002 (versioning), TASK-REW-003 (P1 invariant), TASK-REW-005 (payroll), TASK-REW-007 (BP), TASK-REW-010 (memory exclusion). **Cross-module:** TASK-AUTH-105 (KMS), TASK-AUTH-101 (CFO role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

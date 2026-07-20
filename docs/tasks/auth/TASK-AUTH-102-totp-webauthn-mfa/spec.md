@@ -152,80 +152,79 @@ The AUTH service **MUST** ship TOTP (RFC 6238) + WebAuthn Level 3 MFA with close
 7. **MUST** enforce RLS with `USING + WITH CHECK` on all 5 tables. Policy: `tenant_id = current_setting('auth.tenant_id')::uuid OR current_setting('auth.is_root_admin', true) = 'true'`. Root-admin sees all (for support + unlock).
 
 8. **MUST** implement TOTP per RFC 6238 (per DEC-481):
-    - Algorithm: HMAC-SHA1 (RFC 4226 base).
-    - Time step: 30 seconds.
-    - Code length: 6 digits.
-    - Step skew tolerance: ±1 step (60s total window) per DEC-489.
-    - Secret: 160-bit random, base32-encoded.
-    - Provisioning URI: `otpauth://totp/CyberOS:{tenant_slug}/{subject_email}?secret={base32_secret}&issuer=CyberOS&algorithm=SHA1&digits=6&period=30`.
+- Algorithm: HMAC-SHA1 (RFC 4226 base).
+- Time step: 30 seconds.
+- Code length: 6 digits.
+- Step skew tolerance: ±1 step (60s total window) per DEC-489.
+- Secret: 160-bit random, base32-encoded.
+- Provisioning URI: `otpauth://totp/CyberOS:{tenant_slug}/{subject_email}?secret={base32_secret}&issuer=CyberOS&algorithm=SHA1&digits=6&period=30`.
 
 9. **MUST** KMS-encrypt the TOTP secret at rest (per DEC-482). `totp_secret_kms_blob` column holds the ciphertext; `totp_kms_key_id` records the key used. Plaintext secret is exposed ONLY at enrolment time (as QR code) — never queryable thereafter. Verification flow: decrypt → HMAC-SHA1 compute → compare → discard plaintext.
 
 10. **MUST** implement WebAuthn Level 3 per DEC-483 + DEC-490 via the `webauthn-rs` crate:
-    - Relying party id: `cyberos.world` (slice 1; per-tenant subdomains in slice 3).
-    - User verification: `required` (no `preferred` fallback).
-    - Resident keys: `preferred` (enables passkey UX in TASK-AUTH-105).
-    - Attestation: `none` at slice 1 (per DEC-494).
-    - Counter-monotonicity: on each verify, fetch stored `signature_count`; if response's count ≤ stored → reject with `cloned_authenticator_detected` + sev-1 audit + revoke factor.
+- Relying party id: `cyberos.world` (slice 1; per-tenant subdomains in slice 3).
+- User verification: `required` (no `preferred` fallback).
+- Resident keys: `preferred` (enables passkey UX in TASK-AUTH-105).
+- Attestation: `none` at slice 1 (per DEC-494).
+- Counter-monotonicity: on each verify, fetch stored `signature_count`; if response's count ≤ stored → reject with `cloned_authenticator_detected` + sev-1 audit + revoke factor.
 
 11. **MUST** ship the challenge lifecycle FSM (per DEC-484):
-    - `pending` (issued) → `consumed` (verified successfully).
-    - `pending` → `expired` (TTL passed).
-    - `pending` → `failed` (verification failed; rate-limit applies).
-   `consumed → *`, `expired → *`, `failed → *` are all terminal. Reuse of a `consumed` or `expired` challenge → 401 + sev-2 audit.
+- `pending` (issued) → `consumed` (verified successfully).
+- `pending` → `expired` (TTL passed).
+- `pending` → `failed` (verification failed; rate-limit applies). `consumed → *`, `expired → *`, `failed → *` are all terminal. Reuse of a `consumed` or `expired` challenge → 401 + sev-2 audit.
 
 12. **MUST** TTL challenges at 5 minutes (per DEC-484). Background job (or lazy lookup) marks `pending` rows whose `expires_at < now()` as `expired`. The verify handler explicitly checks `status='pending' AND expires_at > now()` before consuming.
 
 13. **MUST** generate 10 recovery codes at first MFA enrolment (per DEC-485):
-    - Format: 8 chars base32 (excludes 0/O/1/L for legibility).
-    - bcrypt-hashed at cost 12 at rest.
-    - Single-use: on consumption, set `consumed=true, consumed_at=now()` and emit `auth.mfa_recovery_code_consumed` (sev-2).
-    - Subject MAY regenerate via `POST /v1/auth/mfa/recovery-codes/regen` — invalidates ALL prior codes (new batch_id; old batch's codes orphaned but kept for audit history).
+- Format: 8 chars base32 (excludes 0/O/1/L for legibility).
+- bcrypt-hashed at cost 12 at rest.
+- Single-use: on consumption, set `consumed=true, consumed_at=now()` and emit `auth.mfa_recovery_code_consumed` (sev-2).
+- Subject MAY regenerate via `POST /v1/auth/mfa/recovery-codes/regen` — invalidates ALL prior codes (new batch_id; old batch's codes orphaned but kept for audit history).
 
 14. **MUST** implement lockout (per DEC-487):
-    - Count failed challenges per subject in a sliding 15-minute window.
-    - 5 failures in window → set `locked_until = now() + 30 minutes`; emit `auth.mfa_locked_out` memory row at sev-1.
-    - During lockout, all MFA verify attempts return 423 `mfa_locked`; failure counter does NOT increment.
-    - At `locked_until` expiry, the next attempt succeeds normally if credentials valid.
-    - Root-admin can early-unlock via `POST /v1/auth/mfa/unlock` (emits `auth.mfa_unlocked` sev-2).
+- Count failed challenges per subject in a sliding 15-minute window.
+- 5 failures in window → set `locked_until = now() + 30 minutes`; emit `auth.mfa_locked_out` memory row at sev-1.
+- During lockout, all MFA verify attempts return 423 `mfa_locked`; failure counter does NOT increment.
+- At `locked_until` expiry, the next attempt succeeds normally if credentials valid.
+- Root-admin can early-unlock via `POST /v1/auth/mfa/unlock` (emits `auth.mfa_unlocked` sev-2).
 
 15. **MUST** consult per-tenant MFA policy (per DEC-491) at JWT issuance time. The tenant policy YAML (TASK-AI-005) declares `mfa_required_roles: [<role>...]`. JWT issuer checks: if subject's roles ∩ mfa_required_roles ≠ ∅ AND no recent successful MFA challenge → return 401 `mfa_challenge_required` with `factor_kinds: [<available factors for subject>]`. Founder role ALWAYS requires (DEC-128).
 
 16. **MUST** emit memory audit rows for 8 kinds (per DEC-486):
-    - `auth.mfa_factor_enrolled` — POST /enrol success.
-    - `auth.mfa_factor_removed` — POST /remove success.
-    - `auth.mfa_challenge_issued` — POST /challenge success.
-    - `auth.mfa_challenge_succeeded` — POST /verify success.
-    - `auth.mfa_challenge_failed` — POST /verify failure (counter increments).
-    - `auth.mfa_recovery_code_consumed` — sev-2.
-    - `auth.mfa_locked_out` — sev-1 with subject_id_hash16 + failed_count + locked_until.
-    - `auth.mfa_unlocked` — sev-2 with reason + root-admin actor.
+- `auth.mfa_factor_enrolled` — POST /enrol success.
+- `auth.mfa_factor_removed` — POST /remove success.
+- `auth.mfa_challenge_issued` — POST /challenge success.
+- `auth.mfa_challenge_succeeded` — POST /verify success.
+- `auth.mfa_challenge_failed` — POST /verify failure (counter increments).
+- `auth.mfa_recovery_code_consumed` — sev-2.
+- `auth.mfa_locked_out` — sev-1 with subject_id_hash16 + failed_count + locked_until.
+- `auth.mfa_unlocked` — sev-2 with reason + root-admin actor.
 
 17. **MUST** PII-scrub `display_name`, `reason`, and `source_ip_hash16` via TASK-MEMORY-111 before chain commit.
 
 18. **MUST** expose REST handlers:
-    - `POST /v1/auth/mfa/factors/totp/enrol` — generates secret + returns QR provisioning URI; subject confirms first code; row created.
-    - `POST /v1/auth/mfa/factors/webauthn/enrol/begin` — generates WebAuthn creation challenge.
-    - `POST /v1/auth/mfa/factors/webauthn/enrol/finish` — validates attestation + stores credential.
-    - `DELETE /v1/auth/mfa/factors/{id}` — soft-delete (status=removed); audit row.
-    - `POST /v1/auth/mfa/challenges` — issue challenge for `factor_id`; returns challenge_id + nonce.
-    - `POST /v1/auth/mfa/verify` — verify challenge response; transitions to consumed.
-    - `POST /v1/auth/mfa/recovery-codes/regen` — invalidates current batch + returns 10 new codes (once).
-    - `POST /v1/auth/mfa/recovery-codes/consume` — consume one recovery code.
-    - `POST /v1/auth/mfa/unlock` — root-admin only.
+- `POST /v1/auth/mfa/factors/totp/enrol` — generates secret + returns QR provisioning URI; subject confirms first code; row created.
+- `POST /v1/auth/mfa/factors/webauthn/enrol/begin` — generates WebAuthn creation challenge.
+- `POST /v1/auth/mfa/factors/webauthn/enrol/finish` — validates attestation + stores credential.
+- `DELETE /v1/auth/mfa/factors/{id}` — soft-delete (status=removed); audit row.
+- `POST /v1/auth/mfa/challenges` — issue challenge for `factor_id`; returns challenge_id + nonce.
+- `POST /v1/auth/mfa/verify` — verify challenge response; transitions to consumed.
+- `POST /v1/auth/mfa/recovery-codes/regen` — invalidates current batch + returns 10 new codes (once).
+- `POST /v1/auth/mfa/recovery-codes/consume` — consume one recovery code.
+- `POST /v1/auth/mfa/unlock` — root-admin only.
 
 19. **MUST** complete MFA verify in ≤ 100 ms p95 (TOTP) / 300 ms p95 (WebAuthn — includes signature verify). `mfa_perf_test`.
 
 20. **MUST** emit OTel span `auth.mfa.{enrol,challenge,verify,recovery,lockout,unlock}` with attributes: `tenant_id`, `subject_id_hash16`, `factor_kind`, `outcome` (success | challenge_expired | challenge_reused | invalid_code | cloned_authenticator | locked | unknown_factor | policy_required | unlock_not_root_admin).
 
 21. **MUST** emit OTel metrics:
-    - `auth_mfa_factor_enrolled_total{tenant_id, factor_kind}` (counter).
-    - `auth_mfa_challenge_issued_total{tenant_id, factor_kind}` (counter).
-    - `auth_mfa_challenge_succeeded_total{tenant_id, factor_kind}` (counter).
-    - `auth_mfa_challenge_failed_total{tenant_id, factor_kind, reason}` (counter).
-    - `auth_mfa_recovery_consumed_total{tenant_id}` (counter — sev-2 alarm at sustained > 5/h indicates compromise).
-    - `auth_mfa_locked_out_total{tenant_id}` (counter — sev-1 alarm always).
-    - `auth_mfa_active_factors{tenant_id, factor_kind}` (gauge).
+- `auth_mfa_factor_enrolled_total{tenant_id, factor_kind}` (counter).
+- `auth_mfa_challenge_issued_total{tenant_id, factor_kind}` (counter).
+- `auth_mfa_challenge_succeeded_total{tenant_id, factor_kind}` (counter).
+- `auth_mfa_challenge_failed_total{tenant_id, factor_kind, reason}` (counter).
+- `auth_mfa_recovery_consumed_total{tenant_id}` (counter — sev-2 alarm at sustained > 5/h indicates compromise).
+- `auth_mfa_locked_out_total{tenant_id}` (counter — sev-1 alarm always).
+- `auth_mfa_active_factors{tenant_id, factor_kind}` (gauge).
 
 22. **MUST** ship the `mfa_lockout_writer` SQL role distinct from cyberos_app. Only this role can UPDATE `mfa_lockout_state.failed_count`, `window_started_at`, `locked_until`. cyberos_app can SELECT.
 

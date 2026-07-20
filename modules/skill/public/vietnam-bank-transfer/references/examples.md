@@ -24,11 +24,11 @@ Walk:
 - `0002 01` — payload format "01"
 - `0102 11` — static
 - `38 54 ...` — merchant account info, length 54
-  - `0010 A000000727` — Napas AID
-  - `0124 ...` — beneficiary block, length 24
-    - `0006 970436` — VCB BIN
-    - `0110 0123456789` — account
-  - `0208 QRIBFTTA` — service code
+- `0010 A000000727` — Napas AID
+- `0124 ...` — beneficiary block, length 24
+- `0006 970436` — VCB BIN
+- `0110 0123456789` — account
+- `0208 QRIBFTTA` — service code
 - `5303 704` — VND
 - `5802 VN` — country
 - `6304 XXXX` — CRC16
@@ -54,7 +54,7 @@ Use-case: an SME issues an invoice that's auto-paid by scanning; the customer's 
 - Point-of-init switches to `12` (single-use, amount pre-filled).
 - Tag `54` carries the amount: `5406 250000`.
 - Tag `62` wraps the memo under sub-tag `08`:
-  - `62 21 08 17 Thanh toan HD ABC`
+- `62 21 08 17 Thanh toan HD ABC`
 
 The customer's bank app shows: "Chuyển 250,000₫ đến STK 31410001234567 (BIDV) — ND: Thanh toan HD ABC".
 

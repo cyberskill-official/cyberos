@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this breach notification"
+- "Audit this breach notification"
 - "Check the breach notification for completeness"
 - "Verify the breach notification meets the rubric"
 - "Re-audit the breach notification"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a breach notification" → breach-notification-author
+- "Draft a breach notification" → breach-notification-author
 - "Create the breach notification" → breach-notification-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

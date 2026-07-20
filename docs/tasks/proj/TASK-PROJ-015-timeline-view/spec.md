@@ -80,16 +80,16 @@ The Timeline view **MUST** render issues as horizontal bars on a day-grid × ass
 7. **MUST** render milestone markers from TASK-PROJ-007 Fixed-Fee config: vertical gold-bordered line at `target_date`; hover tooltip shows milestone name + amount.
 8. **MUST** show today-indicator: vertical thin line marking current date; subtle pulse animation.
 9. **MUST** support keyboard navigation parity:
-    - Tab cycles swimlanes + bars.
-    - J/K move swimlanes; H/L move within swimlane.
-    - Shift+→/← extend/shrink bar by 1 day.
-    - Shift+Cmd+→/← move bar by 1 day.
-    - Enter opens Brief Modal.
+- Tab cycles swimlanes + bars.
+- J/K move swimlanes; H/L move within swimlane.
+- Shift+→/← extend/shrink bar by 1 day.
+- Shift+Cmd+→/← move bar by 1 day.
+- Enter opens Brief Modal.
 10. **MUST** lazy-render swimlanes off-screen via IntersectionObserver; ≥ 60fps with 50+ swimlanes.
 11. **MUST** emit memory audit `proj.timeline_bar_moved` per resize/move with `{issue_id, field, before, after, was_keyboard, trace_id}`.
 12. **MUST** emit OTel client metrics:
-    - `proj_timeline_render_p95_ms`.
-    - `proj_timeline_resize_latency_ms`.
+- `proj_timeline_render_p95_ms`.
+- `proj_timeline_resize_latency_ms`.
 13. **MUST** RLS-enforce (issues + assignees only for tenant).
 14. **MUST** pass axe-core (per TASK-PROJ-018 a11y CI).
 15. **MUST** support workload overlap visualisation: when multiple bars in same swimlane overlap (one assignee has 3 concurrent issues), stack them vertically OR show a "3" badge on the densest period.

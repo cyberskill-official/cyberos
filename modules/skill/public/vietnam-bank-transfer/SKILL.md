@@ -30,11 +30,11 @@ allowed-tools: read_file write_file
 1. **Resolve the bank** by short code (e.g. "VCB", "BIDV", "ACB") to BIN via `assets/bank-bins.json`.
 2. **Validate the account number** is digits only, length 6-19.
 3. **Build the EMVCo TLV string** per `references/vietqr-format.md`:
-   - Payload format "01", point-of-init "11" (static) or "12" (dynamic).
-   - Merchant account info with Napas AID + bank BIN + account.
-   - Currency "704" (VND); optional amount; country "VN".
-   - Optional memo/terminal label under tag 62.
-   - Compute CRC16-CCITT-FALSE of everything preceding `6304`.
+- Payload format "01", point-of-init "11" (static) or "12" (dynamic).
+- Merchant account info with Napas AID + bank BIN + account.
+- Currency "704" (VND); optional amount; country "VN".
+- Optional memo/terminal label under tag 62.
+- Compute CRC16-CCITT-FALSE of everything preceding `6304`.
 4. **Emit the payload string** — pipe to any QR renderer for the image.
 
 ## Quick start

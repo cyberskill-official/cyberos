@@ -41,8 +41,7 @@ outputs:
 
 ## 2. Pass criterion
 
-10/10. Errors → return to coverage-gate-author with the failing rows;
-the workflow then proceeds to the debugging-cycle skill (step 15).
+10/10. Errors → return to coverage-gate-author with the failing rows; the workflow then proceeds to the debugging-cycle skill (step 15).
 
 ---
 

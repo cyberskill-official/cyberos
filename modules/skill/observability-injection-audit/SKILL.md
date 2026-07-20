@@ -42,8 +42,7 @@ outputs:
 
 ## 2. Pass criterion
 
-10/10. The workflow proceeds to step 13 (coverage-gate-author) once
-this audit passes.
+10/10. The workflow proceeds to step 13 (coverage-gate-author) once this audit passes.
 
 ---
 

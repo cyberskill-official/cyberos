@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this safety report"
+- "Audit this safety report"
 - "Check the safety report for completeness"
 - "Verify the safety report meets the rubric"
 - "Re-audit the safety report"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a safety report" → safety-report-author
+- "Draft a safety report" → safety-report-author
 - "Create the safety report" → safety-report-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

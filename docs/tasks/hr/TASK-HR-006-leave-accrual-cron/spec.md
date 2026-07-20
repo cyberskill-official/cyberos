@@ -90,9 +90,9 @@ The HR service **MUST** ship leave accrual at `services/hr/src/accrual/` running
 2. **MUST** validate `accrual_kind` against closed enum per DEC-1852.
 
 3. **MUST** compute per-month accrual at `monthly_batch.rs::accrue(member, year_month)`:
-   - base = 1.0d (Decree 145 Art. 65) × pro-rate (TASK-HR-002 contract type override)
-   - seniority = floor(years_of_service / 5) × 1.0d (Art. 66; default 0 unless industry special)
-   - skip if member.is_active=false for that month
+- base = 1.0d (Decree 145 Art. 65) × pro-rate (TASK-HR-002 contract type override)
+- seniority = floor(years_of_service / 5) × 1.0d (Art. 66; default 0 unless industry special)
+- skip if member.is_active=false for that month
 
 4. **MUST** be idempotent per DEC-1854 — UNIQUE on (member_id, year_month, kind); ON CONFLICT DO NOTHING.
 
@@ -220,8 +220,7 @@ async fn correction_creates_new_row() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-HR-004.
-**Cross-module:** TASK-HR-002 (contract pro-rate), TASK-MCP-007 (cron), TASK-AUTH-101 (CHRO), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-HR-004. **Cross-module:** TASK-HR-002 (contract pro-rate), TASK-MCP-007 (cron), TASK-AUTH-101 (CHRO), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

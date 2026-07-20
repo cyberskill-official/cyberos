@@ -5,7 +5,6 @@
 - T12: tile assets untouched (AC #8, 0-diff). PASS
 - Floor: run-gates.sh GREEN. Coverage N/A (declared).
 
-TRACE closure: §1 #1✅(makeappx wrap contract) #2✅(placeholder + lint T9) #3✅(4 icons verified present, T12) #4✅(independent gates) #5✅(store-managed default) #6✅(auth contract) #7✅(nothing acquired) #8✅(IARC answer sheet).
-Deferred: AC #1 makeappx pack needs a Windows SDK runner (standing step in the gated job); AC #8's NSIS /S real test is a pre-submission human item.
+TRACE closure: §1 #1✅(makeappx wrap contract) #2✅(placeholder + lint T9) #3✅(4 icons verified present, T12) #4✅(independent gates) #5✅(store-managed default) #6✅(auth contract) #7✅(nothing acquired) #8✅(IARC answer sheet). Deferred: AC #1 makeappx pack needs a Windows SDK runner (standing step in the gated job); AC #8's NSIS /S real test is a pre-submission human item.
 
 **Machine gates green → HALTED at HITL gate 2. Final acceptance verdict is yours.**

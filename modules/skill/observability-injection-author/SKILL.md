@@ -41,11 +41,7 @@ blockers:
 
 ## 1. Purpose
 
-Make the new code legible at runtime — every state transition logged,
-every external IO traced, every error branch counted — without bolting
-observability on as an afterthought. Plan the instrumentation **before**
-implementation; the implementation-plan-author treats this as a
-required input for any path it generates.
+Make the new code legible at runtime — every state transition logged, every external IO traced, every error branch counted — without bolting observability on as an afterthought. Plan the instrumentation **before** implementation; the implementation-plan-author treats this as a required input for any path it generates.
 
 ## 2. Output schema
 
@@ -81,8 +77,7 @@ redaction_policy:
 - Every external IO in `impl_plan.external_calls` has ≥ 1 trace_span.
 - Every error branch in `impl_plan.error_branches` has ≥ 1 error_counter.
 - `branch_coverage.coverage_pct ≥ 80`.
-- `redaction_policy` is non-empty if the task touches any PII (verified
-  against the task's `data:` frontmatter classification).
+- `redaction_policy` is non-empty if the task touches any PII (verified against the task's `data:` frontmatter classification).
 
 ## 4. Chains to
 

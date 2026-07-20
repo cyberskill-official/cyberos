@@ -94,10 +94,10 @@ Every PROJ Issue state change **MUST** be a memory-anchored decision, not just a
 10. **MUST** include `decided_by_subject_id` from JWT claims. Audit shows WHO made the decision, not just that it happened.
 11. **MUST** complete decision emission within 100ms p95 (memory row write + chain fetch + DB update).
 12. **SHOULD** emit OTel metrics:
-    - `proj_decisions_emitted_total{tenant_id, transition}` (counter; transition like `triage_to_todo`).
-    - `proj_decisions_emit_latency_ms` (histogram).
-    - `proj_decisions_with_reason_total` (counter; trend who provides rationale).
-    - `proj_decisions_with_links_total{link_type}` (counter; cross-module integration health).
+- `proj_decisions_emitted_total{tenant_id, transition}` (counter; transition like `triage_to_todo`).
+- `proj_decisions_emit_latency_ms` (histogram).
+- `proj_decisions_with_reason_total` (counter; trend who provides rationale).
+- `proj_decisions_with_links_total{link_type}` (counter; cross-module integration health).
 13. **MUST** redact PII from `reason` text before memory emit using TASK-MEMORY-111 ruleset (same redactor as TASK-CHAT-005). The redacted form is stored in the audit row; original is NOT retained. This is mandatory not optional — operators cannot disable.
 14. **MUST** include a `decision_id` (UUIDv7) as a top-level field in the payload, distinct from the memory row's internal chain hash. Operators and APIs reference decisions by decision_id; chain hash is implementation detail.
 15. **MUST** support decision retraction via separate `proj.decision_retracted` row kind (NOT mutation of the original). Retraction carries `{retracts_decision_id, retraction_reason, retracted_by_subject_id}`. The original decision row is immutable; the retraction is the supersession marker.

@@ -159,24 +159,24 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
 4. **MUST** seed the permission matrix in migration `0005_roles_permissions.sql` with one row per `(role, resource, action)` tuple that is allowed. Disallowed tuples are absent — there is no explicit deny row. Total seeded rows: ~280 (varies by audit; the migration's row count is asserted in the migration test). The matrix is loaded into the `RoleMatrix` snapshot at service start and refreshed every 60 s by a tokio task.
 
 5. **MUST** expose `POST /v1/admin/subjects/{subject_id}/roles` with body `{"role": "<kebab-name>"}` to grant a single role to a subject. The handler:
-   - Validates the caller has `Resource::RoleAssignment + Action::Admin` (typically `tenant-admin` or `root-admin`).
-   - Parses the role string via `Role::from_str` — unknown name → `400 BAD_REQUEST {"error":"unknown_role","role":"<x>","allowed":[...22 names...]}`.
-   - Refuses self-assignment of reserved roles (per §1 #11). Reserved-role assignment requires a dedicated elevated-privilege endpoint (out of scope for slice 1; see §9).
-   - Refuses `founder` assignment to a subject without a registered WebAuthn factor (per DEC-128 + TASK-AUTH-105). Missing factor → `409 CONFLICT {"error":"webauthn_required","role":"founder"}`.
-   - Inserts into `subject_roles` (tenant-scoped; RLS-protected) with `(subject_id, role, granted_by, granted_at)`. Duplicate grant → `409 CONFLICT {"error":"already_granted"}` (idempotent on the (subject_id, role) PK).
-   - Emits exactly one `auth.role_assigned` memory audit row before commit (audit-before-action per task-audit skill rule 25).
-   - Returns `201 CREATED` with `{"subject_id", "role", "granted_by", "granted_at"}`.
+- Validates the caller has `Resource::RoleAssignment + Action::Admin` (typically `tenant-admin` or `root-admin`).
+- Parses the role string via `Role::from_str` — unknown name → `400 BAD_REQUEST {"error":"unknown_role","role":"<x>","allowed":[...22 names...]}`.
+- Refuses self-assignment of reserved roles (per §1 #11). Reserved-role assignment requires a dedicated elevated-privilege endpoint (out of scope for slice 1; see §9).
+- Refuses `founder` assignment to a subject without a registered WebAuthn factor (per DEC-128 + TASK-AUTH-105). Missing factor → `409 CONFLICT {"error":"webauthn_required","role":"founder"}`.
+- Inserts into `subject_roles` (tenant-scoped; RLS-protected) with `(subject_id, role, granted_by, granted_at)`. Duplicate grant → `409 CONFLICT {"error":"already_granted"}` (idempotent on the (subject_id, role) PK).
+- Emits exactly one `auth.role_assigned` memory audit row before commit (audit-before-action per task-audit skill rule 25).
+- Returns `201 CREATED` with `{"subject_id", "role", "granted_by", "granted_at"}`.
 
 6. **MUST** expose `DELETE /v1/admin/subjects/{subject_id}/roles/{role}` with the same caller-permission gate. Deletion:
-   - Is hard-delete (no soft-delete; the audit row is the record).
-   - Emits exactly one `auth.role_revoked` memory audit row before commit.
-   - Returns `204 NO CONTENT`. Already-absent → `204` (idempotent — `DELETE` matches REST semantics).
+- Is hard-delete (no soft-delete; the audit row is the record).
+- Emits exactly one `auth.role_revoked` memory audit row before commit.
+- Returns `204 NO CONTENT`. Already-absent → `204` (idempotent — `DELETE` matches REST semantics).
 
 7. **MUST** expose `GET /v1/admin/roles` returning the catalogue: `{"version": <rbac_v>, "roles": [{"name":"<kebab>","display":"<Human>","reserved":<bool>,"requires_webauthn":<bool>,"scope_summary":"<one-line>"}, ...]}`. The handler reads from the in-memory `RoleMatrix`; never hits the DB. RBAC-version-aware caching: ETag is `W/"rbac-v<n>"`.
 
 8. **MUST** issue access tokens (TASK-AUTH-004 path) with two new claims:
-   - `roles: ["<role-name>", ...]` — array of kebab-case role names the subject holds at issuance time.
-   - `rbac_v: <integer>` — the catalogue version embedded for replay-resistance. Verifiers MAY compare against the live `RoleMatrix.version` and challenge tokens issued under stale catalogue versions (acceptable lag: 1 minor version; rejection threshold: > 2 versions behind).
+- `roles: ["<role-name>", ...]` — array of kebab-case role names the subject holds at issuance time.
+- `rbac_v: <integer>` — the catalogue version embedded for replay-resistance. Verifiers MAY compare against the live `RoleMatrix.version` and challenge tokens issued under stale catalogue versions (acceptable lag: 1 minor version; rejection threshold: > 2 versions behind).
 
 9. **MUST** check role membership via the in-memory `RoleMatrix` only. The matrix is loaded at boot from `subject_roles` join `role_permissions` and refreshed every 60 s. Per-request DB lookups for role/permission are **MUST NOT** (per DEC-126 — performance budget is < 50 µs per check at p95).
 
@@ -191,21 +191,21 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
 14. **MUST** emit exactly one `auth.role_catalogue_changed` memory audit row whenever the catalogue version bumps (via the trigger on `role_catalogue_version`). The row carries `{old_version, new_version, changed_at, migration_id, adr_id}`. Catalogue version bumps without a recorded `adr_id` (e.g. ad-hoc INSERT in a manual psql session) fail the audit row's `NOT NULL adr_id` constraint and roll back the change.
 
 15. **MUST** ship migration `0005_roles_permissions.sql` that creates:
-    - `roles(name TEXT PRIMARY KEY, display TEXT NOT NULL, reserved BOOLEAN NOT NULL, requires_webauthn BOOLEAN NOT NULL, scope_summary TEXT NOT NULL, lands_in_slice INT NOT NULL)` — 22 seeded rows matching the closed enum.
-    - `resources(name TEXT PRIMARY KEY, module TEXT NOT NULL)` — 40 seeded rows.
-    - `actions(name TEXT PRIMARY KEY)` — 5 seeded rows.
-    - `role_permissions(role TEXT REFERENCES roles, resource TEXT REFERENCES resources, action TEXT REFERENCES actions, PRIMARY KEY (role, resource, action))` — ~280 seeded rows.
-    - `subject_roles(tenant_id UUID, subject_id UUID, role TEXT REFERENCES roles, granted_by UUID, granted_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (subject_id, role))` — tenant-scoped; RLS enabled with `USING + WITH CHECK` on `tenant_id = current_setting('auth.tenant_id')::uuid`.
-    - SQL function `auth.has_role(role_name TEXT) RETURNS BOOLEAN` — reads session GUC `auth.roles` (comma-separated).
+- `roles(name TEXT PRIMARY KEY, display TEXT NOT NULL, reserved BOOLEAN NOT NULL, requires_webauthn BOOLEAN NOT NULL, scope_summary TEXT NOT NULL, lands_in_slice INT NOT NULL)` — 22 seeded rows matching the closed enum.
+- `resources(name TEXT PRIMARY KEY, module TEXT NOT NULL)` — 40 seeded rows.
+- `actions(name TEXT PRIMARY KEY)` — 5 seeded rows.
+- `role_permissions(role TEXT REFERENCES roles, resource TEXT REFERENCES resources, action TEXT REFERENCES actions, PRIMARY KEY (role, resource, action))` — ~280 seeded rows.
+- `subject_roles(tenant_id UUID, subject_id UUID, role TEXT REFERENCES roles, granted_by UUID, granted_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (subject_id, role))` — tenant-scoped; RLS enabled with `USING + WITH CHECK` on `tenant_id = current_setting('auth.tenant_id')::uuid`.
+- SQL function `auth.has_role(role_name TEXT) RETURNS BOOLEAN` — reads session GUC `auth.roles` (comma-separated).
 
 16. **MUST** ship migration `0006_role_catalogue_version.sql` that creates:
-    - `role_catalogue_version(id INT PRIMARY KEY CHECK (id = 1), version INT NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), adr_id TEXT NOT NULL)` — singleton (id=1).
-    - AFTER INSERT/UPDATE/DELETE trigger on `roles` + `role_permissions` that bumps `version` and inserts an `auth.role_catalogue_changed` memory audit row via the memory_writer bridge (TASK-AI-003).
+- `role_catalogue_version(id INT PRIMARY KEY CHECK (id = 1), version INT NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), adr_id TEXT NOT NULL)` — singleton (id=1).
+- AFTER INSERT/UPDATE/DELETE trigger on `roles` + `role_permissions` that bumps `version` and inserts an `auth.role_catalogue_changed` memory audit row via the memory_writer bridge (TASK-AI-003).
 
 17. **MUST** ship the ADR gate at `services/auth/src/rbac/adr.rs` as a CI-callable validator. Invoked as `cargo test rbac_adr_gate_test`, it:
-    - Parses each migration file under `services/auth/migrations/` for changes to `roles` or `role_permissions`.
-    - For each such migration, requires a matching `services/auth/adr/ADR-NNN-*.md` file referenced in a SQL comment `-- ADR: ADR-NNN`.
-    - Fails the test if any role-touching migration lacks an ADR reference, OR if the referenced ADR-NNN.md file does not exist.
+- Parses each migration file under `services/auth/migrations/` for changes to `roles` or `role_permissions`.
+- For each such migration, requires a matching `services/auth/adr/ADR-NNN-*.md` file referenced in a SQL comment `-- ADR: ADR-NNN`.
+- Fails the test if any role-touching migration lacks an ADR reference, OR if the referenced ADR-NNN.md file does not exist.
 
 18. **MUST** support the 5-role stub→full migration path **without invalidating existing access tokens issued under `rbac_v = 1`**. Existing tokens (issued by TASK-AUTH-002's 5-role allow-list, before this task ships) carry no `rbac_v` claim. The verifier treats the absence of `rbac_v` as implicit `rbac_v = 1` and accepts the token for a 30-day grace window. After grace, missing-claim tokens are rejected (`401 UNAUTHORIZED {"error":"rbac_version_required"}`). The grace-window enforcer is TASK-AUTH-109.
 
@@ -218,11 +218,11 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
 22. **MUST** emit OTel span `auth.rbac_check` with attributes `subject_id_hash16`, `role`, `resource`, `action`, `outcome` (allow | deny | reserved_role | webauthn_required | unknown_role) on every check. Sampling: 1% under steady state, 100% on `outcome != allow` (deny + error paths fully captured).
 
 23. **MUST** emit OTel metrics:
-    - `auth_rbac_check_total{outcome, role}` (counter).
-    - `auth_rbac_check_latency_us` (histogram; SLO p99 < 50 µs).
-    - `auth_rbac_matrix_refresh_total{outcome}` (counter; outcome ∈ {success, db_unreachable, hash_unchanged}).
-    - `auth_rbac_subject_role_count{tenant_id}` (gauge — number of (subject, role) pairs).
-    - `auth_rbac_catalogue_version` (gauge — current `rbac_v`).
+- `auth_rbac_check_total{outcome, role}` (counter).
+- `auth_rbac_check_latency_us` (histogram; SLO p99 < 50 µs).
+- `auth_rbac_matrix_refresh_total{outcome}` (counter; outcome ∈ {success, db_unreachable, hash_unchanged}).
+- `auth_rbac_subject_role_count{tenant_id}` (gauge — number of (subject, role) pairs).
+- `auth_rbac_catalogue_version` (gauge — current `rbac_v`).
 
 24. **MUST** include `roles` and `rbac_v` claims in every JWT issued by TASK-AUTH-004 after this task ships. The JWT header `typ` MUST remain `JWT`; the claim shape change is additive only (no breaking changes to existing claim names). TASK-AUTH-004's verifier is updated to surface both claims via `Claims::roles()` and `Claims::rbac_v()`.
 

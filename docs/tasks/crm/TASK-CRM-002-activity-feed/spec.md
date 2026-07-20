@@ -88,11 +88,11 @@ risk_if_skipped: "Without activity feed, CRO sees CRM as static record — no te
 The CRM service **MUST** ship activity feed at `services/crm/src/activity/` subscribing to EMAIL/CHAT/calendar/deal events, deduplicating cross-source, logging per-contact + per-account, 3 memory audit kinds.
 
 1. **MUST** subscribe to events via `event_subscribers.rs`:
-   - `email.inbound_processed` (TASK-EMAIL-006 fires after link) → `activity_kind=email_inbound`
-   - `email.message_sent` (TASK-EMAIL-009) → `email_outbound`
-   - `chat.mention_received` (TASK-CHAT-005) → `chat_mention`
-   - `calendar.meeting_scheduled` → `calendar_meeting`
-   - `crm.deal_stage_changed` → `deal_stage_change`
+- `email.inbound_processed` (TASK-EMAIL-006 fires after link) → `activity_kind=email_inbound`
+- `email.message_sent` (TASK-EMAIL-009) → `email_outbound`
+- `chat.mention_received` (TASK-CHAT-005) → `chat_mention`
+- `calendar.meeting_scheduled` → `calendar_meeting`
+- `crm.deal_stage_changed` → `deal_stage_change`
 
 2. **MUST** validate `activity_kind` against closed enum per DEC-1622.
 
@@ -225,8 +225,7 @@ async fn append_only_no_update() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-CRM-001, TASK-EMAIL-006.
-**Cross-module:** TASK-EMAIL-009 (outbound event), TASK-CHAT-005 (mention), TASK-AUTH-101 (manual logger), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-CRM-001, TASK-EMAIL-006. **Cross-module:** TASK-EMAIL-009 (outbound event), TASK-CHAT-005 (mention), TASK-AUTH-101 (manual logger), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

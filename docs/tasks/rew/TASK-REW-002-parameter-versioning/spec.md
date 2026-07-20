@@ -105,13 +105,13 @@ The REW service **MUST** ship parameter versioning at `services/rew/src/params/`
    ```
 
 3. **MUST** lookup at `loader.rs::get(tenant_id, kind, effective_at)` per DEC-2162:
-   - Returns version effective at the date.
-   - Deterministic — same params → same result (critical for TASK-REW-005).
+- Returns version effective at the date.
+- Deterministic — same params → same result (critical for TASK-REW-005).
 
 4. **MUST** run monthly replay-equivalence test via TASK-MCP-007 per DEC-2163:
-   - For last 12 months of payslips, re-run compute with original version_id.
-   - Expect byte-identical output.
-   - Failure → sev-1 alert + CI block.
+- For last 12 months of payslips, re-run compute with original version_id.
+- Expect byte-identical output.
+- Failure → sev-1 alert + CI block.
 
 5. **MUST** expose endpoints:
    ```text
@@ -196,9 +196,7 @@ async fn replay_equivalence_100pct() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-REW-001.
-**Downstream:** TASK-REW-005 (payroll compute uses versioned params).
-**Cross-module:** TASK-HR-005 (compares versioning approach), TASK-MCP-007 (replay cron), TASK-MEMORY-111 (audit).
+**Upstream:** TASK-REW-001. **Downstream:** TASK-REW-005 (payroll compute uses versioned params). **Cross-module:** TASK-HR-005 (compares versioning approach), TASK-MCP-007 (replay cron), TASK-MEMORY-111 (audit).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

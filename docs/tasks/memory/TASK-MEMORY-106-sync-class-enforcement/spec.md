@@ -81,9 +81,8 @@ The memory-sync daemon **MUST** enforce `meta.sync_class` filtering on every syn
 2. **MUST** refuse to ingest a foreign row whose `sync_class != "shareable"` at pull time (defensive — Cloud memory should already filter; double-check at receive boundary).
 3. **MUST** consult `meta.acl[]` (allow-list of actor IDs) for shareable rows; if `acl` is non-empty AND current actor not listed, refuse. Empty `acl` = unrestricted (any actor authorised by Cloud sees it).
 4. **MUST** maintain transitional support for v1 `sync_class` values per AGENTS.md §15:
-    - `local-only` → treat as `private` (refuse).
-    - `publishable | shared | client-visible` → treat as `shareable` (allow, subject to ACL).
-   Transitional mapping logs INFO with the v1 value seen (operators monitor adoption); metric `memory_sync_v1_transitional_total{value}` counts.
+- `local-only` → treat as `private` (refuse).
+- `publishable | shared | client-visible` → treat as `shareable` (allow, subject to ACL). Transitional mapping logs INFO with the v1 value seen (operators monitor adoption); metric `memory_sync_v1_transitional_total{value}` counts.
 5. **MUST** reject DEC-036 (compensation) and equity rows at sync boundary REGARDLESS of sync_class (structural exclusion as defense-in-depth — even mistakenly-tagged shareable comp rows are caught). Path-based detection on `meta/people/*/compensation*`, `meta/people/*/equity*`, `meta/finance/payroll*`, `meta/finance/comp*`.
 6. **MUST** emit memory audit row `memory.sync_row_filtered` per filter decision (push or pull) with payload: `direction` (push|pull), `seq`, `path`, `sync_class`, `reason` (enum: Private | AclMismatch | StructuralExclusion | V1TransitionalRefuse), `actor_id` (current syncing device).
 7. **MUST** be deterministic — same row + same actor + same time = same decision. No clock-dependent or RNG inputs.
@@ -91,9 +90,9 @@ The memory-sync daemon **MUST** enforce `meta.sync_class` filtering on every syn
 9. **MUST** integrate into `services/memory-sync/src/sync.rs`'s push and pull loops; calls `should_sync()` BEFORE network IO.
 10. **SHOULD** support a `cyberos-memory validate-sync-class` CLI for operators: takes a row file as input; reports the SyncDecision; helps debug filter decisions.
 11. **SHOULD** emit OTel metrics:
-    - `memory_sync_filter_decisions_total{direction, reason}` (counter).
-    - `memory_sync_v1_transitional_total{value}` (counter; track v1 adoption).
-    - `memory_sync_compensation_excluded_total` (counter; sev-1 alarm if > 0/day; investigate upstream).
+- `memory_sync_filter_decisions_total{direction, reason}` (counter).
+- `memory_sync_v1_transitional_total{value}` (counter; track v1 adoption).
+- `memory_sync_compensation_excluded_total` (counter; sev-1 alarm if > 0/day; investigate upstream).
 
 ---
 

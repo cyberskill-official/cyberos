@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a brand strategy"
+- "Draft a brand strategy"
 - "Create the brand strategy"
 - "Author a new brand strategy"
 - "Generate the brand strategy"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this brand strategy" → brand-strategy-audit
+- "Audit this brand strategy" → brand-strategy-audit
 - "Check the brand strategy for completeness" → brand-strategy-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

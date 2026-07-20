@@ -60,74 +60,42 @@ effort_hours: 10
 
 ## §1 - Description (BCP-14 normative)
 
-CHAT is rebuilt as a CyberOS-native service - a first-party Rust service on the existing identity, database,
-and audit chain - replacing the Mattermost fork entirely. Slice 1 is the walking skeleton that proves the
-spine end to end. Each requirement:
+CHAT is rebuilt as a CyberOS-native service - a first-party Rust service on the existing identity, database, and audit chain - replacing the Mattermost fork entirely. Slice 1 is the walking skeleton that proves the spine end to end. Each requirement:
 
-1. **MUST** be a new first-party Rust service `cyberos-chat` at `services/chat` (axum + sqlx + tokio), a new
-   member of the `services/` Cargo workspace. No third-party chat server, no Mattermost.
+1. **MUST** be a new first-party Rust service `cyberos-chat` at `services/chat` (axum + sqlx + tokio), a new member of the `services/` Cargo workspace. No third-party chat server, no Mattermost.
 
-2. **MUST** authenticate every request with the CyberOS access token the TASK-AUTH-110 provider issues,
-   verified against the TASK-AUTH-004 JWKS (RS256) - the same verification `obs-compliance-view` and the MCP
-   gateway already do. No separate chat login, no chat-local password store. An HS256 secret path is allowed
-   for tests and local dev only.
+2. **MUST** authenticate every request with the CyberOS access token the TASK-AUTH-110 provider issues, verified against the TASK-AUTH-004 JWKS (RS256) - the same verification `obs-compliance-view` and the MCP gateway already do. No separate chat login, no chat-local password store. An HS256 secret path is allowed for tests and local dev only.
 
-3. **MUST** take the tenant and the caller identity from the verified token (`tenant_id`, `sub`), never from
-   a request parameter. A cross-tenant request is impossible because every query runs under the tenant.
+3. **MUST** take the tenant and the caller identity from the verified token (`tenant_id`, `sub`), never from a request parameter. A cross-tenant request is impossible because every query runs under the tenant.
 
-4. **MUST** persist to Postgres with per-tenant row-level security, using the established GUC idiom
-   (`app.current_tenant_id`; the nil tenant bypasses for admin paths) - identical to the auth and sessions
-   tables. Slice 1 uses a dedicated `cyberos_chat` database.
+4. **MUST** persist to Postgres with per-tenant row-level security, using the established GUC idiom (`app.current_tenant_id`; the nil tenant bypasses for admin paths) - identical to the auth and sessions tables. Slice 1 uses a dedicated `cyberos_chat` database.
 
-5. **MUST** expose channels: `POST /v1/chat/channels` (create; the creator becomes a member) and
-   `GET /v1/chat/channels` (list the channels the caller is a member of, in their tenant).
+5. **MUST** expose channels: `POST /v1/chat/channels` (create; the creator becomes a member) and `GET /v1/chat/channels` (list the channels the caller is a member of, in their tenant).
 
-6. **MUST** expose messages: `POST /v1/chat/channels/{id}/messages` (post; the caller must be a member) and
-   `GET /v1/chat/channels/{id}/messages?before=&limit=` (most-recent-first, paged; members only).
+6. **MUST** expose messages: `POST /v1/chat/channels/{id}/messages` (post; the caller must be a member) and `GET /v1/chat/channels/{id}/messages?before=&limit=` (most-recent-first, paged; members only).
 
-7. **MUST** deliver messages live over a websocket: `GET /v1/chat/ws?channel={id}` (token in the
-   `Authorization` header or an `access_token` query param). When any client posts to a channel, every
-   websocket subscribed to that channel receives the message. Slice 1 uses an in-process per-channel
-   broadcast; Redis pub/sub for multi-instance fan-out is a later slice.
+7. **MUST** deliver messages live over a websocket: `GET /v1/chat/ws?channel={id}` (token in the `Authorization` header or an `access_token` query param). When any client posts to a channel, every websocket subscribed to that channel receives the message. Slice 1 uses an in-process per-channel broadcast; Redis pub/sub for multi-instance fan-out is a later slice.
 
-8. **MUST** write an audit row to the memory chain for `chat.channel_created` and `chat.message_posted`
-   (via `cyberos-audit-chain`), best-effort and non-blocking, the way the other services emit.
+8. **MUST** write an audit row to the memory chain for `chat.channel_created` and `chat.message_posted` (via `cyberos-audit-chain`), best-effort and non-blocking, the way the other services emit.
 
 9. **MUST** serve `GET /healthz` (200 when the pool is reachable) so the deploy stack healthcheck passes.
 
-10. **MUST** refuse an absent, malformed, or expired token at every HTTP endpoint and at the websocket
-    handshake (401), and refuse a non-member posting to or reading a channel (403).
+10. **MUST** refuse an absent, malformed, or expired token at every HTTP endpoint and at the websocket handshake (401), and refuse a non-member posting to or reading a channel (403).
 
-Slice-1 non-goals (named, not gaps): threads, direct messages, presence and typing, read receipts, file
-attachments, search, multi-tenant team mapping, federation, and the production client UI. A minimal test
-client (or a websocket CLI) is enough to prove slice 1; the web client is its own slice.
+Slice-1 non-goals (named, not gaps): threads, direct messages, presence and typing, read receipts, file attachments, search, multi-tenant team mapping, federation, and the production client UI. A minimal test client (or a websocket CLI) is enough to prove slice 1; the web client is its own slice.
 
 ## §2 - Why this design (rationale for humans)
 
-CyberOS is a from-scratch, owned platform. Chat was the one surface leaning on a third party (Mattermost);
-this makes it first-party too. It costs less than it looks because it stands on what already exists: identity
-from the TASK-AUTH-110 provider, Postgres with the tenant-RLS pattern, the audit chain, the obs SDK, and the
-same service shape as auth and memory. Slice 1 deliberately builds only the spine - authenticated channels
-and messages with live delivery - so there is a running, testable chat before any of the heavier features.
+CyberOS is a from-scratch, owned platform. Chat was the one surface leaning on a third party (Mattermost); this makes it first-party too. It costs less than it looks because it stands on what already exists: identity from the TASK-AUTH-110 provider, Postgres with the tenant-RLS pattern, the audit chain, the obs SDK, and the same service shape as auth and memory. Slice 1 deliberately builds only the spine - authenticated channels and messages with live delivery - so there is a running, testable chat before any of the heavier features.
 
-Real-time starts in-process (a `tokio::sync::broadcast` per channel) because a single instance is enough to
-prove the model and to run for the team early; the move to Redis pub/sub is a contained change behind the
-same `realtime` interface when more than one instance runs.
+Real-time starts in-process (a `tokio::sync::broadcast` per channel) because a single instance is enough to prove the model and to run for the team early; the move to Redis pub/sub is a contained change behind the same `realtime` interface when more than one instance runs.
 
 ## §3 - Architecture
 
-- Service `cyberos-chat` (`services/chat`): axum router, sqlx Postgres pool, tokio. Binds
-  `CHAT_LISTEN_ADDR` (default `0.0.0.0:7720`). Reads `DATABASE_URL` and the provider issuer
-  `CHAT_AUTH_ISSUER` (to fetch `/.well-known/jwks.json` at boot, cache the keys by `kid`).
-- Auth (`src/auth.rs`): an `Authenticator` mirroring `obs-compliance-view::auth` - `from_jwks` (RS256) or
-  `from_hs256_secret` (tests), `verify(token) -> Claims { sub, tenant_id, roles, exp }`. A small extractor
-  turns the `Authorization: Bearer` header (or the `access_token` ws query param) into verified `Claims`.
-- DB (`src/db.rs`): the pool plus a helper that, per request, opens a transaction and runs
-  `SELECT set_config('app.current_tenant_id', $tenant, true)` before the query, so RLS scopes every read and
-  write to the caller's tenant.
-- Realtime (`src/realtime.rs`): a process-global map `channel_id -> broadcast::Sender<MessageEvent>`. The
-  websocket handler verifies the token, checks membership, subscribes to the channel sender, and forwards
-  each event to the socket. `messages::post` publishes to the sender after the row commits.
+- Service `cyberos-chat` (`services/chat`): axum router, sqlx Postgres pool, tokio. Binds `CHAT_LISTEN_ADDR` (default `0.0.0.0:7720`). Reads `DATABASE_URL` and the provider issuer `CHAT_AUTH_ISSUER` (to fetch `/.well-known/jwks.json` at boot, cache the keys by `kid`).
+- Auth (`src/auth.rs`): an `Authenticator` mirroring `obs-compliance-view::auth` - `from_jwks` (RS256) or `from_hs256_secret` (tests), `verify(token) -> Claims { sub, tenant_id, roles, exp }`. A small extractor turns the `Authorization: Bearer` header (or the `access_token` ws query param) into verified `Claims`.
+- DB (`src/db.rs`): the pool plus a helper that, per request, opens a transaction and runs `SELECT set_config('app.current_tenant_id', $tenant, true)` before the query, so RLS scopes every read and write to the caller's tenant.
+- Realtime (`src/realtime.rs`): a process-global map `channel_id -> broadcast::Sender<MessageEvent>`. The websocket handler verifies the token, checks membership, subscribes to the channel sender, and forwards each event to the socket. `messages::post` publishes to the sender after the row commits.
 
 ## §4 - Schema (`migrations/0001_chat_core.sql`)
 
@@ -200,13 +168,9 @@ The web client lands alongside slice 1-2 inside the existing console app (its ow
 
 ## §8 - Dependencies and what this retires
 
-Upstream: TASK-AUTH-110 (the provider that issues the identity token), TASK-AUTH-004 (the JWKS chat verifies
-against). Reuses the `cyberos-audit-chain` and `cyberos-obs-sdk` shared crates and the tenant-RLS idiom.
+Upstream: TASK-AUTH-110 (the provider that issues the identity token), TASK-AUTH-004 (the JWKS chat verifies against). Reuses the `cyberos-audit-chain` and `cyberos-obs-sdk` shared crates and the tenant-RLS idiom.
 
-Retires: the Mattermost-fork CHAT module - TASK-CHAT-001 through TASK-CHAT-012 and TASK-CHAT-013 - is superseded by
-this native series. `services/chat` is repurposed from the Mattermost fork to the `cyberos-chat` crate; the
-old Mattermost scaffolding (Dockerfile, patches, plugins, the python helpers, the deploy OIDC config) is
-archived out of the build, not deleted, so its history and any reusable logic remain available.
+Retires: the Mattermost-fork CHAT module - TASK-CHAT-001 through TASK-CHAT-012 and TASK-CHAT-013 - is superseded by this native series. `services/chat` is repurposed from the Mattermost fork to the `cyberos-chat` crate; the old Mattermost scaffolding (Dockerfile, patches, plugins, the python helpers, the deploy OIDC config) is archived out of the build, not deleted, so its history and any reusable logic remain available.
 
 ---
 

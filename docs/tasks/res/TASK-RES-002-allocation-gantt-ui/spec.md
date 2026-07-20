@@ -96,16 +96,16 @@ The RES service + portal-web frontend **MUST** ship allocation Gantt at `service
 2. **MUST** propose changes at `proposer.rs::propose(member_id, week, changes)` per DEC-2040 — changes array of `{project_id, delta_hours}`.
 
 3. **MUST** validate at `validator.rs::validate(proposal)` per DEC-2043:
-   - Total hours stay within member capacity (TASK-RES-001)
-   - TASK-RES-005 OT cap check
-   - TASK-RES-003 thresholds (warn-not-block on 110%)
-   - On violation: return rejection with reason.
+- Total hours stay within member capacity (TASK-RES-001)
+- TASK-RES-005 OT cap check
+- TASK-RES-003 thresholds (warn-not-block on 110%)
+- On violation: return rejection with reason.
 
 4. **MUST** commit at `commit_handler.rs::commit(proposal, version)` per DEC-2044:
-   - Verify matrix row version matches (optimistic concurrency per DEC-2042)
-   - Insert allocation_changes row (history)
-   - UPDATE matrix row + increment version
-   - Transaction: all or nothing
+- Verify matrix row version matches (optimistic concurrency per DEC-2042)
+- Insert allocation_changes row (history)
+- UPDATE matrix row + increment version
+- Transaction: all or nothing
 
 5. **MUST** define table at migration `0002`:
    ```sql
@@ -241,8 +241,7 @@ async fn commit_atomic() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-RES-001.
-**Cross-module:** TASK-RES-003 (threshold flags), TASK-RES-005 (OT cap), TASK-PROJ-001 (project context), TASK-AUTH-101 (CHRO/PM role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-RES-001. **Cross-module:** TASK-RES-003 (threshold flags), TASK-RES-005 (OT cap), TASK-PROJ-001 (project context), TASK-AUTH-101 (CHRO/PM role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

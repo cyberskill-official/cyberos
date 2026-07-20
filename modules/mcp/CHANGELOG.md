@@ -31,4 +31,3 @@ Changes by section:
 - **§17 References** — replaced stale PRD/SRS refs with 4 in-page sections + 8 cross-module links + AUDIT_AND_PLAN §3.3 (P0 · slice 3 placement) + RESEARCH_REVIEW §5 (9/10) + MEMORY_AUTOSYNC_DESIGN.md §5+§6 + task-audit skill + DPoP RFC 9449 + EU AI Act + PDPL citations.
 
 The MCP Gateway page now reads as the complete answer to: (1) why 22 modules need one external door (federation Mermaid + N²→N+1 math), (2) how the broker prevents a compromised external agent from escaping scope (audience-bound JWT + tool-annotation gating + destructive-op Elicitation), (3) how external agents discover what CyberOS can do (6 discovery endpoints + 5 pre-canned prompts + Tasks primitive for long-running work), (4) what fails if MCP Gateway is missing (every external agent re-implements its own auth + tool catalogue + audit).
-

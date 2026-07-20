@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a data governance"
+- "Draft a data governance"
 - "Create the data governance"
 - "Author a new data governance"
 - "Generate the data governance"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this data governance" → data-governance-audit
+- "Audit this data governance" → data-governance-audit
 - "Check the data governance for completeness" → data-governance-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

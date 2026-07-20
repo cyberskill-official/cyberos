@@ -83,11 +83,11 @@ The MCP service **MUST** ship SEP-986 naming validator at `services/mcp/src/nami
 1. **MUST** validate `sep986_verb` against closed enum per DEC-2361.
 
 2. **MUST** parse + validate at `validator.rs::validate(skill_id)` per DEC-2360:
-   - Regex: `^cyberos\.([a-z][a-z0-9_]*)\.([a-z]+)_([a-z][a-z0-9_]*)$`
-   - Extract module, verb, noun
-   - Module ∈ TASK-MCP-002 registered modules
-   - Verb ∈ closed enum
-   - Noun: snake_case identifier
+- Regex: `^cyberos\.([a-z][a-z0-9_]*)\.([a-z]+)_([a-z][a-z0-9_]*)$`
+- Extract module, verb, noun
+- Module ∈ TASK-MCP-002 registered modules
+- Verb ∈ closed enum
+- Noun: snake_case identifier
 
 3. **MUST** hook into TASK-MCP-001 skill registration per DEC-2362 — reject with sev-2 audit if invalid.
 
@@ -98,8 +98,8 @@ The MCP service **MUST** ship SEP-986 naming validator at `services/mcp/src/nami
    ```
 
 5. **MUST** validate module per DEC-2363 at `module_registry.rs::is_valid_module(name)`:
-   - Hardcoded list: ten, hr, rew, email, inv, crm, doc, kb, okr, res, learn, esop, cuo, mcp, auth, memory, ai, time, proj, chat, obs, portal, skill
-   - Unknown → reject
+- Hardcoded list: ten, hr, rew, email, inv, crm, doc, kb, okr, res, learn, esop, cuo, mcp, auth, memory, ai, time, proj, chat, obs, portal, skill
+- Unknown → reject
 
 6. **MUST** emit 4 memory audit kinds per DEC-2364. PII: skill IDs (public) ok.
 
@@ -194,8 +194,7 @@ async fn ci_grep_catches_non_conforming() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-MCP-001.
-**Cross-module:** TASK-MCP-002 (module registry), TASK-MEMORY-111 (audit).
+**Upstream:** TASK-MCP-001. **Cross-module:** TASK-MCP-002 (module registry), TASK-MEMORY-111 (audit).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

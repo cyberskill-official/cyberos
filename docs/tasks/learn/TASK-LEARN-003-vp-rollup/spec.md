@@ -87,10 +87,10 @@ The LEARN service **MUST** ship VP rollup at `services/learn/src/vp/` aggregatin
 1. **MUST** validate `vp_component` against closed enum per DEC-2101.
 
 2. **MUST** aggregate at `aggregator.rs::aggregate(member, week, weights)`:
-   - proj_contribution = sum(issue.complexity × weight_proj) closed in week
-   - time_billable = sum(billable_hours × weight_time) for week
-   - kb_authorship = sum(doc.view_count × weight_kb) for docs authored before week
-   - total_vp = sum of weighted components
+- proj_contribution = sum(issue.complexity × weight_proj) closed in week
+- time_billable = sum(billable_hours × weight_time) for week
+- kb_authorship = sum(doc.view_count × weight_kb) for docs authored before week
+- total_vp = sum of weighted components
 
 3. **MUST** be deterministic per DEC-2103 — pure function; same data + same weights → same output.
 
@@ -224,8 +224,7 @@ async fn correction_via_new_row() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-PROJ-013, TASK-TIME-001.
-**Cross-module:** TASK-LEARN-001 (member context), TASK-KB-001 (doc authorship), TASK-MCP-007 (cron), TASK-AUTH-101 (CEO), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-PROJ-013, TASK-TIME-001. **Cross-module:** TASK-LEARN-001 (member context), TASK-KB-001 (doc authorship), TASK-MCP-007 (cron), TASK-AUTH-101 (CEO), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

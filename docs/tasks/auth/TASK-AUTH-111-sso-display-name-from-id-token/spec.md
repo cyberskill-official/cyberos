@@ -292,8 +292,7 @@ async fn the_visibility_view_drains() {                              // AC 13
 
 ## §6 - Implementation skeleton
 
-(§3 is the skeleton. The change is three lines of binding, one `CASE` in the upsert, one helper, and the same
-again in `saml.rs`.)
+(§3 is the skeleton. The change is three lines of binding, one `CASE` in the upsert, one helper, and the same again in `saml.rs`.)
 
 ## §7 - Dependencies
 

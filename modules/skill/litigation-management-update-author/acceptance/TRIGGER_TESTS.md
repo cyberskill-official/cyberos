@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a litigation management update"
+- "Draft a litigation management update"
 - "Create the litigation management update"
 - "Author a new litigation management update"
 - "Generate the litigation management update"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this litigation management update" → litigation-management-update-audit
+- "Audit this litigation management update" → litigation-management-update-audit
 - "Check the litigation management update for completeness" → litigation-management-update-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

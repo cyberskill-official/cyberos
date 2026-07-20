@@ -132,35 +132,34 @@ The INV service **MUST** ship the Stripe webhook handler at `POST /v1/inv/webhoo
 6. **MUST** expose `POST /v1/inv/webhooks/stripe/{tenant_slug}` (per DEC-465). Per-tenant URL routing. Unknown slug → 404 `tenant_unknown` + emit `inv.stripe_event_rejected` memory row.
 
 7. **MUST** verify Stripe-Signature header per Stripe's v1 scheme (per DEC-460 + DEC-468):
-   - Header format: `t=<unix_timestamp>,v1=<hex_signature>[,v0=<deprecated>]`.
-   - Parse `t` + `v1` values (ignore v0).
-   - Compute `expected_signature = HMAC-SHA256(secret, "{t}.{raw_body}")`.
-   - Constant-time compare `v1` vs `expected_signature`.
-   - Mismatch → 401 `stripe_signature_invalid` + emit `inv.stripe_event_rejected` memory row with `reason='signature_invalid'`.
+- Header format: `t=<unix_timestamp>,v1=<hex_signature>[,v0=<deprecated>]`.
+- Parse `t` + `v1` values (ignore v0).
+- Compute `expected_signature = HMAC-SHA256(secret, "{t}.{raw_body}")`.
+- Constant-time compare `v1` vs `expected_signature`.
+- Mismatch → 401 `stripe_signature_invalid` + emit `inv.stripe_event_rejected` memory row with `reason='signature_invalid'`.
 
 8. **MUST** validate replay window (per DEC-464). `|server_now - t| ≤ 5 minutes`. Outside → 401 `stripe_replay_window_exceeded` + emit `inv.stripe_event_rejected` with `reason='replay_window_exceeded'`.
 
 9. **MUST** enforce **closed event-type allowlist** (per DEC-461 + §1 #14). The 8 allowed values:
-    - `payment_intent.succeeded` — successful payment.
-    - `payment_intent.payment_failed` — payment attempt failed.
-    - `charge.refunded` — refund issued.
-    - `invoice.payment_succeeded` — subscription invoice paid.
-    - `invoice.payment_failed` — subscription invoice failed.
-    - `invoice.finalized` — invoice ready for collection.
-    - `customer.subscription.updated` — subscription state change.
-    - `customer.subscription.deleted` — subscription cancelled.
-   Unknown `event.type` → INSERT `stripe_event_log` row with `outcome='unknown_event_type'` + return 200 OK (Stripe expects 2xx ack for all received events; non-2xx triggers retry).
+- `payment_intent.succeeded` — successful payment.
+- `payment_intent.payment_failed` — payment attempt failed.
+- `charge.refunded` — refund issued.
+- `invoice.payment_succeeded` — subscription invoice paid.
+- `invoice.payment_failed` — subscription invoice failed.
+- `invoice.finalized` — invoice ready for collection.
+- `customer.subscription.updated` — subscription state change.
+- `customer.subscription.deleted` — subscription cancelled. Unknown `event.type` → INSERT `stripe_event_log` row with `outcome='unknown_event_type'` + return 200 OK (Stripe expects 2xx ack for all received events; non-2xx triggers retry).
 
 10. **MUST** enforce idempotency on `event.id` (per DEC-462). Lookup `stripe_event_log WHERE tenant_id=$1 AND stripe_event_id=$2`. If exists → return 200 OK with existing log id; emit `inv.duplicate_stripe_event_received` memory row (sev-3 informational). Never double-process.
 
 11. **MUST** route allowed events to per-type handlers (per DEC-461):
-    - `payment_intent.succeeded` → INSERT `payment_receipts` row with `receipt_source='stripe'`, `bank_code='STRIPE'`, link to invoice via `payment_intent.metadata.invoice_id` (per DEC-472).
-    - `payment_intent.payment_failed` → log only; emit `inv.stripe_event_rejected` with `reason='payment_failed'`.
-    - `charge.refunded` → INSERT compensating payment_receipts row with negative `amount_minor`; emit `inv.stripe_payment_refunded` memory row.
-    - `invoice.payment_succeeded` → INSERT payment_receipts + match to TASK-INV-001 invoice via `stripe_invoice.metadata.invoice_id`.
-    - `invoice.payment_failed` → log; emit `inv.stripe_event_rejected`.
-    - `invoice.finalized` → log only (slice 1; subscription state tracking ships in TASK-TEN-003).
-    - `customer.subscription.{updated,deleted}` → emit `inv.stripe_subscription_changed` memory row + log.
+- `payment_intent.succeeded` → INSERT `payment_receipts` row with `receipt_source='stripe'`, `bank_code='STRIPE'`, link to invoice via `payment_intent.metadata.invoice_id` (per DEC-472).
+- `payment_intent.payment_failed` → log only; emit `inv.stripe_event_rejected` with `reason='payment_failed'`.
+- `charge.refunded` → INSERT compensating payment_receipts row with negative `amount_minor`; emit `inv.stripe_payment_refunded` memory row.
+- `invoice.payment_succeeded` → INSERT payment_receipts + match to TASK-INV-001 invoice via `stripe_invoice.metadata.invoice_id`.
+- `invoice.payment_failed` → log; emit `inv.stripe_event_rejected`.
+- `invoice.finalized` → log only (slice 1; subscription state tracking ships in TASK-TEN-003).
+- `customer.subscription.{updated,deleted}` → emit `inv.stripe_subscription_changed` memory row + log.
 
 12. **MUST** support multi-currency (per DEC-466). Stripe sends `amount` (BIGINT minor units) + `currency` (3-letter ISO-4217 lowercase per Stripe — we uppercase). Supported at slice 1: USD, EUR, SGD, GBP. Unsupported currency → 400 `currency_unsupported` + emit `inv.stripe_event_rejected`.
 
@@ -177,23 +176,23 @@ The INV service **MUST** ship the Stripe webhook handler at `POST /v1/inv/webhoo
 18. **MUST** support webhook secret rotation via `POST /v1/inv/stripe-secrets/rotate`. Caller MUST have role `cfo` per TASK-AUTH-101. Rotation flow same shape as TASK-INV-005 — generates new 32-byte secret, KMS-encrypts, INSERT new active + UPDATE prior to rotated; 60-second overlap window where both old + new accepted.
 
 19. **MUST** emit 6 memory audit row kinds (per DEC-467):
-    - `inv.stripe_event_received` — every successful processing.
-    - `inv.stripe_event_rejected` — signature fail / replay / unsupported_currency / unknown_tenant.
-    - `inv.stripe_payment_received` — payment_intent.succeeded or invoice.payment_succeeded.
-    - `inv.stripe_payment_refunded` — charge.refunded.
-    - `inv.stripe_subscription_changed` — customer.subscription.{updated,deleted}.
-    - `inv.duplicate_stripe_event_received` — idempotency hit; sev-3.
+- `inv.stripe_event_received` — every successful processing.
+- `inv.stripe_event_rejected` — signature fail / replay / unsupported_currency / unknown_tenant.
+- `inv.stripe_payment_received` — payment_intent.succeeded or invoice.payment_succeeded.
+- `inv.stripe_payment_refunded` — charge.refunded.
+- `inv.stripe_subscription_changed` — customer.subscription.{updated,deleted}.
+- `inv.duplicate_stripe_event_received` — idempotency hit; sev-3.
 
 20. **MUST** alarm sev-2 on > 10 rejections per tenant per hour (per DEC-470). OBS rule in TASK-OBS-007's set.
 
 21. **MUST** emit OTel span `inv.webhook.stripe` with attributes: `tenant_id`, `event_type`, `currency`, `outcome` (success | signature_invalid | replay_window_exceeded | tenant_unknown | currency_unsupported | duplicate | unknown_event_type | payment_failed).
 
 22. **MUST** emit OTel metrics:
-    - `inv_stripe_event_received_total{tenant_id, event_type, outcome}` (counter).
-    - `inv_stripe_event_rejected_total{tenant_id, reason}` (counter — sev-2 alarm at > 10/h).
-    - `inv_stripe_payment_amount_minor{tenant_id, currency}` (counter — sum of payment amounts).
-    - `inv_stripe_refund_amount_minor{tenant_id, currency}` (counter).
-    - `inv_stripe_webhook_latency_ms` (histogram; SLO p95 < 200ms).
+- `inv_stripe_event_received_total{tenant_id, event_type, outcome}` (counter).
+- `inv_stripe_event_rejected_total{tenant_id, reason}` (counter — sev-2 alarm at > 10/h).
+- `inv_stripe_payment_amount_minor{tenant_id, currency}` (counter — sum of payment amounts).
+- `inv_stripe_refund_amount_minor{tenant_id, currency}` (counter).
+- `inv_stripe_webhook_latency_ms` (histogram; SLO p95 < 200ms).
 
 23. **MUST** validate that `livemode` matches the environment — production endpoint accepts only `livemode=true`; staging/dev only `livemode=false`. Mismatch → 400 `livemode_mismatch` + emit `inv.stripe_event_rejected`.
 

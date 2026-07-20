@@ -96,15 +96,15 @@ The EMAIL service **MUST** ship CaMeL dual-LLM protection at `services/email/src
 1. **MUST** wrap ANY LLM call that involves email content (inbound or thread context) — directly inline via TASK-EMAIL-008 or indirectly via TASK-AI-003.
 
 2. **MUST** split execution per DEC-1600:
-   - `privileged_llm.rs::plan(user_intent)` → returns plan + tool calls (sees tool list, NOT email content)
-   - `quarantined_llm.rs::extract(email_content, schema)` → returns structured `Variable` (no tool list, no execution context)
+- `privileged_llm.rs::plan(user_intent)` → returns plan + tool calls (sees tool list, NOT email content)
+- `quarantined_llm.rs::extract(email_content, schema)` → returns structured `Variable` (no tool list, no execution context)
 
 3. **MUST** store Q-LLM output as opaque variables per DEC-1601 at `variable_store.rs` — `{var_id, schema, value, source_email_id, created_at}`. P-LLM references via `$var_123`, never inlines value.
 
 4. **MUST** check policy on tool args per DEC-1603 at `policy_checker.rs::check(tool_name, args, plan)`:
-   - If `arg` references a variable: verify variable.source matches plan-allowed sources
-   - If `arg` is literal: must be from P-LLM, not Q-LLM
-   - Outcome: `safe` | `suspicious_marked` (logged, executed) | `hard_blocked` (rejected) | `error`
+- If `arg` references a variable: verify variable.source matches plan-allowed sources
+- If `arg` is literal: must be from P-LLM, not Q-LLM
+- Outcome: `safe` | `suspicious_marked` (logged, executed) | `hard_blocked` (rejected) | `error`
 
 5. **MUST** validate `camel_check_outcome` against closed enum per DEC-1602.
 
@@ -270,9 +270,7 @@ pub async fn execute(req: ExecuteRequest, ctx: &Ctx) -> Result<ExecuteResult> {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-EMAIL-001, TASK-AI-003.
-**Downstream:** TASK-EMAIL-008 (Genie wraps its AI calls).
-**Cross-module:** TASK-MCP-006 (tool gating), TASK-AUTH-101 (CISO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-EMAIL-001, TASK-AI-003. **Downstream:** TASK-EMAIL-008 (Genie wraps its AI calls). **Cross-module:** TASK-MCP-006 (tool gating), TASK-AUTH-101 (CISO role), TASK-MEMORY-111 (PII).
 
 ## §8 — Sample payloads (see §3)
 

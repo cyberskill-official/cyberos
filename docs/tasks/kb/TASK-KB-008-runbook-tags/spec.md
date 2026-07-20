@@ -104,8 +104,8 @@ The KB service **MUST** ship runbook tagging at `services/kb/src/runbook/` with 
    ```
 
 3. **MUST** match for incident at `tag_matcher.rs::match(incident_provider, incident_region, incident_severity)` per DEC-1954:
-   - SELECT runbooks WHERE provider IN (incident_provider, 'custom') AND region IN (incident_region, 'global') AND severity IN (incident_severity, ...higher_severities)
-   - Order by specificity (exact match > global)
+- SELECT runbooks WHERE provider IN (incident_provider, 'custom') AND region IN (incident_region, 'global') AND severity IN (incident_severity, ...higher_severities)
+- Order by specificity (exact match > global)
 
 4. **MUST** expose endpoints:
    ```text
@@ -192,8 +192,7 @@ async fn invalid_enum_rejected() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-KB-001, TASK-OBS-007.
-**Cross-module:** TASK-MEMORY-111 (audit).
+**Upstream:** TASK-KB-001, TASK-OBS-007. **Cross-module:** TASK-MEMORY-111 (audit).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

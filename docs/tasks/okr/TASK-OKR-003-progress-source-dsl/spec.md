@@ -120,16 +120,16 @@ The OKR service **MUST** ship progress_source DSL at `services/okr/src/dsl/` par
    ```
 
 3. **MUST** parse DSL at `parser.rs::parse(jsonb) → DslQuery`:
-   - Required fields: module, metric, agg
-   - Optional: filter (key-value pairs), date_range
-   - Reject unknown enum values.
+- Required fields: module, metric, agg
+- Optional: filter (key-value pairs), date_range
+- Reject unknown enum values.
 
 4. **MUST** dispatch per module at `resolvers/mod.rs::resolve(dsl, tenant)`:
-   - proj → proj_resolver (e.g. metric=issues_closed, agg=count, filter={status:done})
-   - inv → inv_resolver (e.g. metric=invoice_amount_paid, agg=sum)
-   - hr → hr_resolver (e.g. metric=member_count, agg=count, filter={status:active})
-   - learn → learn_resolver (e.g. metric=courses_completed, agg=sum)
-   - custom_sql → custom_sql_resolver (gated)
+- proj → proj_resolver (e.g. metric=issues_closed, agg=count, filter={status:done})
+- inv → inv_resolver (e.g. metric=invoice_amount_paid, agg=sum)
+- hr → hr_resolver (e.g. metric=member_count, agg=count, filter={status:active})
+- learn → learn_resolver (e.g. metric=courses_completed, agg=sum)
+- custom_sql → custom_sql_resolver (gated)
 
 5. **MUST** enforce metric whitelist per DEC-1983 at `metric_whitelist.rs::is_allowed(module, metric)` — only pre-approved metrics; reject all others.
 
@@ -223,9 +223,7 @@ async fn custom_sql_requires_dual_sign() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-OKR-001.
-**Downstream:** TASK-OKR-004 (auto-progress cron uses resolver).
-**Cross-module:** TASK-PROJ-013, TASK-INV-009, TASK-HR-008, TASK-LEARN-001 (data sources), TASK-AUTH-101 (CFO/CEO roles), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-OKR-001. **Downstream:** TASK-OKR-004 (auto-progress cron uses resolver). **Cross-module:** TASK-PROJ-013, TASK-INV-009, TASK-HR-008, TASK-LEARN-001 (data sources), TASK-AUTH-101 (CFO/CEO roles), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

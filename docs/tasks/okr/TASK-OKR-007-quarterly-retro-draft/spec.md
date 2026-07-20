@@ -89,15 +89,15 @@ The OKR service **MUST** ship quarterly retro at `services/okr/src/retro/` auto-
 2. **MUST** validate `retro_framing` against closed enum per DEC-2021.
 
 3. **MUST** pick framing at `framing_picker.rs::pick(tenant)`:
-   - tenant.residency = vn-1 → default vn_face_saving
-   - Other → balanced
-   - CEO can override per retro
+- tenant.residency = vn-1 → default vn_face_saving
+- Other → balanced
+- CEO can override per retro
 
 4. **MUST** draft at `draft_generator.rs::draft(tenant, quarter, framing)` per DEC-2023:
-   - Pull all KRs of quarter; compute hit/miss
-   - Pull check-ins from TASK-OKR-005
-   - TASK-AI-003 prompt with framing-aware tone
-   - Output: results_summary, hits_and_misses, lessons_learned, next_quarter_recommendations
+- Pull all KRs of quarter; compute hit/miss
+- Pull check-ins from TASK-OKR-005
+- TASK-AI-003 prompt with framing-aware tone
+- Output: results_summary, hits_and_misses, lessons_learned, next_quarter_recommendations
 
 5. **MUST** queue for CEO review per DEC-2024 — never auto-persist.
 
@@ -219,8 +219,7 @@ async fn approve_writes_memory() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-OKR-001, TASK-CUO-101.
-**Cross-module:** TASK-OKR-005 (check-in history), TASK-AI-003 (draft + framing), TASK-MEMORY-111 (PII + persist), TASK-AUTH-101 (CEO role), TASK-MCP-007 (cron).
+**Upstream:** TASK-OKR-001, TASK-CUO-101. **Cross-module:** TASK-OKR-005 (check-in history), TASK-AI-003 (draft + framing), TASK-MEMORY-111 (PII + persist), TASK-AUTH-101 (CEO role), TASK-MCP-007 (cron).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

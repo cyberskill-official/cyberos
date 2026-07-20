@@ -87,10 +87,10 @@ The CRM service **MUST** ship vietnam-vat-invoice@1 skill at `services/crm/src/v
 3. **MUST** validate `vat_invoice_trigger` against closed enum per DEC-1701.
 
 4. **MUST** orchestrate at `invoice_orchestrator.rs::orchestrate(deal, trigger)`:
-   - Check if existing emission row (idempotent per DEC-1702).
-   - Call TASK-INV-001 create invoice (account_id, contact_id, line items from deal).
-   - Call TASK-INV-007 hóa đơn emit (delegation per DEC-1703).
-   - Store emission record with status.
+- Check if existing emission row (idempotent per DEC-1702).
+- Call TASK-INV-001 create invoice (account_id, contact_id, line items from deal).
+- Call TASK-INV-007 hóa đơn emit (delegation per DEC-1703).
+- Store emission record with status.
 
 5. **MUST** define table at migration `0010`:
    ```sql
@@ -220,8 +220,7 @@ async fn skips_non_vn_tenant() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-INV-007, TASK-CRM-004.
-**Cross-module:** TASK-INV-001 (invoice create), TASK-SKILL-109 (registry), TASK-AUTH-101 (CFO role for manual), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-INV-007, TASK-CRM-004. **Cross-module:** TASK-INV-001 (invoice create), TASK-SKILL-109 (registry), TASK-AUTH-101 (CFO role for manual), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

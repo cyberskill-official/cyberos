@@ -43,22 +43,14 @@ All six findings addressed as cited. The task now kills the bug class (hardcoded
 
 ## §10 - Post-implementation gates (2026-07-12, ship run)
 
-- §10.4 coverage gate: PASS - t01-t06 green on fresh testing-phase rerun; TASK-IMP-068 suite green as
-  regression. Report: docs/tasks/.workflow/TASK-SKILL-116/coverage-and-review.md.
+- §10.4 coverage gate: PASS - t01-t06 green on fresh testing-phase rerun; TASK-IMP-068 suite green as regression. Report: docs/tasks/.workflow/TASK-SKILL-116/coverage-and-review.md.
 - TRACE-004 closure: PASS - every §1 clause's cited test passed (table in the bundled artefact).
-- §10.5 awh gate: N/A (no sealed goldenset for this tooling path - declared). §10.6 caf gate: N/A
-  (no audit-profile); floor = bash -n clean + both suites green.
-- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit
-  operator pre-authorization at the review gate; gates stayed green.
-- Live proof: payload now vendors 22 skills; build prints `chain OK: 24 referenced, 22 vendored,
-  2 allowlisted` and the commit hook ran both checks green.
+- §10.5 awh gate: N/A (no sealed goldenset for this tooling path - declared). §10.6 caf gate: N/A (no audit-profile); floor = bash -n clean + both suites green.
+- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit operator pre-authorization at the review gate; gates stayed green.
+- Live proof: payload now vendors 22 skills; build prints `chain OK: 24 referenced, 22 vendored, 2 allowlisted` and the commit hook ran both checks green.
 
 *TASK-SKILL-116 shipped 2026-07-12.*
 
 ## §11 - Post-ship amendment (2026-07-12, surfaced by TASK-CUO-209 t07)
 
-Field finding: the chain-coverage check failed REDUCED-profile builds (zero vendored
-skills = every chain reference "missing"), breaking the documented doc-driven floor.
-Amendment: zero-vendored payloads skip with `chain SKIP: reduced profile` (exit 0);
-partial vendoring still fails - the drift case the check exists for. §1 #5 amended;
-t07_reduced_profile_skips added to the suite.
+Field finding: the chain-coverage check failed REDUCED-profile builds (zero vendored skills = every chain reference "missing"), breaking the documented doc-driven floor. Amendment: zero-vendored payloads skip with `chain SKIP: reduced profile` (exit 0); partial vendoring still fails - the drift case the check exists for. §1 #5 amended; t07_reduced_profile_skips added to the suite.

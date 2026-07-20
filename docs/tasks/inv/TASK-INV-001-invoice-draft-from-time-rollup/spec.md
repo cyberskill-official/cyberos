@@ -141,43 +141,42 @@ The INV service **MUST** ship invoice substrate at `services/inv/src/` with 5 mi
 8. **MUST** enforce RLS with USING and WITH CHECK on all 5 tables: `tenant_id = current_setting('auth.tenant_id')::uuid`.
 
 9. **MUST** expose draft creation `POST /v1/inv/invoices/draft` body `{ engagement_id, billing_period_start, billing_period_end }`. Handler:
-   - Validates engagement_id in tenant scope.
-   - Resolves billing currency from engagement.
-   - Allocates invoice number per §1 #10.
-   - Snapshots current rate card per §1 #11.
-   - Aggregates unbilled TIME entries via TASK-TIME-009 rollup into `invoice_lines` rows.
-   - Computes totals.
-   - Marks TIME entries `invoiced_at = now()` to prevent double-billing.
-   - INSERTs invoices + invoice_lines + invoice_status_history (status='draft').
-   - Emits `inv.draft_created` sev-2.
+- Validates engagement_id in tenant scope.
+- Resolves billing currency from engagement.
+- Allocates invoice number per §1 #10.
+- Snapshots current rate card per §1 #11.
+- Aggregates unbilled TIME entries via TASK-TIME-009 rollup into `invoice_lines` rows.
+- Computes totals.
+- Marks TIME entries `invoiced_at = now()` to prevent double-billing.
+- INSERTs invoices + invoice_lines + invoice_status_history (status='draft').
+- Emits `inv.draft_created` sev-2.
 
 10. **MUST** allocate invoice number per DEC-1367 via `numbering/mod.rs`:
-    - `SELECT last_sequence FROM invoice_number_sequence WHERE tenant_id=$1 AND year=$2 FOR UPDATE`.
-    - `last_sequence + 1`.
-    - `INVOICE_NUMBER = "INV-" + tenant_slug + "-" + (year%100) + "-" + ZeroPad(seq, 6)`.
-    - UPDATE sequence.
-    - On rollback after allocation: record skipped number in `notes` JSONB for Decree-123 audit clarity (matches TASK-TEN-102 §1 #17 pattern).
+- `SELECT last_sequence FROM invoice_number_sequence WHERE tenant_id=$1 AND year=$2 FOR UPDATE`.
+- `last_sequence + 1`.
+- `INVOICE_NUMBER = "INV-" + tenant_slug + "-" + (year%100) + "-" + ZeroPad(seq, 6)`.
+- UPDATE sequence.
+- On rollback after allocation: record skipped number in `notes` JSONB for Decree-123 audit clarity (matches TASK-TEN-102 §1 #17 pattern).
 
 11. **MUST** snapshot rate card per DEC-1363. The `snapshot/rate_card.rs::snapshot_for_engagement(engagement_id)`:
-    - Resolves latest active rate-card version.
-    - Deep-copies into `invoices.rate_card_snapshot` JSONB.
-    - Records snapshot version reference for traceability.
+- Resolves latest active rate-card version.
+- Deep-copies into `invoices.rate_card_snapshot` JSONB.
+- Records snapshot version reference for traceability.
 
 12. **MUST** validate state-machine transitions per DEC-1361 via `status/state_machine.rs`. Allowed transitions:
-    - `draft → ready_for_review` (any user can flip own draft).
-    - `ready_for_review → approved` (cfo OR engagement_admin only per DEC-1370).
-    - `approved → sent` (auto on send action OR manual).
-    - `sent → partially_paid` (auto on partial payment receipt via TASK-INV-003/005).
-    - `sent | partially_paid → paid` (auto on full payment).
-    - `draft | ready_for_review | approved → void` (cfo only; with reason).
-    - `sent | partially_paid → written_off` (cfo only; with reason per DEC-1371).
-    Invalid transition → 400 `invalid_status_transition`.
+- `draft → ready_for_review` (any user can flip own draft).
+- `ready_for_review → approved` (cfo OR engagement_admin only per DEC-1370).
+- `approved → sent` (auto on send action OR manual).
+- `sent → partially_paid` (auto on partial payment receipt via TASK-INV-003/005).
+- `sent | partially_paid → paid` (auto on full payment).
+- `draft | ready_for_review | approved → void` (cfo only; with reason).
+- `sent | partially_paid → written_off` (cfo only; with reason per DEC-1371). Invalid transition → 400 `invalid_status_transition`.
 
 13. **MUST** support append-only corrections per DEC-1366. `POST /v1/inv/invoices/{id}/lines/correction` body `{ correction_of_line_id, line_kind, description, quantity, unit_price_minor, amount_minor, vat_rate_pct, reason }`. Handler:
-    - Validates `correction_of_line_id` exists + same invoice.
-    - INSERTs new line with `source_kind='correction'` + `correction_of_line_id` populated.
-    - Recomputes invoice totals.
-    - Emits `inv.correction_added` sev-2.
+- Validates `correction_of_line_id` exists + same invoice.
+- INSERTs new line with `source_kind='correction'` + `correction_of_line_id` populated.
+- Recomputes invoice totals.
+- Emits `inv.correction_added` sev-2.
 
 14. **MUST** support approve action `POST /v1/inv/invoices/{id}/approve`. Caller has `cfo` OR `engagement_admin`. Validates transition; INSERTs status history; UPDATEs status; emits `inv.approved` sev-1 (material commercial event).
 
@@ -196,15 +195,15 @@ The INV service **MUST** ship invoice substrate at `services/inv/src/` with 5 mi
 21. **MUST** mark TIME entries `invoiced_at` to prevent double-billing per DEC-1369 derivative. TASK-TIME-009 rollup filter excludes entries with non-NULL `invoiced_at`.
 
 22. **MUST** emit 9 memory audit kinds per DEC-1374:
-    - `inv.draft_created` (sev-2)
-    - `inv.lines_added` (sev-3)
-    - `inv.status_transitioned` (sev-2)
-    - `inv.approved` (sev-1)
-    - `inv.sent` (sev-1)
-    - `inv.paid` (sev-1)
-    - `inv.void` (sev-1)
-    - `inv.written_off` (sev-1)
-    - `inv.correction_added` (sev-2)
+- `inv.draft_created` (sev-2)
+- `inv.lines_added` (sev-3)
+- `inv.status_transitioned` (sev-2)
+- `inv.approved` (sev-1)
+- `inv.sent` (sev-1)
+- `inv.paid` (sev-1)
+- `inv.void` (sev-1)
+- `inv.written_off` (sev-1)
+- `inv.correction_added` (sev-2)
 
 23. **MUST** PII-scrub description + reason via TASK-MEMORY-111 — SHA256 in chain.
 
@@ -485,9 +484,7 @@ async fn invoice_number_gap_free() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-TIME-009 (per-cycle rollup source).
-**Cross-module:** TASK-INV-002 (multi-currency), TASK-INV-003 (Stripe payment), TASK-INV-005 (VietQR), TASK-INV-006 (cash app), TASK-INV-007 (VN hóa đơn), TASK-TEN-003 (Stripe ref), TASK-TEN-102 (VND ref), TASK-PORTAL-001 (invoices view), TASK-PORTAL-006 (billing_inquiry workflows), TASK-CRM-001 (client subject), TASK-AUTH-101 (cfo + engagement_admin roles), TASK-AI-003, TASK-MEMORY-111, TASK-OBS-007.
-**Downstream:** TASK-INV-002 through TASK-INV-011.
+**Upstream:** TASK-TIME-009 (per-cycle rollup source). **Cross-module:** TASK-INV-002 (multi-currency), TASK-INV-003 (Stripe payment), TASK-INV-005 (VietQR), TASK-INV-006 (cash app), TASK-INV-007 (VN hóa đơn), TASK-TEN-003 (Stripe ref), TASK-TEN-102 (VND ref), TASK-PORTAL-001 (invoices view), TASK-PORTAL-006 (billing_inquiry workflows), TASK-CRM-001 (client subject), TASK-AUTH-101 (cfo + engagement_admin roles), TASK-AI-003, TASK-MEMORY-111, TASK-OBS-007. **Downstream:** TASK-INV-002 through TASK-INV-011.
 
 ---
 

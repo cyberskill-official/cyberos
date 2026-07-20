@@ -91,18 +91,18 @@ The HR service **MUST** ship onboarding saga at `services/hr/src/onboarding/` or
 2. **MUST** validate `saga_step` per DEC-1881, `saga_status` per DEC-1882.
 
 3. **MUST** execute steps in fixed order per DEC-1880 at `saga_orchestrator.rs::run(member)`:
-   1. auth_provision — TASK-AUTH-101 create user with role per contract type
-   2. time_init — TASK-TIME-001 create member time profile
-   3. learn_assign_starter — TASK-LEARN-001 assign starter pack
-   4. kb_grant_scope — TASK-KB-001 grant team scope
-   5. chat_create_channel — TASK-CHAT-005 add to team channels
-   6. rew_init_baseline — TASK-REW-001 init comp record
+1. auth_provision — TASK-AUTH-101 create user with role per contract type
+2. time_init — TASK-TIME-001 create member time profile
+3. learn_assign_starter — TASK-LEARN-001 assign starter pack
+4. kb_grant_scope — TASK-KB-001 grant team scope
+5. chat_create_channel — TASK-CHAT-005 add to team channels
+6. rew_init_baseline — TASK-REW-001 init comp record
 
 4. **MUST** be idempotent per DEC-1880 — each step checks "already done" before acting.
 
 5. **MUST** compensate per DEC-1884 on any failure at `compensation.rs::compensate(saga, failed_step)`:
-   - Run reverse ops in REVERSE order of completed steps.
-   - E.g. if rew_init fails, compensate chat → kb → learn → time → auth.
+- Run reverse ops in REVERSE order of completed steps.
+- E.g. if rew_init fails, compensate chat → kb → learn → time → auth.
 
 6. **MUST** define table at migration `0009`:
    ```sql
@@ -244,8 +244,7 @@ async fn trace_id_propagated() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-HR-001.
-**Cross-module:** TASK-AUTH-101 (provision), TASK-TIME-001 (init), TASK-LEARN-001 (starter pack), TASK-KB-001 (scope grant), TASK-CHAT-005 (channel), TASK-REW-001 (comp baseline), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-HR-001. **Cross-module:** TASK-AUTH-101 (provision), TASK-TIME-001 (init), TASK-LEARN-001 (starter pack), TASK-KB-001 (scope grant), TASK-CHAT-005 (channel), TASK-REW-001 (comp baseline), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

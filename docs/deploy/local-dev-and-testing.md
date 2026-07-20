@@ -1,20 +1,12 @@
 # Running CyberOS locally and testing the modules
 
-A step-by-step guide to bring the CyberOS backend up on a local machine and run every module's test
-suite against it. Every command here was executed and verified on macOS (Docker Desktop) against the
-current tree. For the VPS go-live procedure see `cyberos-core-deploy.md`; this document is the local
-"test it now" path.
+A step-by-step guide to bring the CyberOS backend up on a local machine and run every module's test suite against it. Every command here was executed and verified on macOS (Docker Desktop) against the current tree. For the VPS go-live procedure see `cyberos-core-deploy.md`; this document is the local "test it now" path.
 
 ## What runs where
 
-Local infra is two containers from `services/dev/docker-compose.yml`: one Postgres 16 (pgvector, the
-official `pgvector/pgvector:pg16` image) on `localhost:5432` and one Redis 7 on `localhost:6379`. Credentials are `cyberos` / `cyberos`
-/ `cyberos`. The Rust services and their test suites connect to those over `DATABASE_URL` and
-`REDIS_URL`.
+Local infra is two containers from `services/dev/docker-compose.yml`: one Postgres 16 (pgvector, the official `pgvector/pgvector:pg16` image) on `localhost:5432` and one Redis 7 on `localhost:6379`. Credentials are `cyberos` / `cyberos` / `cyberos`. The Rust services and their test suites connect to those over `DATABASE_URL` and `REDIS_URL`.
 
-The Rust workspace is under `services/`. The DB-backed crates are `auth`, `memory`, `ai-gateway`,
-`email`, `proj`, `mcp-gateway` (OAuth + the DB-slice store-of-record, migrations 0013-0017), plus the
-obs services (`obs-compliance-view`, `obs-router`) and the shared crates.
+The Rust workspace is under `services/`. The DB-backed crates are `auth`, `memory`, `ai-gateway`, `email`, `proj`, `mcp-gateway` (OAuth + the DB-slice store-of-record, migrations 0013-0017), plus the obs services (`obs-compliance-view`, `obs-router`) and the shared crates.
 
 ## Prerequisites
 
@@ -29,10 +21,7 @@ cd services
 docker compose -f dev/docker-compose.yml up -d --build
 ```
 
-The image is the official `pgvector/pgvector:pg16` (Postgres 16 + pgvector) via `dev/Dockerfile.postgres`;
-Apache AGE was removed, so a stock pgvector image is all the memory layer-2 schema needs. On first boot
-(a fresh volume) `dev/postgres-init.sql` enables pgcrypto, uuid-ossp, and vector. Confirm both containers
-are healthy and the extensions are present:
+The image is the official `pgvector/pgvector:pg16` (Postgres 16 + pgvector) via `dev/Dockerfile.postgres`; Apache AGE was removed, so a stock pgvector image is all the memory layer-2 schema needs. On first boot (a fresh volume) `dev/postgres-init.sql` enables pgcrypto, uuid-ossp, and vector. Confirm both containers are healthy and the extensions are present:
 
 ```bash
 docker compose -f dev/docker-compose.yml ps
@@ -43,9 +32,7 @@ docker compose -f dev/docker-compose.yml exec -T postgres \
 
 ## Step 2 - apply the migrations
 
-The integration tests connect to the shared `cyberos` database and expect the schema to exist already
-(they do not self-migrate). Apply each module's migrations in dependency order - auth first, because its
-`0004_rls_roles.sql` creates the `cyberos_app` role that the memory grants reference.
+The integration tests connect to the shared `cyberos` database and expect the schema to exist already (they do not self-migrate). Apply each module's migrations in dependency order - auth first, because its `0004_rls_roles.sql` creates the `cyberos_app` role that the memory grants reference.
 
 If you have `sqlx-cli` (`cargo install sqlx-cli --no-default-features --features rustls,postgres`):
 
@@ -72,25 +59,15 @@ done
 
 The mcp-gateway runs locally in two modes:
 
-- Quick smoke (in-memory): leave `MCP_REQUIRE_AUTH` unset. tools/call, elicitations, and tasks use the
-  in-memory stores; no token or KMS key needed. This is the `scripts/mcp_demo.sh` path (Step 6, Tier 3),
-  enough to prove the gateway, registration, and the destructive-confirm gate.
-- Store-of-record (the DB slice): set `MCP_DATABASE_URL`, `MCP_REQUIRE_AUTH=1`, and `MCP_KMS_KEY` (base64
-  of 32 bytes - generate with `openssl rand -base64 32`). Elicitations and tasks then persist to
-  `mcp_elicitations` / `mcp_tasks` (migrations 0016/0017, applied in Step 2), payloads are sealed at rest,
-  and a held confirmation survives a restart. This path is caller-scoped, so it needs a real OAuth access
-  token: run the TASK-MCP-004 flow (register a client, authorize, exchange for a token) and send it as
-  `Authorization: Bearer <token>`. Without `MCP_KMS_KEY` the gateway refuses to start in this mode, by
-  design - a held confirmation would otherwise be un-respondable.
+- Quick smoke (in-memory): leave `MCP_REQUIRE_AUTH` unset. tools/call, elicitations, and tasks use the in-memory stores; no token or KMS key needed. This is the `scripts/mcp_demo.sh` path (Step 6, Tier 3), enough to prove the gateway, registration, and the destructive-confirm gate.
+- Store-of-record (the DB slice): set `MCP_DATABASE_URL`, `MCP_REQUIRE_AUTH=1`, and `MCP_KMS_KEY` (base64 of 32 bytes - generate with `openssl rand -base64 32`). Elicitations and tasks then persist to `mcp_elicitations` / `mcp_tasks` (migrations 0016/0017, applied in Step 2), payloads are sealed at rest, and a held confirmation survives a restart. This path is caller-scoped, so it needs a real OAuth access token: run the TASK-MCP-004 flow (register a client, authorize, exchange for a token) and send it as `Authorization: Bearer <token>`. Without `MCP_KMS_KEY` the gateway refuses to start in this mode, by design - a held confirmation would otherwise be un-respondable.
 
 ## Step 3 - run the test suites
 
 Set both connection strings, then run each crate. Two flags matter:
 
-- `--test-threads=1` - the integration tests share one database, so they are not parallel-safe. Run them
-  serially (the auth and ai-gateway gates already specify this).
-- `--include-ignored` - the DB-backed tests are marked `#[ignore]` so they are skipped when no database
-  is configured; include them once Postgres is up.
+- `--test-threads=1` - the integration tests share one database, so they are not parallel-safe. Run them serially (the auth and ai-gateway gates already specify this).
+- `--include-ignored` - the DB-backed tests are marked `#[ignore]` so they are skipped when no database is configured; include them once Postgres is up.
 
 ```bash
 export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos
@@ -106,23 +83,13 @@ done
 cargo test -p cyberos-ai-gateway -- --include-ignored --test-threads=1
 ```
 
-The shared crates (`cyberos-obs-sdk`, `cyberos-audit-chain`, `cyberos-cli-exit`, `cyberos-types`) are
-pure and need no database: `cargo test -p cyberos-obs-sdk` and so on.
+The shared crates (`cyberos-obs-sdk`, `cyberos-audit-chain`, `cyberos-cli-exit`, `cyberos-types`) are pure and need no database: `cargo test -p cyberos-obs-sdk` and so on.
 
 ### Known environment-sensitive results
 
-- `auth::create_subject_p95_latency_under_200ms` asserts a p95 under 200 ms. Docker Desktop on macOS is
-  slower than CI, so it can trip locally. Not a logic failure - relax or skip that threshold for local
-  runs (`--skip create_subject_p95`).
-- `ai-gateway::cost_hold_expiry::*` spawn the TASK-AI-003 Writer (`python3 -m cyberos.writer put`), so the
-  memory package must be importable when you run the ai-gateway suite. Either `pip install -e
-  modules/memory` once, or set `PYTHONPATH=$PWD/../modules/memory` (from `services/`) before `cargo test`.
-  Without it the audit emit fails, the expiry rolls back, and the two `tick_skips_*` tests fail. This was
-  a real cross-module contract gap (the `cyberos.writer` module was missing); it is fixed - see
-  `docs/KNOWN-ISSUES.md` issue 1.
-- If a run leaves the DB dirty and a later run fails, reset with a clean volume: `docker compose
-  -f dev/docker-compose.yml down -v && docker compose -f dev/docker-compose.yml up -d --build`, then
-  re-apply migrations (step 2).
+- `auth::create_subject_p95_latency_under_200ms` asserts a p95 under 200 ms. Docker Desktop on macOS is slower than CI, so it can trip locally. Not a logic failure - relax or skip that threshold for local runs (`--skip create_subject_p95`).
+- `ai-gateway::cost_hold_expiry::*` spawn the TASK-AI-003 Writer (`python3 -m cyberos.writer put`), so the memory package must be importable when you run the ai-gateway suite. Either `pip install -e modules/memory` once, or set `PYTHONPATH=$PWD/../modules/memory` (from `services/`) before `cargo test`. Without it the audit emit fails, the expiry rolls back, and the two `tick_skips_*` tests fail. This was a real cross-module contract gap (the `cyberos.writer` module was missing); it is fixed - see `docs/KNOWN-ISSUES.md` issue 1.
+- If a run leaves the DB dirty and a later run fails, reset with a clean volume: `docker compose -f dev/docker-compose.yml down -v && docker compose -f dev/docker-compose.yml up -d --build`, then re-apply migrations (step 2).
 
 ## Step 4 - run a service and hit it
 
@@ -142,24 +109,17 @@ curl -fsS -X POST http://127.0.0.1:8080/v1/chat \
 # the response carries a `traceparent` header (TASK-OBS-005); the logs are JSON with trace_id per line.
 ```
 
-AUTH and MEMORY bind `AUTH_LISTEN_ADDR` / `MEMORY_LISTEN_ADDR` and read the env surface listed in
-`cyberos-core-deploy.md` Step 1. MEMORY also needs an embeddings endpoint (`MEMORY_EMBED_URL`, the
-`embed-sidecar`).
+AUTH and MEMORY bind `AUTH_LISTEN_ADDR` / `MEMORY_LISTEN_ADDR` and read the env surface listed in `cyberos-core-deploy.md` Step 1. MEMORY also needs an embeddings endpoint (`MEMORY_EMBED_URL`, the `embed-sidecar`).
 
 ## Step 5 - the telemetry stack (optional)
 
-The RED metrics, traces, and the tenant-scoped Grafana proxy live in `deploy/obs/`. Bring up Grafana +
-Loki + Prometheus + Tempo + the obs-proxy with `cd deploy/obs && docker compose up --build`, then set
-`OBS_OTLP_ENDPOINT` on each service so its metrics and traces export. See `deploy/obs/README.md`. This
-is heavier (it pulls four backend images) and is only needed for the end-to-end correlation path.
+The RED metrics, traces, and the tenant-scoped Grafana proxy live in `deploy/obs/`. Bring up Grafana + Loki + Prometheus + Tempo + the obs-proxy with `cd deploy/obs && docker compose up --build`, then set `OBS_OTLP_ENDPOINT` on each service so its metrics and traces export. See `deploy/obs/README.md`. This is heavier (it pulls four backend images) and is only needed for the end-to-end correlation path.
 
 ## Step 6 - end-to-end smoke (the demoable path)
 
-Steps 1-5 prove each module in isolation. This step runs the live P0 path so you can see the stack work
-as one system. Do it in tiers; each tier stands alone.
+Steps 1-5 prove each module in isolation. This step runs the live P0 path so you can see the stack work as one system. Do it in tiers; each tier stands alone.
 
-Tier 1 - chat path through the gateway (no model needed). With infra up (Step 1) and migrations applied
-(Step 2), run the gateway with the in-repo echo backend and hit it:
+Tier 1 - chat path through the gateway (no model needed). With infra up (Step 1) and migrations applied (Step 2), run the gateway with the in-repo echo backend and hit it:
 
 ```bash
 cd services
@@ -173,16 +133,9 @@ curl -fsS -X POST http://127.0.0.1:8080/v1/chat -H 'content-type: application/js
   -d '{"alias":"chat.smart","messages":[{"role":"user","content":"hello"}]}'
 ```
 
-Tier 2 - real inference through the stack (the demo). Start LM Studio (or Ollama) with a model loaded,
-then point the gateway at it. The tenant config `ai-gateway/config/tenants/org-cyberskill.yaml` maps
-`chat.smart` to the local model - edit the model id there if yours differs. The audit path (TASK-AI-003)
-shells out to the memory Writer, so make the memory package importable first.
+Tier 2 - real inference through the stack (the demo). Start LM Studio (or Ollama) with a model loaded, then point the gateway at it. The tenant config `ai-gateway/config/tenants/org-cyberskill.yaml` maps `chat.smart` to the local model - edit the model id there if yours differs. The audit path (TASK-AI-003) shells out to the memory Writer, so make the memory package importable first.
 
-Timeout budget for slow local models: the router caps each call at the smallest of the tenant
-`call_timeout_seconds` and two env vars, `AI_GATEWAY_FAILOVER_BUDGET_SECS` and
-`AI_GATEWAY_PROVIDER_TIMEOUT_SECS` (whole seconds, both default 30 to stay safe in production). A large
-on-device reasoning model can take ~50s; left at 30 it returns 502 and LM Studio logs "client
-disconnected". Raise all three together (the tenant file already ships `call_timeout_seconds: 120`):
+Timeout budget for slow local models: the router caps each call at the smallest of the tenant `call_timeout_seconds` and two env vars, `AI_GATEWAY_FAILOVER_BUDGET_SECS` and `AI_GATEWAY_PROVIDER_TIMEOUT_SECS` (whole seconds, both default 30 to stay safe in production). A large on-device reasoning model can take ~50s; left at 30 it returns 502 and LM Studio logs "client disconnected". Raise all three together (the tenant file already ships `call_timeout_seconds: 120`):
 
 ```bash
 cd services
@@ -195,8 +148,7 @@ AI_GATEWAY_BIND=127.0.0.1:8080 AI_GATEWAY_CONFIG_DIR=ai-gateway/config/tenants \
 # the same /v1/chat curl now returns a real completion from your local model (give a 35B ~50s).
 ```
 
-Tier 3 - MCP tool federation (independent of the gateway above). One command starts the mcp-gateway,
-the reference module, and the obs triage module, all self-registering:
+Tier 3 - MCP tool federation (independent of the gateway above). One command starts the mcp-gateway, the reference module, and the obs triage module, all self-registering:
 
 ```bash
 bash scripts/mcp_demo.sh
@@ -206,21 +158,13 @@ bash scripts/mcp_call.sh cyberos.obs.execute_triage \
   '{"alert":{"name":"HighErrorRate","severity":"sev2","summary":"5xx above 2%"}}'
 ```
 
-The triage tool name is `cyberos.obs.execute_triage` (the SEP-986 form); a non-conforming registration
-is now rejected at the gateway, so this is also a live check of TASK-MCP-003 enforcement.
+The triage tool name is `cyberos.obs.execute_triage` (the SEP-986 form); a non-conforming registration is now rejected at the gateway, so this is also a live check of TASK-MCP-003 enforcement.
 
-Tier 4 - the desktop app (optional, Tauri build on your Mac). Build and run `apps/desktop` per its
-README; it drives the running gateway's chat-trigger path and, next iteration, the `tools/list` picker.
+Tier 4 - the desktop app (optional, Tauri build on your Mac). Build and run `apps/desktop` per its README; it drives the running gateway's chat-trigger path and, next iteration, the `tools/list` picker.
 
-Tier 5 - telemetry correlation (optional, heavier). Bring up `deploy/obs/` (Step 5) and set
-`OBS_OTLP_ENDPOINT` on the gateway; the `traceparent` from the `/v1/chat` response should resolve to a
-trace in Grafana.
+Tier 5 - telemetry correlation (optional, heavier). Bring up `deploy/obs/` (Step 5) and set `OBS_OTLP_ENDPOINT` on the gateway; the `traceparent` from the `/v1/chat` response should resolve to a trace in Grafana.
 
-What success looks like: infra healthy with all five extensions; every crate suite GREEN under
-`--include-ignored`; `/v1/chat` returns an echo (Tier 1) then a real model completion (Tier 2); the two
-MCP tool calls return their results (Tier 3). At that point the core is proven locally. MCP is now
-feature-complete (all 8 tasks + the DB-slice store-of-record, audited 2026-06-28); the next step is the
-VPS deploy.
+What success looks like: infra healthy with all five extensions; every crate suite GREEN under `--include-ignored`; `/v1/chat` returns an echo (Tier 1) then a real model completion (Tier 2); the two MCP tool calls return their results (Tier 3). At that point the core is proven locally. MCP is now feature-complete (all 8 tasks + the DB-slice store-of-record, audited 2026-06-28); the next step is the VPS deploy.
 
 ## Teardown
 
@@ -232,10 +176,5 @@ docker compose -f dev/docker-compose.yml down -v     # stop and wipe the volumes
 
 ## Going to the VPS
 
-The production path is the same migrations and binaries against a per-service database, fronted by Caddy
-for TLS. The production `docker-compose.yml` + `Caddyfile` now live in `deploy/vps/` (see its README);
-follow `cyberos-core-deploy.md` for the full runbook. Before go-live: copy `deploy/vps/.env.local` to
-`.env` and fill real secrets, rotate any in-tree live-secret files and keep them out of git, and apply
-the one-time repo-wide DB-role-grant hardening noted in `deploy/vps/README.md` so a least-privilege
-`cyberos_app` login can write the oauth + mcp tables.
+The production path is the same migrations and binaries against a per-service database, fronted by Caddy for TLS. The production `docker-compose.yml` + `Caddyfile` now live in `deploy/vps/` (see its README); follow `cyberos-core-deploy.md` for the full runbook. Before go-live: copy `deploy/vps/.env.local` to `.env` and fill real secrets, rotate any in-tree live-secret files and keep them out of git, and apply the one-time repo-wide DB-role-grant hardening noted in `deploy/vps/README.md` so a least-privilege `cyberos_app` login can write the oauth + mcp tables.
 ```

@@ -249,8 +249,8 @@ The API contract in §3 covers both manifest skeletons and the preparation-only 
 
 - **Upstream:** none. Consumes GitHub Release artifacts produced by TASK-APP-003 (macOS `.dmg`) and TASK-APP-004/the existing `desktop` job (Windows NSIS `.exe`) without depending on either task's own gating flags (`MAS_RELEASE`, `MSSTORE_RELEASE`) — the GitHub-Releases artifacts this task points at are produced by the pre-existing, always-on `desktop` job, not the store-specific opt-in jobs those two tasks add.
 - **Downstream:** none currently drafted.
-  - If a future task adopts `wingetcreate`/Homebrew PR-automation tooling (§9, §11's PAT-scope note), it would depend on this task's manifest files and CI prep jobs existing first.
-  - No such task is drafted, scheduled, or otherwise planned as of this writing — the dependency is noted here purely so a future author knows to add `depends_on: [TASK-APP-006]` rather than discovering the relationship after the fact.
+- If a future task adopts `wingetcreate`/Homebrew PR-automation tooling (§9, §11's PAT-scope note), it would depend on this task's manifest files and CI prep jobs existing first.
+- No such task is drafted, scheduled, or otherwise planned as of this writing — the dependency is noted here purely so a future author knows to add `depends_on: [TASK-APP-006]` rather than discovering the relationship after the fact.
 - **Cross-module:** none.
 - **Human/account prerequisites:** none for manifest preparation (no paid account, no Homebrew/Microsoft account needed to author or locally validate either manifest). **Hard blocker on ever opening either PR:** Stephen's explicit, fresh, per-instance chat-turn approval (§1 #5, §4 AC #3 — structurally guaranteed). If update automation via `wingetcreate`/Homebrew PR tooling is adopted later (§9), a scoped GitHub PAT becomes a prerequisite at that time, not before.
 

@@ -26,10 +26,7 @@ allowed_memory_scopes:
 
 # obs.triage-alert
 
-A single alert in, a triage verdict out. This skill does not page, post, or route - obs-router owns
-those. Its only job is to turn one alert into an honest assessment that a tired on-call engineer can act
-on, and a confidence that tells obs-router whether the assessment is trustworthy enough to send to CHAT
-instead of paging.
+A single alert in, a triage verdict out. This skill does not page, post, or route - obs-router owns those. Its only job is to turn one alert into an honest assessment that a tired on-call engineer can act on, and a confidence that tells obs-router whether the assessment is trustworthy enough to send to CHAT instead of paging.
 
 ## 1. Input
 
@@ -50,22 +47,15 @@ obs-router invokes the skill with one alert:
 
 ## 2. Procedure
 
-1. Read the alert: the name, the labels, and the summary annotation. Identify the affected service and
-   what the alert actually measures.
-2. Pull the recent signal for that service: its RED metrics (the `cyberos_requests_total`,
-   `cyberos_errors_total`, `cyberos_duration_ms` series from TASK-OBS-003), the error-rate and latency
-   trend over the last 30 minutes, and any deploy in the last hour.
-3. Search the runbook corpus (`runbooks-corpus/`) for a runbook whose triggers match this alert. A match
-   needs the runbook's alert name or symptom to line up with the alert, not just a keyword overlap.
-4. Form a single most-likely cause. Prefer a cause the signal supports: a deploy that lines up in time, a
-   dependency that is also alerting, a saturation metric that crossed its limit. If the signal is thin,
-   say so rather than guessing.
+1. Read the alert: the name, the labels, and the summary annotation. Identify the affected service and what the alert actually measures.
+2. Pull the recent signal for that service: its RED metrics (the `cyberos_requests_total`, `cyberos_errors_total`, `cyberos_duration_ms` series from TASK-OBS-003), the error-rate and latency trend over the last 30 minutes, and any deploy in the last hour.
+3. Search the runbook corpus (`runbooks-corpus/`) for a runbook whose triggers match this alert. A match needs the runbook's alert name or symptom to line up with the alert, not just a keyword overlap.
+4. Form a single most-likely cause. Prefer a cause the signal supports: a deploy that lines up in time, a dependency that is also alerting, a saturation metric that crossed its limit. If the signal is thin, say so rather than guessing.
 5. Set the confidence per section 4.
 
 ## 3. Output contract
 
-Return exactly this shape (obs-router's `cuo_triage.rs` parses it; extra fields are ignored, a missing
-`suggested_runbook` is allowed):
+Return exactly this shape (obs-router's `cuo_triage.rs` parses it; extra fields are ignored, a missing `suggested_runbook` is allowed):
 
 ```json
 {
@@ -76,31 +66,22 @@ Return exactly this shape (obs-router's `cuo_triage.rs` parses it; extra fields 
 }
 ```
 
-`confidence` is a number in `[0, 1]`. `summary` is one or two sentences. `suspected_cause` names the most
-likely cause in plain language. `suggested_runbook` is the matching runbook, or `null` when none clearly
-matches - never invent a runbook URL.
+`confidence` is a number in `[0, 1]`. `summary` is one or two sentences. `suspected_cause` names the most likely cause in plain language. `suggested_runbook` is the matching runbook, or `null` when none clearly matches - never invent a runbook URL.
 
 ## 4. Confidence calibration
 
-Confidence is the probability that the suspected cause is correct, not how severe the alert is. It is the
-single most important output: at 0.70 and above obs-router trusts the verdict enough to post to CHAT
-instead of paging, so an overconfident wrong answer sends a real incident to a channel instead of a pager.
+Confidence is the probability that the suspected cause is correct, not how severe the alert is. It is the single most important output: at 0.70 and above obs-router trusts the verdict enough to post to CHAT instead of paging, so an overconfident wrong answer sends a real incident to a channel instead of a pager.
 
-- 0.85 and up: the signal points one clear way (a deploy lines up in time, a named dependency is failing,
-  a saturation metric is pinned) and a runbook matches.
+- 0.85 and up: the signal points one clear way (a deploy lines up in time, a named dependency is failing, a saturation metric is pinned) and a runbook matches.
 - 0.70 to 0.85: a likely cause with supporting signal, but an alternative is not ruled out.
-- below 0.70: thin or conflicting signal, a novel alert, or several plausible causes. obs-router pages on
-  this - which is the safe outcome when triage is unsure.
+- below 0.70: thin or conflicting signal, a novel alert, or several plausible causes. obs-router pages on this - which is the safe outcome when triage is unsure.
 
-When in doubt, return a lower confidence. Paging a human on an uncertain alert is cheap; sending a real
-incident to a chat channel because triage was falsely confident is not.
+When in doubt, return a lower confidence. Paging a human on an uncertain alert is cheap; sending a real incident to a chat channel because triage was falsely confident is not.
 
 ## 5. Guardrails
 
 - Stay within this alert and the CyberSkill systems. Do not speculate beyond the signal.
 - Never invent a runbook, a URL, a metric value, or a deploy. If you did not see it, do not cite it.
-- Never lower the severity or suggest suppressing the alert; routing and severity are not this skill's
-  job.
+- Never lower the severity or suggest suppressing the alert; routing and severity are not this skill's job.
 - A sev-1 is paged by obs-router no matter what you return, so do not soften a sev-1 summary.
-- If you cannot reach the metrics or the runbook corpus, return a low confidence with a summary that says
-  the triage ran without its inputs - obs-router will page, which is correct.
+- If you cannot reach the metrics or the runbook corpus, return a low confidence with a summary that says the triage ran without its inputs - obs-router will page, which is correct.

@@ -14,5 +14,4 @@ Pure-infra profile invoked explicitly with justification (hook/CI/doc wiring ove
 - ISS-002: batch clause originally said "commits are batched" without restating per-task HITL — exploitable reading → clauses 5/7 restate both gates verbatim-equivalent.
 - ISS-003: rules_sha had no determinism guarantee across OS locales → LC_ALL=C pipeline + AC #3 double-build check + failure row 4.
 ## §3 — Resolution
-All resolved same pass. Score = 10/10.
-*End of TASK-IMP-074 audit.*
+All resolved same pass. Score = 10/10. *End of TASK-IMP-074 audit.*

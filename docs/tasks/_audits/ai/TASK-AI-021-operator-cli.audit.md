@@ -130,13 +130,13 @@ Without standardised exit codes, scripts can either treat every non-zero as fata
 
 1. Add §1 #7 normative requirement: enumerated exit codes with stable numerical values.
 2. `cli/exit_codes.rs` with `ExitCode` enum:
-   - `0` Ok
-   - `1` UserError
-   - `2` AuthFailed
-   - `3` RemoteUnreachable
-   - `4` DestructiveWithoutConfirm
-   - `5` SchemaViolation
-   - `6` InternalError
+- `0` Ok
+- `1` UserError
+- `2` AuthFailed
+- `3` RemoteUnreachable
+- `4` DestructiveWithoutConfirm
+- `5` SchemaViolation
+- `6` InternalError
 3. Document exit codes in §1 #7 + §6 entrypoint maps errors to codes.
 4. Add §5 tests asserting specific exit codes per failure mode.
 

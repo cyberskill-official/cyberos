@@ -97,17 +97,17 @@ The TEN service **MUST** ship HoldCo flip CLI at `services/ten/src/holdco/` + `s
 1. **MUST** validate `holdco_flip_step` against closed enum per DEC-2401.
 
 2. **MUST** require CEO + CFO + CLO triple-sign at initiation per DEC-2403 via `triple_sign_gate.rs::can_initiate(flip)`:
-   - All three signed
-   - Same-person rejected across any two slots
-   - Initiation proceeds only after all three
+- All three signed
+- Same-person rejected across any two slots
+- Initiation proceeds only after all three
 
 3. **MUST** orchestrate 6 steps via CLI per DEC-2400:
-   - sg_entity_form: BizFile API call to form Pte Ltd
-   - acra_filings: generate Form 24 + ACRA submissions
-   - shareholder_migration: VN shareholders → SG shareholders (signed agreements track)
-   - esop_reissue: TASK-ESOP-001 grants re-issued under SG entity
-   - residency_migrated: TASK-TEN-103 tenant residency → sg-1
-   - completed: all steps done
+- sg_entity_form: BizFile API call to form Pte Ltd
+- acra_filings: generate Form 24 + ACRA submissions
+- shareholder_migration: VN shareholders → SG shareholders (signed agreements track)
+- esop_reissue: TASK-ESOP-001 grants re-issued under SG entity
+- residency_migrated: TASK-TEN-103 tenant residency → sg-1
+- completed: all steps done
 
 4. **MUST** be resumable per DEC-2402 — each step writes checkpoint; restart resumes from last completed.
 
@@ -253,8 +253,7 @@ async fn esop_reissue_under_sg() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-ESOP-001.
-**Cross-module:** TASK-ESOP-006 (acceleration triggers may overlap), TASK-TEN-103 (residency migration), TASK-AUTH-101 (CEO+CFO+CLO roles), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-ESOP-001. **Cross-module:** TASK-ESOP-006 (acceleration triggers may overlap), TASK-TEN-103 (residency migration), TASK-AUTH-101 (CEO+CFO+CLO roles), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

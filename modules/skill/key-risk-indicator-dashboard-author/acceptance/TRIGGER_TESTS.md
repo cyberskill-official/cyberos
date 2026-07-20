@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a key risk indicator dashboard"
+- "Draft a key risk indicator dashboard"
 - "Create the key risk indicator dashboard"
 - "Author a new key risk indicator dashboard"
 - "Generate the key risk indicator dashboard"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this key risk indicator dashboard" → key-risk-indicator-dashboard-audit
+- "Audit this key risk indicator dashboard" → key-risk-indicator-dashboard-audit
 - "Check the key risk indicator dashboard for completeness" → key-risk-indicator-dashboard-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

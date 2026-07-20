@@ -129,66 +129,60 @@ The TEN service **MUST** ship the 90-day offboarding contract — closed 4-state
 3. **MUST** define `tenant_offboarding_log` table: `(id BIGSERIAL, tenant_id UUID, from_state offboarding_state, to_state offboarding_state NOT NULL, changed_at TIMESTAMPTZ NOT NULL DEFAULT now(), changed_by_subject_id UUID NOT NULL, reason TEXT, signer1_subject_id UUID, signer2_subject_id UUID)`. `REVOKE UPDATE, DELETE FROM cyberos_app` (per DEC-508).
 
 4. **MUST** enforce the closed FSM transition matrix (per DEC-500 + DEC-502):
-    - `active → terminating_a` (operator-initiated offboarding).
-    - `terminating_a → active` (cancellation; only within 30-day window).
-    - `terminating_a → terminating_b` (scheduled advance after 30 days; OR TASK-TEN-202 fast-track).
-    - `terminating_b → terminated` (scheduled advance after 60 days IN B + CSO+CLO dual-signoff).
-    - `active → terminating_b` (TASK-TEN-202 hostile-termination fast-track; CEO+CLO+CSO sign-off).
-    All other transitions REJECTED at trigger + handler.
+- `active → terminating_a` (operator-initiated offboarding).
+- `terminating_a → active` (cancellation; only within 30-day window).
+- `terminating_a → terminating_b` (scheduled advance after 30 days; OR TASK-TEN-202 fast-track).
+- `terminating_b → terminated` (scheduled advance after 60 days IN B + CSO+CLO dual-signoff).
+- `active → terminating_b` (TASK-TEN-202 hostile-termination fast-track; CEO+CLO+CSO sign-off). All other transitions REJECTED at trigger + handler.
 
 5. **MUST** ship the FSM at `services/ten/src/offboarding/fsm.rs` as a closed Rust function `validate_transition(from, to) -> Result<(), InvalidTransition>`. The trigger `enforce_offboarding_fsm` mirrors the matrix at DB level.
 
 6. **MUST** ship the scheduled advance job at `services/ten/src/offboarding/scheduler.rs` running hourly (per DEC-503). Query: `SELECT tenant_id, offboarding_state FROM tenant_offboarding_state WHERE scheduled_advance_at <= now() AND offboarding_state IN ('terminating_a','terminating_b')`. For each row:
-    - If `terminating_a` → transition to `terminating_b`; emit memory row; wipe data to dead-letter bucket per §1 #12.
-    - If `terminating_b` → DO NOT auto-advance; emit `ten.dual_signoff_required` notification to ops; manual transition only.
-   Idempotent — re-running on already-advanced tenant is a no-op (trigger predicate enforces).
+- If `terminating_a` → transition to `terminating_b`; emit memory row; wipe data to dead-letter bucket per §1 #12.
+- If `terminating_b` → DO NOT auto-advance; emit `ten.dual_signoff_required` notification to ops; manual transition only. Idempotent — re-running on already-advanced tenant is a no-op (trigger predicate enforces).
 
 7. **MUST** enforce read-only freeze in `terminating_a` (per DEC-509). The TASK-AUTH-004 JWT issuer consults `read_only_gate::is_tenant_read_only(tenant_id)` — true → JWT's `scope_grants` filtered to read-only operations (read | list | view; write | create | update | delete excluded). Existing tokens issued pre-freeze are NOT invalidated; their writes fail at handler with 423 `tenant_read_only` + emit `ten.read_only_write_attempted` memory row.
 
 8. **MUST** ship `POST /v1/ten/offboarding/initiate` handler. Body: `{tenant_slug, reason, total_grace_days?}`. Caller MUST have role `root-admin` per TASK-AUTH-101. Validates:
-    - Tenant exists and is in `active` state.
-    - reason 1–500 chars.
-    - total_grace_days defaults to 90; if specified, must be 30-180.
-   On success: UPDATE state to `terminating_a`; set `terminating_a_started_at = now()`, `scheduled_advance_at = now() + INTERVAL '30 days'` (or proportional); emit `ten.offboarding_initiated` + `ten.terminating_a_entered` memory rows.
+- Tenant exists and is in `active` state.
+- reason 1–500 chars.
+- total_grace_days defaults to 90; if specified, must be 30-180. On success: UPDATE state to `terminating_a`; set `terminating_a_started_at = now()`, `scheduled_advance_at = now() + INTERVAL '30 days'` (or proportional); emit `ten.offboarding_initiated` + `ten.terminating_a_entered` memory rows.
 
 9. **MUST** ship `POST /v1/ten/offboarding/cancel` (per DEC-510). Caller MUST have role `root-admin` OR `tenant-admin` for the target tenant. Body: `{tenant_slug, reason, confirmation: "I_UNDERSTAND_CANCELLATION"}`. Validates:
-    - Tenant is in `terminating_a` state (NEVER allowed in terminating_b or terminated).
-    - confirmation string matches exactly.
-   On success: UPDATE state to `active`; clear `terminating_a_started_at`, `scheduled_advance_at`; emit `ten.terminating_cancelled` memory row.
+- Tenant is in `terminating_a` state (NEVER allowed in terminating_b or terminated).
+- confirmation string matches exactly. On success: UPDATE state to `active`; clear `terminating_a_started_at`, `scheduled_advance_at`; emit `ten.terminating_cancelled` memory row.
 
 10. **MUST** ship `POST /v1/ten/offboarding/extend` (per DEC-512). Caller MUST have role `clo` (Chief Legal Officer) per TASK-AUTH-101. Body: `{tenant_slug, additional_days, reason}`. Validates:
-    - Tenant in `terminating_a` OR `terminating_b`.
-    - additional_days in [1, 30].
-    - reason non-empty.
-    - extension_count < 2.
-   On success: UPDATE `scheduled_advance_at = scheduled_advance_at + additional_days`; UPDATE `extension_count = extension_count + 1`; UPDATE `total_grace_days += additional_days`; emit `ten.offboarding_extended` memory row.
+- Tenant in `terminating_a` OR `terminating_b`.
+- additional_days in [1, 30].
+- reason non-empty.
+- extension_count < 2. On success: UPDATE `scheduled_advance_at = scheduled_advance_at + additional_days`; UPDATE `extension_count = extension_count + 1`; UPDATE `total_grace_days += additional_days`; emit `ten.offboarding_extended` memory row.
 
 11. **MUST** ship `POST /v1/ten/offboarding/finalize-termination` (per DEC-506). Body: `{tenant_slug, signer1_subject_id, signer2_subject_id, reason, confirmation: "I_AUTHORISE_IRREVERSIBLE_DELETE"}`. Validates:
-    - Tenant in `terminating_b`.
-    - `signer1` has role `cseco` (Chief Security Officer) per TASK-AUTH-101.
-    - `signer2` has role `clo`.
-    - `signer1 != signer2`.
-    - confirmation matches.
-   On success: UPDATE state to `terminated`; set `terminated_at = now()`; emit `ten.tenant_terminated` memory row; trigger TASK-TEN-106 attestation row.
+- Tenant in `terminating_b`.
+- `signer1` has role `cseco` (Chief Security Officer) per TASK-AUTH-101.
+- `signer2` has role `clo`.
+- `signer1 != signer2`.
+- confirmation matches. On success: UPDATE state to `terminated`; set `terminated_at = now()`; emit `ten.tenant_terminated` memory row; trigger TASK-TEN-106 attestation row.
 
 12. **MUST** wipe tenant data to dead-letter S3 bucket on `terminating_a → terminating_b` transition (per DEC-505). The dead-letter writer:
-    - Streams Postgres tables tagged with the tenant_id to S3 (per-table CSV/JSONL export).
-    - Encrypts at rest with KMS key separate from production keyspace.
-    - Applies S3 Object-Lock COMPLIANCE mode with retention = `terminating_b_started_at + 60 days` (or per-tenant policy override; min 30 days).
-    - Deletes the rows from production Postgres after S3 commit confirmation.
-    - Emits `ten.dead_letter_written` row carrying `byte_count`, `table_count`, `kms_key_id`, `s3_bucket`, `retention_until`.
+- Streams Postgres tables tagged with the tenant_id to S3 (per-table CSV/JSONL export).
+- Encrypts at rest with KMS key separate from production keyspace.
+- Applies S3 Object-Lock COMPLIANCE mode with retention = `terminating_b_started_at + 60 days` (or per-tenant policy override; min 30 days).
+- Deletes the rows from production Postgres after S3 commit confirmation.
+- Emits `ten.dead_letter_written` row carrying `byte_count`, `table_count`, `kms_key_id`, `s3_bucket`, `retention_until`.
 
 13. **MUST** support `POST /v1/ten/offboarding/restore-from-dead-letter` (per DEC-513). Body: `{tenant_slug, signer1_subject_id, signer2_subject_id, reason, confirmation: "I_AUTHORISE_DEAD_LETTER_RESTORE"}`. Validates same shape as §1 #11 (CSO + CLO dual-signoff). Tenant must be in `terminating_b`. On success: restore rows from S3 dead-letter into production Postgres; UPDATE state to `terminating_a` (re-enter the 30-day grace); emit `ten.dead_letter_restored` memory row sev-1.
 
 14. **MUST** emit 8 memory audit row kinds (per DEC-507):
-    - `ten.offboarding_initiated` — first initiation.
-    - `ten.terminating_a_entered` — entry into read-only grace.
-    - `ten.terminating_b_entered` — entry into dead-letter grace.
-    - `ten.terminating_cancelled` — cancellation from terminating_a.
-    - `ten.tenant_terminated` — irreversible terminal state.
-    - `ten.offboarding_extended` — extension applied.
-    - `ten.dead_letter_restored` — restore from dead-letter; sev-1.
-    - `ten.read_only_write_attempted` — write rejected during terminating_a.
+- `ten.offboarding_initiated` — first initiation.
+- `ten.terminating_a_entered` — entry into read-only grace.
+- `ten.terminating_b_entered` — entry into dead-letter grace.
+- `ten.terminating_cancelled` — cancellation from terminating_a.
+- `ten.tenant_terminated` — irreversible terminal state.
+- `ten.offboarding_extended` — extension applied.
+- `ten.dead_letter_restored` — restore from dead-letter; sev-1.
+- `ten.read_only_write_attempted` — write rejected during terminating_a.
 
 15. **MUST** PII-scrub `reason` and `initiated_reason` fields via TASK-MEMORY-111 before chain commit.
 
@@ -209,11 +203,11 @@ The TEN service **MUST** ship the 90-day offboarding contract — closed 4-state
 23. **MUST** emit OTel span `ten.offboarding.{initiate,advance,cancel,extend,terminate,restore,write_attempted}` with `outcome` attribute (success | invalid_transition | wrong_state | already_terminated | wrong_role | signer_role_mismatch | self_co_sign | confirmation_mismatch | extension_count_exceeded | dead_letter_unavailable).
 
 24. **MUST** emit OTel metrics:
-    - `ten_offboarding_state_count{state}` (gauge — count of tenants per state).
-    - `ten_offboarding_transitions_total{from_state, to_state, outcome}` (counter).
-    - `ten_offboarding_read_only_writes_blocked_total{tenant_id}` (counter — sev-3 alarm at > 100/h indicates stuck client).
-    - `ten_dead_letter_bytes_total{tenant_id}` (counter — bytes wiped to dead letter).
-    - `ten_offboarding_active_extensions{tenant_id}` (gauge — current extension_count).
+- `ten_offboarding_state_count{state}` (gauge — count of tenants per state).
+- `ten_offboarding_transitions_total{from_state, to_state, outcome}` (counter).
+- `ten_offboarding_read_only_writes_blocked_total{tenant_id}` (counter — sev-3 alarm at > 100/h indicates stuck client).
+- `ten_dead_letter_bytes_total{tenant_id}` (counter — bytes wiped to dead letter).
+- `ten_offboarding_active_extensions{tenant_id}` (gauge — current extension_count).
 
 25. **MUST** ship `GET /v1/ten/offboarding/state/{tenant_slug}` for operator visibility. Returns `{state, initiated_at, scheduled_advance_at, days_remaining_in_state, extension_count, can_cancel: bool, can_extend: bool, can_terminate: bool}`. Caller MUST be root-admin or tenant-admin for the target tenant.
 

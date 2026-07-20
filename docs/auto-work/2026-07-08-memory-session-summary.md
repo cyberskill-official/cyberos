@@ -10,8 +10,8 @@ Per-task ledgers: `2026-07-08-memory-1.md` .. `-5.md`. Only the human reviewer s
 2. **MEM-002** (98bfda6) - fail-closed brain-table RLS (migration 0009 drops the unset-GUC fail-open + nil-uuid bypass arms). Proven at the DB by `brain_rls_test.rs` under a non-superuser probe role.
 3. **MEM-059** (4d8cae4, discovered) - fixed the `brain_common` test harness so the brain DB suite RUNS for the first time (it applied multi-statement migrations with `sqlx::query` -> setup error; + a concurrent-apply race). raw_sql + once-per-process `OnceCell` migrate.
 4. **MEM-060** (7929a4e, discovered) - fixed TWO serious latent product bugs the now-runnable suite exposed:
-   - `summarize::scope_event_filter` hardcoded `$3`, reused where `$2` was needed -> **rolling summaries had NEVER built for subject/channel scopes** (bind mismatch).
-   - `access_scope` decoded `SELECT 1` (INT4) as `Option<i64>` -> the **founder/manager ALLOW path of the access boundary ERRORED whenever a grant matched**.
+- `summarize::scope_event_filter` hardcoded `$3`, reused where `$2` was needed -> **rolling summaries had NEVER built for subject/channel scopes** (bind mismatch).
+- `access_scope` decoded `SELECT 1` (INT4) as `Option<i64>` -> the **founder/manager ALLOW path of the access boundary ERRORED whenever a grant matched**.
 5. **MEM-005** (33c1597) - recall confidence floor now uses the REAL top summary cosine similarity, not a hardcoded `1.0` (the floor -> drill decision was dead code). `should_drill` helper + `best_summary` in explain + DB regression test.
 
 Plus the two critical security holes from the report (auth, RLS) are closed.

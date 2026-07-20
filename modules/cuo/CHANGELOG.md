@@ -29,9 +29,9 @@ Massive multi-stream day. Four parallel programs landed end-to-end:
 ### Stream 3 — Repo refactor + doc consolidation
 - Moved `cuo/`, `skill/`, `memory/` → `modules/<name>/` (isolation preserved)
 - Consolidated each module's `docs/` into a single comprehensive `README.md` at module root:
-  - `modules/cuo/README.md` — 713 lines
-  - `modules/skill/README.md` — 4,112 lines (existing 2,478-line wiki + 8 appendices)
-  - `modules/memory/README.md` — 612 lines
+- `modules/cuo/README.md` — 713 lines
+- `modules/skill/README.md` — 4,112 lines (existing 2,478-line wiki + 8 appendices)
+- `modules/memory/README.md` — 612 lines
 - Kept protocol artefacts at module root (NOT folded): `AGENTS.md` (symlink target), `INTEROP.md`, `memory.schema.json`, `memory.invariants.yaml`, `MODULE.md` (cuo + skill canonical catalogs)
 - Updated root `CLAUDE.md` + `AGENTS.md` symlinks → `modules/memory/AGENTS.md`
 - Deleted outdated `docs/prd/` (724K) + `docs/srs/` (2.3M); both frozen 2026-05-15
@@ -88,4 +88,3 @@ Verified:
 - Lumi naming clarified in 5+ places — Genie (user face) / CUO (engineer view) / Lumi (org-tenant identity) → consistent through hero, §0, §3.5, audit table, references
 
 The CUO page now reads as the complete answer to: (1) why CUO is the orchestrator and not "yet another chatbot framework" (the 3-role frame + cross-module surface table), (2) how the agent_persona JWT cryptographically anchors every Lumi action back to AUTH (concrete JWT example), (3) why the capability broker is the protocol-level guarantee that auto-invocation cannot escape scope (7-step sequence + 7-row contract + defer-to-human matrix), (4) where Genie actually shows up in the platform (9-row cross-module surface table with per-surface latency budgets). A new engineer reading this page cold can pick up the Phase 1 source + AGENTS.md and ship Phase 2 LangGraph integration.
-

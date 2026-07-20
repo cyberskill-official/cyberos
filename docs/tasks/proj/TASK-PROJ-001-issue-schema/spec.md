@@ -93,44 +93,43 @@ risk_if_skipped: "PROJ has no model; downstream tasks (TASK-PROJ-002 memory anch
 The PROJ service **MUST** model project work as Issues + Cycles + Engagements with cross-module linkability. The schema and contract:
 
 1. **MUST** define 4 tables:
-    - `engagements (id, tenant_id, client_id, name, status, started_at, ended_at)`
-    - `cycles (id, tenant_id, engagement_id, name, starts_at, ends_at, state)`
-    - `issues (id, tenant_id, engagement_id, cycle_id, title, body, status, priority, assignee_subject_id, estimate_hours, created_at, updated_at)`
-    - `issue_links (issue_id, linked_to_id, link_type, created_at)`
+- `engagements (id, tenant_id, client_id, name, status, started_at, ended_at)`
+- `cycles (id, tenant_id, engagement_id, name, starts_at, ends_at, state)`
+- `issues (id, tenant_id, engagement_id, cycle_id, title, body, status, priority, assignee_subject_id, estimate_hours, created_at, updated_at)`
+- `issue_links (issue_id, linked_to_id, link_type, created_at)`
 2. **MUST** support 5 status values per DEC-210: `triage | todo | doing | review | done`. No custom statuses at slice 1.
 3. **MUST** enforce status FSM transitions:
-    - `triage` → {`todo`, `done` (rejected as not-applicable)}
-    - `todo` → {`doing`, `triage` (deferral), `done`}
-    - `doing` → {`review`, `todo` (paused), `done`}
-    - `review` → {`done`, `doing` (rejected back), `todo` (significant rework)}
-    - `done` → {} (terminal; reopen requires explicit `reopen` API)
-   Illegal transitions return `400 BAD_REQUEST` with `{"error":"illegal_status_transition","from":"<s>","to":"<t>","allowed":[...]}`.
+- `triage` → {`todo`, `done` (rejected as not-applicable)}
+- `todo` → {`doing`, `triage` (deferral), `done`}
+- `doing` → {`review`, `todo` (paused), `done`}
+- `review` → {`done`, `doing` (rejected back), `todo` (significant rework)}
+- `done` → {} (terminal; reopen requires explicit `reopen` API) Illegal transitions return `400 BAD_REQUEST` with `{"error":"illegal_status_transition","from":"<s>","to":"<t>","allowed":[...]}`.
 4. **MUST** support 4 priority values: `urgent | high | normal | low` (numeric mapping for sort: urgent=4, high=3, normal=2, low=1).
 5. **MUST** expose REST:
-    - `POST /v1/proj/issues` (create)
-    - `GET /v1/proj/issues?engagement_id=&cycle_id=&assignee=&status=&limit=` (list with filters)
-    - `GET /v1/proj/issues/{id}` (single)
-    - `PATCH /v1/proj/issues/{id}` (update; status mutation goes through FSM)
-    - `DELETE /v1/proj/issues/{id}` (soft-delete via `status: deleted` flag — reserved status outside the 5; only root-admin)
-    - `POST /v1/proj/issues/{id}/links` (add link)
+- `POST /v1/proj/issues` (create)
+- `GET /v1/proj/issues?engagement_id=&cycle_id=&assignee=&status=&limit=` (list with filters)
+- `GET /v1/proj/issues/{id}` (single)
+- `PATCH /v1/proj/issues/{id}` (update; status mutation goes through FSM)
+- `DELETE /v1/proj/issues/{id}` (soft-delete via `status: deleted` flag — reserved status outside the 5; only root-admin)
+- `POST /v1/proj/issues/{id}/links` (add link)
 6. **MUST** emit memory audit rows:
-    - `proj.issue_created` per POST.
-    - `proj.issue_status_changed` per status mutation (payload: old_status, new_status, by_subject_id).
-    - `proj.issue_assigned` per assignee change (payload: from_subject_id, to_subject_id).
-    - `proj.issue_linked` per link added (payload: source_id, linked_to_id, link_type).
+- `proj.issue_created` per POST.
+- `proj.issue_status_changed` per status mutation (payload: old_status, new_status, by_subject_id).
+- `proj.issue_assigned` per assignee change (payload: from_subject_id, to_subject_id).
+- `proj.issue_linked` per link added (payload: source_id, linked_to_id, link_type).
 7. **MUST** enforce RLS via TASK-AUTH-003 pattern. All 4 tables added to `TENANT_SCOPED_TABLES`. Cross-tenant queries return 0 rows.
 8. **MUST** support cross-module links via `link_type` enum:
-    - `duplicates`, `blocks`, `blocked_by`, `related`, `derived_from_email_thread`, `derived_from_chat_thread`, `derived_from_meeting_decision`.
+- `duplicates`, `blocks`, `blocked_by`, `related`, `derived_from_email_thread`, `derived_from_chat_thread`, `derived_from_meeting_decision`.
 9. **MUST** insert `issue_links` rows bidirectionally for symmetric link types: `blocks`/`blocked_by`, `duplicates`/`duplicated_by` (auto-inserted as inverse).
 10. **MUST** validate `assignee_subject_id` exists AND belongs to same tenant. Cross-tenant assignee → 400 with `assignee_cross_tenant`.
 11. **MUST** validate cycle membership: `issue.cycle_id` MUST belong to `issue.engagement_id`. Cross-engagement cycle → 400 with `cycle_engagement_mismatch`.
 12. **MUST** validate `cycle.ends_at > cycle.starts_at`. Reverse → 400.
 13. **MUST** support optimistic locking via `If-Match: <updated_at>` header on PATCH. Mismatch → 412 PRECONDITION_FAILED with `concurrent_update`.
 14. **SHOULD** emit OTel metrics:
-    - `proj_issues_created_total{tenant_id, engagement_id}` (counter).
-    - `proj_issues_status_changed_total{from, to}` (counter).
-    - `proj_issues_assigned_total` (counter).
-    - `proj_issue_links_total{link_type}` (counter).
+- `proj_issues_created_total{tenant_id, engagement_id}` (counter).
+- `proj_issues_status_changed_total{from, to}` (counter).
+- `proj_issues_assigned_total` (counter).
+- `proj_issue_links_total{link_type}` (counter).
 
 ---
 

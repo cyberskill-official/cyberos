@@ -123,58 +123,58 @@ The TEN service **MUST** ship signed-bundle export at `services/ten/src/bundle/`
 4. **MUST** generate Ed25519 keypair at tenant provisioning per DEC-1322. Modification to TASK-TEN-001 orchestrator: after tenant row created, generate keypair via `ed25519-dalek`, KMS-encrypt private key, insert `tenant_signing_keys` row.
 
 5. **MUST** expose `POST /v1/admin/tenants/{tid}/bundle/export` body `{ reason }`. Caller has `tenant_admin` OR `cso` role. Handler:
-   - Rate-limit check per DEC-1329 (3 per year per tenant).
-   - INSERTs bundle row with status='pending'.
-   - Enqueues build task via TASK-MCP-007.
-   - Emit `ten.bundle_export_initiated` sev-1.
+- Rate-limit check per DEC-1329 (3 per year per tenant).
+- INSERTs bundle row with status='pending'.
+- Enqueues build task via TASK-MCP-007.
+- Emit `ten.bundle_export_initiated` sev-1.
 
 6. **MUST** build bundle per DEC-1323 via `bundle/builder.rs`:
-   - Per-source JSON: PROJ (all projects + sub-resources), INV (invoices + lines), DOC (metadata + S3 refs), CHAT (channels + messages), AUDIT_CHAIN (full memory segment for tenant), METERING (TASK-TEN-004 history), USERS (TASK-AUTH-002 subjects).
-   - Per-source CSV (human-readable; same data).
-   - signed-manifest.json (Ed25519-signed file inventory).
-   - public-key.pem (verifier reference).
-   - README.md (verification instructions).
-   - Deterministic ZIP per §1 #8.
-   - Computes SHA-256, file count, total size.
+- Per-source JSON: PROJ (all projects + sub-resources), INV (invoices + lines), DOC (metadata + S3 refs), CHAT (channels + messages), AUDIT_CHAIN (full memory segment for tenant), METERING (TASK-TEN-004 history), USERS (TASK-AUTH-002 subjects).
+- Per-source CSV (human-readable; same data).
+- signed-manifest.json (Ed25519-signed file inventory).
+- public-key.pem (verifier reference).
+- README.md (verification instructions).
+- Deterministic ZIP per §1 #8.
+- Computes SHA-256, file count, total size.
 
 7. **MUST** include full memory audit chain segment per DEC-1331. Chain segment = all rows where tenant_id matches; chain hashes intact; verifier can replay locally.
 
 8. **MUST** produce deterministic ZIP per DEC-1321 + task-audit skill rule 27-28:
-   - Sorted entries (alphabetic by path).
-   - Fixed mtime `2000-01-01T00:00:00Z`.
-   - Fixed mode `0o644`.
-   - ZIP_DEFLATED compression level 6.
-   - No extra/optional ZIP fields (mac extras, unicode extras).
-   - Two builds of same source data produce byte-identical zip.
+- Sorted entries (alphabetic by path).
+- Fixed mtime `2000-01-01T00:00:00Z`.
+- Fixed mode `0o644`.
+- ZIP_DEFLATED compression level 6.
+- No extra/optional ZIP fields (mac extras, unicode extras).
+- Two builds of same source data produce byte-identical zip.
 
 9. **MUST** sign manifest with per-tenant Ed25519 key per DEC-1324. The `bundle/signer.rs::sign(manifest_bytes, tenant_id)`:
-   - Loads private key from `tenant_signing_keys` (KMS-decrypt).
-   - Signs `SHA-256(manifest_bytes)` per Ed25519 spec.
-   - Returns signature bytes (64 bytes).
-   - Persists `manifest_signature_kms_blob` on bundle row.
-   - Emits `ten.bundle_signature_generated`.
+- Loads private key from `tenant_signing_keys` (KMS-decrypt).
+- Signs `SHA-256(manifest_bytes)` per Ed25519 spec.
+- Returns signature bytes (64 bytes).
+- Persists `manifest_signature_kms_blob` on bundle row.
+- Emits `ten.bundle_signature_generated`.
 
 10. **MUST** anchor in memory per DEC-1325. After build completes:
-    - INSERT memory row `ten.bundle_built` with payload containing `bundle_sha256` + `manifest_sha256` + `tenant_id` + `file_count`.
-    - This row's chain hash becomes the anchor for TASK-OBS-009 chain-of-custody per DEC-1333.
+- INSERT memory row `ten.bundle_built` with payload containing `bundle_sha256` + `manifest_sha256` + `tenant_id` + `file_count`.
+- This row's chain hash becomes the anchor for TASK-OBS-009 chain-of-custody per DEC-1333.
 
 11. **MUST** upload to S3 with 30-day signed URL per DEC-1327. Handler:
-    - Uploads to `cyberos-bundles/{tenant_id}/{bundle_id}/bundle.zip` per residency S3.
-    - Generates presigned URL with 30-day TTL.
-    - Status → 'ready'; expires_at set.
-    - Emit `ten.bundle_built` sev-1.
+- Uploads to `cyberos-bundles/{tenant_id}/{bundle_id}/bundle.zip` per residency S3.
+- Generates presigned URL with 30-day TTL.
+- Status → 'ready'; expires_at set.
+- Emit `ten.bundle_built` sev-1.
 
 12. **MUST** deliver via `GET /v1/admin/tenants/{tid}/bundle/{bundle_id}/download` returning the signed URL (URL itself not stored client-side; fetched per request). On first delivery: status → 'delivered'; emit `ten.bundle_delivered`.
 
 13. **MUST** rate-limit per DEC-1329 — 3 bundle requests per tenant per 365 days. Excess → 429 + `bundle_rate_limit_exceeded`.
 
 14. **MUST** enforce pre-deletion gate per DEC-1330. TASK-TEN-106 attestation handler checks:
-    - SELECT bundle WHERE tenant_id=$1 AND status IN ('ready','delivered') AND ready_at > now() - interval '90 days'.
-    - No row → 412 PRECONDITION_FAILED + `bundle_export_required_before_attestation`.
+- SELECT bundle WHERE tenant_id=$1 AND status IN ('ready','delivered') AND ready_at > now() - interval '90 days'.
+- No row → 412 PRECONDITION_FAILED + `bundle_export_required_before_attestation`.
 
 15. **MUST** expire bundle at T+30d per DEC-1327. Scheduled job:
-    - status='expired' + bundle s3 deleted + signed URL invalid.
-    - Emit `ten.bundle_expired`.
+- status='expired' + bundle s3 deleted + signed URL invalid.
+- Emit `ten.bundle_expired`.
 
 16. **MUST** emit 6 memory audit kinds per DEC-1332: export_initiated (sev-1), built (sev-1), delivered (sev-1), failed (sev-1), expired (sev-2), signature_generated (sev-2). All sev-1 except expired (sev-2 ops event) + signature_generated (sev-2 internal).
 
@@ -366,9 +366,7 @@ async fn memory_chain_anchored() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-TEN-104 (lifecycle — bundle as part of termination flow).
-**Cross-module:** TASK-TEN-106 (pre-deletion gate), TASK-AUTH-101 (cso + tenant_admin roles), TASK-MEMORY-101 (audit chain source), TASK-DOC-001 (S3 storage), TASK-MCP-007 (async build via Tasks), TASK-AI-003 (audit kinds), TASK-MEMORY-111 (PII scrub), TASK-OBS-007 (sev-1 routing), TASK-OBS-009 (chain-of-custody anchor).
-**Downstream:** None.
+**Upstream:** TASK-TEN-104 (lifecycle — bundle as part of termination flow). **Cross-module:** TASK-TEN-106 (pre-deletion gate), TASK-AUTH-101 (cso + tenant_admin roles), TASK-MEMORY-101 (audit chain source), TASK-DOC-001 (S3 storage), TASK-MCP-007 (async build via Tasks), TASK-AI-003 (audit kinds), TASK-MEMORY-111 (PII scrub), TASK-OBS-007 (sev-1 routing), TASK-OBS-009 (chain-of-custody anchor). **Downstream:** None.
 
 ---
 

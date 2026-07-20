@@ -116,33 +116,33 @@ The TEN service **MUST** ship vertical-pack pricing add-on at `services/ten/src/
 5. **MUST** enforce RLS on all 3 tables scoped to tenant_id; `vertical_pack_overrides` requires `cfo` role to insert.
 
 6. **MUST** expose `POST /v1/admin/tenants/{tid}/packs/install` body `{ pack_id }`. Handler:
-   - Validates pack exists in TASK-SKILL-107 registry.
-   - Tier-gate check per §1 #7.
-   - 50-pack-limit check per DEC-1307.
-   - Duplicate check (partial unique).
-   - Resolve price per §1 #8.
-   - Prorate invoice via TASK-TEN-003 (stripe-rail) or TASK-TEN-102 (vnd-rail).
-   - INSERT install row with status='pending' → transition to 'active' on billing confirmation.
-   - Emit `ten.pack_installed`.
+- Validates pack exists in TASK-SKILL-107 registry.
+- Tier-gate check per §1 #7.
+- 50-pack-limit check per DEC-1307.
+- Duplicate check (partial unique).
+- Resolve price per §1 #8.
+- Prorate invoice via TASK-TEN-003 (stripe-rail) or TASK-TEN-102 (vnd-rail).
+- INSERT install row with status='pending' → transition to 'active' on billing confirmation.
+- Emit `ten.pack_installed`.
 
 7. **MUST** tier-gate per DEC-1306. Lookup pack's `min_tier`; compare with `tenants.plan_tier`. If insufficient → 403 + `tier_upgrade_required` + emit `ten.pack_tier_blocked` sev-2.
 
 8. **MUST** resolve price per `price_resolver.rs::resolve(tenant, pack, currency)`:
-   - Check `vertical_pack_overrides` first (per-tenant, currency-matched, not expired) → use override price.
-   - Else lookup `vertical_pack_price_catalog` latest version effective at `tenants.installed_at` per DEC-1309 grandfathering (within 90d use install-time version).
-   - Else error `no_price_for_pack_currency_combo`.
+- Check `vertical_pack_overrides` first (per-tenant, currency-matched, not expired) → use override price.
+- Else lookup `vertical_pack_price_catalog` latest version effective at `tenants.installed_at` per DEC-1309 grandfathering (within 90d use install-time version).
+- Else error `no_price_for_pack_currency_combo`.
 
 9. **MUST** expose `POST /v1/admin/tenants/{tid}/packs/{install_id}/uninstall` per DEC-1305:
-   - Transition status='uninstalled', `soft_uninstalled_at=now()`.
-   - Skill bundle remains accessible 14 days (TASK-SKILL-107 reads our status).
-   - At T+14d hard-uninstall job: `hard_uninstalled_at=now()` + skill bundle deactivated.
-   - Stripe: prorate credit at uninstall; VND: skip next monthly charge.
-   - Emit `ten.pack_uninstalled`.
+- Transition status='uninstalled', `soft_uninstalled_at=now()`.
+- Skill bundle remains accessible 14 days (TASK-SKILL-107 reads our status).
+- At T+14d hard-uninstall job: `hard_uninstalled_at=now()` + skill bundle deactivated.
+- Stripe: prorate credit at uninstall; VND: skip next monthly charge.
+- Emit `ten.pack_uninstalled`.
 
 10. **MUST** expose `POST /v1/admin/tenants/{tid}/packs/{install_id}/reinstall` within 14d window:
-    - Reverses soft-uninstall: status='active' + `soft_uninstalled_at=NULL`.
-    - No new billing (period still active).
-    - Emit `ten.pack_installed` with `via_reinstall=true`.
+- Reverses soft-uninstall: status='active' + `soft_uninstalled_at=NULL`.
+- No new billing (period still active).
+- Emit `ten.pack_installed` with `via_reinstall=true`.
 
 11. **MUST** monthly recurring charge at billing-cycle-anchor (consistent with TASK-TEN-003 DEC-788). Per active install, dispatch charge via configured rail. On failure: increment retry; after TASK-TEN-003-style 3 retries → status='suspended_billing_failed' + emit `ten.pack_billing_failed` sev-1.
 
@@ -151,16 +151,16 @@ The TEN service **MUST** ship vertical-pack pricing add-on at `services/ten/src/
 13. **MUST** enforce 50-pack-install limit per DEC-1307. `COUNT(*) WHERE tenant_id=$1 AND status IN ('pending','active') ≥ 50` → 403 + `install_limit_exceeded` (Enterprise tier can request via support).
 
 14. **MUST** grandfather pack pricing per DEC-1309. When catalog version changes:
-    - Existing installs continue paying their install-time price for 90 days.
-    - At T+90d: next billing uses new price + emit `ten.pack_price_changed` (informational not in 5-core).
-    - New installs immediately use new price.
+- Existing installs continue paying their install-time price for 90 days.
+- At T+90d: next billing uses new price + emit `ten.pack_price_changed` (informational not in 5-core).
+- New installs immediately use new price.
 
 15. **MUST** emit 5 memory audit kinds per DEC-1308:
-    - `ten.pack_installed` (sev-2)
-    - `ten.pack_uninstalled` (sev-2)
-    - `ten.pack_billing_failed` (sev-1)
-    - `ten.pack_price_overridden` (sev-1)
-    - `ten.pack_tier_blocked` (sev-2)
+- `ten.pack_installed` (sev-2)
+- `ten.pack_uninstalled` (sev-2)
+- `ten.pack_billing_failed` (sev-1)
+- `ten.pack_price_overridden` (sev-1)
+- `ten.pack_tier_blocked` (sev-2)
 
 16. **MUST** PII-scrub: justification_sha256 only in chain; raw in DB.
 
@@ -355,9 +355,7 @@ async fn grandfathered_for_90d() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-TEN-002 (plan tiers — min_tier semantics), TASK-SKILL-107 (pack registry — pack_id source).
-**Cross-module:** TASK-TEN-003 (stripe rail), TASK-TEN-102 (vnd rail), TASK-TEN-004 (metering integration), TASK-INV-001 (invoice line items), TASK-AUTH-101 (cfo role), TASK-AI-003, TASK-MEMORY-111.
-**Downstream:** None.
+**Upstream:** TASK-TEN-002 (plan tiers — min_tier semantics), TASK-SKILL-107 (pack registry — pack_id source). **Cross-module:** TASK-TEN-003 (stripe rail), TASK-TEN-102 (vnd rail), TASK-TEN-004 (metering integration), TASK-INV-001 (invoice line items), TASK-AUTH-101 (cfo role), TASK-AI-003, TASK-MEMORY-111. **Downstream:** None.
 
 ---
 

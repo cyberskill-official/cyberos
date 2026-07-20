@@ -85,9 +85,9 @@ The skill MUST first build an inventory before touching anything. The inventory 
 
 - **Top-level layout** — directories + file counts per dir.
 - **Suspicious leftovers** — markdown files matching patterns:
-  - `*_SUMMARY.md`, `*_PROGRESS.md`, `*_NOTES.md` outside an explicit notes/ folder
-  - `*.md.bak`, `*.old.md`, `tmp_*.md`, `draft_*.md`
-  - Files in known-archive paths (`archive/`, `_old/`, `deprecated/`)
+- `*_SUMMARY.md`, `*_PROGRESS.md`, `*_NOTES.md` outside an explicit notes/ folder
+- `*.md.bak`, `*.old.md`, `tmp_*.md`, `draft_*.md`
+- Files in known-archive paths (`archive/`, `_old/`, `deprecated/`)
 - **Orphan audit pairs** — for repos with audit discipline: spec files missing audits, audit files missing specs
 - **Stale references** — broken cross-doc links (file deleted but linked from elsewhere)
 - **Small fragments** — markdown files under `absorb_threshold_lines` (default: 80) that could merge into a parent
@@ -100,9 +100,9 @@ For each candidate small fragment:
 
 1. **Read** the fragment fully.
 2. **Auto-detect** the suitable target parent by:
-   - Same directory's `README.md` if present
-   - Cross-references in the fragment that name another doc
-   - Closest-related larger doc in the same module
+- Same directory's `README.md` if present
+- Cross-references in the fragment that name another doc
+- Closest-related larger doc in the same module
 3. **Propose** a merge plan: `<fragment> → <parent>` with a one-line absorb summary.
 4. **Operator approves** (or skips per-fragment) → write absorb section into parent → delete fragment.
 5. **Audit row emitted** for each merge.
@@ -115,11 +115,11 @@ For each leftover not absorbed:
 
 1. **Show the file** + age + last-modified date + any incoming references.
 2. **Recommend** keep / archive / delete based on:
-   - Has incoming refs from active docs → KEEP (flag for manual review)
-   - In `archive/` already → KEEP (already archived)
-   - Backup or temp file with `.bak / .old / tmp_` prefix → DELETE
-   - Empty file or just whitespace → DELETE
-   - Otherwise → manual review
+- Has incoming refs from active docs → KEEP (flag for manual review)
+- In `archive/` already → KEEP (already archived)
+- Backup or temp file with `.bak / .old / tmp_` prefix → DELETE
+- Empty file or just whitespace → DELETE
+- Otherwise → manual review
 3. **Operator confirms** the recommendation per file (or accepts all).
 4. **Delete** approved files.
 

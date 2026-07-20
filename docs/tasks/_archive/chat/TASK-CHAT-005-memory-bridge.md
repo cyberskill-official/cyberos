@@ -67,14 +67,14 @@ The bridge **MUST** consume Postgres logical replication from chat DB and emit m
 2. **MUST** create publication `chat_bridge FOR TABLE posts, channels`; bridge subscribes via `CREATE_REPLICATION_SLOT cyberos_bridge LOGICAL pgoutput`.
 3. **MUST** run as a separate process per tenant (Fargate task, sidecar to chat service); auto-restart on crash.
 4. **MUST** parse incoming WAL events:
-    - `INSERT posts` → emit `chat.message` memory row.
-    - `UPDATE posts SET deleted_at = ...` → emit `chat.message_deleted`.
-    - `INSERT channels` → emit `chat.channel_created`.
-    - `UPDATE channels SET delete_at = ...` → emit `chat.channel_archived`.
+- `INSERT posts` → emit `chat.message` memory row.
+- `UPDATE posts SET deleted_at = ...` → emit `chat.message_deleted`.
+- `INSERT channels` → emit `chat.channel_created`.
+- `UPDATE channels SET delete_at = ...` → emit `chat.channel_archived`.
 5. **MUST** derive `sync_class` from channel's privacy:
-    - Private channel → `sync_class: private`.
-    - Public channel (team-wide) → `sync_class: shareable` with `acl: []` (any tenant member).
-    - DM (direct message) → `sync_class: private`.
+- Private channel → `sync_class: private`.
+- Public channel (team-wide) → `sync_class: shareable` with `acl: []` (any tenant member).
+- DM (direct message) → `sync_class: private`.
 6. **MUST** redact PII via TASK-MEMORY-111 ruleset BEFORE emit.
 7. **MUST** propagate W3C trace_id: read from post's `props.cyberos_trace_id` if present; else generate new at bridge.
 8. **MUST** track latency: measure `now() - post.create_at` at emit time; emit histogram `chat_memory_bridge_latency_seconds`.
@@ -82,9 +82,9 @@ The bridge **MUST** consume Postgres logical replication from chat DB and emit m
 10. **MUST** persist replication slot LSN; on restart, resume from last-committed LSN (no message loss).
 11. **MUST** be tenant-scoped: bridge process knows its tenant_id; emits with that tenant_id only.
 12. **MUST** emit OTel metrics:
-    - `chat_memory_bridge_messages_total{kind, outcome}` (counter; outcome ∈ emitted | redaction_failed | memory_write_failed).
-    - `chat_memory_bridge_latency_seconds`.
-    - `chat_memory_bridge_lag_lsn` (gauge; chat WAL LSN minus consumed LSN).
+- `chat_memory_bridge_messages_total{kind, outcome}` (counter; outcome ∈ emitted | redaction_failed | memory_write_failed).
+- `chat_memory_bridge_latency_seconds`.
+- `chat_memory_bridge_lag_lsn` (gauge; chat WAL LSN minus consumed LSN).
 13. **MUST** handle memory socket unavailable: bridge pauses (does NOT advance LSN); resumes when socket up; alarm sev-2 if down > 60s.
 14. **MUST** be idempotent at the message level: re-emit of the same `(tenant_id, post_id, version)` triple MUST produce a memory row whose `dedup_key` field equals the prior row's `dedup_key`. TASK-MEMORY-107 uses `dedup_key` to drop duplicates that arise from restart-mid-LSN-advance.
 15. **MUST NOT** advance the replication slot past an LSN whose memory emit ack has not been received. The bridge maintains a `pending_acks: BTreeMap<Lsn, AckHandle>` and only calls `pg_replication_slot_advance` for LSNs whose ack has resolved. This is the source of the exactly-once-modulo-dedup guarantee.
@@ -94,11 +94,10 @@ The bridge **MUST** consume Postgres logical replication from chat DB and emit m
 19. **MUST** include a `chat_db_replica_safety` check at startup: query `SELECT pg_is_in_recovery()` and refuse to start if the bridge is connected to a read replica (replicas don't have logical replication slots). Emits SEV-1 `chat.bridge_misconfigured` audit on refusal.
 20. **MUST** publish a heartbeat row `chat.bridge_heartbeat` every 30s with `{lsn_consumed, lsn_max, lag_bytes, lag_seconds, slot_active}` so operators can monitor liveness without inspecting metrics.
 21. **MUST** support graceful shutdown via SIGTERM:
-    - Stop accepting new replication events.
-    - Drain in-flight memory emits with a 10s grace window.
-    - Persist final LSN to memory as `chat.bridge_shutdown` row.
-    - Exit 0.
-    SIGKILL is allowed but loses up to one in-flight message (recovered via dedup on restart).
+- Stop accepting new replication events.
+- Drain in-flight memory emits with a 10s grace window.
+- Persist final LSN to memory as `chat.bridge_shutdown` row.
+- Exit 0. SIGKILL is allowed but loses up to one in-flight message (recovered via dedup on restart).
 22. **MUST** scrub Mattermost's special characters that look like PII but aren't: Mattermost's `@all`, `@channel`, `@here` mentions; emoji codes like `:smile:`; markdown link references `[text](url)`. The PII scrubber MUST run AFTER these are normalised so the regex windows match accurately.
 23. **MUST** include a `replay_safety_check` on first start after a major version bump: scan the publication's `relfilenode` to detect a pgoutput message-format change, and refuse to start if the format is incompatible. Operator runs `cyberos chat-bridge force-replay --from-lsn <lsn>` after coordinating with TASK-MEMORY-107 schema update.
 24. **MUST** emit a `chat.message_attachment` row separate from `chat.message` when a post has `file_ids`. Payload `{post_id, file_id, filename_redacted, mime, size_bytes, sync_class}`. Filenames may carry PII (e.g. `Resume - Trinh Thai Anh.pdf`); the redactor runs on filenames too.

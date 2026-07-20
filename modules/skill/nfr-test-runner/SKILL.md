@@ -18,5 +18,4 @@ allowed_mcp_tools:
 
 # nfr-test-runner
 
-Read NFR verification stanzas, run or collect the declared checks, and emit a
-raw result bundle keyed by NFR id.
+Read NFR verification stanzas, run or collect the declared checks, and emit a raw result bundle keyed by NFR id.

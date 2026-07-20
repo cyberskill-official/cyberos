@@ -89,24 +89,23 @@ The pre-ingest PII detection layer **MUST** sit between the TASK-MEMORY-107 capt
 1. **MUST** be invoked synchronously per-event in `emit.rs` before `blake3::hash` is computed. The hash is over the REDACTED body — same content with same PII = same hash, but the raw body never leaves the function frame.
 2. **MUST** consume the canonical ruleset from `pii::ruleset` (single source of truth per DEC-171). Three callers (memory capture, Claude Code hook, AI Gateway redactor) MUST import from the same crate; divergence is forbidden by construction (CI test asserts no inline regex literals in callers).
 3. **MUST** support the following detection categories, each tagged with a `MatchTag` enum variant:
-    - English: `EmailAddress`, `PhoneNumber`, `CreditCard`, `SSN`, `IpAddress`, `AwsAccessKey`, `AwsSecretKey`, `BearerToken`, `JwtToken`, `GitHubPat`, `OpenAiKey`, `AnthropicKey`, `IbanCode`, `UsPassport`.
-    - Vietnamese: `VnCccd` (12-digit national ID with checksum), `VnMst` (10 or 13-digit tax ID), `VnPassport` (1 letter + 8 digits), `VnBankAccount` (bank-prefix + 6–14 digits), `VnPhoneLocal` (`+84` or `0` prefix), `VnAddress` (heuristic: contains "phường|quận|huyện|tỉnh|thành phố").
-    - Names (NER-backed): `PersonName`, `LocationName`, `OrganizationName`.
+- English: `EmailAddress`, `PhoneNumber`, `CreditCard`, `SSN`, `IpAddress`, `AwsAccessKey`, `AwsSecretKey`, `BearerToken`, `JwtToken`, `GitHubPat`, `OpenAiKey`, `AnthropicKey`, `IbanCode`, `UsPassport`.
+- Vietnamese: `VnCccd` (12-digit national ID with checksum), `VnMst` (10 or 13-digit tax ID), `VnPassport` (1 letter + 8 digits), `VnBankAccount` (bank-prefix + 6–14 digits), `VnPhoneLocal` (`+84` or `0` prefix), `VnAddress` (heuristic: contains "phường|quận|huyện|tỉnh|thành phố").
+- Names (NER-backed): `PersonName`, `LocationName`, `OrganizationName`.
 4. **MUST** prioritise regex categories over NER (faster + higher precision). The orchestrator runs regex sweep first (≤ 10ms for 8KB input); only invokes Presidio NER if `body_len > 32 bytes` and no PII has been found by regex (cuts NER calls by ~80% in practice).
 5. **MUST** redact every matched span with `<TAG>` where TAG is the MatchTag (`<EMAIL>`, `<VN_CCCD>`, `<PERSON_NAME>`, etc.). The original byte length of the span is irrelevant; redactions are length-changing.
 6. **MUST** report results as `ScanResult { redacted_body: String, matches: Vec<(Span, MatchTag)>, confidence: f32 }`. The `confidence` is the lowest-confidence match in the set (regex = 1.0, NER = Presidio's score).
 7. **MUST** fail-closed on detection error: if Presidio subprocess crashes, NER OOMs, regex panics — the scan returns `ScanResult { redacted_body: "<SCAN_FAILED>", matches: vec![], confidence: 0.0 }` and the caller emits a `memory.capture_pii_scan_failed` audit row with `{folder_path, body_byte_count, error}`. The original body is dropped (never reaches the chain).
 8. **MUST** maintain a labelled fixture corpus in `tests/fixtures/pii-corpus*.jsonl` with at least 500 English + 500 Vietnamese examples. Each line is `{"text": "...", "expected_matches": [{"tag": "Email", "start": 12, "end": 28}, ...]}`.
 9. **MUST** pass a CI gate (`pii_recall_test.rs`) asserting:
-    - **Recall ≥ 99.5%** across the full fixture corpus (held-back rate; how many PII spans were caught).
-    - **False-positive rate ≤ 1%** across the same corpus (how many non-PII spans got flagged).
-   Failure → CI blocked; PR cannot merge until ruleset is tuned.
+- **Recall ≥ 99.5%** across the full fixture corpus (held-back rate; how many PII spans were caught).
+- **False-positive rate ≤ 1%** across the same corpus (how many non-PII spans got flagged). Failure → CI blocked; PR cannot merge until ruleset is tuned.
 10. **MUST** allow per-tenant `pii_allowlist[]` (regex strings) that override matches. Example: a tenant whose business model legitimately involves CCCDs (KYC vendor) can add `pii_allowlist: ["^CCCD: 0\\d{11}$"]` so those specific patterns pass through unredacted. Allowlists are tenant-scoped in `manifest.tenants[].pii_allowlist`; the empty list is the safe default.
 11. **MUST** emit OTel span `memory.pii.scan` per invocation with attributes `body_bytes`, `match_count`, `nerinvoked` (bool), `duration_ms`, `confidence`.
 12. **MUST** emit OTel metrics:
-    - `memory_pii_matches_total{tag}` (counter; cardinality bounded by enum variants).
-    - `memory_pii_scan_duration_seconds{ner_invoked}` (histogram; TASK-OBS-003 buckets).
-    - `memory_pii_scan_failed_total{reason}` (counter; reasons ∈ regex_panic | ner_subprocess_died | ner_timeout | oom).
+- `memory_pii_matches_total{tag}` (counter; cardinality bounded by enum variants).
+- `memory_pii_scan_duration_seconds{ner_invoked}` (histogram; TASK-OBS-003 buckets).
+- `memory_pii_scan_failed_total{reason}` (counter; reasons ∈ regex_panic | ner_subprocess_died | ner_timeout | oom).
 13. **MUST** complete scan in ≤ 50ms p95 for ≤ 8KB input on commodity hardware. NER-invoked path budgeted ≤ 200ms p95; regex-only ≤ 10ms p95.
 14. **SHOULD** support `cyberos memory pii test --input <file>` CLI for operator debugging — prints scan result with span highlights.
 15. **SHOULD** allow per-folder override of detection categories (e.g. `meta/people/<id>/medical/*` enables `HealthCondition` recogniser; default off elsewhere).

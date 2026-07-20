@@ -1,7 +1,6 @@
 # memory module — task index
 
-_Generated 2026-05-17 — 11 tasks, 136 engineering-hours total._
-_Updated 2026-05-19 — +9 tasks (TASK-MEMORY-112..120) from the MEMORY Improvement Wave 2026 Q3 (Anthropic Memory+Dreaming alignment + Ramakrushna agentic-memory taxonomy). Catalog: 20 tasks, ~266 engineering-hours total._
+_Generated 2026-05-17 — 11 tasks, 136 engineering-hours total._ _Updated 2026-05-19 — +9 tasks (TASK-MEMORY-112..120) from the MEMORY Improvement Wave 2026 Q3 (Anthropic Memory+Dreaming alignment + Ramakrushna agentic-memory taxonomy). Catalog: 20 tasks, ~266 engineering-hours total._
 
 ## tasks
 

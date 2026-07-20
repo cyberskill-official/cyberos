@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a observability injection"
+- "Draft a observability injection"
 - "Create the observability injection"
 - "Author a new observability injection"
 - "Generate the observability injection"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this observability injection" → observability-injection-audit
+- "Audit this observability injection" → observability-injection-audit
 - "Check the observability injection for completeness" → observability-injection-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

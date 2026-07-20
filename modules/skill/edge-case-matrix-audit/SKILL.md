@@ -42,8 +42,7 @@ outputs:
 
 ## 2. Pass criterion
 
-10/10 only. Any error-class miss → fail (return matrix to author with
-fix list).
+10/10 only. Any error-class miss → fail (return matrix to author with fix list).
 
 ---
 

@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this contract review"
+- "Audit this contract review"
 - "Check the contract review for completeness"
 - "Verify the contract review meets the rubric"
 - "Re-audit the contract review"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a contract review" → contract-review-author
+- "Draft a contract review" → contract-review-author
 - "Create the contract review" → contract-review-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

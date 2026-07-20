@@ -94,10 +94,10 @@ The INV service **MUST** ship dunning draft generation at `services/invoicing/sr
 1. **MUST** schedule daily scanner at 09:00 tenant_timezone per DEC-1554 via TASK-MCP-007 task or cron. `scanner.rs::scan(tenant)` calls TASK-INV-009 `aging.generate({as_of_date: today, group_by: 'engagement'})`.
 
 2. **MUST** map bucket → tone per DEC-1550:
-   - overdue_30 → polite
-   - overdue_60 → firm
-   - overdue_90 → urgent
-   - overdue_120 + overdue_120plus → legal_warning
+- overdue_30 → polite
+- overdue_60 → firm
+- overdue_90 → urgent
+- overdue_120 + overdue_120plus → legal_warning
 
 3. **MUST** validate `dunning_tone` against closed enum per DEC-1551; reject invalid values.
 
@@ -255,8 +255,7 @@ pub async fn scan(tenant: &Tenant, db: &Db) -> Result<ScanResult> {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-INV-009 (aging), TASK-EMAIL-009 (send).
-**Cross-module:** TASK-AI-003 (template generation), TASK-CUO-101 (review UI), TASK-MCP-007 (cron).
+**Upstream:** TASK-INV-009 (aging), TASK-EMAIL-009 (send). **Cross-module:** TASK-AI-003 (template generation), TASK-CUO-101 (review UI), TASK-MCP-007 (cron).
 
 ## §8 — Sample payloads (see §3)
 

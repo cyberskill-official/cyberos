@@ -93,26 +93,25 @@ The AUTH service **MUST** issue RS256-signed JWTs containing tenant context, per
 
 1. **MUST** sign with RS256 (RSA 2048+); rotate signing key quarterly with 24h overlap. Signing keys live in `signing_keys` table with `kid` (key id), `status` (`active | retiring | retired`), `created_at`, `retired_at`. Active key signs new tokens; retiring keys verify only (24h after rotation); retired keys are removed from JWKS.
 2. **MUST** include claims:
-    - `sub` (subject UUID)
-    - `tenant_id` (UUID)
-    - `email`
-    - `roles[]` (string array; from `subjects.roles`)
-    - `agent_persona` (default persona handle for subject; e.g., `"cuo-cpo@0.4.1"`)
-    - `scope_grants[]` (allowed tool/resource refs; e.g., `["chat:read", "chat:write", "kb:read"]`)
-    - `iat` (issued at; unix seconds)
-    - `exp` (expiry; iat + 3600)
-    - `nbf` (not before; iat - 100 to allow clock skew)
-    - `jti` (ULID for replay protection)
-    - `iss` (`"https://auth.cyberos.world"`)
+- `sub` (subject UUID)
+- `tenant_id` (UUID)
+- `email`
+- `roles[]` (string array; from `subjects.roles`)
+- `agent_persona` (default persona handle for subject; e.g., `"cuo-cpo@0.4.1"`)
+- `scope_grants[]` (allowed tool/resource refs; e.g., `["chat:read", "chat:write", "kb:read"]`)
+- `iat` (issued at; unix seconds)
+- `exp` (expiry; iat + 3600)
+- `nbf` (not before; iat - 100 to allow clock skew)
+- `jti` (ULID for replay protection)
+- `iss` (`"https://auth.cyberos.world"`)
 3. **MUST** expose `/.well-known/jwks.json` returning all keys with status ∈ {`active`, `retiring`}. Retired keys are excluded. JWKS response is cached at the CDN edge for 5 minutes; clients re-fetch on `kid` mismatch.
 4. **MUST** issue via `POST /v1/auth/token` with body `{ "email": <string>, "password": <string>, "tenant_slug": <string> }` → returns `{ "access_token": <jwt>, "expires_in": 3600, "token_type": "Bearer" }`. The `tenant_slug` field is required: a single email may exist across multiple tenants (different subjects), so the slug disambiguates.
 5. **MUST** dual-rate-limit token issuance:
-    - Per-IP: 10 attempts per minute per source IP (via `X-Forwarded-For` first hop).
-    - Per-account: 5 attempts per minute per `(tenant_slug, email)` regardless of source IP.
-   Either limit triggering returns `429 TOO_MANY_REQUESTS` with body `{"error":"rate_limited","retry_after_seconds":<n>}`. Distributed credential stuffing (different IPs, same account) is caught by the per-account limit; single-IP brute force is caught by the per-IP limit.
+- Per-IP: 10 attempts per minute per source IP (via `X-Forwarded-For` first hop).
+- Per-account: 5 attempts per minute per `(tenant_slug, email)` regardless of source IP. Either limit triggering returns `429 TOO_MANY_REQUESTS` with body `{"error":"rate_limited","retry_after_seconds":<n>}`. Distributed credential stuffing (different IPs, same account) is caught by the per-account limit; single-IP brute force is caught by the per-IP limit.
 6. **MUST** emit memory audit rows:
-    - `auth.token_issued` per success — payload: `subject_id`, `tenant_id`, `jti`, `roles`, `scope_grants_count`, `expires_at`, `request_id`, `source_ip_hash16`.
-    - `auth.token_failed` per failed login — payload: `tenant_slug`, `email_hash16`, `reason` (invalid_credentials | suspended | rate_limited), `request_id`, `source_ip_hash16`. Note `email_hash16` not plaintext (matches TASK-AUTH-002 §1 #7 discipline).
+- `auth.token_issued` per success — payload: `subject_id`, `tenant_id`, `jti`, `roles`, `scope_grants_count`, `expires_at`, `request_id`, `source_ip_hash16`.
+- `auth.token_failed` per failed login — payload: `tenant_slug`, `email_hash16`, `reason` (invalid_credentials | suspended | rate_limited), `request_id`, `source_ip_hash16`. Note `email_hash16` not plaintext (matches TASK-AUTH-002 §1 #7 discipline).
 7. **MUST** validate JWT signature, `exp`, `nbf`, `iss` on every consuming service (TASK-AI-006, TASK-MCP-004, TASK-AUTH-005). Verification reads JWKS, picks the key matching the JWT's `kid` header, validates signature; failures return `401 UNAUTHORIZED` with `{"error":"invalid_jwt","reason":"<bad_sig|expired|nbf|wrong_iss|unknown_kid>"}`.
 8. **MUST** support `jti` dedup at consuming services via bloom filter (probabilistic; ~1MB per million-jti window). Each service maintains a 1-hour rolling bloom filter of seen jtis; a JWT whose jti is in the filter is rejected as `replay_detected`. No central dedup store (would be a single point of failure); per-service bloom is sufficient for the threat model (replay-within-service is the dangerous case; cross-service replay matters less since each service independently checks).
 9. **MUST** use **constant-time email lookup** to prevent enumeration timing attack: even when the email doesn't exist in the requested tenant, the handler runs a dummy `bcrypt::verify` against a constant hash to keep response time identical for "wrong password" vs "no such email." Without this, an attacker times responses to enumerate valid emails.
@@ -120,16 +119,16 @@ The AUTH service **MUST** issue RS256-signed JWTs containing tenant context, per
 11. **MUST** include `kid` (key id) in the JWT header so verifiers know which JWKS key to use. Without `kid`, verifiers must try every key — works at slice 1 but doesn't scale.
 12. **MUST** propagate `agent_persona` from `subjects.default_persona` column (added in this task) — the persona claim defaults to `"cuo-cpo@0.4.1"` if not set per subject. Callers can override at request time via `X-Override-Persona` header (subject to TASK-AI-005's allowed-personas check).
 13. **MUST** generate `scope_grants` from a join of `subjects.roles` × role-to-grants mapping (defined in `services/auth/src/scope_map.rs`). Slice 1 mappings:
-    - `tenant-admin` → `["chat:*", "kb:*", "proj:*", "ai:read", "ai:invoke"]`
-    - `tenant-member` → `["chat:read", "chat:write", "kb:read", "ai:invoke"]`
-    - `root-admin` (tenant 0 only) → `["*"]`
+- `tenant-admin` → `["chat:*", "kb:*", "proj:*", "ai:read", "ai:invoke"]`
+- `tenant-member` → `["chat:read", "chat:write", "kb:read", "ai:invoke"]`
+- `root-admin` (tenant 0 only) → `["*"]`
 14. **MUST** check `subjects.suspended == false` BEFORE issuing token. Suspended subjects get `403 FORBIDDEN` with `{"error":"subject_suspended","contact":"ops@cyberos.world"}` AND an `auth.token_failed` audit row with reason `suspended`.
 15. **SHOULD** support refresh tokens via separate HTTP-only cookie (TASK-AUTH-007 ships the full flow; this task defines the access-token shape).
 16. **SHOULD** emit OTel metrics:
-    - `auth_token_issued_total{tenant_id, outcome}` (counter; outcome ∈ ok | invalid_credentials | suspended | rate_limited).
-    - `auth_token_issuance_latency_ms` (histogram; SLO p95 < 250ms).
-    - `auth_jwks_rotation_total{status}` (counter; status ∈ generated | retired).
-    - `auth_jwt_verifications_total{service, outcome}` (counter; for downstream services).
+- `auth_token_issued_total{tenant_id, outcome}` (counter; outcome ∈ ok | invalid_credentials | suspended | rate_limited).
+- `auth_token_issuance_latency_ms` (histogram; SLO p95 < 250ms).
+- `auth_jwks_rotation_total{status}` (counter; status ∈ generated | retired).
+- `auth_jwt_verifications_total{service, outcome}` (counter; for downstream services).
 
 ---
 

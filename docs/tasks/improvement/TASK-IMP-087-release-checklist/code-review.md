@@ -1,13 +1,6 @@
 # TASK-IMP-087 - code review packet
 
-Files under review: new `docs/release/RELEASE-CHECKLIST.md` (the deliverable, ~110 lines,
-18 checklist rows across groups (a)-(e) + a 9-row channel matrix; new directory `docs/release/`
-introduced by this task exactly as the spec's `new_files` fixes it). Supporting records in the
-task folder: `gate-log-draft.md` (G1-G9, the seed for audit.md §gate-log), context-map,
-edge-case-matrix, impl-plan, obs-injection. `modified_files` is empty and stayed truthful -
-zero production files touched outside docs/release/**. Cone-disjoint from batch siblings
-TASK-IMP-085 (tools/install/docs-tools/**) and TASK-IMP-086 (docs/tasks/BACKLOG.md); their
-working-tree dirt is covered by their own packets.
+Files under review: new `docs/release/RELEASE-CHECKLIST.md` (the deliverable, ~110 lines, 18 checklist rows across groups (a)-(e) + a 9-row channel matrix; new directory `docs/release/` introduced by this task exactly as the spec's `new_files` fixes it). Supporting records in the task folder: `gate-log-draft.md` (G1-G9, the seed for audit.md §gate-log), context-map, edge-case-matrix, impl-plan, obs-injection. `modified_files` is empty and stayed truthful - zero production files touched outside docs/release/**. Cone-disjoint from batch siblings TASK-IMP-085 (tools/install/docs-tools/**) and TASK-IMP-086 (docs/tasks/BACKLOG.md); their working-tree dirt is covered by their own packets.
 
 ## §1 clause -> proof
 
@@ -22,29 +15,17 @@ working-tree dirt is covered by their own packets.
 
 ## Acceptance criteria
 
-AC 1 (§1 #1.1) recorded structure greps G1/G2/G3 - pass. AC 2 (§1 #1.2-1.4) recorded presence
-greps G4/G5/G6 - pass. AC 3 (§1 #1.5) recorded command-cell extraction G7 - pass. AC 4
-(§1 #1.6) recorded credential scan G8 + link check G9 - pass. All four are ops-verified by
-design (spec: "a test suite for one markdown file is out of scope by design, see Non-Goals");
-gate-log-draft.md holds the verbatim commands and outputs for audit.md §gate-log.
+AC 1 (§1 #1.1) recorded structure greps G1/G2/G3 - pass. AC 2 (§1 #1.2-1.4) recorded presence greps G4/G5/G6 - pass. AC 3 (§1 #1.5) recorded command-cell extraction G7 - pass. AC 4 (§1 #1.6) recorded credential scan G8 + link check G9 - pass. All four are ops-verified by design (spec: "a test suite for one markdown file is out of scope by design, see Non-Goals"); gate-log-draft.md holds the verbatim commands and outputs for audit.md §gate-log.
 
 ## Diff size
 
-One new production file: `docs/release/RELEASE-CHECKLIST.md` (~110 lines; 18 checklist rows -
-a:6 b:4 c:1+matrix d:3 e:4; 3 checked / 15 open / 0 waived). Zero modified files, zero
-deletions, zero dependencies. `dist/` untouched (docs/** is not vendored - no payload
-obligation arises; the A6 trio line belongs to the release run, not to this docs-only change).
+One new production file: `docs/release/RELEASE-CHECKLIST.md` (~110 lines; 18 checklist rows - a:6 b:4 c:1+matrix d:3 e:4; 3 checked / 15 open / 0 waived). Zero modified files, zero deletions, zero dependencies. `dist/` untouched (docs/** is not vendored - no payload obligation arises; the A6 trio line belongs to the release run, not to this docs-only change).
 
 ## Deviations (disclosure)
 
-1. E3 (IMP-08) is a fourth group-(e) line beyond §1.3's three decisions - required by the ship
-   brief, consistent with spec §1.2's channel-matrix clause (the candidate rows need their
-   implementation pointer), additive and disclosed.
-2. IMP-15.2 is split into tagged lines 2a/2b so the pack dry-run and the npx smoke each carry
-   their own verbatim command cell (§1.5); the presence grep counts both toward the seven.
-3. The handoff cross-link points outside the repo (sibling checkout) because that is where the
-   file lives, untracked by upstream decision; the document and G9 state the layout dependency
-   plainly instead of pretending an in-repo path.
+1. E3 (IMP-08) is a fourth group-(e) line beyond §1.3's three decisions - required by the ship brief, consistent with spec §1.2's channel-matrix clause (the candidate rows need their implementation pointer), additive and disclosed.
+2. IMP-15.2 is split into tagged lines 2a/2b so the pack dry-run and the npx smoke each carry their own verbatim command cell (§1.5); the presence grep counts both toward the seven.
+3. The handoff cross-link points outside the repo (sibling checkout) because that is where the file lives, untracked by upstream decision; the document and G9 state the layout dependency plainly instead of pretending an in-repo path.
 
 ## Verdict
 

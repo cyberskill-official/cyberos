@@ -37,4 +37,3 @@ Changes by section:
 - **§17 References** — replaced stale PRD/SRS refs with the 4 new in-page sections + MEMORY_AUTOSYNC_DESIGN.md §7 + task-audit skill + AUDIT_AND_PLAN §3.3 (P0 · slice 1 placement) + RESEARCH_REVIEW §2.4 (reorder citation) + 8 cross-module links + expanded EU AI Act citations (Art. 12/13/14/15/26/50) + OWASP Gen AI Top-10 + ISO/IEC 42001 + PDPL Art. 14/20/38.
 
 The AI Gateway page now reads as the complete answer to: (1) why this module ships first in P0 (cost-control before everything), (2) how the cost ledger gates calls in real-time (pre-check + post-reconcile + 60s hold expiry), (3) how the same Python service abstracts across Bedrock/Anthropic/OpenAI/Vertex (model alias + residency × provider matrix), (4) how the 4-link compliance chain ensures no bytes leak unscrubbed/unstamped/un-ZDR'd/un-audited. A new engineer reading this page cold can pick up the P0 · slice 1 build sequence and ship the cost-gate slice.
-

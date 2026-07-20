@@ -1,9 +1,6 @@
 # Nghị định 53/2022/NĐ-CP — Cybersecurity Law implementing decree
 
-**In force:** 1 October 2022.
-**Implements:** Cybersecurity Law (Luật An ninh mạng) of 2018.
-**Issuing authority:** Government of Vietnam.
-**Supervisory authority:** Ministry of Public Security (MoPS), with operational support from Ministry of Information and Communications (MoIC) for telecom carriers and content platforms.
+**In force:** 1 October 2022. **Implements:** Cybersecurity Law (Luật An ninh mạng) of 2018. **Issuing authority:** Government of Vietnam. **Supervisory authority:** Ministry of Public Security (MoPS), with operational support from Ministry of Information and Communications (MoIC) for telecom carriers and content platforms.
 
 Decree 53 is the long-awaited implementing decree for the 2018 Cybersecurity Law. Where Decree 13 (PDPD) governs personal data, Decree 53 governs **information that affects national security**, including the corresponding data-localisation and local-presence regimes.
 

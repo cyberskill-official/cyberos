@@ -24,14 +24,9 @@ hitl: required
 
 ## When this skill runs
 
-ship-tasks trusts its own manifests (hash-verified resume) and its own gates (route-back).
-This skill covers the third state: a task that arrives **already implemented** - status past
-`ready_to_implement` with no manifest, a manifest that fails verify, or a phase artefact set
-that does not exist. Mid-shipping or long-shipped, audited or never audited: if the claim
-outruns the evidence, reconcile measures the gap before anyone builds on it.
+ship-tasks trusts its own manifests (hash-verified resume) and its own gates (route-back). This skill covers the third state: a task that arrives **already implemented** - status past `ready_to_implement` with no manifest, a manifest that fails verify, or a phase artefact set that does not exist. Mid-shipping or long-shipped, audited or never audited: if the claim outruns the evidence, reconcile measures the gap before anyone builds on it.
 
-It does NOT run when a valid ship-manifest exists - resume semantics own that task
-(`ship-tasks.md`, Resume semantics §). Reconcile is for work this workflow did not perform.
+It does NOT run when a valid ship-manifest exists - resume semantics own that task (`ship-tasks.md`, Resume semantics §). Reconcile is for work this workflow did not perform.
 
 ## Machine floor first
 
@@ -41,9 +36,7 @@ Run the tool BEFORE forming any opinion:
 node .cyberos/docs-tools/task-reconcile.mjs <task-ID> --run-tests
 ```
 
-It is read-only (rungs 1-4 execute nothing; rung 5 runs only the suite files the spec's own
-§2 cites) and emits `reconcile-report@1`: per-rung verdicts, a drift score, and exactly one
-recommendation. The rungs are mechanical and the model does not re-derive them:
+It is read-only (rungs 1-4 execute nothing; rung 5 runs only the suite files the spec's own §2 cites) and emits `reconcile-report@1`: per-rung verdicts, a drift score, and exactly one recommendation. The rungs are mechanical and the model does not re-derive them:
 
 | Rung | Question it answers |
 |---|---|
@@ -57,24 +50,14 @@ recommendation. The rungs are mechanical and the model does not re-derive them:
 
 The tool produces the verdicts; the model produces the *understanding*:
 
-- **Read the reds in context.** "Cited suite fails now" on a task whose module was refactored
-  by a later task is a different story from the same red on untouched code. Say which story
-  the evidence supports - and say when it supports neither.
-- **Weigh the binding gap honestly.** A note that the audit's sha matches no committed
-  version is an evidence-hygiene problem, not proof the spec drifted; the normative-half
-  comparison is the substantive answer. Do not upgrade a note into a verdict.
-- **Draft the gate question.** State the claimed status, the recommendation, the two or three
-  facts that drive it, and what each branch costs the operator. One screen, no padding.
-- **Name what reconcile cannot see.** Passing rungs mean the *evidence* is consistent - not
-  that the design is right. If the work looks sound and the spec looks wrong, say so; that is
-  a judgment the ladder has no rung for.
+- **Read the reds in context.** "Cited suite fails now" on a task whose module was refactored by a later task is a different story from the same red on untouched code. Say which story the evidence supports - and say when it supports neither.
+- **Weigh the binding gap honestly.** A note that the audit's sha matches no committed version is an evidence-hygiene problem, not proof the spec drifted; the normative-half comparison is the substantive answer. Do not upgrade a note into a verdict.
+- **Draft the gate question.** State the claimed status, the recommendation, the two or three facts that drive it, and what each branch costs the operator. One screen, no padding.
+- **Name what reconcile cannot see.** Passing rungs mean the *evidence* is consistent - not that the design is right. If the work looks sound and the spec looks wrong, say so; that is a judgment the ladder has no rung for.
 
 ## The hard rule
 
-**The agent NEVER executes a recommendation - resume, route back, or adopt - without the
-recorded human verdict.** The report is evidence for a decision, never the decision. This is
-a third, conditional human gate; the two acceptance gates (reviewing -> ready_to_test,
-testing -> done) are untouched and still apply afterwards.
+**The agent NEVER executes a recommendation - resume, route back, or adopt - without the recorded human verdict.** The report is evidence for a decision, never the decision. This is a third, conditional human gate; the two acceptance gates (reviewing -> ready_to_test, testing -> done) are untouched and still apply afterwards.
 
 ## The fork
 
@@ -85,5 +68,4 @@ testing -> done) are untouched and still apply afterwards.
 | `adopt_candidate` | deliverables green at HEAD, artefacts missing | backfill the phase artefact set from the evidence, then re-enter at the verified phase |
 | `not_applicable` | status is `draft` / `ready_to_implement` | nothing claimed - the normal chain applies |
 
-Every executed branch emits its memory row (`task_routed_back` on route-back;
-`memory.status_overridden` when the human overrides the recommendation).
+Every executed branch emits its memory row (`task_routed_back` on route-back; `memory.status_overridden` when the human overrides the recommendation).

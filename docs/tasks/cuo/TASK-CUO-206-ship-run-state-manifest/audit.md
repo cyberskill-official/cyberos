@@ -43,14 +43,9 @@ All six findings addressed as cited. The task upgrades ship from restartable to 
 
 ## §10 - Ship record (2026-07-12)
 
-- §10.1 Implementation: contract + helpers + tests + workflow v2.4.0 Resume semantics + scaffolds,
-  commit f06ff65 (rebased onto PR #44 version-reset mid-flight; original hash 46911d8 superseded); phase artefacts at docs/tasks/.workflow/TASK-CUO-206/.
-- §10.2 Review: clause-by-clause pass (packet in phase-bundle); human verdict at gate 1:
-  APPROVE + pre-authorize done (Stephen Cheng, in-chat).
-- §10.3 Testing: 8/8 AC tests, 100.0% statement coverage on modules/cuo/cuo/ship_manifest.py
-  (raised from 77.3% by covering validate error branches + write_atomic failure cleanup),
-  5/5 cyberos-install suites, git check-ignore proof. Gate 2 recorded per pre-authorization.
-- §10.4 Field finding folded back: TASK-CUO-209 t08 temporal-scope guard amended to durable
-  workflows_vendored_intact (TASK-CUO-209 §1 #8, AC 8, audit §11).
+- §10.1 Implementation: contract + helpers + tests + workflow v2.4.0 Resume semantics + scaffolds, commit f06ff65 (rebased onto PR #44 version-reset mid-flight; original hash 46911d8 superseded); phase artefacts at docs/tasks/.workflow/TASK-CUO-206/.
+- §10.2 Review: clause-by-clause pass (packet in phase-bundle); human verdict at gate 1: APPROVE + pre-authorize done (Stephen Cheng, in-chat).
+- §10.3 Testing: 8/8 AC tests, 100.0% statement coverage on modules/cuo/cuo/ship_manifest.py (raised from 77.3% by covering validate error branches + write_atomic failure cleanup), 5/5 cyberos-install suites, git check-ignore proof. Gate 2 recorded per pre-authorization.
+- §10.4 Field finding folded back: TASK-CUO-209 t08 temporal-scope guard amended to durable workflows_vendored_intact (TASK-CUO-209 §1 #8, AC 8, audit §11).
 
 Verdict unchanged: PASS, Score = 10/10.

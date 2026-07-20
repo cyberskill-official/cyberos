@@ -167,8 +167,6 @@ None blocking. Whether `payload-gate` becomes a required check in the branch rul
 
 Keep the job name `payload-gate / build-and-check` stable so it can be added to the ruleset's required checks. The check script must not import from `build.sh` (read-only comparator; zero side effects). Reuse in TASK-IMP-069 and TASK-APP-001 is by invocation, not by copy.
 
-**Post-ship amendment (2026-07-12, TASK-IMP-071):** §1 #7's premise - bump commits carry [skip ci] so
-payload-gate never sees them - is retired; bump commits are now plain `chore(release):` and
-payload-gate runs on them too. The inline proof in version.yml stays as belt-and-suspenders.
+**Post-ship amendment (2026-07-12, TASK-IMP-071):** §1 #7's premise - bump commits carry [skip ci] so payload-gate never sees them - is retired; bump commits are now plain `chore(release):` and payload-gate runs on them too. The inline proof in version.yml stays as belt-and-suspenders.
 
 *End of TASK-IMP-068.*

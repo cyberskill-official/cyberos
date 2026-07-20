@@ -149,9 +149,8 @@ The AUTH service **MUST** ship SAML 2.0 SP-initiated SSO with per-tenant IdP con
 5. **MUST** enforce RLS with `USING + WITH CHECK` on all 4 tables; root-admin escape clause.
 
 6. **MUST** implement SP-initiated flow only (per DEC-520):
-    - `GET /v1/auth/saml/initiate?idp_id=<>` — builds SAMLRequest XML, signs with SP signing key, base64-encodes, redirects to IdP's sso_url via HTTP Redirect binding.
-    - `POST /v1/auth/saml/acs` — receives SAMLResponse via HTTP POST binding; parses + verifies + provisions/links subject; redirects to tenant SPA on success.
-   IdP-initiated unsolicited responses (POST to ACS without prior AuthnRequest) → 401 `unsolicited_response_rejected` + sev-2 audit per DEC-520.
+- `GET /v1/auth/saml/initiate?idp_id=<>` — builds SAMLRequest XML, signs with SP signing key, base64-encodes, redirects to IdP's sso_url via HTTP Redirect binding.
+- `POST /v1/auth/saml/acs` — receives SAMLResponse via HTTP POST binding; parses + verifies + provisions/links subject; redirects to tenant SPA on success. IdP-initiated unsolicited responses (POST to ACS without prior AuthnRequest) → 401 `unsolicited_response_rejected` + sev-2 audit per DEC-520.
 
 7. **MUST** fetch IdP metadata at config save time (per DEC-523). Parse `EntityDescriptor` → extract `SingleSignOnService` URL + `X509Certificate`. Cache 24h with kid-style overlap on cert rotation (new cert accepted immediately; old cert accepted for 24h after observed rotation).
 
@@ -160,34 +159,31 @@ The AUTH service **MUST** ship SAML 2.0 SP-initiated SSO with per-tenant IdP con
 9. **MUST** enforce closed NameIDFormat (per DEC-524). Accepted formats: `urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress` + `urn:oasis:names:tc:SAML:2.0:nameid-format:persistent`. Others (transient, unspecified, x509SubjectName, etc.) → 401 `nameid_format_unsupported`.
 
 10. **MUST** implement replay defense via InResponseTo (per DEC-525):
-    - AuthnRequest's ID stored in `auth_saml_authn_request_log` with 10-min TTL.
-    - SAMLResponse's `InResponseTo` attribute MUST match a known unconsumed row.
-    - Missing/unknown/expired/consumed → 401 `saml_replay_or_expired` + emit `auth.saml_assertion_replay_attempted` (sev-2) memory row.
-    - On success, mark consumed.
+- AuthnRequest's ID stored in `auth_saml_authn_request_log` with 10-min TTL.
+- SAMLResponse's `InResponseTo` attribute MUST match a known unconsumed row.
+- Missing/unknown/expired/consumed → 401 `saml_replay_or_expired` + emit `auth.saml_assertion_replay_attempted` (sev-2) memory row.
+- On success, mark consumed.
 
 11. **MUST** validate assertion conditions (per DEC-526):
-    - `NotBefore` ≤ now ≤ `NotOnOrAfter` with ±60s clock skew tolerance.
-    - `SubjectConfirmation/SubjectConfirmationData.Recipient` MUST exactly match SP ACS URL.
-    - `SubjectConfirmation/SubjectConfirmationData.InResponseTo` MUST match outer InResponseTo.
-    - `Conditions/AudienceRestriction/Audience` MUST contain SP entity_id (per DEC-536).
-   Any fail → 401 + `auth.saml_login_failed` + reason field.
+- `NotBefore` ≤ now ≤ `NotOnOrAfter` with ±60s clock skew tolerance.
+- `SubjectConfirmation/SubjectConfirmationData.Recipient` MUST exactly match SP ACS URL.
+- `SubjectConfirmation/SubjectConfirmationData.InResponseTo` MUST match outer InResponseTo.
+- `Conditions/AudienceRestriction/Audience` MUST contain SP entity_id (per DEC-536). Any fail → 401 + `auth.saml_login_failed` + reason field.
 
 12. **MUST** verify XML signature with restricted transforms (per DEC-531). Allowed transforms:
-    - `http://www.w3.org/2001/10/xml-exc-c14n#` (Exclusive Canonicalization).
-    - `http://www.w3.org/2000/09/xmldsig#enveloped-signature`.
-   Any other transform (especially `xpath-2.0`, `xslt`) → reject with `unsupported_transform` per XSW attack defense.
+- `http://www.w3.org/2001/10/xml-exc-c14n#` (Exclusive Canonicalization).
+- `http://www.w3.org/2000/09/xmldsig#enveloped-signature`. Any other transform (especially `xpath-2.0`, `xslt`) → reject with `unsupported_transform` per XSW attack defense.
 
 13. **MUST** require RSA-SHA256 minimum signature algorithm (per DEC-532). `SignatureMethod` must be one of:
-    - `http://www.w3.org/2001/04/xmldsig-more#rsa-sha256` ✓
-    - `http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256` ✓
-    - `http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha384` ✓
-   SHA-1 (`http://www.w3.org/2000/09/xmldsig#rsa-sha1`) → 401 `weak_signature_algorithm`.
+- `http://www.w3.org/2001/04/xmldsig-more#rsa-sha256` ✓
+- `http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256` ✓
+- `http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha384` ✓ SHA-1 (`http://www.w3.org/2000/09/xmldsig#rsa-sha1`) → 401 `weak_signature_algorithm`.
 
 14. **MUST** PII-scrub `nameid`, `failure_reason`, and the `AttributeStatement` value contents via TASK-MEMORY-111 before chain commit.
 
 15. **MUST** JIT-provision subject on first login (per DEC-528). Same shape as TASK-AUTH-104:
-    - Lookup `auth_saml_subject_link WHERE idp_id=$1 AND nameid=$2` — found → use linked subject_id.
-    - Not found → call TASK-AUTH-002 internal helper with `email` from nameid (if emailAddress format) or AttributeStatement's `email` claim; assign role per attribute_mapping_yaml; INSERT link row; emit `auth.saml_jit_provisioned` memory row.
+- Lookup `auth_saml_subject_link WHERE idp_id=$1 AND nameid=$2` — found → use linked subject_id.
+- Not found → call TASK-AUTH-002 internal helper with `email` from nameid (if emailAddress format) or AttributeStatement's `email` claim; assign role per attribute_mapping_yaml; INSERT link row; emit `auth.saml_jit_provisioned` memory row.
 
 16. **MUST** apply per-tenant attribute → role mapping (per DEC-528). Reuses TASK-AUTH-104 YAML shape but with SAML AttributeStatement claim names:
    ```yaml
@@ -200,37 +196,37 @@ The AUTH service **MUST** ship SAML 2.0 SP-initiated SSO with per-tenant IdP con
        contains: "Finance"
        grant_role: cfo
    ```
-   Validation: every `grant_role` MUST parse to TASK-AUTH-101 closed Role enum at config save time.
+Validation: every `grant_role` MUST parse to TASK-AUTH-101 closed Role enum at config save time.
 
 17. **MUST** enforce max 2 active SAML IdP configs per tenant (per DEC-534). 3rd → 409 `idp_config_limit_exceeded`. ADR required.
 
 18. **MUST** ship `POST /v1/auth/saml/idp-configs` handler for tenant-admin SAML IdP CRUD. Caller MUST have role `tenant-admin`. Validates:
-    - metadata_url fetch succeeds.
-    - x509_cert_pem parses + matches metadata.
-    - attribute_mapping_yaml parses + all roles valid.
-    - SP signing key generated (RSA-2048) + KMS-encrypted.
-    - Returns SP metadata for IdP-side configuration (entity_id, ACS URL, signing certificate).
+- metadata_url fetch succeeds.
+- x509_cert_pem parses + matches metadata.
+- attribute_mapping_yaml parses + all roles valid.
+- SP signing key generated (RSA-2048) + KMS-encrypted.
+- Returns SP metadata for IdP-side configuration (entity_id, ACS URL, signing certificate).
 
 19. **MUST** emit 7 memory audit row kinds (per DEC-529):
-    - `auth.saml_login_succeeded` — full flow → AUTH JWT issued.
-    - `auth.saml_login_failed` — any failure with reason.
-    - `auth.saml_jit_provisioned` — new subject on first login.
-    - `auth.saml_metadata_refreshed` — IdP metadata fetch updated cert.
-    - `auth.saml_idp_config_changed` — POST/PATCH/DELETE on idp_configs.
-    - `auth.saml_signature_invalid` — sev-2 (may signal attack).
-    - `auth.saml_assertion_replay_attempted` — sev-2 InResponseTo violation.
+- `auth.saml_login_succeeded` — full flow → AUTH JWT issued.
+- `auth.saml_login_failed` — any failure with reason.
+- `auth.saml_jit_provisioned` — new subject on first login.
+- `auth.saml_metadata_refreshed` — IdP metadata fetch updated cert.
+- `auth.saml_idp_config_changed` — POST/PATCH/DELETE on idp_configs.
+- `auth.saml_signature_invalid` — sev-2 (may signal attack).
+- `auth.saml_assertion_replay_attempted` — sev-2 InResponseTo violation.
 
 20. **MUST** complete ACS callback handler in ≤ 500 ms p95 (XML signature verify is the dominant cost). `saml_perf_test`.
 
 21. **MUST** emit OTel span `auth.saml.{initiate,acs,jit_provision,idp_config_change,metadata_refresh}` with `outcome` attribute (success | jit_provisioned | unsolicited_response | replay_or_expired | signature_invalid | assertion_signature_required | weak_signature_algorithm | unsupported_transform | audience_mismatch | recipient_mismatch | not_before_violated | not_on_or_after_violated | nameid_format_unsupported | unknown_role | metadata_fetch_failed | sub_already_linked).
 
 22. **MUST** emit OTel metrics:
-    - `auth_saml_login_total{tenant_id, idp_id, outcome}` (counter).
-    - `auth_saml_jit_provisioned_total{tenant_id}` (counter).
-    - `auth_saml_metadata_refreshes_total{tenant_id, idp_id}` (counter).
-    - `auth_saml_signature_failures_total{tenant_id, idp_id}` (counter — sev-2 alarm > 5/h).
-    - `auth_saml_replay_attempts_total{tenant_id}` (counter — sev-2 alarm > 3/h).
-    - `auth_saml_flow_latency_ms` (histogram; SLO p95 < 500ms).
+- `auth_saml_login_total{tenant_id, idp_id, outcome}` (counter).
+- `auth_saml_jit_provisioned_total{tenant_id}` (counter).
+- `auth_saml_metadata_refreshes_total{tenant_id, idp_id}` (counter).
+- `auth_saml_signature_failures_total{tenant_id, idp_id}` (counter — sev-2 alarm > 5/h).
+- `auth_saml_replay_attempts_total{tenant_id}` (counter — sev-2 alarm > 3/h).
+- `auth_saml_flow_latency_ms` (histogram; SLO p95 < 500ms).
 
 23. **MUST** ship the `samael` crate (or equivalent Rust SAML library audited for security) for XML parsing + signature verification + canonicalization. Hand-rolled XML signature is forbidden — too easy to misimplement (see XSW + XML signature attack literature).
 

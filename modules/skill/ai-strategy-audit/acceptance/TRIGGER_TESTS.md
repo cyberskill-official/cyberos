@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this ai strategy"
+- "Audit this ai strategy"
 - "Check the ai strategy for completeness"
 - "Verify the ai strategy meets the rubric"
 - "Re-audit the ai strategy"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a ai strategy" → ai-strategy-author
+- "Draft a ai strategy" → ai-strategy-author
 - "Create the ai strategy" → ai-strategy-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

@@ -95,12 +95,12 @@ The EMAIL service **MUST** ship Stalwart authbridge plugin at `services/email/sr
 1. **MUST** define closed `auth_outcome` enum: `('success','jwt_invalid','jwt_expired','jwt_wrong_audience','subject_revoked','mailbox_unauthorized')` per DEC-1463. Cardinality 6.
 
 2. **MUST** expose `POST /v1/email/auth` (Stalwart HTTP auth backend) body `{ username, password, protocol }`. Handler:
-   - Treats `password` field as JWT per DEC-1461.
-   - Validates JWT against TASK-AUTH-004 issuer + JWKS.
-   - Validates `username` matches JWT's subject_id @ tenant.
-   - Checks Redis cache; hit → return cached outcome.
-   - Else verify + cache + return.
-   - Returns 200 + `{ outcome, mailbox_path, permissions }` for Stalwart enforcement.
+- Treats `password` field as JWT per DEC-1461.
+- Validates JWT against TASK-AUTH-004 issuer + JWKS.
+- Validates `username` matches JWT's subject_id @ tenant.
+- Checks Redis cache; hit → return cached outcome.
+- Else verify + cache + return.
+- Returns 200 + `{ outcome, mailbox_path, permissions }` for Stalwart enforcement.
 
 3. **MUST** resolve mailbox path per DEC-1462: `subject_id@tenant_slug.cyberos.world`. Per-Engagement aliases possible via TASK-PORTAL-002 CNAME mapping.
 
@@ -226,8 +226,7 @@ async fn scim_revoke_invalidates() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-EMAIL-001, TASK-AUTH-004.
-**Cross-module:** TASK-PORTAL-004 (SCIM cascade), TASK-AI-003, TASK-MEMORY-111.
+**Upstream:** TASK-EMAIL-001, TASK-AUTH-004. **Cross-module:** TASK-PORTAL-004 (SCIM cascade), TASK-AI-003, TASK-MEMORY-111.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -245,11 +244,7 @@ async fn scim_revoke_invalidates() {
 
 ## §11 — Implementation notes
 
-**§11.1** Stalwart `auth.backend.type = http` configured to point at `/v1/email/auth`.
-**§11.2** JWT-as-password tested with real IMAP clients (Apple Mail, Thunderbird).
-**§11.3** Per-tenant mailbox isolation enforced by Stalwart given correct mailbox_path return.
-**§11.4** Redis cache pruned at TTL automatically.
-**§11.5** Source IP hashed before persist; never raw IP in audit chain.
+**§11.1** Stalwart `auth.backend.type = http` configured to point at `/v1/email/auth`. **§11.2** JWT-as-password tested with real IMAP clients (Apple Mail, Thunderbird). **§11.3** Per-tenant mailbox isolation enforced by Stalwart given correct mailbox_path return. **§11.4** Redis cache pruned at TTL automatically. **§11.5** Source IP hashed before persist; never raw IP in audit chain.
 
 ---
 

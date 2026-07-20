@@ -56,10 +56,7 @@ The first-pass §1 #4 said: *"MUST report `cost: 0.0` to the cost-ledger (self-h
 
 This is correct for the marginal cost (one additional BGE call costs $0 because the GPU is rented monthly). But it's misleading for total cost-of-service: the ~$360/mo GPU rental is a real expense. A finance audit asking "show me embeddings cost for tenant X" sees $0 across all tenants — but the company spent $4320/year on infrastructure.
 
-Without explicit handling, a future engineer might:
-(a) Try to amortise the cost across calls (arbitrary choice — by-tenant? by-token?).
-(b) Try to amortise it into the per-call cost-ledger semantics (breaks the "per-call dollars to provider" definition).
-(c) Just leave it invisible (current state).
+Without explicit handling, a future engineer might: (a) Try to amortise the cost across calls (arbitrary choice — by-tenant? by-token?). (b) Try to amortise it into the per-call cost-ledger semantics (breaks the "per-call dollars to provider" definition). (c) Just leave it invisible (current state).
 
 #### Suggested fix
 

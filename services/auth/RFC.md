@@ -1,10 +1,6 @@
 # AUTH module — Implementation RFC
 
-**Status:** draft, 2026-05-14
-**Author:** Stephen Cheng (CyberSkill)
-**Spec:** `../../website/docs/modules/auth.html` (1,218 lines, 5W1H2C5M + 12 internal components + 20 task-AUTH + RBAC catalogue)
-**Lives at:** `services/auth/` once approved
-**Depends on:** memory module (audit chain), OBS module (telemetry — not built; deferred dep)
+**Status:** draft, 2026-05-14 **Author:** Stephen Cheng (CyberSkill) **Spec:** `../../website/docs/modules/auth.html` (1,218 lines, 5W1H2C5M + 12 internal components + 20 task-AUTH + RBAC catalogue) **Lives at:** `services/auth/` once approved **Depends on:** memory module (audit chain), OBS module (telemetry — not built; deferred dep)
 
 ---
 
@@ -115,8 +111,8 @@ The 7,000 LoC + 120 tests estimate is realistic for ~5–6 weeks of focused work
 Every auth decision (login attempt, MFA challenge, token issue, RBAC predicate evaluation, session revocation) MUST land on the memory module's audit chain. Implementation:
 
 - `services/auth/src/audit.rs` calls into the memory module via a thin shim. For the Rust↔Python boundary, two options:
-  1. **Subprocess shim** (simplest, slice-4-acceptable): `cyberos --store $memory put ...` via stdin. Slow but correct.
-  2. **PyO3 binding** (preferred, slice-5 target): link `cyberos.core.writer` as a Python module embedded in the Rust binary. Requires the memory module to expose a stable C-ABI or PyO3 surface — TBD with memory module owner.
+1. **Subprocess shim** (simplest, slice-4-acceptable): `cyberos --store $memory put ...` via stdin. Slow but correct.
+2. **PyO3 binding** (preferred, slice-5 target): link `cyberos.core.writer` as a Python module embedded in the Rust binary. Requires the memory module to expose a stable C-ABI or PyO3 surface — TBD with memory module owner.
 
 Slice 4 ships option 1; slice 5 evaluates option 2 with the memory module owner.
 

@@ -118,15 +118,14 @@ A long-lived Rust worker (`brain-ingest`, spawned in `services/memory` alongside
 2. **MUST** compute an embedding for every ingested event's body through the ai-gateway embeddings path (TASK-AI-019 model, TASK-AI-022 policy surface) — NEVER by calling a model provider directly (DEC-2723). The call MUST carry the tenant's residency pin and ZDR flag and MUST be charged against the tenant spend cap. Insert into `brain_event_embedding` with `(tenant_id, source_seq, audit_row_id, subject_id, channel_id, kind, ts_ns, embedding vector(1024), chain_anchor BYTEA, tier)`.
 3. **MUST** build an HNSW index on `brain_event_embedding.embedding` (cosine ops) so semantic recall over the hot tier returns in sub-second time (p99 ≤ 1s on the slice-1 fixture; SLO via `brain_recall_latency_ms`).
 4. **MUST** maintain rolling summaries (DEC-2724) in `brain_summary`, one row per `(scope_kind, scope_id, window)` where `scope_kind ∈ subject | channel | time_window`:
-    - A summary compacts the events in its window into a short natural-language digest plus its own embedding (via the same ai-gateway path).
-    - The summary row MUST record `covered_seq_range int8range` — the inclusive range of `source_seq` it compacted — and a monotonic `version`.
-    - When new events land in an already-summarised window, the worker MUST re-summarise and write a NEW version that supersedes the prior (the prior is retained for audit, marked `superseded_by`); recall reads the current version.
+- A summary compacts the events in its window into a short natural-language digest plus its own embedding (via the same ai-gateway path).
+- The summary row MUST record `covered_seq_range int8range` — the inclusive range of `source_seq` it compacted — and a monotonic `version`.
+- When new events land in an already-summarised window, the worker MUST re-summarise and write a NEW version that supersedes the prior (the prior is retained for audit, marked `superseded_by`); recall reads the current version.
 5. **MUST** make recall summaries-first (DEC-2724): a recall query searches `brain_summary` embeddings first; raw hot-event embeddings are searched and merged only to satisfy `?drill=true` or when summary recall is below the configured confidence floor. This keeps recall fast and cheap as the log grows.
 6. **MUST** tier `brain_event_embedding` rows by age (DEC-2725) via a `tier` column `hot | warm | cold` and a per-tenant `brain_tier_watermark`:
-    - **hot** — recent raw events, fully HNSW-indexed, searched directly.
-    - **warm** — older events: the embedding is retained (still vector-searchable on drill) but the raw event is represented in recall through its summary; the hot index need not cover it.
-    - **cold** — archived: the raw event stays in Layer 1 (system of record) and in cold storage; only the summary embedding is indexed; the raw row is retrievable on demand by `audit_row_id` (DEC-2726) without being held in the hot index.
-    Tier transitions are age-driven (`hot_max_age`, `warm_max_age` config, default 30d / 180d) and MUST be idempotent — re-running the tiering pass does not duplicate or lose rows.
+- **hot** — recent raw events, fully HNSW-indexed, searched directly.
+- **warm** — older events: the embedding is retained (still vector-searchable on drill) but the raw event is represented in recall through its summary; the hot index need not cover it.
+- **cold** — archived: the raw event stays in Layer 1 (system of record) and in cold storage; only the summary embedding is indexed; the raw row is retrievable on demand by `audit_row_id` (DEC-2726) without being held in the hot index. Tier transitions are age-driven (`hot_max_age`, `warm_max_age` config, default 30d / 180d) and MUST be idempotent — re-running the tiering pass does not duplicate or lose rows.
 7. **MUST** expose `POST /v1/memory/recall` returning ranked evidence. The request body accepts `{q, subject_scope?, channel_scope?, ts_since?, ts_until?, limit?, drill?, explain?}`; `limit` default 10, max 100.
 8. **MUST** scope every recall by tenant RLS AND the TASK-EVAL-001 per-subject access rules (DEC-2722). The caller's tenant_id (from the TASK-AUTH-004 JWT) scopes the tables via `current_setting('app.tenant_id')`; the TASK-EVAL-001 access predicate then filters to the subjects the caller is entitled to. A semantically-closest neighbour whose subject the caller may NOT see **MUST** be excluded from results (not merely deranked). Unknown subject → deny by default.
 9. **MUST** return, per hit, `{audit_row_id, subject_id, channel_id, kind, ts_ns, snippet, score, source: "event" | "summary", provenance}` where `provenance` points back to the exact l1_audit_log row(s) the hit was derived from (DEC-2726): an event hit cites its single `audit_row_id`; a summary hit cites its `covered_seq_range` plus the top contributing `audit_row_id`s. Downstream TASK-EVAL-003 cites these exact rows.
@@ -136,14 +135,14 @@ A long-lived Rust worker (`brain-ingest`, spawned in `services/memory` alongside
 13. **MUST** route embeddings + summary generation through the ai-gateway with residency + spend-cap discipline (DEC-2723): each call passes the tenant policy (region, ZDR, model alias) from TASK-AI-022; when the tenant spend cap is exhausted the worker MUST mark the row `pending_embed_retry` / `pending_summary_retry` and back off, NOT fall back to a direct provider call. Backoff is exponential (100ms, 250ms, 500ms, 1s, 2s) up to 5 attempts before marking pending.
 14. **MUST** provide a backfill + rebuild path (`--rebuild`, `--reembed --model <alias>`, `--resummarize <scope>`): rebuild re-derives `brain_event_embedding` and `brain_summary` from the Layer-1 chain from `source_seq` 0; re-embed migrates to a new embedding model version (recording `embed_model_version` per row); index rebuild (`REINDEX` of the HNSW index) runs without dropping recall availability beyond a documented window. Rebuild output MUST match a fresh ingest of the same Layer-1 range (derivability invariant, reuse TASK-MEMORY-102 gate).
 15. **MUST** emit OTel metrics:
-    - `memory_brain_ingest_lag_seconds{tenant_id}` (histogram; event-append → embedding-visible).
-    - `memory_brain_recall_latency_ms{tenant_id, path}` (histogram; `path ∈ summary | drill`; SLO p50 + p99 reported).
-    - `memory_brain_index_size_rows{tenant_id, tier}` (gauge).
-    - `memory_brain_summary_count{tenant_id, scope_kind}` (gauge).
-    - `memory_brain_tier_rows_total{tenant_id, tier}` (gauge; hot/warm/cold distribution).
-    - `memory_brain_embed_spend_units{tenant_id}` (counter; embedding spend charged via the gateway).
-    - `memory_brain_recall_access_denied_total{tenant_id, reason}` (counter; `reason ∈ tenant_rls | subject_scope | unknown_subject`).
-    - `memory_brain_ingest_failures_total{tenant_id, reason}` (counter; `reason ∈ embed_gateway_down | spend_cap_exhausted | postgres_error | chain_anchor_mismatch`).
+- `memory_brain_ingest_lag_seconds{tenant_id}` (histogram; event-append → embedding-visible).
+- `memory_brain_recall_latency_ms{tenant_id, path}` (histogram; `path ∈ summary | drill`; SLO p50 + p99 reported).
+- `memory_brain_index_size_rows{tenant_id, tier}` (gauge).
+- `memory_brain_summary_count{tenant_id, scope_kind}` (gauge).
+- `memory_brain_tier_rows_total{tenant_id, tier}` (gauge; hot/warm/cold distribution).
+- `memory_brain_embed_spend_units{tenant_id}` (counter; embedding spend charged via the gateway).
+- `memory_brain_recall_access_denied_total{tenant_id, reason}` (counter; `reason ∈ tenant_rls | subject_scope | unknown_subject`).
+- `memory_brain_ingest_failures_total{tenant_id, reason}` (counter; `reason ∈ embed_gateway_down | spend_cap_exhausted | postgres_error | chain_anchor_mismatch`).
 16. **MUST** enforce tenant isolation via `tenant_id` + RLS (TASK-AUTH-003 pattern) on `brain_event_embedding`, `brain_summary`, and both cursor tables — `USING` + `WITH CHECK`, `FORCE ROW LEVEL SECURITY`; the tables join the `TENANT_SCOPED_TABLES` registry.
 17. **MUST** apply TASK-MEMORY-117 store-ACL semantics to any summary the worker writes into the memory tree (subject summaries are written under an ACL-governed subtree, e.g. `company/brain/subjects/`); the worker runs under a reserved actor identity (`brain-ingest`) and MUST be rejected (with a `memory.acl_denied` aux row) if it lacks write capability on the target subtree.
 18. **MUST** support graceful degrade on recall: if the ai-gateway embeddings path is down at query time (needed to embed the query), recall falls back to full-text over summaries (reuse TASK-MEMORY-108 PGroonga path) and surfaces the degradation in `?explain=true`; when both summary search and event search are impossible, return `503`. Empty results are `200` with `[]` (search semantics, per TASK-MEMORY-108 §1 #12).

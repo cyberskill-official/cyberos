@@ -78,25 +78,25 @@ The Kanban Board **MUST** present issues grouped by status with drag/drop transi
 1. **MUST** render 6 columns matching TASK-PROJ-004 status enum: Backlog, Todo, InProgress, InReview, Done, Cancelled.
 2. **MUST** subscribe to TASK-PROJ-002 WebSocket for live updates; YjsProvider for description/comments.
 3. **MUST** support drag-and-drop between columns via @dnd-kit/core:
-    - Drop on column → POST `/api/proj/issues/:id/transition` with `to: <new_status>`.
-    - Illegal transition (422 from TASK-PROJ-004) → snap card back to original column with 250ms spring animation.
-    - Successful transition → emit toast + audit-trail link.
-    - Optimistic UI: card visually moves immediately; reconciled on server confirmation.
+- Drop on column → POST `/api/proj/issues/:id/transition` with `to: <new_status>`.
+- Illegal transition (422 from TASK-PROJ-004) → snap card back to original column with 250ms spring animation.
+- Successful transition → emit toast + audit-trail link.
+- Optimistic UI: card visually moves immediately; reconciled on server confirmation.
 4. **MUST** support keyboard navigation parity:
-    - Tab/Shift-Tab cycles focus through columns + cards.
-    - J / K / Down / Up move focus within column.
-    - H / L / Left / Right move focus between columns.
-    - Enter opens TASK-PROJ-017 Brief Modal for focused card.
-    - Cmd/Ctrl + Shift + → moves focused card to next-rightward column (if legal); ← to next-leftward.
-    - Esc dismisses any open transient UI.
+- Tab/Shift-Tab cycles focus through columns + cards.
+- J / K / Down / Up move focus within column.
+- H / L / Left / Right move focus between columns.
+- Enter opens TASK-PROJ-017 Brief Modal for focused card.
+- Cmd/Ctrl + Shift + → moves focused card to next-rightward column (if legal); ← to next-leftward.
+- Esc dismisses any open transient UI.
 5. **MUST** virtualise long columns via `react-window FixedSizeList` when > 200 items; 60fps maintained.
 6. **MUST** render IssueCard with: title (≤ 2 lines truncated), assignee avatar, estimate badge, priority indicator, blocker count badge (TASK-PROJ-011), labels.
 7. **MUST** show real-time presence indicators (TASK-PROJ-003 awareness): cursor + selection of other users editing the same issue (when in Brief Modal).
 8. **MUST** emit memory audit row `proj.kanban_card_moved` per drag-induced transition; payload `{issue_id, from_status, to_status, by_subject_id, was_keyboard: bool, trace_id}`.
 9. **MUST** emit OTel client-side metrics via `web-vitals`:
-    - `proj_kanban_render_p95_ms` (LCP for board page).
-    - `proj_kanban_drag_latency_ms` (drag start → drop reflected).
-    - `proj_kanban_transitions_total{outcome}` (counter; outcome ∈ accepted | rejected | optimistic_rollback).
+- `proj_kanban_render_p95_ms` (LCP for board page).
+- `proj_kanban_drag_latency_ms` (drag start → drop reflected).
+- `proj_kanban_transitions_total{outcome}` (counter; outcome ∈ accepted | rejected | optimistic_rollback).
 10. **MUST** pass axe-core a11y audit: no critical/serious violations; ARIA roles for `application`/`group`/`listitem` correct; keyboard-only test passes.
 11. **MUST** handle WebSocket disconnect gracefully: banner "offline; changes will sync when connected"; drags queued in offline buffer (TASK-PROJ-003 §1 #8).
 12. **MUST** support `?member=<uuid>` and `?label=<id>` URL query filters; updates URL on filter change for shareability.

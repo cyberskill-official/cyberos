@@ -1,7 +1,6 @@
 # `observability-injection-author` - pipeline
 
-Walk the implementation's critical paths and emit structured log points, trace spans, and error counters with a branch-coverage estimate.
-Artefact: `observability-injection@1`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
+Walk the implementation's critical paths and emit structured log points, trace spans, and error counters with a branch-coverage estimate. Artefact: `observability-injection@1`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
 
 ## Upstream
 

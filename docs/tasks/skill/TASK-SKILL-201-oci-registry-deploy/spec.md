@@ -92,10 +92,10 @@ The SKILL service **MUST** ship OCI registry deploy at `services/skill/src/oci/`
 1. **MUST** validate `bundle_status` against closed enum per DEC-2421.
 
 2. **MUST** push at `push.rs::push(bundle_path, registry, tag, tenant_acl)` per DEC-2420:
-   - Validate `.skill` bundle (SKILL.md frontmatter, allowed_tools list)
-   - Push to OCI registry via OCI distribution spec API
-   - Sign via `cosign_wrapper.rs::sign(digest, tenant_kms_key)`
-   - Record in DB with tenant_acl
+- Validate `.skill` bundle (SKILL.md frontmatter, allowed_tools list)
+- Push to OCI registry via OCI distribution spec API
+- Sign via `cosign_wrapper.rs::sign(digest, tenant_kms_key)`
+- Record in DB with tenant_acl
 
 3. **MUST** enforce tag immutability per DEC-2423 — pre-push: check registry for existing tag; reject if exists.
 
@@ -218,8 +218,7 @@ async fn acl_blocks_cross_tenant() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-SKILL-102.
-**Cross-module:** TASK-AUTH-105 (KMS for cosign), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-SKILL-102. **Cross-module:** TASK-AUTH-105 (KMS for cosign), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

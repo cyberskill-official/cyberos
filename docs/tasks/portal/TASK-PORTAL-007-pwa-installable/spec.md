@@ -126,30 +126,30 @@ The PORTAL service **MUST** ship Progressive Web App support at `services/portal
      "theme_color": "<brand.primary>", "background_color": "<brand.background>",
      "display": "standalone", "start_url": "/" }
    ```
-   Manifest cached 1h client-side; invalidated by brand-pack update via TASK-PORTAL-002 NATS event.
+Manifest cached 1h client-side; invalidated by brand-pack update via TASK-PORTAL-002 NATS event.
 
 6. **MUST** generate versioned service worker at `GET /service-worker.js` per DEC-1262 + DEC-1265 + DEC-1269. Worker code:
-   - Cache name `cyberos-portal-v{version}` (version = deploy timestamp).
-   - Network-first strategy for `/v1/portal/views/*` with 24h cache fallback.
-   - Cache-first for static assets (`/static/*`) with 30d TTL.
-   - On activation: deletes stale cache versions.
-   - Push event handler: shows notification with brand-themed icon + body from payload.
+- Cache name `cyberos-portal-v{version}` (version = deploy timestamp).
+- Network-first strategy for `/v1/portal/views/*` with 24h cache fallback.
+- Cache-first for static assets (`/static/*`) with 30d TTL.
+- On activation: deletes stale cache versions.
+- Push event handler: shows notification with brand-themed icon + body from payload.
 
 7. **MUST** expose `POST /v1/portal/pwa/subscribe` body `{ endpoint, p256dh, auth, user_agent }`. Handler:
-   - Validates JWT.
-   - KMS-encrypts endpoint + keys.
-   - UPSERTs subscription row.
-   - Emit `portal.pwa_subscription_created`.
+- Validates JWT.
+- KMS-encrypts endpoint + keys.
+- UPSERTs subscription row.
+- Emit `portal.pwa_subscription_created`.
 
 8. **MUST** expose `POST /v1/portal/pwa/unsubscribe` body `{ subscription_id }` → revokes subscription. Emit `portal.pwa_subscription_revoked`.
 
 9. **MUST** expose `PATCH /v1/portal/pwa/preferences` body `{ enabled_kinds: [...] }` → updates `enabled_kinds` JSONB.
 
 10. **MUST** dispatch push notifications per DEC-1263 via `pwa/push_dispatcher.rs`. Consumer of NATS events from TASK-PORTAL-006 (workflow_status_changed), TASK-PORTAL-008 (dsar_ready), TASK-PORTAL-005 (genie_mention), TASK-CHAT-005 (channel_mention), TASK-INV-001 (billing_alert). For each event:
-   - Lookup subscriptions for target subject_id WHERE kind IN enabled_kinds AND revoked_at IS NULL.
-   - Sign VAPID JWT per RFC 8292.
-   - POST to push endpoint with encrypted payload (Web Push encryption per RFC 8291).
-   - Log delivery_status; emit `portal.pwa_notification_sent` or `portal.pwa_notification_delivery_failed`.
+- Lookup subscriptions for target subject_id WHERE kind IN enabled_kinds AND revoked_at IS NULL.
+- Sign VAPID JWT per RFC 8292.
+- POST to push endpoint with encrypted payload (Web Push encryption per RFC 8291).
+- Log delivery_status; emit `portal.pwa_notification_sent` or `portal.pwa_notification_delivery_failed`.
 
 11. **MUST** rate-limit at 100 push/day/subject per DEC-1268. Excess → log `delivery_status='rate_limited'`; user not notified (avoid notification spam).
 
@@ -162,10 +162,10 @@ The PORTAL service **MUST** ship Progressive Web App support at `services/portal
 15. **MUST** version service worker on every deploy per DEC-1269. Cache key includes deploy timestamp; old caches deleted on activation.
 
 16. **MUST** emit 4 memory audit kinds per DEC-1270:
-   - `portal.pwa_subscription_created` (sev-3)
-   - `portal.pwa_subscription_revoked` (sev-3)
-   - `portal.pwa_notification_sent` (sev-3 — high-volume, sampled 1%)
-   - `portal.pwa_notification_delivery_failed` (sev-2 — security signal could indicate compromised endpoint)
+- `portal.pwa_subscription_created` (sev-3)
+- `portal.pwa_subscription_revoked` (sev-3)
+- `portal.pwa_notification_sent` (sev-3 — high-volume, sampled 1%)
+- `portal.pwa_notification_delivery_failed` (sev-2 — security signal could indicate compromised endpoint)
 
 17. **MUST** PII-scrub: payload_sha256 only in audit chain; raw payload in delivery_log only.
 
@@ -322,9 +322,7 @@ async fn workflow_status_change_triggers_push() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-PORTAL-001 (views to cache offline).
-**Cross-module:** TASK-PORTAL-002 (brand in manifest + notifications), TASK-PORTAL-003 (auth for subscribe), TASK-PORTAL-005 (genie_mention event source), TASK-PORTAL-006 (workflow_status_changed event), TASK-PORTAL-008 (dsar_ready event), TASK-CHAT-005 (channel_mention), TASK-INV-001 (billing_alert), TASK-EMAIL-001 (fallback channel), TASK-AI-003, TASK-MEMORY-111.
-**Downstream:** None.
+**Upstream:** TASK-PORTAL-001 (views to cache offline). **Cross-module:** TASK-PORTAL-002 (brand in manifest + notifications), TASK-PORTAL-003 (auth for subscribe), TASK-PORTAL-005 (genie_mention event source), TASK-PORTAL-006 (workflow_status_changed event), TASK-PORTAL-008 (dsar_ready event), TASK-CHAT-005 (channel_mention), TASK-INV-001 (billing_alert), TASK-EMAIL-001 (fallback channel), TASK-AI-003, TASK-MEMORY-111. **Downstream:** None.
 
 ---
 

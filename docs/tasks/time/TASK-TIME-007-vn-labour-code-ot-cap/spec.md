@@ -96,18 +96,18 @@ The TIME service **MUST** ship VN Labour Code Art. 107 OT cap enforcement at `se
 3. **MUST** compute OT = `MAX(0, daily_total_hours - 8)` per Art. 107. Standard workday baseline 8h; everything beyond is OT.
 
 4. **MUST** aggregate OT at 4 granularities via `vn_labour/aggregator.rs`:
-   - **Daily**: SUM(OT hours) WHERE entry_date = $today.
-   - **Weekly**: SUM(OT hours) WHERE entry_date >= $week_start (Monday-Sunday).
-   - **Monthly**: SUM(OT hours) WHERE entry_month = $current_month.
-   - **Yearly**: SUM(OT hours) WHERE entry_year = $current_year.
+- **Daily**: SUM(OT hours) WHERE entry_date = $today.
+- **Weekly**: SUM(OT hours) WHERE entry_date >= $week_start (Monday-Sunday).
+- **Monthly**: SUM(OT hours) WHERE entry_month = $current_month.
+- **Yearly**: SUM(OT hours) WHERE entry_year = $current_year.
 
 5. **MUST** check 4 hard caps pre-entry-write per DEC-1391 + DEC-1395:
-   - **Daily**: new_daily_ot > 4h → `daily_4h_breach`.
-   - **Weekly**: new_weekly_ot > 12h → `weekly_12h_breach`.
-   - **Monthly**: new_monthly_ot > 40h → `monthly_40h_breach`.
-   - **Yearly (standard tier)**: new_yearly_ot > 200h AND approval='standard' → `yearly_200h_breach`.
-   - **Yearly (extended tier)**: new_yearly_ot > 300h → `yearly_300h_breach_no_approval` (regardless of approval; 300h is absolute cap).
-   - First-matching breach returned; entry write blocked with 412 + breach kind.
+- **Daily**: new_daily_ot > 4h → `daily_4h_breach`.
+- **Weekly**: new_weekly_ot > 12h → `weekly_12h_breach`.
+- **Monthly**: new_monthly_ot > 40h → `monthly_40h_breach`.
+- **Yearly (standard tier)**: new_yearly_ot > 200h AND approval='standard' → `yearly_200h_breach`.
+- **Yearly (extended tier)**: new_yearly_ot > 300h → `yearly_300h_breach_no_approval` (regardless of approval; 300h is absolute cap).
+- First-matching breach returned; entry write blocked with 412 + breach kind.
 
 6. **MUST** emit 80% soft warning per DEC-1391. If new_total > 0.80 × cap AND new_total ≤ cap: write proceeds + emits `time.ot_warning_issued` sev-3 + UI banner.
 
@@ -118,9 +118,9 @@ The TIME service **MUST** ship VN Labour Code Art. 107 OT cap enforcement at `se
 9. **MUST** expose approval-change endpoint `POST /v1/admin/members/{member_id}/vn-ot-approval` body `{ tier, molisa_doc_ref, expires_at }`. Caller has `clo` role. Updates `hr_members.vn_ot_approval` + emits `time.ot_approval_changed` sev-1.
 
 10. **MUST** emit 3 memory audit kinds per DEC-1396:
-    - `time.ot_warning_issued` (sev-3)
-    - `time.ot_breach_blocked` (sev-2 — material entry rejection)
-    - `time.ot_approval_changed` (sev-1 — compliance event)
+- `time.ot_warning_issued` (sev-3)
+- `time.ot_breach_blocked` (sev-2 — material entry rejection)
+- `time.ot_approval_changed` (sev-1 — compliance event)
 
 11. **MUST** thread trace_id end-to-end.
 
@@ -250,8 +250,7 @@ async fn 80pct_warning_emitted() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-TIME-001 (entry write path).
-**Cross-module:** TASK-HR-001 (vn_ot_approval flag), TASK-TIME-002 (timer integration), TASK-AUTH-101 (clo role), TASK-AI-003, TASK-MEMORY-111.
+**Upstream:** TASK-TIME-001 (entry write path). **Cross-module:** TASK-HR-001 (vn_ot_approval flag), TASK-TIME-002 (timer integration), TASK-AUTH-101 (clo role), TASK-AI-003, TASK-MEMORY-111.
 
 ---
 

@@ -162,8 +162,7 @@ New: `modules/memory/tests/core/test_put_if.py` (349 lines, 19 test functions) c
 
 ### Files touched (this entry only)
 
-New: `tests/core/test_put_if.py` (349 lines).
-Modified: `modules/memory/AGENTS.md` §3.1; `modules/memory/cyberos/core/ops.py` (~160 LOC); `modules/memory/cyberos/__main__.py`; `modules/memory/README.md` Appendix D.
+New: `tests/core/test_put_if.py` (349 lines). Modified: `modules/memory/AGENTS.md` §3.1; `modules/memory/cyberos/core/ops.py` (~160 LOC); `modules/memory/cyberos/__main__.py`; `modules/memory/README.md` Appendix D.
 
 ### Wave 3 status
 
@@ -189,8 +188,8 @@ New: `modules/memory/cyberos/core/store_acl.py` (~280 LOC):
 - `find_governing_store_yaml(root, rel_path)` — walks UP from the target's parent dir; innermost STORE.yaml wins.
 - `check_write(root, rel_path, actor)` — returns `AclResult` with `allowed`, `mode`, `store_id`, `yaml_path`, `matched_entry`, `reason`.
 - Two-mode operation:
-  - **Enforced** (AGENTS.md §14.4 anchor present): denied writes raise `AclDenied` after emitting the `memory.acl_denied` aux row.
-  - **WARN-ONLY** (anchor absent, pre-amendment transition): aux row still emitted with `warn_only=True` payload field, but writes proceed. Anti-footgun for operators who pull code before APPROVE'ing.
+- **Enforced** (AGENTS.md §14.4 anchor present): denied writes raise `AclDenied` after emitting the `memory.acl_denied` aux row.
+- **WARN-ONLY** (anchor absent, pre-amendment transition): aux row still emitted with `warn_only=True` payload field, but writes proceed. Anti-footgun for operators who pull code before APPROVE'ing.
 - `explain(root, path, actor)` — operator-readable diagnostic for `cyberos acl explain`.
 
 Hooks into `modules/memory/cyberos/core/ops.py`:
@@ -330,7 +329,6 @@ Result: memory page now reflects the expanded universal-protocol vision while pr
 
 - Saved `docs/RESEARCH_REVIEW_2026_05_14.md` (315 lines, ~53 KB) — the pre-launch audit from Claude Chat's Research Mode. Aggregate 6.5/10; lowest substantive scores on Spec Quality (5) and GTM (5). 10 follow-up tasks created (#31–#40) covering: P0→P1 descope gate, AI Gateway → AUTH reorder, PDPL citation fixes, server-render NFR + Risk catalogs, first 50 tasks via task-author, 7 missing risks, TEN-billing P2 slice, UX defects, memory Layer 2 source-of-truth one-pager, memory decision memory.
 - **Wrote `docs/MEMORY_AUTOSYNC_DESIGN.md`** (~700 lines, design v1.0.0) — universal Personal memory + Lumi's memory architecture. Per Stephen's clarified vision: (1) Personal memory works on any folder, not just cyberos; (2) captures everything including discussions, not just file deliverables; (3) portable by folder copy across user's machines; (4) 2-way sync with Cloud memory aka Lumi's memory (also CUO's memory, CyberSkill's memory — same store, different names for different audiences); (5) multi-memory power + auto-evolve memory at scale.
-  - 16 sections: vision, naming, three-layer architecture, Personal memory spec, Capture daemon spec, Lumi's memory spec, Sync orchestrator, Multi-memory auto-evolve, Dependency map, Privacy + governance, AGENTS.md Proposal P13 additions, CyberOS strategic implications, naming/branding decisions, 4-week sprint plan, 5 open questions, where-to-read-next.
-  - Stage gating: **Stage 1 (Personal memory universal) + Stage 2 (capture daemon) are buildable today** — no external dep. Stages 3+ ride the P0+P2 critical path (AUTH + AI Gateway + TEN).
-  - Strategic implication called out: this is **the moat** the reviewer's GTM critique was looking for. Personal memory as OSS distribution; Lumi's memory as the commercial product. The compounding switching cost = value of the org's accumulated memory.
-
+- 16 sections: vision, naming, three-layer architecture, Personal memory spec, Capture daemon spec, Lumi's memory spec, Sync orchestrator, Multi-memory auto-evolve, Dependency map, Privacy + governance, AGENTS.md Proposal P13 additions, CyberOS strategic implications, naming/branding decisions, 4-week sprint plan, 5 open questions, where-to-read-next.
+- Stage gating: **Stage 1 (Personal memory universal) + Stage 2 (capture daemon) are buildable today** — no external dep. Stages 3+ ride the P0+P2 critical path (AUTH + AI Gateway + TEN).
+- Strategic implication called out: this is **the moat** the reviewer's GTM critique was looking for. Personal memory as OSS distribution; Lumi's memory as the commercial product. The compounding switching cost = value of the org's accumulated memory.

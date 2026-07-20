@@ -18,26 +18,13 @@ trace_id: "cowork-cyberos-improvement-batch5-2026-07-17"
 
 Machine floor: task-lint clean on first pass.
 
-Judgment: this audit is the first to carry `audited_body_sha256_prefix` - the field the task
-itself defines, computed over the normative half of the spec it audits. That is deliberate:
-the convention's first witness is the task that introduces it, so the corpus contains a
-verifiable binding from the moment the rule exists. The whole-file prefix is retained as
-provenance of the exact bytes read, and will stop matching the moment ship-tasks flips
-`status` - which is precisely the fact this task documents rather than hides.
+Judgment: this audit is the first to carry `audited_body_sha256_prefix` - the field the task itself defines, computed over the normative half of the spec it audits. That is deliberate: the convention's first witness is the task that introduces it, so the corpus contains a verifiable binding from the moment the rule exists. The whole-file prefix is retained as provenance of the exact bytes read, and will stop matching the moment ship-tasks flips `status` - which is precisely the fact this task documents rather than hides.
 
-Alternatives are real and distinctly rejected (post-flip hashing still breaks on the second
-transition; relocating status inverts STATUS-REFERENCE §1's priority; corpus rewriting
-falsifies history). Metrics carry baseline (100 percent unverifiable) and a suite-asserted
-target. Legacy readability is a stated guardrail, not an afterthought.
+Alternatives are real and distinctly rejected (post-flip hashing still breaks on the second transition; relocating status inverts STATUS-REFERENCE §1's priority; corpus rewriting falsifies history). Metrics carry baseline (100 percent unverifiable) and a suite-asserted target. Legacy readability is a stated guardrail, not an afterthought.
 
-ISSUE ISS-001 (QA-004, wontfix-info): AC 4 is a recorded-grep prose contract (accepted pattern,
-TASK-IMP-090 AC 1).
+ISSUE ISS-001 (QA-004, wontfix-info): AC 4 is a recorded-grep prose contract (accepted pattern, TASK-IMP-090 AC 1).
 
-SUMMARY
-verdict: pass
-issues_open: 0
-issues_human: 0
-next_action: ship
+SUMMARY verdict: pass issues_open: 0 issues_human: 0 next_action: ship
 
 ## §gate-log
 

@@ -87,16 +87,16 @@ The DOC service **MUST** ship expiry alert cascade at `services/doc/src/expiry/`
 2. **MUST** validate `alert_threshold` against closed enum per DEC-1721.
 
 3. **MUST** scan at `scanner.rs::scan(tenant, today)`:
-   - SELECT documents WHERE expiry_date IS NOT NULL AND lifecycle_status NOT IN ('expired','terminated').
-   - Check if `expiry_date - today` matches d90/d30/d7 ±0d.
-   - Filter snoozed docs per DEC-1724.
+- SELECT documents WHERE expiry_date IS NOT NULL AND lifecycle_status NOT IN ('expired','terminated').
+- Check if `expiry_date - today` matches d90/d30/d7 ±0d.
+- Filter snoozed docs per DEC-1724.
 
 4. **MUST** dedup per DEC-1722 via UNIQUE constraint — skip if `(document_id, threshold)` row exists.
 
 5. **MUST** dispatch at `notifier.rs::notify(doc, threshold, parties)`:
-   - For each party with email → TASK-EMAIL-009 send
-   - Tenant CLO → TASK-CHAT-005 message
-   - Use template: "Contract {title} expires in {days}d. Renew or terminate?"
+- For each party with email → TASK-EMAIL-009 send
+- Tenant CLO → TASK-CHAT-005 message
+- Use template: "Contract {title} expires in {days}d. Renew or terminate?"
 
 6. **MUST** define table at migration `0003`:
    ```sql
@@ -213,8 +213,7 @@ async fn snooze_suppresses_alerts() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-DOC-007.
-**Cross-module:** TASK-EMAIL-009 (email send), TASK-CHAT-005 (chat notify), TASK-MCP-007 (cron), TASK-AUTH-101 (CLO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-DOC-007. **Cross-module:** TASK-EMAIL-009 (email send), TASK-CHAT-005 (chat notify), TASK-MCP-007 (cron), TASK-AUTH-101 (CLO role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

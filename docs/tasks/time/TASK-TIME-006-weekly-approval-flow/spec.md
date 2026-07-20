@@ -108,43 +108,43 @@ The TIME service **MUST** ship weekly approval flow at `services/time/src/timesh
 4. **MUST** enforce RLS scoped to tenant_id; Members see own timesheets, AMs see engagement-scoped, CFO sees all.
 
 5. **MUST** expose Member submit `POST /v1/time/timesheets/{id}/submit`. Handler:
-   - Validates Member owns timesheet.
-   - Validates status='open' or 'rejected'.
-   - Aggregates entries for week → total_seconds, billable_seconds.
-   - Transitions status='submitted' + submitted_at.
-   - Triggers email to AM via TASK-EMAIL-001.
-   - Emits `time.timesheet_submitted` sev-2.
+- Validates Member owns timesheet.
+- Validates status='open' or 'rejected'.
+- Aggregates entries for week → total_seconds, billable_seconds.
+- Transitions status='submitted' + submitted_at.
+- Triggers email to AM via TASK-EMAIL-001.
+- Emits `time.timesheet_submitted` sev-2.
 
 6. **MUST** expose AM approve `POST /v1/time/timesheets/{id}/approve`. Caller has `engagement_admin` role. Handler:
-   - Validates status='submitted'.
-   - Transitions status='approved' + reviewed_at + reviewed_by.
-   - INSERTs review row.
-   - Auto-transitions to 'locked' immediately per DEC-1422.
-   - Emits `time.timesheet_approved` sev-1.
+- Validates status='submitted'.
+- Transitions status='approved' + reviewed_at + reviewed_by.
+- INSERTs review row.
+- Auto-transitions to 'locked' immediately per DEC-1422.
+- Emits `time.timesheet_approved` sev-1.
 
 7. **MUST** expose AM reject `POST /v1/time/timesheets/{id}/reject` body `{ reason }`. Handler:
-   - Transitions status='rejected'.
-   - INSERTs review row with reason.
-   - Triggers email to Member with reason.
-   - Emits `time.timesheet_rejected` sev-1.
+- Transitions status='rejected'.
+- INSERTs review row with reason.
+- Triggers email to Member with reason.
+- Emits `time.timesheet_rejected` sev-1.
 
 8. **MUST** expose bulk approve `POST /v1/time/timesheets/bulk-approve` body `{ engagement_id, week_start_date }` per DEC-1423. AM scope. Approves all submitted timesheets matching filter; one memory row + per-timesheet audit. Emits `time.timesheet_bulk_approved` sev-2 + N individual `time.timesheet_approved`.
 
 9. **MUST** expose diff view `GET /v1/time/timesheets/{id}/diff?since=<submission_n>` per DEC-1424. Returns added/removed/modified entries since prior submission for resubmission review.
 
 10. **MUST** auto-lock 14d post-week-end per DEC-1425 via `auto_lock_job.rs`:
-    - Daily job: SELECT timesheets WHERE status='open' AND week_end_date < now() - 14d.
-    - Transition status='locked' + lock_reason='auto_lock_14d_no_submission'.
-    - Triggers email to Member + AM.
-    - Emits `time.timesheet_auto_locked` sev-2.
+- Daily job: SELECT timesheets WHERE status='open' AND week_end_date < now() - 14d.
+- Transition status='locked' + lock_reason='auto_lock_14d_no_submission'.
+- Triggers email to Member + AM.
+- Emits `time.timesheet_auto_locked` sev-2.
 
 11. **MUST** block entry writes for locked weeks per DEC-1422. TASK-TIME-001 entry/create.rs modified to check `timesheets.status` for the week; locked → 412 + `week_locked`.
 
 12. **MUST** trigger emails per DEC-1426 via TASK-EMAIL-001:
-    - Monday 09:00: reminder to Members with unsubmitted previous week.
-    - Wednesday 09:00: reminder to AMs with pending reviews.
-    - On rejection: Member notified with reason.
-    - On auto-lock: Member + AM notified.
+- Monday 09:00: reminder to Members with unsubmitted previous week.
+- Wednesday 09:00: reminder to AMs with pending reviews.
+- On rejection: Member notified with reason.
+- On auto-lock: Member + AM notified.
 
 13. **MUST** emit 5 memory audit kinds per DEC-1427. PII-scrub reason via TASK-MEMORY-111.
 
@@ -302,8 +302,7 @@ async fn locked_week_blocks_entry_write() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-TIME-001 (entries to aggregate).
-**Cross-module:** TASK-AUTH-101 (engagement_admin role), TASK-EMAIL-001 (notifications), TASK-AI-003, TASK-MEMORY-111.
+**Upstream:** TASK-TIME-001 (entries to aggregate). **Cross-module:** TASK-AUTH-101 (engagement_admin role), TASK-EMAIL-001 (notifications), TASK-AI-003, TASK-MEMORY-111.
 
 ---
 

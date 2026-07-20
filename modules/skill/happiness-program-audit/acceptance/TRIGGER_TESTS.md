@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this happiness program"
+- "Audit this happiness program"
 - "Check the happiness program for completeness"
 - "Verify the happiness program meets the rubric"
 - "Re-audit the happiness program"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a happiness program" → happiness-program-author
+- "Draft a happiness program" → happiness-program-author
 - "Create the happiness program" → happiness-program-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

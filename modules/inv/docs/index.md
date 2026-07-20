@@ -47,18 +47,7 @@ revenue recognition"] PROJ --> TIME TIME -- "billable rollup" --> INV CRM --> IN
 
 ### Auto vs human-in-loop operations matrix
 
-Operation| How it happens| Why this split
----|---|---
-Invoice draft from TIME rollup| **Auto** at cycle close| Deterministic from rollup + rate-card snapshot; AM reviews.
-AM review + edit before send| **Manual** AM action| Client invoice = revenue + relationship; AM is accountable.
-Hóa đơn (VN e-invoice) emission| **Auto** after AM sends; **blocked** if MST invalid| MST validity is GDT requirement; cannot emit invalid invoice.
-Cash application (receipt matching)| **Auto** by amount + reference| High-precision matching; unmatched fall to AM.
-Unmatched receipt triage| **Manual** AM action| Ambiguous cases (partial pay, wrong reference) need human judgment.
-Dunning chase email draft| **Auto** at 30/60/90 day thresholds| CUO drafts; tone calibrated per overdue band.
-Dunning chase send| **Manual** AM/CFO action| Customer relationship + tone require human confirm; auto-send burns relationships.
-Hóa đơn cancellation (Decree 123 Art. 19)| **Manual** + dual approval (AM + CFO)| Cancelling an emitted invoice triggers regulator notification; never auto.
-FX rate snapshot (daily SBV)| **Auto**| Daily SBV publication; cached; per-invoice snapshot stored.
-Revenue recognition to GL| **Auto** on invoice sent (accrual) or paid (cash basis)| Per-tenant policy chooses basis; both supported.
+Operation| How it happens| Why this split ---|---|--- Invoice draft from TIME rollup| **Auto** at cycle close| Deterministic from rollup + rate-card snapshot; AM reviews. AM review + edit before send| **Manual** AM action| Client invoice = revenue + relationship; AM is accountable. Hóa đơn (VN e-invoice) emission| **Auto** after AM sends; **blocked** if MST invalid| MST validity is GDT requirement; cannot emit invalid invoice. Cash application (receipt matching)| **Auto** by amount + reference| High-precision matching; unmatched fall to AM. Unmatched receipt triage| **Manual** AM action| Ambiguous cases (partial pay, wrong reference) need human judgment. Dunning chase email draft| **Auto** at 30/60/90 day thresholds| CUO drafts; tone calibrated per overdue band. Dunning chase send| **Manual** AM/CFO action| Customer relationship + tone require human confirm; auto-send burns relationships. Hóa đơn cancellation (Decree 123 Art. 19)| **Manual** + dual approval (AM + CFO)| Cancelling an emitted invoice triggers regulator notification; never auto. FX rate snapshot (daily SBV)| **Auto**| Daily SBV publication; cached; per-invoice snapshot stored. Revenue recognition to GL| **Auto** on invoice sent (accrual) or paid (cash basis)| Per-tenant policy chooses basis; both supported.
 
 ## Why INV exists
 
@@ -74,21 +63,7 @@ INV is also part of the CyberSkill margin story: faster collection compresses DS
 
 A structured decomposition of INV's scope.
 
-Axis| Question| Answer
----|---|---
-**5W - What**| What is INV?| An AR + multi-currency invoicing + payment integration service. Drafts invoices from TIME entries; sends; tracks payments; ages receivables; reconciles cash to invoices; routes Vietnamese e-invoices to GDT via the vietnam-vat-invoice skill.
-**5W - Who**| Who uses INV?| **CFO / Finance:** close, AR aging, dunning approval. **Project lead / Account Manager:** invoice draft preview + send. **Customer:** receives invoice + pays. **CUO/CFO-skill:** drafts dunning + payment-status narrative.
-**5W - When**| When does INV act?| (a) Engagement milestone or month-end -> invoice draft. (b) Send invoice -> email/portal. (c) Payment webhook -> cash application. (d) Overdue tick -> dunning. (e) Quarter-end -> AR aging report. (f) Year-end -> 1099-style summaries.
-**5W - Where**| Where does it run?| P2: single region (SG-1) backed by AWS RDS Postgres. Per-tenant data-residency for VN tenants (vn-hanoi-1) by P3.
-**5W - Why**| Why a separate module?| Because AR-ledger drift and tax-compliance surprise are existential to small companies. INV is the one source of truth for "what did we bill, what did they pay, who owes what".
-**1H - How**| How does it work?| Postgres for invoice + payment + reminder rows. Stripe / Wise webhooks -> cash_application engine matches receipts to invoices by metadata + amount. VietQR generated via `vietnam-bank-transfer` skill; bank confirms via screen-scrape OR open-banking API (Napas247 P3). Vietnamese e-invoice via `vietnam-vat-invoice` skill -> POST to GDT.
-**2C - Cost**| Cost budget?| P2: ~$40/month (RDS + Fargate + Stripe/Wise pass-through fees). 50-tenant: ~$150/month. Per-invoice cost: ~$0.02 + payment processor fee.
-**2C - Constraints**| Constraints?| (a) Vietnam Decree 123 + Circular 78 - e-invoice format. (b) Currency rounding policy (VND has no decimals; round to nearest 1,000 for display). (c) Per-engagement billable rules drive line items (task pending). (d) Approved invoices are append-only (task pending); corrections via credit note.
-**5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, stripe-rust, wise sdk, typst / tectonic for PDF, async-graphql, cyberskill-vn skills, AWS S3 (immutable archive).
-**5M - Methods**| Method choices?| Idempotent webhooks (Stripe idempotency-key + DB UNIQUE on external_event_id). VND rate snapshot daily from SBV REST endpoint. Multi-rail collection abstracted behind `PaymentRail` trait. Append-only invoice rows; credit-note for corrections.
-**5M - Machines**| Deployment?| Fargate in SG-1. Multi-AZ Postgres RDS. S3 immutable bucket for PDFs.
-**5M - Manpower**| Who maintains?| CFO (R for close + dunning approval) + 0.25 FTE eng.
-**5M - Measurement**| How measured?| KPIs: DSO (days sales outstanding); cash-application match rate; e-invoice GDT acceptance rate; dunning effectiveness.
+Axis| Question| Answer ---|---|--- **5W - What**| What is INV?| An AR + multi-currency invoicing + payment integration service. Drafts invoices from TIME entries; sends; tracks payments; ages receivables; reconciles cash to invoices; routes Vietnamese e-invoices to GDT via the vietnam-vat-invoice skill. **5W - Who**| Who uses INV?| **CFO / Finance:** close, AR aging, dunning approval. **Project lead / Account Manager:** invoice draft preview + send. **Customer:** receives invoice + pays. **CUO/CFO-skill:** drafts dunning + payment-status narrative. **5W - When**| When does INV act?| (a) Engagement milestone or month-end -> invoice draft. (b) Send invoice -> email/portal. (c) Payment webhook -> cash application. (d) Overdue tick -> dunning. (e) Quarter-end -> AR aging report. (f) Year-end -> 1099-style summaries. **5W - Where**| Where does it run?| P2: single region (SG-1) backed by AWS RDS Postgres. Per-tenant data-residency for VN tenants (vn-hanoi-1) by P3. **5W - Why**| Why a separate module?| Because AR-ledger drift and tax-compliance surprise are existential to small companies. INV is the one source of truth for "what did we bill, what did they pay, who owes what". **1H - How**| How does it work?| Postgres for invoice + payment + reminder rows. Stripe / Wise webhooks -> cash_application engine matches receipts to invoices by metadata + amount. VietQR generated via `vietnam-bank-transfer` skill; bank confirms via screen-scrape OR open-banking API (Napas247 P3). Vietnamese e-invoice via `vietnam-vat-invoice` skill -> POST to GDT. **2C - Cost**| Cost budget?| P2: ~$40/month (RDS + Fargate + Stripe/Wise pass-through fees). 50-tenant: ~$150/month. Per-invoice cost: ~$0.02 + payment processor fee. **2C - Constraints**| Constraints?| (a) Vietnam Decree 123 + Circular 78 - e-invoice format. (b) Currency rounding policy (VND has no decimals; round to nearest 1,000 for display). (c) Per-engagement billable rules drive line items (task pending). (d) Approved invoices are append-only (task pending); corrections via credit note. **5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, stripe-rust, wise sdk, typst / tectonic for PDF, async-graphql, cyberskill-vn skills, AWS S3 (immutable archive). **5M - Methods**| Method choices?| Idempotent webhooks (Stripe idempotency-key + DB UNIQUE on external_event_id). VND rate snapshot daily from SBV REST endpoint. Multi-rail collection abstracted behind `PaymentRail` trait. Append-only invoice rows; credit-note for corrections. **5M - Machines**| Deployment?| Fargate in SG-1. Multi-AZ Postgres RDS. S3 immutable bucket for PDFs. **5M - Manpower**| Who maintains?| CFO (R for close + dunning approval) + 0.25 FTE eng. **5M - Measurement**| How measured?| KPIs: DSO (days sales outstanding); cash-application match rate; e-invoice GDT acceptance rate; dunning effectiveness.
 
 ## Architecture
 
@@ -127,25 +102,7 @@ payment-status sync"] OBS["👁 OBS"] end PM --> AR CFO --> AR CUST --> AR CUO -
 
 ### Internal components
 
-Component| Path (planned)| Responsibility
----|---|---
-`invoice.rs`| services/inv/src/invoice.rs| Invoice CRUD. Append-only after status="sent"; corrections via credit_note.
-`draft.rs`| services/inv/src/draft.rs| Auto-populate draft from TIME entries per engagement + billable rules.
-`line_item.rs`| services/inv/src/line_item.rs| Per-invoice line items; aggregates billable rules; supports VN VAT category codes.
-`payment.rs`| services/inv/src/payment.rs| Payment row writer. Idempotent by external_event_id.
-`credit_note.rs`| services/inv/src/credit_note.rs| Credit-note + refund. Always tied to an invoice; reduces outstanding balance.
-`pdf_renderer.rs`| services/inv/src/pdf_renderer.rs| Deterministic PDF via tectonic. Tenant brand applied via per-tenant template.
-`cash_application.rs`| services/inv/src/cash_application.rs| Match incoming receipt -> outstanding invoice by metadata + amount. Manual override UI for ambiguous cases.
-`webhook.rs`| services/inv/src/webhook.rs| Stripe + Wise + bank webhook handlers. Signature verification; idempotency-key check.
-`aging.rs`| services/inv/src/aging.rs| AR aging bucket report: 0-30 / 31-60 / 61-90 / 90+ days.
-`dunning.rs`| services/inv/src/dunning.rs| Drafts dunning emails (T+1, T+7, T+30 of overdue). Sends ONLY after CFO/AM approval.
-`fx.rs`| services/inv/src/fx.rs| Daily SBV rate snapshot. Cached per day; new invoices use today's snapshot.
-`vn_vat_bridge.rs`| services/inv/src/vn_vat_bridge.rs| Bridge to `vietnam-vat-invoice` skill - Mẫu 01/GTGT generation + GDT submission.
-`mst_bridge.rs`| services/inv/src/mst_bridge.rs| Bridge to `vietnam-mst-validate` skill - customer + tenant MST validation before send.
-`bank_bridge.rs`| services/inv/src/bank_bridge.rs| Bridge to `vietnam-bank-transfer` skill - VietQR generator.
-`audit_bridge.rs`| services/inv/src/audit_bridge.rs| Lifecycle rows to memory.
-`nats_bridge.rs`| services/inv/src/nats_bridge.rs| Event publisher - sent/paid/overdue events for CRM + KPI dashboards.
-`migrations/`| services/inv/migrations/| sqlx migrations. UNIQUE on external_event_id; append-only on invoice after status=sent.
+Component| Path (planned)| Responsibility ---|---|--- `invoice.rs`| services/inv/src/invoice.rs| Invoice CRUD. Append-only after status="sent"; corrections via credit_note. `draft.rs`| services/inv/src/draft.rs| Auto-populate draft from TIME entries per engagement + billable rules. `line_item.rs`| services/inv/src/line_item.rs| Per-invoice line items; aggregates billable rules; supports VN VAT category codes. `payment.rs`| services/inv/src/payment.rs| Payment row writer. Idempotent by external_event_id. `credit_note.rs`| services/inv/src/credit_note.rs| Credit-note + refund. Always tied to an invoice; reduces outstanding balance. `pdf_renderer.rs`| services/inv/src/pdf_renderer.rs| Deterministic PDF via tectonic. Tenant brand applied via per-tenant template. `cash_application.rs`| services/inv/src/cash_application.rs| Match incoming receipt -> outstanding invoice by metadata + amount. Manual override UI for ambiguous cases. `webhook.rs`| services/inv/src/webhook.rs| Stripe + Wise + bank webhook handlers. Signature verification; idempotency-key check. `aging.rs`| services/inv/src/aging.rs| AR aging bucket report: 0-30 / 31-60 / 61-90 / 90+ days. `dunning.rs`| services/inv/src/dunning.rs| Drafts dunning emails (T+1, T+7, T+30 of overdue). Sends ONLY after CFO/AM approval. `fx.rs`| services/inv/src/fx.rs| Daily SBV rate snapshot. Cached per day; new invoices use today's snapshot. `vn_vat_bridge.rs`| services/inv/src/vn_vat_bridge.rs| Bridge to `vietnam-vat-invoice` skill - Mẫu 01/GTGT generation + GDT submission. `mst_bridge.rs`| services/inv/src/mst_bridge.rs| Bridge to `vietnam-mst-validate` skill - customer + tenant MST validation before send. `bank_bridge.rs`| services/inv/src/bank_bridge.rs| Bridge to `vietnam-bank-transfer` skill - VietQR generator. `audit_bridge.rs`| services/inv/src/audit_bridge.rs| Lifecycle rows to memory. `nats_bridge.rs`| services/inv/src/nats_bridge.rs| Event publisher - sent/paid/overdue events for CRM + KPI dashboards. `migrations/`| services/inv/migrations/| sqlx migrations. UNIQUE on external_event_id; append-only on invoice after status=sent.
 
 ## Data model
 
@@ -159,13 +116,7 @@ erDiagram TENANT ||--o{ CUSTOMER: "bills" CUSTOMER ||--o{ INVOICE: "owes" ENGAGE
 
 ### Payment-rail comparison (P2 launch set)
 
-Rail| Currencies| Typical fee| Settlement| Webhook| Use case
----|---|---|---|---|---
-**Stripe**| USD, EUR (multi-currency intent supported)| 2.9% + $0.30| T+2| signed (HMAC)| Default for international customers; cards.
-**Wise**| 40+ incl. VND, SGD, USD, EUR| 0.4-1% mid-market| T+0 to T+2| polling + webhook (P3)| Cross-border + local-rail collection.
-**VietQR / Napas247**| VND| ~5,000 VND / txn| instant (24/7)| bank API (BIDV, MB, VCB)| Vietnamese B2B + B2C; preferred for VN customers.
-**Manual bank transfer**| any| bank-dependent| T+1 to T+5| none (manual reconciliation)| Fallback when other rails unavailable.
-MoMo / ZaloPay / VNPay (P3)| VND| 1.5-2.5%| instant| signed| VN consumer wallets - added at P3.
+Rail| Currencies| Typical fee| Settlement| Webhook| Use case ---|---|---|---|---|--- **Stripe**| USD, EUR (multi-currency intent supported)| 2.9% + $0.30| T+2| signed (HMAC)| Default for international customers; cards. **Wise**| 40+ incl. VND, SGD, USD, EUR| 0.4-1% mid-market| T+0 to T+2| polling + webhook (P3)| Cross-border + local-rail collection. **VietQR / Napas247**| VND| ~5,000 VND / txn| instant (24/7)| bank API (BIDV, MB, VCB)| Vietnamese B2B + B2C; preferred for VN customers. **Manual bank transfer**| any| bank-dependent| T+1 to T+5| none (manual reconciliation)| Fallback when other rails unavailable. MoMo / ZaloPay / VNPay (P3)| VND| 1.5-2.5%| instant| signed| VN consumer wallets - added at P3.
 
 ## API surface
 
@@ -247,32 +198,11 @@ type Mutation {
 
 ### REST + webhook surface
 
-Method| Path| Purpose
----|---|---
-POST| `/admin/invoice/draft`| Draft from TIME entries against engagement billable rules.
-POST| `/admin/invoice/{id}/send`| Send invoice - render PDF, validate MST (VN), submit e-invoice to GDT (VN), email customer.
-POST| `/admin/invoice/{id}/void`| Void invoice. Append-only - sets status=void; does NOT delete.
-POST| `/admin/invoice/{id}/credit-note`| Issue credit note (partial or full).
-GET| `/admin/aging?as_of=YYYY-MM-DD`| AR aging report.
-POST| `/admin/dunning/{reminder_id}/approve`| CFO/AM approves CUO-drafted dunning email; sends.
-POST| `/webhook/stripe`| Stripe webhook - HMAC verified; cash_application triggered.
-POST| `/webhook/wise`| Wise webhook (P3); polling fallback P2.
-POST| `/webhook/bank/{bank_code}`| Bank API webhook (BIDV, MB, VCB) for VietQR receipts.
-GET| `/portal/invoice/{token}`| Customer-facing invoice + payment options page.
-POST| `/internal/fx/snapshot`| Daily SBV rate snapshot job.
-POST| `/admin/cash-application/manual`| Manual override - link a payment to an invoice when auto-match fails.
+Method| Path| Purpose ---|---|--- POST| `/admin/invoice/draft`| Draft from TIME entries against engagement billable rules. POST| `/admin/invoice/{id}/send`| Send invoice - render PDF, validate MST (VN), submit e-invoice to GDT (VN), email customer. POST| `/admin/invoice/{id}/void`| Void invoice. Append-only - sets status=void; does NOT delete. POST| `/admin/invoice/{id}/credit-note`| Issue credit note (partial or full). GET| `/admin/aging?as_of=YYYY-MM-DD`| AR aging report. POST| `/admin/dunning/{reminder_id}/approve`| CFO/AM approves CUO-drafted dunning email; sends. POST| `/webhook/stripe`| Stripe webhook - HMAC verified; cash_application triggered. POST| `/webhook/wise`| Wise webhook (P3); polling fallback P2. POST| `/webhook/bank/{bank_code}`| Bank API webhook (BIDV, MB, VCB) for VietQR receipts. GET| `/portal/invoice/{token}`| Customer-facing invoice + payment options page. POST| `/internal/fx/snapshot`| Daily SBV rate snapshot job. POST| `/admin/cash-application/manual`| Manual override - link a payment to an invoice when auto-match fails.
 
 ### MCP tool catalogue (CUO/CFO-skill)
 
-Tool name| Inputs| Outputs| Annotations
----|---|---|---
-`cyberos.inv.draft_invoice`| engagement_id, period| draft Invoice (not sent)| readwrite (draft only), human-confirm
-`cyberos.inv.list_overdue`| since?| Invoice| readonly, scope=inv.aging_read
-`cyberos.inv.draft_dunning`| invoice_id| email draft| readwrite (draft only), human-confirm before send
-`cyberos.inv.explain_aging`| as_of?| narrative AR report| readonly
-`cyberos.inv.summarise_payment_status`| invoice_id| narrative| readonly
-`cyberos.inv.validate_mst`| mst_string| {valid, taxpayer_info}| readonly, bridges vietnam-mst-validate skill
-`cyberos.inv.generate_vietqr`| amount, bank, account| QR data + image| readonly, bridges vietnam-bank-transfer skill
+Tool name| Inputs| Outputs| Annotations ---|---|---|--- `cyberos.inv.draft_invoice`| engagement_id, period| draft Invoice (not sent)| readwrite (draft only), human-confirm `cyberos.inv.list_overdue`| since?| Invoice| readonly, scope=inv.aging_read `cyberos.inv.draft_dunning`| invoice_id| email draft| readwrite (draft only), human-confirm before send `cyberos.inv.explain_aging`| as_of?| narrative AR report| readonly `cyberos.inv.summarise_payment_status`| invoice_id| narrative| readonly `cyberos.inv.validate_mst`| mst_string| {valid, taxpayer_info}| readonly, bridges vietnam-mst-validate skill `cyberos.inv.generate_vietqr`| amount, bank, account| QR data + image| readonly, bridges vietnam-bank-transfer skill
 
 ## Key flows
 
@@ -324,13 +254,7 @@ stateDiagram-v2 [*] --> Draft: drafted from TIME Draft --> Sent: PM clicks send 
 
 ### AR aging buckets
 
-Bucket| Days past due| Default action
----|---|---
-**Current**| <= 0| None - not yet due
-**0-30**| 1-30| T+1 friendly reminder, T+7 firmer reminder
-**31-60**| 31-60| T+30 escalation; CFO sees in close report
-**61-90**| 61-90| AM phone call; CFO weekly review
-**90+**| 91+| Legal counsel consultation; write-off policy review
+Bucket| Days past due| Default action ---|---|--- **Current**| <= 0| None - not yet due **0-30**| 1-30| T+1 friendly reminder, T+7 firmer reminder **31-60**| 31-60| T+30 escalation; CFO sees in close report **61-90**| 61-90| AM phone call; CFO weekly review **90+**| 91+| Legal counsel consultation; write-off policy review
 
 ## Functional requirements
 
@@ -342,19 +266,7 @@ Previous task enumerations were archived 2026-05-14 and are no longer reflected 
 
 Performance and reliability NFRs bind on INV - especially payment reconciliation correctness.
 
-NFR ID| Concern| Target| Measurement
----|---|---|---
-(NFR pending)| Invoice generation p95| <= 2 s| bench/draft.rs, k6 load
-(NFR pending)| PDF render p95 (deterministic)| <= 600 ms| bench/pdf.rs
-(NFR pending)| VN e-invoice GDT submission p95| <= 5 s (network bound)| k6 against staging GDT
-(NFR pending)| Payment-webhook idempotency| 100% (zero duplicate side-effects)| chaos test: replay webhook 100x
-(NFR pending)| Cash-application auto-match rate| >= 90% (the rest manual)| OBS dashboard, monthly review
-(NFR pending)| Webhook signature verification| 100% (zero unsigned acceptance)| integration test injects unsigned webhook
-(NFR pending)| VND rounding correctness| 0 sub-1,000 drift / 1k invoices| property test
-(NFR pending)| INV availability| >= 99.5%| SLO monitor
-(NFR pending)| Invoice PDF durability (10-year)| 0 lost objects| S3 immutable + quarterly inventory
-(NFR pending)| Customer payment method tokens encrypted| KMS-wrapped| schema inspection, CI gate
-(NFR pending)| PCI scope minimisation (no card data stored)| = 0 raw PAN columns| schema audit; Stripe handles PCI
+NFR ID| Concern| Target| Measurement ---|---|---|--- (NFR pending)| Invoice generation p95| <= 2 s| bench/draft.rs, k6 load (NFR pending)| PDF render p95 (deterministic)| <= 600 ms| bench/pdf.rs (NFR pending)| VN e-invoice GDT submission p95| <= 5 s (network bound)| k6 against staging GDT (NFR pending)| Payment-webhook idempotency| 100% (zero duplicate side-effects)| chaos test: replay webhook 100x (NFR pending)| Cash-application auto-match rate| >= 90% (the rest manual)| OBS dashboard, monthly review (NFR pending)| Webhook signature verification| 100% (zero unsigned acceptance)| integration test injects unsigned webhook (NFR pending)| VND rounding correctness| 0 sub-1,000 drift / 1k invoices| property test (NFR pending)| INV availability| >= 99.5%| SLO monitor (NFR pending)| Invoice PDF durability (10-year)| 0 lost objects| S3 immutable + quarterly inventory (NFR pending)| Customer payment method tokens encrypted| KMS-wrapped| schema inspection, CI gate (NFR pending)| PCI scope minimisation (no card data stored)| = 0 raw PAN columns| schema audit; Stripe handles PCI
 
 ## Dependencies
 
@@ -375,80 +287,25 @@ audit"] CUO["🤖 CUO/CFO-skill"] end AUTH --> INV TIME --> INV CRM --> INV memo
 
 INV is the tax-and-financial-records front door. Decree 123, Circular 78, and 10-year retention are non-negotiable for VN tenants.
 
-Regulation / standard| Article / clause| INV feature that satisfies it
----|---|---
-Decree 123/2020/NĐ-CP| Art. 7 - Electronic invoice mandate| vietnam-vat-invoice skill generates GDT-compliant e-invoice for every VN tenant invoice.
-Circular 78/2021/TT-BTC| Schema - GDT XML format| Skill emits Circular 78 XML; submits to GDT via authenticated endpoint.
-Decree 119/2018/NĐ-CP| Art. 4 - E-invoice retention| S3 immutable bucket; 10-year retention lock.
-Vietnam VAT Law (Law 13/2008)| Art. 8 - VAT rate categories| Line items carry VAT category code: 0%, 5%, 8%, 10% (Vietnamese categories).
-Vietnam Tax Administration Law (2019)| Art. 33 - MST| MST validated (tenant + customer) via vietnam-mst-validate before submission.
-Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Customer invoice history exportable as DSAR bundle.
-GDPR (EU 2016/679)| Art. 6 - Lawful processing| Customer billing data processed on contractual basis.
-PCI DSS| Cardholder data scope minimisation| No raw PAN stored; Stripe handles card data; INV stores only Stripe customer tokens.
-ISO/IEC 27001:2022| A.8.10 - Information deletion| Invoice rows append-only; void via status flag, not delete.
-ISO/IEC 27001:2022| A.5.13 - Information labelling| Customer + invoice records classified `confidential`; access scoped.
-SOC 2 Type II| CC8.1 - Change management| Append-only ledger; credit notes audited.
-VN Accounting Standards (VAS)| VAS 14 - Revenue| Revenue recognition triggered by invoice.status="sent"; GL bridge per accrual.
-SBV Circular 35/2018| FX reporting| Daily rate snapshot from SBV; cross-border invoice carries snapshot reference.
+Regulation / standard| Article / clause| INV feature that satisfies it ---|---|--- Decree 123/2020/NĐ-CP| Art. 7 - Electronic invoice mandate| vietnam-vat-invoice skill generates GDT-compliant e-invoice for every VN tenant invoice. Circular 78/2021/TT-BTC| Schema - GDT XML format| Skill emits Circular 78 XML; submits to GDT via authenticated endpoint. Decree 119/2018/NĐ-CP| Art. 4 - E-invoice retention| S3 immutable bucket; 10-year retention lock. Vietnam VAT Law (Law 13/2008)| Art. 8 - VAT rate categories| Line items carry VAT category code: 0%, 5%, 8%, 10% (Vietnamese categories). Vietnam Tax Administration Law (2019)| Art. 33 - MST| MST validated (tenant + customer) via vietnam-mst-validate before submission. Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Customer invoice history exportable as DSAR bundle. GDPR (EU 2016/679)| Art. 6 - Lawful processing| Customer billing data processed on contractual basis. PCI DSS| Cardholder data scope minimisation| No raw PAN stored; Stripe handles card data; INV stores only Stripe customer tokens. ISO/IEC 27001:2022| A.8.10 - Information deletion| Invoice rows append-only; void via status flag, not delete. ISO/IEC 27001:2022| A.5.13 - Information labelling| Customer + invoice records classified `confidential`; access scoped. SOC 2 Type II| CC8.1 - Change management| Append-only ledger; credit notes audited. VN Accounting Standards (VAS)| VAS 14 - Revenue| Revenue recognition triggered by invoice.status="sent"; GL bridge per accrual. SBV Circular 35/2018| FX reporting| Daily rate snapshot from SBV; cross-border invoice carries snapshot reference.
 
 ## Risk entries
 
 INV's risks are largely about reconciliation correctness and webhook spoofing. The cash-application false-match risk is the highest single-incident risk.
 
-ID| Risk| Likelihood| Impact| Owner| Mitigation
----|---|---|---|---|---
-`R-INV-001`| Webhook spoofing leads to false payment record| Low| High| CTO| HMAC signature verification on every webhook; unsigned events rejected; integration test injects unsigned payload.
-`R-INV-002`| Duplicate webhook causes double cash-application| Medium| Medium| CTO| UNIQUE on external_event_id; idempotent INSERT; chaos test replays webhook 100x.
-`R-INV-003`| Cash-application false match (wrong invoice)| Medium| Medium| CFO| Strict matching: metadata.invoice_id OR (amount + customer + +/-1k VND tolerance); ambiguous cases land in manual-override queue.
-`R-INV-004`| GDT e-invoice submission rejected (Mẫu format drift)| Medium| Medium| CTO + CFO| vietnam-vat-invoice skill versioned; CI test against GDT sandbox; alert on rejected status.
-`R-INV-005`| Currency rounding drift on cross-currency invoice| Medium| Low| CFO| Round-half-to-even at line-item level; VND no decimals; property test asserts deterministic.
-`R-INV-006`| SBV rate API outage blocks new cross-currency invoices| Medium| Low| CTO| Last-known-good cached; on outage, use yesterday's rate + flag invoice for review.
-`R-INV-007`| CUO sends dunning email without approval| Low| Medium| CSO| MCP tool annotated destructive=false; reminder.status="drafted" cannot transition to "sent" without approval_id; CI verifies.
-`R-INV-008`| Stripe webhook secret leaked| Low| High| CSO| Secret in AWS Secrets Manager; rotation every 90 days; access audited.
-`R-INV-009`| Invoice number gap (regulatory issue in VN)| Medium| Medium| CFO| Per-tenant sequence with gap-detection job; void invoices retain number; audit shows void/issued chain.
-`R-INV-010`| 10-year retention violated by S3 lifecycle bug| Low| High| CTO| Immutable bucket; lifecycle policy review at deploy; quarterly inventory.
-`R-INV-011`| TIME rollup arrives incomplete -> invoice missing billable hours| Medium| High| COO| Rollup waits for all submissions or 24h grace; INV flags missing-Member draft; AM reviews + can re-trigger after submissions land.
-`R-INV-012`| Rate-card snapshot on TimeEntry diverges from invoiced rate| Low| High| CFO| Snapshot is immutable on TimeEntry; INV reads from snapshot; CI test asserts invoice line-amount = snapshot x hours.
-`R-INV-013`| Hóa đơn cancellation (Decree 123 Art. 19) without dual approval| Low| Critical| CFO| Cancellation requires AM + CFO approval tokens both; CI verifies API rejects single-approval cancel; GDT API call audit-chained.
-`R-INV-014`| Dunning email auto-send bug| Low| High| CSO| MCP tool annotation destructive=true on dunning send; AM/CFO approval token required; CI gate verifies; OBS alarm on send rate > 0 without approval ID.
-`R-INV-015`| Vietnamese hóa đơn template drift after Decree 123 amendment| Medium| High| CLO| vietnam-vat-invoice skill version-pinned; legal monitor watches GDT bulletins; quarterly drill emit against staging GDT sandbox.
+ID| Risk| Likelihood| Impact| Owner| Mitigation ---|---|---|---|---|--- `R-INV-001`| Webhook spoofing leads to false payment record| Low| High| CTO| HMAC signature verification on every webhook; unsigned events rejected; integration test injects unsigned payload. `R-INV-002`| Duplicate webhook causes double cash-application| Medium| Medium| CTO| UNIQUE on external_event_id; idempotent INSERT; chaos test replays webhook 100x. `R-INV-003`| Cash-application false match (wrong invoice)| Medium| Medium| CFO| Strict matching: metadata.invoice_id OR (amount + customer + +/-1k VND tolerance); ambiguous cases land in manual-override queue. `R-INV-004`| GDT e-invoice submission rejected (Mẫu format drift)| Medium| Medium| CTO + CFO| vietnam-vat-invoice skill versioned; CI test against GDT sandbox; alert on rejected status. `R-INV-005`| Currency rounding drift on cross-currency invoice| Medium| Low| CFO| Round-half-to-even at line-item level; VND no decimals; property test asserts deterministic. `R-INV-006`| SBV rate API outage blocks new cross-currency invoices| Medium| Low| CTO| Last-known-good cached; on outage, use yesterday's rate + flag invoice for review. `R-INV-007`| CUO sends dunning email without approval| Low| Medium| CSO| MCP tool annotated destructive=false; reminder.status="drafted" cannot transition to "sent" without approval_id; CI verifies. `R-INV-008`| Stripe webhook secret leaked| Low| High| CSO| Secret in AWS Secrets Manager; rotation every 90 days; access audited. `R-INV-009`| Invoice number gap (regulatory issue in VN)| Medium| Medium| CFO| Per-tenant sequence with gap-detection job; void invoices retain number; audit shows void/issued chain. `R-INV-010`| 10-year retention violated by S3 lifecycle bug| Low| High| CTO| Immutable bucket; lifecycle policy review at deploy; quarterly inventory. `R-INV-011`| TIME rollup arrives incomplete -> invoice missing billable hours| Medium| High| COO| Rollup waits for all submissions or 24h grace; INV flags missing-Member draft; AM reviews + can re-trigger after submissions land. `R-INV-012`| Rate-card snapshot on TimeEntry diverges from invoiced rate| Low| High| CFO| Snapshot is immutable on TimeEntry; INV reads from snapshot; CI test asserts invoice line-amount = snapshot x hours. `R-INV-013`| Hóa đơn cancellation (Decree 123 Art. 19) without dual approval| Low| Critical| CFO| Cancellation requires AM + CFO approval tokens both; CI verifies API rejects single-approval cancel; GDT API call audit-chained. `R-INV-014`| Dunning email auto-send bug| Low| High| CSO| MCP tool annotation destructive=true on dunning send; AM/CFO approval token required; CI gate verifies; OBS alarm on send rate > 0 without approval ID. `R-INV-015`| Vietnamese hóa đơn template drift after Decree 123 amendment| Medium| High| CLO| vietnam-vat-invoice skill version-pinned; legal monitor watches GDT bulletins; quarterly drill emit against staging GDT sandbox.
 
 ## KPIs
 
 INV KPIs cover AR efficiency, reconciliation accuracy, and compliance.
 
-KPI| Formula| Source| Target
----|---|---|---
-**DSO (Days Sales Outstanding)**| (AR balance / sales) x period days| INV DB| <= 35 days
-**Auto-match rate**| auto-matched payments / total| cash_application| >= 90%
-**Invoice generation p95**| histogram| OBS| <= 2 s
-**GDT e-invoice acceptance rate**| accepted / submitted| vn_einvoice| >= 99.5%
-**Dunning effectiveness**| (invoices paid within 14d of dunning) / dunning sent| INV DB| >= 60%
-**Aging 90+ as % of total**| aging_90_plus / total_outstanding| aging_report| <= 5%
-**Manual cash-application queue depth**| unmatched payments > 24h| OBS| <= 2 at any time
-**Webhook spoofing attempts blocked**| signature-failed count| OBS| tracked; alert on bursts
-**Invoice number gap incidents**| detected gaps / period| cron gap-check| = 0 unexplained
-**TIME rollup -> INV bridge p95**| histogram (cycle close -> draft ready)| OBS| <= 60 s
-**Missing-Member draft rate**| drafts flagged missing-Member / total drafts| INV events| <= 5% (after 24h grace)
-**Rate-card snapshot integrity**| line items where amount = snapshot x hours / total line items| memory audit replay| = 1.0 (hard floor)
-**Dunning auto-send false-positive**| sends without approval token| OBS| = 0 (hard floor; CI gate)
-**Hóa đơn dual-approval rate**| cancellations with both AM + CFO tokens / total cancellations| memory audit| = 1.0 (hard floor)
+KPI| Formula| Source| Target ---|---|---|--- **DSO (Days Sales Outstanding)**| (AR balance / sales) x period days| INV DB| <= 35 days **Auto-match rate**| auto-matched payments / total| cash_application| >= 90% **Invoice generation p95**| histogram| OBS| <= 2 s **GDT e-invoice acceptance rate**| accepted / submitted| vn_einvoice| >= 99.5% **Dunning effectiveness**| (invoices paid within 14d of dunning) / dunning sent| INV DB| >= 60% **Aging 90+ as % of total**| aging_90_plus / total_outstanding| aging_report| <= 5% **Manual cash-application queue depth**| unmatched payments > 24h| OBS| <= 2 at any time **Webhook spoofing attempts blocked**| signature-failed count| OBS| tracked; alert on bursts **Invoice number gap incidents**| detected gaps / period| cron gap-check| = 0 unexplained **TIME rollup -> INV bridge p95**| histogram (cycle close -> draft ready)| OBS| <= 60 s **Missing-Member draft rate**| drafts flagged missing-Member / total drafts| INV events| <= 5% (after 24h grace) **Rate-card snapshot integrity**| line items where amount = snapshot x hours / total line items| memory audit replay| = 1.0 (hard floor) **Dunning auto-send false-positive**| sends without approval token| OBS| = 0 (hard floor; CI gate) **Hóa đơn dual-approval rate**| cancellations with both AM + CFO tokens / total cancellations| memory audit| = 1.0 (hard floor)
 
 ## RACI matrix
 
 INV is operationally owned by CFO; AM drives per-engagement billing; CFO approves dunning; CTO owns reliability.
 
-Activity| CEO| CFO| AM/PL| CTO| CSO| DPO
----|---|---|---|---|---|---
-Engagement billable-rules setup| I| C| A/R| I| I| I
-Invoice draft -> send| I| C| A/R| I| I| I
-Cash application (manual override)| I| A/R| C| I| I| I
-AR aging review| I| A/R| C| I| I| I
-Dunning approval| I| A/R| C| I| I| I
-VN e-invoice integration (GDT)| I| C| I| A/R| C| I
-Webhook secret rotation| I| I| I| R| A| I
-10-year retention audit| I| R| I| A| C| C
-DSAR (customer scope)| I| C| R| I| C| A
+Activity| CEO| CFO| AM/PL| CTO| CSO| DPO ---|---|---|---|---|---|--- Engagement billable-rules setup| I| C| A/R| I| I| I Invoice draft -> send| I| C| A/R| I| I| I Cash application (manual override)| I| A/R| C| I| I| I AR aging review| I| A/R| C| I| I| I Dunning approval| I| A/R| C| I| I| I VN e-invoice integration (GDT)| I| C| I| A/R| C| I Webhook secret rotation| I| I| I| R| A| I 10-year retention audit| I| R| I| A| C| C DSAR (customer scope)| I| C| R| I| C| A
 
 R = Responsible, A = Accountable, C = Consulted, I = Informed.
 
@@ -585,25 +442,7 @@ $ cyberos-inv credit-note issue \
 | CLI subcommands | ~20 planned (`cyberos-inv` entrypoint) |
 | P2 budget | ~$40/mo + Stripe/Wise pass-through fees |
 
-Capability| Status
----|---
-Invoice draft from TIME entries| planned - P2
-Multi-currency (VND/USD/SGD/EUR) + SBV snapshot| planned - P2
-Stripe (USD/EUR) integration + webhook| planned - P2
-Wise integration (multi-currency)| planned - P2
-VietQR / Napas247 collection| planned - P2
-Vietnamese e-invoice (Decree 123 + Circular 78)| planned - P2
-MST validation (vietnam-mst-validate skill)| skill shipped
-vietnam-vat-invoice + vietnam-bank-transfer skills| skills shipped
-AR aging report| planned - P2
-Dunning automation (drafts only, human send)| planned - P2
-Cash application (auto-match + manual override)| planned - P2
-Credit-note + void workflow| planned - P2
-Webhook idempotency + signature verification| planned - P2
-Customer payment portal (token-link)| planned - P2
-Recurring invoice schedule (subscription)| planned - P3
-MoMo / ZaloPay / VNPay rails| planned - P3
-Open-banking integration (Napas247 real-time)| planned - P3
+Capability| Status ---|--- Invoice draft from TIME entries| planned - P2 Multi-currency (VND/USD/SGD/EUR) + SBV snapshot| planned - P2 Stripe (USD/EUR) integration + webhook| planned - P2 Wise integration (multi-currency)| planned - P2 VietQR / Napas247 collection| planned - P2 Vietnamese e-invoice (Decree 123 + Circular 78)| planned - P2 MST validation (vietnam-mst-validate skill)| skill shipped vietnam-vat-invoice + vietnam-bank-transfer skills| skills shipped AR aging report| planned - P2 Dunning automation (drafts only, human send)| planned - P2 Cash application (auto-match + manual override)| planned - P2 Credit-note + void workflow| planned - P2 Webhook idempotency + signature verification| planned - P2 Customer payment portal (token-link)| planned - P2 Recurring invoice schedule (subscription)| planned - P3 MoMo / ZaloPay / VNPay rails| planned - P3 Open-banking integration (Napas247 real-time)| planned - P3
 
 ## References
 

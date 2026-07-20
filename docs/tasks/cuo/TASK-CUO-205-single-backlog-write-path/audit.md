@@ -43,13 +43,9 @@ All six findings addressed as cited. One audited write path to BACKLOG.md remain
 
 ## §10 - Post-implementation gates (2026-07-12, ship run)
 
-- §10.4 verification: PASS - CASE-01..08 table live; CASE-08 rerun in testing phase: all
-  338 backlog rows round-trip byte-identical. Doc assertions green; ship workflow diff-clean.
+- §10.4 verification: PASS - CASE-01..08 table live; CASE-08 rerun in testing phase: all 338 backlog rows round-trip byte-identical. Doc assertions green; ship workflow diff-clean.
 - awh/caf: N/A (contract work; declared). Floor = live proofs + hook checks green on commit.
-- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via
-  explicit operator pre-authorization; gates stayed green.
-- Two spec bugs caught by the executable case pre-commit (stem sort; block bounds) and one
-  pre-existing audit defect fixed in passing (BSU-001 retired vocabulary) - all recorded in
-  the review packet.
+- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit operator pre-authorization; gates stayed green.
+- Two spec bugs caught by the executable case pre-commit (stem sort; block bounds) and one pre-existing audit defect fixed in passing (BSU-001 retired vocabulary) - all recorded in the review packet.
 
 *TASK-CUO-205 shipped 2026-07-12. BACKLOG.md now has exactly one audited write path.*

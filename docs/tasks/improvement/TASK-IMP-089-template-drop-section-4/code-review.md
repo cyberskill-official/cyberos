@@ -1,13 +1,6 @@
 # TASK-IMP-089 — code review packet
 
-Files under review: modified `tools/install/templates/TASK-TEMPLATE.md` (section-4 removal +
-renumber, +1/−5) and `scripts/tests/test_template_schema.sh` (t08 block: shared shape oracle,
-three arms, TMP harness line, runner line — +61/−0). Exactly the spec's `modified_files`, no
-new files. Suite state at review: test_template_schema 10/10 (t01–t07 untouched and
-regression-green, three t08 arms green), ~1.2 s including the scratch payload build. Working
-tree carries no other dirt (git status: only these two files); dist/ deliberately untouched —
-rebuild, version-sync and full suite before commit are the batch parent's step per
-payload-sync doctrine.
+Files under review: modified `tools/install/templates/TASK-TEMPLATE.md` (section-4 removal + renumber, +1/−5) and `scripts/tests/test_template_schema.sh` (t08 block: shared shape oracle, three arms, TMP harness line, runner line — +61/−0). Exactly the spec's `modified_files`, no new files. Suite state at review: test_template_schema 10/10 (t01–t07 untouched and regression-green, three t08 arms green), ~1.2 s including the scratch payload build. Working tree carries no other dirt (git status: only these two files); dist/ deliberately untouched — rebuild, version-sync and full suite before commit are the batch parent's step per payload-sync doctrine.
 
 ## §1 clause → proof
 
@@ -20,24 +13,15 @@ payload-sync doctrine.
 
 ## Acceptance criteria
 
-AC 1 `t08_single_out_of_scope_home` ok · AC 2 `t08_duplicate_reintroduction_fails` ok ·
-AC 3 `t08_payload_carries_shape` ok. Full suite 10/10, 0 failed.
+AC 1 `t08_single_out_of_scope_home` ok · AC 2 `t08_duplicate_reintroduction_fails` ok · AC 3 `t08_payload_carries_shape` ok. Full suite 10/10, 0 failed.
 
 ## Reference sweep (spec §3 "downstream prose citing section 5 invariants")
 
-grep over tools/, modules/, scripts/, README.md for "Protected invariants", numbered
-section-4/5 headings and out-of-scope H2s: the ONLY hits were TASK-TEMPLATE.md's own two
-headings (now fixed). Adjudicated non-hits: `tools/install/tests/test_*.sh:2` headers cite
-"TASK-XXX-NNN §5 suite" — those tasks' own historical spec sections (docs/tasks corpus,
-excluded by spec §3); `tools/install/README.md:122/135` "### 4./### 5." number distribution
-channels. Zero template-adjacent references required updating.
+grep over tools/, modules/, scripts/, README.md for "Protected invariants", numbered section-4/5 headings and out-of-scope H2s: the ONLY hits were TASK-TEMPLATE.md's own two headings (now fixed). Adjudicated non-hits: `tools/install/tests/test_*.sh:2` headers cite "TASK-XXX-NNN §5 suite" — those tasks' own historical spec sections (docs/tasks corpus, excluded by spec §3); `tools/install/README.md:122/135` "### 4./### 5." number distribution channels. Zero template-adjacent references required updating.
 
 ## Diff size
 
-2 modified files, +62/−5 total: TASK-TEMPLATE.md +1/−5 (block removal + renumber, nothing
-else touched — no pointer line added, per scope), test_template_schema.sh +61/−0 (WHY block,
-`shape_why`, three arms, one mktemp/trap line, one runner line). No new files, no dependency
-added, per-type templates and RUBRIC.md untouched (the rubric never required section 4).
+2 modified files, +62/−5 total: TASK-TEMPLATE.md +1/−5 (block removal + renumber, nothing else touched — no pointer line added, per scope), test_template_schema.sh +61/−0 (WHY block, `shape_why`, three arms, one mktemp/trap line, one runner line). No new files, no dependency added, per-type templates and RUBRIC.md untouched (the rubric never required section 4).
 
 ## Verdict
 

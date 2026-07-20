@@ -76,18 +76,18 @@ The billing-mode layer **MUST** support exactly three modes per engagement with 
 5. **MUST** expose `rollup_invoiceable(engagement_id, period_start, period_end) -> InvoiceRollup` returning ordered list of `InvoiceLine { line_kind, description, quantity, unit_rate_minor, amount_minor, currency, source_refs }` where source_refs cross-references to time entries / milestone IDs.
 6. **MUST** record mode changes via supersession (new row + close prior `effective_to`). Mode-change DURING an open invoice period prorates: portion before change billed under old mode, portion after under new.
 7. **MUST** emit memory audit rows:
-    - `proj.billing_mode_set` on initial mode set.
-    - `proj.billing_mode_changed` on supersession with `{old_mode, new_mode, effective_from, prorating_applied}`.
-    - `proj.milestone_invoiced` per Fixed-Fee milestone rollup.
-    - `proj.retainer_overage_emitted` per Retainer overage line.
-    - `proj.retainer_rollover_carry_forward` per period transition with unused credit.
+- `proj.billing_mode_set` on initial mode set.
+- `proj.billing_mode_changed` on supersession with `{old_mode, new_mode, effective_from, prorating_applied}`.
+- `proj.milestone_invoiced` per Fixed-Fee milestone rollup.
+- `proj.retainer_overage_emitted` per Retainer overage line.
+- `proj.retainer_rollover_carry_forward` per period transition with unused credit.
 8. **MUST** validate Fixed-Fee `milestones[*].amount_minor` sums to `total_amount_minor` exactly (no rounding).
 9. **MUST** track Retainer `consumed_minutes_this_period` + `rollover_credit_minutes` in dedicated table `retainer_state(engagement_id, period_year_month, consumed_minutes, rollover_credit_minutes, base_amount_invoiced, overage_minutes_invoiced, computed_at, tenant_id)`.
 10. **MUST** support `cyberos engagements set-mode <eng> <mode>` CLI for ops with idempotency.
 11. **MUST** emit OTel metrics:
-    - `proj_billing_rollup_duration_seconds{mode}` (histogram).
-    - `proj_retainer_overage_total{engagement_id_bucket}` (counter — overage frequency dashboard).
-    - `proj_fixed_fee_milestones_invoiced_total` (counter).
+- `proj_billing_rollup_duration_seconds{mode}` (histogram).
+- `proj_retainer_overage_total{engagement_id_bucket}` (counter — overage frequency dashboard).
+- `proj_fixed_fee_milestones_invoiced_total` (counter).
 12. **MUST** RLS-enforce (TASK-AUTH-003).
 13. **MUST** apply mid-period mode-change proration when the rollup period straddles a mode-change date. Specifically: split the period at the mode-change boundary; compute rollup independently for each sub-period under its mode; combine into a single `InvoiceRollup` with `prorated: true` marker and per-sub-period source_refs.
 14. **MUST** support `cancel_milestone(milestone_id, reason)` — Fixed-Fee admin can cancel an in-progress milestone, redistributing its amount across remaining milestones OR refunding to client. Emits `proj.milestone_cancelled` audit + reduces total_amount_minor.

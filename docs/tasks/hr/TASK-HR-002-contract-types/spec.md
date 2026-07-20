@@ -89,12 +89,12 @@ The HR service **MUST** extend member schema with contract types at `services/hr
 3. **MUST** enforce fixed-term renewal limit per DEC-1812 — `SELECT COUNT(*) FROM contract_history WHERE member_id=... AND type='fixed_term'`; if ≥2 attempting → reject; must convert to indefinite.
 
 4. **MUST** override leave entitlement per DEC-1813:
-   - contractor → 0 paid leave (overrides TASK-HR-004 defaults)
-   - part_time → pro-rated by hours_per_week / 48
+- contractor → 0 paid leave (overrides TASK-HR-004 defaults)
+- part_time → pro-rated by hours_per_week / 48
 
 5. **MUST** override SI participation per DEC-1814:
-   - contractor → SI participation=false
-   - others → SI participation=true
+- contractor → SI participation=false
+- others → SI participation=true
 
 6. **MUST** define table extension at migration `0002`:
    ```sql
@@ -208,8 +208,7 @@ async fn part_time_prorated_leave() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-HR-001.
-**Cross-module:** TASK-HR-004 (leave types), TASK-HR-005 (working hours), TASK-REW-004 (SI), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-HR-001. **Cross-module:** TASK-HR-004 (leave types), TASK-HR-005 (working hours), TASK-REW-004 (SI), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

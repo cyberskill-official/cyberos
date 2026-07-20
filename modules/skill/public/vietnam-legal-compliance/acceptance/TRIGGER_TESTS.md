@@ -12,18 +12,16 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Reference vietnam legal compliance"
+- "Reference vietnam legal compliance"
 - "Look up vietnam legal compliance"
 - "Consult the vietnam legal compliance reference"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Run unrelated task" → none
+- "Run unrelated task" → none
 - "What time is it" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

@@ -89,8 +89,8 @@ The AI service **MUST** ship VN provider integration at `services/ai/src/provide
 2. **MUST** add to TASK-AI-016 region set per DEC-2380 — modify `residency_resolver.rs` to include Viettel + FPT region strings for `Vn1`.
 
 3. **MUST** dispatch at `vn/mod.rs::dispatch(tenant, request)` with failover per DEC-2383:
-   - Primary: Viettel; on 5xx/timeout → FPT
-   - Both down → return `vn1_provider_outage` (distinct from `vn1_no_provider_yet`)
+- Primary: Viettel; on 5xx/timeout → FPT
+- Both down → return `vn1_provider_outage` (distinct from `vn1_no_provider_yet`)
 
 4. **MUST** store creds in KMS per DEC-2382 (CTO-only).
 
@@ -196,8 +196,7 @@ async fn both_down_refusal() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-AI-016.
-**Cross-module:** TASK-AI-006 (provider abstraction), TASK-AUTH-105 (KMS), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-AI-016. **Cross-module:** TASK-AI-006 (provider abstraction), TASK-AUTH-105 (KMS), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

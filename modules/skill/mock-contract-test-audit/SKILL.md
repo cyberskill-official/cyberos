@@ -42,9 +42,7 @@ outputs:
 
 ## 2. Pass criterion
 
-10/10 only. Any error-class miss returns the artefact to the author
-with a fix list. The workflow proceeds to step 9
-(implementation-plan-author) once this audit passes.
+10/10 only. Any error-class miss returns the artefact to the author with a fix list. The workflow proceeds to step 9 (implementation-plan-author) once this audit passes.
 
 ---
 

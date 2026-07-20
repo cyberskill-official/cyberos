@@ -204,8 +204,7 @@ async fn non_blocking_on_gdt_down() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-CRM-003.
-**Cross-module:** TASK-SKILL-107 (skill registry), TASK-MEMORY-111 (PII), TASK-MCP-007 (async).
+**Upstream:** TASK-CRM-003. **Cross-module:** TASK-SKILL-107 (skill registry), TASK-MEMORY-111 (PII), TASK-MCP-007 (async).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

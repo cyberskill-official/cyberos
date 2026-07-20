@@ -166,68 +166,68 @@ The MCP service **MUST** ship Tasks primitive at `services/mcp/src/tasks/` per M
 6. **MUST** enforce RLS with both USING and WITH CHECK on all 3 tables: `tenant_id = current_setting('auth.tenant_id')::uuid`.
 
 7. **MUST** extend TASK-MCP-002 `server_registry` with 3 new annotation fields per DEC-1102 + DEC-1103 + DEC-1108 + DEC-1120:
-    - `long_running: bool` — defaults false (synchronous tool); when true, tools/call returns task_id instead of result.
-    - `task_ttl_seconds: u32` — defaults 86400 (24h); max 604800 (7d).
-    - `max_concurrent_tasks: u32` — per-module worker pool size; defaults 4.
-    - `supports_cancellation: bool` — defaults true; when false, cancellation endpoint returns 405.
+- `long_running: bool` — defaults false (synchronous tool); when true, tools/call returns task_id instead of result.
+- `task_ttl_seconds: u32` — defaults 86400 (24h); max 604800 (7d).
+- `max_concurrent_tasks: u32` — per-module worker pool size; defaults 4.
+- `supports_cancellation: bool` — defaults true; when false, cancellation endpoint returns 405.
 
 8. **MUST** branch `tools/call` handler per DEC-1102. If invoked tool's `long_running=true`:
-    - Generate UUIDv7 task_id per DEC-1104.
-    - Check TASK-MCP-006 gating (destructive_hint requires confirmation per DEC-1111); confirmation token consumed at task START only.
-    - Check tenant rate-limit per DEC-1115 (100/min/tenant); excess → 429.
-    - Check idempotency_key per DEC-1121; duplicate within 24h returns existing task_id.
-    - INSERT `mcp_tasks` row with status='pending', KMS-encrypt input_payload, `expires_at = now() + ttl_seconds`.
-    - Enqueue to per-module worker pool per DEC-1108.
-    - Return `202 Accepted` + JSON-RPC body `{ task_id, status, poll_url, expires_at }`.
+- Generate UUIDv7 task_id per DEC-1104.
+- Check TASK-MCP-006 gating (destructive_hint requires confirmation per DEC-1111); confirmation token consumed at task START only.
+- Check tenant rate-limit per DEC-1115 (100/min/tenant); excess → 429.
+- Check idempotency_key per DEC-1121; duplicate within 24h returns existing task_id.
+- INSERT `mcp_tasks` row with status='pending', KMS-encrypt input_payload, `expires_at = now() + ttl_seconds`.
+- Enqueue to per-module worker pool per DEC-1108.
+- Return `202 Accepted` + JSON-RPC body `{ task_id, status, poll_url, expires_at }`.
 
 9. **MUST** expose `GET /v1/mcp/tasks/{task_id}` for status polling per DEC-1105. Handler:
-    - Validates caller JWT + verifies `caller_subject_id = jwt.subject_id` (RLS + explicit check).
-    - Rate-limit 60/min/task (1/sec sufficient; busier = bot).
-    - Returns current row state: `{ task_id, status, progress: {value, unit, total}, started_at, completed_at, result?, result_url?, error? }`.
-    - On `status=completed` with inline result: includes `result: <json>` (size ≤ 10 MiB per DEC-1112).
-    - On oversized result: returns `result_url: <s3_url>` (TASK-DOC-001 reference); inline result is NULL.
+- Validates caller JWT + verifies `caller_subject_id = jwt.subject_id` (RLS + explicit check).
+- Rate-limit 60/min/task (1/sec sufficient; busier = bot).
+- Returns current row state: `{ task_id, status, progress: {value, unit, total}, started_at, completed_at, result?, result_url?, error? }`.
+- On `status=completed` with inline result: includes `result: <json>` (size ≤ 10 MiB per DEC-1112).
+- On oversized result: returns `result_url: <s3_url>` (TASK-DOC-001 reference); inline result is NULL.
 
 10. **MUST** expose `POST /v1/mcp/tasks/{task_id}/cancel` per DEC-1107. Handler:
-    - Validates caller JWT + verifies `caller_subject_id = jwt.subject_id`.
-    - Looks up task; if status='pending' or 'running': transition to status='cancelling' (intermediate transient state; not in closed-enum because instantaneous).
-    - Sends cancellation signal to worker via Tokio cancel-token.
-    - Worker honours `is_cancelled()` at next checkpoint boundary per DEC-1122; transitions status='cancelled'; emits `mcp.task_cancelled`.
-    - If tool registration `supports_cancellation=false`: returns 405 + `cancellation_not_supported`.
-    - If task already completed/failed/cancelled/expired: returns 409 + `task_terminal`.
-    - Returns 202 Accepted (cancellation initiated; final status confirmed via subsequent poll).
+- Validates caller JWT + verifies `caller_subject_id = jwt.subject_id`.
+- Looks up task; if status='pending' or 'running': transition to status='cancelling' (intermediate transient state; not in closed-enum because instantaneous).
+- Sends cancellation signal to worker via Tokio cancel-token.
+- Worker honours `is_cancelled()` at next checkpoint boundary per DEC-1122; transitions status='cancelled'; emits `mcp.task_cancelled`.
+- If tool registration `supports_cancellation=false`: returns 405 + `cancellation_not_supported`.
+- If task already completed/failed/cancelled/expired: returns 409 + `task_terminal`.
+- Returns 202 Accepted (cancellation initiated; final status confirmed via subsequent poll).
 
 11. **MUST** expose `GET /v1/mcp/tasks?status=...&tool_id=...&caller_subject_id=...` per DEC-1119. Pagination via cursor (last task_id). Caller MUST be `tenant_admin` to filter by other subjects; non-admin sees only own tasks.
 
 12. **MUST** run per-module bounded-concurrency worker pool per DEC-1108 + DEC-1120. The `tasks/worker_pool.rs::ModulePool`:
-    - Tokio semaphore sized at `max_concurrent_tasks` per module.
-    - Pending tasks enqueued in `mcp_tasks` table; pickup query `SELECT ... WHERE status='pending' AND module=$1 ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1`.
-    - Worker acquires semaphore, transitions status='running', invokes tool handler.
-    - On completion/failure: transitions status accordingly, emits audit row, releases semaphore.
-    - Crashed workers (process restart): in-flight tasks resume from last checkpoint per DEC-1116; if no checkpoint, retry from scratch (with idempotency_key dedup).
+- Tokio semaphore sized at `max_concurrent_tasks` per module.
+- Pending tasks enqueued in `mcp_tasks` table; pickup query `SELECT ... WHERE status='pending' AND module=$1 ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1`.
+- Worker acquires semaphore, transitions status='running', invokes tool handler.
+- On completion/failure: transitions status accordingly, emits audit row, releases semaphore.
+- Crashed workers (process restart): in-flight tasks resume from last checkpoint per DEC-1116; if no checkpoint, retry from scratch (with idempotency_key dedup).
 
 13. **MUST** persist checkpoints per DEC-1116 via `tasks/checkpoint.rs::save(task_id, seq, data)`:
-    - Worker invokes during long operations at sensible boundaries (per-item processed, per-batch, etc.).
-    - INSERT `mcp_task_checkpoints` row.
-    - Optional; tools choose when to checkpoint.
-    - On task restart: worker loads latest checkpoint via `SELECT ... ORDER BY seq DESC LIMIT 1`; resumes from that state.
+- Worker invokes during long operations at sensible boundaries (per-item processed, per-batch, etc.).
+- INSERT `mcp_task_checkpoints` row.
+- Optional; tools choose when to checkpoint.
+- On task restart: worker loads latest checkpoint via `SELECT ... ORDER BY seq DESC LIMIT 1`; resumes from that state.
 
 14. **MUST** emit progress events via `tasks/progress.rs::publish(task_id, value, unit, total, msg)` per DEC-1110:
-    - INSERT `mcp_task_progress_events` row.
-    - UPDATE `mcp_tasks.progress_*` columns (latest state for fast polling).
-    - NATS publish `tenant.<slug>.mcp.tasks.<task_id>.progress` with payload.
-    - Sample 1% to memory as `mcp.task_progress` (high-volume).
+- INSERT `mcp_task_progress_events` row.
+- UPDATE `mcp_tasks.progress_*` columns (latest state for fast polling).
+- NATS publish `tenant.<slug>.mcp.tasks.<task_id>.progress` with payload.
+- Sample 1% to memory as `mcp.task_progress` (high-volume).
 
 15. **MUST** expire tasks via daily scheduled job per DEC-1103 + DEC-1113. The `tasks/expiry_job.rs::run_daily()`:
-    - SELECT tasks WHERE status IN ('pending','running','completed','failed','cancelled') AND expires_at < now().
-    - For pending/running: transition status='expired' + signal worker cancel.
-    - For terminal (completed/failed/cancelled/expired): prune result_payload_kms_blob (set to NULL) — retain metadata.
-    - Emit `mcp.task_expired` per task.
+- SELECT tasks WHERE status IN ('pending','running','completed','failed','cancelled') AND expires_at < now().
+- For pending/running: transition status='expired' + signal worker cancel.
+- For terminal (completed/failed/cancelled/expired): prune result_payload_kms_blob (set to NULL) — retain metadata.
+- Emit `mcp.task_expired` per task.
 
 16. **MUST** apply idempotency on task creation per DEC-1121. The `tasks/idempotency.rs::find_or_create(idempotency_key, tenant_id)`:
-    - Lookup partial unique index `(tenant_id, idempotency_key) WHERE created_at > now() - interval '24 hours'`.
-    - Hit: return existing task_id (200 OK with existing task state, NOT 202 Accepted with new).
-    - Miss: INSERT new task row.
-    - Atomic via INSERT ... ON CONFLICT.
+- Lookup partial unique index `(tenant_id, idempotency_key) WHERE created_at > now() - interval '24 hours'`.
+- Hit: return existing task_id (200 OK with existing task state, NOT 202 Accepted with new).
+- Miss: INSERT new task row.
+- Atomic via INSERT ... ON CONFLICT.
 
 17. **MUST** integrate with TASK-MCP-006 gating per DEC-1111 + DEC-1122. Confirmation at task START (sync phase of create.rs); subsequent polls do NOT re-confirm; cancellation does NOT require confirmation. The confirmation token consumed in tasks/create.rs per TASK-MCP-006 §1 #12 atomic-consume pattern.
 
@@ -236,14 +236,14 @@ The MCP service **MUST** ship Tasks primitive at `services/mcp/src/tasks/` per M
 19. **MUST** preserve trace_id end-to-end per DEC-1123 + task-audit skill rule 22-24. Original tools/call trace_id stored in `mcp_tasks.trace_id`; emitted on every audit row + every progress event + every NATS publish.
 
 20. **MUST** emit 8 memory audit row kinds per DEC-1124:
-    - `mcp.task_started` (sev-2)
-    - `mcp.task_progress` (sev-3 — high-volume; sampled at 1% via TASK-OBS-006)
-    - `mcp.task_completed` (sev-2)
-    - `mcp.task_failed` (sev-2)
-    - `mcp.task_cancelled` (sev-2)
-    - `mcp.task_expired` (sev-3)
-    - `mcp.task_resumed_after_reconnect` (sev-3 — informational, helps debug worker restarts)
-    - `mcp.task_checkpoint_persisted` (sev-3 — sampled at 1%)
+- `mcp.task_started` (sev-2)
+- `mcp.task_progress` (sev-3 — high-volume; sampled at 1% via TASK-OBS-006)
+- `mcp.task_completed` (sev-2)
+- `mcp.task_failed` (sev-2)
+- `mcp.task_cancelled` (sev-2)
+- `mcp.task_expired` (sev-3)
+- `mcp.task_resumed_after_reconnect` (sev-3 — informational, helps debug worker restarts)
+- `mcp.task_checkpoint_persisted` (sev-3 — sampled at 1%)
 
 21. **MUST** PII-scrub audit rows per DEC-1125 + task-audit skill rule 18. `input_payload_sha256` and `result_payload_sha256` only in chain; raw payloads in `mcp_tasks` (RLS-scoped, 30-day retention post-completion).
 

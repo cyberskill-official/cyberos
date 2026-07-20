@@ -1,28 +1,16 @@
 # CyberOS CHAT — Mattermost fork at pinned MIT-Apache commit
 
-**Status:** TASK-CHAT-001..012 shipped as service slices. TASK-CHAT-001 pins the fork, license-drift watcher, and cherry-pick policy; TASK-CHAT-002 adds the CyberOS AuthBridge plugin scaffold for AUTH JWT login and tenant propagation; TASK-CHAT-003..012 add deploy planning, Vietnamese search, memory bridge, imports, Lumi routing, retro-capture, decommission signal, privacy push, and DSAR export helpers.
-**Upstream:** [`mattermost/mattermost-server`](https://github.com/mattermost/mattermost-server)
-**Pinned commit:** see [`PINNED_COMMIT`](PINNED_COMMIT)
-**CyberOS patch version:** see [`CYBEROS_PATCH_VERSION`](CYBEROS_PATCH_VERSION)
-**License posture:** the pinned upstream commit is dated BEFORE Mattermost's relicense to non-Apache terms; the upstream tree at that SHA carries MIT + Apache-2.0. CyberOS patches in [`patches/`](patches/) are Apache-2.0.
+**Status:** TASK-CHAT-001..012 shipped as service slices. TASK-CHAT-001 pins the fork, license-drift watcher, and cherry-pick policy; TASK-CHAT-002 adds the CyberOS AuthBridge plugin scaffold for AUTH JWT login and tenant propagation; TASK-CHAT-003..012 add deploy planning, Vietnamese search, memory bridge, imports, Lumi routing, retro-capture, decommission signal, privacy push, and DSAR export helpers. **Upstream:** [`mattermost/mattermost-server`](https://github.com/mattermost/mattermost-server) **Pinned commit:** see [`PINNED_COMMIT`](PINNED_COMMIT) **CyberOS patch version:** see [`CYBEROS_PATCH_VERSION`](CYBEROS_PATCH_VERSION) **License posture:** the pinned upstream commit is dated BEFORE Mattermost's relicense to non-Apache terms; the upstream tree at that SHA carries MIT + Apache-2.0. CyberOS patches in [`patches/`](patches/) are Apache-2.0.
 
 ---
 
 ## §1 — Why a fork, why pinned, why patches only
 
-CyberOS sells commercial services on top of the chat surface. Mattermost's
-post-relicense terms (business-source-style) prohibit competing commercial
-offerings; the pre-relicense MIT + Apache-2.0 commit is the last point at
-which a commercial fork is permitted.
+CyberOS sells commercial services on top of the chat surface. Mattermost's post-relicense terms (business-source-style) prohibit competing commercial offerings; the pre-relicense MIT + Apache-2.0 commit is the last point at which a commercial fork is permitted.
 
-We pin a single SHA rather than a tag because tags can be re-pointed (the
-upstream maintainer can move `v9.x` to a different commit). The SHA is
-immutable.
+We pin a single SHA rather than a tag because tags can be re-pointed (the upstream maintainer can move `v9.x` to a different commit). The SHA is immutable.
 
-We apply changes as patches in [`patches/`](patches/) at Docker build time,
-not as commits in this repository. The diff between the pinned upstream and
-the patched build is therefore obvious from the patch directory. We do not
-vendor the 2M-line upstream source.
+We apply changes as patches in [`patches/`](patches/) at Docker build time, not as commits in this repository. The diff between the pinned upstream and the patched build is therefore obvious from the patch directory. We do not vendor the 2M-line upstream source.
 
 ---
 
@@ -60,19 +48,14 @@ UPSTREAM_SHA=abc123...
 
 ## §4 — License drift watcher
 
-A scheduled GitHub Actions workflow (`chat-license-drift-watcher.yml`) runs
-every Monday 00:00 UTC. It:
+A scheduled GitHub Actions workflow (`chat-license-drift-watcher.yml`) runs every Monday 00:00 UTC. It:
 
 1. Reads the pinned SHA from `PINNED_COMMIT`.
-2. Queries the upstream `mattermost-server` repository for commits since
-   that SHA.
-3. Filters for commits touching `LICENSE`, `LICENSE.md`, files under
-   `licensing/`, or root-level package metadata.
-4. If any drift is detected → files a GitHub issue with the
-   `legal-review-needed` and `chat` labels.
+2. Queries the upstream `mattermost-server` repository for commits since that SHA.
+3. Filters for commits touching `LICENSE`, `LICENSE.md`, files under `licensing/`, or root-level package metadata.
+4. If any drift is detected → files a GitHub issue with the `legal-review-needed` and `chat` labels.
 
-The workflow also runs on `workflow_dispatch` so operators can trigger a
-fresh scan on demand.
+The workflow also runs on `workflow_dispatch` so operators can trigger a fresh scan on demand.
 
 ---
 
@@ -95,17 +78,13 @@ The image tag includes the pinned SHA (12-char) and CyberOS patch version:
 cyberos/chat:cf5fa5a2bb14-0.1.0
 ```
 
-The tag is the **only** identifier operators need to determine what is
-running. No manifest inspection necessary.
+The tag is the **only** identifier operators need to determine what is running. No manifest inspection necessary.
 
 ---
 
 ## §6 — CHANGELOG
 
-CyberOS-specific changes are tracked in [`CHANGELOG.cyberos.md`](CHANGELOG.cyberos.md)
-using Keep-a-Changelog format. Every PR touching `services/chat/` MUST
-update the changelog with a category line — `feature`, `bug-fix`,
-`security`, or `license-cherry-pick`.
+CyberOS-specific changes are tracked in [`CHANGELOG.cyberos.md`](CHANGELOG.cyberos.md) using Keep-a-Changelog format. Every PR touching `services/chat/` MUST update the changelog with a category line — `feature`, `bug-fix`, `security`, or `license-cherry-pick`.
 
 ---
 

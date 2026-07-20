@@ -21,9 +21,7 @@ provenance:
 ## 1. Objectives and Success Criteria
 
 <!-- authority: human-confirmed --> Modernise the Acme customer portal so that:
-the project-list page p95 load time drops below 800ms; ≥95% of Acme customers
-can log in via SSO (SAML 2.0 + OIDC); the portal achieves a Lighthouse Mobile
-score ≥ 90. <!-- source: golden-happy-path-brief.md §"Rough scope" + §"Problem statement" -->
+the project-list page p95 load time drops below 800ms; ≥95% of Acme customers can log in via SSO (SAML 2.0 + OIDC); the portal achieves a Lighthouse Mobile score ≥ 90. <!-- source: golden-happy-path-brief.md §"Rough scope" + §"Problem statement" -->
 
 ## 2. Scope
 
@@ -54,11 +52,8 @@ score ≥ 90. <!-- source: golden-happy-path-brief.md §"Rough scope" + §"Probl
 
 ## 4. Assumptions and Constraints
 
-- **Assumptions:** Acme provides production database snapshot by 2026-07-01;
-  Acme's identity-provider admins respond within 5 business days on SAML
-  configuration handshakes.
-- **Constraints:** Budget USD $180k–$240k; demo deadline 2026-09 user
-  conference; GA by 2026-11-30; GDPR applies (three EU customer firms).
+- **Assumptions:** Acme provides production database snapshot by 2026-07-01; Acme's identity-provider admins respond within 5 business days on SAML configuration handshakes.
+- **Constraints:** Budget USD $180k–$240k; demo deadline 2026-09 user conference; GA by 2026-11-30; GDPR applies (three EU customer firms).
 
 ## 5. Engagement Model
 
@@ -114,45 +109,24 @@ See §5 Fixed-Price Terms milestone table for fee triggers. Acceptance gates:
 
 ## 9. Acceptance Criteria
 
-Per-deliverable in §3 + the three measurable targets in §1. Definition of Done
-applies as declared in `./dor-dod.md` (to be authored at M2).
+Per-deliverable in §3 + the three measurable targets in §1. Definition of Done applies as declared in `./dor-dod.md` (to be authored at M2).
 
 ## 10. IP and Confidentiality
 
-- **IP assignment on payment:** all CyberSkill-authored Phase-1 source code,
-  designs, and documentation transfer to Acme upon receipt of the M6 invoice.
-- **Pre-existing IP carve-out:** CyberSkill retains the CyberOS skill module,
-  the project-cleanup utility, and any cyberskill-vn skills used in support of
-  the engagement.
-- **Background-IP licensing:** CyberSkill grants Acme a perpetual, irrevocable,
-  royalty-free, worldwide licence to use any background IP embedded in Phase-1
-  deliverables for Acme's own internal business purposes.
+- **IP assignment on payment:** all CyberSkill-authored Phase-1 source code, designs, and documentation transfer to Acme upon receipt of the M6 invoice.
+- **Pre-existing IP carve-out:** CyberSkill retains the CyberOS skill module, the project-cleanup utility, and any cyberskill-vn skills used in support of the engagement.
+- **Background-IP licensing:** CyberSkill grants Acme a perpetual, irrevocable, royalty-free, worldwide licence to use any background IP embedded in Phase-1 deliverables for Acme's own internal business purposes.
 - **NDA scope and term:** mutual NDA, two-year survival post-engagement.
-- **Sub-processor list:** Cloudflare (CDN), Vercel (hosting), Sentry (errors),
-  Datadog (APM), Postgres-as-a-service via Neon.
-- **Data-processing addendum:** `./acme-dpa-2026.md` (GDPR-aligned; per
-  golden-happy-path-brief §Constraints).
-- **AI-tool usage disclosure:** CyberSkill engineers may use Claude Code,
-  Cursor, and GitHub Copilot during Phase 1. AI-generated code is reviewed by
-  a human per modules/cuo/docs/appendices.md (§13 Software Development Process) §5; every PR carries an
-  `ai-assisted: yes/no` label. No Acme proprietary data is fed to AI providers
-  without ZDR (zero-data-retention) attestation on file.
+- **Sub-processor list:** Cloudflare (CDN), Vercel (hosting), Sentry (errors), Datadog (APM), Postgres-as-a-service via Neon.
+- **Data-processing addendum:** `./acme-dpa-2026.md` (GDPR-aligned; per golden-happy-path-brief §Constraints).
+- **AI-tool usage disclosure:** CyberSkill engineers may use Claude Code, Cursor, and GitHub Copilot during Phase 1. AI-generated code is reviewed by a human per modules/cuo/docs/appendices.md (§13 Software Development Process) §5; every PR carries an `ai-assisted: yes/no` label. No Acme proprietary data is fed to AI providers without ZDR (zero-data-retention) attestation on file.
 
 ## 11. Change Control
 
-Any change to scope, deliverables, schedule, or pricing requires a written
-change-order, signed by CS + EM. Change-orders are priced at CyberSkill's
-standard T&M rates (USD $95/hr senior, $70/hr mid, $50/hr junior). The default
-change-order template lives at `./change-order-template.md` (created at M1).
+Any change to scope, deliverables, schedule, or pricing requires a written change-order, signed by CS + EM. Change-orders are priced at CyberSkill's standard T&M rates (USD $95/hr senior, $70/hr mid, $50/hr junior). The default change-order template lives at `./change-order-template.md` (created at M1).
 
 ## 12. Warranty, Support, and Governance Cadence
 
-- **Warranty:** 90 days post-M6 acceptance — defects against §1 criteria fixed
-  at no additional cost.
-- **Support tier:** business-hours email + 24h response SLA during warranty;
-  post-warranty handled via separate managed-services SOW or hand-over to
-  Acme's internal team.
-- **Governance cadence:** daily standup (internal); weekly written status to
-  Pat + Sam + 30-min Friday call; fortnightly demo to Acme product team;
-  monthly steering committee (Pat + @stephen.cheng); single QBR in December
-  2026 covering DORA metrics, NPS, and Phase-2 roadmap.
+- **Warranty:** 90 days post-M6 acceptance — defects against §1 criteria fixed at no additional cost.
+- **Support tier:** business-hours email + 24h response SLA during warranty; post-warranty handled via separate managed-services SOW or hand-over to Acme's internal team.
+- **Governance cadence:** daily standup (internal); weekly written status to Pat + Sam + 30-min Friday call; fortnightly demo to Acme product team; monthly steering committee (Pat + @stephen.cheng); single QBR in December 2026 covering DORA metrics, NPS, and Phase-2 roadmap.

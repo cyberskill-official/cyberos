@@ -99,27 +99,27 @@ The TIME service **MUST** ship auto-detect proposal engine at `services/time/src
 3. **MUST** define `time_proposals` table at migration `0008`: `(proposal_id UUID PRIMARY KEY, tenant_id UUID NOT NULL, member_subject_id UUID NOT NULL, engagement_id UUID NOT NULL, project_id UUID, task_id UUID, source proposal_source NOT NULL, source_ref UUID NOT NULL, suggested_start TIMESTAMPTZ NOT NULL, suggested_end TIMESTAMPTZ NOT NULL, suggested_description TEXT, confidence_score INT NOT NULL CHECK (confidence_score BETWEEN 50 AND 100), state proposal_state NOT NULL DEFAULT 'pending', created_at TIMESTAMPTZ NOT NULL DEFAULT now(), expires_at TIMESTAMPTZ NOT NULL, accepted_entry_id UUID, trace_id CHAR(32))`. RLS scoped to Member.
 
 4. **MUST** subscribe to PROJ NATS events via `proj_activity_watcher.rs`:
-   - `proj.issue.status_changed`: fires `proj_status_change` proposal evaluator.
-   - `proj.comment.created`: per-issue rolling count → `proj_comment_burst` if > 5 comments in 1h.
-   - `proj.attachment.added`: fires `proj_attachment_added`.
+- `proj.issue.status_changed`: fires `proj_status_change` proposal evaluator.
+- `proj.comment.created`: per-issue rolling count → `proj_comment_burst` if > 5 comments in 1h.
+- `proj.attachment.added`: fires `proj_attachment_added`.
 
 5. **MUST** compute confidence via `confidence_score.rs::score(source, context)`:
-   - Status change from In-Progress → Done: ~85 (likely user did work).
-   - Comment burst: ~70 (probably discussion + work).
-   - Attachment added: ~65 (artifact suggests work).
-   - Multiple signals same hour: aggregate +10 each (cap 100).
-   - User's role on engagement matches issue assignee: +5.
-   - Issue assignee = Member: required (else skip).
+- Status change from In-Progress → Done: ~85 (likely user did work).
+- Comment burst: ~70 (probably discussion + work).
+- Attachment added: ~65 (artifact suggests work).
+- Multiple signals same hour: aggregate +10 each (cap 100).
+- User's role on engagement matches issue assignee: +5.
+- Issue assignee = Member: required (else skip).
 
 6. **MUST** filter proposals < 50 confidence per DEC-1444 — never persist.
 
 7. **MUST** propose duration from event timestamps. For status_change: `now() - prior_status_change_at` (capped at 4h). For comment_burst: span of comments (capped at 2h). For attachment: 30min default.
 
 8. **MUST NEVER auto-create TIME entry per DEC-1445. Always requires `POST /v1/time/proposals/{id}/accept` from Member with body `{ duration_seconds_override?, description_override? }`. Handler:
-   - Validates Member owns proposal.
-   - Creates TIME entry via TASK-TIME-001 with Member's overrides applied.
-   - Transitions state='accepted'.
-   - Emits `time.proposal_accepted` sev-2.
+- Validates Member owns proposal.
+- Creates TIME entry via TASK-TIME-001 with Member's overrides applied.
+- Transitions state='accepted'.
+- Emits `time.proposal_accepted` sev-2.
 
 9. **MUST** support reject `POST /v1/time/proposals/{id}/reject` body `{ reason? }`. Transitions state='rejected'. Emits `time.proposal_rejected` sev-3.
 
@@ -275,8 +275,7 @@ async fn expire_after_7d() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-PROJ-002 (NATS events to subscribe).
-**Cross-module:** TASK-TIME-001 (entry create), TASK-AI-003, TASK-MEMORY-111.
+**Upstream:** TASK-PROJ-002 (NATS events to subscribe). **Cross-module:** TASK-TIME-001 (entry create), TASK-AI-003, TASK-MEMORY-111.
 
 ---
 

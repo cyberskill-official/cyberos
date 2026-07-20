@@ -108,12 +108,12 @@ The REW service **MUST** ship BP ledger at `services/rew/src/bp/` with credit/de
    ```
 
 3. **MUST** schedule interest accrual cron nightly 03:30 via TASK-MCP-007 per DEC-2212:
-   - Fetch ACB rate from TASK-HR-005 policy
-   - For each active member with balance > 0: compute daily_interest = balance * (annual_rate / 365); insert credit_interest_accrual txn
+- Fetch ACB rate from TASK-HR-005 policy
+- For each active member with balance > 0: compute daily_interest = balance * (annual_rate / 365); insert credit_interest_accrual txn
 
 4. **MUST** compute balance pure-function at `balance_query.rs::balance(member, as_of)`:
-   - Sum credits - debits up to as_of date
-   - Verify matches latest txn.balance_after
+- Sum credits - debits up to as_of date
+- Verify matches latest txn.balance_after
 
 5. **MUST** be immutable per DEC-2213 — corrections via new debit_correction txn with reason.
 
@@ -209,9 +209,7 @@ async fn debit_exceeds_balance_rejected() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-REW-001.
-**Downstream:** TASK-REW-008 (P3 distribution debits from this).
-**Cross-module:** TASK-HR-005 (ACB rate policy), TASK-MCP-007 (cron), TASK-AUTH-101 (CFO), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-REW-001. **Downstream:** TASK-REW-008 (P3 distribution debits from this). **Cross-module:** TASK-HR-005 (ACB rate policy), TASK-MCP-007 (cron), TASK-AUTH-101 (CFO), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

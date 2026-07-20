@@ -100,24 +100,24 @@ A Rust HTTP proxy **MUST** sit between Grafana and the 3 OBS backends (Loki, Pro
 3. **MUST** AND the injected filter with any user-supplied query (logical conjunction; never OR). Example: `rate(foo[5m])` with tenant `T` → `rate(foo{tenant_id="T"}[5m])`. The user's query is preserved exactly; only the label set is augmented.
 4. **MUST** refuse queries that ALREADY contain `tenant_id` label as a user-supplied filter — this prevents bypass attempts where a user crafts `foo{tenant_id="other"}` hoping the proxy will OR-merge or pass through. Such queries return `400 BAD_REQUEST` with `{"error":"user_supplied_tenant_id","reason":"tenant_id label is reserved; do not include in query"}`. Sev-1 audit row `obs.cross_tenant_query_attempt` emitted.
 5. **MUST** support all 3 query languages with per-language AST parser:
-    - PromQL via `promql-parser@0.4` (Prometheus official Rust port).
-    - LogQL via custom parser (no mature crate; ~300 LoC subset covering selector + pipe stages).
-    - TraceQL via custom parser (~200 LoC subset).
+- PromQL via `promql-parser@0.4` (Prometheus official Rust port).
+- LogQL via custom parser (no mature crate; ~300 LoC subset covering selector + pipe stages).
+- TraceQL via custom parser (~200 LoC subset).
 6. **MUST** complete proxying in ≤ 5ms p95 overhead (parse + inject + serialise; backend latency excluded). The 5ms ceiling protects user experience — Grafana already round-trips multiple queries per dashboard refresh.
 7. **MUST** forward responses unchanged (the backends already namespace by tenant_id label; nothing to filter response-side).
 8. **MUST** detect cross-tenant attempts: if the caller's `tenant_id` claim differs from any explicit `tenant_id` in the query (caught by §1 #4) OR the JWT's tenant_id is the nil UUID (root-admin) — root-admin queries are special-cased per §1 #11.
 9. **MUST** emit a memory audit row `obs.query_proxied` per query with payload: `tenant_id`, `caller_subject_id`, `backend` (loki|prometheus|tempo), `query_sha256`, `outcome` (proxied | rejected_user_supplied_tenant_id | rejected_unauthenticated | backend_error), `latency_ms`, `request_id`. Logging the SHA-256 of the query (not the raw query) preserves privacy if the query contains tenant-business semantics.
 10. **MUST** emit OTel metrics:
-    - `obs_proxy_requests_total{tenant_id, backend, outcome}` (counter).
-    - `obs_proxy_injection_latency_ms{backend}` (histogram; SLO p95 < 5ms).
-    - `obs_proxy_cross_tenant_attempts_total{tenant_id}` (counter; sev-1 alarm on increment).
-    - `obs_proxy_backend_latency_ms{backend}` (histogram).
+- `obs_proxy_requests_total{tenant_id, backend, outcome}` (counter).
+- `obs_proxy_injection_latency_ms{backend}` (histogram; SLO p95 < 5ms).
+- `obs_proxy_cross_tenant_attempts_total{tenant_id}` (counter; sev-1 alarm on increment).
+- `obs_proxy_backend_latency_ms{backend}` (histogram).
 11. **MUST** support root-admin (tenant 0) queries WITHOUT injection — root-admin legitimately queries cross-tenant for ops/compliance. The exception is logged via `obs.query_proxied` row with `outcome: root_admin_unfiltered` AND emits sev-2 (informational) so cross-tenant queries are visible to compliance review.
 12. **SHOULD** cache JWKS lookups for 5 minutes (matches TASK-AUTH-004 §1 #3 cache header).
 13. **SHOULD** support all standard Grafana query endpoints:
-    - Prometheus: `/api/v1/query`, `/api/v1/query_range`, `/api/v1/labels`, `/api/v1/series`.
-    - Loki: `/loki/api/v1/query`, `/loki/api/v1/query_range`, `/loki/api/v1/labels`.
-    - Tempo: `/api/search`, `/api/traces/<id>`.
+- Prometheus: `/api/v1/query`, `/api/v1/query_range`, `/api/v1/labels`, `/api/v1/series`.
+- Loki: `/loki/api/v1/query`, `/loki/api/v1/query_range`, `/loki/api/v1/labels`.
+- Tempo: `/api/search`, `/api/traces/<id>`.
 
 ---
 

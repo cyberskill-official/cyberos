@@ -88,48 +88,47 @@ risk_if_skipped: "Without marketplace, plugins distribute only via direct downlo
 The PLUGIN module **MUST** ship a marketplace publish surface at `services/plugin-host/src/marketplace/`. CLI `cyberos-plugin publish <bundle>` uploads a packed bundle to `plugins.cyberskill.world` (OCI-compatible registry); public plugins additionally mirror to `agentskills.io`. The marketplace server itself (registry API + UI) is scaffolded here and fully implemented in task-PLUGIN-008a.
 
 1. **MUST** implement `cyberos-plugin publish <bundle>` CLI with flags per DEC-2470 + DEC-2471:
-   - `--visibility {public,private,enterprise}` — default reads from manifest's `marketplace.visibility` (per TASK-PLUGIN-001 schema)
-   - `--registry <url>` — defaults to `https://plugins.cyberskill.world`
-   - `--mirror-agentskills` — boolean, default true for public visibility; force-false otherwise
-   - `--vetted-badge-token <token>` — optional, supplied by CyberSkill after manual review (clause 5)
+- `--visibility {public,private,enterprise}` — default reads from manifest's `marketplace.visibility` (per TASK-PLUGIN-001 schema)
+- `--registry <url>` — defaults to `https://plugins.cyberskill.world`
+- `--mirror-agentskills` — boolean, default true for public visibility; force-false otherwise
+- `--vetted-badge-token <token>` — optional, supplied by CyberSkill after manual review (clause 5)
 
 2. **MUST** validate bundle integrity before upload per DEC-2475:
-   - Re-run `cyberos-plugin doctor <bundle>` and require all 8 INTEROP invariants pass
-   - Re-validate canonical manifest against `manifest.schema.json` per TASK-PLUGIN-001
-   - Verify Sigstore Rekor anchor matches the bundle bytes
-   - Verify bundle's target adapter output matches the per-target reproducibility check
+- Re-run `cyberos-plugin doctor <bundle>` and require all 8 INTEROP invariants pass
+- Re-validate canonical manifest against `manifest.schema.json` per TASK-PLUGIN-001
+- Verify Sigstore Rekor anchor matches the bundle bytes
+- Verify bundle's target adapter output matches the per-target reproducibility check
 
 3. **MUST** push to OCI-compatible registry at `plugins.cyberskill.world/v2/<id>/blobs` per OCI Distribution Spec v1.1:
-   - Bundle bytes pushed as `application/vnd.cyberskill.plugin.v1+zip` (or `+folder` for codex-cli)
-   - Manifest pushed as `application/vnd.cyberskill.plugin.manifest.v1+json`
-   - Tag = `<version>` (e.g. `1.0.0`)
-   - Authentication via OAuth-PKCE bearer token (per TASK-PLUGIN-005)
+- Bundle bytes pushed as `application/vnd.cyberskill.plugin.v1+zip` (or `+folder` for codex-cli)
+- Manifest pushed as `application/vnd.cyberskill.plugin.manifest.v1+json`
+- Tag = `<version>` (e.g. `1.0.0`)
+- Authentication via OAuth-PKCE bearer token (per TASK-PLUGIN-005)
 
 4. **MUST** mirror public-visibility plugins to `agentskills.io` per DEC-2472:
-   - Only `marketplace.visibility == "public"` qualifies
-   - Mirror uploads the canonical manifest + skills/ folder (NOT the binary, NOT the OAuth-PKCE-bound runtime fields)
-   - agentskills.io receives an "anthropic-skills" subset of the manifest
-   - Failure to mirror is a soft failure (publish to plugins.cyberskill.world succeeds, mirror retried via TASK-PLUGIN-006 audit_outbox pattern)
+- Only `marketplace.visibility == "public"` qualifies
+- Mirror uploads the canonical manifest + skills/ folder (NOT the binary, NOT the OAuth-PKCE-bound runtime fields)
+- agentskills.io receives an "anthropic-skills" subset of the manifest
+- Failure to mirror is a soft failure (publish to plugins.cyberskill.world succeeds, mirror retried via TASK-PLUGIN-006 audit_outbox pattern)
 
 5. **MUST** support the vetted-by-CyberSkill badge per DEC-2474:
-   - Badge token issued via out-of-band manual review process (initially) at `https://plugins.cyberskill.world/admin/vet`
-   - Token is JWT signed by CyberSkill with `aud: "plugin:<id>:<version>"`
-   - Publish embeds token in marketplace metadata; registry verifies signature; badge persists across reads
-   - Token-less publish still succeeds; just no badge
+- Badge token issued via out-of-band manual review process (initially) at `https://plugins.cyberskill.world/admin/vet`
+- Token is JWT signed by CyberSkill with `aud: "plugin:<id>:<version>"`
+- Publish embeds token in marketplace metadata; registry verifies signature; badge persists across reads
+- Token-less publish still succeeds; just no badge
 
 6. **MUST** support three visibility modes per DEC-2471:
-   - `public` — discoverable by any user; appears in marketplace search; mirrored to agentskills.io
-   - `private` — discoverable only within the publishing tenant; mirror disabled; install requires tenant membership
-   - `enterprise` — like private, but the registry is a separate tenant-isolated origin (Strategy Level 5 white-label); URL pattern `plugins.<enterprise-domain>.cyberskill.world`
+- `public` — discoverable by any user; appears in marketplace search; mirrored to agentskills.io
+- `private` — discoverable only within the publishing tenant; mirror disabled; install requires tenant membership
+- `enterprise` — like private, but the registry is a separate tenant-isolated origin (Strategy Level 5 white-label); URL pattern `plugins.<enterprise-domain>.cyberskill.world`
 
 7. **MUST** validate revenue-share rules per DEC-2473:
-   - Free plugins (`marketplace.price_usd_per_month` absent or 0): no revenue share, badge irrelevant
-   - Paid plugins (`marketplace.price_usd_per_month > 0`): 70/30 author/CyberSkill split enforced server-side at billing time
-   - `marketplace.revenue_share_percent` defaults to 70 per manifest schema; values < 70 trigger publish-time warning (author getting less than fair share)
+- Free plugins (`marketplace.price_usd_per_month` absent or 0): no revenue share, badge irrelevant
+- Paid plugins (`marketplace.price_usd_per_month > 0`): 70/30 author/CyberSkill split enforced server-side at billing time
+- `marketplace.revenue_share_percent` defaults to 70 per manifest schema; values < 70 trigger publish-time warning (author getting less than fair share)
 
 8. **MUST** emit memory audit row `plugin.published` per DEC-2476 with body containing:
-   - `plugin_id`, `version`, `sha256` of bundle, `signature.rekor_uuid`, `visibility`, `vetted_badge: boolean`, `mirror_targets: [...]`, `trace_id`
-   Audit emission follows TASK-PLUGIN-006 retry semantics.
+- `plugin_id`, `version`, `sha256` of bundle, `signature.rekor_uuid`, `visibility`, `vetted_badge: boolean`, `mirror_targets: [...]`, `trace_id` Audit emission follows TASK-PLUGIN-006 retry semantics.
 
 9. **MUST** enforce version monotonicity at registry — uploading version `1.0.0` after `1.0.1` MUST fail. SemVer 2.0 semantic ordering per TASK-PLUGIN-001 clause 4.
 

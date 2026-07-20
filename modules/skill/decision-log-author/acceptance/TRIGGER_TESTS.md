@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a decision log"
+- "Draft a decision log"
 - "Create the decision log"
 - "Author a new decision log"
 - "Generate the decision log"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this decision log" → decision-log-audit
+- "Audit this decision log" → decision-log-audit
 - "Check the decision log for completeness" → decision-log-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

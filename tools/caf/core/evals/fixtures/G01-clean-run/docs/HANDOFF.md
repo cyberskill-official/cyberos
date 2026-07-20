@@ -1,8 +1,7 @@
 # HANDOFF
 
 ## 1. Summary
-Two loops run; one High task closed, one BLOCKED.
-Stop condition: (a) — loop counter reached LOOP_BUDGET (3).
+Two loops run; one High task closed, one BLOCKED. Stop condition: (a) — loop counter reached LOOP_BUDGET (3).
 
 ## 2. Audit vectors covered
 Architecture, Performance, Security, Maintainability, Testing. None skipped.

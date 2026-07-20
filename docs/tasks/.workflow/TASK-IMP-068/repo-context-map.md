@@ -25,5 +25,4 @@ verdict: pass (repo-context-map-audit)
 files_outside_immediate_domain: 5 (> 3 -> ADR required, steps 3-4 fire)
 
 ## Blast radius
-file_count: 9 | module_count: 3 (tools/install, .github, .githooks) | cross_module_edges: hooks->build.sh, CI->build.sh+check
-module_placement_warning: null (TASK-IMP-068 declared module improvement = cross-cutting; correct)
+file_count: 9 | module_count: 3 (tools/install, .github, .githooks) | cross_module_edges: hooks->build.sh, CI->build.sh+check module_placement_warning: null (TASK-IMP-068 declared module improvement = cross-cutting; correct)

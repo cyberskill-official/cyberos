@@ -41,11 +41,7 @@ blockers:
 
 ## 1. Purpose
 
-Make missing external services **non-blocking** for the task queue. Every
-expected Request/Response pair is captured as a structural contract; a
-Mock Service passes that contract; the test suite stays in CI forever.
-When the real dependency lands, the swap is a single import change and
-the contract guarantees behavioural parity.
+Make missing external services **non-blocking** for the task queue. Every expected Request/Response pair is captured as a structural contract; a Mock Service passes that contract; the test suite stays in CI forever. When the real dependency lands, the swap is a single import change and the contract guarantees behavioural parity.
 
 ## 2. Output schema
 
@@ -81,8 +77,7 @@ backlog_status_tag: "shipped + mocked-dependency"
 ## 3. Quality gates
 
 - ≥ 1 request_response_pair per distinct shape used by the implementation.
-- Every error_mode listed in the task's edge-case-matrix SECURITY or
-  DEGRADATION categories appears in `error_modes` for at least one pair.
+- Every error_mode listed in the task's edge-case-matrix SECURITY or DEGRADATION categories appears in `error_modes` for at least one pair.
 - `mock_implementation.swap_target` is a real exported symbol (file:line resolvable).
 - `sunset_criterion` has an observable trigger — not "someday".
 

@@ -102,8 +102,6 @@ None blocking. Per-task history sparklines need event data the corpus does not c
 
 Chips show short ids (task- prefix stripped) for density; full id + title + status live in the tooltip.
 
-**Post-ship amendment (2026-07-12, TASK-IMP-071):** §1 #4c's deploy-dispatch workaround is retired -
-with [skip ci] gone from bump commits, deploy.yml's VERSION path filter fires natively on the bump
-push. Surfaces (a) and (b) unchanged.
+**Post-ship amendment (2026-07-12, TASK-IMP-071):** §1 #4c's deploy-dispatch workaround is retired - with [skip ci] gone from bump commits, deploy.yml's VERSION path filter fires natively on the bump push. Surfaces (a) and (b) unchanged.
 
 *End of TASK-DOCS-007.*

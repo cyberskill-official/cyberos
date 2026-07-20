@@ -9,4 +9,3 @@ Key changes:
 - Risks +5 (R-DOC-011..015): cross-module trigger source mismatch · CUO renewal stale terms · expiry cascade miss · multi-jurisdiction cert chain · migrated DocuSign LTV failure
 - KPIs +5: cross-module trigger validation (= 1.0) · renewal terms-stamp coverage (= 1.0) · expiry cascade completeness (= 1.0) · multi-jurisdiction cert-chain declaration (= 1.0) · LTV re-validation (≥ 0.95)
 - References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + task-audit skill
-

@@ -1,18 +1,10 @@
 # Compliance mapping — how AUDIT.md's rules support audit & control objectives
 
-This one-pager maps the protocol's core rules and this repository's release
-machinery to the change-management and evidence-integrity control objectives
-that enterprise audits (SOC 2-style, ISO 27001-style) typically test. It is a
-**support map for evidence collection, not a certification** and not legal
-advice: certification belongs to the organization operating the process.
+This one-pager maps the protocol's core rules and this repository's release machinery to the change-management and evidence-integrity control objectives that enterprise audits (SOC 2-style, ISO 27001-style) typically test. It is a **support map for evidence collection, not a certification** and not legal advice: certification belongs to the organization operating the process.
 
 ## Why this framework helps in an audited environment
 
-AI coding agents create a new evidence problem: changes proposed and executed
-by a non-human actor, with reasoning that lives in a conversation buffer.
-AUDIT.md converts that into **files** — append-only backlogs, raw command
-output, closed-vocabulary statuses — and the validator makes the evidence
-trail *mechanically checkable*, offline, with zero telemetry.
+AI coding agents create a new evidence problem: changes proposed and executed by a non-human actor, with reasoning that lives in a conversation buffer. AUDIT.md converts that into **files** — append-only backlogs, raw command output, closed-vocabulary statuses — and the validator makes the evidence trail *mechanically checkable*, offline, with zero telemetry.
 
 ## Rule-to-objective map
 
@@ -40,9 +32,6 @@ trail *mechanically checkable*, offline, with zero telemetry.
 | Blind-spot register (`core/improve/BLINDSPOTS.md`, statuses with evidence) | Honest control-limitation disclosure — what the tooling *cannot* see is documented, reviewed each campaign |
 | Offline-by-design validator (stdlib-only, no network, no telemetry) | Data residency / air-gap compatibility: nothing about the audited codebase leaves the machine |
 
-**Operating it in a regulated context:** pin a release tag per engagement,
-commit `docs/BACKLOG.md` + `docs/HANDOFF.md` in the target repo, run the
-validator in the target's CI (`uses: cyberskill-official/code-audit-framework@v1`),
-and export `--report json` per run for retention.
+**Operating it in a regulated context:** pin a release tag per engagement, commit `docs/BACKLOG.md` + `docs/HANDOFF.md` in the target repo, run the validator in the target's CI (`uses: cyberskill-official/code-audit-framework@v1`), and export `--report json` per run for retention.
 
 *Maintained by CyberSkill — info@cyberskill.world.*

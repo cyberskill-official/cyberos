@@ -47,18 +47,7 @@ expiry · renewal · alerts"] SOURCE --> DOC DOC -- "EU tenant" --> SIGN_EU DOC 
 
 ### Auto vs human-in-loop operations matrix
 
-Operation| How it happens| Why this split
----|---|---
-Document upload| **Manual** Member action| Intent; auto-upload from other modules also requires authoring trigger.
-Template assembly| **Auto** from template engine| Templates parameterised; CUO drafts variable fields.
-Identity verification| **Auto** via WebAuthn / VNeID / SMS-OTP / email-link| Multi-factor enforced per signer; never bypassed.
-Cryptographic signing| **Auto** via QTSP partner API| The QTSP/CA is the trust anchor; CyberOS never holds the signing key.
-High-value signing (>= tenant threshold)| **Manual** 2nd-factor + dual approval| Anti-fraud per Decree 130/2018; signer + counter-signer if applicable.
-Expiry alert| **Auto** 90 / 30 / 7 days before| Renewal lead time; CUO drafts renewal proposal.
-Renewal proposal| **Auto** draft; **Manual** review + send| CUO drafts terms; legal/AM reviews.
-Archival| **Auto** at signing complete| Object-Lock + audit chain row.
-DSAR export| **Auto** bundle per request| Per-subject signature events; chain-preserved.
-Document deletion (purge)| **Blocked** until retention expires| 10-year retention is statutory; deletion not allowed prior.
+Operation| How it happens| Why this split ---|---|--- Document upload| **Manual** Member action| Intent; auto-upload from other modules also requires authoring trigger. Template assembly| **Auto** from template engine| Templates parameterised; CUO drafts variable fields. Identity verification| **Auto** via WebAuthn / VNeID / SMS-OTP / email-link| Multi-factor enforced per signer; never bypassed. Cryptographic signing| **Auto** via QTSP partner API| The QTSP/CA is the trust anchor; CyberOS never holds the signing key. High-value signing (>= tenant threshold)| **Manual** 2nd-factor + dual approval| Anti-fraud per Decree 130/2018; signer + counter-signer if applicable. Expiry alert| **Auto** 90 / 30 / 7 days before| Renewal lead time; CUO drafts renewal proposal. Renewal proposal| **Auto** draft; **Manual** review + send| CUO drafts terms; legal/AM reviews. Archival| **Auto** at signing complete| Object-Lock + audit chain row. DSAR export| **Auto** bundle per request| Per-subject signature events; chain-preserved. Document deletion (purge)| **Blocked** until retention expires| 10-year retention is statutory; deletion not allowed prior.
 
 ## Why DOC exists
 
@@ -74,21 +63,7 @@ The bet is that the dollars saved on DocuSign are nice but the real value is the
 
 A structured decomposition of DOC's scope.
 
-Axis| Question| Answer
----|---|---
-**5W - What**| What is DOC?| A document-management + e-signature workflow service. Owns: documents, templates, signing sessions, signature records, identity-verification events, audit log, archive. Delegates cryptographic signing to QTSP partners.
-**5W - Who**| Who uses it?| **AMs:** initiate MSA / SOW signing. **HR:** contract signing. **Finance:** PO + invoice signing. **Counterparties:** external signers via email link. **CLO:** reviews high-value docs pre-send.
-**5W - When**| When does it run?| On-demand for signing-session create. Continuous for archival jobs and certificate-chain validation. Nightly for retention-policy enforcement (purge after retention expiry per legal).
-**5W - Where**| Where does it run?| P4: SG-1 primary + VN-hanoi-1 partition. S3 Object-Lock bucket per residency. QTSP API calls outbound to partner regions.
-**5W - Why**| Why a separate module?| Because every other module needs to attach signed documents to its primitives (CRM.deal -> MSA, HR.employee -> contract, INV.invoice -> signed PO). Owning the surface once means every consumer reads the same signature audit chain.
-**1H - How**| How does it work?| Document upload -> SHA-256 integrity hash -> template overlay (auto-fill from CRM/HR data) -> signing session created with ordered signer list -> identity verification per signer (WebAuthn/VNeID/SMS) -> QTSP signing call -> certificate + timestamp returned -> PDF stamped + AATL/CAdES-format embedded -> archive to S3 Object-Lock.
-**2C - Cost**| Cost budget?| P4: QTSP partner cost ~$0.50-$2.00 per signature (passes through). Infra ~$80 / month (Fargate + S3 storage + Object-Lock + KMS).
-**2C - Constraints**| Constraints?| (a) eIDAS conformity required for QES - partner-only. (b) VN Decree 130/2018 - signature must use VN-licenced CA for legal effect in VN. (c) 10-year minimum retention. (d) PDPL Art. 14 DSAR - export support for signers' own data. (e) GDPR Art. 17 - purge with archival exemption for legal docs.
-**5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, S3 (Object-Lock Compliance), KMS, pdfium for PDF manipulation, CAdES + PAdES formats, OpenTelemetry. QTSP partners: GlobalSign (EU), DigiCert (US-AATL), VnPay (VN), MK Group (VN), Viettel-CA (VN).
-**5M - Methods**| Method choices?| PAdES-B-LT (long-term) format for archived PDFs - includes cert chain + revocation info + LTV. Per-document hash-chained audit log mirrors memory chain semantics. Multi-signer workflows are state machines.
-**5M - Machines**| Deployment?| Fargate tasks (workflow), separate task for archival jobs. S3 Object-Lock buckets per residency. KMS-wrapped encryption for at-rest documents.
-**5M - Manpower**| Who maintains?| 0.3 FTE at P4; legal counsel reviews QTSP partner contracts annually; security review of cert-chain handling annually.
-**5M - Measurement**| How measured?| (NFR pending) signature non-repudiation - cosign verifies any archive byte-for-byte; (NFR pending) zero archive loss over 10 years; KPI signature-time p95 (<= 5 min including human-confirm).
+Axis| Question| Answer ---|---|--- **5W - What**| What is DOC?| A document-management + e-signature workflow service. Owns: documents, templates, signing sessions, signature records, identity-verification events, audit log, archive. Delegates cryptographic signing to QTSP partners. **5W - Who**| Who uses it?| **AMs:** initiate MSA / SOW signing. **HR:** contract signing. **Finance:** PO + invoice signing. **Counterparties:** external signers via email link. **CLO:** reviews high-value docs pre-send. **5W - When**| When does it run?| On-demand for signing-session create. Continuous for archival jobs and certificate-chain validation. Nightly for retention-policy enforcement (purge after retention expiry per legal). **5W - Where**| Where does it run?| P4: SG-1 primary + VN-hanoi-1 partition. S3 Object-Lock bucket per residency. QTSP API calls outbound to partner regions. **5W - Why**| Why a separate module?| Because every other module needs to attach signed documents to its primitives (CRM.deal -> MSA, HR.employee -> contract, INV.invoice -> signed PO). Owning the surface once means every consumer reads the same signature audit chain. **1H - How**| How does it work?| Document upload -> SHA-256 integrity hash -> template overlay (auto-fill from CRM/HR data) -> signing session created with ordered signer list -> identity verification per signer (WebAuthn/VNeID/SMS) -> QTSP signing call -> certificate + timestamp returned -> PDF stamped + AATL/CAdES-format embedded -> archive to S3 Object-Lock. **2C - Cost**| Cost budget?| P4: QTSP partner cost ~$0.50-$2.00 per signature (passes through). Infra ~$80 / month (Fargate + S3 storage + Object-Lock + KMS). **2C - Constraints**| Constraints?| (a) eIDAS conformity required for QES - partner-only. (b) VN Decree 130/2018 - signature must use VN-licenced CA for legal effect in VN. (c) 10-year minimum retention. (d) PDPL Art. 14 DSAR - export support for signers' own data. (e) GDPR Art. 17 - purge with archival exemption for legal docs. **5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, S3 (Object-Lock Compliance), KMS, pdfium for PDF manipulation, CAdES + PAdES formats, OpenTelemetry. QTSP partners: GlobalSign (EU), DigiCert (US-AATL), VnPay (VN), MK Group (VN), Viettel-CA (VN). **5M - Methods**| Method choices?| PAdES-B-LT (long-term) format for archived PDFs - includes cert chain + revocation info + LTV. Per-document hash-chained audit log mirrors memory chain semantics. Multi-signer workflows are state machines. **5M - Machines**| Deployment?| Fargate tasks (workflow), separate task for archival jobs. S3 Object-Lock buckets per residency. KMS-wrapped encryption for at-rest documents. **5M - Manpower**| Who maintains?| 0.3 FTE at P4; legal counsel reviews QTSP partner contracts annually; security review of cert-chain handling annually. **5M - Measurement**| How measured?| (NFR pending) signature non-repudiation - cosign verifies any archive byte-for-byte; (NFR pending) zero archive loss over 10 years; KPI signature-time p95 (<= 5 min including human-confirm).
 
 ## Architecture
 
@@ -119,22 +94,7 @@ doc.* rows"] OBS["👁 OBS"] end SPA --> DCRUD TPL --> TPL_S INBOX --> SIGNER DC
 
 ### Internal components
 
-Component| Path (planned)| Responsibility
----|---|---
-`doc.rs`| services/doc/src/doc.rs| Document CRUD - upload, version, SHA-256 hash, encrypt-at-rest via KMS, store on S3.
-`template.rs`| services/doc/src/template.rs| Template definition: signer fields, text fields, date fields, conditional fields. Auto-fill rules pulling from CRM/HR/INV.
-`session.rs`| services/doc/src/session.rs| Signing session: ordered signer list, parallel/sequential mode, deadline, reminder schedule.
-`signer.rs`| services/doc/src/signer.rs| Per-signer state machine: invited -> identity_verified -> signed / rejected / expired.
-`idv.rs`| services/doc/src/idv.rs| Identity-verification dispatcher. Routes based on signer profile + document risk-tier. WebAuthn / VNeID / SMS-OTP / email-link.
-`vneid.rs`| services/doc/src/vneid.rs| VNeID API client. CCCD (Citizen ID) validation; biometric assertion for high-value docs (Decision 06/2022/QĐ-TTg).
-`broker.rs`| services/doc/src/broker.rs| QTSP routing. Picks partner per (jurisdiction x document_type x signer_country). Failover between partners on outage.
-`pades.rs`| services/doc/src/pades.rs| PAdES-B-LT formatter. Embeds cert chain + OCSP revocation info + DSS dictionary for long-term validation.
-`archive.rs`| services/doc/src/archive.rs| S3 Object-Lock Compliance archival. Residency-pinned bucket. 10-year retention by default; per-tenant override.
-`audit_chain.rs`| services/doc/src/audit_chain.rs| Per-document hash-chained audit log. Each signature event chains to previous; export bundle for legal discovery.
-`retention.rs`| services/doc/src/retention.rs| Retention policy enforcement. Nightly job: identifies docs past retention + legal hold lifted; purges with audit row.
-`migrate.rs`| services/doc/src/migrate.rs| DocuSign / Adobe Sign / HelloSign import. Preserves original audit trail; flags imported docs as "external-trust".
-`fraud.rs`| services/doc/src/fraud.rs| Notary-fraud detection: velocity check, impossible-travel for signers, device fingerprint, anomaly score.
-`migrations/`| services/doc/migrations/| sqlx migrations. RLS by tenant_id. Indices on (doc_id), (session_id, signer_id), (status).
+Component| Path (planned)| Responsibility ---|---|--- `doc.rs`| services/doc/src/doc.rs| Document CRUD - upload, version, SHA-256 hash, encrypt-at-rest via KMS, store on S3. `template.rs`| services/doc/src/template.rs| Template definition: signer fields, text fields, date fields, conditional fields. Auto-fill rules pulling from CRM/HR/INV. `session.rs`| services/doc/src/session.rs| Signing session: ordered signer list, parallel/sequential mode, deadline, reminder schedule. `signer.rs`| services/doc/src/signer.rs| Per-signer state machine: invited -> identity_verified -> signed / rejected / expired. `idv.rs`| services/doc/src/idv.rs| Identity-verification dispatcher. Routes based on signer profile + document risk-tier. WebAuthn / VNeID / SMS-OTP / email-link. `vneid.rs`| services/doc/src/vneid.rs| VNeID API client. CCCD (Citizen ID) validation; biometric assertion for high-value docs (Decision 06/2022/QĐ-TTg). `broker.rs`| services/doc/src/broker.rs| QTSP routing. Picks partner per (jurisdiction x document_type x signer_country). Failover between partners on outage. `pades.rs`| services/doc/src/pades.rs| PAdES-B-LT formatter. Embeds cert chain + OCSP revocation info + DSS dictionary for long-term validation. `archive.rs`| services/doc/src/archive.rs| S3 Object-Lock Compliance archival. Residency-pinned bucket. 10-year retention by default; per-tenant override. `audit_chain.rs`| services/doc/src/audit_chain.rs| Per-document hash-chained audit log. Each signature event chains to previous; export bundle for legal discovery. `retention.rs`| services/doc/src/retention.rs| Retention policy enforcement. Nightly job: identifies docs past retention + legal hold lifted; purges with audit row. `migrate.rs`| services/doc/src/migrate.rs| DocuSign / Adobe Sign / HelloSign import. Preserves original audit trail; flags imported docs as "external-trust". `fraud.rs`| services/doc/src/fraud.rs| Notary-fraud detection: velocity check, impossible-travel for signers, device fingerprint, anomaly score. `migrations/`| services/doc/migrations/| sqlx migrations. RLS by tenant_id. Indices on (doc_id), (session_id, signer_id), (status).
 
 **DOC-INV-001 - Signed-document integrity is byte-for-byte verifiable.** Every archived PDF MUST cosign-verify against (a) its SHA-256 stored at archive time, (b) its cert chain stored with the document, and (c) its memory audit-chain leaf. The verification path is implemented in `cyberos-doc verify --archive-id ...` and is exercised quarterly by an automated chaos job that randomly picks 1% of archived docs and verifies them. Failure halts retention purges until investigation completes.
 
@@ -277,34 +237,11 @@ type Mutation {
 
 ### REST endpoints
 
-Method| Path| Purpose
----|---|---
-POST| `/doc/upload`| Multipart upload - returns doc_id + s3_key.
-POST| `/doc/{id}/template/{tpl}`| Apply template overlay; resolve auto-fill from CRM/HR.
-POST| `/doc/{id}/session`| Create signing session.
-GET| `/doc/sign/{signer_token}`| External signer landing page (counterparty).
-POST| `/doc/sign/{signer_token}/idv`| Identity-verification challenge response.
-POST| `/doc/sign/{signer_token}/finalize`| Capture signature; trigger QTSP call.
-GET| `/doc/{id}/audit-bundle.zip`| Legal-discovery bundle: PDF + cert chain + audit log.
-POST| `/doc/migrate/docusign`| Import legacy DocuSign envelope (preserve original trail).
-POST| `/doc/migrate/adobesign`| Import legacy Adobe Sign.
-POST| `/doc/migrate/hellosign`| Import legacy HelloSign.
-GET| `/doc/{id}/verify`| Cosign verify of archived PDF.
-POST| `/doc/{id}/legal-hold`| Apply / lift legal hold.
-POST| `/doc/admin/retention-sweep`| Run nightly retention sweep manually.
+Method| Path| Purpose ---|---|--- POST| `/doc/upload`| Multipart upload - returns doc_id + s3_key. POST| `/doc/{id}/template/{tpl}`| Apply template overlay; resolve auto-fill from CRM/HR. POST| `/doc/{id}/session`| Create signing session. GET| `/doc/sign/{signer_token}`| External signer landing page (counterparty). POST| `/doc/sign/{signer_token}/idv`| Identity-verification challenge response. POST| `/doc/sign/{signer_token}/finalize`| Capture signature; trigger QTSP call. GET| `/doc/{id}/audit-bundle.zip`| Legal-discovery bundle: PDF + cert chain + audit log. POST| `/doc/migrate/docusign`| Import legacy DocuSign envelope (preserve original trail). POST| `/doc/migrate/adobesign`| Import legacy Adobe Sign. POST| `/doc/migrate/hellosign`| Import legacy HelloSign. GET| `/doc/{id}/verify`| Cosign verify of archived PDF. POST| `/doc/{id}/legal-hold`| Apply / lift legal hold. POST| `/doc/admin/retention-sweep`| Run nightly retention sweep manually.
 
 ### MCP tool catalogue
 
-Tool name| Inputs| Outputs| Annotations
----|---|---|---
-`cyberos.doc.list`| filter, status?| Document| readonly, scope=doc.read
-`cyberos.doc.start_signing`| template_id, deal_id, signers| {session_id, signer_links}| destructive, scope=doc.write, human-confirm
-`cyberos.doc.status`| session_id| {session, signers}| readonly
-`cyberos.doc.cancel_session`| session_id, reason| {ok}| destructive, scope=doc.write, human-confirm
-`cyberos.doc.find_template`| name_match, jurisdiction| Template| readonly
-`cyberos.doc.legal_discovery_bundle`| doc_id| {zip_url}| destructive, scope=doc.legal_export
-`cyberos.doc.verify_archive`| doc_id| {ok, diagnostics}| readonly
-`cyberos.doc.set_legal_hold`| doc_id, hold| {ok}| destructive, scope=doc.legal_hold, human-confirm
+Tool name| Inputs| Outputs| Annotations ---|---|---|--- `cyberos.doc.list`| filter, status?| Document| readonly, scope=doc.read `cyberos.doc.start_signing`| template_id, deal_id, signers| {session_id, signer_links}| destructive, scope=doc.write, human-confirm `cyberos.doc.status`| session_id| {session, signers}| readonly `cyberos.doc.cancel_session`| session_id, reason| {ok}| destructive, scope=doc.write, human-confirm `cyberos.doc.find_template`| name_match, jurisdiction| Template| readonly `cyberos.doc.legal_discovery_bundle`| doc_id| {zip_url}| destructive, scope=doc.legal_export `cyberos.doc.verify_archive`| doc_id| {ok, diagnostics}| readonly `cyberos.doc.set_legal_hold`| doc_id, hold| {ok}| destructive, scope=doc.legal_hold, human-confirm
 
 ## Key flows
 
@@ -354,18 +291,7 @@ stateDiagram-v2 [*] --> Draft: document uploaded + template applied Draft --> Op
 
 ### Per-state actions
 
-State| Trigger| Side-effects
----|---|---
-Draft| document + template ready| Audit row `template.applied`; preview rendered.
-Open| createSession success| First signer notified (sequential) or all signers notified (parallel); reminders scheduled.
-Invited| signer email sent| Magic-link token issued; expiry = session deadline.
-Viewed| signer opens link| Audit row `signer.viewed` with IP + UA + device fingerprint.
-IdvPassed| identity verified| Audit row `idv.passed` with method + proof_id.
-Signed| QTSP signature returned| Audit row `signer.signed` with cert chain + TSA token.
-Completed| all signers signed| Trigger archive flow; downstream consumers (CRM / HR / INV) notified.
-Archived| PAdES-LT written to S3 Object-Lock| Audit row `archive.completed`; retention timer starts.
-Expired| deadline reached without all signing| Audit row `session.expired`; AM notified; document remains in PG (no archive).
-Cancelled| AM revoke OR signer reject| Audit row `session.cancelled` with reason; all signer tokens invalidated.
+State| Trigger| Side-effects ---|---|--- Draft| document + template ready| Audit row `template.applied`; preview rendered. Open| createSession success| First signer notified (sequential) or all signers notified (parallel); reminders scheduled. Invited| signer email sent| Magic-link token issued; expiry = session deadline. Viewed| signer opens link| Audit row `signer.viewed` with IP + UA + device fingerprint. IdvPassed| identity verified| Audit row `idv.passed` with method + proof_id. Signed| QTSP signature returned| Audit row `signer.signed` with cert chain + TSA token. Completed| all signers signed| Trigger archive flow; downstream consumers (CRM / HR / INV) notified. Archived| PAdES-LT written to S3 Object-Lock| Audit row `archive.completed`; retention timer starts. Expired| deadline reached without all signing| Audit row `session.expired`; AM notified; document remains in PG (no archive). Cancelled| AM revoke OR signer reject| Audit row `session.cancelled` with reason; all signer tokens invalidated.
 
 ## Functional requirements
 
@@ -377,19 +303,7 @@ Previous task enumerations were archived 2026-05-14 and are no longer reflected 
 
 DOC NFRs centre on signature non-repudiation and long-term archival durability.
 
-NFR ID| Concern| Target| Measurement
----|---|---|---
-(NFR pending)| Signature non-repudiation (cosign verifies archive byte-for-byte)| 100% of archives| quarterly chaos audit (random 1%)
-(NFR pending)| Cross-tenant document leak| = 0| RLS verification suite
-(NFR pending)| Archive durability (no archive loss over 10 years)| 11x9s (S3 Object-Lock guarantee)| S3 SLA
-(NFR pending)| Audit-chain integrity| = 0 broken chains| nightly walker job
-(NFR pending)| uploadDocument server-canonical p95| <= 3 s (10 MB PDF)| k6
-(NFR pending)| End-to-end sign (after IDV) p95| <= 8 s| RUM
-(NFR pending)| QTSP partner round-trip p95| <= 5 s (network)| per-partner SLO
-(NFR pending)| DOC availability| >= 99.9% (P4)| SLO monitor
-(NFR pending)| QTSP partner failover RTO| <= 60 s on partner outage| chaos test
-(NFR pending)| eIDAS QES conformity (annual audit)| passed| external auditor
-(NFR pending)| VN Decree 130/2018 cert chain validity| 100%| VN CA SLA
+NFR ID| Concern| Target| Measurement ---|---|---|--- (NFR pending)| Signature non-repudiation (cosign verifies archive byte-for-byte)| 100% of archives| quarterly chaos audit (random 1%) (NFR pending)| Cross-tenant document leak| = 0| RLS verification suite (NFR pending)| Archive durability (no archive loss over 10 years)| 11x9s (S3 Object-Lock guarantee)| S3 SLA (NFR pending)| Audit-chain integrity| = 0 broken chains| nightly walker job (NFR pending)| uploadDocument server-canonical p95| <= 3 s (10 MB PDF)| k6 (NFR pending)| End-to-end sign (after IDV) p95| <= 8 s| RUM (NFR pending)| QTSP partner round-trip p95| <= 5 s (network)| per-partner SLO (NFR pending)| DOC availability| >= 99.9% (P4)| SLO monitor (NFR pending)| QTSP partner failover RTO| <= 60 s on partner outage| chaos test (NFR pending)| eIDAS QES conformity (annual audit)| passed| external auditor (NFR pending)| VN Decree 130/2018 cert chain validity| 100%| VN CA SLA
 
 ## Dependencies
 
@@ -415,81 +329,25 @@ doc citations"] end AUTH --> DOC memory --> DOC OBS --> DOC KMS --> DOC S3 --> D
 
 DOC is the most regulation-heavy module after AUTH. Signature legality across jurisdictions is its entire job.
 
-Regulation / standard| Article / clause| DOC feature that satisfies it
----|---|---
-eIDAS (EU Reg. 910/2014)| Art. 25 - Legal effects of e-signatures| QES via partner QTSP for EU; AdES default for non-QES use cases.
-eIDAS| Art. 32 - Validation of QES| PAdES-B-LT embedded cert chain + OCSP + LTV timestamp.
-eIDAS| Art. 34 - Long-term preservation| S3 Object-Lock Compliance 10y; LTV outer timestamp.
-EU ESI standards| ETSI EN 319 142 - PAdES baseline| PAdES-B-LT format implemented.
-US ESIGN Act (15 U.S.C. §7001)| Consent + intent + record retention| Explicit consent UI; intent captured at sign; 10-year retention.
-US UETA| State e-signature recognition| AATL cert chain via DigiCert.
-Vietnam Decree 130/2018/NĐ-CP| E-signature legal recognition| VN CA chain (VnPay / MK / Viettel-CA); compliant cert profile.
-Vietnam Decision 06/2022/QĐ-TTg| National digital identity (VNeID)| VNeID integration via `vneid.rs` for VN citizens.
-Vietnam Law 91/2025/QH15 (PDPL)| Art. 14 - DSAR| DSAR export bundles documents + audit chains.
-GDPR (EU 2016/679)| Art. 15 - Right of access| Same surface as PDPL.
-GDPR| Art. 17 - Right to erasure| Purge supported with legal-hold + retention-period exemptions; audit fact of erasure remains.
-ISO/IEC 27001:2022| A.5.34 - Privacy in development| Documents encrypted at rest via KMS; access RLS-keyed.
-ISO 14533-1 (PAdES)| Long-term archival profiles| PAdES-B-LT format.
-SOC 2 Type II| CC6.1 - Logical access| RBAC + multi-factor for high-value signing.
+Regulation / standard| Article / clause| DOC feature that satisfies it ---|---|--- eIDAS (EU Reg. 910/2014)| Art. 25 - Legal effects of e-signatures| QES via partner QTSP for EU; AdES default for non-QES use cases. eIDAS| Art. 32 - Validation of QES| PAdES-B-LT embedded cert chain + OCSP + LTV timestamp. eIDAS| Art. 34 - Long-term preservation| S3 Object-Lock Compliance 10y; LTV outer timestamp. EU ESI standards| ETSI EN 319 142 - PAdES baseline| PAdES-B-LT format implemented. US ESIGN Act (15 U.S.C. §7001)| Consent + intent + record retention| Explicit consent UI; intent captured at sign; 10-year retention. US UETA| State e-signature recognition| AATL cert chain via DigiCert. Vietnam Decree 130/2018/NĐ-CP| E-signature legal recognition| VN CA chain (VnPay / MK / Viettel-CA); compliant cert profile. Vietnam Decision 06/2022/QĐ-TTg| National digital identity (VNeID)| VNeID integration via `vneid.rs` for VN citizens. Vietnam Law 91/2025/QH15 (PDPL)| Art. 14 - DSAR| DSAR export bundles documents + audit chains. GDPR (EU 2016/679)| Art. 15 - Right of access| Same surface as PDPL. GDPR| Art. 17 - Right to erasure| Purge supported with legal-hold + retention-period exemptions; audit fact of erasure remains. ISO/IEC 27001:2022| A.5.34 - Privacy in development| Documents encrypted at rest via KMS; access RLS-keyed. ISO 14533-1 (PAdES)| Long-term archival profiles| PAdES-B-LT format. SOC 2 Type II| CC6.1 - Logical access| RBAC + multi-factor for high-value signing.
 
 ## Risk entries
 
 DOC-specific risks in the [risk register](../../reference/risk-register.html#doc).
 
-ID| Risk| Likelihood| Impact| Owner| Mitigation
----|---|---|---|---|---
-`R-DOC-001`| Spoofing / Repudiation - forged signature| Low| Catastrophic| CLO| eIDAS QTSP cert chain; WebAuthn binding; multi-factor for high-value docs; quarterly external audit.
-`R-DOC-002`| Notary-fraud / impersonation via SMS-OTP only| Medium| High| CSO| SMS-OTP restricted to low-value docs; high-value requires WebAuthn or VNeID biometric.
-`R-DOC-003`| QTSP partner outage during signing campaign| Medium| Medium| CTO| Multi-partner per jurisdiction; broker.rs failover; 60s RTO chaos-tested.
-`R-DOC-004`| VNeID API breaking change| Medium| High| CTO| Adapter pattern in vneid.rs; integration tests on every release; VN CA fallback for non-biometric path.
-`R-DOC-005`| S3 Object-Lock misconfiguration allows premature deletion| Low| Catastrophic| CSO| Compliance mode (not Governance); CI test verifies retention-until; account-root cannot override.
-`R-DOC-006`| Legal-hold lift granted to non-CLO| Low| High| CSO| (task pending) scope=doc.legal_hold limited to CLO + DPO; quarterly access review.
-`R-DOC-007`| Cert chain expires; PAdES-LT cannot validate decades later| Medium| High| CTO| PAdES-B-LT includes LTV outer timestamp; periodic re-stamping job at year 9 (1y before retention end).
-`R-DOC-008`| Cross-tenant document leak via shared S3 bucket| Low| Catastrophic| CSO| Per-tenant bucket prefix; IAM scoped per tenant; pre-signed-URL audience-bound.
-`R-DOC-009`| Migration import accepts forged DocuSign trail| Low| High| CLO| Imports flagged trust=external; cert chain validated against AATL root; CLO approves import batches.
-`R-DOC-010`| GDPR Art. 17 purge collides with retention obligation| Medium| Medium| DPO| Purge requires CLO sign-off + retention-exempt classification; rejection logged with reason.
-`R-DOC-011`| CRM/HR/ESOP-triggered document creation fires without underlying lifecycle context| Medium| Medium| CTO| Each cross-module trigger validates source record state at submission; reject document creation if source record incomplete.
-`R-DOC-012`| Renewal proposal CUO-drafted with stale terms (e.g. expired discount)| Medium| Low| CPO| Renewal proposal carries terms-version stamp; CUO reads from active rate-card / contract templates only; AM final review.
-`R-DOC-013`| Expiry alert latency - 90-day notice misses a contract| Low| High| CTO| Nightly batch double-checks all active contracts; 90/30/7 day cascade; OBS alarm on any missed cascade step.
-`R-DOC-014`| Multi-jurisdiction contract (VN tenant signs with EU customer) - which cert chain governs?| Medium| Medium| CLO| Per-contract cert-chain declaration; co-signer cert chains both attached; legal precedence rules per type documented in KB runbook.
-`R-DOC-015`| Migrated DocuSign trail fails LTV after import - provenance breaks at archive| Medium| High| CLO| Imports flagged trust=external + cert-chain captured at import; LTV re-validation at year 9; failures escalate to CLO.
+ID| Risk| Likelihood| Impact| Owner| Mitigation ---|---|---|---|---|--- `R-DOC-001`| Spoofing / Repudiation - forged signature| Low| Catastrophic| CLO| eIDAS QTSP cert chain; WebAuthn binding; multi-factor for high-value docs; quarterly external audit. `R-DOC-002`| Notary-fraud / impersonation via SMS-OTP only| Medium| High| CSO| SMS-OTP restricted to low-value docs; high-value requires WebAuthn or VNeID biometric. `R-DOC-003`| QTSP partner outage during signing campaign| Medium| Medium| CTO| Multi-partner per jurisdiction; broker.rs failover; 60s RTO chaos-tested. `R-DOC-004`| VNeID API breaking change| Medium| High| CTO| Adapter pattern in vneid.rs; integration tests on every release; VN CA fallback for non-biometric path. `R-DOC-005`| S3 Object-Lock misconfiguration allows premature deletion| Low| Catastrophic| CSO| Compliance mode (not Governance); CI test verifies retention-until; account-root cannot override. `R-DOC-006`| Legal-hold lift granted to non-CLO| Low| High| CSO| (task pending) scope=doc.legal_hold limited to CLO + DPO; quarterly access review. `R-DOC-007`| Cert chain expires; PAdES-LT cannot validate decades later| Medium| High| CTO| PAdES-B-LT includes LTV outer timestamp; periodic re-stamping job at year 9 (1y before retention end). `R-DOC-008`| Cross-tenant document leak via shared S3 bucket| Low| Catastrophic| CSO| Per-tenant bucket prefix; IAM scoped per tenant; pre-signed-URL audience-bound. `R-DOC-009`| Migration import accepts forged DocuSign trail| Low| High| CLO| Imports flagged trust=external; cert chain validated against AATL root; CLO approves import batches. `R-DOC-010`| GDPR Art. 17 purge collides with retention obligation| Medium| Medium| DPO| Purge requires CLO sign-off + retention-exempt classification; rejection logged with reason. `R-DOC-011`| CRM/HR/ESOP-triggered document creation fires without underlying lifecycle context| Medium| Medium| CTO| Each cross-module trigger validates source record state at submission; reject document creation if source record incomplete. `R-DOC-012`| Renewal proposal CUO-drafted with stale terms (e.g. expired discount)| Medium| Low| CPO| Renewal proposal carries terms-version stamp; CUO reads from active rate-card / contract templates only; AM final review. `R-DOC-013`| Expiry alert latency - 90-day notice misses a contract| Low| High| CTO| Nightly batch double-checks all active contracts; 90/30/7 day cascade; OBS alarm on any missed cascade step. `R-DOC-014`| Multi-jurisdiction contract (VN tenant signs with EU customer) - which cert chain governs?| Medium| Medium| CLO| Per-contract cert-chain declaration; co-signer cert chains both attached; legal precedence rules per type documented in KB runbook. `R-DOC-015`| Migrated DocuSign trail fails LTV after import - provenance breaks at archive| Medium| High| CLO| Imports flagged trust=external + cert-chain captured at import; LTV re-validation at year 9; failures escalate to CLO.
 
 ## KPIs
 
 DOC KPIs cover signing speed, completion rate, audit integrity, and compliance posture.
 
-KPI| Formula| Source| Target
----|---|---|---
-**Session completion rate**| completed / opened (per 30d)| doc.signing_session| >= 75%
-**Time-to-first-signature p95**| histogram| OBS| <= 24 h
-**Time-to-completion p95**| histogram| OBS| <= 7 d
-**QTSP partner success rate**| signed / attempted| broker.rs| >= 99.5%
-**Identity-verification pass rate**| idv.passed / idv.attempted| idv.rs| >= 90%
-**Archive verification success**| quarterly chaos audit| chaos job| = 100%
-**Cosign chain validation success**| nightly walker| OBS| = 100%
-**Fraud-detection alerts / month**| count| fraud.rs| tracked
-**Migration trust-external flag rate**| external / total| doc.document| declining trend
-**Cross-module trigger validation rate**| cross-module-triggered docs with source record validated / total| OBS| = 1.0 (hard floor)
-**Renewal proposal terms-stamp coverage**| proposals with active terms-version stamped / total| memory audit| = 1.0
-**Expiry cascade completeness**| contracts hit by all 3 cascade steps (90/30/7) / total expiring| nightly batch| = 1.0
-**Multi-jurisdiction cert-chain declaration rate**| multi-juris contracts with explicit cert-chain declared / total| contract metadata| = 1.0
-**LTV re-validation pass rate (year 9)**| migrated trails passing LTV at year 9 / total imports| quarterly audit| >= 0.95 (escalate failures)
+KPI| Formula| Source| Target ---|---|---|--- **Session completion rate**| completed / opened (per 30d)| doc.signing_session| >= 75% **Time-to-first-signature p95**| histogram| OBS| <= 24 h **Time-to-completion p95**| histogram| OBS| <= 7 d **QTSP partner success rate**| signed / attempted| broker.rs| >= 99.5% **Identity-verification pass rate**| idv.passed / idv.attempted| idv.rs| >= 90% **Archive verification success**| quarterly chaos audit| chaos job| = 100% **Cosign chain validation success**| nightly walker| OBS| = 100% **Fraud-detection alerts / month**| count| fraud.rs| tracked **Migration trust-external flag rate**| external / total| doc.document| declining trend **Cross-module trigger validation rate**| cross-module-triggered docs with source record validated / total| OBS| = 1.0 (hard floor) **Renewal proposal terms-stamp coverage**| proposals with active terms-version stamped / total| memory audit| = 1.0 **Expiry cascade completeness**| contracts hit by all 3 cascade steps (90/30/7) / total expiring| nightly batch| = 1.0 **Multi-jurisdiction cert-chain declaration rate**| multi-juris contracts with explicit cert-chain declared / total| contract metadata| = 1.0 **LTV re-validation pass rate (year 9)**| migrated trails passing LTV at year 9 / total imports| quarterly audit| >= 0.95 (escalate failures)
 
 ## RACI matrix
 
 DOC is owned by the CLO seat (legal effect) with CTO for engineering and DPO for data-subject rights.
 
-Activity| CEO| CLO| CTO| CSO| DPO| CFO
----|---|---|---|---|---|---
-Service design + spec| A| R| R| C| C| I
-Implementation| I| C| A/R| C| I| I
-QTSP partner selection + contracts| C| A/R| R| C| I| C
-Legal-hold application / lift| C| A/R| I| C| R| I
-Retention-policy review (10y default)| C| A/R| I| I| C| I
-eIDAS / Decree 130 conformity audit| C| A/R| C| R| C| I
-Notary-fraud incident response| C| R| R| A| C| I
-DSAR fulfilment (DOC scope)| I| C| I| I| A/R| I
-Migration import (DocuSign / Adobe Sign)| C| A| R| I| I| I
+Activity| CEO| CLO| CTO| CSO| DPO| CFO ---|---|---|---|---|---|--- Service design + spec| A| R| R| C| C| I Implementation| I| C| A/R| C| I| I QTSP partner selection + contracts| C| A/R| R| C| I| C Legal-hold application / lift| C| A/R| I| C| R| I Retention-policy review (10y default)| C| A/R| I| I| C| I eIDAS / Decree 130 conformity audit| C| A/R| C| R| C| I Notary-fraud incident response| C| R| R| A| C| I DSAR fulfilment (DOC scope)| I| C| I| I| A/R| I Migration import (DocuSign / Adobe Sign)| C| A| R| I| I| I
 
 R = Responsible, A = Accountable, C = Consulted, I = Informed.
 
@@ -605,23 +463,7 @@ $ cyberos-doc dsar-export --subject alice@acme.com --output dsar.zip
 | External libs | ~20 (pdfium, cms, oid-registry, CAdES) |
 | P4 budget | ~$80/mo + $0.50-$2 / signature (Fargate + S3 + KMS + QTSP pass-thru) |
 
-Capability| Status
----|---
-Document upload + SHA-256 + KMS encrypt| planned - P4
-Template designer + auto-fill from CRM/HR| planned - P4
-Multi-party signing (sequential + parallel)| planned - P4
-eIDAS QTSP integration (GlobalSign / Cryptomathic)| planned - P4
-Adobe AATL chain (DigiCert)| planned - P4
-VN CA chain (VnPay / MK Group / Viettel-CA)| planned - P4
-VNeID integration for VN citizens| planned - P4
-WebAuthn / SMS-OTP / email-link IDV| planned - P4
-PAdES-B-LT archival with LTV outer timestamp| planned - P4
-S3 Object-Lock Compliance, residency-pinned| planned - P4
-DocuSign / Adobe Sign / HelloSign migration| planned - P4
-Notary-fraud detection (velocity + device)| planned - P4
-Legal-hold + retention sweep| planned - P4
-Cosign verification end-to-end| planned - P4
-Quarterly external eIDAS audit| planned - P4+
+Capability| Status ---|--- Document upload + SHA-256 + KMS encrypt| planned - P4 Template designer + auto-fill from CRM/HR| planned - P4 Multi-party signing (sequential + parallel)| planned - P4 eIDAS QTSP integration (GlobalSign / Cryptomathic)| planned - P4 Adobe AATL chain (DigiCert)| planned - P4 VN CA chain (VnPay / MK Group / Viettel-CA)| planned - P4 VNeID integration for VN citizens| planned - P4 WebAuthn / SMS-OTP / email-link IDV| planned - P4 PAdES-B-LT archival with LTV outer timestamp| planned - P4 S3 Object-Lock Compliance, residency-pinned| planned - P4 DocuSign / Adobe Sign / HelloSign migration| planned - P4 Notary-fraud detection (velocity + device)| planned - P4 Legal-hold + retention sweep| planned - P4 Cosign verification end-to-end| planned - P4 Quarterly external eIDAS audit| planned - P4+
 
 ## References
 

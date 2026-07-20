@@ -84,31 +84,31 @@ Every `.skill` bundle's `SKILL.md` file **MUST** carry a YAML frontmatter block 
 
 1. **MUST** begin with `---` on line 1, end with `---` on a line by itself; the YAML block lies between. Anything before line 1's `---` is rejected. The body markdown begins on the line after the closing fence.
 2. **MUST** include the following required fields (rejection if missing):
-    - `id` (string): kebab-case slug `^[a-z][a-z0-9-]*$`; the canonical skill identifier; used in OCI registry path (TASK-SKILL-102).
-    - `version` (string): SemVer `^\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?$`.
-    - `description` (string): 1–200 chars; the operator-facing one-line summary.
-    - `allowed_memory_scopes` (list of glob strings): which memory paths the skill MAY read. Empty list `[]` = no memory access. Each glob validated by `globset@0.4`; invalid glob → reject. Globs are evaluated against memory paths starting at `<memory-root>/` (e.g. `memories/projects/cyberos/**`).
-    - `allowed_tools` (list of strings): which broker-managed tools the skill MAY invoke. Each name MUST appear in the canonical tool enum (`Bash`, `Read`, `Write`, `Edit`, `Glob`, `Grep`, `MemoryRead`, `MemorySearch`, `HttpFetch`, custom MCP names per TASK-SKILL-104). Unknown names → reject.
+- `id` (string): kebab-case slug `^[a-z][a-z0-9-]*$`; the canonical skill identifier; used in OCI registry path (TASK-SKILL-102).
+- `version` (string): SemVer `^\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?$`.
+- `description` (string): 1–200 chars; the operator-facing one-line summary.
+- `allowed_memory_scopes` (list of glob strings): which memory paths the skill MAY read. Empty list `[]` = no memory access. Each glob validated by `globset@0.4`; invalid glob → reject. Globs are evaluated against memory paths starting at `<memory-root>/` (e.g. `memories/projects/cyberos/**`).
+- `allowed_tools` (list of strings): which broker-managed tools the skill MAY invoke. Each name MUST appear in the canonical tool enum (`Bash`, `Read`, `Write`, `Edit`, `Glob`, `Grep`, `MemoryRead`, `MemorySearch`, `HttpFetch`, custom MCP names per TASK-SKILL-104). Unknown names → reject.
 3. **MUST** support the following optional fields (validated when present):
-    - `signature` (object): `{ algo: "ed25519", public_key_hex: <64-char hex>, signature_hex: <128-char hex> }`. Verifies that frontmatter content + body hash matches the signature. Absent signature = unsigned skill (allowed for local dev; rejected by TASK-SKILL-102's OCI gate which requires signed).
-    - `min_broker_version` (string): SemVer; broker refuses to invoke if its own version is lower than this. Default: `0.1.0`.
-    - `max_broker_version` (string): SemVer; broker refuses if higher (forward-incompatible). Default: unbounded.
-    - `disallowed_tools` (list of strings): explicit denylist (subset of canonical tool enum). Useful for skills that want to assert "I never need Edit" even if allowed_tools is broad.
-    - `sync_class` (enum: `private` | `shareable`): default `private`; controls whether the skill's emitted memory rows are eligible for cross-device sync (per TASK-MEMORY-106).
-    - `tenant_scope` (enum: `any` | `pinned`): default `any`; if `pinned`, skill executes only under the tenant_id where it was installed.
-    - `effort_minutes` (integer): suggested timeout cap; broker enforces SIGTERM after `effort_minutes * 60` seconds.
-    - `tags` (list of strings): operator-facing categorisation; ≤ 10 tags; each tag ≤ 30 chars.
+- `signature` (object): `{ algo: "ed25519", public_key_hex: <64-char hex>, signature_hex: <128-char hex> }`. Verifies that frontmatter content + body hash matches the signature. Absent signature = unsigned skill (allowed for local dev; rejected by TASK-SKILL-102's OCI gate which requires signed).
+- `min_broker_version` (string): SemVer; broker refuses to invoke if its own version is lower than this. Default: `0.1.0`.
+- `max_broker_version` (string): SemVer; broker refuses if higher (forward-incompatible). Default: unbounded.
+- `disallowed_tools` (list of strings): explicit denylist (subset of canonical tool enum). Useful for skills that want to assert "I never need Edit" even if allowed_tools is broad.
+- `sync_class` (enum: `private` | `shareable`): default `private`; controls whether the skill's emitted memory rows are eligible for cross-device sync (per TASK-MEMORY-106).
+- `tenant_scope` (enum: `any` | `pinned`): default `any`; if `pinned`, skill executes only under the tenant_id where it was installed.
+- `effort_minutes` (integer): suggested timeout cap; broker enforces SIGTERM after `effort_minutes * 60` seconds.
+- `tags` (list of strings): operator-facing categorisation; ≤ 10 tags; each tag ≤ 30 chars.
 4. **MUST** validate every field per §1 #2 + #3 BEFORE the skill is admitted to invocation. The broker exposes `frontmatter::load_and_validate(bundle_path) -> Result<SkillFrontmatter, FrontmatterError>`; only `Ok` admits the skill.
 5. **MUST** reject (and produce structured error) on any of:
-    - Schema-required field missing.
-    - `id` does not match the kebab-case regex.
-    - `version` is not valid SemVer.
-    - Any `allowed_memory_scopes` glob fails `globset::Glob::new()`.
-    - Any `allowed_tools` value is not in the canonical enum.
-    - `signature` present and verification fails.
-    - `min_broker_version > current_broker_version`.
-    - `max_broker_version < current_broker_version`.
-    - Frontmatter parses but contains unknown keys NOT prefixed with `x-` (forward-compat: `x-` prefixed unknown keys are allowed and ignored).
+- Schema-required field missing.
+- `id` does not match the kebab-case regex.
+- `version` is not valid SemVer.
+- Any `allowed_memory_scopes` glob fails `globset::Glob::new()`.
+- Any `allowed_tools` value is not in the canonical enum.
+- `signature` present and verification fails.
+- `min_broker_version > current_broker_version`.
+- `max_broker_version < current_broker_version`.
+- Frontmatter parses but contains unknown keys NOT prefixed with `x-` (forward-compat: `x-` prefixed unknown keys are allowed and ignored).
 6. **MUST** be schema-version frozen at v1. Adding a new required field is a v2 schema; v1 bundles MUST continue to load on broker versions that support v2.
 7. **MUST** verify ed25519 signature (when present) BEFORE trusting any other frontmatter field. The signature signs `SHA-256(frontmatter_yaml_canonical) || SHA-256(body_markdown_canonical)`. Canonical form: trimmed leading/trailing whitespace, normalised line endings to `\n`.
 8. **MUST** emit OTel span `skill.frontmatter.validate` per call with attributes `skill_id`, `version`, `validation_outcome` (ok | parse_err | required_missing | invalid_field | signature_failed | version_skew), `duration_ms`.

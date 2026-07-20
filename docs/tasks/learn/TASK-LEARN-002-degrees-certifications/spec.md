@@ -191,8 +191,7 @@ async fn append_only_no_update() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-LEARN-001.
-**Cross-module:** TASK-DOC-001 (scans), TASK-MCP-007 (cron), TASK-CHAT-005 (notification), TASK-AUTH-101 (CHRO), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-LEARN-001. **Cross-module:** TASK-DOC-001 (scans), TASK-MCP-007 (cron), TASK-CHAT-005 (notification), TASK-AUTH-101 (CHRO), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

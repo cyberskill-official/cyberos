@@ -1,21 +1,8 @@
 # core/evals/ — regression gate for AUDIT.md
 
-Every change to `AUDIT.md` must keep this suite green. The harness validates
-**agent outputs** (a run's `docs/BACKLOG.md` + `docs/HANDOFF.md`) against the
-machine-checkable subset of the protocol's rules, and proves each rule is
-**load-bearing** by fault injection: a `B*` fixture plants a known fault set
-(usually exactly one; `B16` deliberately plants three to verify exact-set
-reporting), and the validator must catch exactly that set — no more, no less.
-A trap that stops tripping means a rule has silently died. `G*` fixtures are
-the precision half: compliant-but-tricky outputs (negated prose, redaction
-markers, adversarial formatting, minimal-valid) that must NOT trip anything —
-the suite proves rules fire *and* don't over-fire.
+Every change to `AUDIT.md` must keep this suite green. The harness validates **agent outputs** (a run's `docs/BACKLOG.md` + `docs/HANDOFF.md`) against the machine-checkable subset of the protocol's rules, and proves each rule is **load-bearing** by fault injection: a `B*` fixture plants a known fault set (usually exactly one; `B16` deliberately plants three to verify exact-set reporting), and the validator must catch exactly that set — no more, no less. A trap that stops tripping means a rule has silently died. `G*` fixtures are the precision half: compliant-but-tricky outputs (negated prose, redaction markers, adversarial formatting, minimal-valid) that must NOT trip anything — the suite proves rules fire *and* don't over-fire.
 
-Two checks make the rest load-bearing: `TEMPLATE-NONCONFORMANT` (output that
-doesn't follow the Phase 2 template can no longer silently escape the other
-tripwires — BS-12) and the CONFIG preflight (`CONFIG-PLACEHOLDER` /
-`CONFIG-BAD-ENUM`, which also auto-loads `PROTECTED_AREAS` from the target's
-AUDIT.md so R3 needs no `--protected` double entry — BS-13).
+Two checks make the rest load-bearing: `TEMPLATE-NONCONFORMANT` (output that doesn't follow the Phase 2 template can no longer silently escape the other tripwires — BS-12) and the CONFIG preflight (`CONFIG-PLACEHOLDER` / `CONFIG-BAD-ENUM`, which also auto-loads `PROTECTED_AREAS` from the target's AUDIT.md so R3 needs no `--protected` double entry — BS-13).
 
 ## Files
 
@@ -46,26 +33,13 @@ python3 core/evals/scripts/retro-summary.py           # retro scores per protoco
 python3 core/evals/scripts/retro-summary.py --feedback-dir <field-data>  # + per-version FIELD trend
 ```
 
-Field-run accuracy evaluation (tiers, metrics, calibration pipeline):
-[`TESTING-PROTOCOL.md`](./TESTING-PROTOCOL.md).
+Field-run accuracy evaluation (tiers, metrics, calibration pipeline): [`TESTING-PROTOCOL.md`](./TESTING-PROTOCOL.md).
 
-Point `--run` at the target repo root (or its `docs/`): if the target's
-`AUDIT.md` is found, its CONFIG is preflighted and `PROTECTED_AREAS` is loaded
-automatically; `--protected` extends it.
+Point `--run` at the target repo root (or its `docs/`): if the target's `AUDIT.md` is found, its CONFIG is preflighted and `PROTECTED_AREAS` is loaded automatically; `--protected` extends it.
 
-**Runner vs copy mode.** A target needs either an `audit-profile.yaml` with a
-`config:` section (runner mode — the protocol stays here, launch via
-`./core/evals/run-audit.sh <target> [agent cmd]`) or a full `AUDIT.md` copy
-(copy mode — pinned + self-contained; wins precedence when both exist). The
-preflight, placeholder/enum checks and PROTECTED_AREAS auto-load behave
-identically for both sources (B17/B18/G08 vs B26/G11).
+**Runner vs copy mode.** A target needs either an `audit-profile.yaml` with a `config:` section (runner mode — the protocol stays here, launch via `./core/evals/run-audit.sh <target> [agent cmd]`) or a full `AUDIT.md` copy (copy mode — pinned + self-contained; wins precedence when both exist). The preflight, placeholder/enum checks and PROTECTED_AREAS auto-load behave identically for both sources (B17/B18/G08 vs B26/G11).
 
-**Waivers.** A target repo may carry `docs/AUDIT-WAIVERS.yaml` — audit-trailed,
-*expiring* suppressions (`code` + optional `file`/`match` + `reason` +
-`approved_by` + mandatory ISO `expires`). A valid waiver suppresses the matched
-violation and is reported separately; an expired or undated one un-suppresses
-it AND flags the stale waiver (`WAIVER-EXPIRED`). This is the sanctioned
-exception channel — eval fixtures, by contrast, may never be weakened.
+**Waivers.** A target repo may carry `docs/AUDIT-WAIVERS.yaml` — audit-trailed, *expiring* suppressions (`code` + optional `file`/`match` + `reason` + `approved_by` + mandatory ISO `expires`). A valid waiver suppresses the matched violation and is reported separately; an expired or undated one un-suppresses it AND flags the stale waiver (`WAIVER-EXPIRED`). This is the sanctioned exception channel — eval fixtures, by contrast, may never be weakened.
 
 **Parsing notes (precision boundaries, pinned by fixtures).** Tables inside
 ``` fences are raw evidence, never artifacts (G07/B19). Tables must use
@@ -84,12 +58,7 @@ Validating artifacts produced under an older protocol? Pin the matching tag
 2. `fixture.yaml` is flat `key: value` (no YAML library needed):
 
    ```yaml
-   id: B11-my-trap
-   description: one line
-   expect: fail                  # or pass
-   expected_violations: [R1-NO-OUTPUT]
-   exercises_rules: [R1]
-   protected_areas: []
+id: B11-my-trap description: one line expect: fail                  # or pass expected_violations: [R1-NO-OUTPUT] exercises_rules: [R1] protected_areas: []
    ```
 
 3. For `expect: fail`, the validator must report **exactly** `expected_violations` — plant one fault per fixture unless the fixture's purpose is exact-set verification (B16). Keep `docs/BACKLOG.md` template-conformant (Mode line + tables or the R7 line) so the planted fault is the only signal; ship a near-miss `G*` sibling when adding a new rule, so precision is pinned alongside recall.

@@ -88,22 +88,20 @@ The AUTH service **MUST** ship a `cyberos-auth` CLI binary providing bootstrap +
 7. **MUST** be idempotent: running `cyberos-auth bootstrap` after success exits with code 5 (`AlreadyInitialised`) and message `"Tenant 0 + root-admin + signing key already exist. Use --reset --confirm to recreate (destructive)."`. The check is `SELECT EXISTS FROM tenants WHERE id = nil_uuid`.
 8. **MUST** support `cyberos-auth rotate-keys` to manually trigger TASK-AUTH-004's quarterly rotation (the same function that the cron runs). Useful for emergency rotation (suspected key compromise).
 9. **MUST** support `cyberos-auth sweepers` to manually trigger cleanup of:
-    - Expired `sessions` rows (where `expires_at < NOW()`).
-    - Old `admin_idempotency_keys` rows (where `created_at < NOW() - INTERVAL '24 hours'`).
-    - Retired `signing_keys` rows (where `status='retired'` AND `retired_at < NOW()`).
-   Output reports counts deleted per table. Cron runs hourly; manual invocation is for ops investigation.
+- Expired `sessions` rows (where `expires_at < NOW()`).
+- Old `admin_idempotency_keys` rows (where `created_at < NOW() - INTERVAL '24 hours'`).
+- Retired `signing_keys` rows (where `status='retired'` AND `retired_at < NOW()`). Output reports counts deleted per table. Cron runs hourly; manual invocation is for ops investigation.
 10. **MUST** support `--reset --confirm` for destructive re-bootstrap (drops tenant 0 + cascades). BOTH flags required; either alone exits with code 4.
 11. **MUST** refuse `--reset` in production environment (`CYBEROS_DEPLOYMENT_TIER=production`) unless `--force-prod-reset` is ALSO passed AND an interactive Y/N prompt confirms (with the deployment tier displayed). Non-tty input in production exits 4 unconditionally.
 12. **MUST** use standardised exit codes from the shared **`cyberos-cli-exit`** crate (single source of truth across CyberOS CLIs — see also TASK-AI-021):
-    - `0` Ok
-    - `1` UserError (bad args, validation failure)
-    - `2` AuthFailed (reserved — not raised by bootstrap, which is pre-auth)
-    - `3` RemoteUnreachable (DB or memory)
-    - `4` DestructiveWithoutConfirm OR ProductionResetBlocked
-    - `5` AlreadyInitialised (bootstrap rerun — distinct from UserError so CI scripts can detect "already done, no action needed" vs "bad input, fix the call")
-    - `6` SchemaViolation (password complexity, email format)
-    - `7` InternalError
-   These numerical values are a stable cross-CLI contract; any module-specific extensions begin at `200` (AUTH module range).
+- `0` Ok
+- `1` UserError (bad args, validation failure)
+- `2` AuthFailed (reserved — not raised by bootstrap, which is pre-auth)
+- `3` RemoteUnreachable (DB or memory)
+- `4` DestructiveWithoutConfirm OR ProductionResetBlocked
+- `5` AlreadyInitialised (bootstrap rerun — distinct from UserError so CI scripts can detect "already done, no action needed" vs "bad input, fix the call")
+- `6` SchemaViolation (password complexity, email format)
+- `7` InternalError These numerical values are a stable cross-CLI contract; any module-specific extensions begin at `200` (AUTH module range).
 13. **SHOULD** print summary to stdout on success: tenant 0 id, root-admin id (NOT email — privacy; operator knows what they typed), initial signing key kid, memory audit row request_id.
 14. **SHOULD** emit OTel span `auth.cli.bootstrap` (and `auth.cli.sweepers`, `auth.cli.rotate_keys`) with attributes `subcommand`, `outcome`, `deployment_tier`, `operator_id` (if from env, else `"interactive"`).
 

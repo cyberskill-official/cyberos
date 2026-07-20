@@ -1,29 +1,16 @@
 # Release-readiness checklist - CyberOS 1.0.0
 
-`VERSION` says 1.0.0; this document defines what "ready to tag `v1.0.0`" means. It is a living,
-tracked operator document: work every line to `checked` (or `waived` with a reason) before the tag.
-Nothing in this file authorizes tagging, publishing, or pushing - the release gate is operator-held.
+`VERSION` says 1.0.0; this document defines what "ready to tag `v1.0.0`" means. It is a living, tracked operator document: work every line to `checked` (or `waived` with a reason) before the tag. Nothing in this file authorizes tagging, publishing, or pushing - the release gate is operator-held.
 
-**Row contract.** Every checklist row carries: `#` (stable id), `Line`, `Owner` (`operator` =
-human-only act, `agent` = machine-executable), `State` from the closed set {`open`, `checked`,
-`waived`}, and `Evidence / command`. A `waived` state REQUIRES its reason in the Evidence cell -
-an empty waiver is a structure violation. Machine lines name their command verbatim; human lines
-say what evidence satisfies them. No credentials belong in this file.
+**Row contract.** Every checklist row carries: `#` (stable id), `Line`, `Owner` (`operator` = human-only act, `agent` = machine-executable), `State` from the closed set {`open`, `checked`, `waived`}, and `Evidence / command`. A `waived` state REQUIRES its reason in the Evidence cell - an empty waiver is a structure violation. Machine lines name their command verbatim; human lines say what evidence satisfies them. No credentials belong in this file.
 
 **Cross-links.**
 
-- Seed source: `../IMPROVEMENT_HANDOFF.md` - sibling of this repo checkout
-  (`~/Projects/CyberSkill/IMPROVEMENT_HANDOFF.md`, deliberately not tracked in-repo). Its IMP-15
-  defines the seven seed lines below (tagged `IMP-15.1`..`IMP-15.7`); its §5 is the evidence index
-  and the 2026-07-16 channel research with source URLs.
+- Seed source: `../IMPROVEMENT_HANDOFF.md` - sibling of this repo checkout (`~/Projects/CyberSkill/IMPROVEMENT_HANDOFF.md`, deliberately not tracked in-repo). Its IMP-15 defines the seven seed lines below (tagged `IMP-15.1`..`IMP-15.7`); its §5 is the evidence index and the 2026-07-16 channel research with source URLs.
 - Batch-1 pre-work commits: `feff8cef`, `a882e705`, `81ac11a3` (handoff §1 applied table).
-- Batch-1 governed run: `27292774..ca9ae490` - TASK-IMP-082/083/084 authored -> done; member
-  suites 6/6, 13/13, 8/8; 19/19 repo suites; both HITL gates human-recorded per task.
-- Batch-2 (in flight on `batch/2-workflow-helpers`): `e9cfb97a` - TASK-IMP-085/086/087 authored,
-  machine-floor linted, audited ready_to_implement.
-- Decision record (2026-07-16, batch-2 PLAN gate):
-  `docs/tasks/.workflow/task-author.improvement-batch-2.manifest.json` (open questions Q2/Q3/Q4 =
-  IMP-06/07/11) plus the `source_decisions` block in each batch-2 spec.
+- Batch-1 governed run: `27292774..ca9ae490` - TASK-IMP-082/083/084 authored -> done; member suites 6/6, 13/13, 8/8; 19/19 repo suites; both HITL gates human-recorded per task.
+- Batch-2 (in flight on `batch/2-workflow-helpers`): `e9cfb97a` - TASK-IMP-085/086/087 authored, machine-floor linted, audited ready_to_implement.
+- Decision record (2026-07-16, batch-2 PLAN gate): `docs/tasks/.workflow/task-author.improvement-batch-2.manifest.json` (open questions Q2/Q3/Q4 = IMP-06/07/11) plus the `source_decisions` block in each batch-2 spec.
 
 ## (a) Code readiness
 
@@ -62,8 +49,7 @@ Channel matrix (agent surface per tool, researched 2026-07-16; RE-VERIFIED 2026-
 | Shared skills dir - Agent Skills open standard (read by Codex, Copilot, Cursor, Gemini CLI, OpenCode) | `.agents/skills/` | shipped (E3 checked, TASK-IMP-094) - CHANGED 2026-07-19: Agent Skills is now a ratified open standard governed by the Linux Foundation Agentic AI Foundation; Codex scans `.agents/skills` from cwd up to repo root; portable across 30+ agent platforms |
 | Devin Desktop (Windsurf rebrand, June 2026) | `.devin/rules/` preferred, `.windsurf/rules/` fallback; legacy `.windsurfrules` still read, kept | shipped (E3 checked, TASK-IMP-094) - CONFIRMED 2026-07-19: rebrand landed 2026-06-02; `.devin/rules/` takes precedence, `.windsurf/rules/` remains a fallback, `.windsurfrules` is still read and there is no `.devinrules` single-file equivalent. Row is exactly right |
 
-MCP registrations (`.mcp.json`, `.cursor/mcp.json`) ride the same install step; B2's scratch
-install exercises them.
+MCP registrations (`.mcp.json`, `.cursor/mcp.json`) ride the same install step; B2's scratch install exercises them.
 
 ## (d) Docs readiness
 
@@ -85,6 +71,4 @@ install exercises them.
 
 ---
 
-Maintained by the operator. Rows flip by editing this file with the Evidence cell filled; after
-batch 3 lands A5/E1-E4, flip those rows to `checked` citing their commits. TASK-IMP-087's
-acceptance verifies this document's shape, not its final states - working the lines IS the release.
+Maintained by the operator. Rows flip by editing this file with the Evidence cell filled; after batch 3 lands A5/E1-E4, flip those rows to `checked` citing their commits. TASK-IMP-087's acceptance verifies this document's shape, not its final states - working the lines IS the release.

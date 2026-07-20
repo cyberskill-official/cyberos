@@ -92,19 +92,19 @@ The TIME service **MUST** ship manual entry form at `services/time/src/manual_en
 1. **MUST** define closed `manual_entry_reason` enum: `('forgot_to_start_timer','off_network','mobile_bulk_add','correction','retroactive_invoiced')` per DEC-1403. Cardinality 5.
 
 2. **MUST** expose `POST /v1/time/entries/manual` body `{ engagement_id, project_id?, task_id?, entry_date, duration_seconds, description, reason, approval_override? }`. Handler:
-   - Validates engagement membership.
-   - Date-window check per §1 #3.
-   - Per-day cap check per §1 #4.
-   - TASK-TIME-007 OT cap check per §1 #5.
-   - Creates TIME entry via TASK-TIME-001.
-   - Emits `time.manual_entry_created` sev-2.
+- Validates engagement membership.
+- Date-window check per §1 #3.
+- Per-day cap check per §1 #4.
+- TASK-TIME-007 OT cap check per §1 #5.
+- Creates TIME entry via TASK-TIME-001.
+- Emits `time.manual_entry_created` sev-2.
 
 3. **MUST** enforce date-window tiers per DEC-1400 + DEC-1404:
-   - `entry_date ≥ now() - 30d` → no approval required.
-   - `30d < age ≤ 90d` → requires `engagement_admin` (caller has role OR `approval_override.subject_id` references one).
-   - `90d < age ≤ 1y` → requires `cfo` approval.
-   - `> 1y` → rejected with 412 + `entry_too_old`.
-   - Approval-override path emits `time.manual_entry_past_90d_approved` or `time.manual_entry_past_1y_approved` sev-2.
+- `entry_date ≥ now() - 30d` → no approval required.
+- `30d < age ≤ 90d` → requires `engagement_admin` (caller has role OR `approval_override.subject_id` references one).
+- `90d < age ≤ 1y` → requires `cfo` approval.
+- `> 1y` → rejected with 412 + `entry_too_old`.
+- Approval-override path emits `time.manual_entry_past_90d_approved` or `time.manual_entry_past_1y_approved` sev-2.
 
 4. **MUST** enforce 24h-per-day hard cap per DEC-1401. SUM(duration_seconds) for (member, entry_date) + new_duration > 86_400 → 412 + `daily_24h_cap_exceeded`. Emit `time.manual_entry_blocked_24h_cap` sev-2.
 
@@ -242,8 +242,7 @@ async fn vn_ot_cap_chained() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-TIME-001 (entry write).
-**Cross-module:** TASK-TIME-007 (OT chain), TASK-AUTH-101 (engagement_admin + cfo roles), TASK-AI-003, TASK-MEMORY-111.
+**Upstream:** TASK-TIME-001 (entry write). **Cross-module:** TASK-TIME-007 (OT chain), TASK-AUTH-101 (engagement_admin + cfo roles), TASK-AI-003, TASK-MEMORY-111.
 
 ---
 

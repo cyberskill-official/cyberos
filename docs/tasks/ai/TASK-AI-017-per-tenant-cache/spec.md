@@ -106,13 +106,12 @@ The AI Gateway service **SHOULD** cache successful LLM responses in Redis keyed 
 2. **MUST** isolate per tenant by construction: every Redis key has the prefix `ai_cache:v1:{tenant_id}:`. A `KEYS ai_cache:v1:tenant_a:*` scan MUST never return a `tenant_b` entry. The tenant prefix is a structural invariant — not a runtime check; the key derivation makes cross-tenant reads impossible without direct Redis surgery. TASK-AI-018 will exhaustively test this property.
 3. **MUST** include the `persona_handle` (full `<id>@<version>` from TASK-AI-014) in the key derivation. A persona change MUST invalidate cache automatically — `cuo-cpo@0.4.1` and `cuo-cpo@0.4.2` are distinct keys. This prevents serving an old-persona response to a request that selected a new persona; the keys diverge naturally.
 4. **MUST** apply TTLs per alias-class as defined in `cache/ttl.rs`:
-   - `chat.fast` → 1 hour.
-   - `chat.smart` → 30 minutes.
-   - `chat.long` → no cache (skip insert; lookup always returns None).
-   - `embed.standard` → 24 hours.
-   - `embed.code` → 24 hours.
-   - `rerank.fast` → 15 minutes.
-   New alias classes added to TASK-AI-006 MUST extend `ttl.rs`; an alias with no TTL entry is treated as `chat.long` semantics (no cache) with a WARN log so the operator notices.
+- `chat.fast` → 1 hour.
+- `chat.smart` → 30 minutes.
+- `chat.long` → no cache (skip insert; lookup always returns None).
+- `embed.standard` → 24 hours.
+- `embed.code` → 24 hours.
+- `rerank.fast` → 15 minutes. New alias classes added to TASK-AI-006 MUST extend `ttl.rs`; an alias with no TTL entry is treated as `chat.long` semantics (no cache) with a WARN log so the operator notices.
 5. **MUST** apply per-entry TTL jitter of ±10% to prevent thundering-herd expiry. Mechanically: actual_ttl = nominal_ttl × (1 + uniform(-0.1, 0.1)). The jitter is per-insert (deterministic for testability via a seedable RNG; production seeds from system entropy).
 6. **MUST NOT** cache responses on streaming calls (TASK-AI-010 streaming returns chunks, not a full response). The cache is bypassed entirely on the streaming code path; the handler decides at request time based on `req.stream == true`.
 7. **MUST NOT** cache failed responses (any non-200 from provider). A retry-after-failure path that hit cache would mask transient provider errors as deterministic answers. The handler only calls `cache::insert` on the success path.
@@ -124,13 +123,13 @@ The AI Gateway service **SHOULD** cache successful LLM responses in Redis keyed 
 13. **MUST** include a cache schema version (`v1` in slice 4) in the Redis key prefix AND in the serialised payload's first 4 bytes. A schema-version mismatch on lookup MUST be treated as a miss (NOT a deserialisation error). This allows future schema migrations (e.g., adding a `model_version` field to `CachedResponse`) without flushing the cache — old entries simply expire.
 14. **MUST** gracefully degrade on Redis unavailability: connection errors, timeouts (>200ms), and serialisation errors all return `cache_state: error` to the caller; the handler proceeds as if it were a miss (call provider). The metric `ai_cache_errors_total{reason}` (reason ∈ unreachable | timeout | deserialisation | oversize) tracks each path; sustained errors > 1% trigger sev-2 alarm.
 15. **SHOULD** emit OTel metrics:
-    - `ai_cache_lookups_total{tenant_id, alias_class, outcome}` (counter; outcome ∈ hit | miss | skipped | error).
-    - `ai_cache_hit_rate{tenant_id}` (gauge; 7-day rolling).
-    - `ai_cache_size_bytes{tenant_id}` (gauge; from Redis MEMORY USAGE).
-    - `ai_cache_evictions_total{tenant_id, reason}` (counter; reason ∈ ttl | lru).
-    - `ai_cache_errors_total{tenant_id, reason}` (counter).
-    - `ai_cache_oversize_skipped_total{tenant_id}` (counter).
-    - `ai_cache_lookup_latency_ms` (histogram; p99 SLO 5ms).
+- `ai_cache_lookups_total{tenant_id, alias_class, outcome}` (counter; outcome ∈ hit | miss | skipped | error).
+- `ai_cache_hit_rate{tenant_id}` (gauge; 7-day rolling).
+- `ai_cache_size_bytes{tenant_id}` (gauge; from Redis MEMORY USAGE).
+- `ai_cache_evictions_total{tenant_id, reason}` (counter; reason ∈ ttl | lru).
+- `ai_cache_errors_total{tenant_id, reason}` (counter).
+- `ai_cache_oversize_skipped_total{tenant_id}` (counter).
+- `ai_cache_lookup_latency_ms` (histogram; p99 SLO 5ms).
 16. **SHOULD** support cache-warming hooks at boot for known-stable prompts (e.g., the persona system prompts themselves trigger common opening-summary calls). Slice 4 ships a no-op stub; TASK-AI-022 implements warming once we have hit-rate data showing where it pays off.
 
 ---

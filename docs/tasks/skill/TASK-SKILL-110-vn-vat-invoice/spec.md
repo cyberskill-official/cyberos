@@ -86,32 +86,32 @@ The `vietnam-vat-invoice@1` skill **MUST** emit Decree-123-compliant Vietnamese 
 1. **MUST** accept an `InvoiceRequest` with: `seller` (object: tenant_id, mst, name, address, certificate_id), `buyer` (object: mst OR personal_id, name, address, optional phone, optional email), `lines` (array of `LineItem { description, quantity, unit, unit_price_vnd, tax_rate (0|5|8|10), discount_pct (0-100) }`), `template_id` (registered with GDT), `issue_date` (ISO date), `payment_method` (`cash | bank_transfer | other`), `currency` (default `VND`; foreign currency captured separately), `idempotency_key` (UUID; same key = same invoice).
 2. **MUST** validate buyer MST via TASK-SKILL-108 BEFORE invoice generation. Inactive MST → `Err(BuyerMstInactive { status })`. Buyer-without-MST (private individual) → `personal_id` field used instead (CCCD via TASK-MEMORY-111 ruleset).
 3. **MUST** assign an invoice number monotonically per (tenant_id, template_id):
-    - Read current counter from sled `~/.cyberos/skills/vietnam-vat-invoice/<tenant_id>/<template_id>.seq`.
-    - Increment by 1; persist atomically (sled transaction).
-    - Format: `<sym><number_padded_to_7>` (e.g. `0001234`). The `<sym>` is the template's registered series symbol from GDT.
+- Read current counter from sled `~/.cyberos/skills/vietnam-vat-invoice/<tenant_id>/<template_id>.seq`.
+- Increment by 1; persist atomically (sled transaction).
+- Format: `<sym><number_padded_to_7>` (e.g. `0001234`). The `<sym>` is the template's registered series symbol from GDT.
 4. **MUST** compose the XML per Decree 123 v1.2.0 schema:
-    - Root element `<HDon>`.
-    - `<DLHDon>` (header): seller info, invoice serial, number, date, template_id.
-    - `<NDHDon>` (content): item lines with `<Hang>` elements; tax breakdown.
-    - `<TToan>` (totals): subtotal, tax amount per rate, grand total (Vietnamese amount-in-words appended via `cyberos-vn-common::amount_to_words`).
-    - `<DSCKS>` (signature block): `<NBan>` (seller signature) populated by signer.rs.
+- Root element `<HDon>`.
+- `<DLHDon>` (header): seller info, invoice serial, number, date, template_id.
+- `<NDHDon>` (content): item lines with `<Hang>` elements; tax breakdown.
+- `<TToan>` (totals): subtotal, tax amount per rate, grand total (Vietnamese amount-in-words appended via `cyberos-vn-common::amount_to_words`).
+- `<DSCKS>` (signature block): `<NBan>` (seller signature) populated by signer.rs.
 5. **MUST** validate the composed XML against the bundled XSD (`HDDT_v123_2020.xsd`) BEFORE signing. Schema violation → `Err(XmlSchemaViolation { detail })`; never sign invalid XML (GDT rejects).
 6. **MUST** sign the XML with ed25519 using the tenant's registered certificate (loaded by `template.rs`). Signature is detached, embedded in `<DSIG>` element. Tampering with signed XML invalidates the signature.
 7. **MUST** submit signed XML to GDT endpoint `https://hoadondientu.gdt.gov.vn/HoaDon/Submit` via POST (application/xml). Parse the response receipt code (`MaCQT` field in GDT response XML). Receipt code = legal proof of issue.
 8. **MUST** handle GDT submission failures:
-    - Network timeout → retry 3× (exp backoff 2s, 8s, 30s).
-    - 4xx HTTP → permanent failure; `Err(GdtRejected { reason })`; do NOT retry; do NOT advance counter (counter already advanced before submit; emit `vn.invoice_submission_failed` audit row with counter for manual reconciliation).
-    - 5xx HTTP → transient; retry as above.
-    - Final failure after retries → `Err(GdtUnreachable)`.
+- Network timeout → retry 3× (exp backoff 2s, 8s, 30s).
+- 4xx HTTP → permanent failure; `Err(GdtRejected { reason })`; do NOT retry; do NOT advance counter (counter already advanced before submit; emit `vn.invoice_submission_failed` audit row with counter for manual reconciliation).
+- 5xx HTTP → transient; retry as above.
+- Final failure after retries → `Err(GdtUnreachable)`.
 9. **MUST** emit memory audit row `vn.invoice_emitted` on successful submission with payload `{idempotency_key, invoice_serial, invoice_number, seller_mst, buyer_mst_redacted, total_vnd, tax_vnd, gdt_receipt_code, xml_hash, signed_xml_hash, submitted_at_ns, trace_id}`. The redacted buyer MST is `XX******<last_4>`.
 10. **MUST** emit `vn.invoice_submission_failed` on permanent failure with payload `{idempotency_key, invoice_serial, invoice_number, gdt_error_code, gdt_error_message, attempted_at_ns, trace_id}` so the operator can manually reconcile.
 11. **MUST** detect numbering gaps via `numbering::check_consecutive(tenant_id, template_id)`: lists missing numbers in the sequence; if any gap exists → emit `vn.invoice_gap_detected` sev-1 alarm via TASK-OBS-007. Operator MUST file a "lost invoice" notice with GDT within 30 days.
 12. **MUST** support `cyberos skill vietnam-vat-invoice replay <idempotency_key>` for crash-recovery: looks up the memory audit row; if `vn.invoice_emitted` exists, returns prior outcome (idempotent). If `vn.invoice_submission_failed` exists but no emit-row → return the prior error.
 13. **MUST** emit OTel span `skill.vn_vat_invoice.emit` with attrs `seller_mst`, `template_id`, `total_vnd_bucket` (log-binned), `outcome`, `gdt_round_trip_ms`, `duration_ms`.
 14. **MUST** emit OTel metrics:
-    - `skill_vn_vat_invoice_emits_total{outcome}` (counter; outcome ∈ ok | xml_schema | gdt_rejected | gdt_unreachable | buyer_mst_inactive).
-    - `skill_vn_vat_invoice_gdt_round_trip_seconds` (histogram).
-    - `skill_vn_vat_invoice_numbering_gap_total` (counter; sev-1 if >0).
+- `skill_vn_vat_invoice_emits_total{outcome}` (counter; outcome ∈ ok | xml_schema | gdt_rejected | gdt_unreachable | buyer_mst_inactive).
+- `skill_vn_vat_invoice_gdt_round_trip_seconds` (histogram).
+- `skill_vn_vat_invoice_numbering_gap_total` (counter; sev-1 if >0).
 15. **MUST** redact buyer info in all logs (tracing) — buyer name partial (`Nguyễn V*`), buyer MST redacted, phone/email full-masked.
 16. **SHOULD** support PDF rendering alongside XML via `cyberos-vietnam-vat-invoice render-pdf <invoice_id>` (uses wkhtmltopdf + Decree 123 visual template; produces the human-readable copy).
 

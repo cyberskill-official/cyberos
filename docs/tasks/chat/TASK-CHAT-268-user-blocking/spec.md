@@ -74,11 +74,10 @@ risk_if_skipped: "Google Play requires an in-app block mechanism for any app car
 3. A subject **MUST NOT** be able to block themselves. The service returns `400`.
 
 4. Blocking **MUST** be enforced on the server, at every one of these four fan-out points, and **MUST NOT** rely on the client filtering anything:
-   - the message-list query,
-   - the realtime (WebSocket) fan-out,
-   - the notification and push fan-out,
-   - the direct-message list.
-   A block implemented only in the client is not a block; it is a CSS rule that anyone can open the network tab and defeat, and it fails the store policy it exists to satisfy.
+- the message-list query,
+- the realtime (WebSocket) fan-out,
+- the notification and push fan-out,
+- the direct-message list. A block implemented only in the client is not a block; it is a CSS rule that anyone can open the network tab and defeat, and it fails the store policy it exists to satisfy.
 
 5. In a **shared group channel**, a message from a blocked person **MUST** be returned to the blocker with `body`, `attachments`, and `reactions` withheld, and a `blocked_sender: true` flag set. The message's position in the channel and its id **MUST** be preserved. The client renders a collapsed placeholder with an explicit "show anyway" affordance.
 
@@ -170,10 +169,7 @@ GET    /v1/chat/blocks                                            -> 200 [ { sub
 401  token invalid
 ```
 
-Both mutations are idempotent by design: blocking someone twice is a no-op, and unblocking someone
-you never blocked is a no-op. Neither returns `404` or `409`, because a distinguishable response
-would let a caller enumerate their own block state through side effects - and, worse, invites a
-client to render an error for a state the user does not care about.
+Both mutations are idempotent by design: blocking someone twice is a no-op, and unblocking someone you never blocked is a no-op. Neither returns `404` or `409`, because a distinguishable response would let a caller enumerate their own block state through side effects - and, worse, invites a client to render an error for a state the user does not care about.
 
 ### The blocked-set, and where it is applied
 
@@ -440,8 +436,7 @@ async fn idempotent_mutations_and_self_block_guard() {              // AC 2, 3, 
 
 ## §6 - Implementation skeleton
 
-(The four enforcement points in §3 are the skeleton. What remains is socket-state invalidation, which is
-the only genuinely stateful part and the easiest thing to get wrong - see §10 row 5.)
+(The four enforcement points in §3 are the skeleton. What remains is socket-state invalidation, which is the only genuinely stateful part and the easiest thing to get wrong - see §10 row 5.)
 
 ```rust
 // services/chat/src/blocks.rs :: block

@@ -44,12 +44,12 @@ Create one file: `docs/tasks/<module>/task-<MODULE>-<NNN>-<slug>.md`. Copy the t
     Why this matters, in 2-4 sentences.
 
     ## 1. Normative clauses
-    1. The login endpoint MUST reject more than 5 attempts per minute per account.
-    2. A rejected attempt MUST return 429 with a Retry-After header.
+1. The login endpoint MUST reject more than 5 attempts per minute per account.
+2. A rejected attempt MUST return 429 with a Retry-After header.
 
     ## 2. Acceptance criteria
-    - [ ] 6th attempt within a minute returns 429.
-    - [ ] Tests cover the limit and the reset.
+- [ ] 6th attempt within a minute returns 429.
+- [ ] Tests cover the limit and the reset.
 
 Then add one line to `docs/tasks/BACKLOG.md` in the module's section (improvement-class rows get an `(improvement)` tag). The task file's `status:` field is the record of truth; the backlog is just the index.
 

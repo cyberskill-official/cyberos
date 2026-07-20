@@ -95,16 +95,11 @@ bash .cyberos-install/install.sh
 
 ### 2a. What the payload covers (TASK-CUO-209)
 
-The payload vendors the FULL 14-stage SDP skill catalog (52 skills: 24 author/audit
-pairs + the four NFR singles) - SOW through decommissioning. The two commands automate
-stages 5-10; everything else is standalone-invocable. See the lifecycle map in GUIDE.md.
+The payload vendors the FULL 14-stage SDP skill catalog (52 skills: 24 author/audit pairs + the four NFR singles) - SOW through decommissioning. The two commands automate stages 5-10; everything else is standalone-invocable. See the lifecycle map in GUIDE.md.
 
 ### 2b. Update awareness (TASK-IMP-070)
 
-`install.sh --check <repo>` reports three values - `installed=`, `payload=`, `latest=` (the newest
-published release, resolved by `check-latest.sh` with a 3s budget; `CYBEROS_OFFLINE=1` skips it) -
-plus one `verdict=` line (`up_to_date` | `repo_stale` | `payload_stale`) and the exact `next:`
-command. Machine-parseable key=value lines; the desktop Ops tab and `/version` consume them.
+`install.sh --check <repo>` reports three values - `installed=`, `payload=`, `latest=` (the newest published release, resolved by `check-latest.sh` with a 3s budget; `CYBEROS_OFFLINE=1` skips it) - plus one `verdict=` line (`up_to_date` | `repo_stale` | `payload_stale`) and the exact `next:` command. Machine-parseable key=value lines; the desktop Ops tab and `/version` consume them.
 
 ### 3. One-liner curl | sh (from GitHub Releases - TASK-IMP-069)
 
@@ -203,8 +198,7 @@ The pack is a build artifact. When the workflow improves in CyberOS, rebuild (`b
 
 ## Gate autodetection + per-repo config (TASK-CUO-207)
 
-`/install` detects gate commands per stack (union across stacks; first claim per gate wins; a command is
-never invented when its marker file is absent - root-only scanning):
+`/install` detects gate commands per stack (union across stacks; first claim per gate wins; a command is never invented when its marker file is absent - root-only scanning):
 
 | stack  | marker             | build                      | lint                                  | test                                  | coverage                                 |
 | ------ | ------------------ | -------------------------- | ------------------------------------- | ------------------------------------- | ---------------------------------------- |
@@ -219,8 +213,4 @@ never invented when its marker file is absent - root-only scanning):
 | ruby   | Gemfile            | -                          | -                                     | rspec (spec/) or rake test (Rakefile) | -                                        |
 | make   | Makefile           | make build (per target)    | make lint                             | make test                             | make coverage                            |
 
-Overrides live in `.cyberos/config.yaml` (scaffolded once, all-commented, detected values shown as
-comments): `gates.build/lint/test/coverage` (each overrides only its own gate), `coverage_threshold`
-(default 90, exported as CYBEROS_COVERAGE_THRESHOLD), `task_template`, `profile`. `run-gates.sh` prints
-one provenance line per gate: `gate <name>: <cmd> (source: config|autodetect:<stack>|absent)`.
-A malformed config fails loudly with its line number and runs no gate. Unknown keys warn only.
+Overrides live in `.cyberos/config.yaml` (scaffolded once, all-commented, detected values shown as comments): `gates.build/lint/test/coverage` (each overrides only its own gate), `coverage_threshold` (default 90, exported as CYBEROS_COVERAGE_THRESHOLD), `task_template`, `profile`. `run-gates.sh` prints one provenance line per gate: `gate <name>: <cmd> (source: config|autodetect:<stack>|absent)`. A malformed config fails loudly with its line number and runs no gate. Unknown keys warn only.

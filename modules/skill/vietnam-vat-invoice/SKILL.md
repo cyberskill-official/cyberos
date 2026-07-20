@@ -17,5 +17,4 @@ allowed_mcp_tools:
 
 # vietnam-vat-invoice
 
-Build a minimal e-invoice XML payload with escaped tax identifiers, invoice
-number, and totals.
+Build a minimal e-invoice XML payload with escaped tax identifiers, invoice number, and totals.

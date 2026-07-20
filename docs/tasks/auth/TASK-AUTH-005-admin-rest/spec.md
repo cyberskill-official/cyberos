@@ -90,8 +90,8 @@ The AUTH service **MUST** expose three admin REST endpoints for tenant + subject
 4. **MUST** `POST /v1/admin/subjects/{id}/unrevoke` — tenant-admin (same tenant) or root-admin; sets `subjects.suspended = false`. Does NOT remove jtis from the deny-list (existing tokens stay revoked; new logins issue fresh jtis).
 5. **MUST** include cursor-based pagination via opaque base64-encoded cursor. The cursor encodes `(table, last_id, hmac_signature)`. Limit defaults to 50; max 200. Offset-based paging is forbidden (cursor only) because concurrent inserts during paging would produce duplicates or skips.
 6. **MUST** emit memory audit rows:
-    - `auth.subject_revoked` per revoke — payload: `subject_id`, `tenant_id`, `revoked_by_subject_id`, `reason` (optional caller-supplied), `revoked_jti_count`, `request_id`.
-    - `auth.subject_unrevoked` per unrevoke — payload: `subject_id`, `tenant_id`, `unrevoked_by_subject_id`, `request_id`.
+- `auth.subject_revoked` per revoke — payload: `subject_id`, `tenant_id`, `revoked_by_subject_id`, `reason` (optional caller-supplied), `revoked_jti_count`, `request_id`.
+- `auth.subject_unrevoked` per unrevoke — payload: `subject_id`, `tenant_id`, `unrevoked_by_subject_id`, `request_id`.
 7. **MUST** complete each endpoint in ≤ 100ms p95 (list ops bounded by limit; revoke bounded by deny-list inserts ~1ms each).
 8. **MUST** support `Idempotency-Key` header on revoke + unrevoke (mirrors TASK-AUTH-001 §1 #5 pattern). Repeat revoke with same key + same subject_id → no-op return; same key + different subject_id → 409.
 9. **MUST** validate cursor signature: a malformed or tampered cursor returns `400 BAD_REQUEST` with `{"error":"invalid_cursor"}`. The HMAC signature uses the same deployment secret as JWT signing (separate scope: cursor signing key derived via HKDF).
@@ -101,11 +101,11 @@ The AUTH service **MUST** expose three admin REST endpoints for tenant + subject
 13. **MUST** include `sessions` table in `TENANT_SCOPED_TABLES` registry (TASK-AUTH-003 §1 #1) so RLS applies. Tenant-admin can only list sessions for their own tenant.
 14. **SHOULD** support `?include_suspended=false` (default) and `?include_suspended=true` query param on `/v1/admin/subjects`. Default hides suspended subjects (the common case); explicit opt-in shows them (for revoke-management workflows).
 15. **SHOULD** emit OTel metrics:
-    - `auth_admin_list_total{endpoint, outcome, tenant_id}` (counter).
-    - `auth_admin_revoke_total{outcome, tenant_id}` (counter).
-    - `auth_admin_revoke_jti_count` (histogram; how many jtis revoked per call).
-    - `auth_admin_deny_list_size{service}` (gauge from each consuming service).
-    - `auth_admin_revoke_propagation_latency_ms` (histogram; revoke-call to deny-list-presence-on-consumer; SLO p99 < 30s).
+- `auth_admin_list_total{endpoint, outcome, tenant_id}` (counter).
+- `auth_admin_revoke_total{outcome, tenant_id}` (counter).
+- `auth_admin_revoke_jti_count` (histogram; how many jtis revoked per call).
+- `auth_admin_deny_list_size{service}` (gauge from each consuming service).
+- `auth_admin_revoke_propagation_latency_ms` (histogram; revoke-call to deny-list-presence-on-consumer; SLO p99 < 30s).
 
 ---
 

@@ -6,11 +6,7 @@ folds_into: "audit.md §gate-log (the spec's ACs verify against recorded evidenc
 ---
 # Gate log (draft) - TASK-IMP-086
 
-All commands ran from the repo root on 2026-07-16, branch `batch/2-workflow-helpers`.
-Chronology: E0 and E1 ran against the PRE-image (working tree clean at HEAD, no
-068-081 row present); E-SPLICE performed the one write; E2-E6 ran against the
-POST-image. Every command below is a pure read except E-SPLICE - a reviewer can
-re-run E2-E6 verbatim and must get these exact outputs.
+All commands ran from the repo root on 2026-07-16, branch `batch/2-workflow-helpers`. Chronology: E0 and E1 ran against the PRE-image (working tree clean at HEAD, no 068-081 row present); E-SPLICE performed the one write; E2-E6 ran against the POST-image. Every command below is a pure read except E-SPLICE - a reviewer can re-run E2-E6 verbatim and must get these exact outputs.
 
 ## E0 - pre-image scan (AC 4's scan as the pre-check, spec §3)
 
@@ -25,15 +21,11 @@ $ grep -o 'TASK-IMP-[0-9]*' docs/tasks/BACKLOG.md | sort | uniq -d | wc -l
 0
 ```
 
-73 rows (67 draft + 3 done + 3 implementing), zero 068-081 rows anywhere in the
-file, zero duplicate id tokens. The section's row block ended at the 067 row with
-082 adjacent - exactly the gap the spec describes.
+73 rows (67 draft + 3 done + 3 implementing), zero 068-081 rows anywhere in the file, zero duplicate id tokens. The section's row block ended at the 067 row with 082 adjacent - exactly the gap the spec describes.
 
 ## E1 - regenerator trial (the byte authority, spec Alternatives - MUST try first)
 
-Dry-run against a temp copy so the repo was never touched by the script
-(`ROOT = Path(__file__).resolve().parents[1]`, so a relocated script writes only
-under /tmp/dry86):
+Dry-run against a temp copy so the repo was never touched by the script (`ROOT = Path(__file__).resolve().parents[1]`, so a relocated script writes only under /tmp/dry86):
 
 ```
 $ rm -rf /tmp/dry86 && mkdir -p /tmp/dry86/scripts /tmp/dry86/docs
@@ -57,24 +49,11 @@ $ grep -c 'TASK-IMP-0\(6[89]\|7[0-9]\|8[01]\)' /tmp/dry86/docs/tasks/BACKLOG.md;
 grep exit: 1
 ```
 
-Verdict: FALL BACK to the surgical path (the spec's own off-ramp). The
-regenerator's output (a) DELETES the three pre-existing `[done]` rows 082-084 and
-(b) rewrites the repo-wide `Totals:` line - both outside what §1 #1.5 permits
-("MUST NOT modify any line outside the improvement section, and MUST NOT edit any
-pre-existing row other than the header count line"; protected invariant: "No row
-deletion"). It also (c) emits ZERO rows for 068-081: `regen_backlog` lists only
-ACTIVE statuses (scripts/migrate_improvement_to_task.py:19-20, :201) and all
-fourteen tasks are `done`, so the regenerator cannot satisfy §1 #1.1 at all.
-Its section header, however, reads `## improvement  (67 draft, 3 implementing,
-17 done)` - independent confirmation of the E3 tally below.
+Verdict: FALL BACK to the surgical path (the spec's own off-ramp). The regenerator's output (a) DELETES the three pre-existing `[done]` rows 082-084 and (b) rewrites the repo-wide `Totals:` line - both outside what §1 #1.5 permits ("MUST NOT modify any line outside the improvement section, and MUST NOT edit any pre-existing row other than the header count line"; protected invariant: "No row deletion"). It also (c) emits ZERO rows for 068-081: `regen_backlog` lists only ACTIVE statuses (scripts/migrate_improvement_to_task.py:19-20, :201) and all fourteen tasks are `done`, so the regenerator cannot satisfy §1 #1.1 at all. Its section header, however, reads `## improvement  (67 draft, 3 implementing, 17 done)` - independent confirmation of the E3 tally below.
 
 ## E-SPLICE - the one write (surgical backfill)
 
-Rows were built from each task's frontmatter via yaml.safe_load and flowed into
-the file without manual transcription (statuses and titles byte-verbatim). Guards:
-HALT on missing spec.md, unparseable frontmatter, id/folder-stem mismatch, or a
-multi-line title - no row is ever invented. Splice asserted 067/082 adjacency;
-header recomputed from ALL rows in the section in the file's own STATUS_ORDER.
+Rows were built from each task's frontmatter via yaml.safe_load and flowed into the file without manual transcription (statuses and titles byte-verbatim). Guards: HALT on missing spec.md, unparseable frontmatter, id/folder-stem mismatch, or a multi-line title - no row is ever invented. Splice asserted 067/082 adjacency; header recomputed from ALL rows in the section in the file's own STATUS_ORDER.
 
 ```python
 import re, yaml, sys
@@ -123,12 +102,7 @@ header byte-change: False
 inserted 14 rows between line 239 and old line 240; section tally: {'draft': 67, 'done': 17, 'implementing': 3}
 ```
 
-All fourteen frontmatter statuses read `done` at write time (no off-ramp present;
-the emitter carries whatever the frontmatter says, verbatim). The recomputed
-header equals the pre-existing header byte-for-byte - the old header already
-counted 068-081 from frontmatter (regen forward-counts unlisted done tasks), so
-the backfill brought the ROWS to parity with it and the header contributes zero
-diff lines.
+All fourteen frontmatter statuses read `done` at write time (no off-ramp present; the emitter carries whatever the frontmatter says, verbatim). The recomputed header equals the pre-existing header byte-for-byte - the old header already counted 068-081 from frontmatter (regen forward-counts unlisted done tasks), so the backfill brought the ROWS to parity with it and the header contributes zero diff lines.
 
 ## E2 - folder count vs row count (AC 1 parity)
 
@@ -139,8 +113,7 @@ $ awk '/^## improvement/{f=1;next} /^## /{f=0} f && /^- \[/' docs/tasks/BACKLOG.
 87
 ```
 
-87 folders = 87 rows. With E0 (zero 068-081 rows before) and E4 (zero duplicate
-stems after), every folder has EXACTLY one row.
+87 folders = 87 rows. With E0 (zero 068-081 rows before) and E4 (zero duplicate stems after), every folder has EXACTLY one row.
 
 ## E3 - per-status tally vs the header line (AC 2)
 
@@ -153,12 +126,7 @@ $ grep -n '^## improvement' docs/tasks/BACKLOG.md
 171:## improvement  (67 draft, 3 implementing, 17 done)
 ```
 
-Tally (67 draft, 3 implementing, 17 done; 67+3+17 = 87) equals the header
-exactly, in the file's own status order (STATUS_ORDER,
-scripts/migrate_improvement_to_task.py:21-22, zero-count statuses omitted -
-matching every other section header's convention). The 17 done = 3 pre-existing
-rows (082-084) + 14 backfilled; the 3 implementing rows (085-087) are counted,
-untouched.
+Tally (67 draft, 3 implementing, 17 done; 67+3+17 = 87) equals the header exactly, in the file's own status order (STATUS_ORDER, scripts/migrate_improvement_to_task.py:21-22, zero-count statuses omitted - matching every other section header's convention). The 17 done = 3 pre-existing rows (082-084) + 14 backfilled; the 3 implementing rows (085-087) are counted, untouched.
 
 ## E4 - duplicate-stem scans (AC 4)
 
@@ -175,25 +143,18 @@ $ grep -n 'TASK-IMP-080' docs/tasks/BACKLOG.md
 ```
 
 Zero duplicate stems repo-wide: folder stems 0, row stems (the `$3` key token)
-0. The single TOKEN-level hit is TASK-IMP-081's verbatim title citing
-"TASK-IMP-080's ... fix" - quoted data inside a title tail, not a stem, and the
-spec §3 title-verbatim edge case working as specified (it also explains why E0's
-token scan showed 0 before: the citing 081 row did not exist yet). Row-block
-order check:
+0. The single TOKEN-level hit is TASK-IMP-081's verbatim title citing "TASK-IMP-080's ... fix" - quoted data inside a title tail, not a stem, and the spec §3 title-verbatim edge case working as specified (it also explains why E0's token scan showed 0 before: the citing 081 row did not exist yet). Row-block order check:
 
 ```
 $ awk '/^## improvement/{f=1;next} /^## /{f=0} f && /^- \[/{print $3}' docs/tasks/BACKLOG.md | sort -c && echo 'sort -c: in order'
 sort -c: in order
 ```
 
-The whole contiguous block (001..087) is stem-ascending - insertions landed
-between the 067 and 082 rows without reordering anything.
+The whole contiguous block (001..087) is stem-ascending - insertions landed between the 067 and 082 rows without reordering anything.
 
 ## E5 - status + title verbatim recheck (AC 1)
 
-Each of the fourteen rows re-compared byte-for-byte against a fresh yaml parse of
-its spec.md frontmatter (`- [<status>] <folder-stem> - <title>`; exactly one
-matching line required per task):
+Each of the fourteen rows re-compared byte-for-byte against a fresh yaml parse of its spec.md frontmatter (`- [<status>] <folder-stem> - <title>`; exactly one matching line required per task):
 
 ```
 TASK-IMP-068-payload-version-drift-gate: OK (1 exact row)
@@ -213,9 +174,7 @@ TASK-IMP-081-web-console-bundle-ci-rebuild: OK (1 exact row)
 verbatim mismatches: 0
 ```
 
-Covers the five titles containing the grammar's own ` - ` separator (068, 070,
-071, 072, 081) and the em-dash/backtick/apostrophe titles (073-080): all
-byte-verbatim, all on one line, untagged like the section's corpus rows.
+Covers the five titles containing the grammar's own ` - ` separator (068, 070, 071, 072, 081) and the em-dash/backtick/apostrophe titles (073-080): all byte-verbatim, all on one line, untagged like the section's corpus rows.
 
 ## E6 - diff footprint (AC 3)
 
@@ -234,15 +193,7 @@ $ grep -n '^## ' docs/tasks/BACKLOG.md | sed -n '/## improvement/{p;n;p}'
 261:## inv  (10 draft, 1 ready_to_implement)
 ```
 
-One file, one hunk, 14 insertions, 0 deletions, 0 modifications. The `-U0` hunk
-`-239,0 +240,14` is a pure insertion after old line 239 (the 067 row); new lines
-240-253 sit strictly inside the improvement section (header line 171, next
-section at 261). The `Totals: ...` text after `@@` is git's funcname context
-LABEL (markdown `##` headings do not match the default heuristic, so git labels
-the hunk with the nearest preceding alphanumeric-initial line) - the Totals line
-itself is untouched, as `removed: 0` and the `--stat` prove. Note: the Totals
-line's own repo-wide drift (155 vs the corpus's 158 done, E1) predates this task
-and is out of scope per the spec ("Other module sections' drift").
+One file, one hunk, 14 insertions, 0 deletions, 0 modifications. The `-U0` hunk `-239,0 +240,14` is a pure insertion after old line 239 (the 067 row); new lines 240-253 sit strictly inside the improvement section (header line 171, next section at 261). The `Totals: ...` text after `@@` is git's funcname context LABEL (markdown `##` headings do not match the default heuristic, so git labels the hunk with the nearest preceding alphanumeric-initial line) - the Totals line itself is untouched, as `removed: 0` and the `--stat` prove. Note: the Totals line's own repo-wide drift (155 vs the corpus's 158 done, E1) predates this task and is out of scope per the spec ("Other module sections' drift").
 
 ## AC map
 
@@ -253,38 +204,18 @@ and is out of scope per the spec ("Other module sections' drift").
 | AC 3 | §1 #1.5 | E6 (single insertion-only hunk inside section lines 171-260; 0 removed/modified lines - not even the header, which recomputed to identical bytes) + E1 (the path that WOULD have churned rows, rejected on recorded evidence) |
 | AC 4 | §1 #1.6 | E0 (pre-check) + E4 (folder stems 0 dup, row stems 0 dup, the one token hit explained as 081's quoted title) |
 
-Human gates (spec §5): review acceptance and final acceptance are recorded human
-verdicts; nothing here sets a status.
+Human gates (spec §5): review acceptance and final acceptance are recorded human verdicts; nothing here sets a status.
 
 ## CORRECTIVE ADDENDUM (2026-07-16, post-acceptance verification)
 
-The E2/E5/E6 evidence above was truthful for the view it was measured in and FALSE for
-every committed object: no commit on batch/2-workflow-helpers carried the 14 rows, and the
-batch-1 rows 082-084 were lost from committed state during the same window. Root cause:
-concurrent writes to docs/tasks/BACKLOG.md through Cowork's two filesystem views (this
-task's agent wrote host-side; the parent's phase flips and commits ran sandbox-side); each
-writer's reads were self-consistent while updates crossed views and were lost. The header
-never screamed because the pre-existing corpus header already counted the unindexed done
-tasks, and backlog-mutate's incremental count adjust inherited that baseline (34 vs true 20).
+The E2/E5/E6 evidence above was truthful for the view it was measured in and FALSE for every committed object: no commit on batch/2-workflow-helpers carried the 14 rows, and the batch-1 rows 082-084 were lost from committed state during the same window. Root cause: concurrent writes to docs/tasks/BACKLOG.md through Cowork's two filesystem views (this task's agent wrote host-side; the parent's phase flips and commits ran sandbox-side); each writer's reads were self-consistent while updates crossed views and were lost. The header never screamed because the pre-existing corpus header already counted the unindexed done tasks, and backlog-mutate's incremental count adjust inherited that baseline (34 vs true 20).
 
-Flagged by the PR review bot (devin-ai-integration) against the pushed branch. Repair, as
-commit 092c9887: single-writer re-insert of all 17 rows via backlog-mutate.mjs, full header
-retally from actual rows, then verification against the COMMITTED GIT OBJECT (not any
-working view): `git show 092c9887:docs/tasks/BACKLOG.md` = 87 rows in the improvement
-section, 0 duplicate stem tokens, header `(67 draft, 20 done)`, all 17 restored [done]
-rows present, working tree clean against HEAD.
+Flagged by the PR review bot (devin-ai-integration) against the pushed branch. Repair, as commit 092c9887: single-writer re-insert of all 17 rows via backlog-mutate.mjs, full header retally from actual rows, then verification against the COMMITTED GIT OBJECT (not any working view): `git show 092c9887:docs/tasks/BACKLOG.md` = 87 rows in the improvement section, 0 duplicate stem tokens, header `(67 draft, 20 done)`, all 17 restored [done] rows present, working tree clean against HEAD.
 
-Rule adopted from this incident (filed as IMP-18 in IMPROVEMENT_HANDOFF.md): shared files
-get ONE writer through ONE view, and acceptance evidence for content deliverables MUST be
-measured on the committed object, never on a working view.
+Rule adopted from this incident (filed as IMP-18 in IMPROVEMENT_HANDOFF.md): shared files get ONE writer through ONE view, and acceptance evidence for content deliverables MUST be measured on the committed object, never on a working view.
 
 ## PR-review affirmation (2026-07-17, Devin Review, batch-5 PR)
 
-The bot independently recomputed the BACKLOG status counts from the file and confirmed the
-regenerated `Totals:` line matches exactly (draft 336, ready_to_implement 4, implementing 12,
-done 176, on_hold 1, closed 1), that the `## improvement (67 draft, 35 done)` header matches its
-section, and that the global done delta (+15 vs +10 new improvement tasks) is explained by
-pre-existing tasks flipping implementing -> done (implementing 17 -> 12). No staleness bug.
+The bot independently recomputed the BACKLOG status counts from the file and confirmed the regenerated `Totals:` line matches exactly (draft 336, ready_to_implement 4, implementing 12, done 176, on_hold 1, closed 1), that the `## improvement (67 draft, 35 done)` header matches its section, and that the global done delta (+15 vs +10 new improvement tasks) is explained by pre-existing tasks flipping implementing -> done (implementing 17 -> 12). No staleness bug.
 
-Recording it here because this is the file the 2026-07-16 incident corrupted: an outside
-recomputation agreeing with the retally is exactly the evidence the incident lacked.
+Recording it here because this is the file the 2026-07-16 incident corrupted: an outside recomputation agreeing with the retally is exactly the evidence the incident lacked.

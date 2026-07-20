@@ -106,31 +106,31 @@ A read-only HTTP service `obs-compliance-view` **MUST** expose pre-built complia
 9. **MUST** include a summary block per view (counts, key metrics) + the row list. Auditors typically read the summary first; rows are evidence.
 10. **MUST** emit memory audit row `obs.compliance_view_accessed` per query (auditor self-audit) with payload: `auditor_subject_id`, `tenant_id`, `view`, `time_range_days`, `request_id`.
 11. **Per-view content (slice-3 scope):**
-    - **EU AI Act** (Art. 12 record-keeping):
-      - `ai.invocation`, `ai.persona_loaded`, `ai.zdr_violation`, `ai.residency_violation` rows.
-      - Persona-version stamps + EU AI Act Art. 50 `made_by_genie` attributions.
-      - Oversight log: every CLI mutation (`cli.*`) for AI infra.
-    - **PDPL** (VN data residency):
-      - DSAR fulfilment rows (delete-data, export-data requests).
-      - Cross-border transfer log (`ai.residency_violation` + `obs.langsmith_export_*`).
-      - Consent records (langsmith opt-in/out audit).
-      - PII redaction stats (TASK-AI-011 metrics aggregated).
-    - **SOC 2** (trust services criteria):
-      - Access logs (`auth.token_issued` + `auth.token_failed`).
-      - Configuration changes (`ai.cli_policy_updated` + `ai.cli_breaker_reset`).
-      - Backup attestations (TASK-OBS-009).
-      - Incident response (`obs.alert_triaged` + `obs.alert_acked`).
-    - **ISO 27001:2022** (Annex A):
-      - Asset inventory (tenant + subject lists).
-      - Risk assessments (manual ops uploads).
-      - Access control reviews (subject-role audits).
+- **EU AI Act** (Art. 12 record-keeping):
+- `ai.invocation`, `ai.persona_loaded`, `ai.zdr_violation`, `ai.residency_violation` rows.
+- Persona-version stamps + EU AI Act Art. 50 `made_by_genie` attributions.
+- Oversight log: every CLI mutation (`cli.*`) for AI infra.
+- **PDPL** (VN data residency):
+- DSAR fulfilment rows (delete-data, export-data requests).
+- Cross-border transfer log (`ai.residency_violation` + `obs.langsmith_export_*`).
+- Consent records (langsmith opt-in/out audit).
+- PII redaction stats (TASK-AI-011 metrics aggregated).
+- **SOC 2** (trust services criteria):
+- Access logs (`auth.token_issued` + `auth.token_failed`).
+- Configuration changes (`ai.cli_policy_updated` + `ai.cli_breaker_reset`).
+- Backup attestations (TASK-OBS-009).
+- Incident response (`obs.alert_triaged` + `obs.alert_acked`).
+- **ISO 27001:2022** (Annex A):
+- Asset inventory (tenant + subject lists).
+- Risk assessments (manual ops uploads).
+- Access control reviews (subject-role audits).
 12. **MUST** enforce PII-placeholder discipline: rows returned MUST NOT contain raw PII. The audit chain itself uses placeholders (`email_hash16`, `<VN_CCCD_1>`); this view inherits. Defence-in-depth: response body is regex-scanned for raw PII patterns before serving; matches → sev-1 + 500.
 13. **MUST** authenticate via TASK-AUTH-004 JWT verification; auditor JWT issued per engagement (typically 30-day TTL, longer than standard) via `cyberos-auth issue-auditor-token`.
 14. **SHOULD** emit OTel metrics:
-    - `obs_compliance_view_requests_total{view, format, outcome}` (counter).
-    - `obs_compliance_view_latency_ms{view}` (histogram).
-    - `obs_compliance_view_rows_returned{view}` (histogram).
-    - `obs_compliance_pii_leak_attempted_total` (counter; sev-1 alarm).
+- `obs_compliance_view_requests_total{view, format, outcome}` (counter).
+- `obs_compliance_view_latency_ms{view}` (histogram).
+- `obs_compliance_view_rows_returned{view}` (histogram).
+- `obs_compliance_pii_leak_attempted_total` (counter; sev-1 alarm).
 
 ---
 

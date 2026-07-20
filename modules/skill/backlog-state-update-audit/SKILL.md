@@ -55,14 +55,11 @@ insert-row rules (TASK-CUO-205):
 | BSU-INS-004 | No other line of the file changed, except that section's header counts when present | error |
 | BSU-INS-005 | `insert.status` equals the task file's frontmatter status at write time | error |
 
-Transition window: a @1 artefact (no mutation_kind) audits as status-cell-only with a
-transition note, not a failure; the window closes one release after TASK-CUO-205 ships.
+Transition window: a @1 artefact (no mutation_kind) audits as status-cell-only with a transition note, not a failure; the window closes one release after TASK-CUO-205 ships.
 
 ## 2. Pass criterion
 
-10/10. The `workflow_complete` memory row is the workflow's terminal
-artefact — supervisors that watch the memory chain use this row to
-detect "task drained from queue, move on".
+10/10. The `workflow_complete` memory row is the workflow's terminal artefact — supervisors that watch the memory chain use this row to detect "task drained from queue, move on".
 
 ---
 

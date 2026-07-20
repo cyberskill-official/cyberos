@@ -86,14 +86,14 @@ The REW service **MUST** ship payslip PDF render at `services/rew/src/pdf/` dete
 1. **MUST** validate `pdf_render_status` against closed enum per DEC-2201.
 
 2. **MUST** render at `tectonic_renderer.rs::render(payslip_row, template)` per DEC-2200:
-   - Use Tectonic (deterministic LaTeX compiler)
-   - Fonts pinned in template via explicit version
-   - Output PDF bytes
+- Use Tectonic (deterministic LaTeX compiler)
+- Fonts pinned in template via explicit version
+- Output PDF bytes
 
 3. **MUST** verify at `verifier.rs::verify(pdf_bytes)` per DEC-2203:
-   - SHA256 the PDF
-   - Compare to expected (from deterministic replay or prior render)
-   - Mismatch → sev-1 audit + status=verification_failed
+- SHA256 the PDF
+- Compare to expected (from deterministic replay or prior render)
+- Mismatch → sev-1 audit + status=verification_failed
 
 4. **MUST** store in TASK-DOC-001 per DEC-2202 with `sha256` metadata.
 
@@ -205,8 +205,7 @@ async fn pinned_fonts_in_template() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-REW-005.
-**Cross-module:** TASK-DOC-001 (storage), TASK-AUTH-101 (CFO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-REW-005. **Cross-module:** TASK-DOC-001 (storage), TASK-AUTH-101 (CFO role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

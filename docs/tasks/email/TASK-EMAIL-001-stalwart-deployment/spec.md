@@ -169,13 +169,13 @@ The EMAIL service **MUST** deploy Stalwart as the canonical mail server with Pos
 3. **MUST** configure Stalwart's blob store as **S3 with KMS encryption** (per DEC-302), residency-pinned per tenant. Per-tenant routing is via Stalwart's directory-tag mechanism: a Stalwart user's `tenant_id` directs blob writes to the per-tenant bucket. Bucket naming: `cyberos-email-<residency>-bodies` (e.g. `cyberos-email-vn-1-bodies`).
 
 4. **MUST** open the following protocol endpoints (per DEC-303):
-    - **SMTP** port 25 (relay-in only; receives mail from external MTAs).
-    - **SMTP** port 465 (TLS implicit; outbound submission).
-    - **SMTP** port 587 (STARTTLS; outbound submission; preferred for clients).
-    - **IMAP** port 143 (STARTTLS-required).
-    - **IMAP** port 993 (TLS implicit).
-    - **ManageSieve** port 4190 (filter rule management).
-    - **JMAP** at `/jmap` on the application HTTPS endpoint (RFC 8620 + 8621).
+- **SMTP** port 25 (relay-in only; receives mail from external MTAs).
+- **SMTP** port 465 (TLS implicit; outbound submission).
+- **SMTP** port 587 (STARTTLS; outbound submission; preferred for clients).
+- **IMAP** port 143 (STARTTLS-required).
+- **IMAP** port 993 (TLS implicit).
+- **ManageSieve** port 4190 (filter rule management).
+- **JMAP** at `/jmap` on the application HTTPS endpoint (RFC 8620 + 8621).
 
 5. **MUST** ship per-tenant DKIM key registry at `dkim_keys` table (per DEC-304). Schema: `(tenant_id, key_id, dkim_selector, key_algorithm, public_key, private_key_encrypted_kms_id, created_at, status active|rotated|revoked)`. Slice 1 generates RSA-2048 keys; Ed25519 (RFC 8463) deferred to slice 2. Stalwart's signing keystore is synced from this registry at start + on rotation.
 
@@ -186,19 +186,18 @@ The EMAIL service **MUST** deploy Stalwart as the canonical mail server with Pos
 8. **MUST** ship the `thread_metadata` table for JMAP-native threading: `(thread_id TEXT, tenant_id UUID, subject_normalised TEXT, last_message_at TIMESTAMPTZ, message_count INT, participant_addresses TEXT[])`. Inbound messages are merged into existing threads by JMAP's `threadId` algorithm; thread_metadata is the materialised view for fast list queries.
 
 9. **MUST** declare 2 closed Postgres enums:
-    - `message_direction`: 3 values (`inbound`, `outbound`, `internal`).
-    - `message_status`: 6 values (`received`, `quarantined`, `delivered`, `sent`, `bounced`, `dropped`).
+- `message_direction`: 3 values (`inbound`, `outbound`, `internal`).
+- `message_status`: 6 values (`received`, `quarantined`, `delivered`, `sent`, `bounced`, `dropped`).
 
 10. **MUST** enforce RLS with both `USING` and `WITH CHECK` clauses on `message_metadata`, `thread_metadata`, `bounce_log`, `dkim_keys`. Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`.
 
 11. **MUST** be **append-only** on `message_metadata` AND `bounce_log` at the SQL-grant layer (per task-audit skill rule 12). `REVOKE UPDATE, DELETE ON message_metadata, bounce_log FROM cyberos_app;`. Status changes (received → quarantined → delivered) create new rows linked via `prior_message_id` self-FK. Bounce events are pure inserts.
 
 12. **MUST** route messages to per-tenant storage per TASK-AI-016 (per DEC-306). The Stalwart inbound handler:
-    - Resolves the recipient's tenant via the local-part-to-tenant directory.
-    - Looks up tenant residency via `residency::resolve(tenant_id)`.
-    - Writes the body to the residency-pinned S3 bucket with the residency-pinned KMS key.
-    - Records `s3_body_key` + `s3_body_kms_key_id` in `message_metadata`.
-   Cross-residency leakage (e.g. VN tenant body accidentally written to eu-1 bucket) is **fail-closed**: the handler asserts residency match before write.
+- Resolves the recipient's tenant via the local-part-to-tenant directory.
+- Looks up tenant residency via `residency::resolve(tenant_id)`.
+- Writes the body to the residency-pinned S3 bucket with the residency-pinned KMS key.
+- Records `s3_body_key` + `s3_body_kms_key_id` in `message_metadata`. Cross-residency leakage (e.g. VN tenant body accidentally written to eu-1 bucket) is **fail-closed**: the handler asserts residency match before write.
 
 13. **MUST** emit memory audit row `email.message_received` on every inbound delivery; `email.message_sent` on every outbound; `email.message_bounced` on every bounce; `email.message_quarantined` on spam classification; `email.dkim_key_rotated` on key rotation (per DEC-310). All rows carry `{tenant_id, message_id, thread_id, direction, from_hash16, to_hash16, body_sha256_hex, status, ts_ns}`.
 
@@ -213,9 +212,9 @@ The EMAIL service **MUST** deploy Stalwart as the canonical mail server with Pos
 18. **MUST** quarantine spam per Stalwart's built-in classifier (per DEC-308). Spam score threshold: 5.0 (Stalwart default). Above → `status = quarantined`, message routed to per-user `Trash` folder with 30-day retention.
 
 19. **MUST** expose internal REST handlers:
-    - `GET /v1/email/healthz` — returns `{stalwart_status, last_message_received_at, last_message_sent_at, postgres_status, s3_status, registered_tenants}`.
-    - `GET /v1/email/messages/{id}/status` — returns delivery status, DKIM/SPF/DMARC pass flags, bounce events.
-    - `GET /v1/email/messages?tenant_id=<>&subject_id=<>&from=<ts>&to=<ts>` — list with cursor pagination (used by TASK-EMAIL-003 + TASK-EMAIL-011).
+- `GET /v1/email/healthz` — returns `{stalwart_status, last_message_received_at, last_message_sent_at, postgres_status, s3_status, registered_tenants}`.
+- `GET /v1/email/messages/{id}/status` — returns delivery status, DKIM/SPF/DMARC pass flags, bounce events.
+- `GET /v1/email/messages?tenant_id=<>&subject_id=<>&from=<ts>&to=<ts>` — list with cursor pagination (used by TASK-EMAIL-003 + TASK-EMAIL-011).
 
 20. **MUST** complete inbound metadata write + memory audit emit in ≤ 200 ms p95 (excluding body upload to S3, which is async). `inbound_perf_test` asserts.
 
@@ -224,12 +223,12 @@ The EMAIL service **MUST** deploy Stalwart as the canonical mail server with Pos
 22. **MUST** emit OTel span `email.{inbound,outbound,bounce,quarantine,dkim_rotate}` with attributes: `tenant_id`, `message_id`, `direction`, `outcome` (success | residency_mismatch | dkim_missing | body_too_large | s3_write_failed | postgres_write_failed).
 
 23. **MUST** emit OTel metrics:
-    - `email_message_received_total{tenant_id, outcome}` (counter).
-    - `email_message_sent_total{tenant_id, outcome}` (counter).
-    - `email_message_bounced_total{tenant_id, bounce_kind}` (counter).
-    - `email_message_quarantined_total{tenant_id, spam_score_band}` (counter; bands: 5-7, 7-10, 10+).
-    - `email_dkim_key_rotated_total{tenant_id}` (counter).
-    - `email_stalwart_up{instance}` (gauge 0/1; scraped from /healthz).
+- `email_message_received_total{tenant_id, outcome}` (counter).
+- `email_message_sent_total{tenant_id, outcome}` (counter).
+- `email_message_bounced_total{tenant_id, bounce_kind}` (counter).
+- `email_message_quarantined_total{tenant_id, spam_score_band}` (counter; bands: 5-7, 7-10, 10+).
+- `email_dkim_key_rotated_total{tenant_id}` (counter).
+- `email_stalwart_up{instance}` (gauge 0/1; scraped from /healthz).
 
 24. **MUST** support graceful shutdown: SIGTERM triggers (a) refuse new SMTP connections with 421 temporary failure, (b) drain in-flight messages with 30s budget, (c) close IMAP/JMAP sessions cleanly, (d) shut down. Shutdown deadline configurable via env `EMAIL_SHUTDOWN_BUDGET_SECONDS`.
 

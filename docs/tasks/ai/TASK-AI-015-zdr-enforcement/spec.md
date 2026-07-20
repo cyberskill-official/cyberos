@@ -111,12 +111,12 @@ The AI Gateway service **MUST** maintain an authoritative ZDR (Zero Data Retenti
 12. **MUST** integrate with `policy.ai_policy.zdr_required` from TASK-AI-005's tenant policy schema. The flag is read once per request via TASK-AI-001's policy load; this task reads it through the request context, never directly from disk.
 13. **MUST** propagate `ZdrViolation` errors as HTTP `403 ZDR_VIOLATION` with body `{"error":"zdr_violation","resolved_provider":"<p>","resolved_model":"<m>","policy_requires_zdr":true,"contact":"ops@cyberos.world"}`. The body MUST NOT echo the attestation's `notes` field (operator-facing explanation, not customer-facing).
 14. **SHOULD** emit OTel metrics:
-    - `ai_zdr_lookups_total{provider, model, outcome}` (counter; outcome ∈ `attested | missing | revoked | expired`).
-    - `ai_zdr_violations_total{tenant_id}` (counter; alarm threshold > 0 over a 5-minute window).
-    - `ai_zdr_attestations_revoked_total{provider, model}` (counter; sev-2 alert on increment).
-    - `ai_zdr_attestations_stale_total{provider, model}` (counter; weekly evaluated).
-    - `ai_zdr_attestations_expired_total{provider, model}` (counter; sev-1 alert).
-    - `ai_zdr_table_size` (gauge; current attestation count).
+- `ai_zdr_lookups_total{provider, model, outcome}` (counter; outcome ∈ `attested | missing | revoked | expired`).
+- `ai_zdr_violations_total{tenant_id}` (counter; alarm threshold > 0 over a 5-minute window).
+- `ai_zdr_attestations_revoked_total{provider, model}` (counter; sev-2 alert on increment).
+- `ai_zdr_attestations_stale_total{provider, model}` (counter; weekly evaluated).
+- `ai_zdr_attestations_expired_total{provider, model}` (counter; sev-1 alert).
+- `ai_zdr_table_size` (gauge; current attestation count).
 15. **SHOULD** log at INFO level on every successful hot-reload: `zdr_table_reloaded count=<N> sources={hash16}` so operators can verify "did my edit actually load?".
 
 ---

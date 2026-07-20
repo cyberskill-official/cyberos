@@ -45,9 +45,7 @@ blockers:
 
 ## 1. Purpose
 
-Turn "we have 2+ plausible architectures" into evidence an ADR can cite, inside a
-bounded spend. A spike without checkable evidence is an opinion; a spike without a
-recorded timebox is a design project. This skill forbids both.
+Turn "we have 2+ plausible architectures" into evidence an ADR can cite, inside a bounded spend. A spike without checkable evidence is an opinion; a spike without a recorded timebox is a design project. This skill forbids both.
 
 ## 2. Artefact schema - architectural-spike@1
 
@@ -67,29 +65,18 @@ Frontmatter (all fields required unless marked):
 | discarded | array | each: { name, reason } - non-empty whenever options were rejected |
 | created | date | |
 
-Body sections, in order: `## Question`, `## Options probed`, `## Evidence log`,
-`## Recommendation`, `## Discard log`.
+Body sections, in order: `## Question`, `## Options probed`, `## Evidence log`, `## Recommendation`, `## Discard log`.
 
 ## 3. The evidence rule
 
-Every `evidence[]` entry MUST cite something checkable: a file path in the repo, a
-command plus its observed output, or an external URL. Unsupported assertions ("X is
-faster") count as ZERO evidence - the audit (SPK-EVID) rejects options carrying only
-uncited claims. `confidence: high` requires >= 2 evidence entries per surviving option.
+Every `evidence[]` entry MUST cite something checkable: a file path in the repo, a command plus its observed output, or an external URL. Unsupported assertions ("X is faster") count as ZERO evidence - the audit (SPK-EVID) rejects options carrying only uncited claims. `confidence: high` requires >= 2 evidence entries per surviving option.
 
 ## 4. Timebox discipline
 
-`timebox_hours` is recorded up front (INV-1). At close, `actual_hours` is recorded;
-when actual > 1.5x plan the skill HALTS with: "spike over budget (<actual>h vs <plan>h
-planned) - extend the timebox, force a recommendation from current evidence, or
-discard the spike?" The operator's verdict is recorded in the artefact (`halted: true`
-plus the outcome in the Discard log or Recommendation section).
+`timebox_hours` is recorded up front (INV-1). At close, `actual_hours` is recorded; when actual > 1.5x plan the skill HALTS with: "spike over budget (<actual>h vs <plan>h planned) - extend the timebox, force a recommendation from current evidence, or discard the spike?" The operator's verdict is recorded in the artefact (`halted: true` plus the outcome in the Discard log or Recommendation section).
 
 ## 5. Handoff
 
-The artefact feeds `architecture-decision-record-author` as its spike input. When no
-spike exists (single obvious option - see blockers), the ADR proceeds in lean profile:
-its options table carries the evidence inline.
+The artefact feeds `architecture-decision-record-author` as its spike input. When no spike exists (single obvious option - see blockers), the ADR proceeds in lean profile: its options table carries the evidence inline.
 
-See PIPELINE.md for the phased run, INVARIANTS.md for the checkable rules, and
-references/FAILURE_MODES.md before authoring.
+See PIPELINE.md for the phased run, INVARIANTS.md for the checkable rules, and references/FAILURE_MODES.md before authoring.

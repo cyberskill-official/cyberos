@@ -28,12 +28,12 @@ allowed-tools: read_file write_file
 
 1. **Validate both MSTs** using the `vietnam-mst-validate` skill. Both seller and buyer MST must structurally pass.
 2. **For each line item**, compute:
-   - `thanh_tien = so_luong * don_gia` (subtotal, round half-up to integer VND)
-   - `tien_thue = thanh_tien * thue_suat` (VAT, round half-up to integer VND **per line**, not at document level — this is a GDT requirement)
+- `thanh_tien = so_luong * don_gia` (subtotal, round half-up to integer VND)
+- `tien_thue = thanh_tien * thue_suat` (VAT, round half-up to integer VND **per line**, not at document level — this is a GDT requirement)
 3. **Compute totals**:
-   - `tong_tien_hang = sum(thanh_tien)` across all lines
-   - `tong_tien_thue = sum(tien_thue)` across all lines
-   - `tong_thanh_toan = tong_tien_hang + tong_tien_thue`
+- `tong_tien_hang = sum(thanh_tien)` across all lines
+- `tong_tien_thue = sum(tien_thue)` across all lines
+- `tong_thanh_toan = tong_tien_hang + tong_tien_thue`
 4. **Generate the XML** per the GDT schema v3.0 — see `references/gdt-xml-schema-v3.md` for the element-by-element walk.
 5. **Write the XML** to the path passed via the `--out` argument, or stdout if absent.
 

@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a data strategy"
+- "Draft a data strategy"
 - "Create the data strategy"
 - "Author a new data strategy"
 - "Generate the data strategy"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this data strategy" → data-strategy-audit
+- "Audit this data strategy" → data-strategy-audit
 - "Check the data strategy for completeness" → data-strategy-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

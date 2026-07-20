@@ -16,4 +16,3 @@ We will implement a closed 22-role catalogue in the RBAC system (`Role` enum).
 ## Consequences
 - **Positive:** Strict control over role definitions. Reduces the attack surface of typo-squatting or ad-hoc roles.
 - **Negative:** Requires an application release to introduce new roles.
-

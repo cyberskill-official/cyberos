@@ -114,24 +114,24 @@ A Tauri 2.x desktop app **MUST** bundle the memory sync daemon + a minimal UI fo
 2. **MUST** auto-update via Tauri's built-in updater. Update manifests signed with a release-signing Ed25519 key; client verifies signature before applying. Signature failure → rollback + sev-2 alert; user notified via in-app banner.
 3. **MUST** run memory-sync (TASK-MEMORY-103) as an internal Tauri-managed process via `tauri::async_runtime::spawn`. The supervisor monitors health; auto-restart on panic with exponential backoff.
 4. **MUST** expose a system tray icon with quick actions:
-    - Open memory main window.
-    - Force sync now.
-    - Show recent memories (last 10 from local Layer 1).
-    - Toggle sync (pause/resume).
-    - Quit.
+- Open memory main window.
+- Force sync now.
+- Show recent memories (last 10 from local Layer 1).
+- Toggle sync (pause/resume).
+- Quit.
 5. **MUST** show on the main dashboard:
-    - Current chain head (hex; copyable).
-    - Last sync time + duration.
-    - Disputed pair count (badge; clicks to TASK-MEMORY-105 resolution UI).
-    - sync_class breakdown (count of shareable vs private rows).
-    - Total memory count + storage used.
-    - Cloud memory connection state (online/offline).
+- Current chain head (hex; copyable).
+- Last sync time + duration.
+- Disputed pair count (badge; clicks to TASK-MEMORY-105 resolution UI).
+- sync_class breakdown (count of shareable vs private rows).
+- Total memory count + storage used.
+- Cloud memory connection state (online/offline).
 6. **MUST** support local search via TASK-MEMORY-108 API. Search box on dashboard; results pane with memory previews; click → open memory file.
 7. **MUST** request macOS Full Disk Access at first run (one-time; persisted by macOS). Without FDA, the app cannot read `~/.cyberos/memory/store/` (System Integrity Protection blocks). The prompt directs user to System Settings > Privacy & Security > Full Disk Access > [Memory.app toggle].
 8. **MUST** sandbox per OS:
-    - macOS: hardened runtime + entitlements (no JIT, no debug, FDA only).
-    - Windows: AppContainer with capabilities (file system access for `%USERPROFILE%/.cyberos/memory/store/`, network for Cloud memory).
-    - Linux: AppArmor profile (where supported).
+- macOS: hardened runtime + entitlements (no JIT, no debug, FDA only).
+- Windows: AppContainer with capabilities (file system access for `%USERPROFILE%/.cyberos/memory/store/`, network for Cloud memory).
+- Linux: AppArmor profile (where supported).
 9. **MUST** support quick-capture: tray-accessible textbox; user types → app writes a `quick_note` memory row with auto-tag (date, source: tray, originator_device).
 10. **MUST** sign update manifests with the release-signing Ed25519 key (separate from memory signing key). Public key embedded in app binary at compile time; rotation requires app rebuild + re-release.
 11. **MUST** persist user settings (Cloud memory URL, sync interval, opt-in to crash reporting) in OS-standard config dir (`~/Library/Application Support/cyberos/memory/` macOS; `%APPDATA%/cyberos/memory/` Windows; `~/.config/cyberos/memory/` Linux).

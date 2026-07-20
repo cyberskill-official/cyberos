@@ -124,9 +124,9 @@ The ESOP service **MUST** ship annual valuation at `services/esop/src/valuation/
    ```
 
 3. **MUST** enforce board threshold per DEC-2272 at `board_sign_gate.rs::can_commit(valuation)`:
-   - Count distinct sign rows
-   - Threshold from tenant config (default 3)
-   - Reach threshold → status auto-advance to board_approved + commit
+- Count distinct sign rows
+- Threshold from tenant config (default 3)
+- Reach threshold → status auto-advance to board_approved + commit
 
 4. **MUST** be unique per year per DEC-2273 — UNIQUE(tenant_id, valuation_year, correction_of) allows original + corrections.
 
@@ -227,9 +227,7 @@ async fn duplicate_year_blocked() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-ESOP-001.
-**Downstream:** TASK-ESOP-004 (put-option uses committed price).
-**Cross-module:** TASK-AUTH-101 (CFO + board roles), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-ESOP-001. **Downstream:** TASK-ESOP-004 (put-option uses committed price). **Cross-module:** TASK-AUTH-101 (CFO + board roles), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

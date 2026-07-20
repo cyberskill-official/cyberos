@@ -26,4 +26,3 @@ Verified:
 - 19 KPI rows (was 9), with margin watchdog + citation-coverage + dogfooding-acceptance as the new strategic gates
 
 The PROJ page now reads as the complete answer to: (1) why PROJ is the spine and not just a tracker (the join contract table makes it concrete), (2) why consultancies cannot use Linear or Jira off the shelf (the Engagement economics section walks through 3 billing modes + rate-card YAML + billable cascade), (3) how the memory integration makes issue history survive leadership changes (citation graph + dual-write audit chain), (4) why PROJ is the design-system exemplar (4 canonical UI surfaces + token overlay + accessibility commitments). A new engineer reading this page cold can pick up the sync-engine, join contracts, and the four UI surfaces and start P1 slice 1.
-

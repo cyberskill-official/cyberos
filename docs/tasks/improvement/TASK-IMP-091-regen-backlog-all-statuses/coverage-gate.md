@@ -32,9 +32,6 @@ TRACE-004 closure:
 - 1.4 -> t03_every_status_emitted: passed
 - 1.5 -> AC 4 verify (run_all lists `ok test_regen_backlog.sh`): satisfied
 
-Edge-case matrix rows without a test: none. Row 7 (empty module folder) is pre-existing
-behavior this task does not change and carries no new assertion by design.
+Edge-case matrix rows without a test: none. Row 7 (empty module folder) is pre-existing behavior this task does not change and carries no new assertion by design.
 
-The repaired failure, measured: the regenerator that would have deleted 17 committed rows
-this morning now reproduces the committed improvement section byte-for-byte (t01 compares
-against `git show HEAD:docs/tasks/BACKLOG.md`).
+The repaired failure, measured: the regenerator that would have deleted 17 committed rows this morning now reproduces the committed improvement section byte-for-byte (t01 compares against `git show HEAD:docs/tasks/BACKLOG.md`).

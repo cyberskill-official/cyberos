@@ -91,47 +91,47 @@ risk_if_skipped: "Without CRDT, concurrent editing of issue.description (the bre
 The collaborative-editing layer **MUST** use Yjs CRDT for rich-text fields and LWW for scalar metadata. The contract:
 
 1. **MUST** use Y.Doc to represent each issue. Specifically:
-    - `Y.Text("description")` — issue description.
-    - `Y.Array("comments")` of `Y.Map { id: string, author_id: uuid, body: Y.Text, created_at: number }`.
-    - Scalars (title, status, priority, assignee_id, cycle_id, estimate, labels) are NOT in Y.Doc; they're plain Postgres columns with LWW.
+- `Y.Text("description")` — issue description.
+- `Y.Array("comments")` of `Y.Map { id: string, author_id: uuid, body: Y.Text, created_at: number }`.
+- Scalars (title, status, priority, assignee_id, cycle_id, estimate, labels) are NOT in Y.Doc; they're plain Postgres columns with LWW.
 2. **MUST** persist Y.Doc state as snapshots in Postgres `yjs_state_snapshots` (one row per snapshot version per issue):
-    - Snapshot every 60s OR on graceful disconnect of last connected client.
-    - Snapshot bytes = `Y.encodeStateAsUpdate(doc)`; compressed with `zstd` (level 6); typical < 10 KB after 1000 edits.
-    - Retain last 50 snapshots OR last 7 days (whichever is fewer per doc).
+- Snapshot every 60s OR on graceful disconnect of last connected client.
+- Snapshot bytes = `Y.encodeStateAsUpdate(doc)`; compressed with `zstd` (level 6); typical < 10 KB after 1000 edits.
+- Retain last 50 snapshots OR last 7 days (whichever is fewer per doc).
 3. **MUST** restore Y.Doc on doc open:
-    - Read latest snapshot from `yjs_state_snapshots` → `Y.applyUpdate(doc, snapshot)`.
-    - Read all binlog deltas since snapshot's `created_at` from `yjs_update_log` → apply.
-    - Send initial sync to connecting client.
+- Read latest snapshot from `yjs_state_snapshots` → `Y.applyUpdate(doc, snapshot)`.
+- Read all binlog deltas since snapshot's `created_at` from `yjs_update_log` → apply.
+- Send initial sync to connecting client.
 4. **MUST** be a transparent relay: the Rust server's role is forwarding `update` messages between connected clients of the same `doc_id`. It does NOT merge, does NOT authoritatively interpret CRDT operations. CRDT correctness is client-side per Yjs semantics.
 5. **MUST** authenticate WebSocket connections via JWT (TASK-AUTH-004); enforce RLS on doc_id (TASK-AUTH-003 — only tenant members can subscribe). Invalid auth → close with code 4001; tenant mismatch → close with 4003.
 6. **MUST** apply scalar LWW per field:
-    - Each scalar field has companion columns `<field>_updated_at_ns` (i64, unix ns) + `<field>_updated_by_subject_id` (uuid).
-    - On write: if `incoming_updated_at_ns > stored_updated_at_ns`, accept; else reject with `409 STALE_WRITE` and return current state for client to reconcile.
-    - Tie-break on equal timestamps: lexicographic on `updated_by_subject_id` (deterministic).
+- Each scalar field has companion columns `<field>_updated_at_ns` (i64, unix ns) + `<field>_updated_by_subject_id` (uuid).
+- On write: if `incoming_updated_at_ns > stored_updated_at_ns`, accept; else reject with `409 STALE_WRITE` and return current state for client to reconcile.
+- Tie-break on equal timestamps: lexicographic on `updated_by_subject_id` (deterministic).
 7. **MUST** track awareness state (per-user cursor + selection + presence):
-    - Sent via Yjs Awareness Protocol on a separate channel within the same WebSocket.
-    - Awareness state expires 30s after last heartbeat (user disconnected without close frame).
-    - Sent at most 30 Hz (33ms throttle) per user per doc.
+- Sent via Yjs Awareness Protocol on a separate channel within the same WebSocket.
+- Awareness state expires 30s after last heartbeat (user disconnected without close frame).
+- Sent at most 30 Hz (33ms throttle) per user per doc.
 8. **MUST** buffer offline edits client-side:
-    - When WebSocket disconnected, accumulate updates in IndexedDB-backed Y.Doc.
-    - On reconnect: send buffered updates first; server forwards; clients converge.
-    - Buffer size capped at 5 MB per doc; overflow → emit `proj.yjs_buffer_overflow` audit row + UI banner ("editing offline; some changes may be lost on reconnect").
+- When WebSocket disconnected, accumulate updates in IndexedDB-backed Y.Doc.
+- On reconnect: send buffered updates first; server forwards; clients converge.
+- Buffer size capped at 5 MB per doc; overflow → emit `proj.yjs_buffer_overflow` audit row + UI banner ("editing offline; some changes may be lost on reconnect").
 9. **MUST** emit memory audit rows for significant CRDT events:
-    - `proj.issue_collab_session_started` on first client connection (when prior was 0).
-    - `proj.issue_collab_session_ended` on last disconnect.
-    - `proj.issue_snapshot_persisted` per snapshot, with `{doc_id, version, bytes_compressed, applies_since_last_snapshot}`.
-    - `proj.yjs_buffer_overflow` on client-side buffer overflow (sent on reconnect).
-    - `proj.scalar_stale_write_rejected` on LWW reject with `{field, incoming_ts, stored_ts, attempted_by}`.
+- `proj.issue_collab_session_started` on first client connection (when prior was 0).
+- `proj.issue_collab_session_ended` on last disconnect.
+- `proj.issue_snapshot_persisted` per snapshot, with `{doc_id, version, bytes_compressed, applies_since_last_snapshot}`.
+- `proj.yjs_buffer_overflow` on client-side buffer overflow (sent on reconnect).
+- `proj.scalar_stale_write_rejected` on LWW reject with `{field, incoming_ts, stored_ts, attempted_by}`.
 10. **MUST** propagate W3C TraceContext: WebSocket handshake carries `traceparent` header; relay includes trace_id in every forwarded message metadata for OBS correlation.
 11. **MUST** emit OTel metrics:
-    - `proj_yjs_active_connections{doc_id_bucket}` (gauge; doc_id bucketed to prevent cardinality blow-up).
-    - `proj_yjs_messages_forwarded_total{kind}` (counter; kind ∈ update | awareness | sync-step1 | sync-step2).
-    - `proj_yjs_snapshot_duration_seconds` (histogram).
-    - `proj_yjs_snapshot_bytes` (histogram; alert if p99 > 1 MB).
-    - `proj_yjs_lwww_conflicts_total{field}` (counter — operator visibility into hot conflict fields).
+- `proj_yjs_active_connections{doc_id_bucket}` (gauge; doc_id bucketed to prevent cardinality blow-up).
+- `proj_yjs_messages_forwarded_total{kind}` (counter; kind ∈ update | awareness | sync-step1 | sync-step2).
+- `proj_yjs_snapshot_duration_seconds` (histogram).
+- `proj_yjs_snapshot_bytes` (histogram; alert if p99 > 1 MB).
+- `proj_yjs_lwww_conflicts_total{field}` (counter — operator visibility into hot conflict fields).
 12. **MUST** support graceful degradation when Postgres unavailable:
-    - Snapshot writes buffered in memory (cap 100 MB across all docs); replayed on Postgres recovery.
-    - Reads of `yjs_state_snapshots` failure → start fresh Y.Doc (no history); UI shows "history unavailable" banner.
+- Snapshot writes buffered in memory (cap 100 MB across all docs); replayed on Postgres recovery.
+- Reads of `yjs_state_snapshots` failure → start fresh Y.Doc (no history); UI shows "history unavailable" banner.
 13. **MUST** be the only path for issue.description writes. Direct Postgres updates of `issues.description` are forbidden (enforced by absence of `description` column on the canonical issue table — it's a write-through view of latest Y.Doc snapshot).
 
 ---

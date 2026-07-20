@@ -1,7 +1,6 @@
 # `mock-contract-test-author` - pipeline
 
-When a task declares a missing external dependency: pin the expected request/response contract, a mock that satisfies it today, and contract tests the real service passes tomorrow.
-Artefact: `mock-contract-test@1`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
+When a task declares a missing external dependency: pin the expected request/response contract, a mock that satisfies it today, and contract tests the real service passes tomorrow. Artefact: `mock-contract-test@1`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
 
 ## Upstream
 

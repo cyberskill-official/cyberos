@@ -88,9 +88,9 @@ The KB service **MUST** ship reranker at `services/kb/src/rerank/` using BGE-rer
 2. **MUST** call BGE-rerank-v2-m3 at `bge_rerank_client.rs::rerank(query, candidates) → Vec<(chunk, score)>` per DEC-1930.
 
 3. **MUST** merge hybrid per DEC-1932 at `hybrid_merger.rs::merge(lexical_results, semantic_results)`:
-   - Dedup by chunk_id (semantic) or doc_id (lexical).
-   - Combine top-20 from each → up to 40 candidates.
-   - Rerank → return top-10.
+- Dedup by chunk_id (semantic) or doc_id (lexical).
+- Combine top-20 from each → up to 40 candidates.
+- Rerank → return top-10.
 
 4. **MUST** cache per DEC-1933:
    ```sql
@@ -213,9 +213,7 @@ async fn dedup_across_sources() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-AI-020 (BGE-rerank-v2-m3 service), TASK-KB-005.
-**Downstream:** TASK-KB-007 (Ask this page Q&A).
-**Cross-module:** TASK-KB-004 (lexical input), TASK-MCP-007 (cache eviction cron), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-AI-020 (BGE-rerank-v2-m3 service), TASK-KB-005. **Downstream:** TASK-KB-007 (Ask this page Q&A). **Cross-module:** TASK-KB-004 (lexical input), TASK-MCP-007 (cache eviction cron), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

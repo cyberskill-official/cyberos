@@ -37,25 +37,25 @@ Without workflow-level evolution, structural issues that span multiple skills go
 
 1. **MUST** ship `cuo/core/workflow_evolution.py` with `compute_workflow_metrics(audit_dir, window) -> dict[str, WorkflowMetrics]` that aggregates per-workflow: total runs, COMPLETED count, ROUTED_BACK count (sum + per-task median), HITL_HALT count, average step count of failed runs, top-3 steps where failure occurred most often.
 2. **MUST** define workflow-level threshold signals (mirroring SKILL-level `self_audit.anomaly_signals`):
-   - `routed_back_rate_above` (default 0.3 → 30% of runs route back)
-   - `hitl_halt_rate_above` (default 0.1 → 10% of runs halt for human)
-   - `repeat_phase_failure_above` (default 3 → same phase fails on 3+ different tasks in window)
-   - `chain_length_efficiency_below` (default 0.7 → average steps_run / chain_length below 70%)
+- `routed_back_rate_above` (default 0.3 → 30% of runs route back)
+- `hitl_halt_rate_above` (default 0.1 → 10% of runs halt for human)
+- `repeat_phase_failure_above` (default 3 → same phase fails on 3+ different tasks in window)
+- `chain_length_efficiency_below` (default 0.7 → average steps_run / chain_length below 70%)
 3. **MUST** declare these signals in each workflow file's `self_audit:` frontmatter (similar to SKILL.md's). Workflow YAML extension: add the same `self_audit` + `human_fine_tune` blocks the SKILL.md frontmatter already has. (Schema change in `cuo/contracts/workflow/CONTRACT.md`.) *(traces_to: §1 #3 → AC #2)*
 4. **MUST** compute workflow stripes via `compute_workflow_stripe(workflow_id, signal_id, failure_pattern) -> str` with format `<persona>/<workflow_slug>:<signal_id>:<pattern_hash>`.
 5. **MUST** route workflow-refinement proposals to the SAME `docs/proposals/open/` directory as skill proposals (TASK-CUO-201). They are distinguishable by `frontmatter.kind: workflow_refinement` vs `skill_refinement`.
 6. **MUST** extend TASK-CUO-202's proposal classifier to handle workflow diffs:
-   - `step_addition` (insert a new step in `skill_chain:`) — minor bump (workflow_version), queue.
-   - `step_removal` — major bump, queue.
-   - `step_reorder` — major bump, queue.
-   - `escalates_to_addition` — minor bump, queue.
-   - `pattern_change` (e.g. `linear` → `per_instance`) — major bump, queue.
-   - `condition_tune` (numeric threshold in a `condition:` clause) — minor bump, queue.
-   - All workflow diffs default to QUEUE — workflows are higher-stakes than individual skills. Auto-apply requires explicit `--auto-workflow-diffs` flag.
+- `step_addition` (insert a new step in `skill_chain:`) — minor bump (workflow_version), queue.
+- `step_removal` — major bump, queue.
+- `step_reorder` — major bump, queue.
+- `escalates_to_addition` — minor bump, queue.
+- `pattern_change` (e.g. `linear` → `per_instance`) — major bump, queue.
+- `condition_tune` (numeric threshold in a `condition:` clause) — minor bump, queue.
+- All workflow diffs default to QUEUE — workflows are higher-stakes than individual skills. Auto-apply requires explicit `--auto-workflow-diffs` flag.
 7. **MUST** emit `cuo.workflow_refinement_emitted` memory aux row per new workflow proposal; `cuo.workflow_refinement_applied` per apply.
 8. **MUST** add CLI:
-   - `cyberos-cuo workflow metrics --since 30d` — table of per-workflow outcome distribution.
-   - `cyberos-cuo workflow propose --workflow <id>` — manually trigger proposal authoring against one workflow.
+- `cyberos-cuo workflow metrics --since 30d` — table of per-workflow outcome distribution.
+- `cyberos-cuo workflow propose --workflow <id>` — manually trigger proposal authoring against one workflow.
 9. **SHOULD** include per-task routed-back history in the workflow report — if task-X has routed back 3+ times in the window, the proposal body cites it as the canonical case study.
 10. **MUST** include in proposal body: `## Before` (current chain snippet), `## After` (proposed chain snippet), `## Rationale` (which signal tripped + evidence rows), `## Backward-compat notes` (whether the change breaks in-flight tasks at older chain positions).
 

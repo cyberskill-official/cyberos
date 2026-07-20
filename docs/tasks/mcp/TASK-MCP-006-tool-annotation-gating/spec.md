@@ -155,10 +155,10 @@ The MCP service **MUST** ship tool-annotation gating at `services/mcp/src/gating
 7. **MUST** intercept every `tools/call` MCP request at the gateway entry (TASK-MCP-001 handler modification) BEFORE dispatching to the per-module server. The `tools_call` handler invokes `gating::decision::decide(caller, tool, payload)` first; on `rejected_*` decisions, returns 403 + `confirm_required` (with confirm endpoint URL) + emits `mcp.tool_gating_decision`. On `auto_allowed | confirmed | elicited | bypassed`, proceeds to dispatch.
 
 8. **MUST** resolve gating mode per DEC-1053 annotation precedence (most restrictive wins):
-    - If tool has `destructiveHint=true` OR `openWorldHint=true` → requires confirmation (mode from policy: `confirm` or `elicit`).
-    - Else if `readOnlyHint=true` AND `destructiveHint=false` AND `openWorldHint=false` → `auto_confirm` (fast path).
-    - Otherwise → policy-default (which itself defaults to `confirm`).
-    - `idempotentHint` is informational only (does not change gating; surfaces in audit log).
+- If tool has `destructiveHint=true` OR `openWorldHint=true` → requires confirmation (mode from policy: `confirm` or `elicit`).
+- Else if `readOnlyHint=true` AND `destructiveHint=false` AND `openWorldHint=false` → `auto_confirm` (fast path).
+- Otherwise → policy-default (which itself defaults to `confirm`).
+- `idempotentHint` is informational only (does not change gating; surfaces in audit log).
 
 9. **MUST** support per-tenant gating policy YAML per DEC-1044. Schema:
     ```yaml
@@ -172,26 +172,26 @@ The MCP service **MUST** ship tool-annotation gating at `services/mcp/src/gating
         mode: auto_confirm
       # explicit override of annotation-derived default
     ```
-   Policy stored in `mcp_gating_policy.policy_yaml`; loaded into memory at handler startup + hot-reloaded on NATS subject `cyberos.mcp.gating_policy.updated.<tenant_slug>`.
+Policy stored in `mcp_gating_policy.policy_yaml`; loaded into memory at handler startup + hot-reloaded on NATS subject `cyberos.mcp.gating_policy.updated.<tenant_slug>`.
 
 10. **MUST** expose `POST /v1/admin/tenants/{tenant_id}/mcp/gating-policy` per DEC-1058. Caller has `tenant_admin` role. Body: `{ policy_yaml }`. Handler:
-    - Validates YAML schema (tool_id format `cyberos.<module>.<verb>_<noun>` per TASK-MCP-003 + SEP-986).
-    - INSERTs new policy row at version=max(version)+1.
-    - Publishes NATS reload event.
-    - Emits `mcp.tool_gating_policy_updated` sev-1.
+- Validates YAML schema (tool_id format `cyberos.<module>.<verb>_<noun>` per TASK-MCP-003 + SEP-986).
+- INSERTs new policy row at version=max(version)+1.
+- Publishes NATS reload event.
+- Emits `mcp.tool_gating_policy_updated` sev-1.
 
 11. **MUST** expose `POST /v1/mcp/tools/{tool_id}/confirm` for confirm-mode ack. Body: `{ tenant_id, tool_id, request_payload_sha256, signed_payload? }`. Handler:
-    - Validates caller JWT (TASK-AUTH-004).
-    - Validates `request_payload_sha256` matches a recently-attempted tool call by this caller (matched within 60s — denial-of-future-action mitigation).
-    - INSERTs `mcp_pending_confirmations` row with `expires_at = now() + 5 min` per DEC-1047.
-    - Returns 201 + `{ confirm_token, expires_at }`. Caller re-issues tools/call within 5 min; confirm row consumed atomically.
+- Validates caller JWT (TASK-AUTH-004).
+- Validates `request_payload_sha256` matches a recently-attempted tool call by this caller (matched within 60s — denial-of-future-action mitigation).
+- INSERTs `mcp_pending_confirmations` row with `expires_at = now() + 5 min` per DEC-1047.
+- Returns 201 + `{ confirm_token, expires_at }`. Caller re-issues tools/call within 5 min; confirm row consumed atomically.
 
 12. **MUST** consume confirm token atomically per DEC-1054. The tools/call handler's gating decision:
-    - Compute `request_payload_sha256`.
-    - `SELECT ... FROM mcp_pending_confirmations WHERE caller_subject_id=$1 AND tool_id=$2 AND request_payload_sha256=$3 AND consumed_at IS NULL AND expires_at > now() FOR UPDATE`.
-    - If row found: UPDATE `consumed_at=now()` + proceed.
-    - If not found: return 403 + `confirm_required`.
-    - `UNIQUE(caller_subject_id, tool_id, request_payload_sha256)` prevents double-use.
+- Compute `request_payload_sha256`.
+- `SELECT ... FROM mcp_pending_confirmations WHERE caller_subject_id=$1 AND tool_id=$2 AND request_payload_sha256=$3 AND consumed_at IS NULL AND expires_at > now() FOR UPDATE`.
+- If row found: UPDATE `consumed_at=now()` + proceed.
+- If not found: return 403 + `confirm_required`.
+- `UNIQUE(caller_subject_id, tool_id, request_payload_sha256)` prevents double-use.
 
 13. **MUST** delegate elicit mode to TASK-MCP-008 per DEC-1055. At slice 2 of this task (TASK-MCP-008 not yet shipped), `elicit` mode returns `503 + { error: "elicitation_not_yet_supported", retry_when: "TASK-MCP-008 ships in next slice" }`. When TASK-MCP-008 lands, the elicit handler invokes `mcp::elicitation::request(caller, tool, prompt)` + awaits the response inline.
 
@@ -200,10 +200,10 @@ The MCP service **MUST** ship tool-annotation gating at `services/mcp/src/gating
 15. **MUST** support audit-only mode per DEC-1050. Tenant sets `mcp_gating_policy.audit_only=true`; gating decisions are computed + logged but tools always proceed (no 403). Surface mode via `decision='audit_only_allowed'` in audit log + sev-2 row `mcp.tool_gating_audit_only_mode_set` when policy is updated to enable audit-only.
 
 16. **MUST** detect annotation drift nightly per DEC-1059. The `drift_detector.rs` scheduled job:
-    - Loads each module's currently-registered annotations from `server_registry`.
-    - Queries each module's `tools/list` endpoint to fetch the live annotations.
-    - For each tool: compares declared annotations (registry) vs live annotations (server).
-    - Drift detected → INSERTs `mcp_gating_drift_log` row + emits `mcp.tool_gating_annotation_drift` sev-1 with `(module, tool_id, registry_annotations, live_annotations, diff_fields)`.
+- Loads each module's currently-registered annotations from `server_registry`.
+- Queries each module's `tools/list` endpoint to fetch the live annotations.
+- For each tool: compares declared annotations (registry) vs live annotations (server).
+- Drift detected → INSERTs `mcp_gating_drift_log` row + emits `mcp.tool_gating_annotation_drift` sev-1 with `(module, tool_id, registry_annotations, live_annotations, diff_fields)`.
 
 17. **MUST** rate-limit confirmation requests at 100 confirm-mode requests/min/caller per DEC-1056. Excess returns `429 + Retry-After`.
 
@@ -212,11 +212,11 @@ The MCP service **MUST** ship tool-annotation gating at `services/mcp/src/gating
 19. **MUST** thread W3C `traceparent` across `tools/call` → gating decision → confirm-ack → dispatch → response (task-audit skill rule 22-24).
 
 20. **MUST** emit 5 memory audit row kinds per DEC-1051:
-    - `mcp.tool_gating_decision` (sev-3 high-volume; sampled at 1% via TASK-OBS-006 tail-sampling)
-    - `mcp.tool_gating_policy_updated` (sev-1)
-    - `mcp.tool_gating_annotation_drift` (sev-1)
-    - `mcp.tool_gating_bypass_used` (sev-2)
-    - `mcp.tool_gating_audit_only_mode_set` (sev-2)
+- `mcp.tool_gating_decision` (sev-3 high-volume; sampled at 1% via TASK-OBS-006 tail-sampling)
+- `mcp.tool_gating_policy_updated` (sev-1)
+- `mcp.tool_gating_annotation_drift` (sev-1)
+- `mcp.tool_gating_bypass_used` (sev-2)
+- `mcp.tool_gating_audit_only_mode_set` (sev-2)
 
 21. **MUST** preserve MCP-spec response shape on rejection. The 403 response body includes:
     ```json

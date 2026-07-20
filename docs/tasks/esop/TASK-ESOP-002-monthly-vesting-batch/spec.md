@@ -83,10 +83,10 @@ The ESOP service **MUST** ship monthly vesting batch at `services/esop/src/vesti
 1. **MUST** validate `accrual_status` against closed enum per DEC-2261.
 
 2. **MUST** compute at `calculator.rs::compute(grant, as_of_date)` per DEC-2260:
-   - months_elapsed = months_between(grant.vest_start_date, as_of_date)
-   - if months_elapsed < cliff_months: vested = 0
-   - else if months_elapsed >= vest_months: vested = total_shares
-   - else: vested = (months_elapsed / vest_months) * total_shares
+- months_elapsed = months_between(grant.vest_start_date, as_of_date)
+- if months_elapsed < cliff_months: vested = 0
+- else if months_elapsed >= vest_months: vested = total_shares
+- else: vested = (months_elapsed / vest_months) * total_shares
 
 3. **MUST** schedule EOM cron via TASK-MCP-007 at 04:30 tenant_tz.
 
@@ -217,8 +217,7 @@ async fn idempotent_double_run() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-ESOP-001.
-**Cross-module:** TASK-MCP-007 (cron), TASK-AUTH-101 (CFO), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-ESOP-001. **Cross-module:** TASK-MCP-007 (cron), TASK-AUTH-101 (CFO), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

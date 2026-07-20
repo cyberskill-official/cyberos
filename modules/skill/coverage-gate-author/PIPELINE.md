@@ -1,7 +1,6 @@
 # `coverage-gate-author` - pipeline
 
-Run the suite + measure coverage on the task's touched files; the artefact certifies (or blocks) the testing -> done transition.
-Artefact: `coverage-gate@1`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
+Run the suite + measure coverage on the task's touched files; the artefact certifies (or blocks) the testing -> done transition. Artefact: `coverage-gate@1`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
 
 ## Upstream
 

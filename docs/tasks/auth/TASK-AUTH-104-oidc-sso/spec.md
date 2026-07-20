@@ -141,23 +141,23 @@ The AUTH service **MUST** ship OIDC SSO with RFC 8414 discovery + RFC 7517 JWKS 
 6. **MUST** implement RFC 7517 JWKS fetch + rotation (per DEC-402). Fetch `jwks_uri` once per kid + cache 24h. On id_token with unknown kid → refetch JWKS; if still unknown → 401 `unknown_kid`. Old kids accepted for 24h overlap (graceful rotation); new kids accepted immediately.
 
 7. **MUST** implement the Authorisation Code flow with PKCE (RFC 7636 + DEC-401):
-   - `GET /v1/auth/oidc/initiate?idp_id=<>&tenant_slug=<>` — generates `state` (32 random bytes hex) + `nonce` (32 random bytes hex) + `code_verifier` (43-128 char base64url) + `code_challenge = SHA-256(code_verifier)`; stores `(state, nonce, code_verifier, idp_id, tenant_id, expires_at = now + 10min)` in Redis; redirects to `authorization_endpoint?response_type=code&client_id=<>&redirect_uri=<>&scope=openid profile email&state=<>&nonce=<>&code_challenge=<>&code_challenge_method=S256`.
-   - `GET /v1/auth/oidc/callback?code=<>&state=<>` — looks up `state` in Redis; expired or missing → 401 `oidc_flow_expired`; validates `state` + recovers `code_verifier`; POSTs to `token_endpoint` with `grant_type=authorization_code&code=<>&client_id=<>&client_secret=<>&redirect_uri=<>&code_verifier=<>`; receives `id_token`; verifies per §1 #8; provisions JIT subject per §1 #9; issues TASK-AUTH-004 JWT; redirects to tenant SPA.
+- `GET /v1/auth/oidc/initiate?idp_id=<>&tenant_slug=<>` — generates `state` (32 random bytes hex) + `nonce` (32 random bytes hex) + `code_verifier` (43-128 char base64url) + `code_challenge = SHA-256(code_verifier)`; stores `(state, nonce, code_verifier, idp_id, tenant_id, expires_at = now + 10min)` in Redis; redirects to `authorization_endpoint?response_type=code&client_id=<>&redirect_uri=<>&scope=openid profile email&state=<>&nonce=<>&code_challenge=<>&code_challenge_method=S256`.
+- `GET /v1/auth/oidc/callback?code=<>&state=<>` — looks up `state` in Redis; expired or missing → 401 `oidc_flow_expired`; validates `state` + recovers `code_verifier`; POSTs to `token_endpoint` with `grant_type=authorization_code&code=<>&client_id=<>&client_secret=<>&redirect_uri=<>&code_verifier=<>`; receives `id_token`; verifies per §1 #8; provisions JIT subject per §1 #9; issues TASK-AUTH-004 JWT; redirects to tenant SPA.
 
 7. **MUST** validate id_token signature + claims (per DEC-411 + §1 #8):
-    - Signature: HS/RS/ES algorithms per JWKS `alg`; verify against the matching `kid`.
-    - `iss` claim MUST equal `idp_config.issuer_url`.
-    - `aud` claim MUST contain `client_id`.
-    - `exp` claim MUST be in the future (60s skew tolerance).
-    - `nbf` claim MUST be in the past (60s skew).
-    - `nonce` claim MUST match the stored nonce.
-    - Any fail → 401 + emit `auth.oidc_login_failed` + `auth.oidc_signature_invalid` memory rows.
+- Signature: HS/RS/ES algorithms per JWKS `alg`; verify against the matching `kid`.
+- `iss` claim MUST equal `idp_config.issuer_url`.
+- `aud` claim MUST contain `client_id`.
+- `exp` claim MUST be in the future (60s skew tolerance).
+- `nbf` claim MUST be in the past (60s skew).
+- `nonce` claim MUST match the stored nonce.
+- Any fail → 401 + emit `auth.oidc_login_failed` + `auth.oidc_signature_invalid` memory rows.
 
 8. **MUST** JIT-provision a subject on first login (per DEC-403). If `auth_oidc_subject_link WHERE idp_id=$1 AND sub_claim=$2` returns nothing:
-    - Extract `email` claim (fall back to `preferred_username` if email absent).
-    - Call `TASK-AUTH-002`'s `create_subject` internal helper with `email`, JIT-generated password (zeroised; subject MUST set password reset on first session OR rely on SSO subsequently), default role per claim mapping (§1 #10).
-    - INSERT `auth_oidc_subject_link` row.
-    - Emit `auth.oidc_jit_provisioned` memory row.
+- Extract `email` claim (fall back to `preferred_username` if email absent).
+- Call `TASK-AUTH-002`'s `create_subject` internal helper with `email`, JIT-generated password (zeroised; subject MUST set password reset on first session OR rely on SSO subsequently), default role per claim mapping (§1 #10).
+- INSERT `auth_oidc_subject_link` row.
+- Emit `auth.oidc_jit_provisioned` memory row.
 
 9. **MUST** apply per-tenant claim → role mapping (per DEC-404). The IdP config's `claim_mapping_yaml` is a closed-shape YAML:
    ```yaml
@@ -170,7 +170,7 @@ The AUTH service **MUST** ship OIDC SSO with RFC 8414 discovery + RFC 7517 JWKS 
        contains: "Finance"
        grant_role: cfo      # per TASK-AUTH-101 enum
    ```
-   Rules evaluated top-down; first match wins. Unmatched claim values → use `default_role`. Unknown role in mapping → log + fall back to `default_role`.
+Rules evaluated top-down; first match wins. Unmatched claim values → use `default_role`. Unknown role in mapping → log + fall back to `default_role`.
 
 10. **MUST** enforce the closed TASK-AUTH-101 role enum on JIT provisioning. claim_mapping_yaml referencing a role not in the catalogue → IdP config save fails with `unknown_role: <name>`.
 
@@ -181,12 +181,12 @@ The AUTH service **MUST** ship OIDC SSO with RFC 8414 discovery + RFC 7517 JWKS 
 13. **MUST** enforce a per-tenant max of 3 active IdP configs (per DEC-412). Attempt to create a 4th → 409 `idp_config_limit_exceeded`. ADR required to raise the cap.
 
 14. **MUST** emit memory audit rows for 6 kinds (per DEC-406):
-    - `auth.oidc_login_succeeded` (full login flow → AUTH JWT issued).
-    - `auth.oidc_login_failed` (any callback failure).
-    - `auth.oidc_jit_provisioned` (new subject created on first login).
-    - `auth.oidc_jwks_rotated` (new kid observed in JWKS).
-    - `auth.oidc_idp_config_changed` (POST/PATCH/DELETE on idp_configs).
-    - `auth.oidc_signature_invalid` (id_token verification failed; sev-2 — may signal attack).
+- `auth.oidc_login_succeeded` (full login flow → AUTH JWT issued).
+- `auth.oidc_login_failed` (any callback failure).
+- `auth.oidc_jit_provisioned` (new subject created on first login).
+- `auth.oidc_jwks_rotated` (new kid observed in JWKS).
+- `auth.oidc_idp_config_changed` (POST/PATCH/DELETE on idp_configs).
+- `auth.oidc_signature_invalid` (id_token verification failed; sev-2 — may signal attack).
 
 15. **MUST** PII-scrub `sub_claim`, `email`, `failure_reason` via TASK-MEMORY-111 before chain commit.
 
@@ -195,11 +195,11 @@ The AUTH service **MUST** ship OIDC SSO with RFC 8414 discovery + RFC 7517 JWKS 
 17. **MUST** emit OTel span `auth.oidc.{initiate,callback,jit_provision,idp_config_change}` with `outcome` attribute (success | jit_provisioned | state_reused | flow_expired | signature_invalid | sub_mismatch | unknown_kid | idp_unreachable | claim_mapping_unknown_role).
 
 18. **MUST** emit OTel metrics:
-    - `auth_oidc_login_total{tenant_id, idp_id, outcome}` (counter).
-    - `auth_oidc_jit_provisioned_total{tenant_id}` (counter).
-    - `auth_oidc_jwks_rotations_total{tenant_id, idp_id}` (counter).
-    - `auth_oidc_signature_failures_total{tenant_id, idp_id}` (counter — sev-2 if sustained > 5/h).
-    - `auth_oidc_flow_latency_ms` (histogram; SLO p95 < 500ms).
+- `auth_oidc_login_total{tenant_id, idp_id, outcome}` (counter).
+- `auth_oidc_jit_provisioned_total{tenant_id}` (counter).
+- `auth_oidc_jwks_rotations_total{tenant_id, idp_id}` (counter).
+- `auth_oidc_signature_failures_total{tenant_id, idp_id}` (counter — sev-2 if sustained > 5/h).
+- `auth_oidc_flow_latency_ms` (histogram; SLO p95 < 500ms).
 
 19. **MUST** ship `POST /v1/auth/oidc/idp-configs` for tenant-admin IdP config CRUD. Caller MUST have role `tenant-admin` per TASK-AUTH-101. Validates claim_mapping_yaml + roles + discovery succeeds before persisting.
 

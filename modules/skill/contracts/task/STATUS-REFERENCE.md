@@ -33,9 +33,7 @@ A task carries exactly one status at any point in time. There are **10** valid v
 | 11 | `cannot_reproduce` | **`type: bug` only.** The reproduction steps do not reproduce. Terminal, but *softly*: a bug that cannot be reproduced is not a bug that does not exist, and this status says so honestly rather than laundering it through `closed`. Re-opening is a normal operator flip back to `draft`, and the audit chain shows how many times that happened — which is itself the signal that the repro is wrong, not the bug. |
 | 12 | `duplicate` | Superseded by another task. REQUIRES a `duplicate_of: TASK-<ID>` frontmatter field pointing at a task that exists. Distinct from `closed` because `closed` loses the link, and the link is the whole value: it is how you discover that six reports were one cause. |
 
-Both were added 2026-07-14 with the `type` discriminator. `closed` alone forced
-every non-fix outcome through one door and destroyed the reason. A backlog where
-`closed` means six different things is a backlog you cannot learn from.
+Both were added 2026-07-14 with the `type` discriminator. `closed` alone forced every non-fix outcome through one door and destroyed the reason. A backlog where `closed` means six different things is a backlog you cannot learn from.
 
 ### 1.3 What happened to `[FAILED: ...]` and `[BLOCKED: ...]`?
 
@@ -54,9 +52,7 @@ This section previously said:
 > an Issue Request (a new artefact type, distinct from TASK) carrying the failure
 > reason, the failing test name(s), and the reverting commit hash.
 
-That artefact needed no new type. It is a task with `type: bug`. The route-back path
-now auto-drafts one, pre-filled from the evidence that already exists at the moment
-of failure:
+That artefact needed no new type. It is a task with `type: bug`. The route-back path now auto-drafts one, pre-filled from the evidence that already exists at the moment of failure:
 
 | Issue-Request field (as specified) | `type: bug` field it became |
 |---|---|
@@ -64,12 +60,7 @@ of failure:
 | failing test name(s) | `regression_test` |
 | reverting commit hash | `first_bad_commit` |
 
-**Second intake path.** `services/obs-router/src/cuo_triage.rs` and
-`modules/cuo/cuo/triage_server.py` already route production alerts into CUO triage.
-An alert that survives triage emits a `type: bug` task with the reproduction
-pre-filled from the trace. Both intake paths — a gate failing on the way out, and an
-alert firing in production — now land in the same artefact, with the same rubric and
-the same regression gate. That is the whole reason to have a type discriminator.
+**Second intake path.** `services/obs-router/src/cuo_triage.rs` and `modules/cuo/cuo/triage_server.py` already route production alerts into CUO triage. An alert that survives triage emits a `type: bug` task with the reproduction pre-filled from the trace. Both intake paths — a gate failing on the way out, and an alert firing in production — now land in the same artefact, with the same rubric and the same regression gate. That is the whole reason to have a type discriminator.
 
 ### 1.4 HITL — Human-in-the-loop is REQUIRED
 

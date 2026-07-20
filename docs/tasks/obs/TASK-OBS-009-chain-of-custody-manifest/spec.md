@@ -86,38 +86,38 @@ risk_if_skipped: "Auditor receives a JSON dump. No proof it's authentic. Could b
 Every compliance export from TASK-OBS-008 **MUST** be accompanied by a chain-of-custody manifest. Each manifest:
 
 1. **MUST** include the following fields:
-    - `export_id` (ULID-26).
-    - `tenant_id` (UUID).
-    - `regulation` (string: `"EU AI Act" | "PDPL" | "SOC 2" | "ISO 27001"`).
-    - `time_range` (ISO8601 tuple).
-    - `row_count` (u64).
-    - `chain_head_at_export` (32-byte memory MMR root, hex-encoded).
-    - `exporter` (auditor JWT subject_id + email).
-    - `exported_at` (ISO8601 UTC).
-    - `sha256_of_rows` (32 bytes hex; deterministic over canonical JSON of rows).
-    - `ed25519_signature` (64 bytes base64, over canonical-bytes-of-everything-above).
-    - `public_key_id` (string: identifier for the signing key version, e.g., `"cyberos-infra-2026-Q2"`).
-    - `state` (enum: `Complete | Incomplete`).
+- `export_id` (ULID-26).
+- `tenant_id` (UUID).
+- `regulation` (string: `"EU AI Act" | "PDPL" | "SOC 2" | "ISO 27001"`).
+- `time_range` (ISO8601 tuple).
+- `row_count` (u64).
+- `chain_head_at_export` (32-byte memory MMR root, hex-encoded).
+- `exporter` (auditor JWT subject_id + email).
+- `exported_at` (ISO8601 UTC).
+- `sha256_of_rows` (32 bytes hex; deterministic over canonical JSON of rows).
+- `ed25519_signature` (64 bytes base64, over canonical-bytes-of-everything-above).
+- `public_key_id` (string: identifier for the signing key version, e.g., `"cyberos-infra-2026-Q2"`).
+- `state` (enum: `Complete | Incomplete`).
 2. **MUST** sign with the CyberOS infrastructure Ed25519 key. The key is rotated quarterly via TASK-AUTH-006-style sweeper; key versions enumerate in `public_key_id`.
 3. **MUST** include the public key ID in the manifest. Auditors fetch the corresponding public key from `https://keys.cyberos.world/<public_key_id>.pub` (a static file served via CDN; no auth required for public keys).
 4. **MUST** be both human-readable (PDF cover page with manifest fields + QR code linking to verifier) AND machine-verifiable (JSON sidecar with raw bytes for cryptographic verification).
 5. **MUST** record the export to memory as `obs.export_compliance` audit row before returning to the caller. The row carries `export_id`, `tenant_id`, `regulation`, `row_count`, `exporter_subject_id`, `chain_head_at_export`, `request_id`. Self-anchoring: the export itself is in the chain.
 6. **MUST** prevent partial exports — if export is interrupted (panic, network drop mid-stream), the manifest carries `state: Incomplete` AND the memory row records the incompleteness. Incomplete manifests fail offline verification (ExportState mismatch).
 7. **MUST** ship a standalone verifier binary `verify_manifest` that auditors run offline. The verifier:
-    - Takes a manifest JSON path + rows JSON path.
-    - Fetches the public key from `keys.cyberos.world` (or accepts via `--pubkey` flag for fully-offline use).
-    - Verifies the Ed25519 signature.
-    - Recomputes SHA-256 of rows; compares to `sha256_of_rows`.
-    - Outputs PASS/FAIL with reason.
+- Takes a manifest JSON path + rows JSON path.
+- Fetches the public key from `keys.cyberos.world` (or accepts via `--pubkey` flag for fully-offline use).
+- Verifies the Ed25519 signature.
+- Recomputes SHA-256 of rows; compares to `sha256_of_rows`.
+- Outputs PASS/FAIL with reason.
 8. **MUST** use deterministic canonical-JSON serialisation for both `sha256_of_rows` AND the signed bytes. The same rows + same manifest input always produce the same hash + signature. RFC 8785 JCS is the standard.
 9. **MUST** complete signing in ≤ 100ms per export (Ed25519 is microseconds; the 100ms budget covers JSON serialisation + key load).
 10. **MUST** attach the manifest to BOTH PDF and JSON exports:
-    - PDF: cover page renders manifest fields + QR code linking to `https://verify.cyberos.world/?export_id=<id>` (online verifier).
-    - JSON: paired files `<export_id>_rows.json` + `<export_id>_manifest.json` in a single zip.
+- PDF: cover page renders manifest fields + QR code linking to `https://verify.cyberos.world/?export_id=<id>` (online verifier).
+- JSON: paired files `<export_id>_rows.json` + `<export_id>_manifest.json` in a single zip.
 11. **SHOULD** emit OTel metrics:
-    - `obs_export_compliance_total{regulation, state}` (counter).
-    - `obs_export_signing_latency_ms` (histogram).
-    - `obs_export_verification_total{outcome}` (counter; verify_manifest binary's metrics if telemetry-enabled).
+- `obs_export_compliance_total{regulation, state}` (counter).
+- `obs_export_signing_latency_ms` (histogram).
+- `obs_export_verification_total{outcome}` (counter; verify_manifest binary's metrics if telemetry-enabled).
 
 ---
 

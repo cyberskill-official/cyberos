@@ -16,25 +16,11 @@ caller_persona: "operator:stephen-cheng"
 
 # TASK-IMP-086-backlog-index-backfill spec audit - audit_rubric@2.0 (machine floor + judgment)
 
-Machine floor: task-lint.mjs (first governed use). Judgment families walked by the model:
-QA semantics (metrics grounded in run evidence with baseline/target/deadline; alternatives
-distinct; scope subsections; no unsourced numerics; no cross-team claims), SAFE content
-(sourced blocks, no injection markers), TRACE semantic sufficiency (cited tests/ops
-evidence genuinely prove their clauses), COND-004 content (three labeled bullets truthful).
+Machine floor: task-lint.mjs (first governed use). Judgment families walked by the model: QA semantics (metrics grounded in run evidence with baseline/target/deadline; alternatives distinct; scope subsections; no unsourced numerics; no cross-team claims), SAFE content (sourced blocks, no injection markers), TRACE semantic sufficiency (cited tests/ops evidence genuinely prove their clauses), COND-004 content (three labeled bullets truthful).
 
-ISSUE ISS-001 (TRACE-002, wontfix-info): all four ACs are ops-verified with a recorded
-rationale (one-shot content chore; a permanent parity test is explicitly out of scope to
-avoid going red on other sections pre-existing drift). Justification judged sufficient.
-ISSUE ISS-002 (QA-006, wontfix-info): the regenerator-first alternative doubles as an
-implementation instruction - kept in Alternatives deliberately so the implementer tries
-the byte authority before the surgical path.
+ISSUE ISS-001 (TRACE-002, wontfix-info): all four ACs are ops-verified with a recorded rationale (one-shot content chore; a permanent parity test is explicitly out of scope to avoid going red on other sections pre-existing drift). Justification judged sufficient. ISSUE ISS-002 (QA-006, wontfix-info): the regenerator-first alternative doubles as an implementation instruction - kept in Alternatives deliberately so the implementer tries the byte authority before the surgical path.
 
-SUMMARY
-verdict:         pass
-issues_open:     0
-issues_human:    0
-iterations:      2
-next_action:     ship
+SUMMARY verdict:         pass issues_open:     0 issues_human:    0 iterations:      2 next_action:     ship
 
 ## §gate-log
 
@@ -42,8 +28,4 @@ Populated during implementation (ship-tasks testing phase).
 
 ## §10.7 post-acceptance correction (2026-07-16)
 
-Acceptance evidence asserted a state no commit contained (see gate-log CORRECTIVE
-ADDENDUM). Deliverable ruling: §1 #1.1 is the contract - every folder gets a listed row;
-the counted-not-listed pattern is the regenerator's defect (IMP-17), not a convention that
-supersedes the task. Fixed forward in 092c9887 with committed-object verification. The
-done status stands on the corrected evidence.
+Acceptance evidence asserted a state no commit contained (see gate-log CORRECTIVE ADDENDUM). Deliverable ruling: §1 #1.1 is the contract - every folder gets a listed row; the counted-not-listed pattern is the regenerator's defect (IMP-17), not a convention that supersedes the task. Fixed forward in 092c9887 with committed-object verification. The done status stands on the corrected evidence.

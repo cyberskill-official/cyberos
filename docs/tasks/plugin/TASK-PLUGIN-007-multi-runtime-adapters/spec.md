@@ -88,10 +88,10 @@ risk_if_skipped: "Without multi-runtime adapters, the plugin only works in one r
 The PLUGIN module **MUST** ship multi-runtime adapters at `services/plugin-host/src/adapters/<target>/`. Each adapter transforms the canonical CyberOS manifest (per TASK-PLUGIN-001) into a target-runtime-native bundle. P1 targets: claude-code, cursor, cowork, codex-cli.
 
 1. **MUST** ship adapters for all four P1 targets per DEC-2460:
-   - **`claude-code`** — produces `.plugin` zip with `plugin.json` at root + `commands/*.md` + `skills/*` + `bin/cyberos-mcp-bridge`
-   - **`cursor`** — produces `.mcp.json` single-file config pointing at `cyberos-mcp-bridge` stdio transport; omits commands + skills per DEC-2465
-   - **`cowork`** — produces Customize-slot zip with `manifest.json` + `commands/*.md` + `skills/*` + HTTP-transport bridge config
-   - **`codex-cli`** — produces top-level `SKILL.md` + nested `skills/` subfolders + env var binding for MCP
+- **`claude-code`** — produces `.plugin` zip with `plugin.json` at root + `commands/*.md` + `skills/*` + `bin/cyberos-mcp-bridge`
+- **`cursor`** — produces `.mcp.json` single-file config pointing at `cyberos-mcp-bridge` stdio transport; omits commands + skills per DEC-2465
+- **`cowork`** — produces Customize-slot zip with `manifest.json` + `commands/*.md` + `skills/*` + HTTP-transport bridge config
+- **`codex-cli`** — produces top-level `SKILL.md` + nested `skills/` subfolders + env var binding for MCP
 
 2. **MUST** consume the SAME canonical manifest per DEC-2462. The CLI `cyberos-plugin pack --target <name>` reads `modules/plugin/manifests/<id>@<version>.plugin.json` once and dispatches to the target adapter. Authors do NOT write per-target manifests.
 
@@ -102,22 +102,22 @@ The PLUGIN module **MUST** ship multi-runtime adapters at `services/plugin-host/
 5. **MUST** omit `skills/` directory from the Cursor bundle per DEC-2465. Cursor's MCP integration surfaces tools but does NOT render Skills. Shipping skills/ bloats the bundle without benefit and may confuse users.
 
 6. **MUST** emit bundles conforming to each target's published format per DEC-2466:
-   - claude-code: `.plugin` format per Anthropic Claude Code plugin spec (zip with manifest at root)
-   - cursor: `.mcp.json` format per Cursor MCP integration docs
-   - cowork: Customize slot format per Anthropic Cowork docs
-   - codex-cli: Anthropic Agent Skills SKILL.md format (single SKILL.md at root + nested skills/)
+- claude-code: `.plugin` format per Anthropic Claude Code plugin spec (zip with manifest at root)
+- cursor: `.mcp.json` format per Cursor MCP integration docs
+- cowork: Customize slot format per Anthropic Cowork docs
+- codex-cli: Anthropic Agent Skills SKILL.md format (single SKILL.md at root + nested skills/)
 
 7. **MUST** translate the canonical manifest's `tools[]` to target-appropriate shape:
-   - claude-code: tools nested under `mcp_servers[0].tools[]`
-   - cursor: tools live in `command` config; Cursor introspects via MCP `tools/list` at runtime
-   - cowork: tools under `connectors[0].tools[]`
-   - codex-cli: tools surface via MCP server env-var; SKILL.md describes via prose
+- claude-code: tools nested under `mcp_servers[0].tools[]`
+- cursor: tools live in `command` config; Cursor introspects via MCP `tools/list` at runtime
+- cowork: tools under `connectors[0].tools[]`
+- codex-cli: tools surface via MCP server env-var; SKILL.md describes via prose
 
 8. **MUST** translate `commands[]` and `skills[]` per target capability:
-   - claude-code: copy `commands/*.md` into `.claude/commands/`; copy `skills/*` into `.claude/skills/`
-   - cursor: omit both
-   - cowork: copy commands into `commands/`; copy skills into `skills/`
-   - codex-cli: convert commands into supplementary SKILL.md files (one per command); copy skills as-is
+- claude-code: copy `commands/*.md` into `.claude/commands/`; copy `skills/*` into `.claude/skills/`
+- cursor: omit both
+- cowork: copy commands into `commands/`; copy skills into `skills/`
+- codex-cli: convert commands into supplementary SKILL.md files (one per command); copy skills as-is
 
 9. **MUST** validate target name against the manifest's `targets[]` array — if author packs `--target cursor` but manifest doesn't list `cursor` in `targets[]`, the pack fails with a clear error. This prevents shipping bundles for targets the author didn't intend.
 

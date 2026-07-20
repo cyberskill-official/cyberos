@@ -1,27 +1,10 @@
 # TASK-IMP-086 — code review packet
 
-Files under review: modified `docs/tasks/BACKLOG.md` (+14/−0, one hunk — the
-task's whole cone) and the six new artefact docs in
-`docs/tasks/improvement/TASK-IMP-086-backlog-index-backfill/` (gate-log-draft.md,
-context-map.md, edge-case-matrix.md, impl-plan.md, obs-injection.md, this
-packet). Any other dirt in the same working tree belongs to batch siblings
-(TASK-IMP-085 under tools/install/** and modules/**, TASK-IMP-087 under
-docs/release/**) and is covered by their own packets. Evidence state at review:
-gate-log-draft.md E0–E6 recorded; all E2–E6 commands are pure reads and
-re-runnable.
+Files under review: modified `docs/tasks/BACKLOG.md` (+14/−0, one hunk — the task's whole cone) and the six new artefact docs in `docs/tasks/improvement/TASK-IMP-086-backlog-index-backfill/` (gate-log-draft.md, context-map.md, edge-case-matrix.md, impl-plan.md, obs-injection.md, this packet). Any other dirt in the same working tree belongs to batch siblings (TASK-IMP-085 under tools/install/** and modules/**, TASK-IMP-087 under docs/release/**) and is covered by their own packets. Evidence state at review: gate-log-draft.md E0–E6 recorded; all E2–E6 commands are pure reads and re-runnable.
 
 ## Path decision (disclosure)
 
-The spec's Alternatives PREFER full-section regeneration via
-`scripts/migrate_improvement_to_task.py regen_backlog` and require trying it
-first. Tried first, against a /tmp copy so the repo stayed untouched (gate-log
-E1). Rejected on the recorded output: it deletes the three pre-existing `[done]`
-rows 082–084, rewrites the repo-wide `Totals:` line, and — decisively — emits
-ZERO rows for 068–081, because `regen_backlog` lists only ACTIVE statuses
-(migrate_improvement_to_task.py:19-20, :201) and all fourteen tasks are `done`.
-The regenerator therefore both violates §1 #1.5 and cannot satisfy §1 #1.1;
-the spec's own fallback (surgical backfill) was taken. Both paths were held to
-the same ACs, as the spec demands.
+The spec's Alternatives PREFER full-section regeneration via `scripts/migrate_improvement_to_task.py regen_backlog` and require trying it first. Tried first, against a /tmp copy so the repo stayed untouched (gate-log E1). Rejected on the recorded output: it deletes the three pre-existing `[done]` rows 082–084, rewrites the repo-wide `Totals:` line, and — decisively — emits ZERO rows for 068–081, because `regen_backlog` lists only ACTIVE statuses (migrate_improvement_to_task.py:19-20, :201) and all fourteen tasks are `done`. The regenerator therefore both violates §1 #1.5 and cannot satisfy §1 #1.1; the spec's own fallback (surgical backfill) was taken. Both paths were held to the same ACs, as the spec demands.
 
 ## §1 clause → proof
 
@@ -36,21 +19,11 @@ the same ACs, as the spec demands.
 
 ## Acceptance criteria
 
-AC 1 (§1 #1.1–1.3) evidenced by E2+E0+E5+E4b · AC 2 (§1 #1.4) by E3+E-SPLICE ·
-AC 3 (§1 #1.5) by E6 (+E1 for the rejected churn path) · AC 4 (§1 #1.6) by
-E0+E4. All four are ops-verified per the spec's stated rationale (one-shot
-content chore; the permanent parity test is explicitly out of scope because it
-would go red on other sections' pre-existing drift).
+AC 1 (§1 #1.1–1.3) evidenced by E2+E0+E5+E4b · AC 2 (§1 #1.4) by E3+E-SPLICE · AC 3 (§1 #1.5) by E6 (+E1 for the rejected churn path) · AC 4 (§1 #1.6) by E0+E4. All four are ops-verified per the spec's stated rationale (one-shot content chore; the permanent parity test is explicitly out of scope because it would go red on other sections' pre-existing drift).
 
 ## Diff size
 
-`docs/tasks/BACKLOG.md`: +14/−0, one hunk, insertions only — the review-sized
-diff the spec promises. Six new markdown artefacts in the task folder, zero code,
-zero dependencies, no other file touched (context-map:
-files_outside_immediate_domain 0). Known out-of-scope residue, disclosed: the
-repo-wide `Totals:` line still says 155 done while the corpus tallies 158 (E1) —
-other sections' pre-existing drift, named out of scope by the spec, and fixing it
-here would itself have violated §1 #1.5.
+`docs/tasks/BACKLOG.md`: +14/−0, one hunk, insertions only — the review-sized diff the spec promises. Six new markdown artefacts in the task folder, zero code, zero dependencies, no other file touched (context-map: files_outside_immediate_domain 0). Known out-of-scope residue, disclosed: the repo-wide `Totals:` line still says 155 done while the corpus tallies 158 (E1) — other sections' pre-existing drift, named out of scope by the spec, and fixing it here would itself have violated §1 #1.5.
 
 ## Verdict
 

@@ -1,9 +1,6 @@
 # Non-Functional Requirements (NFRs) — CyberOS
 
-This directory holds the per-module NFR specs that back the rendered catalog at
-`website/docs/reference/nfr-catalog.html`. Each NFR is a single Markdown file
-with a normative §1 statement (BCP-14), an SLO, a measurement spec, a
-verification pointer, and a failure-handling stanza.
+This directory holds the per-module NFR specs that back the rendered catalog at `website/docs/reference/nfr-catalog.html`. Each NFR is a single Markdown file with a normative §1 statement (BCP-14), an SLO, a measurement spec, a verification pointer, and a failure-handling stanza.
 
 ## Layout
 
@@ -20,23 +17,18 @@ docs/non-functional-requirements/
 └── …                                            # one folder per module
 ```
 
-Folder naming mirrors `docs/tasks/` exactly — same `<module>/`
-slugs, same `<ID>-<slug>.md` file shape. The renderer enumerates this tree
-and projects each frontmatter row into the catalog's `NFR_DATA` array.
+Folder naming mirrors `docs/tasks/` exactly — same `<module>/` slugs, same `<ID>-<slug>.md` file shape. The renderer enumerates this tree and projects each frontmatter row into the catalog's `NFR_DATA` array.
 
 ## NFR vs task
 
 - **task** specifies a *feature surface* the system MUST expose.
-- **NFR** asserts a *cross-cutting quality property* the system MUST hold
-  (performance, security, reliability, scalability, observability, etc.).
+- **NFR** asserts a *cross-cutting quality property* the system MUST hold (performance, security, reliability, scalability, observability, etc.).
 
-NFRs are tighter than tasks by design: one constraint, one SLO, one
-measurement, one verification path. Target body size is 80-150 lines.
+NFRs are tighter than tasks by design: one constraint, one SLO, one measurement, one verification path. Target body size is 80-150 lines.
 
 ## Template
 
-See `modules/skill/contracts/non-functional-requirement/template.md` (not yet
-shipped — for now, copy any existing NFR sibling as the canonical shape).
+See `modules/skill/contracts/non-functional-requirement/template.md` (not yet shipped — for now, copy any existing NFR sibling as the canonical shape).
 
 The required frontmatter keys are:
 
@@ -57,15 +49,11 @@ related_tasks: [task-…, task-…]
 ## Authoring discipline
 
 - One claim per NFR. If you find yourself writing "and also" — split.
-- Always cite the shipped code path (e.g. `services/auth/src/rbac/refresher.rs`
-  for refresher cadence claims). Don't invent SLOs; mirror what the code does.
-- Verification pointer is mandatory — name the benchmark, test, or audit that
-  proves the NFR holds.
+- Always cite the shipped code path (e.g. `services/auth/src/rbac/refresher.rs` for refresher cadence claims). Don't invent SLOs; mirror what the code does.
+- Verification pointer is mandatory — name the benchmark, test, or audit that proves the NFR holds.
 - Failure handling §5 must say: detection, alert, on-call action, escalation.
 
 ## Batch authoring history
 
-- **Batch 1 (2026-05-18)** — 42 NFRs across AI/OBS/AUTH/memory/CHAT.
-  Resolves ~50 of the `(task pending)` placeholders in the rendered catalog.
-- Subsequent batches will cover SKILL, CUO, MCP, GraphQL, REW, CP, TEN, KMS,
-  EMAIL, KB, NATS, and the remaining cross-cutting modules.
+- **Batch 1 (2026-05-18)** — 42 NFRs across AI/OBS/AUTH/memory/CHAT. Resolves ~50 of the `(task pending)` placeholders in the rendered catalog.
+- Subsequent batches will cover SKILL, CUO, MCP, GraphQL, REW, CP, TEN, KMS, EMAIL, KB, NATS, and the remaining cross-cutting modules.

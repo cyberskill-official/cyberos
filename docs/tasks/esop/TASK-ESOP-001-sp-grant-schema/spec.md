@@ -202,9 +202,7 @@ async fn immutable_post_create() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-HR-001.
-**Downstream:** TASK-ESOP-002 (vesting), TASK-ESOP-003 (valuation), TASK-ESOP-004 (put-option), TASK-ESOP-005 (GL/BL).
-**Cross-module:** TASK-AUTH-101 (CEO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-HR-001. **Downstream:** TASK-ESOP-002 (vesting), TASK-ESOP-003 (valuation), TASK-ESOP-004 (put-option), TASK-ESOP-005 (GL/BL). **Cross-module:** TASK-AUTH-101 (CEO role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

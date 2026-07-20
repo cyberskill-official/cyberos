@@ -72,9 +72,9 @@ Missing:
 - No @-mentions. There is no mention parsing, no mention storage, no autocomplete, no "mentions me" flag, and no per-message highlight. Nothing in `messages.rs` or `Chat.tsx` handles `@`.
 - No mention badges or a "@ mentions" inbox. The sidebar badge is a raw unread count only (`Chat.tsx:790`); there is no distinction between "unread" and "mentioned."
 - No per-user notification socket. Every websocket is scoped to one channel (`realtime.rs::ws_handler` requires a `channel` query param and channel membership, `realtime.rs:124-158`). The client opens exactly one socket, for the active channel (`Chat.tsx:316-321`). Consequences stated in the code itself:
-  - Presence for a DM only updates while that DM is open (`Chat.tsx:773-776`).
-  - Call ringing only reaches a callee who has that conversation open (`lib/call.ts:6-7`).
-  - There is no way to receive a message event, a mention, or a ring for a channel you are not currently viewing.
+- Presence for a DM only updates while that DM is open (`Chat.tsx:773-776`).
+- Call ringing only reaches a callee who has that conversation open (`lib/call.ts:6-7`).
+- There is no way to receive a message event, a mention, or a ring for a channel you are not currently viewing.
 - No desktop notifications. There is no `Notification` API use anywhere in `apps/web/src`.
 - No real push. As above, `push.rs` logs intent; there is no APNS/FCM client, no VAPID web-push, and the task for mobile push is separate (`docs/tasks/chat/TASK-CHAT-011-mobile-push/spec.md`).
 - No notification preferences (per-channel mute, all/mentions/nothing, keywords, schedules).

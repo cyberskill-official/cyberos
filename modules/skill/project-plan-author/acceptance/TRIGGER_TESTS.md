@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a project plan"
+- "Draft a project plan"
 - "Create the project plan"
 - "Author a new project plan"
 - "Generate the project plan"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this project plan" → project-plan-audit
+- "Audit this project plan" → project-plan-audit
 - "Check the project plan for completeness" → project-plan-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

@@ -85,9 +85,9 @@ The REW service **MUST** ship VietQR payroll batch at `services/rew/src/batch/` 
 1. **MUST** validate `batch_status` against closed enum per DEC-2231.
 
 2. **MUST** generate file at `file_generator.rs::generate(payroll_run)` per DEC-2230:
-   - For each member: account_number + amount + memo (template per TASK-CRM-009 convention)
-   - Output Napas-bulk-transfer XML or CSV format
-   - SHA256 the file for verification
+- For each member: account_number + amount + memo (template per TASK-CRM-009 convention)
+- Output Napas-bulk-transfer XML or CSV format
+- SHA256 the file for verification
 
 3. **MUST** require CFO manual confirm at `POST .../confirm-submitted` per DEC-2232 — system updates status; no auto-submit.
 
@@ -232,8 +232,7 @@ async fn reconciliation_matches_acks() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-INV-005.
-**Cross-module:** TASK-REW-005 (payroll source), TASK-CRM-009 (memo format), TASK-DOC-001 (file storage), TASK-AUTH-101 (CFO role), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-INV-005. **Cross-module:** TASK-REW-005 (payroll source), TASK-CRM-009 (memo format), TASK-DOC-001 (file storage), TASK-AUTH-101 (CFO role), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

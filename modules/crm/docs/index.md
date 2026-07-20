@@ -47,17 +47,7 @@ deal history · win/loss memories"] EMAIL["✉ EMAIL"] LEADS --> CRM EMAIL --> C
 
 ### Auto vs human-in-loop operations matrix
 
-Operation| How it happens| Why this split
----|---|---
-Activity auto-logging| **Auto** from EMAIL/CHAT/Cal by domain/contact match| Stops the "log it in the CRM" tax that AMs hate; auto-log = no manual entry.
-Lead scoring| **Auto** on Contact create; refreshed nightly| Score is a hint, not an action - AM decides outreach priority.
-Stage transition| **Manual** with workflow validator| Sales is a relationship, not an automaton; AM owns when a deal progresses.
-MST validation| **Auto** on every account write that includes an MST| VN tax-code authority is the GDT registry; we just call them.
-VietQR generation| **Auto-available**, **manual-trigger** per deal| One click on the deal page; cached for 24 h.
-Hóa đơn (VAT invoice) emission| **Auto** on deal.stage=won via INV; **manual confirm** required| Tax document - AM must confirm amount + recipient before emission.
-Deal -> Engagement conversion| **Manual** AM click| Not every won deal becomes a PROJ Engagement (some are pure resale); AM intent required.
-Win/loss analysis| **Auto** draft via CUO; **AM accept**| Generates a memory entry citable by future deals; AM owns the narrative.
-Inbound web-form deal create| **Auto** with lead-scoring pre-applied| Reduces friction; AM triages from a pre-scored queue.
+Operation| How it happens| Why this split ---|---|--- Activity auto-logging| **Auto** from EMAIL/CHAT/Cal by domain/contact match| Stops the "log it in the CRM" tax that AMs hate; auto-log = no manual entry. Lead scoring| **Auto** on Contact create; refreshed nightly| Score is a hint, not an action - AM decides outreach priority. Stage transition| **Manual** with workflow validator| Sales is a relationship, not an automaton; AM owns when a deal progresses. MST validation| **Auto** on every account write that includes an MST| VN tax-code authority is the GDT registry; we just call them. VietQR generation| **Auto-available**, **manual-trigger** per deal| One click on the deal page; cached for 24 h. Hóa đơn (VAT invoice) emission| **Auto** on deal.stage=won via INV; **manual confirm** required| Tax document - AM must confirm amount + recipient before emission. Deal -> Engagement conversion| **Manual** AM click| Not every won deal becomes a PROJ Engagement (some are pure resale); AM intent required. Win/loss analysis| **Auto** draft via CUO; **AM accept**| Generates a memory entry citable by future deals; AM owns the narrative. Inbound web-form deal create| **Auto** with lead-scoring pre-applied| Reduces friction; AM triages from a pre-scored queue.
 
 ## Why CRM exists
 
@@ -73,21 +63,7 @@ The bet is that the Vietnamese consultancy buyer values "this works with our hó
 
 A structured decomposition of CRM's scope.
 
-Axis| Question| Answer
----|---|---
-**5W - What**| What is CRM?| An Account / Contact / Deal pipeline tracker with customisable per-pipeline stages, automatic activity feed from CHAT / EMAIL / Calendar, memory-ingested closed deals, and Vietnamese-market skill integrations (MST, VietQR, hóa đơn).
-**5W - Who**| Who uses it?| **Sales:** create and progress deals; daily pipeline review. **Account Managers:** own client relationships; log activities. **CRO:** dashboard + forecast review. **Marketing:** read-only on activity + lead source. **Agents:** CUO/CRO-skill logs activities, suggests NBAs, produces forecasts.
-**5W - When**| When does it run?| Continuous: SPA pipeline view; WebSocket on stage transitions. Hourly: activity feed reconciliation (EMAIL -> CRM). Nightly: AI lead scoring refresh + win/loss analysis on closed deals. On deal close: VietQR + hóa đơn + PROJ Engagement creation.
-**5W - Where**| Where does it run?| P1: single region (SG-1) with VN-residency RDS for VN tenants. P3+: multi-region. The CRM service is one axum binary; the pipeline UI is a React SPA component.
-**5W - Why**| Why a separate module?| Activity volume, ACL granularity (per-deal), and Vietnamese-skill integration are too specific to belong elsewhere. Folding into PROJ corrupts both data models.
-**1H - How**| How does it work?| Accounts are validated on write (MST -> GDT registry). Contacts have a normalised phone (E.164) and email; merge candidates surface when two contacts share either. Deals carry stage, value, probability, expected close. Activities are append-only and feed from EMAIL / CHAT / Calendar with idempotency keys.
-**2C - Cost**| Cost budget?| P1: ~$60 / month single-tenant pilot (Fargate + RDS + Redis). 50-tenant: ~$240 / month. AI lead scoring runs nightly batch; ~$0.001 per deal per night.
-**2C - Constraints**| Constraints?| (a) Per-deal ACL - private deals not visible cross-workspace (task pending). (b) Email-to-CRM auto-log only for tracked domains (task pending) - never auto-attach a personal email. (c) Vietnamese-formatting helpers (Anh / Chị / Bạn) on every contact display. (d) Deals only ingested into memory after closed / lost - never open pipeline data.
-**5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, Redis 7, React + Zustand, vietnam-mst-validate skill, vietnam-bank-transfer skill, vietnam-vat-invoice skill, libphonenumber, OpenTelemetry SDK.
-**5M - Methods**| Method choices?| Three-primitive Account / Contact / Deal (no Lead as separate primitive - Leads are Contacts with no Deal). Configurable pipeline stages (not free-form). Phone normalisation to E.164 (libphonenumber). Per-deal ACL. Idempotent activity feed (idempotency key = source event id).
-**5M - Machines**| Deployment?| Fargate axum service. RDS Postgres Multi-AZ. Redis hot cache. NATS for pipeline-event fan-out. Skill invocations via the Skill module's WASM host.
-**5M - Manpower**| Who maintains?| 0.5 FTE (CRO seat) at P1 launch. By P2+: CRO owns product; CMO consulted on activity feed schema; CFO consulted on hóa đơn flow.
-**5M - Measurement**| How measured?| Pipeline drag-drop response p95 <= 200 ms; activity-feed reconciliation p95 <= 60 s after EMAIL receipt; lead-scoring precision >= 70% on validated wins; deal-close -> INV invoice generated within 60 s (P1: 5 min).
+Axis| Question| Answer ---|---|--- **5W - What**| What is CRM?| An Account / Contact / Deal pipeline tracker with customisable per-pipeline stages, automatic activity feed from CHAT / EMAIL / Calendar, memory-ingested closed deals, and Vietnamese-market skill integrations (MST, VietQR, hóa đơn). **5W - Who**| Who uses it?| **Sales:** create and progress deals; daily pipeline review. **Account Managers:** own client relationships; log activities. **CRO:** dashboard + forecast review. **Marketing:** read-only on activity + lead source. **Agents:** CUO/CRO-skill logs activities, suggests NBAs, produces forecasts. **5W - When**| When does it run?| Continuous: SPA pipeline view; WebSocket on stage transitions. Hourly: activity feed reconciliation (EMAIL -> CRM). Nightly: AI lead scoring refresh + win/loss analysis on closed deals. On deal close: VietQR + hóa đơn + PROJ Engagement creation. **5W - Where**| Where does it run?| P1: single region (SG-1) with VN-residency RDS for VN tenants. P3+: multi-region. The CRM service is one axum binary; the pipeline UI is a React SPA component. **5W - Why**| Why a separate module?| Activity volume, ACL granularity (per-deal), and Vietnamese-skill integration are too specific to belong elsewhere. Folding into PROJ corrupts both data models. **1H - How**| How does it work?| Accounts are validated on write (MST -> GDT registry). Contacts have a normalised phone (E.164) and email; merge candidates surface when two contacts share either. Deals carry stage, value, probability, expected close. Activities are append-only and feed from EMAIL / CHAT / Calendar with idempotency keys. **2C - Cost**| Cost budget?| P1: ~$60 / month single-tenant pilot (Fargate + RDS + Redis). 50-tenant: ~$240 / month. AI lead scoring runs nightly batch; ~$0.001 per deal per night. **2C - Constraints**| Constraints?| (a) Per-deal ACL - private deals not visible cross-workspace (task pending). (b) Email-to-CRM auto-log only for tracked domains (task pending) - never auto-attach a personal email. (c) Vietnamese-formatting helpers (Anh / Chị / Bạn) on every contact display. (d) Deals only ingested into memory after closed / lost - never open pipeline data. **5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, Redis 7, React + Zustand, vietnam-mst-validate skill, vietnam-bank-transfer skill, vietnam-vat-invoice skill, libphonenumber, OpenTelemetry SDK. **5M - Methods**| Method choices?| Three-primitive Account / Contact / Deal (no Lead as separate primitive - Leads are Contacts with no Deal). Configurable pipeline stages (not free-form). Phone normalisation to E.164 (libphonenumber). Per-deal ACL. Idempotent activity feed (idempotency key = source event id). **5M - Machines**| Deployment?| Fargate axum service. RDS Postgres Multi-AZ. Redis hot cache. NATS for pipeline-event fan-out. Skill invocations via the Skill module's WASM host. **5M - Manpower**| Who maintains?| 0.5 FTE (CRO seat) at P1 launch. By P2+: CRO owns product; CMO consulted on activity feed schema; CFO consulted on hóa đơn flow. **5M - Measurement**| How measured?| Pipeline drag-drop response p95 <= 200 ms; activity-feed reconciliation p95 <= 60 s after EMAIL receipt; lead-scoring precision >= 70% on validated wins; deal-close -> INV invoice generated within 60 s (P1: 5 min).
 
 ## Architecture
 
@@ -117,25 +93,7 @@ hóa đơn invoice"] OBS["👁 OBS"] end SPA --> WS SPA --> GQL AGENT --> MCP GQ
 
 ### Internal components
 
-Component| Path (planned)| Responsibility
----|---|---
-`account.rs`| services/crm/src/account.rs| Account CRUD. MST validation on write (Vietnamese tenants). Address parser. Custom fields per workspace.
-`contact.rs`| services/crm/src/contact.rs| Contact CRUD. E.164 phone normalisation. Anh / Chị / Bạn salutation derivation. Merge candidate detection.
-`deal.rs`| services/crm/src/deal.rs| Deal CRUD. Stage transitions with workflow rules. Value / probability / expected-close. Per-deal ACL.
-`pipeline.rs`| services/crm/src/pipeline.rs| Pipeline definition + stage transition rules. Workspace-configurable. WebSocket fan-out on drag-drop.
-`activity_feed.rs`| services/crm/src/activity_feed.rs| Auto-log from EMAIL / CHAT / Calendar. Idempotency by source event id.
-`email_logger.rs`| services/crm/src/email_logger.rs| Listens to EMAIL events; auto-logs inbound / outbound for tracked-domain mailboxes (task pending).
-`ai_lead_scoring.rs`| services/crm/src/ai_lead_scoring.rs| Nightly batch lead scoring. Features: activity recency, engagement size, account vertical, historical win-rate.
-`ai_nba.rs`| services/crm/src/ai_nba.rs| Next-best-action generator. For each open deal, produces a concrete suggestion ("send proposal", "schedule check-in", "request VietQR collection").
-`ai_forecast.rs`| services/crm/src/ai_forecast.rs| Confidence-banded forecast (CUO/CRO-skill). Per-pipeline VND total + USD total with 50% / 80% / 95% bands.
-`merge_detector.rs`| services/crm/src/merge_detector.rs| Detects >= 2 contacts sharing email or normalised phone; surfaces as a Notify (task pending).
-`vn_mst.rs`| services/crm/src/vn_mst.rs| Adapter to `vietnam-mst-validate` skill. Caches results 7 days.
-`vn_vietqr.rs`| services/crm/src/vn_vietqr.rs| Adapter to `vietnam-bank-transfer` skill. Generates Napas247 QR on demand.
-`vn_hoadon.rs`| services/crm/src/vn_hoadon.rs| Adapter to `vietnam-vat-invoice` skill. Fires on deal close.
-`memory_ingest.rs`| services/crm/src/memory_ingest.rs| Layer 3 ingestion of closed deals only (task pending).
-`acl.rs`| services/crm/src/acl.rs| Per-deal ACL. Private deals not visible cross-workspace.
-`vn_salutation.rs`| services/crm/src/vn_salutation.rs| Vietnamese salutation helper. Anh / Chị / Bạn picker from gender + age signal.
-`migrations/`| services/crm/migrations/| sqlx migrations. RLS on every table.
+Component| Path (planned)| Responsibility ---|---|--- `account.rs`| services/crm/src/account.rs| Account CRUD. MST validation on write (Vietnamese tenants). Address parser. Custom fields per workspace. `contact.rs`| services/crm/src/contact.rs| Contact CRUD. E.164 phone normalisation. Anh / Chị / Bạn salutation derivation. Merge candidate detection. `deal.rs`| services/crm/src/deal.rs| Deal CRUD. Stage transitions with workflow rules. Value / probability / expected-close. Per-deal ACL. `pipeline.rs`| services/crm/src/pipeline.rs| Pipeline definition + stage transition rules. Workspace-configurable. WebSocket fan-out on drag-drop. `activity_feed.rs`| services/crm/src/activity_feed.rs| Auto-log from EMAIL / CHAT / Calendar. Idempotency by source event id. `email_logger.rs`| services/crm/src/email_logger.rs| Listens to EMAIL events; auto-logs inbound / outbound for tracked-domain mailboxes (task pending). `ai_lead_scoring.rs`| services/crm/src/ai_lead_scoring.rs| Nightly batch lead scoring. Features: activity recency, engagement size, account vertical, historical win-rate. `ai_nba.rs`| services/crm/src/ai_nba.rs| Next-best-action generator. For each open deal, produces a concrete suggestion ("send proposal", "schedule check-in", "request VietQR collection"). `ai_forecast.rs`| services/crm/src/ai_forecast.rs| Confidence-banded forecast (CUO/CRO-skill). Per-pipeline VND total + USD total with 50% / 80% / 95% bands. `merge_detector.rs`| services/crm/src/merge_detector.rs| Detects >= 2 contacts sharing email or normalised phone; surfaces as a Notify (task pending). `vn_mst.rs`| services/crm/src/vn_mst.rs| Adapter to `vietnam-mst-validate` skill. Caches results 7 days. `vn_vietqr.rs`| services/crm/src/vn_vietqr.rs| Adapter to `vietnam-bank-transfer` skill. Generates Napas247 QR on demand. `vn_hoadon.rs`| services/crm/src/vn_hoadon.rs| Adapter to `vietnam-vat-invoice` skill. Fires on deal close. `memory_ingest.rs`| services/crm/src/memory_ingest.rs| Layer 3 ingestion of closed deals only (task pending). `acl.rs`| services/crm/src/acl.rs| Per-deal ACL. Private deals not visible cross-workspace. `vn_salutation.rs`| services/crm/src/vn_salutation.rs| Vietnamese salutation helper. Anh / Chị / Bạn picker from gender + age signal. `migrations/`| services/crm/migrations/| sqlx migrations. RLS on every table.
 
 ## Data model
 
@@ -149,14 +107,7 @@ erDiagram TENANT ||--o{ ACCOUNT: "owns" ACCOUNT ||--o{ CONTACT: "has" ACCOUNT ||
 
 ### Vietnamese account types
 
-Code| Vietnamese| English| MST length| Hóa đơn template
----|---|---|---|---
-`sole_proprietor`| Hộ kinh doanh| Sole proprietor| 10 digits| 06GTKT (simplified)
-`llc`| Công ty TNHH| LLC| 10 / 13 digits| 01GTKT
-`jsc`| Công ty cổ phần| JSC| 10 / 13 digits| 01GTKT
-`fdi`| FDI| Foreign-invested| 10 / 13 digits| 01GTKT
-`individual`| Cá nhân| Individual| 10 digits (CCCD-linked)| 06GTKT
-`other`| Khác| Other| -| manual
+Code| Vietnamese| English| MST length| Hóa đơn template ---|---|---|---|--- `sole_proprietor`| Hộ kinh doanh| Sole proprietor| 10 digits| 06GTKT (simplified) `llc`| Công ty TNHH| LLC| 10 / 13 digits| 01GTKT `jsc`| Công ty cổ phần| JSC| 10 / 13 digits| 01GTKT `fdi`| FDI| Foreign-invested| 10 / 13 digits| 01GTKT `individual`| Cá nhân| Individual| 10 digits (CCCD-linked)| 06GTKT `other`| Khác| Other| -| manual
 
 ## API surface
 
@@ -238,19 +189,7 @@ type Mutation {
 
 ### MCP tool catalogue
 
-Tool name| Inputs| Outputs| Annotations
----|---|---|---
-`cyberos.crm.search_accounts`| query, account_type?, limit| Account| readonly
-`cyberos.crm.get_account`| id| Account| readonly
-`cyberos.crm.create_account`| CreateAccountInput| Account| scope=crm.write
-`cyberos.crm.validate_mst`| mst| {valid, name, address}| readonly
-`cyberos.crm.list_deals`| account_id?, pipeline_id?, stage_id?| Deal| readonly, scope=crm.read
-`cyberos.crm.create_deal`| CreateDealInput| Deal| scope=crm.write
-`cyberos.crm.move_stage`| deal_id, to_stage| Deal| scope=crm.write
-`cyberos.crm.close_deal`| deal_id, outcome, lost_reason?| Deal + side-effects| destructive, human-confirm, scope=crm.close
-`cyberos.crm.generate_vietqr`| deal_id, bank_bin, account_number| VietQR| scope=crm.payment
-`cyberos.crm.forecast`| pipeline_id?, range| Forecast with bands| readonly
-`cyberos.crm.next_best_action`| deal_id?| NBA| readonly
+Tool name| Inputs| Outputs| Annotations ---|---|---|--- `cyberos.crm.search_accounts`| query, account_type?, limit| Account| readonly `cyberos.crm.get_account`| id| Account| readonly `cyberos.crm.create_account`| CreateAccountInput| Account| scope=crm.write `cyberos.crm.validate_mst`| mst| {valid, name, address}| readonly `cyberos.crm.list_deals`| account_id?, pipeline_id?, stage_id?| Deal| readonly, scope=crm.read `cyberos.crm.create_deal`| CreateDealInput| Deal| scope=crm.write `cyberos.crm.move_stage`| deal_id, to_stage| Deal| scope=crm.write `cyberos.crm.close_deal`| deal_id, outcome, lost_reason?| Deal + side-effects| destructive, human-confirm, scope=crm.close `cyberos.crm.generate_vietqr`| deal_id, bank_bin, account_number| VietQR| scope=crm.payment `cyberos.crm.forecast`| pipeline_id?, range| Forecast with bands| readonly `cyberos.crm.next_best_action`| deal_id?| NBA| readonly
 
 ## Key flows
 
@@ -298,15 +237,7 @@ stateDiagram-v2 [*] --> Qualifying: created Qualifying --> Discovery: budget + a
 
 ### Default pipeline stages (sales)
 
-Code| vi| en| Default probability| Category
----|---|---|---|---
-`qualifying`| Đánh giá| Qualifying| 10%| open
-`discovery`| Khám phá| Discovery| 25%| open
-`proposal`| Đề xuất| Proposal| 50%| open
-`negotiation`| Đàm phán| Negotiation| 75%| open
-`closed_won`| Thắng| Closed Won| 100%| won
-`closed_lost`| Thua| Closed Lost| 0%| lost
-`cancelled`| Huỷ| Cancelled| 0%| lost
+Code| vi| en| Default probability| Category ---|---|---|---|--- `qualifying`| Đánh giá| Qualifying| 10%| open `discovery`| Khám phá| Discovery| 25%| open `proposal`| Đề xuất| Proposal| 50%| open `negotiation`| Đàm phán| Negotiation| 75%| open `closed_won`| Thắng| Closed Won| 100%| won `closed_lost`| Thua| Closed Lost| 0%| lost `cancelled`| Huỷ| Cancelled| 0%| lost
 
 ## Functional requirements
 
@@ -318,20 +249,7 @@ Previous task enumerations were archived 2026-05-14 and are no longer reflected 
 
 NFRs CRM must satisfy.
 
-NFR ID| Concern| Target| Measurement
----|---|---|---
-(NFR pending)| Pipeline view load (200 deals)| p95 <= 350 ms| SPA RUM
-(NFR pending)| Stage drag-drop response| p95 <= 200 ms| WS latency histogram
-(NFR pending)| Account search (10k accounts)| p95 <= 300 ms| k6
-(NFR pending)| MST validation| p95 <= 1.5 s (cache-cold)| histogram
-(NFR pending)| Pipeline drag-drop drop-rate (loss)| = 0| memory audit reconciliation
-(NFR pending)| Vietnamese salutation accuracy| >= 92% on 200-contact eval| quarterly review
-(NFR pending)| Service availability| >= 99.9% (28-day)| OBS SLO
-(NFR pending)| Private-deal isolation| = 0 cross-leak| CI test + quarterly red-team
-(NFR pending)| Personal email auto-attach| = 0 (tracked-domain only)| policy gate test
-(NFR pending)| Activity-feed idempotency| = 0 duplicates| idempotency key DB constraint
-(NFR pending)| Deal close -> Engagement durability| 100% within 60 s| memory audit cross-check
-(NFR pending)| Hóa đơn XML schema compliance| 100% pass Circular 78/2021| CI test against GDT XSD
+NFR ID| Concern| Target| Measurement ---|---|---|--- (NFR pending)| Pipeline view load (200 deals)| p95 <= 350 ms| SPA RUM (NFR pending)| Stage drag-drop response| p95 <= 200 ms| WS latency histogram (NFR pending)| Account search (10k accounts)| p95 <= 300 ms| k6 (NFR pending)| MST validation| p95 <= 1.5 s (cache-cold)| histogram (NFR pending)| Pipeline drag-drop drop-rate (loss)| = 0| memory audit reconciliation (NFR pending)| Vietnamese salutation accuracy| >= 92% on 200-contact eval| quarterly review (NFR pending)| Service availability| >= 99.9% (28-day)| OBS SLO (NFR pending)| Private-deal isolation| = 0 cross-leak| CI test + quarterly red-team (NFR pending)| Personal email auto-attach| = 0 (tracked-domain only)| policy gate test (NFR pending)| Activity-feed idempotency| = 0 duplicates| idempotency key DB constraint (NFR pending)| Deal close -> Engagement durability| 100% within 60 s| memory audit cross-check (NFR pending)| Hóa đơn XML schema compliance| 100% pass Circular 78/2021| CI test against GDT XSD
 
 ## Dependencies
 
@@ -347,79 +265,25 @@ graph LR subgraph upstream ["CRM depends on"] AUTH["🔐 AUTH"] memory["🧠 mem
 
 CRM holds Customer personal data and processes hóa đơn-relevant fields; it sits inside PDPL / Circular 78/2021 / GDPR scope.
 
-Regulation / standard| Article / clause| CRM feature that satisfies it
----|---|---
-Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| DSAR export includes contact + activity + deal data.
-Vietnam Decree 13/2023| Art. 17 - Processing log| Every CRM mutation writes a memory audit row.
-Vietnam Decree 53/2022| Art. 26 - Residency| Per-tenant residency tag; VN tenants on hanoi-1.
-Vietnam Circular 78/2021/TT-BTC| Hóa đơn e-invoice format| vietnam-vat-invoice emits compliant XML.
-Vietnam Decree 123/2020/NĐ-CP| Invoice issuance & storage| HOA_DON table with XML link + 10-year retention.
-GDPR (EU 2016/679)| Art. 17 - Right to erasure| Contact delete + DSAR-driven hard purge.
-GDPR| Art. 25 - Privacy by design| Per-deal ACL prevents cross-workspace leak.
-ISO/IEC 27001:2022| A.8.2 - Privileged access| RBAC + per-deal ACL.
-SOC 2 Type II| CC6.1 - Logical access| RLS + ACL enforced at every mutation.
-OWASP Top-10 (web)| A01 - Broken access control| ACL enforced server-side; CI test on every PR.
+Regulation / standard| Article / clause| CRM feature that satisfies it ---|---|--- Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| DSAR export includes contact + activity + deal data. Vietnam Decree 13/2023| Art. 17 - Processing log| Every CRM mutation writes a memory audit row. Vietnam Decree 53/2022| Art. 26 - Residency| Per-tenant residency tag; VN tenants on hanoi-1. Vietnam Circular 78/2021/TT-BTC| Hóa đơn e-invoice format| vietnam-vat-invoice emits compliant XML. Vietnam Decree 123/2020/NĐ-CP| Invoice issuance & storage| HOA_DON table with XML link + 10-year retention. GDPR (EU 2016/679)| Art. 17 - Right to erasure| Contact delete + DSAR-driven hard purge. GDPR| Art. 25 - Privacy by design| Per-deal ACL prevents cross-workspace leak. ISO/IEC 27001:2022| A.8.2 - Privileged access| RBAC + per-deal ACL. SOC 2 Type II| CC6.1 - Logical access| RLS + ACL enforced at every mutation. OWASP Top-10 (web)| A01 - Broken access control| ACL enforced server-side; CI test on every PR.
 
 ## Risk entries
 
 CRM-specific risks tracked in the [risk register](../../reference/risk-register.html#crm).
 
-ID| Risk| Likelihood| Impact| Owner| Mitigation
----|---|---|---|---|---
-`R-CRM-001`| GDT MST registry endpoint outage| Medium| Medium| CTO| 7-day cache; validation marked stale; user warned but write permitted.
-`R-CRM-002`| Hóa đơn XML schema drift breaks emission| Medium| High| CFO| CI test against GDT XSD weekly; skill version pinned; rollback plan documented.
-`R-CRM-003`| Personal email auto-attaches to CRM via misconfig| Low| High| CSO| Tracked-domain config audited; CI test asserts personal domains stay out.
-`R-CRM-004`| Private-deal leak via cross-workspace GraphQL query| Low| High| CSO| ACL CI gate; quarterly red-team on subgraph.
-`R-CRM-005`| Activity-feed duplicate from EMAIL retry| Medium| Low| CTO| Idempotency key on source event id; DB unique constraint.
-`R-CRM-006`| Lead-scoring bias against specific account verticals| Medium| Medium| CDO| Quarterly fairness review of scoring inputs; reasons surfaced to user.
-`R-CRM-007`| VietQR generated with wrong account number -> payment misdirected| Low| High| CFO| Per-tenant bank-account allow-list; Member confirm step on first use.
-`R-CRM-008`| Merge proposes false-positive (same email shared family)| Medium| Low| CRO| Merge requires explicit Member confirm; confidence threshold >= 0.85.
-`R-CRM-009`| memory ingest of closed deals leaks competitive data| Low| Medium| CDO| Closed deals respect deal ACL on memory side; private deals never ingested.
-`R-CRM-010`| Open-pipeline data ingested into memory by accident ((task pending) violation)| Low| High| CDO| memory ingest path gated by deal.status in ('won','lost'); CI test asserts.
-`R-CRM-011`| Deal-to-Engagement bridge fails partially - Engagement created without rate card| Medium| High| CTO| Bridge is transactional; either full Engagement + rate card OR rollback; failed bridge surfaces as actionable error to AM.
-`R-CRM-012`| Won deal converted to wrong Engagement billing mode (T&M vs fixed-fee)| Medium| Medium| COO| AM must explicitly choose billing mode in conversion dialog; default is deal's pricing-page choice; locked once Engagement created.
-`R-CRM-013`| CUO next-action skill suggests inappropriate move (e.g. propose to lost-cause deal)| Medium| Low| CRO| Confidence threshold >= 0.60; AM sees suggestion ranked, never auto-actioned; quarterly review of suggestion acceptance correlation with deal outcomes.
-`R-CRM-014`| Vertical-pack drift (cyberskill-vn pack updates -> MST validation regression)| Medium| High| CTO| Pack version pinning per tenant; integration tests against GDT staging endpoint; quarterly drill on real MST samples.
-`R-CRM-015`| Account-merge causes loss of historical activity for one of the merged accounts| Low| Medium| CRO| Merge preserves both audit trails (no deletion); merged account points to "survivor" via redirect record; unmerge is supported up to 90 days post-merge.
+ID| Risk| Likelihood| Impact| Owner| Mitigation ---|---|---|---|---|--- `R-CRM-001`| GDT MST registry endpoint outage| Medium| Medium| CTO| 7-day cache; validation marked stale; user warned but write permitted. `R-CRM-002`| Hóa đơn XML schema drift breaks emission| Medium| High| CFO| CI test against GDT XSD weekly; skill version pinned; rollback plan documented. `R-CRM-003`| Personal email auto-attaches to CRM via misconfig| Low| High| CSO| Tracked-domain config audited; CI test asserts personal domains stay out. `R-CRM-004`| Private-deal leak via cross-workspace GraphQL query| Low| High| CSO| ACL CI gate; quarterly red-team on subgraph. `R-CRM-005`| Activity-feed duplicate from EMAIL retry| Medium| Low| CTO| Idempotency key on source event id; DB unique constraint. `R-CRM-006`| Lead-scoring bias against specific account verticals| Medium| Medium| CDO| Quarterly fairness review of scoring inputs; reasons surfaced to user. `R-CRM-007`| VietQR generated with wrong account number -> payment misdirected| Low| High| CFO| Per-tenant bank-account allow-list; Member confirm step on first use. `R-CRM-008`| Merge proposes false-positive (same email shared family)| Medium| Low| CRO| Merge requires explicit Member confirm; confidence threshold >= 0.85. `R-CRM-009`| memory ingest of closed deals leaks competitive data| Low| Medium| CDO| Closed deals respect deal ACL on memory side; private deals never ingested. `R-CRM-010`| Open-pipeline data ingested into memory by accident ((task pending) violation)| Low| High| CDO| memory ingest path gated by deal.status in ('won','lost'); CI test asserts. `R-CRM-011`| Deal-to-Engagement bridge fails partially - Engagement created without rate card| Medium| High| CTO| Bridge is transactional; either full Engagement + rate card OR rollback; failed bridge surfaces as actionable error to AM. `R-CRM-012`| Won deal converted to wrong Engagement billing mode (T&M vs fixed-fee)| Medium| Medium| COO| AM must explicitly choose billing mode in conversion dialog; default is deal's pricing-page choice; locked once Engagement created. `R-CRM-013`| CUO next-action skill suggests inappropriate move (e.g. propose to lost-cause deal)| Medium| Low| CRO| Confidence threshold >= 0.60; AM sees suggestion ranked, never auto-actioned; quarterly review of suggestion acceptance correlation with deal outcomes. `R-CRM-014`| Vertical-pack drift (cyberskill-vn pack updates -> MST validation regression)| Medium| High| CTO| Pack version pinning per tenant; integration tests against GDT staging endpoint; quarterly drill on real MST samples. `R-CRM-015`| Account-merge causes loss of historical activity for one of the merged accounts| Low| Medium| CRO| Merge preserves both audit trails (no deletion); merged account points to "survivor" via redirect record; unmerge is supported up to 90 days post-merge.
 
 ## KPIs
 
 CRM KPIs cover pipeline health, AI feature efficacy, integration durability, and VN-specific flow correctness.
 
-KPI| Formula| Source| Target
----|---|---|---
-**Pipeline value (VND)**| sum(open_deal.amount x probability)| PG| tracked daily
-**Stage drag-drop p95**| histogram| OBS| <= 200 ms
-**Win rate**| won / (won + lost)| memory audit| tracked per pipeline
-**Average deal cycle**| median(closed_date - created_at)| memory audit| tracked per Engagement type
-**Lead-scoring precision**| true_hot / scored_hot| retrospective on wins| >= 70%
-**NBA acceptance**| actioned / suggested| SPA telemetry| tracked; target >= 35%
-**Activity auto-log durability**| logged / source_events| EMAIL - CRM reconciliation| 100%
-**Hóa đơn emission success**| issued / close_won| memory audit| 100%
-**MST validation rate**| validated / vn_accounts| memory audit| >= 95%
-**Cross-workspace ACL violations**| count| memory audit| = 0
-**Deal-to-Engagement conversion rate**| engagements_created / deals_won| PROJ-CRM cross-check| tracked; expect 0.70-0.95 (some won deals are pure resale)
-**Conversion bridge p95**| histogram (click -> Engagement created)| OBS| <= 3 s
-**Win/loss memory citation rate**| new deals citing past win/loss memories / total open deals| MEMORY_LINK table| tracked; expect >= 0.30 of high-priority deals
-**Next-action acceptance per deal**| actioned suggestions / shown suggestions| SPA telemetry| >= 0.35
-**Stage-stuck deal alert**| deals in same stage > 30 days| nightly batch| flagged on AM dashboard; SLA-style nudge
-**Forecast accuracy**| abs(actual_close - forecast_close) / forecast_close| retrospective| <= 0.20 quarterly
+KPI| Formula| Source| Target ---|---|---|--- **Pipeline value (VND)**| sum(open_deal.amount x probability)| PG| tracked daily **Stage drag-drop p95**| histogram| OBS| <= 200 ms **Win rate**| won / (won + lost)| memory audit| tracked per pipeline **Average deal cycle**| median(closed_date - created_at)| memory audit| tracked per Engagement type **Lead-scoring precision**| true_hot / scored_hot| retrospective on wins| >= 70% **NBA acceptance**| actioned / suggested| SPA telemetry| tracked; target >= 35% **Activity auto-log durability**| logged / source_events| EMAIL - CRM reconciliation| 100% **Hóa đơn emission success**| issued / close_won| memory audit| 100% **MST validation rate**| validated / vn_accounts| memory audit| >= 95% **Cross-workspace ACL violations**| count| memory audit| = 0 **Deal-to-Engagement conversion rate**| engagements_created / deals_won| PROJ-CRM cross-check| tracked; expect 0.70-0.95 (some won deals are pure resale) **Conversion bridge p95**| histogram (click -> Engagement created)| OBS| <= 3 s **Win/loss memory citation rate**| new deals citing past win/loss memories / total open deals| MEMORY_LINK table| tracked; expect >= 0.30 of high-priority deals **Next-action acceptance per deal**| actioned suggestions / shown suggestions| SPA telemetry| >= 0.35 **Stage-stuck deal alert**| deals in same stage > 30 days| nightly batch| flagged on AM dashboard; SLA-style nudge **Forecast accuracy**| abs(actual_close - forecast_close) / forecast_close| retrospective| <= 0.20 quarterly
 
 ## RACI matrix
 
 CRM is owned by CRO seat (interim CEO).
 
-Activity| CEO| CRO| CFO| CTO| CSO| CMO
----|---|---|---|---|---|---
-Service design + spec| A| R| C| C| C| C
-Implementation| I| C| I| A/R| C| I
-Pipeline / stage config| C| A/R| I| I| I| C
-Tracked-domain config| I| A| I| R| C| I
-Hóa đơn flow review| I| C| A/R| C| I| I
-Lead-scoring fairness review| C| A| I| C| I| R
-ACL audit| C| C| I| R| A| I
-DSAR fulfilment| I| C| C| C| R| I
-Incident response| A| R| C| R| R| I
+Activity| CEO| CRO| CFO| CTO| CSO| CMO ---|---|---|---|---|---|--- Service design + spec| A| R| C| C| C| C Implementation| I| C| I| A/R| C| I Pipeline / stage config| C| A/R| I| I| I| C Tracked-domain config| I| A| I| R| C| I Hóa đơn flow review| I| C| A/R| C| I| I Lead-scoring fairness review| C| A| I| C| I| R ACL audit| C| C| I| R| A| I DSAR fulfilment| I| C| C| C| R| I Incident response| A| R| C| R| R| I
 
 R = Responsible, A = Accountable, C = Consulted, I = Informed.
 
@@ -533,24 +397,7 @@ $ cyberos-crm dsar-export --contact 01HZKD… --output a-nguyen.zip
 | CLI subcommands | ~20 planned (`cyberos-crm`) |
 | P1 budget | ~$60/mo (Fargate + RDS + Redis) |
 
-Capability| Status
----|---
-Account / Contact / Deal CRUD| planned - P1
-Configurable pipeline + stages| planned - P1
-WebSocket drag-drop pipeline| planned - P1
-Activity auto-log (EMAIL / CHAT / Calendar)| planned - P1
-vietnam-mst-validate integration| planned - P1
-vietnam-bank-transfer (VietQR)| planned - P1
-vietnam-vat-invoice (hóa đơn)| planned - P1
-Deal close -> PROJ Engagement| planned - P1
-AI lead scoring (nightly batch)| planned - P1
-Next-best-action suggestion| planned - P1
-Confidence-banded forecast| planned - P1
-Contact merge candidate detection| planned - P1
-Per-deal ACL| planned - P1
-Vietnamese salutation helper| planned - P1
-HubSpot / Salesforce migration import| planned - P2+
-Client-visible PORTAL view| planned - P2+
+Capability| Status ---|--- Account / Contact / Deal CRUD| planned - P1 Configurable pipeline + stages| planned - P1 WebSocket drag-drop pipeline| planned - P1 Activity auto-log (EMAIL / CHAT / Calendar)| planned - P1 vietnam-mst-validate integration| planned - P1 vietnam-bank-transfer (VietQR)| planned - P1 vietnam-vat-invoice (hóa đơn)| planned - P1 Deal close -> PROJ Engagement| planned - P1 AI lead scoring (nightly batch)| planned - P1 Next-best-action suggestion| planned - P1 Confidence-banded forecast| planned - P1 Contact merge candidate detection| planned - P1 Per-deal ACL| planned - P1 Vietnamese salutation helper| planned - P1 HubSpot / Salesforce migration import| planned - P2+ Client-visible PORTAL view| planned - P2+
 
 ## References
 

@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this coverage gate"
+- "Audit this coverage gate"
 - "Check the coverage gate for completeness"
 - "Verify the coverage gate meets the rubric"
 - "Re-audit the coverage gate"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a coverage gate" → coverage-gate-author
+- "Draft a coverage gate" → coverage-gate-author
 - "Create the coverage gate" → coverage-gate-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

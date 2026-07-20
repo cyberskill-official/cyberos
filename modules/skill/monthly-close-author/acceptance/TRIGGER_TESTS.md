@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Draft a monthly close"
+- "Draft a monthly close"
 - "Create the monthly close"
 - "Author a new monthly close"
 - "Generate the monthly close"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Audit this monthly close" → monthly-close-audit
+- "Audit this monthly close" → monthly-close-audit
 - "Check the monthly close for completeness" → monthly-close-audit
 - "What is our company holiday schedule" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

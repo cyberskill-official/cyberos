@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this backlog state update"
+- "Audit this backlog state update"
 - "Check the backlog state update for completeness"
 - "Verify the backlog state update meets the rubric"
 - "Re-audit the backlog state update"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a backlog state update" → backlog-state-update-author
+- "Draft a backlog state update" → backlog-state-update-author
 - "Create the backlog state update" → backlog-state-update-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

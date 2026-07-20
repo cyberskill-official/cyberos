@@ -12,20 +12,18 @@
 
         ## Positive triggers (MUST route here)
 
-        - "Audit this sustainability report"
+- "Audit this sustainability report"
 - "Check the sustainability report for completeness"
 - "Verify the sustainability report meets the rubric"
 - "Re-audit the sustainability report"
 
         ## Negative triggers (MUST NOT route here)
 
-        - "Draft a sustainability report" → sustainability-report-author
+- "Draft a sustainability report" → sustainability-report-author
 - "Create the sustainability report" → sustainability-report-author
 - "What is the team on-call rotation" → none
 
         ## Authoring notes
 
-        - Triggers derived from skill name + role (author/audit) via the heuristic
-          backfill script. They are conservative — refine with OBS-observed real
-          user phrasings during the next natural fine-tune cycle.
-        - Re-author when classifier_version MAJOR-bumps.
+- Triggers derived from skill name + role (author/audit) via the heuristic backfill script. They are conservative — refine with OBS-observed real user phrasings during the next natural fine-tune cycle.
+- Re-author when classifier_version MAJOR-bumps.

@@ -108,41 +108,41 @@ The EMAIL service **MUST** ship DKIM signing + ARC chain forward + BIMI brand in
 1. **MUST** define closed `dkim_outcome` enum: `('signed_ed25519','signed_rsa','sign_failed_no_key','sign_failed_kms')` per DEC-1473. Cardinality 4.
 
 2. **MUST** generate per-tenant DKIM keypair per DEC-1470 at TASK-TEN-001 provisioning:
-   - Ed25519 primary per RFC 8463.
-   - RSA-2048 fallback for legacy receivers.
-   - Private keys KMS-wrapped.
-   - Public keys serialized as DNS TXT format for publication.
+- Ed25519 primary per RFC 8463.
+- RSA-2048 fallback for legacy receivers.
+- Private keys KMS-wrapped.
+- Public keys serialized as DNS TXT format for publication.
 
 3. **MUST** define `tenant_dkim_keys` table at migration `0002`: `(tenant_id UUID NOT NULL, key_kind TEXT NOT NULL CHECK (key_kind IN ('ed25519','rsa2048')), selector TEXT NOT NULL DEFAULT 'cyberos', private_key_kms_blob BYTEA NOT NULL, public_key_dns_txt TEXT NOT NULL, kms_key_id TEXT NOT NULL, generated_at TIMESTAMPTZ NOT NULL DEFAULT now(), revoked_at TIMESTAMPTZ, PRIMARY KEY (tenant_id, key_kind, selector))`.
 
 4. **MUST** sign outbound messages via `dkim/signer.rs::sign(message, tenant_id)` per RFC 6376:
-   - Resolves private key from `tenant_dkim_keys` (Ed25519 primary).
-   - KMS-decrypts.
-   - Computes canonical body hash.
-   - Signs over headers + hash.
-   - Emits `DKIM-Signature` header.
-   - Emits memory row `email.dkim_signed` with outcome.
+- Resolves private key from `tenant_dkim_keys` (Ed25519 primary).
+- KMS-decrypts.
+- Computes canonical body hash.
+- Signs over headers + hash.
+- Emits `DKIM-Signature` header.
+- Emits memory row `email.dkim_signed` with outcome.
 
 5. **MUST** support ARC chain forward per DEC-1471 + RFC 8617 via `arc/chain_forward.rs`. For forwarded inbound mail:
-   - Verifies existing ARC chain (cv= verdict).
-   - Appends new ARC-Authentication-Results + ARC-Message-Signature + ARC-Seal.
-   - Preserves chain for downstream receivers.
+- Verifies existing ARC chain (cv= verdict).
+- Appends new ARC-Authentication-Results + ARC-Message-Signature + ARC-Seal.
+- Preserves chain for downstream receivers.
 
 6. **MUST** attach BIMI brand indicator per DEC-1472 via `bimi/mod.rs`:
-   - Requires tenant's DMARC at `p=quarantine` or stricter (verified via DNS check).
-   - SVG logo from TASK-PORTAL-002 brand pack → tinified (SVG Tiny PS) via `svg_tinifier.rs`.
-   - Optional VMC certificate URL for verified-mark display.
-   - Adds `BIMI-Selector` header + DNS BIMI TXT record.
+- Requires tenant's DMARC at `p=quarantine` or stricter (verified via DNS check).
+- SVG logo from TASK-PORTAL-002 brand pack → tinified (SVG Tiny PS) via `svg_tinifier.rs`.
+- Optional VMC certificate URL for verified-mark display.
+- Adds `BIMI-Selector` header + DNS BIMI TXT record.
 
 7. **MUST** define `tenant_dns_setup` at migration `0003`: `(tenant_id UUID PRIMARY KEY, custom_domain TEXT, dkim_txt_published BOOLEAN, spf_txt_published BOOLEAN, dmarc_txt_published BOOLEAN, dmarc_policy TEXT, bimi_txt_published BOOLEAN, vmc_cert_url TEXT, last_verified_at TIMESTAMPTZ, verification_failures INT NOT NULL DEFAULT 0)`.
 
 8. **MUST** expose DNS setup wizard `POST /v1/admin/tenants/{tid}/email/dns-setup`. Returns required TXT records (DKIM public key + SPF + DMARC + BIMI). Tenant admin publishes; verifier polls.
 
 9. **MUST** verify DNS via `dns/verifier.rs::verify(tenant_id)`. Daily job:
-   - DNS resolve each expected TXT.
-   - Compare with database expectation.
-   - Mismatch → emit `email.dns_verification_failed` sev-2.
-   - Success → `email.dns_verification_passed` sev-3.
+- DNS resolve each expected TXT.
+- Compare with database expectation.
+- Mismatch → emit `email.dns_verification_failed` sev-2.
+- Success → `email.dns_verification_passed` sev-3.
 
 10. **MUST** emit 5 memory audit kinds per DEC-1475.
 
@@ -292,9 +292,7 @@ async fn provisioning_generates_keys() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-EMAIL-001.
-**Cross-module:** TASK-TEN-001 (keygen at provisioning), TASK-PORTAL-002 (BIMI logo), TASK-AI-003, TASK-MEMORY-111.
-**Downstream:** TASK-EMAIL-009 (outbound send).
+**Upstream:** TASK-EMAIL-001. **Cross-module:** TASK-TEN-001 (keygen at provisioning), TASK-PORTAL-002 (BIMI logo), TASK-AI-003, TASK-MEMORY-111. **Downstream:** TASK-EMAIL-009 (outbound send).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

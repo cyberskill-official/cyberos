@@ -26,14 +26,9 @@ classifier_version: 3.0.0-a4
 
 ## Authoring notes
 
-- Positive 1-3 anchor on "audit", "check", "re-audit" verbs from the
-  description-format triggers (TASK-SKILL-111).
-- Positive 4 is the "re-audit" repeat case — operators come back to an
-  existing task-collection to re-run the rubric.
-- Negative 1-2 derived from common confusion in pilot (author/audit pair).
-  These ARE the author's positive triggers — by design, the classifier MUST
-  pick the right side based on verb cues ("draft" / "generate" vs "audit" /
-  "check").
+- Positive 1-3 anchor on "audit", "check", "re-audit" verbs from the description-format triggers (TASK-SKILL-111).
+- Positive 4 is the "re-audit" repeat case — operators come back to an existing task-collection to re-run the rubric.
+- Negative 1-2 derived from common confusion in pilot (author/audit pair). These ARE the author's positive triggers — by design, the classifier MUST pick the right side based on verb cues ("draft" / "generate" vs "audit" / "check").
 - Negative 3 from the planned downstream chain (task → tech-spec).
 - Negative 4 is canonical "no skill" sanity.
 - Re-author when classifier_version MAJOR-bumps.

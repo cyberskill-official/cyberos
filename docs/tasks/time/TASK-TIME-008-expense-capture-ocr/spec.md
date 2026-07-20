@@ -110,44 +110,44 @@ The TIME service **MUST** ship expense capture pipeline at `services/time/src/ex
 4. **MUST** define `expense_policies` table at migration `0010` per DEC-1454: per (engagement, kind) → max_amount_minor, requires_receipt boolean, requires_approval_above_minor, default_billable.
 
 5. **MUST** expose `POST /v1/time/expenses/upload` body `{ engagement_id, kind, expected_currency }`. Handler:
-   - Returns TASK-DOC-001 presigned S3 URL.
-   - Creates expense row status='pending_ocr'.
-   - Emits `time.expense_captured` sev-3.
+- Returns TASK-DOC-001 presigned S3 URL.
+- Creates expense row status='pending_ocr'.
+- Emits `time.expense_captured` sev-3.
 
 6. **MUST** trigger async OCR via TASK-MCP-007 Tasks on photo-upload-complete webhook from S3:
-   - Task invokes AWS Textract `AnalyzeDocument` with `FORMS` + `TABLES` features.
-   - Parses via §1 #7 or §1 #8.
-   - Transitions status='pending_member_confirm'.
-   - Notifies Member (push via TASK-PORTAL-007 PWA push).
-   - Emits `time.expense_ocr_completed` sev-3 OR `time.expense_ocr_failed` sev-2.
+- Task invokes AWS Textract `AnalyzeDocument` with `FORMS` + `TABLES` features.
+- Parses via §1 #7 or §1 #8.
+- Transitions status='pending_member_confirm'.
+- Notifies Member (push via TASK-PORTAL-007 PWA push).
+- Emits `time.expense_ocr_completed` sev-3 OR `time.expense_ocr_failed` sev-2.
 
 7. **MUST** parse hóa đơn (VN tenants) per DEC-1456 via `hoadon_parser.rs`:
-   - Extract MST: regex `(?:MST|Mã số thuế)[: ]*(\d{10,13})`.
-   - Extract total VND: regex over amount-formatted fields.
-   - Extract issued_at: DD/MM/YYYY pattern.
-   - Extract supplier_name: header line.
-   - Extract VAT: 10% line item.
-   - Confidence scores per field.
+- Extract MST: regex `(?:MST|Mã số thuế)[: ]*(\d{10,13})`.
+- Extract total VND: regex over amount-formatted fields.
+- Extract issued_at: DD/MM/YYYY pattern.
+- Extract supplier_name: header line.
+- Extract VAT: 10% line item.
+- Confidence scores per field.
 
 8. **MUST** parse generic receipt (non-VN tenants) per DEC-1456 via `generic_parser.rs`. Universal fields: merchant_name, total, currency, date.
 
 9. **MUST** require Member confirm per DEC-1453. `POST /v1/time/expenses/{id}/confirm` body `{ confirmed_fields, kind_override?, billable_override? }`. Handler:
-   - Validates expense status='pending_member_confirm'.
-   - Persists Member-edited final values.
-   - Policy check per §1 #10.
-   - Transitions status='confirmed'.
-   - Emits `time.expense_confirmed` sev-2.
+- Validates expense status='pending_member_confirm'.
+- Persists Member-edited final values.
+- Policy check per §1 #10.
+- Transitions status='confirmed'.
+- Emits `time.expense_confirmed` sev-2.
 
 10. **MUST** validate against engagement policy per DEC-1454. If `total_minor > policy.max_amount_minor` → return 412 + `policy_cap_exceeded`. If `> policy.requires_approval_above_minor` → status remains 'pending_member_confirm' with `requires_admin_approval=true` field; engagement_admin approves separately.
 
 11. **MUST** support reject `POST /v1/time/expenses/{id}/reject` body `{ reason }`. Transitions status='rejected'. Emits `time.expense_rejected` sev-3.
 
 12. **MUST** support invoice attach `POST /v1/time/expenses/{id}/attach-to-invoice` body `{ invoice_id }` per DEC-1457 derivative. Caller has `cfo` or `engagement_admin`. Handler:
-    - Validates expense status='confirmed' + billable=true.
-    - Validates invoice status='draft' or 'ready_for_review'.
-    - Creates invoice_line row (line_kind='expense_reimbursement') via TASK-INV-001.
-    - Transitions expense status='invoiced' + populates invoice_line_id.
-    - Emits `time.expense_invoiced` sev-2.
+- Validates expense status='confirmed' + billable=true.
+- Validates invoice status='draft' or 'ready_for_review'.
+- Creates invoice_line row (line_kind='expense_reimbursement') via TASK-INV-001.
+- Transitions expense status='invoiced' + populates invoice_line_id.
+- Emits `time.expense_invoiced` sev-2.
 
 13. **MUST** emit 6 memory audit kinds per DEC-1457. PII-scrub merchant/supplier name via TASK-MEMORY-111 — hash only in chain.
 
@@ -323,8 +323,7 @@ async fn policy_cap_blocks() {
 
 ## §7 — Dependencies
 
-**Upstream:** TASK-CRM-010 (engagement context).
-**Cross-module:** TASK-DOC-001 (S3 storage), TASK-MCP-007 (async OCR task), TASK-PORTAL-007 (push notification), TASK-INV-001 (invoice attach), TASK-AI-003, TASK-MEMORY-111.
+**Upstream:** TASK-CRM-010 (engagement context). **Cross-module:** TASK-DOC-001 (S3 storage), TASK-MCP-007 (async OCR task), TASK-PORTAL-007 (push notification), TASK-INV-001 (invoice attach), TASK-AI-003, TASK-MEMORY-111.
 
 ---
 

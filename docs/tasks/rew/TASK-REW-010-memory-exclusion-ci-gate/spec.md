@@ -82,13 +82,13 @@ The REW service **MUST** ship memory exclusion gate at `services/rew/src/exclusi
 1. **MUST** validate `exclusion_check_kind` against closed enum per DEC-2241.
 
 2. **MUST** run static grep CI at `.github/workflows/rew-memory-exclusion.yml` per DEC-2242:
-   - Pattern list: `decrypted_amount`, `gross_vnd`, `net_vnd`, `deductions_total`, `payslip_pdf_bytes`, etc.
-   - Search in: any file under `services/rew/src/audit/`, `services/*/src/memory/`, memory ingest paths
-   - Match → CI fails
+- Pattern list: `decrypted_amount`, `gross_vnd`, `net_vnd`, `deductions_total`, `payslip_pdf_bytes`, etc.
+- Search in: any file under `services/rew/src/audit/`, `services/*/src/memory/`, memory ingest paths
+- Match → CI fails
 
 3. **MUST** check runtime at `runtime_check.rs::validate_payload(json)` per DEC-2243:
-   - Walk JSON, check each key against field_blocklist
-   - Match → reject ingest + emit sev-1 audit
+- Walk JSON, check each key against field_blocklist
+- Match → reject ingest + emit sev-1 audit
 
 4. **MUST** define field blocklist at `field_blocklist.rs` per DEC-2241 — exhaustive list of forbidden field names.
 
@@ -176,8 +176,7 @@ async fn audit_body_excludes_comp() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-REW-001.
-**Cross-module:** TASK-MEMORY-111 (PII enforcement), TASK-MEMORY-101 (memory ingest paths to gate).
+**Upstream:** TASK-REW-001. **Cross-module:** TASK-MEMORY-111 (PII enforcement), TASK-MEMORY-101 (memory ingest paths to gate).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

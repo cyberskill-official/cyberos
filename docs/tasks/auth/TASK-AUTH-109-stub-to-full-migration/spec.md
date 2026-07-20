@@ -119,20 +119,19 @@ The AUTH service **MUST** enforce the TASK-AUTH-101 stub → full migration via 
 4. **MUST** seed `auth_migration_state` for every existing tenant at TASK-AUTH-101 ship time: cutover_at = ship_date + 30 days, status = `grace_active`. New tenants (provisioned after ship date) get cutover_at = now() + 30 days at provisioning time (TASK-TEN-001 hook).
 
 5. **MUST** ship the verifier hook (per DEC-442 + DEC-448). When TASK-AUTH-004's verifier validates a JWT:
-    - If token's `rbac_v` claim is present → continue normal verification.
-    - If `rbac_v` is absent → look up `auth_migration_state` for the token's `tid` claim.
-    - If `cutover_at > now()` → accept; emit `auth.stub_token_accepted` memory row (sampled 1%).
-    - If `cutover_at <= now()` → reject with 401 + body per DEC-448; emit `auth.stub_token_rejected` memory row.
+- If token's `rbac_v` claim is present → continue normal verification.
+- If `rbac_v` is absent → look up `auth_migration_state` for the token's `tid` claim.
+- If `cutover_at > now()` → accept; emit `auth.stub_token_accepted` memory row (sampled 1%).
+- If `cutover_at <= now()` → reject with 401 + body per DEC-448; emit `auth.stub_token_rejected` memory row.
 
 6. **MUST** ship the refresh hook (per DEC-449). When TASK-AUTH-004's refresh path issues a new access token:
-    - If prior token lacked `rbac_v` → log the refresh in `auth_token_refresh_log` with `prior_rbac_v_present=false`; new token MUST include `rbac_v` at current value.
-    - If prior token had `rbac_v` → log with `prior_rbac_v_present=true`; new token includes current `rbac_v` (may differ from prior if catalogue version bumped).
+- If prior token lacked `rbac_v` → log the refresh in `auth_token_refresh_log` with `prior_rbac_v_present=false`; new token MUST include `rbac_v` at current value.
+- If prior token had `rbac_v` → log with `prior_rbac_v_present=true`; new token includes current `rbac_v` (may differ from prior if catalogue version bumped).
 
 7. **MUST** ship `POST /v1/auth/migration/extend-grace` handler (per DEC-445). Body: `{additional_days: 1-60, reason: "<text 1-500 chars>"}`. Caller MUST have role `root-admin` per TASK-AUTH-101. Validates:
-    - Tenant's current status is `grace_active` (extended → 409 already_extended).
-    - additional_days in [1, 60].
-    - reason non-empty.
-   On success: UPDATE `auth_migration_state` SET cutover_at = cutover_at + additional_days, status = `grace_extended`, grace_extended_at = now(), grace_extension_reason = reason, extension_count = 1. Emit `auth.grace_window_extended` memory row.
+- Tenant's current status is `grace_active` (extended → 409 already_extended).
+- additional_days in [1, 60].
+- reason non-empty. On success: UPDATE `auth_migration_state` SET cutover_at = cutover_at + additional_days, status = `grace_extended`, grace_extended_at = now(), grace_extension_reason = reason, extension_count = 1. Emit `auth.grace_window_extended` memory row.
 
 8. **MUST** ship `GET /v1/auth/migration/preview` returning `{tenant_id, cutover_at, status, days_remaining, stub_tokens_accepted_count_24h, stub_tokens_rejected_count_24h, refreshed_count_24h, extension_count, can_extend: bool}`. Caller MUST have role `root-admin` per TASK-AUTH-101 OR `tenant-admin` (can see their own tenant's preview).
 
@@ -141,10 +140,10 @@ The AUTH service **MUST** enforce the TASK-AUTH-101 stub → full migration via 
 10. **MUST** transition status `grace_active` (or `grace_extended`) → `cutover_completed` exactly once per tenant — the first verifier request after `cutover_at <= now()`. Emit `auth.cutover_completed` memory row.
 
 11. **MUST** emit memory audit rows for 4 kinds (per DEC-443):
-    - `auth.stub_token_accepted` — sampled 1% during grace; 100% near grace end (last 24h).
-    - `auth.stub_token_rejected` — every rejection; carries `tenant_id`, `subject_id_hash16`, `cutover_at`, `now`.
-    - `auth.grace_window_extended` — every extension; carries `tenant_id`, `prior_cutover_at`, `new_cutover_at`, `additional_days`, `reason_scrubbed`, `extended_by_subject_id_hash16`.
-    - `auth.cutover_completed` — single emission per tenant on transition; carries `tenant_id`, `final_cutover_at`, `total_stub_accepted`, `total_stub_rejected`.
+- `auth.stub_token_accepted` — sampled 1% during grace; 100% near grace end (last 24h).
+- `auth.stub_token_rejected` — every rejection; carries `tenant_id`, `subject_id_hash16`, `cutover_at`, `now`.
+- `auth.grace_window_extended` — every extension; carries `tenant_id`, `prior_cutover_at`, `new_cutover_at`, `additional_days`, `reason_scrubbed`, `extended_by_subject_id_hash16`.
+- `auth.cutover_completed` — single emission per tenant on transition; carries `tenant_id`, `final_cutover_at`, `total_stub_accepted`, `total_stub_rejected`.
 
 12. **MUST** PII-scrub `grace_extension_reason` via TASK-MEMORY-111 before chain commit.
 
@@ -155,12 +154,12 @@ The AUTH service **MUST** enforce the TASK-AUTH-101 stub → full migration via 
 15. **MUST** emit OTel span `auth.migration.{verify_stub,refresh,extend_grace,cutover}` with attributes: `tenant_id`, `outcome` (accepted | rejected | extended | already_extended | cutover_triggered | not_root_admin).
 
 16. **MUST** emit OTel metrics:
-    - `auth_stub_token_accepted_total{tenant_id}` (counter — should approach zero post-grace).
-    - `auth_stub_token_rejected_total{tenant_id}` (counter — alarm sev-2 at sustained > 100/h per DEC-444).
-    - `auth_token_refresh_total{tenant_id, prior_rbac_v_present}` (counter).
-    - `auth_grace_extensions_total{tenant_id}` (counter; max 1 per tenant).
-    - `auth_cutover_completed_total{tenant_id}` (counter; max 1 per tenant).
-    - `auth_migration_grace_days_remaining{tenant_id}` (gauge — periodic compute).
+- `auth_stub_token_accepted_total{tenant_id}` (counter — should approach zero post-grace).
+- `auth_stub_token_rejected_total{tenant_id}` (counter — alarm sev-2 at sustained > 100/h per DEC-444).
+- `auth_token_refresh_total{tenant_id, prior_rbac_v_present}` (counter).
+- `auth_grace_extensions_total{tenant_id}` (counter; max 1 per tenant).
+- `auth_cutover_completed_total{tenant_id}` (counter; max 1 per tenant).
+- `auth_migration_grace_days_remaining{tenant_id}` (gauge — periodic compute).
 
 17. **MUST** support the `auth_provisioner` SQL role distinct from `cyberos_app` for INSERT into `auth_migration_state`. INSERT/UPDATE granted to `auth_provisioner`; UPDATE on `status` granted only to `auth_provisioner` (controlled cutover); REVOKE UPDATE, DELETE from cyberos_app.
 

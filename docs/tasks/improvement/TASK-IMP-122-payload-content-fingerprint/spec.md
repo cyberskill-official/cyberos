@@ -72,19 +72,13 @@ source_decisions:
 
 ## Summary
 
-CyberOS already ships a rule-content fingerprint. `rules_sha` (TASK-IMP-074) is computed at build
-time over the payload and written into `manifest.yaml`. Three components compare it against an
-installed machine, and every one of them answers the installed side by grepping the stored token
-out of `.cyberos/manifest.yaml` rather than by re-hashing the installed files. Two tokens from one
-build always agree, whatever happens to those files afterward. So the check answers "did these
-manifests come from the same build?" and is read as "do these bytes still match?".
+CyberOS already ships a rule-content fingerprint. `rules_sha` (TASK-IMP-074) is computed at build time over the payload and written into `manifest.yaml`. Three components compare it against an installed machine, and every one of them answers the installed side by grepping the stored token out of `.cyberos/manifest.yaml` rather than by re-hashing the installed files. Two tokens from one build always agree, whatever happens to those files afterward. So the check answers "did these manifests come from the same build?" and is read as "do these bytes still match?".
 
 ## Problem
 
 Measured on this repo at HEAD, 2026-07-18. Every number below was re-measured by this author.
 
-**Defect 1 - the fingerprint is recalled, not recomputed.** `build.sh:354` computes `rules_sha`
-over the assembled output. `install.sh:188` vendors the manifest containing it. Then:
+**Defect 1 - the fingerprint is recalled, not recomputed.** `build.sh:354` computes `rules_sha` over the assembled output. `install.sh:188` vendors the manifest containing it. Then:
 
 | component | what it does |
 |---|---|
@@ -92,29 +86,13 @@ over the assembled output. `install.sh:188` vendors the manifest containing it. 
 | `lib/update-check.sh:8-14, :82-97` | `_cyberos_rules_sha()` greps a manifest; `:101-105` emits `RULE DRIFT ... (same version, different rules)` |
 | `audit-fleet.sh:13, :36-37` | `_rs()` greps `$cy/manifest.yaml`; compares each fleet repo's token to an expected one |
 
-`grep -nE 'shasum|sha256sum'` across all three returns **empty**. Nothing recomputes.
-(`check-version-sync.sh` reads `rules_sha` too, at `:56`, but only asserts it is 64-hex
-(`:57-58`); it is not a drift comparator and is out of scope: `grep -c '\.cyberos'` on it returns
-**0** - it compares payload stamps to the root `VERSION` and has no installed side at all.)
-`update-check.sh:76` states the correct thesis - *"VERSION is a promise; rules_sha is the
-evidence"* - and then greps a token that is a promise for exactly the same reason VERSION is: it
-was written once, at build, by the thing being checked.
+`grep -nE 'shasum|sha256sum'` across all three returns **empty**. Nothing recomputes. (`check-version-sync.sh` reads `rules_sha` too, at `:56`, but only asserts it is 64-hex (`:57-58`); it is not a drift comparator and is out of scope: `grep -c '\.cyberos'` on it returns **0** - it compares payload stamps to the root `VERSION` and has no installed side at all.) `update-check.sh:76` states the correct thesis - *"VERSION is a promise; rules_sha is the evidence"* - and then greps a token that is a promise for exactly the same reason VERSION is: it was written once, at build, by the thing being checked.
 
-The sharpest form of this is measurable today. Run as `bash .cyberos/version.sh`, `$here` resolves
-to `$CY`, so `:64` reads `$root/.cyberos/manifest.yaml` and `:65` reads `$here/manifest.yaml` -
-**the same file**. `:66-68` cannot rescue it, because `CYBEROS_PAYLOAD` is consulted only when
-`$here/manifest.yaml` yields nothing, and it always yields something on an installed machine. So
-`:89`'s `[ "$inst_sha" != "$pay_sha" ]` is unreachable: that invocation compares a file to itself
-and **can never report `rules_drift`**. Verified by running it - both sides print `66bb0459...`,
-`verdict=up_to_date`.
+The sharpest form of this is measurable today. Run as `bash .cyberos/version.sh`, `$here` resolves to `$CY`, so `:64` reads `$root/.cyberos/manifest.yaml` and `:65` reads `$here/manifest.yaml` - **the same file**. `:66-68` cannot rescue it, because `CYBEROS_PAYLOAD` is consulted only when `$here/manifest.yaml` yields nothing, and it always yields something on an installed machine. So `:89`'s `[ "$inst_sha" != "$pay_sha" ]` is unreachable: that invocation compares a file to itself and **can never report `rules_drift`**. Verified by running it - both sides print `66bb0459...`, `verdict=up_to_date`.
 
-The consequence is not theoretical. On 2026-07-18 this repo's own `.cyberos` differed from `dist/`
-in six vendored artefacts while `VERSION` read `1.0.0` and `rules_sha` matched on both sides. The
-installed `batch-select.mjs` was the pre-PR#53 build carrying the undeclared-cone bug, and returned
-a different batch than source. Every check reported current.
+The consequence is not theoretical. On 2026-07-18 this repo's own `.cyberos` differed from `dist/` in six vendored artefacts while `VERSION` read `1.0.0` and `rules_sha` matched on both sides. The installed `batch-select.mjs` was the pre-PR#53 build carrying the undeclared-cone bug, and returned a different batch than source. Every check reported current.
 
-**Defect 2 - the cone is the wrong set.** `build.sh:354` hashes `find cuo plugin mcp cli memory`.
-Measured against the installed tree:
+**Defect 2 - the cone is the wrong set.** `build.sh:354` hashes `find cuo plugin mcp cli memory`. Measured against the installed tree:
 
 ```
 cone today (build.sh:354)  : cuo plugin mcp cli memory
@@ -124,184 +102,60 @@ vendored set (install.sh)  : cuo plugin mcp memory docs-tools lib + 6 root scrip
   never in cone at all     : the 6 root scripts (:190-195)
 ```
 
-Four of the six artefacts that actually drifted (`batch-select.mjs`, `render-status-hub.mjs`,
-`verify-goals.mjs`, `workflow-improve.mjs`) live in `docs-tools/`. So even a recomputing check
-would miss them. And `cli/` is in the cone and is never installed, so a recomputing check with
-today's cone would report drift on a **perfect** install. The two defects are independent and both
-must close, or the fix either misses the evidence that motivated it or cries wolf on every machine.
+Four of the six artefacts that actually drifted (`batch-select.mjs`, `render-status-hub.mjs`, `verify-goals.mjs`, `workflow-improve.mjs`) live in `docs-tools/`. So even a recomputing check would miss them. And `cli/` is in the cone and is never installed, so a recomputing check with today's cone would report drift on a **perfect** install. The two defects are independent and both must close, or the fix either misses the evidence that motivated it or cries wolf on every machine.
 
-**Why REPAIR and not a second mechanism.** TASK-IMP-104 §1.2 forbids install carrying a second
-implementation, and 104 explicitly rejected content hashing for ITS question: *"Compare a manifest
-hash rather than a version. Rejected: overkill for a monotonic version line, and it answers
-'different' rather than 'older', which is not the question."* 104 guards ORDER and is correct as
-shipped; "different" is precisely this task's question. `rules_sha` is the right mechanism, in the
-right place, doing the wrong thing. This task repairs it.
+**Why REPAIR and not a second mechanism.** TASK-IMP-104 §1.2 forbids install carrying a second implementation, and 104 explicitly rejected content hashing for ITS question: *"Compare a manifest hash rather than a version. Rejected: overkill for a monotonic version line, and it answers 'different' rather than 'older', which is not the question."* 104 guards ORDER and is correct as shipped; "different" is precisely this task's question. `rules_sha` is the right mechanism, in the right place, doing the wrong thing. This task repairs it.
 
 ## Proposed Solution
 
 Split the two sides of the comparison and treat them differently, because they are not symmetric.
 
-**The installed side is ALWAYS recomputed** - hashed from the files on disk at comparison time,
-never read from `.cyberos/manifest.yaml`. That is the whole of Defect 1.
+**The installed side is ALWAYS recomputed** - hashed from the files on disk at comparison time, never read from `.cyberos/manifest.yaml`. That is the whole of Defect 1.
 
-**The reference side is a token that `build.sh` wrote over a payload tree.** A stored token is
-trustworthy *as a digest of the build that wrote it*, because build computed it from that payload's
-bytes; it is untrustworthy *as a digest of any tree that merely carries it*, because nothing
-recomputed it after the copy. Where a payload tree is also reachable, the check additionally diffs
-that tree to name the differing paths; where only a token is reachable, it reports drift without
-naming and says so. This makes `bash .cyberos/version.sh` useful for the first time: recomputing
-the installed tree against the token its own manifest carries catches post-install mutation, and
-`manifest.yaml`'s exclusion from the cone is what keeps that from being circular. The asymmetry is
-the best idea here and it survives, but it is narrower than it first reads: a reference token names
-a BUILD. `version.sh`'s `[repo]` argument (§1.9's eighth arm) makes that concrete - there the
-reference is read from *this* machine's install manifest, so the verdict means "the target differs
-from the build this machine claims to come from", not "these two machines differ". The check must
-say which of those it is doing.
+**The reference side is a token that `build.sh` wrote over a payload tree.** A stored token is trustworthy *as a digest of the build that wrote it*, because build computed it from that payload's bytes; it is untrustworthy *as a digest of any tree that merely carries it*, because nothing recomputed it after the copy. Where a payload tree is also reachable, the check additionally diffs that tree to name the differing paths; where only a token is reachable, it reports drift without naming and says so. This makes `bash .cyberos/version.sh` useful for the first time: recomputing the installed tree against the token its own manifest carries catches post-install mutation, and `manifest.yaml`'s exclusion from the cone is what keeps that from being circular. The asymmetry is the best idea here and it survives, but it is narrower than it first reads: a reference token names a BUILD. `version.sh`'s `[repo]` argument (§1.9's eighth arm) makes that concrete - there the reference is read from *this* machine's install manifest, so the verdict means "the target differs from the build this machine claims to come from", not "these two machines differ". The check must say which of those it is doing.
 
-**Fix the cone to the vendored set** - what `install.sh` installs, not what the payload ships -
-declared once in a shared file that `build.sh` and every comparator read, with a build check that
-reconciles it against a real install in both directions. Move `_rsha()` into that same shared file,
-because `build.sh` is never vendored and the two installed comparators cannot reach it. Report the
-differing paths where a tree allows it. Keep each component's existing exit contract.
+**Fix the cone to the vendored set** - what `install.sh` installs, not what the payload ships - declared once in a shared file that `build.sh` and every comparator read, with a build check that reconciles it against a real install in both directions. Move `_rsha()` into that same shared file, because `build.sh` is never vendored and the two installed comparators cannot reach it. Report the differing paths where a tree allows it. Keep each component's existing exit contract.
 
 ## Alternatives Considered
 
-- **Add a per-file manifest beside `rules_sha`.** Rejected: a second comparator for the same
-  question, which TASK-IMP-104 §1.2 forbids by name, and the first draft of this spec proposed it
-  only because it had not found `rules_sha`.
-- **Bump VERSION on every payload change.** Rejected: conflates release identity with build
-  identity, forces a bump for a comment fix, and still cannot see a vendor step that drops a file.
-- **Compare mtimes.** Rejected: not content; survives no copy or checkout faithfully; would have
-  reported the 2026-07-18 drift as fine.
-- **Re-vendor on every `.cyberos` use.** Rejected: install is not free, and a guard that silently
-  repairs drift teaches nobody that the channel leaked.
-- **Widen the cone only, leaving the token stored.** Rejected: it fixes which files are covered and
-  leaves the check comparing two copies of one build-time answer. Defect 1 survives untouched.
-- **Derive the cone by static analysis of `install.sh`.** Rejected by the operator, and the code
-  says why: the copies are conditionally guarded (`:187-198`), one iterates a loop variable
-  (`:431-432`), and one branch is env-gated (`memory/` only when `CYBEROS_NO_MEMORY != 1`). No
-  static read of that file yields the set.
-- **NEW3-004, the CONE's element grammar: `dir:` / `file:` / `prune:`, with memory as `dir:memory` +
-  `prune:memory/store/`** (the exclusions' fourth kind is the next bullet). Chosen over the file-granular reading (`file:memory/AGENTS.md` and its
-  two siblings). Both hash identically today - each resolves to the same 3 files per side - so the
-  tie breaks on what happens when they diverge. Under `file:` × 3, a fourth file added to the
-  payload's `memory/` that `:431-432`'s hardcoded loop does not copy is invisible to every check,
-  forever. Under `dir:memory`, the cone resolves to 4 while the install has 3, and §1.6's second
-  direction fails the build - the divergence surfaces at build time, on the machine of the person
-  who caused it, instead of becoming permanent drift on every install that no re-install can clear.
-  The file-granular reading also makes `prune:memory/store/` dead text for §1.4, since nothing then
-  enumerates it - which was the audit's charge; under the chosen grammar it is load-bearing in both
-  §1.4 and §1.6. Three kinds and not two, because `install.sh` has exactly three copy shapes:
-  `cp -R` on a directory, `cp` on a named file, and install-generated content nested inside a coned
-  directory.
-- **NEW4-002, a FOURTH kind `exempt:`, and the exclusions' home.** The three kinds above are a
-  grammar for the CONE; the nine exclusions of §1.5 had no declared kind at all, and §1.5 put them
-  "alongside" the shared file - which is not a location. Both halves were defects. Eight of the nine
-  sit at `$CY` root beneath no coned dir: they are not `dir:`, not `file:` (that would INCLUDE
-  them), and `prune:` was vacuous on them under §1.3's own wording, since nothing is beneath
-  `manifest.yaml` and it was never in the resolved set to be removed from. Considered and rejected:
-  **widen `prune:` to cover both jobs** by rewording it to "at or beneath, whether or not resolved".
-  One kind fewer, but it destroys a checkable distinction - an author who writes `prune:foo` meaning
-  "install-generated" when `foo` is in fact vendored and coned gets silence, and Direction 2 will
-  not catch it because a pruned path is not in the resolved set. Two kinds let the build check
-  INTENT: a `prune:` that removes nothing is dead text and fails; an `exempt:` that removes
-  something overlaps the cone and fails. That pair of invariants is the direct answer to the
-  standing "dead text" charge, and it is enforceable rather than promised. The home is §1.2's file,
-  as one list of kinded entries - §1.6 Direction 1 must READ the exclusions to classify against
-  them, so they cannot live in prose. Measured: the four kinds classify this repo's real `$CY` with
-  zero unclassified paths.
-- **NEW3-005, `_rsha()`: move it into the shared cone file rather than leave it inline at
-  `build.sh:353`.** `build.sh` is never vendored - measured absent from both `dist/cyberos/` and
-  `.cyberos/` - so `.cyberos/version.sh` and `.cyberos/lib/update-check.sh` cannot reach it, and
-  "use `build.sh`'s own `_rsha()`" was unsatisfiable for two of the three comparators. The
-  alternative, letting each comparator define its own, is the exact duplication §1.2 forbids for
-  the cone and would let the two platform branches drift apart silently. The shared file goes in
-  `lib/`, which `install.sh:197` already vendors wholesale, following `lib/version-compare.sh` -
-  TASK-IMP-104's "ONE comparator, sourced", already resolved two ways by `version.sh:78` and
-  `update-check.sh:62`. The file lands inside the cone, so it fingerprints itself; it contains no
-  digest, so nothing is circular.
-- **Effort: 6 -> 20 hours, and WHY the breakdown wins.** 6 was carried unchanged across four
-  revisions and was sized for "widen a `find` and add a re-hash". Rewrite 4 re-sized to 16 but
-  published a breakdown summing to 17.5 - two numbers, one document, neither derived from the
-  other. **The breakdown is the estimate and `effort_hours` is its sum**, so the breakdown wins and
-  16 was simply wrong: it was a round number written beside an itemisation nobody added up. The
-  arithmetic is now stated so it can be checked rather than trusted. Rewrite 5 also adds scope, and
-  the added scope is priced rather than absorbed: shared lib 2h **-> 3h** (+1h: the grammar is now
-  four kinds with two enforced invariants, NEW4-002); `build.sh` rewire 1h; reconciler 3h;
-  `version.sh` 2h **-> 2.5h** (+0.5h: the eighth arm and its disclaimer, NEW4-003);
-  `update-check.sh` 2h; `audit-fleet.sh` 2h; `install.sh` 0.5h; suite 5h **-> 6h** (+1h: AC 9 goes
-  from seven arms to eight, AC 5 from a spot-check to nine deletion arms, AC 4 to set equality).
-  Sum: 3 + 1 + 3 + 2.5 + 2 + 2 + 0.5 + 6 = **20.0**, which is `effort_hours`. Re-added by this
-  author rather than carried.
+- **Add a per-file manifest beside `rules_sha`.** Rejected: a second comparator for the same question, which TASK-IMP-104 §1.2 forbids by name, and the first draft of this spec proposed it only because it had not found `rules_sha`.
+- **Bump VERSION on every payload change.** Rejected: conflates release identity with build identity, forces a bump for a comment fix, and still cannot see a vendor step that drops a file.
+- **Compare mtimes.** Rejected: not content; survives no copy or checkout faithfully; would have reported the 2026-07-18 drift as fine.
+- **Re-vendor on every `.cyberos` use.** Rejected: install is not free, and a guard that silently repairs drift teaches nobody that the channel leaked.
+- **Widen the cone only, leaving the token stored.** Rejected: it fixes which files are covered and leaves the check comparing two copies of one build-time answer. Defect 1 survives untouched.
+- **Derive the cone by static analysis of `install.sh`.** Rejected by the operator, and the code says why: the copies are conditionally guarded (`:187-198`), one iterates a loop variable (`:431-432`), and one branch is env-gated (`memory/` only when `CYBEROS_NO_MEMORY != 1`). No static read of that file yields the set.
+- **NEW3-004, the CONE's element grammar: `dir:` / `file:` / `prune:`, with memory as `dir:memory` + `prune:memory/store/`** (the exclusions' fourth kind is the next bullet). Chosen over the file-granular reading (`file:memory/AGENTS.md` and its two siblings). Both hash identically today - each resolves to the same 3 files per side - so the tie breaks on what happens when they diverge. Under `file:` × 3, a fourth file added to the payload's `memory/` that `:431-432`'s hardcoded loop does not copy is invisible to every check, forever. Under `dir:memory`, the cone resolves to 4 while the install has 3, and §1.6's second direction fails the build - the divergence surfaces at build time, on the machine of the person who caused it, instead of becoming permanent drift on every install that no re-install can clear. The file-granular reading also makes `prune:memory/store/` dead text for §1.4, since nothing then enumerates it - which was the audit's charge; under the chosen grammar it is load-bearing in both §1.4 and §1.6. Three kinds and not two, because `install.sh` has exactly three copy shapes: `cp -R` on a directory, `cp` on a named file, and install-generated content nested inside a coned directory.
+- **NEW4-002, a FOURTH kind `exempt:`, and the exclusions' home.** The three kinds above are a grammar for the CONE; the nine exclusions of §1.5 had no declared kind at all, and §1.5 put them "alongside" the shared file - which is not a location. Both halves were defects. Eight of the nine sit at `$CY` root beneath no coned dir: they are not `dir:`, not `file:` (that would INCLUDE them), and `prune:` was vacuous on them under §1.3's own wording, since nothing is beneath `manifest.yaml` and it was never in the resolved set to be removed from. Considered and rejected: **widen `prune:` to cover both jobs** by rewording it to "at or beneath, whether or not resolved". One kind fewer, but it destroys a checkable distinction - an author who writes `prune:foo` meaning "install-generated" when `foo` is in fact vendored and coned gets silence, and Direction 2 will not catch it because a pruned path is not in the resolved set. Two kinds let the build check INTENT: a `prune:` that removes nothing is dead text and fails; an `exempt:` that removes something overlaps the cone and fails. That pair of invariants is the direct answer to the standing "dead text" charge, and it is enforceable rather than promised. The home is §1.2's file, as one list of kinded entries - §1.6 Direction 1 must READ the exclusions to classify against them, so they cannot live in prose. Measured: the four kinds classify this repo's real `$CY` with zero unclassified paths.
+- **NEW3-005, `_rsha()`: move it into the shared cone file rather than leave it inline at `build.sh:353`.** `build.sh` is never vendored - measured absent from both `dist/cyberos/` and `.cyberos/` - so `.cyberos/version.sh` and `.cyberos/lib/update-check.sh` cannot reach it, and "use `build.sh`'s own `_rsha()`" was unsatisfiable for two of the three comparators. The alternative, letting each comparator define its own, is the exact duplication §1.2 forbids for the cone and would let the two platform branches drift apart silently. The shared file goes in `lib/`, which `install.sh:197` already vendors wholesale, following `lib/version-compare.sh` - TASK-IMP-104's "ONE comparator, sourced", already resolved two ways by `version.sh:78` and `update-check.sh:62`. The file lands inside the cone, so it fingerprints itself; it contains no digest, so nothing is circular.
+- **Effort: 6 -> 20 hours, and WHY the breakdown wins.** 6 was carried unchanged across four revisions and was sized for "widen a `find` and add a re-hash". Rewrite 4 re-sized to 16 but published a breakdown summing to 17.5 - two numbers, one document, neither derived from the other. **The breakdown is the estimate and `effort_hours` is its sum**, so the breakdown wins and 16 was simply wrong: it was a round number written beside an itemisation nobody added up. The arithmetic is now stated so it can be checked rather than trusted. Rewrite 5 also adds scope, and the added scope is priced rather than absorbed: shared lib 2h **-> 3h** (+1h: the grammar is now four kinds with two enforced invariants, NEW4-002); `build.sh` rewire 1h; reconciler 3h; `version.sh` 2h **-> 2.5h** (+0.5h: the eighth arm and its disclaimer, NEW4-003); `update-check.sh` 2h; `audit-fleet.sh` 2h; `install.sh` 0.5h; suite 5h **-> 6h** (+1h: AC 9 goes from seven arms to eight, AC 5 from a spot-check to nine deletion arms, AC 4 to set equality). Sum: 3 + 1 + 3 + 2.5 + 2 + 2 + 0.5 + 6 = **20.0**, which is `effort_hours`. Re-added by this author rather than carried.
 
 ## Success Metrics
 
-- Primary: a vendored file mutated by one byte after install, with both VERSIONs and both stored
-  tokens equal, is reported as drift and named. Baseline: reported `up_to_date` - reproduced
-  synthetically 2026-07-18; the original six-artefact instance was repaired by `e2504cf3` and is
-  no longer live evidence.
-- Guardrail: a freshly installed, unmodified machine reports current from every component.
-  Measured target: the corrected cone yields `102dc507` over both `dist/cyberos` and `.cyberos`
-  (**1534** files per side). Baseline: today's cone yields `66bb0459` (1508 files) vs `ae756045`
-  (1512) on that same byte-identical pair - a recomputing check with today's cone would report
-  drift on a perfect install. (1534, not 1525: 1525 is the count of the cone this task REJECTS -
-  `cuo plugin mcp lib docs-tools` with neither `memory` nor the root scripts, which yields
-  `86cafee8`. 1525 + 3 + 6 = 1534. Re-derived by this author; the prior revision paired
-  `102dc507` with 1525, so a test written faithfully to it would have failed a correct build.)
-- Guardrail: every path `install.sh` VENDORS is either inside the cone or inside a named exclusion
-  class, enforced at build. (Not "every directory the payload ships": that formulation is retracted
-  by the ADDENDUM and is what forced `ci/`, `cli/` and `template/` into the cone and guaranteed
-  self-drift.)
+- Primary: a vendored file mutated by one byte after install, with both VERSIONs and both stored tokens equal, is reported as drift and named. Baseline: reported `up_to_date` - reproduced synthetically 2026-07-18; the original six-artefact instance was repaired by `e2504cf3` and is no longer live evidence.
+- Guardrail: a freshly installed, unmodified machine reports current from every component. Measured target: the corrected cone yields `102dc507` over both `dist/cyberos` and `.cyberos` (**1534** files per side). Baseline: today's cone yields `66bb0459` (1508 files) vs `ae756045` (1512) on that same byte-identical pair - a recomputing check with today's cone would report drift on a perfect install. (1534, not 1525: 1525 is the count of the cone this task REJECTS - `cuo plugin mcp lib docs-tools` with neither `memory` nor the root scripts, which yields `86cafee8`. 1525 + 3 + 6 = 1534. Re-derived by this author; the prior revision paired `102dc507` with 1525, so a test written faithfully to it would have failed a correct build.)
+- Guardrail: every path `install.sh` VENDORS is either inside the cone or inside a named exclusion class, enforced at build. (Not "every directory the payload ships": that formulation is retracted by the ADDENDUM and is what forced `ci/`, `cli/` and `template/` into the cone and guaranteed self-drift.)
 
 ## Scope
 
-In scope: the cone and `_rsha()` at `build.sh:353-355`, relocated to a new shared vendored library;
-recomputation and path-naming in `version.sh`, `lib/update-check.sh`, `audit-fleet.sh`; the build
-reconciler; `install.sh` vendoring the new library; a suite. `check-version-sync.sh` is deliberately
-NOT in scope: it has no installed side (`grep -c '\.cyberos'` = 0) and only shape-checks the token.
+In scope: the cone and `_rsha()` at `build.sh:353-355`, relocated to a new shared vendored library; recomputation and path-naming in `version.sh`, `lib/update-check.sh`, `audit-fleet.sh`; the build reconciler; `install.sh` vendoring the new library; a suite. `check-version-sync.sh` is deliberately NOT in scope: it has no installed side (`grep -c '\.cyberos'` = 0) and only shape-checks the token.
 
 ### Out of scope / Non-Goals
 
 - TASK-IMP-104's ordering guard. Correct as shipped; untouched.
-- Install-generated and operator-owned paths - the NINE of §1.5 (`memory/store/`, `gates.env`,
-  `config.yaml`, `.update-check-cache`, `AGENT-ENTRY.md`, `gates.env.bak.*`, `.install.lock`,
-  `manifest.yaml`, `VERSION`). Normatively excluded by §1.5 as kinded entries, not merely noted.
+- Install-generated and operator-owned paths - the NINE of §1.5 (`memory/store/`, `gates.env`, `config.yaml`, `.update-check-cache`, `AGENT-ENTRY.md`, `gates.env.bak.*`, `.install.lock`, `manifest.yaml`, `VERSION`). Normatively excluded by §1.5 as kinded entries, not merely noted.
 - Auto-repairing drift. Reporting is the deliverable; `install.sh` already re-vendors.
 - Tamper-evidence. §1.14 makes the prohibition normative rather than a hope in prose.
-- Build-side conditional copies that silently drop a file from the payload (`build.sh:198`). See
-  §3 - a recorded, uncovered gap, not a promise this task can keep.
+- Build-side conditional copies that silently drop a file from the payload (`build.sh:198`). See §3 - a recorded, uncovered gap, not a promise this task can keep.
 
 ## Dependencies
 
-None. TASK-IMP-104's guard runs before the lock and is untouched, and the new shared library sits
-beside `lib/version-compare.sh` without altering it.
+None. TASK-IMP-104's guard runs before the lock and is untouched, and the new shared library sits beside `lib/version-compare.sh` without altering it.
 
 ## AI Authorship Disclosure
 
 - **Tools used:** Claude (Opus 4.8) running the CyberOS task-author skill inside Cowork.
-- **Scope:** rewrite 5, 2026-07-18, after FIVE independent audits (4/10, 6/10, 6/10, 6/10, 8/10).
-  Rounds 1-3 patched only what each audit named. Round 4 fixed that and broke the flat line, but
-  shipped a false number of its own: it paired the corrected cone's digest `102dc507` with **1525**,
-  the file count of the cone §1.4 REJECTS, normatively, in AC 10 and Success Metrics - so a test
-  written faithfully to its own AC would have failed a correct implementation. That number was
-  published beneath THIS disclosure's predecessor, which asserted that "every numeric and
-  line-number claim was re-measured": the claim was true of everything round 4 INHERITED and false
-  of what it ORIGINATED. This disclosure is therefore scoped deliberately: **every number in this
-  document was re-derived from source at HEAD by this author during rewrite 5, including the ones
-  this author invented and including the ones the round-4 audit supplied** - the audit's own figures
-  were treated as claims to verify, not facts to copy. Re-derived and CONFIRMED: `102dc507` = 1534
-  files per side (and `86cafee8` = 1525, which is what 1525 actually counts); all four AC-10
-  combinations with their file counts; the memory 3/8 and store 0/5 splits. Re-derived and
-  CORRECTED: 1525 -> 1534 (AC 10, Success Metrics); `install.sh:636` cited as a temp-repo write when
-  it writes to `$HOME` (§1.7); `effort_hours: 16` against a breakdown summing to 17.5 (now 20.0,
-  re-added). Measured and ADDED: `version.sh`'s eighth invocation arm, executed against a fixture
-  rather than reasoned about. Claims that could not be measured are marked as gaps in §3 rather than
-  asserted.
-- **Human review:** scope approved at the 2026-07-18 PLAN gate; both HITL gates are recorded human
-  verdicts. The comparable-set, maintained-list and report-promise decisions are the operator's,
-  recorded in `source_decisions`. The cone grammar, the `exempt:` kind, `_rsha()`'s relocation, the
-  eighth arm's treatment and the effort figure are authors' decisions, each with rationale in
-  Alternatives and attributed by rewrite number in `source_decisions`.
+- **Scope:** rewrite 5, 2026-07-18, after FIVE independent audits (4/10, 6/10, 6/10, 6/10, 8/10). Rounds 1-3 patched only what each audit named. Round 4 fixed that and broke the flat line, but shipped a false number of its own: it paired the corrected cone's digest `102dc507` with **1525**, the file count of the cone §1.4 REJECTS, normatively, in AC 10 and Success Metrics - so a test written faithfully to its own AC would have failed a correct implementation. That number was published beneath THIS disclosure's predecessor, which asserted that "every numeric and line-number claim was re-measured": the claim was true of everything round 4 INHERITED and false of what it ORIGINATED. This disclosure is therefore scoped deliberately: **every number in this document was re-derived from source at HEAD by this author during rewrite 5, including the ones this author invented and including the ones the round-4 audit supplied** - the audit's own figures were treated as claims to verify, not facts to copy. Re-derived and CONFIRMED: `102dc507` = 1534 files per side (and `86cafee8` = 1525, which is what 1525 actually counts); all four AC-10 combinations with their file counts; the memory 3/8 and store 0/5 splits. Re-derived and CORRECTED: 1525 -> 1534 (AC 10, Success Metrics); `install.sh:636` cited as a temp-repo write when it writes to `$HOME` (§1.7); `effort_hours: 16` against a breakdown summing to 17.5 (now 20.0, re-added). Measured and ADDED: `version.sh`'s eighth invocation arm, executed against a fixture rather than reasoned about. Claims that could not be measured are marked as gaps in §3 rather than asserted.
+- **Human review:** scope approved at the 2026-07-18 PLAN gate; both HITL gates are recorded human verdicts. The comparable-set, maintained-list and report-promise decisions are the operator's, recorded in `source_decisions`. The cone grammar, the `exempt:` kind, `_rsha()`'s relocation, the eighth arm's treatment and the effort figure are authors' decisions, each with rationale in Alternatives and attributed by rewrite number in `source_decisions`.
 
 ## 1. Description (normative)
 

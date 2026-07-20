@@ -144,19 +144,19 @@ The INV service **MUST** ship the VietQR / Napas247 webhook handler at `POST /v1
 6. **MUST** be **append-only** on `payment_receipts` (per DEC-382 + task-audit skill rule 12). `REVOKE UPDATE, DELETE ON payment_receipts FROM cyberos_app`. The only mutation is `invoice_id` update which is handled by a privileged `inv_cash_applier` role (granted to TASK-INV-006's job).
 
 7. **MUST** expose `POST /v1/inv/webhooks/vietqr/{tenant_slug}` (per DEC-387). The per-tenant URL routes correctly without cross-tenant body inspection. Unknown slug → 404 `tenant_unknown`. The handler:
-    - Looks up tenant_id from slug.
-    - Verifies HMAC-SHA256 signature per §1 #8.
-    - Checks replay window per §1 #9.
-    - Checks idempotency per §1 #10.
-    - Parses transfer_memo for invoice reference per §1 #11.
-    - INSERT into payment_receipts (atomic with memory audit emit).
-    - Returns 200 OK within 5s p95 (per DEC-390).
+- Looks up tenant_id from slug.
+- Verifies HMAC-SHA256 signature per §1 #8.
+- Checks replay window per §1 #9.
+- Checks idempotency per §1 #10.
+- Parses transfer_memo for invoice reference per §1 #11.
+- INSERT into payment_receipts (atomic with memory audit emit).
+- Returns 200 OK within 5s p95 (per DEC-390).
 
 8. **MUST** verify HMAC-SHA256 signature (per DEC-380). Signature in header `X-Napas-Signature: hex(HMAC-SHA256(secret, body))`. The handler:
-    - Loads per-tenant active secret from `webhook_secrets` (KMS-decrypted).
-    - Computes HMAC-SHA256 over the raw body bytes (NOT the parsed JSON — preserves byte-for-byte).
-    - Compares constant-time via `subtle::ConstantTimeEq`.
-    - Mismatch → 401 `signature_invalid` + emit `inv.webhook_rejected` memory row with `reason='signature_invalid'`.
+- Loads per-tenant active secret from `webhook_secrets` (KMS-decrypted).
+- Computes HMAC-SHA256 over the raw body bytes (NOT the parsed JSON — preserves byte-for-byte).
+- Compares constant-time via `subtle::ConstantTimeEq`.
+- Mismatch → 401 `signature_invalid` + emit `inv.webhook_rejected` memory row with `reason='signature_invalid'`.
 
 9. **MUST** validate replay window (per DEC-389). The body MUST contain a `ts` field (ISO-8601 UTC). The handler checks `|server_now - ts| ≤ 5 minutes`. Outside window → 401 `webhook_expired` + emit `inv.webhook_rejected` with `reason='replay_window_exceeded'`.
 
@@ -165,11 +165,11 @@ The INV service **MUST** ship the VietQR / Napas247 webhook handler at `POST /v1
 11. **MUST** parse `transfer_memo` for invoice reference (per DEC-383). Regex: `^(HD|INV)(\d{6,12})\b`. Match → `invoice_id` looked up via `invoices WHERE tenant_id=$1 AND invoice_number=$2`; if invoice exists in tenant scope, set `invoice_id` column. No match OR invoice not found → `invoice_id = NULL` (TASK-INV-006 cash application handles later).
 
 12. **MUST** emit memory audit rows on every webhook outcome (per DEC-388):
-    - `inv.payment_received` — happy path; carries `{receipt_id, tenant_id, bank_code, amount_minor, currency, transaction_reference, transfer_memo_scrubbed, invoice_id, ts_ns}`.
-    - `inv.webhook_rejected` — HMAC fail / replay window / parse error; carries `{tenant_id, reason, source_ip_hash16, payload_sha256, ts_ns}`.
-    - `inv.payment_matched_to_invoice` — when memo parser matches an invoice; carries `{receipt_id, invoice_id, matched_via='memo_parser', ts_ns}`.
-    - `inv.payment_unmatched` — when memo parser yields no invoice; carries `{receipt_id, transfer_memo_scrubbed, ts_ns}`.
-    - `inv.duplicate_webhook_received` — idempotency hit; sev-3.
+- `inv.payment_received` — happy path; carries `{receipt_id, tenant_id, bank_code, amount_minor, currency, transaction_reference, transfer_memo_scrubbed, invoice_id, ts_ns}`.
+- `inv.webhook_rejected` — HMAC fail / replay window / parse error; carries `{tenant_id, reason, source_ip_hash16, payload_sha256, ts_ns}`.
+- `inv.payment_matched_to_invoice` — when memo parser matches an invoice; carries `{receipt_id, invoice_id, matched_via='memo_parser', ts_ns}`.
+- `inv.payment_unmatched` — when memo parser yields no invoice; carries `{receipt_id, transfer_memo_scrubbed, ts_ns}`.
+- `inv.duplicate_webhook_received` — idempotency hit; sev-3.
 
 13. **MUST** PII-scrub `sender_account`, `sender_name`, `transfer_memo` via TASK-MEMORY-111 BEFORE chain commit. Raw values retained in tenant-scoped Postgres rows; chain holds scrubbed.
 
@@ -178,24 +178,24 @@ The INV service **MUST** ship the VietQR / Napas247 webhook handler at `POST /v1
 15. **MUST** alarm at sev-2 on > 10 webhook rejections per tenant per hour (per DEC-391). Counter: `inv_webhook_rejected_total{tenant_id, reason}`; OBS rule fires when rolling-1h sum exceeds 10. Reasons may include rotated secret not yet propagated, attack attempt, or Napas247 bug.
 
 16. **MUST** support HMAC secret rotation via `POST /v1/inv/webhook-secrets/rotate` (caller MUST have role `cfo` per TASK-AUTH-101). Rotation:
-    - Generates new 32-byte random secret.
-    - KMS-encrypts with tenant's KMS key.
-    - INSERT new row with `status='active'`.
-    - UPDATE prior active row to `status='rotated'` with `rotated_at=now()`.
-    - Per partial unique index — only one active at a time.
-    - 60-second overlap: both old + new secrets accepted (operator coordinates with Napas247 portal).
-    - After 60s, only new secret accepted.
+- Generates new 32-byte random secret.
+- KMS-encrypts with tenant's KMS key.
+- INSERT new row with `status='active'`.
+- UPDATE prior active row to `status='rotated'` with `rotated_at=now()`.
+- Per partial unique index — only one active at a time.
+- 60-second overlap: both old + new secrets accepted (operator coordinates with Napas247 portal).
+- After 60s, only new secret accepted.
 
 17. **MUST** complete handler in ≤ 200 ms p95 measured server-side (excluding network). Performance test `webhook_perf_test` asserts.
 
 18. **MUST** emit OTel span `inv.webhook.vietqr` with attributes: `tenant_id`, `bank_code`, `outcome` (success | signature_invalid | replay_window_exceeded | tenant_unknown | currency_unsupported | duplicate | parse_error | not_vnd).
 
 19. **MUST** emit OTel metrics:
-    - `inv_webhook_received_total{tenant_id, bank_code, outcome}` (counter).
-    - `inv_webhook_rejected_total{tenant_id, reason}` (counter — sev-2 alarm at > 10/h).
-    - `inv_payment_amount_minor{tenant_id, currency}` (counter — sum of amounts; for revenue dashboards).
-    - `inv_webhook_latency_ms` (histogram; SLO p95 < 200ms).
-    - `inv_payment_matched_total{tenant_id, matched_via}` (counter; matched_via ∈ {memo_parser, manual, cash_applier}).
+- `inv_webhook_received_total{tenant_id, bank_code, outcome}` (counter).
+- `inv_webhook_rejected_total{tenant_id, reason}` (counter — sev-2 alarm at > 10/h).
+- `inv_payment_amount_minor{tenant_id, currency}` (counter — sum of amounts; for revenue dashboards).
+- `inv_webhook_latency_ms` (histogram; SLO p95 < 200ms).
+- `inv_payment_matched_total{tenant_id, matched_via}` (counter; matched_via ∈ {memo_parser, manual, cash_applier}).
 
 20. **MUST** ensure HMAC secret retrieval is **cached** (in-memory) with 60-second TTL — secret rotation must propagate within 60s. Cache is per-process; multiple gateway instances each maintain their own. The handler ALWAYS validates against both old + new during the 60s overlap window.
 
@@ -206,9 +206,9 @@ The INV service **MUST** ship the VietQR / Napas247 webhook handler at `POST /v1
 23. **MUST** persist the raw webhook body's SHA-256 hash (`napas_payload_sha256`) for forensic replay (per §1 #1). The full body is NOT stored (could be large); the hash + the structured fields are sufficient for "did this exact webhook arrive?" reconstruction.
 
 24. **MUST** use the `inv_cash_applier` SQL role for TASK-INV-006's later mutations of `payment_receipts.invoice_id`. The role:
-    - Has UPDATE on `payment_receipts (invoice_id ONLY)` (column-level grant).
-    - Cannot UPDATE other columns.
-    - Cannot DELETE.
+- Has UPDATE on `payment_receipts (invoice_id ONLY)` (column-level grant).
+- Cannot UPDATE other columns.
+- Cannot DELETE.
 
 25. **MUST** emit a `inv.webhook_rejected` memory row with `reason='tenant_unknown'` even when the slug is invalid (logging-only path; no tenant_id; uses `tenant_id = nil-uuid` for the chain). This catches probing attacks against URL paths.
 

@@ -50,10 +50,7 @@ Change the status renderer's default provenance stamp from the current git HEAD 
 The stamp default is repo position, not corpus content:
 
 <untrusted_content source="tools/docs-site/render-status-hub.mjs:304-307">
-// CYBEROS_COMMIT pins the provenance stamp. A page staged by the pre-commit hook necessarily
-// carries the PARENT commit's sha (the new one does not exist yet), so a later re-render would
-// differ from it by the stamp alone. Pinning lets a freshness check compare CONTENT.
-const COMMIT = process.env.CYBEROS_COMMIT || gitCommit(ROOT);
+// CYBEROS_COMMIT pins the provenance stamp. A page staged by the pre-commit hook necessarily // carries the PARENT commit's sha (the new one does not exist yet), so a later re-render would // differ from it by the stamp alone. Pinning lets a freshness check compare CONTENT. const COMMIT = process.env.CYBEROS_COMMIT || gitCommit(ROOT);
 </untrusted_content>
 
 No production caller (install, migrate, status-page.sh, run-gates, the pre-commit hooks) sets `CYBEROS_COMMIT`, so the mitigation is dead code in practice. Reproduced twice on the sachviet consumer repo on 2026-07-16: each re-install on an unchanged corpus dirtied the tree by one stamp; committing that (df24cb3) armed the next diff. A tracked, generated file that can never be clean is a standing false-positive in every `git status`.

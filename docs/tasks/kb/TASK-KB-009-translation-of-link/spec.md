@@ -93,15 +93,15 @@ The KB service **MUST** ship translation linking at `services/kb/src/translation
 3. **MUST** enforce bidirectional link per DEC-1960 — if A.translation_of=B, then B.translation_of MUST equal A. Validated at write.
 
 4. **MUST** check parity at `parity_checker.rs::check(doc, translation)` per DEC-1962:
-   - Triggered on source doc version update
-   - TASK-AI-003 generates diff-summary of changes
-   - Alert emitted (memory audit + CDO notification)
-   - CDO reviews + propagates to translation
+- Triggered on source doc version update
+- TASK-AI-003 generates diff-summary of changes
+- Alert emitted (memory audit + CDO notification)
+- CDO reviews + propagates to translation
 
 5. **MUST** route reader display per DEC-1963 at `locale_router.rs::route(doc, user_locale)`:
-   - If doc.locale matches user_locale, return doc
-   - Else if doc has translation_of in user_locale, redirect to translation
-   - Else show as-is with banner "Translation not available"
+- If doc.locale matches user_locale, return doc
+- Else if doc has translation_of in user_locale, redirect to translation
+- Else show as-is with banner "Translation not available"
 
 6. **MUST** expose endpoints:
    ```text
@@ -194,8 +194,7 @@ async fn parity_alert_on_source_update() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** TASK-KB-001.
-**Cross-module:** TASK-AI-003 (diff summary), TASK-KB-007 (Q&A respects locale), TASK-AUTH-101 (CDO), TASK-MEMORY-111 (PII).
+**Upstream:** TASK-KB-001. **Cross-module:** TASK-AI-003 (diff summary), TASK-KB-007 (Q&A respects locale), TASK-AUTH-101 (CDO), TASK-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

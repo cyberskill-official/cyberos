@@ -1,15 +1,8 @@
 # Playground triage
 
-A worth-it pass over the outside sources sitting in `playground/` (gitignored, Stage 0). The question
-for each: does it strengthen a real CyberOS module enough to earn a Stage-1 absorption, and if so,
-which one and how. Written 2026-06-24. Nothing here is absorbed yet; this is the shortlist that decides
-what gets a deeper verdict note.
+A worth-it pass over the outside sources sitting in `playground/` (gitignored, Stage 0). The question for each: does it strengthen a real CyberOS module enough to earn a Stage-1 absorption, and if so, which one and how. Written 2026-06-24. Nothing here is absorbed yet; this is the shortlist that decides what gets a deeper verdict note.
 
-Read against the module roster and the honest frontier in `docs/tasks/remaining-build-plan.md`.
-The CyberSkill-authored items (CYBEROS_STRATEGY.md, CyberOS-docs/, the cyberos-*.md notes,
-cyberos-memory-workbench-archive/, cyberskill-vn-skills/, the agentic-memory mhtml and the
-dreaming-agents mp4) are our own prior work, not outside sources, so they are out of scope here - the
-memory archive already has a path forward via `cyberos import` (see CONSUMED-FROM-WORKBENCH.md).
+Read against the module roster and the honest frontier in `docs/tasks/remaining-build-plan.md`. The CyberSkill-authored items (CYBEROS_STRATEGY.md, CyberOS-docs/, the cyberos-*.md notes, cyberos-memory-workbench-archive/, cyberskill-vn-skills/, the agentic-memory mhtml and the dreaming-agents mp4) are our own prior work, not outside sources, so they are out of scope here - the memory archive already has a path forward via `cyberos import` (see CONSUMED-FROM-WORKBENCH.md).
 
 ## Tier 1 - clear module fit, deep-dive candidates
 
@@ -38,11 +31,6 @@ memory archive already has a path forward via `cyberos import` (see CONSUMED-FRO
 
 ## Recommendation
 
-Start with code-review-graph. It has the clearest module fit (cuo review cost + an MCP tool), the
-absorption seam is the same federation pattern just proven with obs triage, and Python means I can read
-and even prototype it here in the sandbox rather than waiting on the Mac. hermes-agent is the strongest
-second, as a pattern source for the dream loop. claude-mem is worth a verdict mostly to confirm whether
-it beats the memory module on anything; expect a short note either way.
+Start with code-review-graph. It has the clearest module fit (cuo review cost + an MCP tool), the absorption seam is the same federation pattern just proven with obs triage, and Python means I can read and even prototype it here in the sandbox rather than waiting on the Mac. hermes-agent is the strongest second, as a pattern source for the dream loop. claude-mem is worth a verdict mostly to confirm whether it beats the memory module on anything; expect a short note either way.
 
-Next action per pick: a Stage-0 verdict note at `docs/absorptions/<source>-absorption.md` - read in
-full, state overlap/gaps/license, and make the worth-it call before any task mapping or vendoring.
+Next action per pick: a Stage-0 verdict note at `docs/absorptions/<source>-absorption.md` - read in full, state overlap/gaps/license, and make the worth-it call before any task mapping or vendoring.

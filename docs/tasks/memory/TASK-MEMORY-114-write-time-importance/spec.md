@@ -91,10 +91,10 @@ The write-time importance scoring layer is an **optional preprocessor** sitting 
 1. **MUST** be **optional**, opt-in via `cyberos put --score-importance`. Default `cyberos put` writes MUST NOT call any LLM and MUST NOT touch the network (DEC-200). This preserves the offline-first guarantee of the memory.
 2. **MUST** allow the operator to explicitly override the scored value via `--importance <float>` on the same `cyberos put` invocation. Both flags together: `--importance` wins; no LLM call is made (saves cost when the operator already knows).
 3. **MUST** select the active Invoker through the same priority chain as the CUO supervisor (Phase 3):
-    1. CLI flag `--invoker {mock|anthropic}` (highest priority)
-    2. Env var `CYBEROS_IMPORTANCE_INVOKER`
-    3. `manifest.json:importance.invoker` (string enum `mock | anthropic`)
-    4. Default `"mock"` when no API key is detected; `"anthropic"` when `ANTHROPIC_API_KEY` is set in env
+1. CLI flag `--invoker {mock|anthropic}` (highest priority)
+2. Env var `CYBEROS_IMPORTANCE_INVOKER`
+3. `manifest.json:importance.invoker` (string enum `mock | anthropic`)
+4. Default `"mock"` when no API key is detected; `"anthropic"` when `ANTHROPIC_API_KEY` is set in env
 4. **MUST** treat `CYBEROS_DISABLE_LLM=1` (env) as a hard override forcing `MockInvoker` regardless of any other setting. This is the offline / CI / air-gapped escape hatch.
 5. **MUST** define `ImportanceInvoker` as a Protocol with method `async def score(content: str) -> ScoreResult` returning the typed record:
     ```python

@@ -1,27 +1,16 @@
 # Google Play submission answer sheet (CyberOS)
 
-Everything the Play Console asks for, answered, so the console work is copy-paste rather than
-decision-making. Package `os.cyberskill.world`. Track: **internal** first.
+Everything the Play Console asks for, answered, so the console work is copy-paste rather than decision-making. Package `os.cyberskill.world`. Track: **internal** first.
 
-The CI side is already done: `ANDROID_RELEASE=true`, the keystore secrets are set, and the android
-job builds and signs the `.aab` on every `v*` tag. What is left is Play's own paperwork, plus one
-manual upload that the API is not permitted to do for you (see the bottom of this file).
+The CI side is already done: `ANDROID_RELEASE=true`, the keystore secrets are set, and the android job builds and signs the `.aab` on every `v*` tag. What is left is Play's own paperwork, plus one manual upload that the API is not permitted to do for you (see the bottom of this file).
 
 ## Before you start: the two real blockers
 
-1. **The privacy and deletion pages must be deployed.** They are at
-   `landing-page/app/[lang]/cyberos/{privacy,delete-account}`. Play fetches both URLs and will
-   reject a 404. Ship the landing page first, then confirm:
-   - <https://cyberskill.world/en/cyberos/privacy>
-   - <https://cyberskill.world/en/cyberos/delete-account>
+1. **The privacy and deletion pages must be deployed.** They are at `landing-page/app/[lang]/cyberos/{privacy,delete-account}`. Play fetches both URLs and will reject a 404. Ship the landing page first, then confirm:
+- <https://cyberskill.world/en/cyberos/privacy>
+- <https://cyberskill.world/en/cyberos/delete-account>
 
-2. **CyberOS has user-generated content**, because it has chat. You must declare user-to-user
-   communication truthfully in the content rating questionnaire, and doing so puts the app under
-   Play's UGC policy: an in-app way to **report** objectionable content, an in-app way to **block**
-   another user, and a published content policy. CyberOS has none of these today. The workspace is
-   invite-only and org-scoped, which makes the moderation load light, but the mechanisms still have
-   to exist. Raise this as a task against the chat module before you submit. Declaring UGC without
-   the controls gets you rejected; not declaring it gets you pulled later, which is worse.
+2. **CyberOS has user-generated content**, because it has chat. You must declare user-to-user communication truthfully in the content rating questionnaire, and doing so puts the app under Play's UGC policy: an in-app way to **report** objectionable content, an in-app way to **block** another user, and a published content policy. CyberOS has none of these today. The workspace is invite-only and org-scoped, which makes the moderation load light, but the mechanisms still have to exist. Raise this as a task against the chat module before you submit. Declaring UGC without the controls gets you rejected; not declaring it gets you pulled later, which is worse.
 
 ## Set up your app
 
@@ -33,14 +22,12 @@ https://cyberskill.world/en/cyberos/privacy
 
 ### Sign in details (app access)
 
-CyberOS is entirely behind Google SSO. A reviewer who cannot sign in sees a login wall and rejects
-the app - this is the single most common cause of rejection for a workspace tool.
+CyberOS is entirely behind Google SSO. A reviewer who cannot sign in sees a login wall and rejects the app - this is the single most common cause of rejection for a workspace tool.
 
 Choose **All or some functionality is restricted**, then add one instruction set:
 
 - Name: `Google sign-in (required)`
-- Username: a real Google account you control, provisioned into a demo workspace. Create
-  `play-review@cyberskill.world` for this and nothing else.
+- Username: a real Google account you control, provisioned into a demo workspace. Create `play-review@cyberskill.world` for this and nothing else.
 - Password: that account's password.
 - Any other instructions:
   > CyberOS is a private workspace tool. Tap "Sign in with Google" and use the credentials above.
@@ -48,8 +35,7 @@ Choose **All or some functionality is restricted**, then add one instruction set
   > functionality is reachable after sign-in. There is no public sign-up: access is granted by a
   > workspace administrator.
 
-Keep that account alive and its workspace populated. If it stops working, every future update is
-rejected until it does.
+Keep that account alive and its workspace populated. If it stops working, every future update is rejected until it does.
 
 ### Ads
 
@@ -65,14 +51,12 @@ Category: **Social networking / communication**. Answer honestly:
 - Violence, sexuality, profanity, drugs, gambling, in-app purchases: **No** to all.
 - Digital purchases: **No**.
 
-Expect a rating around Teen / PEGI 12 driven purely by the user-communication answer. That is
-normal for a chat app and is not a problem.
+Expect a rating around Teen / PEGI 12 driven purely by the user-communication answer. That is normal for a chat app and is not a problem.
 
 ### Target audience and content
 
 - Target age group: **18 and over**, only.
-- Do not tick any bracket under 18. Doing so puts CyberOS into the Families policy programme, which
-  raises the bar sharply for a tool no child will ever open.
+- Do not tick any bracket under 18. Doing so puts CyberOS into the Families policy programme, which raises the bar sharply for a tool no child will ever open.
 - Appeals to children: **No**.
 
 ### Data safety
@@ -83,11 +67,9 @@ Overall:
 
 - Does your app collect or share any of the required user data types? **Yes**.
 - Is all of the user data collected by your app encrypted in transit? **Yes** (TLS everywhere).
-- Do you provide a way for users to request that their data is deleted? **Yes** -
-  `https://cyberskill.world/en/cyberos/delete-account`.
+- Do you provide a way for users to request that their data is deleted? **Yes** - `https://cyberskill.world/en/cyberos/delete-account`.
 
-Data types collected (all: collected = yes, shared = no, processed ephemerally = no, required = yes,
-purpose = App functionality; add Account management where noted):
+Data types collected (all: collected = yes, shared = no, processed ephemerally = no, required = yes, purpose = App functionality; add Account management where noted):
 
 | Category | Type | Why |
 | --- | --- | --- |
@@ -99,42 +81,25 @@ purpose = App functionality; add Account management where noted):
 | Files and docs | Files and docs | Only files the user chooses to attach to a message. App functionality. |
 | Device or other IDs | Device or other IDs | The push notification token, so notifications can be delivered. App functionality. |
 
-Declare **nothing** under Location, Contacts, Calendar, Financial info, Health, Web browsing, or
-App activity - CyberOS collects none of it. Do not tick "Crash logs" or "Diagnostics" unless and
-until you actually ship a crash SDK; server-side logs are not client-collected data and are not
-declarable here.
+Declare **nothing** under Location, Contacts, Calendar, Financial info, Health, Web browsing, or App activity - CyberOS collects none of it. Do not tick "Crash logs" or "Diagnostics" unless and until you actually ship a crash SDK; server-side logs are not client-collected data and are not declarable here.
 
-Data is not shared with any third party for Play's purposes: Google (identity), Vultr (hosting) and
-Supabase (database) are service providers processing on our behalf, which Play explicitly excludes
-from "sharing".
+Data is not shared with any third party for Play's purposes: Google (identity), Vultr (hosting) and Supabase (database) are service providers processing on our behalf, which Play explicitly excludes from "sharing".
 
 ### The AI feature, and why it is still not "sharing"
 
-This needs its own paragraph, because it is the one place the app hands message text to a party that is
-**not** our service provider, and getting it wrong is an under-declaration.
+This needs its own paragraph, because it is the one place the app hands message text to a party that is **not** our service provider, and getting it wrong is an under-declaration.
 
-CyberOS ships AI features (channel summary, action extraction, reply suggestions) in the same
-`apps/web` bundle that Capacitor wraps as the Android app, so they are in scope for this declaration.
-Today an employee supplies **their own API key** for an external model provider. That means the provider
-is *the user's*, not ours - so the **service-provider exemption does not apply to it**. Do not rely on it.
+CyberOS ships AI features (channel summary, action extraction, reply suggestions) in the same `apps/web` bundle that Capacitor wraps as the Android app, so they are in scope for this declaration. Today an employee supplies **their own API key** for an external model provider. That means the provider is *the user's*, not ours - so the **service-provider exemption does not apply to it**. Do not rely on it.
 
-What does apply is Play's **user-initiated transfer** exemption: data sent to a third party because of a
-specific action the user took, where the user reasonably expects the data to be sent. Every AI call in
-CyberOS is exactly that:
+What does apply is Play's **user-initiated transfer** exemption: data sent to a third party because of a specific action the user took, where the user reasonably expects the data to be sent. Every AI call in CyberOS is exactly that:
 
-- `AiPanel` is mounted only when the user opens it (`aiOpen &&` in `pages/Chat.tsx`); it is not rendered,
-  and sends nothing, until then.
+- `AiPanel` is mounted only when the user opens it (`aiOpen &&` in `pages/Chat.tsx`); it is not rendered, and sends nothing, until then.
 - `suggestReplies()` is bound to the composer's sparkle button (`onSuggestReplies`).
 - There is **no** background, on-open, or scheduled AI call anywhere in the client.
 
-So: **shared = No** is correct, and the published privacy policy already discloses the transfer ("the text
-you send to it is passed to the model provider that serves that feature").
+So: **shared = No** is correct, and the published privacy policy already discloses the transfer ("the text you send to it is passed to the model provider that serves that feature").
 
-**This is a live constraint on the codebase, not a one-off answer.** The exemption holds *only* while every
-AI call is user-initiated. The moment anything auto-summarises a channel on open, pre-fetches suggestions in
-the background, or runs AI on a schedule, message text leaves the device without a user action - and
-"Other in-app messages" must be re-declared with `shared = Yes`, which changes the store listing. If you add
-a background AI path, change this form in the same PR.
+**This is a live constraint on the codebase, not a one-off answer.** The exemption holds *only* while every AI call is user-initiated. The moment anything auto-summarises a channel on open, pre-fetches suggestions in the background, or runs AI on a schedule, message text leaves the device without a user action - and "Other in-app messages" must be re-declared with `shared = Yes`, which changes the store listing. If you add a background AI path, change this form in the same PR.
 
 (A future self-hosted model removes the question entirely: nothing leaves our infrastructure.)
 
@@ -201,17 +166,13 @@ Graphics you still have to produce:
 
 - App icon: 512 x 512 PNG, 32-bit, no transparency. Use the CyberOS mark from the design system.
 - Feature graphic: 1024 x 500 PNG or JPEG. No transparency.
-- Phone screenshots: at least 2, up to 8. 16:9 or 9:16, each side between 320 and 3840 px. Take
-  them from the real app - a login screen, the channel list, a channel with messages, a DM.
+- Phone screenshots: at least 2, up to 8. 16:9 or 9:16, each side between 320 and 3840 px. Take them from the real app - a login screen, the channel list, a channel with messages, a DM.
 
-Do not put a device frame or heavy marketing copy on the screenshots; Play rejects listings whose
-screenshots misrepresent the app.
+Do not put a device frame or heavy marketing copy on the screenshots; Play rejects listings whose screenshots misrepresent the app.
 
 ## The one manual upload
 
-The Play Developer API **cannot create the first release** for a package. Google requires the first
-bundle to be uploaded by hand through the console so the app passes one review before API access is
-permitted. Skip this and `upload-google-play` fails with:
+The Play Developer API **cannot create the first release** for a package. Google requires the first bundle to be uploaded by hand through the console so the app passes one review before API access is permitted. Skip this and `upload-google-play` fails with:
 
 ```
 Only releases with status draft may be created on draft app.
@@ -221,19 +182,14 @@ So, once:
 
 1. Tag a release. CI builds and signs the `.aab` in the `android` job.
 2. `gh run download --name cyberos-android-aab`
-3. Play Console → Testing → Internal testing → Create new release. Accept **Play App Signing** when
-   offered: Google holds the app signing key, your keystore stays the upload key. Upload the
-   `.aab`, add release notes, **Review release**, **Start rollout to internal testing**.
+3. Play Console → Testing → Internal testing → Create new release. Accept **Play App Signing** when offered: Google holds the app signing key, your keystore stays the upload key. Upload the `.aab`, add release notes, **Review release**, **Start rollout to internal testing**.
 4. Add yourself to the internal tester list first, or there is no one to roll out to.
 
 After that, every tag publishes on its own.
 
 ## Turning on automated publishing
 
-Play Console → **Setup → API access** → link a Google Cloud project → create a service account.
-In Google Cloud: IAM & Admin → Service Accounts → create `play-publisher` (no project roles needed)
-→ Keys → Add key → JSON. Back in Play Console → **Users and permissions** → the service account →
-**App permissions → CyberOS** → grant only **Release apps to testing tracks** → Invite.
+Play Console → **Setup → API access** → link a Google Cloud project → create a service account. In Google Cloud: IAM & Admin → Service Accounts → create `play-publisher` (no project roles needed) → Keys → Add key → JSON. Back in Play Console → **Users and permissions** → the service account → **App permissions → CyberOS** → grant only **Release apps to testing tracks** → Invite.
 
 Then:
 
@@ -244,24 +200,15 @@ gh variable set PLAY_PUBLISH --body true
 
 Keep the JSON key outside the repo, next to the Apple `.p12` and the Tauri updater key.
 
-Play permissions take a few minutes to reach the API. If the first automated run 401s, re-run it
-before you debug anything.
+Play permissions take a few minutes to reach the API. If the first automated run 401s, re-run it before you debug anything.
 
 ## versionCode
 
-Read from the root `BUILD_NUMBER` file by `scripts/stamp-release-version.mjs`. It is a plain monotonic
-counter, incremented on every version bump, and it is deliberately NOT derived from `VERSION`.
+Read from the root `BUILD_NUMBER` file by `scripts/stamp-release-version.mjs`. It is a plain monotonic counter, incremented on every version bump, and it is deliberately NOT derived from `VERSION`.
 
-It used to be derived (`major*10000 + minor*100 + patch`, so 1.2.0 became 10200). That formula quietly
-couples a marketing decision to a number that can never go backwards. Play remembers every versionCode it
-has ever accepted - 10700 among them - and refuses anything at or below the highest it has seen, with no
-appeal and no reset. So when `VERSION` was rolled back to 0.1.0 for the pre-1.0 run-up, the derived code
-would have become 100, and every Android upload from then on would have been rejected permanently. The
-stamper now refuses outright to stamp a `BUILD_NUMBER` at or below 10700.
+It used to be derived (`major*10000 + minor*100 + patch`, so 1.2.0 became 10200). That formula quietly couples a marketing decision to a number that can never go backwards. Play remembers every versionCode it has ever accepted - 10700 among them - and refuses anything at or below the highest it has seen, with no appeal and no reset. So when `VERSION` was rolled back to 0.1.0 for the pre-1.0 run-up, the derived code would have become 100, and every Android upload from then on would have been rejected permanently. The stamper now refuses outright to stamp a `BUILD_NUMBER` at or below 10700.
 
 Practical consequences:
 
-- `BUILD_NUMBER` only ever increases. Never hand-edit it downwards, and never "reset" it to match a
-  version. If it is ever lost, recover it from git history rather than guessing.
-- Play still rejects any versionCode it has already seen, so **never re-tag a version you have already
-  pushed to Play**. Bump and move on.
+- `BUILD_NUMBER` only ever increases. Never hand-edit it downwards, and never "reset" it to match a version. If it is ever lost, recover it from git history rather than guessing.
+- Play still rejects any versionCode it has already seen, so **never re-tag a version you have already pushed to Play**. Bump and move on.
