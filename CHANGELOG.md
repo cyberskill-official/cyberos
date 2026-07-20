@@ -2,6 +2,10 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.0.2] - 2026-07-20
+
+Maintenance release.
+
 ## [1.0.0] - 2026-07-14
 
 The first stable release of CyberOS - the deliberate 1.0.0 call. The 0.x line hardened the platform's governed development machinery end to end; 1.0.0 commits to it.
