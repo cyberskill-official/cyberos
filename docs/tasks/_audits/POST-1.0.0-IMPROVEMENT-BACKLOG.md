@@ -98,3 +98,25 @@ Fix is one job:
 On ubuntu that runs all 37 suites including `test_release_assets.sh`, giving it its first execution and converting a local convention into an enforced gate. It also gives the suite its first run on a platform other than this Mac, which is how the five bash-3.2 and BSD-userland defects fixed on 2026-07-19 went unnoticed for as long as they did.
 
 Not a payload defect and not a 1.0.0 blocker - the release is verified by the guards that DID run (tag-equals-VERSION, check-version-sync, deterministic assets, cross-machine byte-identical plugin). But it is the highest-value single change on this list.
+
+## The local build copies untracked and gitignored files into the payload (2026-07-20)
+
+Found while verifying the estate sweep. A local `build.sh` run on `069d4dff` produced `rules_sha=a9c848e5`. CI, building the same commit, produced `8745b0fd`. Same source, two fingerprints.
+
+The diff is six files, all present locally and absent in CI, all inside the fingerprinted `cuo` tree:
+
+- `cuo/gates/caf/caf/.DS_Store` - macOS Finder metadata, matched by `.gitignore:15`
+- `cuo/gates/caf/caf/core/evals/code_audit_validator.egg-info/` - five files, artifacts of a local `pip install -e`
+
+Zero content differences on any shared path. The payloads are functionally identical; only the fingerprint diverges.
+
+Two defects, and the second is the serious one:
+
+1. `build.sh` copies the module tree without consulting git, so anything a developer happens to have sitting in `modules/` - editor droppings, build artifacts, gitignored files - ships in the payload and changes `rules_sha`. The source tree currently carries 4 `.DS_Store` files and 1 `egg-info` directory.
+2. This makes `rules_sha` non-reproducible off a clean checkout, which is the one property it exists to provide. TASK-IMP-074 defines it as a content fingerprint over `cuo/plugin/mcp/cli/memory`; a fingerprint that varies with untracked local state cannot detect drift, because it cannot distinguish "the rules changed" from "someone opened a folder in Finder".
+
+The failure mode is not theoretical. It cost a full re-sweep this session: 20 repos were installed from the contaminated local `dist`, every one landed on `a9c848e5`, and every one would have reported RULE DRIFT against the released payload at the first update check - drift with no corresponding rule change, which is the exact false positive that erodes trust in the signal. All 20 were re-installed from the released artifact and now carry `8745b0fd`.
+
+Fix is to make the build read from git rather than from the working tree - `git archive`, or `git ls-files` to drive the copy - so the payload is by construction the tracked content at that commit and nothing else. An `--exclude` list is the weaker form: it fixes the two extensions seen today and stays silent on the next one.
+
+Worth a guard alongside the fix: have the release job compare its own `rules_sha` against a local build, or simply fail the build when the module tree contains untracked files. Today the divergence was only visible because the sweep compared an installed machine against a downloaded asset by hand.
