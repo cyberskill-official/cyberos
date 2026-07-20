@@ -22,6 +22,16 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<!-- Answers the export-compliance question in the binary instead of in the App Store Connect UI, where
+	     it is otherwise asked on EVERY upload and blocks the build from being submitted until answered.
+	     Declaring it here removes a manual step per release and, more to the point, removes the chance of
+	     answering it wrong in a hurry. CyberOS qualifies for the exemption: its only cryptography is the
+	     platform's own - HTTPS/TLS to its API and the standard WebRTC media stack for calls - and it ships
+	     no custom, proprietary or non-standard cryptography of its own.
+	     Revisit this the moment that stops being true. This is an export-compliance declaration, not a
+	     formality, and a false one is a misstatement rather than a mis-set build flag. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<!-- Purpose strings. These are NOT optional and NOT cosmetic: iOS terminates the process the instant an
