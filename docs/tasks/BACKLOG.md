@@ -369,6 +369,9 @@ Totals: 337 draft, 4 ready_to_implement, 12 implementing, 196 done, 2 on_hold, 2
 - [draft] TASK-IMP-124-authors-do-not-check-what-they-originate - Authors do not check what they originate
 - [draft] TASK-IMP-125-mechanical-is-behaviour-not-path - mechanical means deterministic, not docs-tools/
 - [done] TASK-IMP-126-uninstall-completeness - Uninstall completeness - MCP, dangling skill links, hook newline
+- [draft] TASK-IMP-127-payload-build-reads-git - Payload build MUST read from git, not the working tree
+- [draft] TASK-IMP-128-run-suite-in-ci - Run the test suite in CI on ubuntu
+- [draft] TASK-IMP-129-uninstall-preserves-config - Uninstall MUST preserve .cyberos/config.yaml, the override home
 
 ## inv  (10 draft, 1 ready_to_implement)
 
