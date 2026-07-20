@@ -171,7 +171,7 @@ Totals: 340 draft, 4 ready_to_implement, 12 implementing, 196 done, 2 on_hold, 2
 - [done] TASK-CUO-205-single-backlog-write-path - Single backlog write path - /create-tasks delegates BACKLOG.md rows to backlog-state-update@2 (insert-row)
 - [done] TASK-CUO-206-ship-run-state-manifest - Ship run-state manifest (ship-manifest@1) - resumable 31-step chain + depends_on-aware queue selection
 - [done] TASK-CUO-207-gate-autodetect-portability - Portability hardening - install.sh gate autodetect for Go/JVM/.NET/PHP/Ruby + per-repo .cyberos/config.yaml overrides
-- [done] TASK-CUO-208-task-template-profile - task template profile - /create-tasks resolves engineering-spec@1 vs task@1 per repo, and the audit rubric follows
+- [done] TASK-CUO-208-fr-template-profile - task template profile - /create-tasks resolves engineering-spec@1 vs task@1 per repo, and the audit rubric follows
 - [done] TASK-CUO-209-full-sdp-vendoring - Vendor the full 14-stage SDP skill set by default - payload and plugin cover SOW through decommissioning, with a lifecycle map in GUIDE.md
 - [done] TASK-CUO-301-backlog-reader-orphaned - ship-tasks queue is permanently empty: backlog_reader parses a table BACKLOG.md that nothing generates
 
