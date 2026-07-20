@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.0.6] - 2026-07-20
+
+Fixed
+- separate the sign-in footer links
+
 ## [1.0.5] - 2026-07-20
 
 Fixed
