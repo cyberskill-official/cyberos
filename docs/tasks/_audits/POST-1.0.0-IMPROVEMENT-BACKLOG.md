@@ -155,3 +155,43 @@ public, so the naming decision is cheaper now than after. Options: rename one bi
 or teach the Python parser to recognise the installer verbs and point at
 `npx cyberos`, so the error names the real problem instead of listing memory
 subcommands.
+
+## The test suite never runs in CI (2026-07-20)
+
+Found while verifying B4. Two facts, both measured:
+
+- No workflow under `.github/workflows/` invokes `scripts/tests/run_all.sh`.
+- No workflow invokes `tools/install/tests/test_release_assets.sh`.
+
+That suite self-skips on macOS with the message "needs GNU tar (BSD/macOS host);
+runs on ubuntu/CI". It does not run on ubuntu/CI, because CI does not run the
+suite at all. The test names a CI that would execute it and that CI does not
+exist, so it has never run on any machine. It is the sharpest instance of the
+day's recurring pattern: a check that documents its own non-execution as though
+that were coverage.
+
+The wider consequence is the point. The 36 pass / 0 fail / 1 skip figure this
+release was judged against is enforced only by the local pre-commit hook - on the
+committer's machine, and only for code changes. A contributor without the hook,
+or any docs-only commit, bypasses it. Every "suite green" claim in this release,
+including the ones in D2, B3 and the re-vendor rows, rests on a human having run
+it by hand on one macOS laptop.
+
+Fix is one job:
+
+    suite:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v7
+        - run: bash scripts/tests/run_all.sh
+
+On ubuntu that runs all 37 suites including `test_release_assets.sh`, giving it
+its first execution and converting a local convention into an enforced gate. It
+also gives the suite its first run on a platform other than this Mac, which is
+how the five bash-3.2 and BSD-userland defects fixed on 2026-07-19 went unnoticed
+for as long as they did.
+
+Not a payload defect and not a 1.0.0 blocker - the release is verified by the
+guards that DID run (tag-equals-VERSION, check-version-sync, deterministic
+assets, cross-machine byte-identical plugin). But it is the highest-value single
+change on this list.
