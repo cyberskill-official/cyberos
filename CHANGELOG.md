@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.0.8] - 2026-07-21
+
+Fixed
+- release-mas
+
 ## [1.0.7] - 2026-07-20
 
 Fixed
