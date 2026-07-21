@@ -73,6 +73,9 @@ jobs:
               -T /usr/bin/codesign -T /usr/bin/productbuild
             rm -f /tmp/"$cert_var".p12
           done
+          curl -fsSL -o /tmp/AppleWWDRCAG3.cer https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer
+          security import /tmp/AppleWWDRCAG3.cer -k mas-build.keychain -T /usr/bin/codesign -T /usr/bin/productbuild
+          rm -f /tmp/AppleWWDRCAG3.cer
           security list-keychains -d user -s mas-build.keychain login.keychain
           security set-key-partition-list -S apple-tool:,apple: -s -k "$MAS_KEYCHAIN_PASSWORD" mas-build.keychain
 

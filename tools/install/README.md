@@ -120,9 +120,31 @@ The payload IS a plugin marketplace: `dist/cyberos/.claude-plugin/marketplace.js
 
 - Claude Code: `/plugin marketplace add /path/to/dist/cyberos`, then `/plugin install cyberos@cyberos`.
 - Claude desktop / Cowork: the Add picker wants a FILE - use `dist/cyberos/cyberos.plugin` (the one-file bundle build.sh produces; selecting a folder greys the Open button). The folder route works where marketplaces are supported: add `dist/cyberos` as a marketplace (its root carries `.claude-plugin/marketplace.json`).
+- Grok: `grok plugin install /path/to/dist/cyberos/plugin --trust`.
 
 Then run `/install` in a repo and `/ship-tasks` (or just ask to ship the next task) to drive the backlog; `/version` and `/status` keep the repo current, `/help` orients a new user.
 
+### 4a. Keep host plugins in sync after every build
+
+`/version` and the soft update-check only watch the **repo machine** (`.cyberos/`). Claude and Grok each keep a separate install cache of the plugin. A rebuild of `dist/cyberos` does **not** refresh those caches by itself.
+
+`build.sh` therefore runs `sync-host-plugins.sh` best-effort after a successful assemble into the canonical `dist/cyberos` path (scratch/CI payload dirs skip automatically):
+
+```bash
+bash tools/install/build.sh
+# after assemble, on a developer machine with claude/grok on PATH:
+#   reinstalls cyberos@cyberos from the local marketplace
+#   reinstalls the Grok local plugin from dist/cyberos/plugin
+
+# manual / forced:
+bash tools/install/sync-host-plugins.sh                 # default: dist/cyberos
+bash tools/install/sync-host-plugins.sh /path/to/payload
+CYBEROS_SYNC_HOST_PLUGINS=0 bash tools/install/build.sh # skip host sync
+CYBEROS_SYNC_HOST_PLUGINS=1 bash tools/install/build.sh /tmp/payload  # force for non-default out
+CYBEROS_SYNC_HOST_PLUGINS_DRY_RUN=1 bash tools/install/sync-host-plugins.sh
+```
+
+Force reinstall (uninstall + install) is intentional: host `plugin update` can no-op on local sources or refuse a VERSION that looks like a downgrade, which is exactly how a cache gets stuck.
 ### 4b. Every other agent (Codex, Cursor, Gemini, Antigravity, Grok, zcode, Command Code, Copilot, Windsurf) - agent-independent
 
 The core is doc-driven, so no plugin is required for any agent. `install.sh` writes the canonical `AGENTS.md` spine plus each agent's preferred pointer file (all create-if-absent), and installs the `ship-tasks` skill natively into every skill-aware agent's folder (`.claude/skills`, `.grok/skills`, `.commandcode/skills`, `.codex/skills`, `.opencode/skill`) so it is invocable as `/ship-tasks` or `$ship-tasks`, not just prose. It also drops `.cyberos/AGENT-ENTRY.md`, the one-page canonical trigger. See the Agent support matrix above. Point any file-and-shell agent at `AGENTS.md` (or `.cyberos/AGENT-ENTRY.md`) and it drives the same workflow, the same gates, the same required human verdicts. The Claude plugin is convenience sugar, not a dependency.

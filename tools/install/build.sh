@@ -417,3 +417,35 @@ plugin_bytes=$(wc -c < "$out/cyberos.plugin" | tr -d ' ')
 
 echo "cyberos: done. profile=$profile skills=$vendored_skills caf=$caf_vendored payload=${payload_bytes} plugin_zip=${plugin_bytes}"
 echo "cyberos: payload at $out - install.sh lays it out under a target repo's .cyberos/ (gitignored)"
+
+# Host-plugin refresh (developer machine only). Claude + Grok keep their own install caches;
+# a rebuild of dist/cyberos does not update them. Soft /version checks cover the REPO machine
+# (.cyberos/), not the host plugin — so without this step the host can stay on an old cache
+# while the payload is already new. Best-effort: never fails the build.
+#
+#   default (auto): run only when $out is the canonical $repo/dist/cyberos (scratch/CI
+#                   payload paths used by tests skip automatically)
+#   CYBEROS_SYNC_HOST_PLUGINS=1  force for any $out
+#   CYBEROS_SYNC_HOST_PLUGINS=0  skip even the default path
+#   CYBEROS_OFFLINE=1            skip (honoured inside sync-host-plugins.sh)
+_sync_mode="${CYBEROS_SYNC_HOST_PLUGINS:-auto}"
+_do_host_sync=0
+if [ "$_sync_mode" = "1" ]; then
+  _do_host_sync=1
+elif [ "$_sync_mode" = "auto" ]; then
+  # Resolve both sides to physical paths so /var vs /private/var (macOS) does not skip
+  # a real developer build. Do NOT mkdir the default path here — scratch builds must not
+  # create dist/cyberos as a side effect of the comparison.
+  _out_phys="$(cd "$out" 2>/dev/null && pwd -P || echo "$out")"
+  if [ -d "$repo/dist/cyberos" ]; then
+    _def_phys="$(cd "$repo/dist/cyberos" && pwd -P)"
+  else
+    _def_phys="$repo/dist/cyberos"
+  fi
+  [ "$_out_phys" = "$_def_phys" ] && _do_host_sync=1
+fi
+if [ "$_do_host_sync" -eq 1 ] && [ -f "$here/sync-host-plugins.sh" ]; then
+  if ! bash "$here/sync-host-plugins.sh" "$out"; then
+    echo "cyberos: WARN host plugin sync failed — payload at $out is still good; re-run: bash tools/install/sync-host-plugins.sh" >&2
+  fi
+fi

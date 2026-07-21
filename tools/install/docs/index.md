@@ -53,6 +53,9 @@ Tracked (not gitignored): `docs/tasks/`, `docs/status/`, `CHANGELOG.md`, agent p
 
    ```bash
    bash tools/install/build.sh        # → dist/cyberos/
+   # On a developer machine with claude/grok on PATH, build also refreshes those
+   # host plugin caches via tools/install/sync-host-plugins.sh (best-effort).
+   # Repo-level currency stays /version; host caches need this post-build step.
    ```
 
 Or release:
