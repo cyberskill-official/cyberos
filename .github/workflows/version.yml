@@ -100,6 +100,7 @@ jobs:
           # version.json - staging the file alone would leave the bundle internally inconsistent.
           git add VERSION BUILD_NUMBER CHANGELOG.md \
             apps/desktop/src-tauri/tauri.conf.json apps/desktop/src-tauri/Cargo.toml \
+            apps/desktop/src-tauri/snap/snapcraft.yaml apps/desktop/src-tauri/AppxManifest.xml \
             apps/web/package.json apps/web/android/app/build.gradle \
             apps/web/ios/App/App.xcodeproj/project.pbxproj tools/install/mcp/package.json \
             apps/console/web

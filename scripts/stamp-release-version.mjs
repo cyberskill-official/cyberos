@@ -14,6 +14,8 @@
 //                                            versionCode    -> BUILD_NUMBER
 //   apps/web/ios/.../project.pbxproj          MARKETING_VERSION       -> X.Y.Z
 //                                             CURRENT_PROJECT_VERSION -> BUILD_NUMBER
+//   apps/desktop/src-tauri/snap/snapcraft.yaml   version        -> X.Y.Z
+//   apps/desktop/src-tauri/AppxManifest.xml      Identity Version -> X.Y.Z.BUILD_NUMBER
 //
 // THE STORE BUILD NUMBER IS DECOUPLED FROM SEMVER, ON PURPOSE.
 //
@@ -147,6 +149,37 @@ function stampXcodeProj(rel) {
   writeFileSync(p, raw);
 }
 
+// Snap Store metadata: cosmetic-only field (no re-upload-rejection rule like the app stores),
+// so it just gets the plain marketing version - no BUILD_NUMBER component needed.
+function stampYamlVersion(rel) {
+  const p = join(root, rel);
+  if (!existsSync(p)) return;
+  let raw = readFileSync(p, "utf8");
+  const cur = (raw.match(/^version:\s*'([^']*)'/m) || [])[1];
+  if (cur === version) return;
+  changes.push(`${rel}: version ${cur} -> ${version}`);
+  if (!apply) return;
+  raw = raw.replace(/^version:\s*'[^']*'/m, `version: '${version}'`);
+  writeFileSync(p, raw);
+}
+
+// MSIX Identity Version is a strict 4-part N.N.N.N (each 0-65535), and the Microsoft Store
+// Submission API refuses to accept a package version it has already seen for the app - the same
+// re-upload rule Android/iOS have. So this follows their exact pattern: X.Y.Z from VERSION,
+// BUILD_NUMBER as the 4th (monotonic) component.
+function stampAppxManifest(rel) {
+  const p = join(root, rel);
+  if (!existsSync(p)) return;
+  let raw = readFileSync(p, "utf8");
+  const cur = (raw.match(/Version="([^"]*)"/) || [])[1];
+  const want = `${version}.${versionCode}`;
+  if (cur === want) return;
+  changes.push(`${rel}: Version ${cur} -> ${want}`);
+  if (!apply) return;
+  raw = raw.replace(/Version="[^"]*"/, `Version="${want}"`);
+  writeFileSync(p, raw);
+}
+
 stampJson("apps/desktop/src-tauri/tauri.conf.json");
 // task 1.0.0-consistency leg: the tauri CARGO package version feeds about-dialogs and crate metadata -
 // stamp it too so the desktop app never self-reports a stale number.
@@ -160,6 +193,10 @@ stampJson("tools/install/mcp/package.json");
 stampJson("apps/web/package.json");
 stampGradle("apps/web/android/app/build.gradle");
 stampXcodeProj("apps/web/ios/App/App.xcodeproj/project.pbxproj");
+// Added so the Snap and MS Store listings can no longer ship a version number that disagrees
+// with everything else - same discipline as the targets above (Stephen approved 2026-07-21).
+stampYamlVersion("apps/desktop/src-tauri/snap/snapcraft.yaml");
+stampAppxManifest("apps/desktop/src-tauri/AppxManifest.xml");
 
 console.log(`VERSION=${version}  BUILD_NUMBER=${versionCode}  (androidVersionCode + iosBuildNumber)`);
 if (!changes.length) {
