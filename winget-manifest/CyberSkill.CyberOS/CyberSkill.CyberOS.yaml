@@ -1,8 +1,7 @@
 # TASK-APP-006: winget version manifest (one of the three-file set Microsoft's schema requires).
-# ManifestVersion 1.6.0 is this task's best-available understanding - spec 9 requires confirming
-# against the live winget-pkgs templates before submission (same hedge as the installer file).
+# ManifestVersion bumped to 1.12.0 to match winget-pkgs' current PR template (2026-07-21).
 PackageIdentifier: CyberSkill.CyberOS
-PackageVersion: 1.0.0
+PackageVersion: 1.0.7
 DefaultLocale: en-US
 ManifestType: version
-ManifestVersion: 1.6.0
+ManifestVersion: 1.12.0
