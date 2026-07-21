@@ -84,6 +84,11 @@ jobs:
       # cfg-gated in src/lib.rs) - the one engineering blocker on this channel. If the pinned
       # CLI major ever renames its cargo-features passthrough, this fails loudly at build,
       # which is the wanted behavior: a MAS bundle must never ship WITH the updater.
+      - name: Write Mac App Store provisioning profile
+        env:
+          MAS_PROVISIONING_PROFILE_BASE64: ${{ secrets.MAS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          printf '%s' "$MAS_PROVISIONING_PROFILE_BASE64" | base64 --decode > apps/desktop/src-tauri/embedded.provisionprofile
       - name: Build MAS bundle (sandboxed, universal, updater compiled out)
         working-directory: apps/desktop
         run: npx --yes @tauri-apps/cli@2 build --config src-tauri/tauri.mas.conf.json --bundles app --target universal-apple-darwin --features mas
