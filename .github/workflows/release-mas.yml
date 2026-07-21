@@ -65,6 +65,7 @@ jobs:
         run: |
           security create-keychain -p "$MAS_KEYCHAIN_PASSWORD" mas-build.keychain
           security set-keychain-settings -lut 21600 mas-build.keychain
+          security default-keychain -s mas-build.keychain
           security unlock-keychain -p "$MAS_KEYCHAIN_PASSWORD" mas-build.keychain
           for cert_var in MAS_APP_CERT_P12_BASE64 MAS_INSTALLER_CERT_P12_BASE64; do
             printf '%s' "${!cert_var}" | base64 --decode > /tmp/"$cert_var".p12
