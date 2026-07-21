@@ -157,3 +157,4 @@ jobs:
         run: |
           security delete-keychain mas-build.keychain || true
           rm -rf ./private_keys
+          rm -f apps/desktop/src-tauri/embedded.provisionprofile
