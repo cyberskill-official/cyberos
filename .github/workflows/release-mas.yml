@@ -78,6 +78,7 @@ jobs:
           rm -f /tmp/AppleWWDRCAG3.cer
           security list-keychains -d user -s mas-build.keychain login.keychain
           security set-key-partition-list -S apple-tool:,apple: -s -k "$MAS_KEYCHAIN_PASSWORD" mas-build.keychain
+          echo "::group::debug - identities visible in mas-build.keychain"; security find-identity -v -p codesigning mas-build.keychain; echo "::endgroup::"
 
       # tauri.mas.conf.json deep-merges over tauri.conf.json: sandbox entitlements,
       # "3rd Party Mac Developer Application" signing, hardened runtime OFF (App Store
