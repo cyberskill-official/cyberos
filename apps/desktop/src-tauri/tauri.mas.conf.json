@@ -5,7 +5,8 @@
       "entitlements": "Entitlements.mas.plist",
       "signingIdentity": "3rd Party Mac Developer Application",
       "providerShortName": null,
-      "hardenedRuntime": false
+      "hardenedRuntime": false,
+      "files": {"embedded.provisionprofile": "embedded.provisionprofile"}
     }
   }
 }
