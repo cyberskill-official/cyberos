@@ -79,6 +79,7 @@ jobs:
           security list-keychains -d user -s mas-build.keychain login.keychain
           security set-key-partition-list -S apple-tool:,apple: -s -k "$MAS_KEYCHAIN_PASSWORD" mas-build.keychain
           echo "::group::debug - identities visible in mas-build.keychain"; security find-identity -v -p codesigning mas-build.keychain; echo "::endgroup::"
+          echo "::group::debug - all identities (valid + invalid) in mas-build.keychain"; security find-identity -p codesigning mas-build.keychain; echo "::endgroup::"
           echo "::group::debug - certificate subjects + validity in mas-build.keychain"; security find-certificate -a -p mas-build.keychain > /tmp/mas-certs.pem; openssl crl2pkcs7 -nocrl -certfile /tmp/mas-certs.pem | openssl pkcs7 -print_certs -noout -text | grep -E "Subject:|Issuer:|Not Before|Not After"; echo "::endgroup::"
 
       # tauri.mas.conf.json deep-merges over tauri.conf.json: sandbox entitlements,
