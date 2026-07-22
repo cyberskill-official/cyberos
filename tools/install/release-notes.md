@@ -25,7 +25,7 @@ Prefer the assets below by role — filenames alone are easy to misread. Every a
 Install steps, day-to-day usage, and everything else live in the official docs — read them rather than a release-page summary:
 
 - **[README](https://github.com/cyberskill-official/cyberos#readme)** — start here; routes to all documentation.
-- **[Getting Started](https://cyberos-wiki.cyberskill.world/reference/getting-started.html)** — repo layout, quick start, versioning, install, deploy runbook.
+- **[Getting Started](https://os.cyberskill.world/docs/reference/getting-started.html)** — repo layout, quick start, versioning, install, deploy runbook.
 
 ---
 

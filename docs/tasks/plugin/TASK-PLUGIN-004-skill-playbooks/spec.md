@@ -27,9 +27,9 @@ depends_on: [TASK-PLUGIN-002, TASK-SKILL-111]
 blocks: [TASK-PLUGIN-007]
 
 source_pages:
-  - "[Plugin docs](https://cyberos-wiki.cyberskill.world/modules/plugin/) §1 (Skill playbooks layer)"
-  - "[SKILL Appendix L](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) (SKB-020..066 conformance)"
-  - "[SKILL Appendix J](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) (Anthropic Skills portability)"
+  - "[Plugin docs](https://os.cyberskill.world/docs/modules/plugin/) §1 (Skill playbooks layer)"
+  - "[SKILL Appendix L](https://os.cyberskill.world/docs/modules/skill/appendices.html) (SKB-020..066 conformance)"
+  - "[SKILL Appendix J](https://os.cyberskill.world/docs/modules/skill/appendices.html) (Anthropic Skills portability)"
 
 source_decisions:
   - DEC-2430 2026-05-19 — Plugin ships 12 skill playbooks at modules/plugin/skills/<name>/SKILL.md following Anthropic Agent Skills spec

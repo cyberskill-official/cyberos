@@ -7,6 +7,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SITE_BASE_URL } from './site-config.mjs';
 
 const __dirname  = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT  = resolve(__dirname, '..', '..');
@@ -197,7 +198,7 @@ const page = `<!DOCTYPE html>
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>CyberOS — Changelog</title>
  <meta name="description" content="CyberOS changelog — all significant changes across modules, services, and infrastructure.">
- <link rel="canonical" href="https://cyberos-wiki.cyberskill.world/reference/changelog.html">
+ <link rel="canonical" href="${SITE_BASE_URL}/reference/changelog.html">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
