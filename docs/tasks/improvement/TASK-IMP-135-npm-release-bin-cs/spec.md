@@ -4,7 +4,7 @@ title: "Publish npm release shipping bin.cs for the rename"
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: done
 priority: p0
 author: "@stephencheng"
 department: engineering
@@ -118,11 +118,11 @@ Blocks TASK-IMP-133 — that task MUST NOT merge a Formula pin to a `cs`-bin tar
 
 ## 2. Acceptance criteria
 
-- [ ] AC 1 (traces_to: #1.1) - `git merge-base --is-ancestor <IMP-130-landing-commit> origin/main` exits 0, and `git show origin/main:tools/install/build.sh` contains the literal `"cs": "cli/bin/cli.mjs"` bin entry - test: shell: `git fetch origin main && git merge-base --is-ancestor "$(git log origin/main --grep='TASK-IMP-130' --format=%H | head -1)" origin/main` exits 0 AND `git show origin/main:tools/install/build.sh | grep -F '"cs": "cli/bin/cli.mjs"'` exits 0
-- [ ] AC 2 (traces_to: #1.2) - for `V=$(git show origin/main:VERSION | tr -d '[:space:]')`, `CHANGELOG.md` on `origin/main` contains a heading line matching `## [$V]` and that section (until the next `## ` heading) contains both the substring `cyberos` and the substring `` `cs` `` in the rename Breaking bullet - test: shell: extract the dated section for `$V` and `grep -F` for the rename markers; fail if the bullet remains only under `## [Unreleased]`
-- [ ] AC 3 (traces_to: #1.3, #1.4) - tag `v$V` exists on `origin`, `git rev-list -n1 v$V` equals the commit where `VERSION` became `$V`, and the GitHub Actions run of workflow `release.yml` for that tag has job `npm` with `conclusion=success` - test: `gh api "/repos/cyberskill-official/cyberos/actions/runs?event=push&per_page=20" --jq ...` (or `gh run list --workflow=release.yml --branch "v$V"`) filters to that tag's run and asserts the npm job success
-- [ ] AC 4 (traces_to: #1.5) - `npm view @cyberskill/cyberos@"$V" version` prints `$V`, and `npm view @cyberskill/cyberos@"$V" bin` JSON-parses to an object with key `cs` and without key `cyberos` - test: `node -e 'const b=JSON.parse(require("child_process").execSync("npm view @cyberskill/cyberos@'"$V"' bin --json","utf8")); if(!b.cs||b.cyberos) process.exit(1)'`
-- [ ] AC 5 (traces_to: #1.5, #1.6) - AC 4's evidence is recorded against the live registry (command output from `npm view`, not from a local `dist/` or `.tgz`), and this task's frontmatter `status` remains non-`done` until that output is captured; TASK-IMP-133's frontmatter `status` is unchanged by this task - test: verify: the ship-tasks / final-acceptance note for this task pastes the `npm view` stdout, and `git diff` for this task's landing commit does not flip TASK-IMP-133's status
+- [x] AC 1 (traces_to: #1.1) - `git merge-base --is-ancestor <IMP-130-landing-commit> origin/main` exits 0, and `git show origin/main:tools/install/build.sh` contains the literal `"cs": "cli/bin/cli.mjs"` bin entry - test: shell: `git fetch origin main && git merge-base --is-ancestor "$(git log origin/main --grep='TASK-IMP-130' --format=%H | head -1)" origin/main` exits 0 AND `git show origin/main:tools/install/build.sh | grep -F '"cs": "cli/bin/cli.mjs"'` exits 0
+- [x] AC 2 (traces_to: #1.2) - for `V=$(git show origin/main:VERSION | tr -d '[:space:]')`, `CHANGELOG.md` on `origin/main` contains a heading line matching `## [$V]` and that section (until the next `## ` heading) contains both the substring `cyberos` and the substring `` `cs` `` in the rename Breaking bullet - test: shell: extract the dated section for `$V` and `grep -F` for the rename markers; fail if the bullet remains only under `## [Unreleased]`
+- [x] AC 3 (traces_to: #1.3, #1.4) - tag `v$V` exists on `origin`, `git rev-list -n1 v$V` equals the commit where `VERSION` became `$V`, and the GitHub Actions run of workflow `release.yml` for that tag has job `npm` with `conclusion=success` - test: `gh api "/repos/cyberskill-official/cyberos/actions/runs?event=push&per_page=20" --jq ...` (or `gh run list --workflow=release.yml --branch "v$V"`) filters to that tag's run and asserts the npm job success
+- [x] AC 4 (traces_to: #1.5) - `npm view @cyberskill/cyberos@"$V" version` prints `$V`, and `npm view @cyberskill/cyberos@"$V" bin` JSON-parses to an object with key `cs` and without key `cyberos` - test: `node -e 'const b=JSON.parse(require("child_process").execSync("npm view @cyberskill/cyberos@'"$V"' bin --json","utf8")); if(!b.cs||b.cyberos) process.exit(1)'`
+- [x] AC 5 (traces_to: #1.5, #1.6) - AC 4's evidence is recorded against the live registry (command output from `npm view`, not from a local `dist/` or `.tgz`), and this task's frontmatter `status` remains non-`done` until that output is captured; TASK-IMP-133's frontmatter `status` is unchanged by this task - test: verify: the ship-tasks / final-acceptance note for this task pastes the `npm view` stdout, and `git diff` for this task's landing commit does not flip TASK-IMP-133's status
 
 ## 3. Edge cases
 
@@ -133,5 +133,15 @@ Blocks TASK-IMP-133 — that task MUST NOT merge a Formula pin to a `cs`-bin tar
 - Security-class: this task publishes a public npm package. The audited path uses short-lived OIDC; introducing a long-lived `NPM_TOKEN` to "just get it out" is explicitly forbidden by this task's non-goals and by `docs/deploy/RELEASE.md`.
 
 ---
+
+## Final-acceptance evidence (2026-07-23)
+
+Operator session blanket approval applies. TRACE-004 / AC evidence:
+
+- AC1: PR #109 merged to `main` (`340d4dc5`); `origin/main` `tools/install/build.sh` contains `"cs": "cli/bin/cli.mjs"`.
+- AC2: `VERSION` on `main` is `1.1.0`; `CHANGELOG.md` has `## [1.1.0] - 2026-07-22` with the Breaking rename bullet (auto-bump commit `81cf3f07`).
+- AC3: tag `v1.1.0` → `81cf3f07`; release.yml run `29952703561` job `npm` conclusion=`success`.
+- AC4/AC5: live `npm view @cyberskill/cyberos@1.1.0 bin --json` → `{ "cs": "cli/bin/cli.mjs" }` (no `cyberos` key). TASK-IMP-133 status was not flipped by this task's publish commit.
+
 
 *End of TASK-IMP-135.*
