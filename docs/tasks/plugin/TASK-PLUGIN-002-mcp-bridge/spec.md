@@ -27,9 +27,9 @@ depends_on: [TASK-PLUGIN-001, TASK-MCP-001, TASK-MCP-003]
 blocks: [TASK-PLUGIN-003, TASK-PLUGIN-007]
 
 source_pages:
-  - "[Plugin docs](https://cyberos-wiki.cyberskill.world/modules/plugin/) §1"
-  - "[Plugin docs](https://cyberos-wiki.cyberskill.world/modules/plugin/) INTEROP section (universal constraints)"
-  - "[CUO docs](https://cyberos-wiki.cyberskill.world/modules/cuo/) (supervisor v3.0.0-a4 surface)"
+  - "[Plugin docs](https://os.cyberskill.world/docs/modules/plugin/) §1"
+  - "[Plugin docs](https://os.cyberskill.world/docs/modules/plugin/) INTEROP section (universal constraints)"
+  - "[CUO docs](https://os.cyberskill.world/docs/modules/cuo/) (supervisor v3.0.0-a4 surface)"
 
 source_decisions:
   - DEC-2410 2026-05-19 — Bridge ships as ONE Rust binary `cyberos-mcp-bridge` at services/plugin-host/ — supports both stdio and HTTP transports
