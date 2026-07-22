@@ -4,7 +4,7 @@ title: End-to-end regression for the cs/memory/cuo rename
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
@@ -102,12 +102,12 @@ Depends on TASK-IMP-130, 131, and 132 — the automated offline portion (clauses
 
 ## 2. Acceptance criteria
 
-- [ ] AC 1 (traces_to: #1.1) - a grep of `tools/install/tests/test_cs_rename_e2e.sh`'s own source for build invocations (`bash "$BUILD"` or equivalent) returns exactly `1`, and that invocation appears before the first `t0[0-9]_` function definition in the file - test: `grep -c 'bash "\$BUILD"' tools/install/tests/test_cs_rename_e2e.sh` returns `1`, combined with a line-number comparison against the first `t0` function definition
-- [ ] AC 2 (traces_to: #1.2) - `$TMP/payload/package.json`'s `bin` object has key `cs` and does not have key `cyberos` - test: `tools/install/tests/test_cs_rename_e2e.sh::t02_bin_is_cs_only`
-- [ ] AC 3 (traces_to: #1.3) - `node $TMP/payload/cli/bin/cli.mjs -h` output contains all ten command names listed in clause 1.3, matched with word-boundary-safe patterns (e.g. `grep -wo`) so that a substring coincidence (e.g. "create" inside a hypothetical unrelated "created") cannot produce a false pass - test: `tools/install/tests/test_cs_rename_e2e.sh::t03_usage_lists_all_ten_verbs`
-- [ ] AC 4 (traces_to: #1.4) - within the same test run, a stub-`python3` `cs memory doctor` call and a `cs cuo plan` call both produce their expected outputs, run in sequence against the one built payload from AC 1-3 - test: `tools/install/tests/test_cs_rename_e2e.sh::t04_memory_and_cuo_both_work_on_shared_build`
-- [ ] AC 5 (traces_to: #1.5) - the test file contains no invocation of `curl`, `npm view`, `npm install <remote>`, or `brew` anywhere in its body - test: `grep -Ec 'curl |npm view|npm install [^-]|brew ' tools/install/tests/test_cs_rename_e2e.sh` returns `0`
-- [ ] AC 6 (traces_to: #1.6) - a grep of THIS spec file for the literal heading text `Manual release-time checklist` returns at least `1` match - test: `grep -c 'Manual release-time checklist' docs/tasks/improvement/TASK-IMP-134-cs-rename-e2e-regression/spec.md` returns `>=1`
+- [x] AC 1 (traces_to: #1.1) - a grep of `tools/install/tests/test_cs_rename_e2e.sh`'s own source for build invocations (`bash "$BUILD"` or equivalent) returns exactly `1`, and that invocation appears before the first `t0[0-9]_` function definition in the file - test: `grep -c 'bash "\$BUILD"' tools/install/tests/test_cs_rename_e2e.sh` returns `1`, combined with a line-number comparison against the first `t0` function definition
+- [x] AC 2 (traces_to: #1.2) - `$TMP/payload/package.json`'s `bin` object has key `cs` and does not have key `cyberos` - test: `tools/install/tests/test_cs_rename_e2e.sh::t02_bin_is_cs_only`
+- [x] AC 3 (traces_to: #1.3) - `node $TMP/payload/cli/bin/cli.mjs -h` output contains all ten command names listed in clause 1.3, matched with word-boundary-safe patterns (e.g. `grep -wo`) so that a substring coincidence (e.g. "create" inside a hypothetical unrelated "created") cannot produce a false pass - test: `tools/install/tests/test_cs_rename_e2e.sh::t03_usage_lists_all_ten_verbs`
+- [x] AC 4 (traces_to: #1.4) - within the same test run, a stub-`python3` `cs memory doctor` call and a `cs cuo plan` call both produce their expected outputs, run in sequence against the one built payload from AC 1-3 - test: `tools/install/tests/test_cs_rename_e2e.sh::t04_memory_and_cuo_both_work_on_shared_build`
+- [x] AC 5 (traces_to: #1.5) - the test file contains no invocation of `curl`, `npm view`, `npm install <remote>`, or `brew` anywhere in its body - test: `grep -Ec 'curl |npm view|npm install [^-]|brew ' tools/install/tests/test_cs_rename_e2e.sh` returns `0`
+- [x] AC 6 (traces_to: #1.6) - a grep of THIS spec file for the literal heading text `Manual release-time checklist` returns at least `1` match - test: `grep -c 'Manual release-time checklist' docs/tasks/improvement/TASK-IMP-134-cs-rename-e2e-regression/spec.md` returns `>=1`
 
 ## 3. Edge cases
 
