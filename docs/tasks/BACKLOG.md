@@ -377,7 +377,7 @@ Totals: 340 draft, 4 ready_to_implement, 12 implementing, 202 done, 2 on_hold, 2
 - [done] TASK-IMP-132-cs-cuo-verb-stub - Add a `cuo` verb to `cs` as a redirect stub
 - [done] TASK-IMP-133-homebrew-tap-cs-rename-followup - Homebrew tap: update cyberos-cli.rb for the cs rename
 - [done] TASK-IMP-134-cs-rename-e2e-regression - End-to-end regression for the cs/memory/cuo rename
-- [done] TASK-IMP-135-npm-release-bin-cs - Publish npm release shipping bin.cs for the rename (improvement)
+- [done] TASK-IMP-135-npm-release-bin-cs - Publish npm release shipping bin.cs for the rename
 
 ## inv  (10 draft, 1 ready_to_implement)
 

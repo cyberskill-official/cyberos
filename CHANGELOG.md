@@ -7,6 +7,16 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 Breaking
 - renamed the published npm CLI's bin command from `cyberos` to `cs` (`npx cs <command>` in place of `npx cyberos <command>`) — the old name collided on `$PATH` with an unrelated, internal-only `modules/memory` console script also named `cyberos`. The npm package name is unchanged (`@cyberskill/cyberos`); only the invoked command renamed. There is no `cyberos` alias during a transition window — update any script or muscle memory calling `npx cyberos ...` to `npx cs ...`. (TASK-IMP-130)
 
+Added
+- `cs memory <args>` — dispatches to a locally installed `cyberos-memory` via `python3 -m cyberos` (never a bare `$PATH` `cyberos` lookup); exits 2 with a clear message when the package is not available. The Python package is not bundled with the npm install. (TASK-IMP-131)
+- `cs cuo <name>` — redirect stub that prints the matching Claude Code slash command (`/plan`, `/create-tasks`, `/ship-tasks`, `/improve`); no subprocess execution. (TASK-IMP-132)
+
+Fixed
+- CLI help / docs surfaces that still pointed at `https://cyberos.cyberskill.world/docs` now use `https://os.cyberskill.world/docs`. (TASK-IMP-130)
+
+Distribution
+- `@cyberskill/cyberos@1.1.0` publishes `bin.cs` → `cli/bin/cli.mjs` (TASK-IMP-135). Homebrew formula `cyberos-cli` installs the `cs` binary pinned to this release (TASK-IMP-133). Offline e2e covers the rename composition (TASK-IMP-134).
+
 ## [1.0.9] - 2026-07-22
 
 Maintenance release.

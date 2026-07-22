@@ -1,5 +1,5 @@
 // Stage the generated site for Vercel: the docs live under /docs (the docs homepage
-// at cyberos.cyberskill.world/docs), with the domain root redirecting there. Run after
+// at os.cyberskill.world/docs), with the domain root redirecting there. Run after
 // build.sh; consumed by vercel.json (outputDirectory: .vercel-out, gitignored).
 import { rmSync, mkdirSync, cpSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";

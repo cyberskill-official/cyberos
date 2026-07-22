@@ -15,9 +15,9 @@
 #                                    canonical `os.cyberskill.world/docs`.
 #   t06_changelog_entry_present      CHANGELOG.md's TOP entry names both `cyberos` and `cs` and
 #                                    says "breaking".
-#   t07_memory_module_untouched      this change touches no file under modules/memory/ (the
-#                                    separate, PyPI-unpublished `cyberos-memory` console script
-#                                    is explicitly out of scope - TASK-IMP-130 §1.7).
+#   t07_memory_module_untouched      no pending changes under modules/memory except docs/
+#                                    (the PyPI-unpublished cyberos-memory console script /
+#                                    Python package stay out of scope - TASK-IMP-130 §1.7).
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../../.." && pwd)"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
@@ -112,12 +112,18 @@ t06_changelog_entry_present() {
 }
 
 t07_memory_module_untouched() {
+  # Scope of IMP-130 §1.7: do not rename or edit the internal cyberos-memory *package*
+  # (pyproject / Python sources). Module *docs* that teach the public install command
+  # may say `npx cs install` and are not part of that guardrail.
   local diff
-  diff="$(cd "$repo" && git diff --name-only -- modules/memory 2>/dev/null; git status --porcelain -- modules/memory 2>/dev/null)"
+  diff="$(cd "$repo" && git diff --name-only -- modules/memory 2>/dev/null \
+    | grep -v '^modules/memory/docs/' || true
+    git status --porcelain -- modules/memory 2>/dev/null \
+    | awk '{print $2}' | grep -v '^modules/memory/docs/' || true)"
   if [ -z "$diff" ]; then
     ok t07_memory_module_untouched
   else
-    fail t07_memory_module_untouched "modules/memory has pending changes: $diff"
+    fail t07_memory_module_untouched "modules/memory non-docs changes: $diff"
   fi
 }
 

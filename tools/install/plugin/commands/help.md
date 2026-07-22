@@ -13,6 +13,7 @@ Orient the user. Present concisely:
 - `/help` — this overview
 - `/ship-tasks` — drive the next task (HITL)
 - `/create-tasks` — draft tasks into the backlog
+- CLI-only: `npx cs gates`, `npx cs mcp`, `npx cs memory` (local cyberos-memory), `npx cs cuo <name>` (slash redirect stub)
 
 3. Soft update-check runs automatically on any `.cyberos` use. Day-to-day: install once, then forget.
 
