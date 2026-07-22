@@ -4,7 +4,7 @@ title: Rename the public CyberOS CLI bin from `cyberos` to `cs`
 template: task@1
 type: improvement
 module: improvement
-status: reviewing
+status: done
 priority: p0
 author: "@stephencheng"
 department: engineering
