@@ -2,7 +2,11 @@
 
 This is the portable form of the single `ship-tasks` workflow. It runs in any repo, any language, with no CyberOS clone required. It is exposed through many channels so a user can pick whatever fits their setup.
 
-New to it? [`ship-your-first-task.md`](../../modules/cuo/docs/guides/ship-your-first-task.md) is the step-by-step walkthrough (zero to your first shipped task), also published on the docs site's day-one guide. This README is the channel catalog and reference — it does not repeat that walkthrough, and `/install` (the Claude Code plugin command) does not either; both point here for the full behavior instead of restating it.
+New to it? Two complementary guides — do not collapse them:
+- **Day-one walkthrough** (zero → first shipped task): [`ship-your-first-task.md`](../../modules/cuo/docs/guides/ship-your-first-task.md) (docs site day-one guide).
+- **Install / update / operate GUIDE** (payload `GUIDE.md` source): [`docs/index.md`](./docs/index.md).
+
+This README is the channel catalog and reference — it does not repeat those walkthroughs, and `/install` (the Claude Code plugin command) does not either; both point here for the full channel behavior instead of restating it.
 
 `install` sets up two things by default: the task workflow AND the BRAIN memory protocol. It scaffolds a local `.cyberos/memory/store/` store (gitignored tenant data) and drops the `AGENTS.md` Layer-1 memory rules, so the project gets both the workflow and the memory discipline. Skip the memory half with `CYBEROS_NO_MEMORY=1`.
 
@@ -180,15 +184,18 @@ printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
 
 ### 9. npx CLI (available)
 
-The payload root carries a `package.json` with three bins:
+The payload root carries a `package.json` with one bin, `cs` (package name stays `@cyberskill/cyberos`):
 
 ```bash
-npx cs install [dir]     # vendor the machine + wire every agent (default: cwd)
-npx cs-gates [dir]    # run the machine gates
-npx cs-mcp            # launch the MCP server (for a client's config)
+npx cs install [dir]   # vendor the machine + wire every agent (default: cwd)
+npx cs gates [dir]     # run the machine gates
+npx cs mcp             # launch the MCP server (for a client's config)
+npx cs memory <args>   # BRAIN CLI when local cyberos-memory is installed
+npx cs cuo <name>      # print slash command (redirect stub)
+npx cs -h              # full command list
 ```
 
-Run `npx .` from `dist/cyberos`, `npm i -g ./dist/cyberos`, or `npx github:<owner>/<repo>` once the payload is published as its own repo.
+Run `npx .` from `dist/cyberos`, `npm i -g ./dist/cyberos`, or invoke the published package as `npx -p @cyberskill/cyberos cs <command>` (same as bare `npx cs <command>` when the bin is on PATH).
 
 ### 10. Template repo / `create.sh` (available) - fresh projects
 
@@ -198,10 +205,19 @@ bash dist/cyberos/create.sh ../my-new-project     # git init + skeleton + instal
 
 `create.sh` seeds `template/` (never clobbering) then runs `install.sh`. Host `template/` as a GitHub template repo ("Use this template") or `degit` it, then run `install.sh` once.
 
+### 11. Homebrew (available)
+
+```bash
+brew tap cyberskill-official/tap
+brew install cyberos-cli   # installs the `cs` binary
+cs -h
+```
+
+Formula name is `cyberos-cli` (disambiguates from the desktop cask); the invoked command is `cs`.
+
 ### Planned channels (say the word and I will build them)
 
-- Homebrew tap and Nix flake - `brew install cyberos` / `nix run`.
-- Published npm package (`npx cs install`). The curl one-liner + hosted payload shipped via GitHub Releases (TASK-IMP-069).
+- Nix flake - `nix run`.
 
 ### Add your own agent
 

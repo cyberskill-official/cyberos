@@ -867,7 +867,7 @@ if grep -Eq '^(docs/tasks/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
   # (:93-128) - this branch covers the untidy one, which is the common one.
   if [ ! -f .cyberos/lib/status-page.sh ] || [ ! -f .cyberos/lib/task-migrate.sh ]; then
     echo "cyberos: hook is orphaned (.cyberos/ missing) - skipping status regen." >&2
-    echo "cyberos: restore with 'cyberos install', or delete .git/hooks/pre-commit." >&2
+    echo "cyberos: restore with 'npx cs install' (or bash …/install.sh), or delete .git/hooks/pre-commit." >&2
     exit 0
   fi
   if ! command -v node >/dev/null 2>&1; then

@@ -31,7 +31,7 @@ The Claude plugin is convenience, not a dependency. The core is doc-driven: `/in
 
 ## One channel of many
 
-`dist/cyberos/` is delivered through several channels, of which the Claude plugin is one. The others include copying the folder, a git submodule or subtree, a `curl | sh` bootstrap, a GitHub Action that runs the machine gates in CI, a Docker image, a Makefile or just target, a Node stdio MCP server (tools `task_install`, `task_gates`, `task_status`, `ship_task`) for any MCP agent, an npx CLI (`npx cyberos <command>`), and a template-repo scaffolder (`create.sh`). The full catalog, with the trade-offs of each, is in `tools/install/README.md`; the install-and-operate walkthrough is in `tools/install/docs/index.md`.
+`dist/cyberos/` is delivered through several channels, of which the Claude plugin is one. The others include copying the folder, a git submodule or subtree, a `curl | sh` bootstrap, a GitHub Action that runs the machine gates in CI, a Docker image, a Makefile or just target, a Node stdio MCP server (tools `task_install`, `task_gates`, `task_status`, `ship_task`) for any MCP agent, an npx CLI (`npx cs <command>`), and a template-repo scaffolder (`create.sh`). The full catalog, with the trade-offs of each, is in `tools/install/README.md`; the install-and-operate walkthrough is in `tools/install/docs/index.md`.
 
 ## Changelog
 

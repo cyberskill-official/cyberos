@@ -7,7 +7,7 @@ Step-by-step: from zero to your first shipped task in any repo, and how to keep 
 Every operation has two equal paths:
 
 - **Desktop app** (no terminal): CyberOS Ops tab — Build payload, per-project Install, Version check. See the [desktop ops guide](./guides/desktop-ops.html).
-- **CLI** (scriptable): the five commands below. Same scripts the app runs.
+- **CLI** (scriptable): the eight shell forms in the table below (ten via `npx cs`, which also adds `memory` and `cuo`). Same scripts the app runs.
 
 ## Final commands
 
@@ -151,5 +151,5 @@ The workflow-side rules these patterns serve — one writer through one filesyst
 ## Where to go next
 
 - Payload channel catalog: payload `README.md`
-- Consumer update detail: `docs/CONSUMER_UPDATE.md` (in the monorepo / pack tools)
+- Consumer update detail: `tools/install/docs/CONSUMER_UPDATE.md` (ships in the payload GUIDE context as the consumer update note; monorepo path shown)
 - Site: https://os.cyberskill.world/docs

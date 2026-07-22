@@ -218,7 +218,7 @@ The website is generated from the markdown single source of truth (TASK-DOCS-002
 
 Nothing generated is committed: the site renders into gitignored `dist/website`, so there is no generated HTML to edit by hand.
 
-Hosting: a Vercel project connected to this repo builds the site on every push to `main` via `vercel.json` (`bash tools/docs-site/build.sh` + `tools/docs-site/stage-vercel.mjs`, output `.vercel-out`) and serves it at `cyberos.cyberskill.world/docs` (the domain root redirects to `/docs/`). The old hand-authored wiki deployment is retired.
+Hosting: a Vercel project connected to this repo builds the site on every push to `main` via `vercel.json` (`bash tools/docs-site/build.sh` + `tools/docs-site/stage-vercel.mjs`, output `.vercel-out`) and serves it at `os.cyberskill.world/docs` (the domain root redirects to `/docs/`). The old hand-authored wiki deployment is retired.
 
 ## GHCR troubleshooting
 

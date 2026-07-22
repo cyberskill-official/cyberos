@@ -17,10 +17,13 @@ CyberOS vendors itself into any repository under a single gitignored `.cyberos/`
    bash tools/install/build.sh        # writes dist/cyberos/
    ```
 
-2. Initialise your repo:
+2. Initialise your repo (pick one):
 
    ```
    bash /path/to/dist/cyberos/install.sh /path/to/your/repo
+   # or, from the published package / Homebrew:
+   npx cs install /path/to/your/repo
+   brew install cyberos-cli && cs install /path/to/your/repo
    ```
 
 This vendors `.cyberos/cuo` (the task workflow engine), `.cyberos/memory` (the BRAIN protocol) and `.cyberos/plugin`, detects your build/lint/test gates into `.cyberos/gates.env`, scaffolds `docs/tasks/BACKLOG.md`, creates the local BRAIN store at `.cyberos/memory/store/`, and stamps `.cyberos/VERSION`.
