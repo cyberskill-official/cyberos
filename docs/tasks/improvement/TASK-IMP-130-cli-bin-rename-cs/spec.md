@@ -13,7 +13,7 @@ ai_authorship: generated_then_reviewed
 eu_ai_act_risk_class: not_ai
 client_visible: false
 depends_on: []
-blocks: [TASK-IMP-131, TASK-IMP-132, TASK-IMP-133, TASK-IMP-134]
+blocks: [TASK-IMP-131, TASK-IMP-132, TASK-IMP-133, TASK-IMP-134, TASK-IMP-135]
 related_tasks: [TASK-IMP-076]
 routed_back_count: 0
 awh: N/A

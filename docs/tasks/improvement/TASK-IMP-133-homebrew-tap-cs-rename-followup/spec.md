@@ -12,9 +12,9 @@ created_at: 2026-07-22T00:00:00+07:00
 ai_authorship: generated_then_reviewed
 eu_ai_act_risk_class: not_ai
 client_visible: false
-depends_on: [TASK-IMP-130]
+depends_on: [TASK-IMP-130, TASK-IMP-135]
 blocks: []
-related_tasks: [TASK-IMP-076]
+related_tasks: [TASK-IMP-076, TASK-IMP-135]
 routed_back_count: 0
 awh: N/A
 verify: T
@@ -73,11 +73,11 @@ In scope: `Formula/cyberos-cli.rb`'s `url`, `sha256`, `test do` block, and heade
 - Renaming the Formula itself away from `cyberos-cli`.
 - The tap's separate `cyberos` GUI Cask — a different product, unaffected by this rename (Formula header comment lines 4-6 already establish this distinction).
 - `depends_on "node"` or the `install` method's `npm install` invocation — neither references the bin name and neither needs to change.
-- Publishing the actual npm release this task depends on — that is TASK-IMP-130's job; this task only reacts to it once it exists.
+- Publishing the actual npm release this task depends on — that is TASK-IMP-135's job (the gap TASK-IMP-133's own audit ISS-005 named); this task only reacts once that release exists on the registry.
 
 ## Dependencies
 
-Depends on TASK-IMP-130 — specifically, on a PUBLISHED npm release carrying the `cs` bin existing, not merely on TASK-IMP-130's code being merged. This task cannot land (in the sense of passing `brew test`) until that release exists, even though its diff could technically be drafted earlier. This task is a soft (non-status-gating) prerequisite for TASK-IMP-134's manual release-time checklist, which the plan (§6 item 7) states must include "a fresh Homebrew install once the tap is updated" — TASK-IMP-134's own `depends_on` deliberately excludes this task so its fully-automated offline portion isn't blocked on this task's externally-gated completion (see TASK-IMP-134's Dependencies section).
+Depends on TASK-IMP-130 (code that emits `bin.cs`) and TASK-IMP-135 (the owned operational cut that publishes that bin to the npm registry). Specifically, this task needs a PUBLISHED npm release carrying the `cs` bin — TASK-IMP-135's `done` criterion — not merely TASK-IMP-130's code being merged. This task cannot land (in the sense of passing `brew test`) until that release exists, even though its diff could technically be drafted earlier. This task is a soft (non-status-gating) prerequisite for TASK-IMP-134's manual release-time checklist, which the plan (§6 item 7) states must include "a fresh Homebrew install once the tap is updated" — TASK-IMP-134's own `depends_on` deliberately excludes this task so its fully-automated offline portion isn't blocked on this task's externally-gated completion (see TASK-IMP-134's Dependencies section).
 
 **Cross-repo note.** This task's spec, audit, and backlog row live in `cyberskill-official/cyberos`'s `docs/tasks/` (this repo's `.cyberos/` machine is what generated it), but its actual code change lands in the separate `cyberskill-official/homebrew-tap` repository, which has no `.cyberos/` machine of its own. `/ship-tasks` driving this task will need to operate against a checkout of `homebrew-tap`, not this repo — flagged explicitly since every other task in this batch is a same-repo change and this one is not.
 
@@ -104,7 +104,7 @@ Depends on TASK-IMP-130 — specifically, on a PUBLISHED npm release carrying th
 
 ## 3. Edge cases
 
-- None of the five tasks in this batch (TASK-IMP-130 through 134) has its own acceptance criterion requiring an actual npm release be CUT and PUBLISHED — TASK-IMP-130's own ACs only prove a scratch build's `package.json` has the right `bin` field, not that a release reaches the registry. Cutting a release is an operational step (`scripts/release.sh`, per this repo's own README "Versioning" section) outside any single task's scope, but this task and TASK-IMP-134 both silently depend on it having happened. Named here explicitly rather than assumed, since it is a real gap in the plan's task set (plan §6) that this task's authoring surfaced, not something this task can close on its own - flagged in the batch report for the operator's awareness.
+- The five-task batch (TASK-IMP-130 through 134) originally had no acceptance criterion requiring an actual npm release be CUT and PUBLISHED — TASK-IMP-130's own ACs only prove a scratch build's `package.json` has the right `bin` field. That gap is now owned by TASK-IMP-135 (added 2026-07-23 per operator judgment). This edge case is retained as historical context: do not re-invent a second publish owner.
 - If TASK-IMP-130 ships but the package NAME also somehow changes (rejected in TASK-IMP-130's own Alternatives Considered, but if a future decision reverses that) - this task's `url` would need to reference the new package name too, not just a new version of the same package; not applicable under TASK-IMP-130's current, approved decision, but named here since this task's own correctness depends on that upstream decision holding.
 - A user with an existing `cyberos-cli` Homebrew install upgrades via `brew upgrade`: Homebrew's own symlink-relinking on upgrade is standard Homebrew behaviour, not something this Formula controls beyond declaring the correct bin via `install_symlink` - no special handling needed in this task.
 - This task's own spec, audit, and backlog entry exist only in `cyberskill-official/cyberos`'s `docs/tasks/` - if that BACKLOG row is marked `done` before the actual `homebrew-tap` PR merges, the two repos' records would disagree about whether the work shipped. `/ship-tasks`'s human final-acceptance gate is the safeguard here - it MUST NOT be granted until the `homebrew-tap` PR is confirmed merged, not merely opened.
