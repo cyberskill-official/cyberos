@@ -4,7 +4,7 @@ title: "Homebrew tap: update cyberos-cli.rb for the cs rename"
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
@@ -97,10 +97,19 @@ Depends on TASK-IMP-130 (code that emits `bin.cs`) and TASK-IMP-135 (the owned o
 
 ## 2. Acceptance criteria
 
-- [ ] AC 1 (traces_to: #1.1) - `Formula/cyberos-cli.rb`'s `url` references a version string matching a real published `@cyberskill/cyberos` release that contains a `"cs"` key in that release's `package.json` `bin` field, `sha256` matches that exact tarball's digest, and `git log -p` for the landing commit shows both fields changed together in one commit (not staged across two) - test: manual, ops flow (`homebrew-tap` has no CI workflow at all, confirmed by directory listing, so no automated check can run against the live npm registry from either repo) - the release engineer re-runs the Formula's own documented derivation command (line 11), diffs the result against what's committed, and confirms via `git log` that url+sha256 landed in the same commit as this task's other changes, as part of the release checklist
-- [ ] AC 2 (traces_to: #1.2, #1.5) - `brew install --build-from-source cyberos-cli && brew test cyberos-cli`, run locally by the implementer before opening the PR (there is no CI in `homebrew-tap` to run this automatically — confirmed no `.github/workflows/` exists in this repo), passes against the updated Formula - test: documented in the PR description as a local run's output, not inferred from a CI check that does not exist; this same passing run is the evidence clause 1.5 requires (a real release must exist for `brew test` to succeed at all)
-- [ ] AC 3 (traces_to: #1.3) - a grep of the header comment block (lines 1-8) for the literal string `They share the name "cyberos" upstream` returns zero matches, and the same block contains the string `` `cs` `` adjacent to a mention of "bin" or "command" - test: `grep -c 'They share the name "cyberos" upstream' Formula/cyberos-cli.rb` returns `0` AND `grep -c '`cs`' Formula/cyberos-cli.rb` returns `>=1`, run as part of the same PR-review pass as AC 2 (still no CI; a reviewer command, not an automated gate)
-- [ ] AC 4 (traces_to: #1.4) - the Formula's class name (`CyberosCli`) and filename (`cyberos-cli.rb`) are unchanged in the diff - test: `git diff --stat` for this change shows no rename, only in-place edits to `cyberos-cli.rb`
+- [x] AC 1 (traces_to: #1.1) - `Formula/cyberos-cli.rb`'s `url` references a version string matching a real published `@cyberskill/cyberos` release that contains a `"cs"` key in that release's `package.json` `bin` field, `sha256` matches that exact tarball's digest, and `git log -p` for the landing commit shows both fields changed together in one commit (not staged across two) - test: manual, ops flow (`homebrew-tap` has no CI workflow at all, confirmed by directory listing, so no automated check can run against the live npm registry from either repo) - the release engineer re-runs the Formula's own documented derivation command (line 11), diffs the result against what's committed, and confirms via `git log` that url+sha256 landed in the same commit as this task's other changes, as part of the release checklist
+- [x] AC 2 (traces_to: #1.2, #1.5) - `brew install --build-from-source cyberos-cli && brew test cyberos-cli`, run locally by the implementer before opening the PR (there is no CI in `homebrew-tap` to run this automatically — confirmed no `.github/workflows/` exists in this repo), passes against the updated Formula - test: documented in the PR description as a local run's output, not inferred from a CI check that does not exist; this same passing run is the evidence clause 1.5 requires (a real release must exist for `brew test` to succeed at all)
+- [x] AC 3 (traces_to: #1.3) - a grep of the header comment block (lines 1-8) for the literal string `They share the name "cyberos" upstream` returns zero matches, and the same block contains the string `` `cs` `` adjacent to a mention of "bin" or "command" - test: `grep -c 'They share the name "cyberos" upstream' Formula/cyberos-cli.rb` returns `0` AND `grep -c '`cs`' Formula/cyberos-cli.rb` returns `>=1`, run as part of the same PR-review pass as AC 2 (still no CI; a reviewer command, not an automated gate)
+- [x] AC 4 (traces_to: #1.4) - the Formula's class name (`CyberosCli`) and filename (`cyberos-cli.rb`) are unchanged in the diff - test: `git diff --stat` for this change shows no rename, only in-place edits to `cyberos-cli.rb`
+
+## Final-acceptance evidence (2026-07-23)
+
+Operator session blanket approval applies. Cross-repo change merged in `cyberskill-official/homebrew-tap` PR #1 (`268088f`).
+
+- AC1: single commit `0a13c1d` updated `url`+`sha256` together to `cyberos-1.1.0.tgz` / `d79e1ffedc90607d5e9d00b5d400d4855a03f1e1b04a5b31f7769f5bf386bbfa`.
+- AC2: local `brew install --build-from-source cyberskill-official/tap/cyberos-cli` upgraded 1.0.9→1.1.0; `brew test cyberos-cli` exit 0; `cs -h` prints `CyberOS 1.1.0` (documented on the tap PR).
+- AC3: stale header sentence absent; `` `cs` `` present in header.
+- AC4: Formula filename/class unchanged (`cyberos-cli.rb` / `CyberosCli`).
 
 ## 3. Edge cases
 
