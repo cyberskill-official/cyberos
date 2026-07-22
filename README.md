@@ -4,17 +4,17 @@ CyberSkill's AI-native internal operations platform. 25 federated modules, 104 a
 
 ## Documentation
 
-**All documentation lives on the [docs site](https://cyberos-wiki.cyberskill.world/).**
+**All documentation lives on the [docs site](https://os.cyberskill.world/docs/).**
 
 | Page | What's there |
 |---|---|
-| [Getting Started](https://cyberos-wiki.cyberskill.world/reference/getting-started.html) | Repo layout, quick start, versioning, install, deploy runbook |
-| [Modules](https://cyberos-wiki.cyberskill.world/) | Per-module pages (25 modules) with appendices, changelogs, deep-dives |
-| [task Catalog](https://cyberos-wiki.cyberskill.world/reference/task-catalog.html) | 489 Tasks across 29 domains |
-| [NFR Catalog](https://cyberos-wiki.cyberskill.world/reference/nfr-catalog.html) | ~157 Non-Functional Requirements across 10 categories |
-| [Changelog](https://cyberos-wiki.cyberskill.world/reference/changelog.html) | All significant changes across modules and services |
-| [Strategy](https://cyberos-wiki.cyberskill.world/architecture/strategy.html) | Ecosystem landscape, competitive analysis, EaaS roadmap |
-| [Roadmap](https://cyberos-wiki.cyberskill.world/architecture/milestones.html) | P0 -> P4 phased milestones |
+| [Getting Started](https://os.cyberskill.world/docs/reference/getting-started.html) | Repo layout, quick start, versioning, install, deploy runbook |
+| [Modules](https://os.cyberskill.world/docs/) | Per-module pages (25 modules) with appendices, changelogs, deep-dives |
+| [task Catalog](https://os.cyberskill.world/docs/reference/task-catalog.html) | 489 Tasks across 29 domains |
+| [NFR Catalog](https://os.cyberskill.world/docs/reference/nfr-catalog.html) | ~157 Non-Functional Requirements across 10 categories |
+| [Changelog](https://os.cyberskill.world/docs/reference/changelog.html) | All significant changes across modules and services |
+| [Strategy](https://os.cyberskill.world/docs/architecture/strategy.html) | Ecosystem landscape, competitive analysis, EaaS roadmap |
+| [Roadmap](https://os.cyberskill.world/docs/architecture/milestones.html) | P0 -> P4 phased milestones |
 
 ## Repository layout
 
