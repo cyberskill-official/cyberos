@@ -10,6 +10,8 @@
      that entitlement is deliberately absent, not forgotten. -->
 <plist version="1.0">
 <dict>
+  <key>application-identifier</key>
+  <string>47QV776KVW.os.cyberskill.world</string>
     <key>com.apple.security.app-sandbox</key>
     <true/>
     <key>com.apple.security.network.client</key>
