@@ -41,6 +41,7 @@ function usage(stream = process.stdout) {
   gates [repo]       run the machine gates for an installed repo
   mcp                launch the stdio MCP server
   memory <args>      BRAIN-store CLI (requires local cyberos-memory; not bundled)
+  cuo <name>         print the slash command to run (redirect stub; not standalone)
   help               this text
 
   -h, --help         this text
@@ -95,6 +96,35 @@ if (cmd === "mcp") {
     process.exit(2);
   }
   r = spawnSync("python3", ["-m", "cyberos", ...rest], { stdio: "inherit" });
+} else if (cmd === "cuo") {
+  // TASK-IMP-132: redirect stub — prints which slash command to run inside an agent
+  // session. No subprocess, no local-availability probe (deliberately asymmetric with memory).
+  const CUO_WORKFLOWS = {
+    plan: "/plan",
+    "create-tasks": "/create-tasks",
+    "ship-tasks": "/ship-tasks",
+    improve: "/improve",
+  };
+  const name = rest[0];
+  const listMsg =
+    "cs cuo — redirect stub (not standalone execution).\n" +
+    "Run one of these slash commands inside a Claude Code / agent session:\n" +
+    "  plan  create-tasks  ship-tasks  improve\n" +
+    "Example: cs cuo plan  →  prints /plan\n";
+  if (!name) {
+    process.stdout.write(listMsg);
+    process.exit(0);
+  }
+  const slash = CUO_WORKFLOWS[name];
+  if (!slash) {
+    process.stderr.write(`cs cuo: unrecognised workflow '${name}'\n\n`);
+    process.stdout.write(listMsg);
+    process.exit(2);
+  }
+  process.stdout.write(
+    `cs cuo ${name}: run ${slash} inside a Claude Code / agent session (redirect stub; not standalone).\n`,
+  );
+  process.exit(0);
 } else if (SCRIPTS[cmd]) {
   const script = join(payload, SCRIPTS[cmd]);
   // Only the repo-scoped commands get a cwd default; help/create take their own args.

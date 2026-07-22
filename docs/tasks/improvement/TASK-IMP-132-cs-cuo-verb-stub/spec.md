@@ -4,7 +4,7 @@ title: Add a `cuo` verb to `cs` as a redirect stub
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: done
 priority: p2
 author: "@stephencheng"
 department: engineering
@@ -104,12 +104,12 @@ Depends on TASK-IMP-130 (adds a verb to the same `cli.mjs` dispatch table under 
 
 ## 2. Acceptance criteria
 
-- [ ] AC 1 (traces_to: #1.2, #1.1) - `cs cuo plan` output contains the literal substring `/plan` and the process exits `0` - this alone proves `cuo` was recognised as a known command (clause 1.1), since an unrecognised top-level command falls through to the "unknown command" branch and could never reach this output - test: `tools/install/tests/test_cli_cuo_verb.sh::t01_plan_redirect_and_recognition`
-- [ ] AC 2 (traces_to: #1.3) - each of `cs cuo create-tasks`, `cs cuo ship-tasks`, `cs cuo improve` prints its matching slash-command substring and exits `0` - test: `tools/install/tests/test_cli_cuo_verb.sh::t02_other_three_redirects`
-- [ ] AC 3 (traces_to: #1.4) - `cs cuo` (no args) prints all four valid names and exits `0` - test: `tools/install/tests/test_cli_cuo_verb.sh::t03_bare_invocation_lists_and_exits_0`
-- [ ] AC 4 (traces_to: #1.4a) - `cs cuo nonexistent-workflow` prints all four valid names and exits with code exactly `2` - test: `tools/install/tests/test_cli_cuo_verb.sh::t04_unrecognised_name_lists_and_exits_2`
-- [ ] AC 5 (traces_to: #1.5) - with tripwire `python3` and `bash` stand-ins on `$PATH` that each write a marker file if invoked, running `cs cuo plan`, `cs cuo create-tasks`, `cs cuo ship-tasks`, and `cs cuo improve` in sequence leaves both marker files absent afterward - test: `tools/install/tests/test_cli_cuo_verb.sh::t05_no_subprocess_spawned` (mirrors the tripwire-binary style already used in TASK-IMP-131's test suite, matching this repo's bash-test-harness convention rather than a JS-level module spy)
-- [ ] AC 6 (traces_to: #1.6) - `help.sh` output and `tools/install/docs/index.md` each mention `cuo` with a redirect-describing word on the same or adjacent line, and `tools/install/docs/index.md`'s command-count sentence reads a number matching the actual verb count in `cli.mjs`'s `SCRIPTS` table at the time of the check (not hardcoded to eight) - test: `tools/install/tests/test_cli_cuo_verb.sh::t06_docs_describe_as_redirect_and_count_correct`
+- [x] AC 1 (traces_to: #1.2, #1.1) - `cs cuo plan` output contains the literal substring `/plan` and the process exits `0` - this alone proves `cuo` was recognised as a known command (clause 1.1), since an unrecognised top-level command falls through to the "unknown command" branch and could never reach this output - test: `tools/install/tests/test_cli_cuo_verb.sh::t01_plan_redirect_and_recognition`
+- [x] AC 2 (traces_to: #1.3) - each of `cs cuo create-tasks`, `cs cuo ship-tasks`, `cs cuo improve` prints its matching slash-command substring and exits `0` - test: `tools/install/tests/test_cli_cuo_verb.sh::t02_other_three_redirects`
+- [x] AC 3 (traces_to: #1.4) - `cs cuo` (no args) prints all four valid names and exits `0` - test: `tools/install/tests/test_cli_cuo_verb.sh::t03_bare_invocation_lists_and_exits_0`
+- [x] AC 4 (traces_to: #1.4a) - `cs cuo nonexistent-workflow` prints all four valid names and exits with code exactly `2` - test: `tools/install/tests/test_cli_cuo_verb.sh::t04_unrecognised_name_lists_and_exits_2`
+- [x] AC 5 (traces_to: #1.5) - with tripwire `python3` and `bash` stand-ins on `$PATH` that each write a marker file if invoked, running `cs cuo plan`, `cs cuo create-tasks`, `cs cuo ship-tasks`, and `cs cuo improve` in sequence leaves both marker files absent afterward - test: `tools/install/tests/test_cli_cuo_verb.sh::t05_no_subprocess_spawned` (mirrors the tripwire-binary style already used in TASK-IMP-131's test suite, matching this repo's bash-test-harness convention rather than a JS-level module spy)
+- [x] AC 6 (traces_to: #1.6) - `help.sh` output and `tools/install/docs/index.md` each mention `cuo` with a redirect-describing word on the same or adjacent line, and `tools/install/docs/index.md`'s command-count sentence reads a number matching the actual verb count in `cli.mjs`'s `SCRIPTS` table at the time of the check (not hardcoded to eight) - test: `tools/install/tests/test_cli_cuo_verb.sh::t06_docs_describe_as_redirect_and_count_correct`
 
 ## 3. Edge cases
 
