@@ -2,7 +2,7 @@
 
 This is the portable form of the single `ship-tasks` workflow. It runs in any repo, any language, with no CyberOS clone required. It is exposed through many channels so a user can pick whatever fits their setup.
 
-New to it? `GUIDE.md` is the step-by-step walkthrough (zero to your first shipped task). This README is the channel catalog and reference.
+New to it? [`ship-your-first-task.md`](../../modules/cuo/docs/guides/ship-your-first-task.md) is the step-by-step walkthrough (zero to your first shipped task), also published on the docs site's day-one guide. This README is the channel catalog and reference — it does not repeat that walkthrough, and `/install` (the Claude Code plugin command) does not either; both point here for the full behavior instead of restating it.
 
 `install` sets up two things by default: the task workflow AND the BRAIN memory protocol. It scaffolds a local `.cyberos/memory/store/` store (gitignored tenant data) and drops the `AGENTS.md` Layer-1 memory rules, so the project gets both the workflow and the memory discipline. Skip the memory half with `CYBEROS_NO_MEMORY=1`.
 
@@ -95,7 +95,7 @@ bash .cyberos-install/install.sh
 
 ### 2a. What the payload covers (TASK-CUO-209)
 
-The payload vendors the FULL 14-stage SDP skill catalog (52 skills: 24 author/audit pairs + the four NFR singles) - SOW through decommissioning. The two commands automate stages 5-10; everything else is standalone-invocable. See the lifecycle map in GUIDE.md.
+The payload vendors the FULL 14-stage SDP skill catalog (52 skills: 24 author/audit pairs + the four NFR singles) - SOW through decommissioning. The two commands automate stages 5-10; everything else is standalone-invocable.
 
 ### 2b. Update awareness (TASK-IMP-070)
 
