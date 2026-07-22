@@ -171,14 +171,19 @@ sync_grok() {
 
   echo "grok: reinstalling from $plugin_dir"
   if [ "$dry" -eq 1 ]; then
+    echo "  dry-run: grok plugin uninstall cyberos --confirm   # ignore failure: nothing to remove on a first run"
     echo "  dry-run: grok plugin install $plugin_dir --trust"
     synced=$((synced + 1))
     return 0
   fi
 
   # Local installs are snapshotted into ~/.grok/installed-plugins/. `plugin update` on a
-  # local source often reports "already live" without re-copying. Re-install is the
-  # reliable refresh (same pattern as the manual recovery that fixed the stuck cache).
+  # local source often reports "already live" without re-copying, and a bare `plugin install`
+  # on a path already registered as a repo fails hard ("Error: repo 'plugin-<hash>' already
+  # installed") instead of refreshing it — observed in practice on a second build, not just
+  # in theory. Force reinstall the same way the Claude branch above already does: uninstall
+  # first (ignore failure — there is nothing to remove on a first run), then install fresh.
+  grok plugin uninstall cyberos --confirm >/dev/null 2>&1 || true
   if ! grok plugin install "$plugin_dir" --trust; then
     echo "grok: FAIL install $plugin_dir" >&2
     failed=$((failed + 1))
