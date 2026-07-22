@@ -69,7 +69,7 @@ Add a `cuo` entry to `cli.mjs`'s dispatch. `cs cuo <name>` where `<name>` is one
 
 ## Scope
 
-In scope: the `cuo` dispatch entry in `cli.mjs` recognising exactly `plan`, `create-tasks`, `ship-tasks`, `improve`; its no-argument/unrecognised-argument listing behaviour; and the `help.sh`/`docs/index.md` mentions of the new verb.
+In scope: the `cuo` dispatch entry in `cli.mjs` recognising exactly `plan`, `create-tasks`, `ship-tasks`, `improve`; its no-argument/unrecognised-argument listing behaviour; and the `help.sh`/`tools/install/docs/index.md` mentions of the new verb.
 
 ### Out of scope / Non-Goals
 
@@ -100,7 +100,7 @@ Depends on TASK-IMP-130 (adds a verb to the same `cli.mjs` dispatch table under 
 - 1.4 `cs cuo` with no argument MUST print a listing of all four valid names and MUST exit `0` (orientation, not an error — matching the bare top-level `cs` invocation's own exit-`0` convention at `cli.mjs:59`).
 - 1.4a `cs cuo <unrecognised-name>` MUST print the same listing but MUST exit with code `2` (matching `cli.mjs`'s established convention for a usage mistake, `cli.mjs:87`) — distinct from the bare-invocation case, since a mistyped name is a usage error a caller may want to detect, while a bare invocation asking for orientation is not.
 - 1.5 `cs cuo <any argument>` MUST NOT spawn any subprocess, MUST NOT invoke Python, and MUST NOT attempt to execute a CUO workflow, and MUST NOT probe whether `cyberos-cuo` is locally installed — unlike TASK-IMP-131's `memory` verb, which does detect and report local tool availability, the plan constrains `cuo` more tightly ("do not implement standalone execution," no mechanism left open for later): this task's stub prints fixed text only, with no local-environment awareness at all. The two sibling verbs are deliberately asymmetric because the plan treats them differently, not by oversight.
-- 1.6 `help.sh` and `docs/index.md` MUST document the `cuo` verb and MUST describe it, on the same line or the immediately adjacent line as the mention, as a redirect/orientation aid rather than standalone execution. `docs/index.md:27`'s "the same eight commands" sentence MUST be updated to the correct count once `cuo` (and, per TASK-IMP-131, `memory`) are added — whichever of TASK-IMP-131/132 lands second is responsible for the numeral, not just appending its own verb's name.
+- 1.6 `help.sh` and `tools/install/docs/index.md` MUST document the `cuo` verb and MUST describe it, on the same line or the immediately adjacent line as the mention, as a redirect/orientation aid rather than standalone execution. `tools/install/docs/index.md:27`'s "the same eight commands" sentence MUST be updated to the correct count once `cuo` (and, per TASK-IMP-131, `memory`) are added — whichever of TASK-IMP-131/132 lands second is responsible for the numeral, not just appending its own verb's name.
 
 ## 2. Acceptance criteria
 
@@ -109,7 +109,7 @@ Depends on TASK-IMP-130 (adds a verb to the same `cli.mjs` dispatch table under 
 - [ ] AC 3 (traces_to: #1.4) - `cs cuo` (no args) prints all four valid names and exits `0` - test: `tools/install/tests/test_cli_cuo_verb.sh::t03_bare_invocation_lists_and_exits_0`
 - [ ] AC 4 (traces_to: #1.4a) - `cs cuo nonexistent-workflow` prints all four valid names and exits with code exactly `2` - test: `tools/install/tests/test_cli_cuo_verb.sh::t04_unrecognised_name_lists_and_exits_2`
 - [ ] AC 5 (traces_to: #1.5) - with tripwire `python3` and `bash` stand-ins on `$PATH` that each write a marker file if invoked, running `cs cuo plan`, `cs cuo create-tasks`, `cs cuo ship-tasks`, and `cs cuo improve` in sequence leaves both marker files absent afterward - test: `tools/install/tests/test_cli_cuo_verb.sh::t05_no_subprocess_spawned` (mirrors the tripwire-binary style already used in TASK-IMP-131's test suite, matching this repo's bash-test-harness convention rather than a JS-level module spy)
-- [ ] AC 6 (traces_to: #1.6) - `help.sh` output and `docs/index.md` each mention `cuo` with a redirect-describing word on the same or adjacent line, and `docs/index.md`'s command-count sentence reads a number matching the actual verb count in `cli.mjs`'s `SCRIPTS` table at the time of the check (not hardcoded to eight) - test: `tools/install/tests/test_cli_cuo_verb.sh::t06_docs_describe_as_redirect_and_count_correct`
+- [ ] AC 6 (traces_to: #1.6) - `help.sh` output and `tools/install/docs/index.md` each mention `cuo` with a redirect-describing word on the same or adjacent line, and `tools/install/docs/index.md`'s command-count sentence reads a number matching the actual verb count in `cli.mjs`'s `SCRIPTS` table at the time of the check (not hardcoded to eight) - test: `tools/install/tests/test_cli_cuo_verb.sh::t06_docs_describe_as_redirect_and_count_correct`
 
 ## 3. Edge cases
 

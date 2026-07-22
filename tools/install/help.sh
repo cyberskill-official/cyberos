@@ -22,8 +22,10 @@ Machine gates:
   bash cuo/gates/run-gates.sh
 
 Channels — same commands, three front doors:
-  npx cs <command>           install | uninstall | version | status | create | gates | mcp | help
+  npx cs <command>           install | uninstall | version | status | create | gates | mcp | help | memory
   node mcp/cyberos-mcp.mjs   stdio MCP server (or: npx cs mcp)
+
+  memory                     BRAIN-store CLI — local-availability only (cyberos-memory not bundled)
 
 Plugin slash commands (Claude Code): /install /uninstall /version /status /help
   plus /ship-tasks and /create-tasks

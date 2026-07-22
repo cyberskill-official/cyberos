@@ -40,6 +40,7 @@ function usage(stream = process.stdout) {
   create [dir]       scaffold a new repo with CyberOS already installed
   gates [repo]       run the machine gates for an installed repo
   mcp                launch the stdio MCP server
+  memory <args>      BRAIN-store CLI (requires local cyberos-memory; not bundled)
   help               this text
 
   -h, --help         this text
@@ -78,6 +79,22 @@ if (cmd === "mcp") {
     process.exit(2);
   }
   r = spawnSync("bash", [gates], { cwd: repo, stdio: "inherit" });
+} else if (cmd === "memory") {
+  // TASK-IMP-131: dispatch into locally available cyberos-memory via `python3 -m cyberos`.
+  // Never resolve by bare `$PATH` lookup of `cyberos` — that name collides with the old
+  // public CLI bin this plan renamed away from.
+  const probe = spawnSync("python3", ["-m", "cyberos", "--help"], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  if (probe.error || probe.status !== 0) {
+    process.stderr.write(
+      "cs memory: cyberos-memory is an internal package not bundled with this install.\n" +
+        "Install it from a CyberOS monorepo checkout (pip install ./modules/memory) to use this verb.\n",
+    );
+    process.exit(2);
+  }
+  r = spawnSync("python3", ["-m", "cyberos", ...rest], { stdio: "inherit" });
 } else if (SCRIPTS[cmd]) {
   const script = join(payload, SCRIPTS[cmd]);
   // Only the repo-scoped commands get a cwd default; help/create take their own args.

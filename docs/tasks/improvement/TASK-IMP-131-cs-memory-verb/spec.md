@@ -4,7 +4,7 @@ title: Add a `memory` verb to `cs`, gated on local availability
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
@@ -106,11 +106,11 @@ Depends on TASK-IMP-130 (the `cs` bin rename must land first; this task adds a v
 
 ## 2. Acceptance criteria
 
-- [ ] AC 1 (traces_to: #1.1) - two runs against the SAME `cs memory --help` invocation: (a) with no `python3` stub present, output does NOT contain "unknown command 'memory'"; (b) with a working `python3 -m cyberos` stub present, its stub output IS printed - proving `memory` is routed to the dispatch/resolution logic in both cases, not merely that the unknown-command message is absent - test: `tools/install/tests/test_cli_memory_verb.sh::t01_memory_is_known_command`
-- [ ] AC 2 (traces_to: #1.2) - with a fake `cyberos` executable on `$PATH` that prints `WRONG-PATH-DISPATCH` and exits 0, alongside a working `python3 -m cyberos` stub that prints `CORRECT-DISPATCH`, `cs memory doctor` prints `CORRECT-DISPATCH` and never prints `WRONG-PATH-DISPATCH` - proves resolution goes through the `python3 -m cyberos` check, not a bare `$PATH` lookup of `cyberos` - test: `tools/install/tests/test_cli_memory_verb.sh::t02_resolution_not_via_path_cyberos`
-- [ ] AC 3 (traces_to: #1.3) - with a stub `python3 -m cyberos` that echoes its args and exits 3, `cs memory foo bar` prints the echoed args and the CLI process exits 3 - test: `tools/install/tests/test_cli_memory_verb.sh::t03_dispatch_forwards_args_and_exit_code`
-- [ ] AC 4 (traces_to: #1.4) - with no `python3` on `$PATH` at all, `cs memory doctor` exits with code exactly `2`, prints a message containing "cyberos-memory" and "not bundled" (or equivalent), and produces no Python traceback text - test: `tools/install/tests/test_cli_memory_verb.sh::t04_missing_python_clear_error`
-- [ ] AC 5 (traces_to: #1.5) - `help.sh`'s output and `docs/index.md` both mention `memory` as a verb and both contain a caveat sentence about local availability (grep for a shared marker string) - test: `tools/install/tests/test_cli_memory_verb.sh::t05_docs_state_gating`
+- [x] AC 1 (traces_to: #1.1) - two runs against the SAME `cs memory --help` invocation: (a) with no `python3` stub present, output does NOT contain "unknown command 'memory'"; (b) with a working `python3 -m cyberos` stub present, its stub output IS printed - proving `memory` is routed to the dispatch/resolution logic in both cases, not merely that the unknown-command message is absent - test: `tools/install/tests/test_cli_memory_verb.sh::t01_memory_is_known_command`
+- [x] AC 2 (traces_to: #1.2) - with a fake `cyberos` executable on `$PATH` that prints `WRONG-PATH-DISPATCH` and exits 0, alongside a working `python3 -m cyberos` stub that prints `CORRECT-DISPATCH`, `cs memory doctor` prints `CORRECT-DISPATCH` and never prints `WRONG-PATH-DISPATCH` - proves resolution goes through the `python3 -m cyberos` check, not a bare `$PATH` lookup of `cyberos` - test: `tools/install/tests/test_cli_memory_verb.sh::t02_resolution_not_via_path_cyberos`
+- [x] AC 3 (traces_to: #1.3) - with a stub `python3 -m cyberos` that echoes its args and exits 3, `cs memory foo bar` prints the echoed args and the CLI process exits 3 - test: `tools/install/tests/test_cli_memory_verb.sh::t03_dispatch_forwards_args_and_exit_code`
+- [x] AC 4 (traces_to: #1.4) - with no `python3` on `$PATH` at all, `cs memory doctor` exits with code exactly `2`, prints a message containing "cyberos-memory" and "not bundled" (or equivalent), and produces no Python traceback text - test: `tools/install/tests/test_cli_memory_verb.sh::t04_missing_python_clear_error`
+- [x] AC 5 (traces_to: #1.5) - `help.sh`'s output and `docs/index.md` both mention `memory` as a verb and both contain a caveat sentence about local availability (grep for a shared marker string) - test: `tools/install/tests/test_cli_memory_verb.sh::t05_docs_state_gating`
 
 ## 3. Edge cases
 
