@@ -6,6 +6,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SITE_BASE_URL } from './site-config.mjs';
 
 const __dirname  = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT  = resolve(__dirname, '..', '..');
@@ -232,7 +233,7 @@ function renderModuleChangelog(slug) {
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>${esc(meta.name)} — Changelog — CyberOS</title>
  <meta name="description" content="${esc(meta.name)} module changelog — all significant changes.">
- <link rel="canonical" href="https://cyberos-wiki.cyberskill.world/modules/${slug}/changelog.html">
+ <link rel="canonical" href="${SITE_BASE_URL}/modules/${slug}/changelog.html">
  <link rel="stylesheet" href="../../assets/tokens.css">
  <link rel="stylesheet" href="../../assets/styles.css">
  <link rel="stylesheet" href="../../assets/tailwind.min.css">

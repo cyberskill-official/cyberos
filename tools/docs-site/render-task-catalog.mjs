@@ -8,6 +8,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SITE_BASE_URL } from './site-config.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT  = resolve(__dirname, '..', '..');
@@ -95,7 +96,7 @@ ${byModule[m].map(renderCard).join('\n')}
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>task Catalog — CyberOS</title>
   <meta name="description" content="Complete catalog of CyberOS Tasks (tasks) — ${data.count} specifications across ${modules.length} modules.">
-  <link rel="canonical" href="https://docs.cyberos.world/reference/task-catalog.html">
+  <link rel="canonical" href="${SITE_BASE_URL}/reference/task-catalog.html">
   <style>
     :root {
       --bg: #0b0d10;

@@ -7,6 +7,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SITE_BASE_URL } from './site-config.mjs';
 
 const __dirname  = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT  = resolve(__dirname, '..', '..');
@@ -125,7 +126,7 @@ function renderPage(data) {
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>CyberOS — NFR Catalog</title>
  <meta name="description" content="Non-Functional Requirements catalog: ${activeCategories.map(k => CATEGORIES[k].name).join(', ')}. ${data.count} specifications across ${modules.length} modules.">
- <link rel="canonical" href="https://cyberos-wiki.cyberskill.world/reference/nfr-catalog.html">
+ <link rel="canonical" href="${SITE_BASE_URL}/reference/nfr-catalog.html">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
