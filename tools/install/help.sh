@@ -22,11 +22,11 @@ Machine gates:
   bash cuo/gates/run-gates.sh
 
 Channels — same commands, three front doors:
-  npx cyberos <command>      install | uninstall | version | status | create | gates | mcp | help
-  node mcp/cyberos-mcp.mjs   stdio MCP server (or: npx cyberos mcp)
+  npx cs <command>           install | uninstall | version | status | create | gates | mcp | help
+  node mcp/cyberos-mcp.mjs   stdio MCP server (or: npx cs mcp)
 
 Plugin slash commands (Claude Code): /install /uninstall /version /status /help
   plus /ship-tasks and /create-tasks
 
-Docs: GUIDE.md · https://cyberos.cyberskill.world/docs
+Docs: GUIDE.md · https://os.cyberskill.world/docs
 TXT

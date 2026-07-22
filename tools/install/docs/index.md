@@ -24,7 +24,7 @@ Every operation has two equal paths:
 
 Also: `/ship-tasks`, `/create-tasks` for the task workflow.
 
-Via the npm package the same eight commands are `npx cyberos <command>`: `install`, `uninstall`, `version`, `status`, `create`, `gates`, `mcp`, `help`. `create`, `gates` and `mcp` have no slash command - they are CLI-only. The Claude plugin additionally ships `/plan`, `/create-tasks` and `/improve` for the task workflow.
+Via the npm package the same eight commands are `npx cs <command>`: `install`, `uninstall`, `version`, `status`, `create`, `gates`, `mcp`, `help`. `create`, `gates` and `mcp` have no slash command - they are CLI-only. The Claude plugin additionally ships `/plan`, `/create-tasks` and `/improve` for the task workflow.
 
 **Day-to-day rule:** install once, then forget. Soft update-check runs automatically whenever anything under `.cyberos/` is used (gates, hooks, MCP, help, version, status). Manual check is only `/version`. Re-vendor is always `install` — there is no separate “apply” command.
 
@@ -152,4 +152,4 @@ The workflow-side rules these patterns serve — one writer through one filesyst
 
 - Payload channel catalog: payload `README.md`
 - Consumer update detail: `docs/CONSUMER_UPDATE.md` (in the monorepo / pack tools)
-- Site: https://cyberos.cyberskill.world/docs
+- Site: https://os.cyberskill.world/docs
