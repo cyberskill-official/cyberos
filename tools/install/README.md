@@ -183,9 +183,9 @@ printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
 The payload root carries a `package.json` with three bins:
 
 ```bash
-npx cyberos install [dir]     # vendor the machine + wire every agent (default: cwd)
-npx cyberos-gates [dir]    # run the machine gates
-npx cyberos-mcp            # launch the MCP server (for a client's config)
+npx cs install [dir]     # vendor the machine + wire every agent (default: cwd)
+npx cs-gates [dir]    # run the machine gates
+npx cs-mcp            # launch the MCP server (for a client's config)
 ```
 
 Run `npx .` from `dist/cyberos`, `npm i -g ./dist/cyberos`, or `npx github:<owner>/<repo>` once the payload is published as its own repo.
@@ -201,7 +201,7 @@ bash dist/cyberos/create.sh ../my-new-project     # git init + skeleton + instal
 ### Planned channels (say the word and I will build them)
 
 - Homebrew tap and Nix flake - `brew install cyberos` / `nix run`.
-- Published npm package (`npx cyberos install`). The curl one-liner + hosted payload shipped via GitHub Releases (TASK-IMP-069).
+- Published npm package (`npx cs install`). The curl one-liner + hosted payload shipped via GitHub Releases (TASK-IMP-069).
 
 ### Add your own agent
 

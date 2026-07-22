@@ -5,7 +5,7 @@ Orient the user. Present concisely:
 
 1. CyberOS turns work into tasks through implement → review → test → done, with the human holding two acceptance gates.
 
-2. Commands (slash + shell):
+2. Commands (slash + shell). The npm/npx channel is the `cs` CLI (`npx cs <command>`):
 - `/install` — install or re-vendor (once / when updating)
 - `/uninstall` — remove the machine
 - `/version` — check for a newer CyberOS; on yes → install
@@ -18,6 +18,6 @@ Orient the user. Present concisely:
 
 4. Layout after install: `.cyberos/cuo/`, `.cyberos/AGENT-ENTRY.md`, `.cyberos/memory/`, `docs/tasks/`, `docs/status/`.
 
-5. Docs: https://cyberos.cyberskill.world/docs
+5. Docs: https://os.cyberskill.world/docs
 
 If no `.cyberos/`, suggest `/install`.

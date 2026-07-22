@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [Unreleased]
+
+Breaking
+- renamed the published npm CLI's bin command from `cyberos` to `cs` (`npx cs <command>` in place of `npx cyberos <command>`) — the old name collided on `$PATH` with an unrelated, internal-only `modules/memory` console script also named `cyberos`. The npm package name is unchanged (`@cyberskill/cyberos`); only the invoked command renamed. There is no `cyberos` alias during a transition window — update any script or muscle memory calling `npx cyberos ...` to `npx cs ...`. (TASK-IMP-130)
+
 ## [1.0.9] - 2026-07-22
 
 Maintenance release.

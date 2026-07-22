@@ -234,7 +234,7 @@ cp "$here/status.sh"    "$out/status.sh"
 cp "$here/help.sh"      "$out/help.sh"
 cp -R "$here/ci"        "$out/ci"
 cp -R "$here/mcp"       "$out/mcp"              # MCP server channel (node stdio; every MCP agent)
-cp -R "$here/cli"       "$out/cli"              # npx CLI channel (one bin: `cyberos <command>`)
+cp -R "$here/cli"       "$out/cli"              # npx CLI channel (one bin: `cs <command>`)
 cp -R "$here/template"  "$out/template"         # skeleton for create.sh + GitHub template repo
 cp "$here/Dockerfile"   "$out/Dockerfile"
 cp "$here/README.md"    "$out/README.md"
@@ -334,12 +334,14 @@ ver="$(cd "$repo" && git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 # $cyver was computed above (before the plugin manifests were stamped + zipped).
 echo "$cyver" > "$out/VERSION"     # plain file so version.sh can compare fast
 
-# root package.json makes the payload npx/npm-installable. ONE bin: `cyberos` is the trigger
-# keyword and everything after it is a command (`npx cyberos install [dir]`, `npx cyberos gates`,
-# `npx cyberos mcp`, `npx cyberos --help`). Three verb-named bins meant `cyberos-install --help`
+# root package.json makes the payload npx/npm-installable. ONE bin: `cs` is the trigger
+# keyword and everything after it is a command (`npx cs install [dir]`, `npx cs gates`,
+# `npx cs mcp`, `npx cs --help`). Three verb-named bins meant `cs-install --help`
 # read as nonsense and the bin name had to change every time the verb did — which is precisely
-# how `init` outlived the init->install rename. cli/bin/cli.mjs dispatches; the command set
-# mirrors help.sh and the plugin's slash commands 1:1, so the channels cannot drift.
+# how `init` outlived the init->install rename. The package name stays `@cyberskill/cyberos`
+# (TASK-IMP-130) — only the invoked bin command renamed, not the npm install target.
+# cli/bin/cli.mjs dispatches; the command set mirrors help.sh and the plugin's slash
+# commands 1:1, so the channels cannot drift.
 cat > "$out/package.json" <<PKG
 {
   "name": "@cyberskill/cyberos",
@@ -347,7 +349,7 @@ cat > "$out/package.json" <<PKG
   "description": "Run the CyberOS ship-tasks workflow in any repo - install, gates, and an MCP server, wired for every popular coding agent (Claude Code, Codex, Cursor, Gemini, Antigravity, Grok CLI, zcode, Command Code, Copilot, Windsurf).",
   "type": "module",
   "bin": {
-    "cyberos": "cli/bin/cli.mjs"
+    "cs": "cli/bin/cli.mjs"
   },
   "engines": { "node": ">=18" },
   "repository": { "type": "git", "url": "git+https://github.com/cyberskill-official/cyberos.git" },
