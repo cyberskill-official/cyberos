@@ -1,0 +1,66 @@
+gate build:  (source: absent)
+SKIP  build     (no command configured)
+gate lint:  (source: absent)
+SKIP  lint      (no command configured)
+gate test: bash scripts/tests/run_all.sh (source: config)
+GATE  test      bash scripts/tests/run_all.sh
+  [32mok[0m   test_benchmark_gates.sh
+  [32mok[0m   test_check_doc_anchors.sh
+  [32mok[0m   test_ci_truth.sh
+  [32mok[0m   test_corpus_hygiene.sh
+  [32mok[0m   test_regen_backlog.sh
+  [32mok[0m   test_render_stamp.sh
+  [32mok[0m   test_skill_stub_lint.sh
+  [32mok[0m   test_task_layout.sh
+  [32mok[0m   test_template_schema.sh
+  [32mok[0m   test_trace_006.sh
+  [32mok[0m   test_render_roadmap.sh
+  [32mok[0m   test_render_status_hub.sh
+  [32mok[0m   test_render_task_pages.sh
+  [32mok[0m   test_templates_module.sh
+  [32mok[0m   test_batch_economics.sh
+  [32mok[0m   test_batch_select.sh
+  [32mok[0m   test_chain_coverage.sh
+  [32mok[0m   test_channels.sh
+  [32mok[0m   test_check_latest.sh
+  [32mok[0m   test_check_version_sync.sh
+  [32mok[0m   test_cli_cuo_verb.sh
+  [32mok[0m   test_cli_memory_verb.sh
+  [32mok[0m   test_cli_rename.sh
+  [32mok[0m   test_cone_audit.sh
+  [32mok[0m   test_coverage_scope.sh
+  [32mok[0m   test_cs_rename_e2e.sh
+  [32mok[0m   test_doctor_gate.sh
+  [32mok[0m   test_e2e_skeleton.sh
+  [32mok[0m   test_fail_closed_gates.sh
+  [32mok[0m   test_fm001_migrate.sh
+  [32mok[0m   test_full_sdp_payload.sh
+  [32mok[0m   test_gate_autodetect.sh
+  [32mok[0m   test_hitl_lock.sh
+  [32mok[0m   test_install_hygiene.sh
+  [32mok[0m   test_install_lock.sh
+  [32mok[0m   test_install_portability.sh
+  [32mok[0m   test_install_version_guard.sh
+  [32mok[0m   test_memory_append.sh
+  [32mok[0m   test_pair_parity.sh
+  [32mok[0m   test_plan_workflow.sh
+  [33mskip[0m test_release_assets.sh — needs GNU tar (BSD/macOS host); runs on ubuntu/CI
+  [32mok[0m   test_review_findings.sh
+  [32mok[0m   test_rubrics_vendored.sh
+  [32mok[0m   test_skill_log.sh
+  [32mok[0m   test_sync_host_plugins.sh
+  [32mok[0m   test_task_lint.sh
+  [32mok[0m   test_task_reconcile.sh
+  [32mok[0m   test_verify_goals.sh
+  [32mok[0m   test_workflow_helpers.sh
+  [32mok[0m   test_workflow_improver.sh
+----
+suites: pass=49 fail=0 skip=1
+PASS  test
+gate coverage:  (source: absent)
+SKIP  coverage  (no command configured)
+----------------------------------------------------------------------
+GATES: GREEN (machine gates only).
+HITL still required: a human records the review verdict and the final acceptance.
+The agent must NOT set the task to done itself.
+status: docs/status/ regenerated
