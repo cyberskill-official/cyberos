@@ -4,7 +4,7 @@ title: Benchmark gates G1-G16 - checkers, risk register, BRAIN recording
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: implementing
 priority: p1
 author: "@stephencheng"
 department: engineering
