@@ -17,6 +17,10 @@ tokens: unknown
 
 Implements the post–batch/8 plan: Wave 0 chores, MMR sync, MEMORY-302, ship-tasks evolution, MCP/OBS schedule, and v3.x/v4.0 draft tasks.
 
+## Gate-1 (2026-07-23)
+
+Operator: **all-accept** for MEMORY-302, IMP-141, CUO-305, IMP-142 → advanced to `testing` (evidence `batch-9-gate1-acceptance.md`). Halted before `done`.
+
 ## Wave 0 (chores — this PR)
 
 - [x] Delete remote `ship/batch-8f-entrypoint`

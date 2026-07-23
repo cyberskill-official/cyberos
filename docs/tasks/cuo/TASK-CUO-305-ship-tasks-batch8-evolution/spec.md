@@ -4,7 +4,7 @@ title: "ship-tasks evolution — batch/8 HITL + sub-batch doctrine"
 template: task@1
 type: improvement
 module: cuo
-status: reviewing
+status: testing
 priority: p1
 author: "@stephencheng"
 department: engineering

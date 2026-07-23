@@ -4,7 +4,7 @@ title: "Schedule MCP/OBS resume wave after IMP-139 triage"
 template: task@1
 type: improvement
 module: improvement
-status: reviewing
+status: testing
 priority: p2
 author: "@stephencheng"
 department: engineering
