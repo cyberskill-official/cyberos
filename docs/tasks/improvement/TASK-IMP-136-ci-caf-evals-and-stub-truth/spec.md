@@ -4,7 +4,7 @@ title: CI truth - CAF evals in root CI, hook-claim honesty, stub workflow sweep
 template: task@1
 type: improvement
 module: improvement
-status: testing
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
