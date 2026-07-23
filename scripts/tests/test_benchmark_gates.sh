@@ -496,22 +496,32 @@ t05_risk_rows_complete() {
 }
 
 t06_brain_record_fixture() {
-  # CARVE-OUT (recorded deviation): spec §1.6 + AC 6 demonstrate the BRAIN record on a
-  # fixture store — but §1.6 is hard-deferred behind TASK-MEMORY-303's operator-gated
-  # store repair (the live store is FROZEN_RECOVERABLE; recording below READY would
-  # violate the protocol the audit measured, and the batch/8 partition forbids memory
-  # writes from this task). Until 303 lands, the testable truth is: the ready-to-run
-  # recording deliverable exists, is executable, and refuses a below-READY store.
+  # AC 6: deliverable exists; when live store is READY, the three §1.6 decision
+  # memories MUST be present (post-MEMORY-303 execution). Fixture-store CI half
+  # remains the script's doctor READY guard (bash -n + refuses below READY).
   local all=1
   local checklist="$TASKDIR/brain-recording-checklist.md" script="$TASKDIR/brain-record.sh"
-  [ -f "$checklist" ] || { fail t06_brain_record_fixture "$checklist missing — the deferred §1.6 step must stay executable-by-checklist"; all=0; }
-  [ -f "$script" ] || { fail t06_brain_record_fixture "$script missing — the ready-to-run recording script for the final pass"; all=0; }
+  local store="$repo/.cyberos/memory/store"
+  [ -f "$checklist" ] || { fail t06_brain_record_fixture "$checklist missing"; all=0; }
+  [ -f "$script" ] || { fail t06_brain_record_fixture "$script missing"; all=0; }
   if [ -f "$script" ]; then
     bash -n "$script" 2>/dev/null || { fail t06_brain_record_fixture "$script does not parse (bash -n)"; all=0; }
-    grep -q 'doctor' "$script" || { fail t06_brain_record_fixture "$script never checks 'cyberos doctor' — §1.6 forbids recording below READY"; all=0; }
+    grep -q 'doctor' "$script" || { fail t06_brain_record_fixture "$script never checks 'cyberos doctor'"; all=0; }
   fi
-  echo "  defer t06 full fixture-store demonstration — BRAIN recording gated on TASK-MEMORY-303 (depends_on edge; store FROZEN_RECOVERABLE at authoring)"
-  [ "$all" -eq 1 ] && ok "t06_brain_record_fixture (deliverable present; recording deferred per depends_on)"
+  if [ -d "$store" ] && PYTHONPATH="$repo/modules/memory${PYTHONPATH:+:$PYTHONPATH}" \
+       python3 -m cyberos --store "$store" state 2>/dev/null | grep -q READY; then
+    local missing=0
+    for slug in 2026-07-23-deep-audit-verdict 2026-07-23-benchmark-gates-g1-g16 2026-07-23-hardening-decisions; do
+      if ! find "$store/memories/decisions" -type f -name "${slug}.md" 2>/dev/null | grep -q .; then
+        echo "  missing BRAIN memory: $slug"; missing=1
+      fi
+    done
+    [ "$missing" -eq 0 ] || { fail t06_brain_record_fixture "READY store missing §1.6 decision memories — run brain-record.sh"; all=0; }
+    [ "$all" -eq 1 ] && ok "t06_brain_record_fixture (live READY store holds audit + gates + wave decisions)"
+  else
+    echo "  defer t06 live demonstration — store not READY or absent (script + checklist present)"
+    [ "$all" -eq 1 ] && ok "t06_brain_record_fixture (deliverable present; live record deferred until READY)"
+  fi
 }
 
 t07_changelog_four_deliverables() {

@@ -1,0 +1,58 @@
+== brain-record: preconditions (§1 pre-write checklist) ==
+cyberos doctor — /Users/stephencheng/Projects/CyberSkill/cyberos/.cyberos/memory/store
+
+  [PASS] layout-root-canonical              canonical layout  (0.1 ms)
+  [PASS] layout-no-sandbox-path             resolved=/Users/stephencheng/Projects/CyberSkill/cyberos/.cyberos/memory/store  (0.1 ms)
+  [PASS] layout-shard-uniformity            all memories sharded under <kind>/<hex>/<hex>/  (0.1 ms)
+  [PASS] layout-no-sync-conflict-siblings   no sync-FS conflict siblings  (2.0 ms)
+  [PASS] ledger-link-invariant              19 records, chain intact  (3.8 ms)
+  [PASS] ledger-hash-invariant              19 records, chain intact  (0.2 ms)
+  [PASS] ledger-crc-tail                    all 8982 bytes accounted for  (0.1 ms)
+  [PASS] ledger-mmr-cross-check             MMR consistent (19 leaves, root=cc77c317e7d1b4c7…)  (0.7 ms)
+  [PASS] ledger-append-only                 no sealed segments to check  (0.0 ms)
+  [PASS] manifest-validates-against-schema  manifest validates  (498.0 ms)
+  [PASS] export-determinism                 sha256=631644e384128e62…  (3.0 ms)
+  [PASS] crypto-crc-implementation          hardware-accelerated CRC-32C  (0.0 ms)
+  [PASS] durability-platform-correct        auto → F_BARRIERFSYNC on Darwin  (0.0 ms)
+  [PASS] dream-applied-row-has-provenance   no dream-applier rows on the chain  (4.3 ms)
+  [PASS] store-yaml-acl-valid               no STORE.yaml declared  (0.7 ms)
+  [PASS] session-lifecycle                  no sessions on the chain  (0.1 ms)
+
+  total: 16  pass: 16  warn: 0  error: 0
+  overall: OK (513 ms)
+doctor: READY - proceeding.
+put -> memories/decisions/b0/7f/2026-07-23-deep-audit-verdict.md
+seq=20
+put -> memories/decisions/ab/3d/2026-07-23-benchmark-gates-g1-g16.md
+seq=21
+put -> memories/decisions/6a/80/2026-07-23-hardening-decisions.md
+seq=22
+== chain verify + post-state ==
+verified 22 records across 1 segment(s); chain intact
+cyberos doctor — /Users/stephencheng/Projects/CyberSkill/cyberos/.cyberos/memory/store
+
+  [PASS] layout-root-canonical              canonical layout  (0.1 ms)
+  [PASS] layout-no-sandbox-path             resolved=/Users/stephencheng/Projects/CyberSkill/cyberos/.cyberos/memory/store  (0.1 ms)
+  [PASS] layout-shard-uniformity            all memories sharded under <kind>/<hex>/<hex>/  (0.1 ms)
+  [PASS] layout-no-sync-conflict-siblings   no sync-FS conflict siblings  (2.1 ms)
+  [PASS] ledger-link-invariant              22 records, chain intact  (4.7 ms)
+  [PASS] ledger-hash-invariant              22 records, chain intact  (0.2 ms)
+  [PASS] ledger-crc-tail                    all 10238 bytes accounted for  (0.1 ms)
+  [PASS] ledger-mmr-cross-check             MMR consistent (22 leaves, root=ab4508254918c195…)  (0.6 ms)
+  [PASS] ledger-append-only                 no sealed segments to check  (0.0 ms)
+  [PASS] manifest-validates-against-schema  manifest validates  (484.2 ms)
+  [PASS] export-determinism                 sha256=47a466ca3c40683f…  (3.7 ms)
+  [PASS] crypto-crc-implementation          hardware-accelerated CRC-32C  (0.0 ms)
+  [PASS] durability-platform-correct        auto → F_BARRIERFSYNC on Darwin  (0.0 ms)
+  [PASS] dream-applied-row-has-provenance   no dream-applier rows on the chain  (4.9 ms)
+  [PASS] store-yaml-acl-valid               no STORE.yaml declared  (0.8 ms)
+  [PASS] session-lifecycle                  no sessions on the chain  (0.1 ms)
+
+  total: 16  pass: 16  warn: 0  error: 0
+  overall: OK (502 ms)
+
+== §13 end-of-response block (paste into the session close) ==
+  file ops: 3 puts (memories/decisions/ - audit verdict, gate index, wave decisions)
+  memories read: 0
+  rejections: none (path validation + ACL green; doctor READY before and after)
+  token budget: n/a (shell script, no model in the loop)

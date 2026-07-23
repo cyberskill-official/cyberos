@@ -70,3 +70,9 @@ ledger records the hash transition), or `delete <path>` (tombstone default) and 
 - Final acceptance of TASK-IMP-140 (the `testing -> done` HITL gate) includes this
   recording having executed on the live store: doctor READY before and after, chain
   verify green, and the §13 block reported. Do not flip the task `done` before that.
+
+## Executed 2026-07-23 (Batch E / ship/batch-8e-benchmarks)
+
+Store was READY post TASK-MEMORY-303. Ran `brain-record.sh`; three puts at seq 20–22;
+doctor READY before and after; evidence: `brain-record-evidence.txt`. Operator evidence:
+`can ship all?`.

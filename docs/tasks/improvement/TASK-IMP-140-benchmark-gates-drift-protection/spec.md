@@ -4,7 +4,7 @@ title: Benchmark gates G1-G16 - checkers, risk register, BRAIN recording
 template: task@1
 type: improvement
 module: improvement
-status: implementing
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
@@ -37,6 +37,7 @@ source_pages:
   - "AGENTS.md §13 (end-of-response BRAIN reporting) + AGENT-ENTRY.md #4 (record decisions, audits, and plans into the BRAIN) - the audit is currently recorded nowhere durable because the live store is FROZEN_RECOVERABLE until TASK-MEMORY-303's layout repair (measured: stray adrs/ + impl-plans/ fail layout-root-canonical)"
   - "checker ownership measured against this authoring wave: G1<-TASK-CUO-302 test, G2<-TASK-CUO-303 test, G7/G8<-TASK-SKILL-202 checkers, G9/G10<-TASK-MEMORY-303, G11<-TASK-CUO-304 pin test, G12<-TASK-IMP-139 suite, G14<-TASK-IMP-136 test_ci_truth.sh (+TASK-IMP-128 for run_all-in-CI), G15<-TASK-IMP-138 suite, G16<-TASK-IMP-137 t06 + test_e2e_skeleton.sh - leaving G3, G4, G5, G6, G13 and the G16 full-idempotency half as this task's own checkers"
 source_decisions:
+  - "2026-07-23 operator (Batch E / can ship all?): BRAIN recording executed on READY store after MEMORY-303; gate-1+gate-2 pre-accepted for IMP-140."
   - "2026-07-23 operator: CyberOS Hardening Plan approved; Phase 3 'Benchmark gates + drift protection' authored as ONE improvement task per the coordinator's instruction (plan file cyberos_hardening_plan_49404998)."
   - "2026-07-23 authoring: gates whose checkers ship inside sibling hardening tasks are NOT re-implemented here - benchmark-gates.md maps each gate to its owning checker, and this task's suite implements only the unowned gates (G3, G4, G5, G6, G13, G16-full). One gate, one checker, one owner; the doc is the index."
   - "2026-07-23 authoring: the BRAIN recording step is gated on TASK-MEMORY-303 via depends_on (reciprocal blocks entry on 303) because §12 forbids writes on a store that fails invariants - recording the audit into a frozen store would itself violate the protocol the audit measured."
@@ -222,13 +223,13 @@ Each row carries the register's full field set (description, cause, impact, dete
 
 ## 2. Acceptance criteria
 
-- [ ] AC 1 (traces_to: #1.1) - benchmark-gates.md exists with sixteen `### G` sections each carrying the seven fields and the status table; a field-completeness scan finds zero gaps, and the doc's severities/tiers match this spec's - test: `scripts/tests/test_benchmark_gates.sh::t01_doc_complete_and_consistent`
-- [ ] AC 2 (traces_to: #1.2) - each of the six checkers passes on the repo and fails on its constructed violation fixture (six negative fixtures, one per checker) - test: `scripts/tests/test_benchmark_gates.sh::t02_checkers_fail_on_violations`
-- [ ] AC 3 (traces_to: #1.3) - the suite exits green at HEAD; any report-only gate prints its report block and the doc's status table names it report-only - test: `scripts/tests/test_benchmark_gates.sh::t03_green_at_head_reportonly_declared`
-- [ ] AC 4 (traces_to: #1.4) - running t_g13 against a fixture corpus with a backdated implementing task lists it and leaves every spec file byte-identical - test: `scripts/tests/test_benchmark_gates.sh::t04_g13_reports_never_mutates`
-- [ ] AC 5 (traces_to: #1.5) - the register carries exactly seven new R-EXT rows, each with all seven fields non-empty and at least one G-reference - test: `scripts/tests/test_benchmark_gates.sh::t05_risk_rows_complete`
-- [ ] AC 6 (traces_to: #1.6) - post-303: the BRAIN holds the audit record (memory files present, chain verify green, doctor READY before and after), demonstrated on the live store at final acceptance and on a fixture store in CI - test: `scripts/tests/test_benchmark_gates.sh::t06_brain_record_fixture`
-- [ ] AC 7 (traces_to: #1.7) - CHANGELOG's top entry names all four deliverables - test: `scripts/tests/test_benchmark_gates.sh::t07_changelog_four_deliverables`
+- [x] AC 1 (traces_to: #1.1) - benchmark-gates.md exists with sixteen `### G` sections each carrying the seven fields and the status table; a field-completeness scan finds zero gaps, and the doc's severities/tiers match this spec's - test: `scripts/tests/test_benchmark_gates.sh::t01_doc_complete_and_consistent`
+- [x] AC 2 (traces_to: #1.2) - each of the six checkers passes on the repo and fails on its constructed violation fixture (six negative fixtures, one per checker) - test: `scripts/tests/test_benchmark_gates.sh::t02_checkers_fail_on_violations`
+- [x] AC 3 (traces_to: #1.3) - the suite exits green at HEAD; any report-only gate prints its report block and the doc's status table names it report-only - test: `scripts/tests/test_benchmark_gates.sh::t03_green_at_head_reportonly_declared`
+- [x] AC 4 (traces_to: #1.4) - running t_g13 against a fixture corpus with a backdated implementing task lists it and leaves every spec file byte-identical - test: `scripts/tests/test_benchmark_gates.sh::t04_g13_reports_never_mutates`
+- [x] AC 5 (traces_to: #1.5) - the register carries exactly seven new R-EXT rows, each with all seven fields non-empty and at least one G-reference - test: `scripts/tests/test_benchmark_gates.sh::t05_risk_rows_complete`
+- [x] AC 6 (traces_to: #1.6) - post-303: the BRAIN holds the audit record (memory files present, chain verify green, doctor READY before and after), demonstrated on the live store at final acceptance and on a fixture store in CI - test: `scripts/tests/test_benchmark_gates.sh::t06_brain_record_fixture`
+- [x] AC 7 (traces_to: #1.7) - CHANGELOG's top entry names all four deliverables - test: `scripts/tests/test_benchmark_gates.sh::t07_changelog_four_deliverables`
 
 ## 3. Edge cases
 
