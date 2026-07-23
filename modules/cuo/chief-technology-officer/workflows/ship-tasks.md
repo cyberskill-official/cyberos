@@ -1,7 +1,7 @@
 ---
 workflow_id: chief-technology-officer/ship-tasks
 workflow_version: 2.8.0
-purpose: Drive each eligible task in `docs/tasks/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the task back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
+purpose: Drive each eligible task in `docs/tasks/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, records architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the task back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
 persona: chief-technology-officer
 cadence: per-task (loops continuously over BACKLOG.md)
 status: shipped   # CUO-workflow lifecycle: planned | shipped | retired (distinct from task lifecycle in STATUS-REFERENCE.md)
@@ -105,7 +105,7 @@ Each task's frontmatter `status` is the record of truth; `docs/tasks/BACKLOG.md`
 
 - **Eligible task** = first row whose status is `ready_to_implement` AND whose declared `depends_on` rows are all in `done` status.
 - **Skipped statuses**: `draft` (not yet audited — handled by the `draft → ready_to_implement` chain, not this workflow), `implementing`, `ready_to_review`, `reviewing`, `ready_to_test`, `testing` (in-flight under another invocation — possibly the previous session of this workflow; pick those up by re-entering at the matching phase), `done` (terminal success — no work to do), `on_hold` / `closed` (operator-decided off-ramps).
-- Pick the first eligible task. Run all 30 steps end-to-end. Between every phase transition the workflow physically updates the BACKLOG.md status cell via `backlog-state-update-author/-audit`. The mutation is atomic — same write that emits the `workflow_phase_complete` (or `workflow_complete` for the final transition) memory row.
+- Pick the first eligible task. Run all 31 steps end-to-end. Between every phase transition the workflow physically updates the BACKLOG.md status cell via `backlog-state-update-author/-audit`. The mutation is atomic — same write that emits the `workflow_phase_complete` (or `workflow_complete` for the final transition) memory row.
 
 ### Backlog layout — one file, both classes
 
@@ -140,7 +140,7 @@ Any failure in `implementing` (steps 1-12), `reviewing` (steps 17-18), or `testi
 
 1. A `memory.task_routed_back` aux audit row with the failure context (debug_trace, failing-test-name, or blocker reason).
 2. A comment cell on the BACKLOG row (`<!-- routed back: <reason> -->`).
-3. A future **Issue Request** artefact that will auto-spawn from the rework signal - future work, unscheduled (no task yet; see STATUS-REFERENCE §1.3 for the rework signal it would consume).
+3. A `type: bug` task auto-drafted from the rework signal (LANDED 2026-07-14 — this replaced the previously planned "Issue Request" artefact; see STATUS-REFERENCE §1.3 for the field mapping and the second intake path via CUO triage).
 
 There are NO terminal failure statuses any more. The previous `[FAILED: UNRESOLVABLE ERROR]` and `[BLOCKED: ...]` enums are gone — failures are routing decisions, not states. Operator can still send a doomed task to `closed` manually via HITL.
 
@@ -362,7 +362,7 @@ Each `skill_chain` step therefore carries `judgment: high | medium | mechanical`
 
 ## 12. No partial-ship-and-pause within a task
 
-The workflow MUST drive **all phases of a task to completion in one continuous session** (or route back to `ready_to_implement` cleanly). It runs continuously under the halt-only doctrine in [`../../EXECUTION-DISCIPLINE.md`](../../EXECUTION-DISCIPLINE.md): the agent stops ONLY for an operator-decision fork, a manual/operator-only action (push, deploy, destructive op, secret), a hard blocker past the circuit-breaker budget, or the operator stop signal. Everything else — compile/lint/clippy, a test or module gate the agent's own change broke, the order of slices or tasks — the agent self-resolves and continues.
+The workflow MUST drive **all phases of a task to completion in one continuous session** (or route back to `ready_to_implement` cleanly). It runs continuously under the halt-only doctrine in `EXECUTION-DISCIPLINE.md` (`modules/cuo/EXECUTION-DISCIPLINE.md` in the platform repo; vendored beside this file at `.cyberos/cuo/` in installed repos): the agent stops ONLY for an operator-decision fork, a manual/operator-only action (push, deploy, destructive op, secret), a hard blocker past the circuit-breaker budget, or the operator stop signal. Everything else — compile/lint/clippy, a test or module gate the agent's own change broke, the order of slices or tasks — the agent self-resolves and continues.
 
 **Rules:**
 
@@ -427,8 +427,8 @@ Every run maintains a per-task run-state manifest at `docs/tasks/.workflow/<task
 
 ## Cross-references
 
-- Execution discipline (continuous run, halt-only conditions): [`../../EXECUTION-DISCIPLINE.md`](../../EXECUTION-DISCIPLINE.md). Added 2026-06-20 (v2.2.0): the agent halts only for an operator-decision fork, a manual/operator-only action, a hard blocker past the budget, or the operator stop signal; it self-resolves everything else and runs continuously across phases and tasks.
-- Task lifecycle: `modules/skill/contracts/task/STATUS-REFERENCE.md` (10-state enum, transitions, HITL semantics).
+- Execution discipline (continuous run, halt-only conditions): `EXECUTION-DISCIPLINE.md` (`modules/cuo/EXECUTION-DISCIPLINE.md` in the platform repo; vendored beside this file at `.cyberos/cuo/` in installed repos). Added 2026-06-20 (v2.2.0): the agent halts only for an operator-decision fork, a manual/operator-only action, a hard blocker past the budget, or the operator stop signal; it self-resolves everything else and runs continuously across phases and tasks.
+- Task lifecycle: `modules/skill/contracts/task/STATUS-REFERENCE.md` (12-state enum, transitions, HITL semantics).
 - Original prompt source: operator's "Zero-Touch Principal Engineer (Unattended Execution)" — absorbed 2026-05-18.
 - BACKLOG state engine: `docs/tasks/BACKLOG.md`.
 - Run-state manifest contract: `modules/skill/contracts/task/SHIP-MANIFEST.md` (ship-manifest@1, TASK-CUO-206). Manifests are gitignored session state under `docs/tasks/.workflow/`.

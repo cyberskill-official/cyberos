@@ -83,11 +83,11 @@ website/build/last-*-report.json
 services/target/
 
 # Workbench consume 2026-05-19 — the workbench/ folder was absorbed into
-# playground/ flat. Its CyberSkill-authored content (CYBEROS_STRATEGY.md,
-# CyberOS-docs/, cyberos-*.md notes, cyberos-memory-workbench-archive/) is
-# tracked; the 10 cloned upstream reference repos are NOT — they have their
-# own .git histories and would bloat cyberos commits. They live on disk for
-# browsing, but stay out of git. See playground/CONSUMED-FROM-WORKBENCH.md.
+# playground/ flat. The ENTIRE folder is untracked (nothing under playground/
+# is in git): the cloned upstream reference repos carry their own .git
+# histories and would bloat cyberos commits, and the CyberSkill-authored notes
+# (CYBEROS_STRATEGY.md, CyberOS-docs/, cyberos-*.md) live on disk for browsing
+# only. See playground/CONSUMED-FROM-WORKBENCH.md.
 playground
 .claude/
 

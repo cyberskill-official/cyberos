@@ -210,6 +210,10 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   [ -f "$here/docs-tools/coverage-scope.mjs" ] && cp "$here/docs-tools/coverage-scope.mjs" "$out/docs-tools/"
   # TASK-IMP-100: reconcile the third state - work this workflow did not perform.
   [ -f "$here/docs-tools/task-reconcile.mjs" ] && cp "$here/docs-tools/task-reconcile.mjs" "$out/docs-tools/"
+  # skill-log: the skill-trust ledger appender (TASK-IMP-113). ship-tasks step 27 logs its
+  # terminal pass/fail verdict through it, so a payload without it ships a workflow step
+  # that cannot reach its own floor (the same class as workflow-improve.mjs below).
+  [ -f "$here/docs-tools/skill-log.mjs" ] && cp "$here/docs-tools/skill-log.mjs" "$out/docs-tools/"
   # fm001-migrate: clean a repo's task corpus of FM-001 trailing frontmatter comments (TASK-IMP-117).
   # Vendored so any installed repo can run it against its OWN specs - the TASK-TEMPLATE.md that taught
   # the trailing-comment shape is itself vendored, so every consumer corpus inherited the violation.

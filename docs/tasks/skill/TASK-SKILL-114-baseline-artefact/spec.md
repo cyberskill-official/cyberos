@@ -12,7 +12,7 @@ department: engineering
 author: "@stephencheng"
 template: task@1
 module: SKILL
-priority: MAY
+priority: p2
 status: done
 verify: T
 phase: P2

@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# One-shot Phase-1 finalize for the awh absorption. Run on your Mac, from the repo,
-# on branch auto/awh-absorb:   bash scripts/awh_finalize.sh
+# HISTORICAL - SUPERSEDED (2026-07-23). One-shot finalize for the awh absorption,
+# consumed on branch auto/awh-absorb (merged long since); the branch guard below makes
+# it a no-op everywhere else. Kept for the audit trail only - do NOT run it again
+# (it stages with `git add -A` and commits with --no-verify, both banned in current
+# doctrine). Deletion was flagged for operator approval and deliberately not done here.
+#
+# Original purpose: run on your Mac, from the repo, on branch auto/awh-absorb:
+#   bash scripts/awh_finalize.sh
 #
 # It untracks the leaked credential/artifact files, commits the whole branch, and
 # regenerates the docs HTML. It does NOT rotate secrets or set branch protection

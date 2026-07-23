@@ -103,7 +103,7 @@ The payload vendors the FULL 14-stage SDP skill catalog (52 skills: 24 author/au
 
 ### 2b. Update awareness (TASK-IMP-070)
 
-`install.sh --check <repo>` reports three values - `installed=`, `payload=`, `latest=` (the newest published release, resolved by `check-latest.sh` with a 3s budget; `CYBEROS_OFFLINE=1` skips it) - plus one `verdict=` line (`up_to_date` | `repo_stale` | `payload_stale`) and the exact `next:` command. Machine-parseable key=value lines; the desktop Ops tab and `/version` consume them.
+`version.sh [repo]` reports three values - `installed=`, `payload=`, `latest=` (the newest published release, resolved by `check-latest.sh` with a 3s budget; `CYBEROS_OFFLINE=1` skips it) - plus one `verdict=` line (`up_to_date` | `not_installed` | `repo_stale` | `payload_stale` | `rules_drift`) and the exact `next:` command. Machine-parseable key=value lines; the desktop Ops tab and `/version` consume them.
 
 ### 3. One-liner curl | sh (from GitHub Releases - TASK-IMP-069)
 
@@ -225,7 +225,7 @@ Every agent is one data row in `install.sh`. For an instruction pointer file: ad
 
 ## After install: trigger, gate, sign off
 
-1. Write a task: `cp .cyberos/cuo/templates/task-TEMPLATE.md docs/tasks/TASK-001-<slug>.md`, fill section 1, set `status: ready_to_implement`, add the row to `BACKLOG.md`.
+1. Write a task: `mkdir -p docs/tasks/<module>/TASK-001-<slug> && cp .cyberos/cuo/templates/TASK-TEMPLATE.md docs/tasks/<module>/TASK-001-<slug>/spec.md`, fill section 1, set `status: ready_to_implement`, add the row to `BACKLOG.md`.
 2. Trigger: tell your agent to follow `.cyberos/cuo/ship-tasks.md` and drive the next eligible task, HITL required, `repo_root` = this repo. (Or `/ship-tasks` with the plugin.)
 3. Gate: `bash .cyberos/cuo/gates/run-gates.sh`.
 4. Sign off: you record the review verdict and the final acceptance. The agent never sets `done`.

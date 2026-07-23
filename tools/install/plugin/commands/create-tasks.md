@@ -41,7 +41,7 @@ Emission rules:
 - Never pad to a count, never re-list a finding the operator already saw in an earlier batch, and never describe a defect in the language of the fix ("added X") - name what was wrong ("X was claimed and was false").
 - The block is a report, not a gate. It halts nothing; the two HITL gates downstream are unchanged.
 
-This is a REPORTING contract, not a learning loop: the model writes it by reading its own audit files. The mechanism that would find these patterns ACROSS runs, without being asked, is `workflow-improver` (TASK-IMP-110) - unbuilt as of 2026-07-17. Do not let this block imply otherwise.
+This is a REPORTING contract, not a learning loop: the model writes it by reading its own audit files. The mechanism that finds these patterns ACROSS runs, without being asked, is `workflow-improver` (TASK-IMP-110) - shipped; run it via `/improve` (bundled with this plugin, vendored at `.cyberos/cuo/skills/` after `/install`). Do not let this block imply it replaces that loop.
 
 Never set `done`, never push, merge, or deploy. If the repo has no `.cyberos/` yet, tell the user to run `/install` first.
 

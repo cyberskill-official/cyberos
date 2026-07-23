@@ -32,12 +32,14 @@ const LENIENT = process.env.CYBEROS_HUB_LENIENT === '1';
 const SPECS = process.env.CYBEROS_STATUS_SPECS !== '0';
 
 const STATUSES = ['draft', 'ready_to_implement', 'implementing', 'ready_to_review', 'reviewing',
-  'ready_to_test', 'testing', 'done', 'on_hold', 'closed'];
+  'ready_to_test', 'testing', 'done', 'on_hold', 'closed', 'cannot_reproduce', 'duplicate'];
 const ACTIVE = ['ready_to_implement', 'implementing', 'ready_to_review', 'reviewing', 'ready_to_test', 'testing'];
+// terminal off-ramps bucket with done/closed (STATUS-REFERENCE §1.2: 12-value enum)
+const TERMINAL = ['done', 'closed', 'cannot_reproduce', 'duplicate'];
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
   .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const die = msg => { throw new Error(`status-hub: ${msg}`); };
-const bucketOf = st => (st === 'done' || st === 'closed') ? 'done'
+const bucketOf = st => TERMINAL.includes(st) ? 'done'
   : ACTIVE.includes(st) ? 'active' : st === 'on_hold' ? 'hold' : 'todo';
 
 // ---- frontmatter: scalars, inline lists, block lists, block scalars -------------------

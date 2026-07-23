@@ -55,7 +55,7 @@ Done (2026-06-20, branch auto/awh-absorb, uncommitted):
 1. Vendored `tools/caf/` (validator self-test 40/40 GREEN, no install) + `tools/caf/field-data/`.
 2. `scripts/caf_gate.sh` - deterministic floor (verify-target.sh target health + code-audit-validate of a sealed `.caf/` audit when present), fail-closed. `scripts/caf_precommit_check.sh` - structural fail-closed (every gated module must declare a profile).
 3. `audit-profile.yaml` for all 8 gated modules (ai, auth, proj, email, skill, chat, cuo, memory), RUN_COMMANDS mirroring the awh-green suites (Rust crates hop `cd ../../services`; cuo/memory run pytest in place; memory adds the cargo crate).
-4. Wired into `ship-tasks.md` v2.1.0: `caf_gate_report` output, step 28.5 (caf-gate), step-29 done-flip now requires `awh GREEN AND caf CLEAN`, §10 outcome table + cross-refs updated.
+4. Wired into `ship-tasks.md` v2.1.0: `caf_gate_report` output, step 29 (caf-gate), step-30 done-flip now requires `awh GREEN AND caf CLEAN`, §10 outcome table + cross-refs updated.
 5. `tools/caf/RETIREMENT.md` written.
 
 Verified in-sandbox (no toolchain needed): scripts bash -n clean; validator `--all` 40/40 exit 0; pre-commit check GREEN (8/8); verify-target.sh PASS on a good command, FAIL (exit 1) on a red one, fail-closed (exit 2) when RUN_COMMANDS is absent; all 8 profiles parse to the expected commands.

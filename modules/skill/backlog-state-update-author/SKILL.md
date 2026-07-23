@@ -67,7 +67,7 @@ The frontmatter `status` is the record of truth; `docs/tasks/BACKLOG.md` is only
 ## 2. Output schema
 
 ```yaml
-# backlog-state-update@1
+# backlog-state-update@2
 task_id: task-<MODULE>-<NNN>
 generated_at: <ISO-8601>
 backlog_path: docs/tasks/BACKLOG.md

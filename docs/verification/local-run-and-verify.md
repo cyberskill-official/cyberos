@@ -4,10 +4,10 @@ This is the step after the CAF absorption and before building the remaining modu
 
 ## How CyberOS "does work" (read these two first)
 
-- `modules/cuo/chief-technology-officer/workflows/ship-tasks.md` - the ~30-step author/audit chain that drives one task from `ready_to_implement` to `done`. The last gates are step 28 `awh-gate` (rerun the tests) and step 28.5 `caf-gate` (rerun the target's own build/lint/test + audit). The `testing -> done` flip requires `awh GREEN AND caf CLEAN`.
+- `modules/cuo/chief-technology-officer/workflows/ship-tasks.md` - the 31-step author/audit chain that drives one task from `ready_to_implement` to `done`. The last gates are step 28 `awh-gate` (rerun the tests) and step 29 `caf-gate` (rerun the target's own build/lint/test + audit). The `testing -> done` flip requires `awh GREEN AND caf CLEAN`.
 - `website/docs/architecture/verification-gate.html` - why the gate exists (separate the grader from the author) and how it is wired (CUO workflow, pre-commit, CI, merge gate).
 
-"Test a module" here means: run those same two gates against that module by hand. That is exactly what the workflow does automatically at 28 / 28.5.
+"Test a module" here means: run those same two gates against that module by hand. That is exactly what the workflow does automatically at steps 28 / 29.
 
 ## Step 0 - prerequisites (once)
 
@@ -77,7 +77,7 @@ pip install -e modules/cuo    # exposes the [project.scripts] entrypoint (read p
 
 ## Step 3 - verify each module, one at a time
 
-For each module, run the same two gates the workflow runs at step 28 and 28.5. If a module has no sealed awh baseline yet, capture and lock it once (the bootstrap script does every module in one go).
+For each module, run the same two gates the workflow runs at steps 28 and 29. If a module has no sealed awh baseline yet, capture and lock it once (the bootstrap script does every module in one go).
 
 ```bash
 # One-time: capture + seal every module's awh baseline (green/red report per module)
