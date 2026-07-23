@@ -11,7 +11,7 @@ created_at: 2026-05-15T00:00:00+07:00
 department: engineering
 author: "@stephencheng"
 template: task@1
-module: OBS
+module: obs
 priority: p0
 status: implementing
 verify: T
@@ -229,7 +229,9 @@ service:
 ### Token file format
 
 ```text
-# deploy/obs/auth/tokens.example  (committed; real tokens.live mounted separately)
+# deploy/obs/auth/tokens.example  (the ONLY committed shape)
+# Local runtime mounts use a gitignored *.live copy (deploy/**/*.live);
+# never commit live token material — mount from the operator secret store.
 ai-gateway   <token-from-secret-store>
 auth-service <token-from-secret-store>
 chat-service <token-from-secret-store>
@@ -250,7 +252,7 @@ services:
     environment: { ENV: "${DEPLOYMENT_ENV:-production}" }
     volumes:
       - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
-      - ./auth/tokens.live:/etc/otelcol/auth.tokens:ro
+      - ./auth/tokens.live:/etc/otelcol/auth.tokens:ro   # local gitignored mount; start from tokens.example
       - otel-buffer:/var/lib/otelcol
     depends_on:
       loki:       { condition: service_healthy }
@@ -472,7 +474,7 @@ echo "✅ Tokens rotated"
 
 - Docker Compose v2.0+ (k8s + Helm at slice 5+).
 - 6.5 vCPU + 11.5GB RAM + 100GB disk (slice 1 baseline; scales linearly).
-- Operator's secret store (1Password Connect, AWS Secrets Manager, etc.) for `auth.tokens.live`.
+- Operator's secret store (1Password Connect, AWS Secrets Manager, etc.) to populate a local gitignored `auth/tokens.live` mount (never committed; `tokens.example` is the tracked template).
 - Ports: 4317, 4318 (collector), 3000 (Grafana), 13133 (collector health), 8888 (collector self-metrics).
 
 ---

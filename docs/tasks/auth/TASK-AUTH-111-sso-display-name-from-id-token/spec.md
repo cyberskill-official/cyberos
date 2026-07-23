@@ -11,7 +11,7 @@ created_at: 2026-07-11T00:00:00+07:00
 department: engineering
 author: "@stephencheng"
 template: task@1
-module: AUTH
+module: auth
 priority: p1
 status: done
 verify: T

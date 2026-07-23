@@ -4,7 +4,7 @@ id: TASK-EVAL-003
 title: "Evaluation engine — GENIE evidence-linked auto-scoring against the TASK-EVAL-002 rubric with a mandatory human-in-the-loop gate before any assessment is final"
 type: feature
 created_at: 2026-06-29T00:00:00+07:00
-module: EVAL
+module: eval
 priority: p0
 status: draft
 verify: T

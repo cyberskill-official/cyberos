@@ -9,7 +9,7 @@ created_at: 2026-06-29T00:00:00+07:00
 department: engineering
 author: "@stephencheng"
 template: task@1
-module: EVAL
+module: eval
 priority: p0
 # was "blocked" (not a valid status per STATUS-REFERENCE §1); deferred pending TASK-AUTH-003
 status: on_hold

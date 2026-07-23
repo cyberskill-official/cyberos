@@ -11,7 +11,7 @@ created_at: 2026-05-19T00:00:00+07:00
 department: engineering
 author: "@stephencheng"
 template: task@1
-module: PLUGIN
+module: plugin
 priority: p1
 status: draft
 verify: T

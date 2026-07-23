@@ -11,7 +11,7 @@ created_at: 2026-05-15T00:00:00+07:00
 department: engineering
 author: "@stephencheng"
 template: task@1
-module: DOCS
+module: docs
 priority: p1
 status: closed
 verify: I

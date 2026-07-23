@@ -11,7 +11,7 @@ created_at: 2026-05-16T00:00:00+07:00
 department: engineering
 author: "@stephencheng"
 template: task@1
-module: TEN
+module: ten
 priority: p0
 status: draft
 verify: T
