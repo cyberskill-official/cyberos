@@ -4,7 +4,7 @@ title: Memory hardening - schema single-source, INTEROP.md, walker + doctor
 template: task@1
 type: improvement
 module: memory
-status: testing
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
