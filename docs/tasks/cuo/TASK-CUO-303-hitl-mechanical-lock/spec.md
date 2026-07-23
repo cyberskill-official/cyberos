@@ -4,7 +4,7 @@ title: Mechanical HITL lock - verdict-gated flips + memory.status_overridden
 template: task@1
 type: improvement
 module: cuo
-status: ready_to_implement
+status: reviewing
 priority: p0
 author: "@stephencheng"
 department: engineering

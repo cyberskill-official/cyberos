@@ -5,8 +5,12 @@
 // task_routed_back, artefact_write), but a doc-driven run has no MCP writer — the real
 // consumer run parked its payloads in a tracked _audits file, chain-shaped data with no
 // chain (IMPROVEMENT_HANDOFF.md IMP-05). This tool is the minimal protocol-honoring
-// writer for EXACTLY those four kinds, plus a verify mode, so a governed run can keep
-// the chain truthful from any environment that has node.
+// writer for EXACTLY the kinds in its closed list — the four workflow kinds above plus
+// status_overridden, the human-verdict row STATUS-REFERENCE §1.4 promises for the two
+// human-acceptance gates (TASK-CUO-303; the doctrine's dotted `memory.status_overridden`
+// is the taxonomy name, the bare kind is the wire form, same as the other four) — plus
+// a verify mode, so a governed run can keep the chain truthful from any environment
+// that has node.
 //
 // Usage:  node memory-append.mjs [--json] [--actor <name>] [--now <ISO-8601>] <command> ...
 //
@@ -35,9 +39,9 @@
 // UTF-8, no NaN/Infinity (msgspec order='sorted'; RFC 8785-conforming for this closed
 // schema). Record shape (memory.schema.json#/definitions/AuditRecord):
 //   { actor, chain, content_sha256, extra, op, path, prev_chain, ts_ns }
-// The four workflow kinds map onto that shape the same way session rows do
+// The closed kinds map onto that shape the same way session rows do
 // (cyberos/core/session.py: op="session.start", extra={...}):
-//   op            = <kind>                      (the closed four-kind set)
+//   op            = <kind>                      (the closed five-kind set)
 //   path          = meta/workflow/<task>.json   (from payload.task_id|task, validated
 //                   against the MemoryPath segment charset; meta/workflow/run.json
 //                   when the payload names no task)
@@ -80,7 +84,8 @@
 // Exit codes:
 //   0  ok / chain verifies clean
 //   2  usage error: unknown kind (refused BEFORE any write), non-JSON or non-object
-//      payload, unreadable payload/store, unsafe task token, bad --now
+//      payload, a status_overridden payload missing a required non-empty string field,
+//      unreadable payload/store, unsafe task token, bad --now
 //   3  lock held (or .lock unreadable/unparseable) — fail fast, nothing written
 //   4  integrity failure: verify names the first bad ordinal; append refuses a chain
 //      that does not verify, a HEAD that disagrees with the rows, or a compacted
@@ -99,7 +104,11 @@ import { createHash, randomBytes } from "node:crypto";
 import { join, resolve, basename } from "node:path";
 import { hostname } from "node:os";
 
-const KINDS = ["workflow_phase_complete", "workflow_complete", "task_routed_back", "artefact_write"];
+const KINDS = ["workflow_phase_complete", "workflow_complete", "task_routed_back", "artefact_write", "status_overridden"];
+// TASK-CUO-303 §1.3: status_overridden (the STATUS-REFERENCE §1.4 human-verdict row) is
+// the ONE kind with a validated payload shape — every field below is a required
+// non-empty string. The other four keep their historical any-object payloads.
+const STATUS_OVERRIDDEN_FIELDS = ["actor", "task_id", "prior_status", "new_status", "reason"];
 const GENESIS = "0".repeat(64);              // writer.py _GENESIS_CHAIN — the null root
 const FRAME_HDR = 24;                        // struct '>IIQQ'
 const LEASE_TTL_NS = 10n * 1000000000n;      // §4.2: TTL 10 s
@@ -353,6 +362,16 @@ function cmdAppend(storeArg, kind, payloadArg, opts) {
   if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
     throw new UsageError("payload must be a JSON object (the record's extra field is an object in the closed schema) - refused before any write");
   }
+  if (kind === "status_overridden") {
+    // TASK-CUO-303 §1.3: the verdict row's payload is validated — a refusal here
+    // happens BEFORE any write, like every other usage refusal in this function.
+    for (const f of STATUS_OVERRIDDEN_FIELDS) {
+      const v = payload[f];
+      if (typeof v !== "string" || v.trim() === "") {
+        throw new UsageError(`status_overridden payload field '${f}' must be a non-empty string (STATUS-REFERENCE §1.4 verdict record carries {${STATUS_OVERRIDDEN_FIELDS.join(", ")}}) - refused before any write`);
+      }
+    }
+  }
   const actor = opts.actor || process.env.CYBEROS_ACTOR || "doc-driven";
   const taskTok = payload.task_id ?? payload.task;
   let memPath = "meta/workflow/run.json";
@@ -458,11 +477,14 @@ commands
   append <store-root> <kind> <payload.json|->
       append ONE chained record to <store-root>/audit/current.binlog and advance HEAD.
       kind is closed: workflow_phase_complete | workflow_complete | task_routed_back |
-      artefact_write - anything else is refused BEFORE any write. payload must be a JSON
-      object ('-' reads stdin); payload.task_id|task names the record's meta/workflow/
-      path. A fresh store bootstraps deterministically (HEAD=0, null-root prev_chain,
-      canonical dirs). Stale two-phase tmp files are cleaned; a held §4.2 lease fails
-      fast. The whole chain is re-verified before every append.
+      artefact_write | status_overridden - anything else is refused BEFORE any write.
+      payload must be a JSON object ('-' reads stdin); payload.task_id|task names the
+      record's meta/workflow/ path. status_overridden (the STATUS-REFERENCE §1.4
+      human-verdict row, TASK-CUO-303) additionally requires non-empty string fields
+      {actor, task_id, prior_status, new_status, reason}. A fresh store bootstraps
+      deterministically (HEAD=0, null-root prev_chain, canonical dirs). Stale two-phase
+      tmp files are cleaned; a held §4.2 lease fails fast. The whole chain is
+      re-verified before every append.
   verify <store-root>
       recompute every link (crc32c, seq continuity, prev_chain, §6.3 chain hash) across
       all audit/*.binlog segments and compare the tip to HEAD; exits non-zero naming the
@@ -471,7 +493,8 @@ commands
 exit codes
   0  ok / chain verifies clean
   2  usage error: unknown kind (refused before any write), non-JSON or non-object
-     payload, unreadable input, unsafe task token
+     payload, a status_overridden payload missing a required field, unreadable input,
+     unsafe task token
   3  lock held or .lock unparseable - fail fast, nothing written
   4  integrity failure: the first bad ordinal is named; append refuses inconsistent or
      compacted stores
