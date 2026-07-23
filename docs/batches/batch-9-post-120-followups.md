@@ -21,6 +21,10 @@ Implements the post–batch/8 plan: Wave 0 chores, MMR sync, MEMORY-302, ship-ta
 
 Operator: **all-accept** for MEMORY-302, IMP-141, CUO-305, IMP-142 → advanced to `testing` (evidence `batch-9-gate1-acceptance.md`). Halted before `done`.
 
+## Gate-2 (2026-07-23)
+
+Operator: **all-accept** for MEMORY-302, IMP-141, CUO-305, IMP-142 → `done` (evidence `batch-9-gate2-acceptance.md`). Drafts IMP-143/144 unchanged. MCP/OBS resume waves 9a–9c not started.
+
 ## Wave 0 (chores — this PR)
 
 - [x] Delete remote `ship/batch-8f-entrypoint`

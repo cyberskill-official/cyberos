@@ -4,7 +4,7 @@ title: "MMR sync for memory-append — doctor stays READY after gated flips"
 template: task@1
 type: improvement
 module: improvement
-status: testing
+status: done
 priority: p0
 author: "@stephencheng"
 department: engineering
