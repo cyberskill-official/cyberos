@@ -6,7 +6,7 @@ All user-facing documentation is served by the generated [docs site](https://os.
 
 | Folder | Purpose |
 |---|---|
-| `tasks/` | The task corpus: 562 task specs across 29 domains (spec + `_audits/` companions). `BACKLOG.md` is the index of remaining active work; task frontmatter `status` is the record of truth. Improvement tasks (`type: improvement`) live in the same tree (`improvement/` + `(improvement)` tags in the backlog). |
+| `tasks/` | The task corpus: 572 task specs across 29 domains (spec + `_audits/` companions). `BACKLOG.md` is the index of remaining active work; task frontmatter `status` is the record of truth. Improvement tasks (`type: improvement`) live in the same tree (`improvement/` + `(improvement)` tags in the backlog). |
 | `non-functional-requirements/` | NFR specs with audit companions. |
 | `architecture/` | Current-state architecture pages (tech stack, infrastructure, compliance, milestones, strategy, verification gate). |
 | `adrs/` | Architecture decision records. |

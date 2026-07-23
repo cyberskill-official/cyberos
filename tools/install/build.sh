@@ -88,10 +88,6 @@ product-requirements-document-author        # SDP 2  PRD
 product-requirements-document-audit         # SDP 2
 software-requirements-specification-author  # SDP 3  SRS
 software-requirements-specification-audit   # SDP 3
-nfr-certification-author                    # SDP 4  NFR (allowlisted unpaired)
-nfr-evaluator                               # SDP 4  NFR
-nfr-test-runner                             # SDP 4  NFR
-nfr-regression-handler                      # SDP 4  NFR
 plan-author                      # SDP 5  plan (front door: idea -> plan@1 -> create-tasks, TASK-IMP-111)
 plan-audit                       # SDP 5  plan
 task-author                      # SDP 5  task
@@ -158,8 +154,19 @@ fi
 # --- memory module: Layer-1 protocol + schema + invariants ---
 cp "$repo/AGENTS.md" "$out/memory/AGENTS.md"
 memory_vendored="protocol"
-[ -f "$repo/modules/memory/memory.schema.json" ]    && { cp "$repo/modules/memory/memory.schema.json"    "$out/memory/memory.schema.json";    memory_vendored="protocol+schema"; }
+# Schema vendors from the CANONICAL package-data copy (TASK-MEMORY-303 §1.1) - the copy the
+# Python package actually loads and the generator maintains. The root copy at
+# modules/memory/memory.schema.json had forked (missing the StoreAcl definitions §14.4.7
+# makes normative) while this line shipped it to every consumer; all copies are being
+# unified byte-identical, and pointing the payload at the package-data source ends the
+# stale-third-copy class regardless.
+_schema_src="$repo/modules/memory/cyberos/data/memory.schema.json"
+[ -f "$_schema_src" ] || _schema_src="$repo/modules/memory/memory.schema.json"   # trimmed fixture builds
+[ -f "$_schema_src" ]    && { cp "$_schema_src"    "$out/memory/memory.schema.json";    memory_vendored="protocol+schema"; }
 [ -f "$repo/modules/memory/memory.invariants.yaml" ] && cp "$repo/modules/memory/memory.invariants.yaml" "$out/memory/memory.invariants.yaml"
+# INTEROP.md - the §14.1 non-ledger consumer subset - ships beside the schema
+# (TASK-MEMORY-303 §1.3; guarded so a source tree predating the doc still builds).
+[ -f "$repo/modules/memory/INTEROP.md" ] && cp "$repo/modules/memory/INTEROP.md" "$out/memory/INTEROP.md"
 
 # --- plugin + runtime + docs ---
 rm -rf "$repo/dist/task-pack"   # self-heal: purge the pre-rename payload if a stale copy lingers
@@ -346,6 +353,9 @@ echo "$cyver" > "$out/VERSION"     # plain file so version.sh can compare fast
 # (TASK-IMP-130) — only the invoked bin command renamed, not the npm install target.
 # cli/bin/cli.mjs dispatches; the command set mirrors help.sh and the plugin's slash
 # commands 1:1, so the channels cannot drift.
+# engines is ">=24 <25" (TASK-IMP-137 §1.4): every .nvmrc pins 24.18.0 and the shipped
+# mcp subpackage demands >=24 <25 - the old ">=18" admitted a Node nobody tests, and an
+# engines field that promises untested compatibility is a lie with a schema.
 cat > "$out/package.json" <<PKG
 {
   "name": "@cyberskill/cyberos",
@@ -355,7 +365,7 @@ cat > "$out/package.json" <<PKG
   "bin": {
     "cs": "cli/bin/cli.mjs"
   },
-  "engines": { "node": ">=18" },
+  "engines": { "node": ">=24 <25" },
   "repository": { "type": "git", "url": "git+https://github.com/cyberskill-official/cyberos.git" },
   "homepage": "https://github.com/cyberskill-official/cyberos#readme",
   "bugs": { "url": "https://github.com/cyberskill-official/cyberos/issues" },

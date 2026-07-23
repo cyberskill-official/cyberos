@@ -1,6 +1,6 @@
 # CyberOS
 
-CyberSkill's AI-native internal operations platform. 26 federated modules, 244 agent Skills, 224 CUO workflows, 48 C-roles, 562 tasks.
+CyberSkill's AI-native internal operations platform. 26 federated modules, 244 agent Skills, 224 CUO workflows, 48 C-roles, 572 tasks.
 
 ## Documentation
 
@@ -10,7 +10,7 @@ CyberSkill's AI-native internal operations platform. 26 federated modules, 244 a
 |---|---|
 | [Getting Started](https://os.cyberskill.world/docs/reference/getting-started.html) | Repo layout, quick start, versioning, install, deploy runbook |
 | [Modules](https://os.cyberskill.world/docs/) | Per-module pages (26 modules) with appendices, changelogs, deep-dives |
-| [task Catalog](https://os.cyberskill.world/docs/reference/task-catalog.html) | 562 Tasks across 29 domains |
+| [task Catalog](https://os.cyberskill.world/docs/reference/task-catalog.html) | 572 Tasks across 29 domains |
 | [NFR Catalog](https://os.cyberskill.world/docs/reference/nfr-catalog.html) | ~157 Non-Functional Requirements across 10 categories |
 | [Changelog](https://os.cyberskill.world/docs/reference/changelog.html) | All significant changes across modules and services |
 | [Strategy](https://os.cyberskill.world/docs/architecture/strategy.html) | Ecosystem landscape, competitive analysis, EaaS roadmap |
