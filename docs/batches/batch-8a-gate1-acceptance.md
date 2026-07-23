@@ -37,8 +37,8 @@ It does **not** cover MEMORY-303 store repair, IMP-138, IMP-139, or other batch-
 
 | Task | Status after Batch A ship pass |
 |------|--------------------------------|
-| TASK-CUO-302 | testing (halted at gate-2) |
-| TASK-CUO-303 | testing (halted at gate-2) |
-| TASK-CUO-304 | testing (halted at gate-2) |
+| TASK-CUO-302 | testing → **done** (see `batch-8a-gate2-acceptance.md`) |
+| TASK-CUO-303 | testing → **done** (see `batch-8a-gate2-acceptance.md`) |
+| TASK-CUO-304 | testing → **done** (see `batch-8a-gate2-acceptance.md`) |
 
-`ended` omitted until gate-2 closes the batch (incomplete ledger until then).
+Gate-2 closed 2026-07-23; batch `ended` is recorded on `batch-8a-gate2-acceptance.md`.

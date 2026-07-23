@@ -11,7 +11,7 @@ tokens: unknown
 Branch: `ship/batch-8a-core-locks`  
 Shipped: TASK-CUO-302, TASK-CUO-303, TASK-CUO-304 from gate-1 onward  
 Date: 2026-07-23  
-Halted at: gate-2 (`testing → done`) — operator verdict required
+Closed: gate-2 all-accept 2026-07-23 (`testing → done` for CUO-302/303/304) — evidence `batch-8a-gate2-acceptance.md`
 
 Frontmatter present so `render-status-hub.mjs` can parse every `docs/batches/*.md` (see evolution candidate #1). `members: []` — this is a notes artefact, not a membership ledger; the shipping members live in `batch-8a-gate1-acceptance.md`.
 
@@ -77,6 +77,10 @@ Before the real flips, a dry-run `memory-append.mjs … status_overridden` for `
 ### 10. `test_task_layout.sh::t04` side-effect: regenerates BACKLOG
 
 t04 runs `migrate_improvement_to_task.py --backlog`, which **rewrites** BACKLOG.md from frontmatter. Safe when frontmatter is truth (our flips survived), surprising if someone expected only a count. Worth noting for agents who have uncommitted hand-edits to backlog prose.
+
+## Gate-2 close (2026-07-23)
+
+Operator: Gate-2 all-accept for Batch A. Bare `testing → done` refused exit 8; gated flips with `--verdict-by "Stephen Cheng"` + `--verdict-evidence docs/batches/batch-8a-gate2-acceptance.md` succeeded (`status_overridden` seq 5–7). CUO-302/303/304 are **done**. Store still FROZEN until MEMORY-303 repair (next operator item).
 
 ## Testing-phase gate results (this run)
 

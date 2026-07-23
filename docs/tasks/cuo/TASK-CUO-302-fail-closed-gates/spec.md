@@ -4,7 +4,7 @@ title: Fail-closed machine gates - RED when zero gate commands are configured
 template: task@1
 type: improvement
 module: cuo
-status: testing
+status: done
 priority: p0
 author: "@stephencheng"
 department: engineering

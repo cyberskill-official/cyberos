@@ -25,9 +25,9 @@ Closes the gap between CyberOS doctrine and enforcement: fail-closed gates, mech
 
 | ID | Task | Status | Why this cell |
 |---|---|---|---|
-| T1 | TASK-CUO-302 | **reviewing** | Implementation + suite green; awaiting review acceptance |
-| T2 | TASK-CUO-303 | **reviewing** | HITL lock + `status_overridden` + tests green |
-| T3 | TASK-CUO-304 | **reviewing** | Ceiling 2→3 pinned; doctrine constants green |
+| T1 | TASK-CUO-302 | **done** | Gate-2 all-accept 2026-07-23 (`batch-8a-gate2-acceptance.md`) |
+| T2 | TASK-CUO-303 | **done** | Gate-2 all-accept 2026-07-23 (`batch-8a-gate2-acceptance.md`) |
+| T3 | TASK-CUO-304 | **done** | Gate-2 all-accept 2026-07-23 (`batch-8a-gate2-acceptance.md`) |
 | T4 | TASK-IMP-136 | **reviewing** | CAF root CI + awh hook + stub sweep + `test_ci_truth` |
 | T5 | TASK-SKILL-202 | **reviewing** | NFR delist, untrusted backport, stub lint 7/7 |
 | T6 | TASK-MEMORY-303 | **implementing** | Code landed; **live store repair is operator-gated** |
@@ -36,7 +36,7 @@ Closes the gap between CyberOS doctrine and enforcement: fail-closed gates, mech
 | T9 | TASK-IMP-139 | **implementing** | Mechanical half done; **Gate-1/Gate-2 operator-gated** |
 | P3 | TASK-IMP-140 | **implementing** | Checkers + risk rows landed; **BRAIN record deferred on T6** |
 
-Hard boundaries observed: no push/merge/deploy; no task set `done`; no HITL gate crossed without verdict flags; no live BRAIN store repair/write; no `# UNREVIEWED` marker cleared; TASK-IMP-138 not implemented; hooks never bypassed.
+Hard boundaries observed: no push/merge/deploy; HITL gates crossed only with recorded verdicts; Batch A (CUO-302/303/304) closed done on 2026-07-23; live BRAIN store repair deferred to MEMORY-303 operator item; no `# UNREVIEWED` marker cleared; TASK-IMP-138 decision pending Batch D; hooks never bypassed.
 
 ## Verification (verbatim summary)
 
@@ -60,8 +60,7 @@ Note: the live installed `run-gates.sh` was **not** refreshed (ordering: store r
 
 Record a dated verdict in chat (or the owning task's `source_decisions`) before any follow-up that mutates markers, statuses past HITL, or the live BRAIN.
 
-1. **TASK-MEMORY-303 — approve live-store layout repair?**  
-   Plan: `docs/tasks/memory/TASK-MEMORY-303-memory-contract-hardening/store-repair-plan.md`. Relocate `adrs/` + `impl-plans/` under `memories/{decisions,projects}/` via canonical `move` (also ratifies the narrow TASK-MEMORY-261 disposition for these two dirs). Re-measure body hashes at execution (volatile). Until approved: store stays `FROZEN_RECOVERABLE`; do not wire/refresh this repo's doctor gate.
+1. **TASK-MEMORY-303 — live-store layout repair** — **APPROVED NOW** (operator 2026-07-23: "yes repair after A"; A closed). Execute `store-repair-plan.md` on `ship/batch-8c-memory`; re-measure hashes at execution.
 
 2. **TASK-IMP-139 Gate-1 — UNREVIEWED fork?**  
    Brief: `…/TASK-IMP-139-…/assets/unreviewed-fork-brief.md` (167 non-draft files / 333 marker lines). Choose **clear** (recommended, with TASK-EVAL-001 carve-out) vs **re-audit wave**. Record verdict in the IMP-139 spec **before** any marker-touching commit.

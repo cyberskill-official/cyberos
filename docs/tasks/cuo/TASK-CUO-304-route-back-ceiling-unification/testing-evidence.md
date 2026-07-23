@@ -48,4 +48,4 @@ caf_rc=0
 
 Full transcript: `docs/batches/batch-8a-awh-caf-transcript.txt`
 
-**HALT:** gate-2 (`testing → done`) requires operator ACCEPT. Agent will not flip done.
+**Gate-2 closed 2026-07-23:** operator all-accept → `done` (evidence `docs/batches/batch-8a-gate2-acceptance.md`).
