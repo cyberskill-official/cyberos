@@ -210,10 +210,51 @@ t04_payload_vendored() {
   ok t04
 }
 
+t05_mmr_peaks_stay_in_sync() { # TASK-IMP-141 — gated flips must not RED doctor
+  # After N appends, peaks.bin leaf_count must equal HEAD, and a second append
+  # on a store that already has peaks must advance both together (the batch/8
+  # failure mode was: chain ahead of peaks after status_overridden rows).
+  local d="$TMP/t05"; emit_payloads "$d"; local s="$d/store"
+  ma append "$s" artefact_write "$d/p1.json" || { fail t05 "first append failed"; return; }
+  ma append "$s" artefact_write "$d/p2.json" || { fail t05 "second append failed"; return; }
+  ma append "$s" artefact_write "$d/p3.json" || { fail t05 "third append failed"; return; }
+  [ -f "$s/audit/mmr/peaks.bin" ] || { fail t05 "peaks.bin missing after appends"; return; }
+  local head peaks_leaves
+  head=$(head_val "$s")
+  peaks_leaves=$(node -e '
+    const fs=require("node:fs"); const b=fs.readFileSync(process.argv[1]);
+    const hdr=Buffer.from("CYBEROS-MMR-PEAKS-v1\n");
+    if (!b.subarray(0,hdr.length).equals(hdr)) { console.error("bad header"); process.exit(2); }
+    process.stdout.write(String(b.readBigUInt64BE(hdr.length)));
+  ' "$s/audit/mmr/peaks.bin") || { fail t05 "cannot read peaks leaf_count"; return; }
+  [ "$peaks_leaves" = "$head" ] || { fail t05 "peaks leaf_count=$peaks_leaves != HEAD=$head"; return; }
+  # Stale-peaks catch-up: shrink peaks to claim fewer leaves, append once, must heal.
+  node -e '
+    const fs=require("node:fs"); const p=process.argv[1];
+    const hdr=Buffer.from("CYBEROS-MMR-PEAKS-v1\n");
+    const body=Buffer.alloc(hdr.length+12);
+    hdr.copy(body,0);
+    body.writeBigUInt64BE(1n, hdr.length); // pretend only 1 leaf
+    body.writeUInt32BE(0, hdr.length+8);   // zero peaks (corrupt-but-parseable enough to exist)
+    fs.writeFileSync(p, body);
+  ' "$s/audit/mmr/peaks.bin"
+  printf '{"task_id":"TASK-T-001","phase":"heal"}\n' > "$d/p4.json"
+  ma append "$s" artefact_write "$d/p4.json" || { fail t05 "heal append failed"; return; }
+  head=$(head_val "$s")
+  peaks_leaves=$(node -e '
+    const fs=require("node:fs"); const b=fs.readFileSync(process.argv[1]);
+    const hdr=Buffer.from("CYBEROS-MMR-PEAKS-v1\n");
+    process.stdout.write(String(b.readBigUInt64BE(hdr.length)));
+  ' "$s/audit/mmr/peaks.bin")
+  [ "$peaks_leaves" = "$head" ] || { fail t05 "after heal peaks=$peaks_leaves != HEAD=$head"; return; }
+  ok t05
+}
+
 want t01 && t01_fresh_store_three_appends
 want t02 && t02_verify_and_tamper
 want t03 && t03_bad_kind_refused
 want t04 && t04_payload_vendored
+want t05 && t05_mmr_peaks_stay_in_sync
 
 echo "test_memory_append: pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

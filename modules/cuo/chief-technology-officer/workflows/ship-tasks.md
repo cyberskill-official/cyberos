@@ -124,6 +124,17 @@ Human acceptance is mandatory (STATUS-REFERENCE.md §1.4, EXECUTION-DISCIPLINE.m
 - **Review acceptance** (`reviewing → ready_to_test`, steps 19-20): the agent produces the code-review packet (steps 17-18) with every §1 clause mapped to a named test, then HALTS. A human records the approval verdict, which advances the cell: the recorded verdict is what carries the flip — `backlog-mutate.mjs flip <id> reviewing ready_to_test --verdict-by <actor> --verdict-evidence <path to the review-acceptance note the human produced>`. A bare flip of this transition refuses with exit 8 (TASK-CUO-303).
 - **Final acceptance** (`testing → done`, steps 30-31): the agent brings every machine gate green (coverage, TRACE-004, awh, caf), then HALTS. A human records the acceptance verdict. The agent NEVER self-sets `done`. Same mechanics: `backlog-mutate.mjs flip <id> testing done --verdict-by <actor> --verdict-evidence <path to the acceptance note>` — the flags are how the recorded verdict advances the cell; a bare flip refuses with exit 8, and on a resolvable BRAIN store the gated flip appends one `status_overridden` audit row before the index moves.
 
+**Gated-flip checklist (truth precedes index — TASK-IMP-120 + batch/8 friction):**
+
+1. Write a non-empty evidence file. If it lives under `docs/batches/`, it MUST open with YAML frontmatter (`batch:` + `members:`) so `render-status-hub.mjs` can parse every file in that directory — or keep acceptance notes under the task folder instead.
+2. Set the task's `spec.md` frontmatter `status:` to the destination value **first**.
+3. Run `backlog-mutate.mjs flip <id> <from> <to> --verdict-by <actor> --verdict-evidence <path>`.
+4. Regenerate `docs/status/` (or rely on the pre-commit hook) before treating the hub as truth.
+
+**Batch "approve all":** one shared evidence file MAY back N gated flips (one utterance, N `status_overridden` rows pointing at the same reason path). Prefer that over per-task copies when the operator's verdict is batch-wide.
+
+**Sub-batches:** a parent ledger (e.g. `batch/8-audit-hardening.md`) MAY list many members while ship branches use nested ledgers (`ship/batch-8a-…`) with their own `batch:` / `members:` / `ended:`. Parent `ended` waits until every sub-batch gate-2 is recorded.
+
 Accepted residual (TASK-CUO-303 edge case): an agent that edits `status:` in spec.md frontmatter directly and regenerates the backlog bypasses the flip gate entirely — the mechanical lock closes the documented tool path (the only path compliant workflows use); the transition-locked state engine (v4.0 roadmap) closes the rest.
 
 Between the gates the agent runs continuously and self-resolves everything it can verify (compile, lint, a test it broke, a red module gate on its own change); it does not pause for self-resolvable work. The only mandatory stops inside a task are these two verdicts.

@@ -20,7 +20,17 @@ if [ "${1:-}" = "--from-release" ]; then
   echo "rollout: downloading $url"
   curl -fsSL "$url" -o "$dl/cyberos-payload.tar.gz"
   curl -fsSL "$(dirname "$url")/SHA256SUMS" -o "$dl/SHA256SUMS" || { echo "rollout: ERROR: no SHA256SUMS beside the tarball" >&2; exit 1; }
-  (cd "$dl" && grep " cyberos-payload.tar.gz$" SHA256SUMS | sha256sum -c - >/dev/null) || { echo "rollout: ERROR: checksum mismatch" >&2; exit 1; }
+  # TASK-IMP-137 residual / post-1.2.0 Wave 1: same checksum chooser as bootstrap.sh —
+  # GNU sha256sum when present, else stock macOS/BSD `shasum -a 256`. Neither → abort.
+  if command -v sha256sum >/dev/null 2>&1; then
+    _rollout_sha_verify() { sha256sum -c - >/dev/null; }
+  elif command -v shasum >/dev/null 2>&1; then
+    _rollout_sha_verify() { shasum -a 256 -c - >/dev/null; }
+  else
+    echo "rollout: ERROR: neither sha256sum nor shasum is on PATH - refusing to install unverified bits" >&2
+    exit 1
+  fi
+  (cd "$dl" && grep " cyberos-payload.tar.gz$" SHA256SUMS | _rollout_sha_verify) || { echo "rollout: ERROR: checksum mismatch" >&2; exit 1; }
   mkdir -p "$dl/payload" && tar -xzf "$dl/cyberos-payload.tar.gz" -C "$dl/payload"
   PAYLOAD="$dl/payload"
 else

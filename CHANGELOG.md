@@ -2,6 +2,25 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [Unreleased]
+
+Fixed
+- `memory-append.mjs` rebuilds `audit/mmr/peaks.bin` after every append so doctor `ledger-mmr-cross-check` stays green after gated HITL flips (TASK-IMP-141; batch/8 residual).
+- CUO applier no longer raw-writes under `.cyberos/memory/store/{adrs,impl-plans,audits,code-reviews,obs-injections}/` — artefacts route through `cyberos.core.ops.put` under `memories/<kind>/<hex>/<hex>/` (TASK-MEMORY-302).
+- `rollout.sh --from-release` checksum verification matches `bootstrap.sh`: GNU `sha256sum` or macOS/BSD `shasum -a 256` (IMP-137 residual).
+
+Changed
+- `ship-tasks.md` HITL section documents the gated-flip checklist, shared batch evidence, and sub-batch ledger rules (TASK-CUO-305).
+- Parent batch ledger `docs/batches/batch-8-audit-hardening.md` closed to final `done` status for all ten members (PR #132 / 1.2.0).
+
+Removed
+- `scripts/awh_finalize.sh` — historical one-shot (banned `git add -A` / `--no-verify`); deletion approved in post-1.2.0 Wave 0.
+
+Added
+- `docs/batches/batch-9-post-120-followups.md` — schedule for MMR/MEMORY-302/ship-tasks evolution + MCP/OBS resume waves + v3.x/v4.0 draft tasks (TASK-IMP-142/143/144).
+- `modules/memory/tests/test_store_layout.py` — layout-root-canonical regression for MEMORY-302.
+- `test_memory_append.sh` t05 — MMR peaks stay in sync with HEAD.
+
 ## [1.2.0] - 2026-07-23
 
 Changed

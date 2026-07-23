@@ -42,6 +42,98 @@ _VALID_STATUSES = frozenset({
 
 _SPANS = logging.getLogger("cyberos.cuo.spans")
 
+# AGENTS.md §2 closed kind set. Applier artefacts map onto these so put() paths
+# stay layout-root-canonical (TASK-MEMORY-302).
+_BRAIN_KIND_BY_ARTEFACT = {
+    "adrs": "decisions",
+    "impl-plans": "projects",
+    "audits": "refinements",
+    "code-reviews": "refinements",
+    "obs-injections": "facts",
+}
+
+
+def _shard_rel(filename: str) -> str:
+    """Return ``<hex>/<hex>/<filename>`` content-addressed shard (AGENTS.md §2)."""
+    import hashlib
+
+    digest = hashlib.sha256(filename.encode("utf-8")).hexdigest()
+    return f"{digest[:2]}/{digest[2:4]}/{filename}"
+
+
+def _put_brain_artefact(
+    repo_root: Path,
+    artefact_class: str,
+    filename: str,
+    content: str,
+    *,
+    actor: str = "cuo-applier",
+    run_span_id: str = "",
+) -> Path | None:
+    """Write an applier artefact through the canonical BRAIN writer (TASK-MEMORY-302).
+
+    Routes via ``cyberos.core.ops.put`` under ``memories/<kind>/<hex>/<hex>/``.
+    Never creates non-canonical store-root dirs (``adrs/``, ``impl-plans/``, …).
+    Returns the absolute path on success, or ``None`` when the writer is unavailable
+    (caller should skip — do NOT fall back to raw store-root writes).
+    """
+    kind = _BRAIN_KIND_BY_ARTEFACT.get(artefact_class)
+    if kind is None:
+        _SPANS.warning(
+            "applier.brain_put_unknown_class",
+            extra={"event": "applier.brain_put_unknown_class", "span_id": run_span_id,
+                   "artefact_class": artefact_class},
+        )
+        return None
+    store = repo_root / ".cyberos" / "memory" / "store"
+    if not store.is_dir() or not (store / "audit").is_dir():
+        _SPANS.info(
+            "applier.brain_put_skipped",
+            extra={"event": "applier.brain_put_skipped", "span_id": run_span_id,
+                   "reason": "no_store", "artefact_class": artefact_class},
+        )
+        return None
+    try:
+        from cyberos.core.ops import put
+        from cyberos.core.writer import Writer
+    except ImportError:
+        # Dev tree: modules/memory on sys.path
+        mem_mod = repo_root / "modules" / "memory"
+        if mem_mod.is_dir():
+            import sys
+            if str(mem_mod) not in sys.path:
+                sys.path.insert(0, str(mem_mod))
+        try:
+            from cyberos.core.ops import put
+            from cyberos.core.writer import Writer
+        except ImportError as e:
+            _SPANS.warning(
+                "applier.brain_put_import_failed",
+                extra={"event": "applier.brain_put_import_failed", "span_id": run_span_id,
+                       "error": str(e)},
+            )
+            return None
+
+    rel = f"memories/{kind}/{_shard_rel(filename)}"
+    try:
+        with Writer(store) as writer:
+            put(
+                writer,
+                rel,
+                content.encode("utf-8"),
+                actor=actor,
+                kind=kind,
+                extra={"artefact_class": artefact_class, "filename": filename},
+            )
+    except Exception as e:  # noqa: BLE001 — applier must not crash the supervisor
+        _SPANS.warning(
+            "applier.brain_put_failed",
+            extra={"event": "applier.brain_put_failed", "span_id": run_span_id,
+                   "rel": rel, "error": str(e)},
+        )
+        return None
+    return store / rel
+
 
 def _resolve_project_root(hand_off: dict) -> Path | None:
     """Resolve the target project root from hand_off.
@@ -482,13 +574,9 @@ def _apply_task_audit(step_result, hand_off: dict, run_span_id: str) -> None:
         )
         return
 
-    # Write audit to .cyberos/memory/store/audits/ (activity history, not deliverable)
-    if repo_root:
-        audits_dir = repo_root / ".cyberos/memory/store" / "audits"
-        audits_dir.mkdir(parents=True, exist_ok=True)
-        audit_path = audits_dir / f"{task_path.stem}.audit.md"
-    else:
-        audit_path = task_path.with_suffix(".audit.md")
+    # TASK-MEMORY-302: audits go through put() under memories/refinements/, never
+    # a raw store-root `audits/` dir. Fallback when no store: sibling of the task.
+    audit_filename = f"{task_path.stem}.audit.md"
 
     # Determine the audit body.
     if isinstance(output.get("audit_body"), str):
@@ -537,6 +625,20 @@ def _apply_task_audit(step_result, hand_off: dict, run_span_id: str) -> None:
 
     content = frontmatter + "\n" + body.strip() + "\n"
 
+    if repo_root is not None:
+        written = _put_brain_artefact(
+            repo_root, "audits", audit_filename, content, run_span_id=run_span_id,
+        )
+        if written is not None:
+            _SPANS.info(
+                "applier.audit_written",
+                extra={"event": "applier.audit_written", "span_id": run_span_id,
+                       "task_id": task_id, "audit_path": str(written),
+                       "verdict": verdict},
+            )
+            return
+    # No BRAIN store / writer — sibling of the task spec (outside store root).
+    audit_path = task_path.with_suffix(".audit.md")
     try:
         tmp = audit_path.with_suffix(".audit.md.tmp")
         tmp.write_text(content, encoding="utf-8")
@@ -722,7 +824,8 @@ def _apply_architecture_decision_record(step_result, hand_off: dict, run_span_id
     3. Structured fields (``context``, ``decision``, ``options``) → render to ADR template.
     4. ``artefact_fields`` key (from mock-llm) → render from template fields.
 
-    Target: ``.cyberos/memory/store/adrs/ADR-{NNN}-{slug}.md`` relative to the repo root.
+    Target: ``memories/decisions/<hex>/<hex>/ADR-{NNN}-{slug}.md`` via put()
+    (TASK-MEMORY-302). Never a raw store-root ``adrs/`` directory.
     """
     output = _extract_output(step_result)
     if not output:
@@ -744,13 +847,9 @@ def _apply_architecture_decision_record(step_result, hand_off: dict, run_span_id
     if repo_root is None:
         repo_root = Path.cwd()
 
-    adrs_dir = repo_root / ".cyberos/memory/store" / "adrs"
-    adrs_dir.mkdir(parents=True, exist_ok=True)
-
     # Clean adr_id for filename (strip non-alphanumeric prefix chars for the number part).
     adr_num = re.sub(r"[^0-9]", "", adr_id) or "0001"
     filename = f"ADR-{adr_num}-{slug}.md"
-    adr_path = adrs_dir / filename
 
     # Determine body.
     for key in ("adr_body", "body", "raw_response"):
@@ -783,21 +882,21 @@ def _apply_architecture_decision_record(step_result, hand_off: dict, run_span_id
 
     content = frontmatter + "\n" + body.strip() + "\n"
 
-    try:
-        tmp = adr_path.with_suffix(".md.tmp")
-        tmp.write_text(content, encoding="utf-8")
-        os.replace(tmp, adr_path)
+    written = _put_brain_artefact(
+        repo_root, "adrs", filename, content, run_span_id=run_span_id,
+    )
+    if written is not None:
         _SPANS.info(
             "applier.adr_written",
             extra={"event": "applier.adr_written", "span_id": run_span_id,
-                   "adr_id": adr_id, "adr_path": str(adr_path)},
+                   "adr_id": adr_id, "adr_path": str(written)},
         )
-    except OSError as e:
-        _SPANS.warning(
-            "applier.adr_write_error",
-            extra={"event": "applier.adr_write_error", "span_id": run_span_id,
-                   "adr_id": adr_id, "error": str(e)},
-        )
+        return
+    _SPANS.warning(
+        "applier.adr_write_error",
+        extra={"event": "applier.adr_write_error", "span_id": run_span_id,
+               "adr_id": adr_id, "error": "brain put unavailable — refused raw store-root write"},
+    )
 
 
 def _render_adr_markdown(output: dict, adr_id: str, title: str, status: str) -> str:
@@ -906,8 +1005,8 @@ def _apply_implementation_plan(step_result, hand_off: dict, run_span_id: str) ->
     2. ``code_changes`` list → write/modify files in the working tree (task #7)
     3. Structured fields → render to template format
 
-    The plan document goes to ``.cyberos/memory/store/impl-plans/<module>/impl-plan-<task_id>.md``
-    (sibling to the task spec, or fallback to output_dir).
+    The plan document goes to ``memories/projects/<hex>/<hex>/impl-plan-<task_id>.md``
+    via put() (TASK-MEMORY-302). Never a raw store-root ``impl-plans/`` directory.
     """
     output = _extract_output(step_result)
     if not output:
@@ -924,7 +1023,7 @@ def _apply_implementation_plan(step_result, hand_off: dict, run_span_id: str) ->
 
 
 def _write_impl_plan_doc(output: dict, task_id: str | None, hand_off: dict, run_span_id: str, output_dir: Path | None = None) -> None:
-    """Write the IMPL-PLAN markdown document."""
+    """Write the IMPL-PLAN markdown document via the canonical BRAIN writer."""
     # Determine plan body.
     for key in ("impl_plan_body", "body", "raw_response"):
         if isinstance(output.get(key), str) and output[key].strip():
@@ -933,19 +1032,8 @@ def _write_impl_plan_doc(output: dict, task_id: str | None, hand_off: dict, run_
     else:
         body = _render_impl_plan_markdown(output)
 
-    # Determine target path.
-    plan_path = _resolve_artifact_path(
-        output, task_id, hand_off,
-        filename_prefix="impl-plan",
-        default_dir=".cyberos/memory/store/impl-plans",
-        output_dir=output_dir,
-        force_default_dir=True,
-    )
-    if plan_path is None:
-        return
-
-    plan_path.parent.mkdir(parents=True, exist_ok=True)
-
+    slug = task_id or "untitled"
+    filename = f"impl-plan-{slug}.md"
     title = output.get("title", f"Implementation Plan — {task_id}" if task_id else "Implementation Plan")
     frontmatter = (
         f"---\n"
@@ -954,24 +1042,36 @@ def _write_impl_plan_doc(output: dict, task_id: str | None, hand_off: dict, run_
         f"created_at: \"{_today_iso()}\"\n"
         f"---\n"
     )
-
     content = frontmatter + "\n" + body.strip() + "\n"
 
-    try:
-        tmp = plan_path.with_suffix(".md.tmp")
-        tmp.write_text(content, encoding="utf-8")
-        os.replace(tmp, plan_path)
-        _SPANS.info(
-            "applier.impl_plan_written",
-            extra={"event": "applier.impl_plan_written", "span_id": run_span_id,
-                   "path": str(plan_path)},
-        )
-    except OSError as e:
+    repo_root = _resolve_project_root(hand_off)
+    if repo_root is None:
+        repo_root = _find_repo_root_from_handoff(hand_off)
+    if repo_root is None:
+        repo_root = _find_repo_root(hand_off, output_dir)
+    if repo_root is None:
         _SPANS.warning(
             "applier.impl_plan_write_error",
             extra={"event": "applier.impl_plan_write_error", "span_id": run_span_id,
-                   "error": str(e)},
+                   "error": "no repo root"},
         )
+        return
+
+    written = _put_brain_artefact(
+        repo_root, "impl-plans", filename, content, run_span_id=run_span_id,
+    )
+    if written is not None:
+        _SPANS.info(
+            "applier.impl_plan_written",
+            extra={"event": "applier.impl_plan_written", "span_id": run_span_id,
+                   "path": str(written)},
+        )
+        return
+    _SPANS.warning(
+        "applier.impl_plan_write_error",
+        extra={"event": "applier.impl_plan_write_error", "span_id": run_span_id,
+               "error": "brain put unavailable — refused raw store-root write"},
+    )
 
 
 def _render_impl_plan_markdown(output: dict) -> str:
@@ -1412,7 +1512,8 @@ def _resolve_artifact_path(
 def _apply_code_review(step_result, hand_off: dict, run_span_id: str) -> None:
     """Write a code-review@1 markdown document from the LLM's output.
 
-    Target: sibling to the task spec or ``docs/tasks/<module>/code-review-<task_id>.md``.
+    Target: ``memories/refinements/<hex>/<hex>/code-review-<task_id>.md`` via put()
+    (TASK-MEMORY-302).
     """
     output = _extract_output(step_result)
     if not output:
@@ -1428,18 +1529,8 @@ def _apply_code_review(step_result, hand_off: dict, run_span_id: str) -> None:
     else:
         body = _render_code_review_markdown(output)
 
-    review_path = _resolve_artifact_path(
-        output, task_id, hand_off,
-        filename_prefix="code-review",
-        default_dir=".cyberos/memory/store/code-reviews",
-        output_dir=output_dir,
-        force_default_dir=True,
-    )
-    if review_path is None:
-        return
-
-    review_path.parent.mkdir(parents=True, exist_ok=True)
-
+    slug = task_id or "untitled"
+    filename = f"code-review-{slug}.md"
     verdict = output.get("verdict", "approved")
     frontmatter = (
         f"---\n"
@@ -1448,24 +1539,36 @@ def _apply_code_review(step_result, hand_off: dict, run_span_id: str) -> None:
         f"reviewed_at: \"{_today_iso()}\"\n"
         f"---\n"
     )
-
     content = frontmatter + "\n" + body.strip() + "\n"
 
-    try:
-        tmp = review_path.with_suffix(".md.tmp")
-        tmp.write_text(content, encoding="utf-8")
-        os.replace(tmp, review_path)
-        _SPANS.info(
-            "applier.code_review_written",
-            extra={"event": "applier.code_review_written", "span_id": run_span_id,
-                   "path": str(review_path), "verdict": verdict},
-        )
-    except OSError as e:
+    repo_root = _resolve_project_root(hand_off)
+    if repo_root is None:
+        repo_root = _find_repo_root_from_handoff(hand_off)
+    if repo_root is None:
+        repo_root = _find_repo_root(hand_off, output_dir)
+    if repo_root is None:
         _SPANS.warning(
             "applier.code_review_write_error",
             extra={"event": "applier.code_review_write_error", "span_id": run_span_id,
-                   "error": str(e)},
+                   "error": "no repo root"},
         )
+        return
+
+    written = _put_brain_artefact(
+        repo_root, "code-reviews", filename, content, run_span_id=run_span_id,
+    )
+    if written is not None:
+        _SPANS.info(
+            "applier.code_review_written",
+            extra={"event": "applier.code_review_written", "span_id": run_span_id,
+                   "path": str(written), "verdict": verdict},
+        )
+        return
+    _SPANS.warning(
+        "applier.code_review_write_error",
+        extra={"event": "applier.code_review_write_error", "span_id": run_span_id,
+               "error": "brain put unavailable — refused raw store-root write"},
+    )
 
 
 def _render_code_review_markdown(output: dict) -> str:
@@ -1537,7 +1640,8 @@ def _render_code_review_markdown(output: dict) -> str:
 def _apply_observability_injection(step_result, hand_off: dict, run_span_id: str) -> None:
     """Write an observability-injection@1 document from the LLM's output.
 
-    Target: sibling to the task spec or ``docs/tasks/<module>/obs-injection-<task_id>.md``.
+    Target: ``memories/facts/<hex>/<hex>/obs-injection-<task_id>.md`` via put()
+    (TASK-MEMORY-302).
     """
     output = _extract_output(step_result)
     if not output:
@@ -1553,18 +1657,8 @@ def _apply_observability_injection(step_result, hand_off: dict, run_span_id: str
     else:
         body = _render_obs_injection_markdown(output)
 
-    obs_path = _resolve_artifact_path(
-        output, task_id, hand_off,
-        filename_prefix="obs-injection",
-        default_dir=".cyberos/memory/store/obs-injections",
-        output_dir=output_dir,
-        force_default_dir=True,
-    )
-    if obs_path is None:
-        return
-
-    obs_path.parent.mkdir(parents=True, exist_ok=True)
-
+    slug = task_id or "untitled"
+    filename = f"obs-injection-{slug}.md"
     language = output.get("language", "typescript")
     subscriber = output.get("subscriber", "tracing")
     frontmatter = (
@@ -1576,24 +1670,36 @@ def _apply_observability_injection(step_result, hand_off: dict, run_span_id: str
         f"generated_at: \"{_today_iso()}\"\n"
         f"---\n"
     )
-
     content = frontmatter + "\n" + body.strip() + "\n"
 
-    try:
-        tmp = obs_path.with_suffix(".md.tmp")
-        tmp.write_text(content, encoding="utf-8")
-        os.replace(tmp, obs_path)
-        _SPANS.info(
-            "applier.obs_injection_written",
-            extra={"event": "applier.obs_injection_written", "span_id": run_span_id,
-                   "path": str(obs_path)},
-        )
-    except OSError as e:
+    repo_root = _resolve_project_root(hand_off)
+    if repo_root is None:
+        repo_root = _find_repo_root_from_handoff(hand_off)
+    if repo_root is None:
+        repo_root = _find_repo_root(hand_off, output_dir)
+    if repo_root is None:
         _SPANS.warning(
             "applier.obs_injection_write_error",
             extra={"event": "applier.obs_injection_write_error", "span_id": run_span_id,
-                   "error": str(e)},
+                   "error": "no repo root"},
         )
+        return
+
+    written = _put_brain_artefact(
+        repo_root, "obs-injections", filename, content, run_span_id=run_span_id,
+    )
+    if written is not None:
+        _SPANS.info(
+            "applier.obs_injection_written",
+            extra={"event": "applier.obs_injection_written", "span_id": run_span_id,
+                   "path": str(written)},
+        )
+        return
+    _SPANS.warning(
+        "applier.obs_injection_write_error",
+        extra={"event": "applier.obs_injection_write_error", "span_id": run_span_id,
+               "error": "brain put unavailable — refused raw store-root write"},
+    )
 
 
 def _render_obs_injection_markdown(output: dict) -> str:
