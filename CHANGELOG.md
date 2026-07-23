@@ -2,7 +2,7 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
-## [Unreleased]
+## [1.2.0] - 2026-07-23
 
 Changed
 - platform entry-point identity (Branch A, thin spine everywhere): root `AGENTS.md` is the same thin workflow spine consumers get; Layer-1 memory protocol normative home is `modules/memory/cyberos/data/AGENTS.md` (installed `.cyberos/memory/AGENTS.md`); `CLAUDE.md` + pointer files name `.cyberos/AGENT-ENTRY.md` first; `install.sh` no longer keeps a platform AGENTS.md protocol exception. Decision recorded 2026-07-23. (TASK-IMP-138)
