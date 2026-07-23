@@ -97,12 +97,25 @@ def _put_brain_artefact(
         from cyberos.core.ops import put
         from cyberos.core.writer import Writer
     except ImportError:
-        # Dev tree: modules/memory on sys.path
-        mem_mod = repo_root / "modules" / "memory"
-        if mem_mod.is_dir():
-            import sys
-            if str(mem_mod) not in sys.path:
-                sys.path.insert(0, str(mem_mod))
+        # Trusted path only: walk from this CUO module's install tree (same pattern as
+        # memory_bridge._try_import_memory_writer). Never add target repo_root/modules/memory
+        # to sys.path — that tree is attacker-controlled in the external-project case.
+        import sys
+
+        here = Path(__file__).resolve()
+        mem_mod = None
+        for ancestor in (
+            here.parent.parent.parent.parent,  # modules/
+            here.parent.parent.parent.parent.parent,  # cyberos-root
+        ):
+            for cand in (ancestor / "memory", ancestor / "modules" / "memory"):
+                if (cand / "cyberos" / "core" / "ops.py").is_file():
+                    mem_mod = cand
+                    break
+            if mem_mod is not None:
+                break
+        if mem_mod is not None and str(mem_mod) not in sys.path:
+            sys.path.insert(0, str(mem_mod))
         try:
             from cyberos.core.ops import put
             from cyberos.core.writer import Writer

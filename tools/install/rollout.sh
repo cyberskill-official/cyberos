@@ -30,7 +30,8 @@ if [ "${1:-}" = "--from-release" ]; then
     echo "rollout: ERROR: neither sha256sum nor shasum is on PATH - refusing to install unverified bits" >&2
     exit 1
   fi
-  (cd "$dl" && grep " cyberos-payload.tar.gz$" SHA256SUMS | _rollout_sha_verify) || { echo "rollout: ERROR: checksum mismatch" >&2; exit 1; }
+  # Exact checksum-record match (digest + optional '*' + filename); reject alternate names.
+  (cd "$dl" && grep -E '^[[:xdigit:]]{64}[[:space:]]+\*?cyberos-payload\.tar\.gz$' SHA256SUMS | _rollout_sha_verify) || { echo "rollout: ERROR: checksum mismatch" >&2; exit 1; }
   mkdir -p "$dl/payload" && tar -xzf "$dl/cyberos-payload.tar.gz" -C "$dl/payload"
   PAYLOAD="$dl/payload"
 else

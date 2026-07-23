@@ -17,9 +17,9 @@ route_backs: 0
 gate_reasks: 0
 tokens: unknown
 ---
-# batch 8 — audit hardening (CLOSED)
+# batch 8 — audit hardening (CLOSED — member tasks done; Wave-0 residual open)
 
-Closes the gap between CyberOS doctrine and enforcement: fail-closed gates, mechanical HITL, skill quality floor, memory contract hardening, CI/CAF truth, install portability, corpus hygiene, benchmark gates G1–G16, and the thin-spine entry point. Merged to `main` as [PR #132](https://github.com/cyberskill-official/cyberos/pull/132) → commit `1d8da66e` (released as **1.2.0**).
+Closes the gap between CyberOS doctrine and enforcement: fail-closed gates, mechanical HITL, skill quality floor, memory contract hardening, CI/CAF truth, install portability, corpus hygiene, benchmark gates G1–G16, and the thin-spine entry point. Merged to `main` as [PR #132](https://github.com/cyberskill-official/cyberos/pull/132) → commit `1d8da66e` (released as **1.2.0**). Branch-protection stub-check confirmation remains an open operator follow-up (decision #7).
 
 ## Member status (final)
 
@@ -50,7 +50,7 @@ Closes the gap between CyberOS doctrine and enforcement: fail-closed gates, mech
 
 Remote tip `origin/ship/batch-8f-entrypoint` deleted 2026-07-23 post-merge (Wave 0 cleanup).
 
-## Operator decision list (all executed)
+## Operator decision list (1–6 + 8 executed; #7 pending)
 
 1. MEMORY-303 live-store repair — **done**
 2. IMP-139 UNREVIEWED bulk-clear (+ EVAL-001 carve-out) — **done**
@@ -58,9 +58,9 @@ Remote tip `origin/ship/batch-8f-entrypoint` deleted 2026-07-23 post-merge (Wave
 4. IMP-138 Branch A thin spine — **done**
 5. IMP-140 BRAIN recording — **done**
 6. CAF B17/B18 — **fixed on main** (`46ceb8b4`); historical ledger warning obsolete
-7. Branch protection vs deleted stubs — **verify attempted 2026-07-23**; `gh` integration lacks `administration:read` (HTTP 403). Stub workflow files absent under `.github/workflows/`. Operator: confirm in GitHub Settings → Branches that no required check still names a deleted stub.
+7. Branch protection vs deleted stubs — **pending** (owner: Stephen Cheng). API probe 2026-07-23 got HTTP 403 (`administration:read` missing). Stub workflow files are absent under `.github/workflows/`. Acceptance: confirm in GitHub Settings → Branches that no required check still names a deleted stub.
 8. `.cyberos/` refresh after store repair — **done** on batch-8c
 
 ## Follow-ups (post-1.2.0)
 
-See plan `post-1.2.0_next_steps` / batch-9 schedule: MMR sync for `memory-append`, TASK-MEMORY-302, ship-tasks evolution, MCP/OBS resume wave, v3.x/v4.0 drafts.
+See plan `post-1.2.0_next_steps` / batch-9 schedule: MMR sync for `memory-append`, TASK-MEMORY-302, ship-tasks evolution, MCP/OBS resume wave, v3.x/v4.0 drafts. Decision #7 (branch-protection stub-check confirm) stays open until the owner ticks the acceptance criterion above.

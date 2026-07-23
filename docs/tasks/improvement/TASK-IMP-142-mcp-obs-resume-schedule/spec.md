@@ -30,7 +30,7 @@ IMP-139 Gate-2 applied dossier recommendations: **11 route_back** (MCP-003/005/0
 
 Author the schedule only (no implementation of the MCP/OBS work itself):
 
-1. Record the three sub-batches in [`docs/batches/batch-9-post-120-followups.md`](../../batches/batch-9-post-120-followups.md) Wave 3 section (already drafted).
+1. Record the three sub-batches in [`docs/batches/batch-9-post-120-followups.md`](../../../batches/batch-9-post-120-followups.md) Wave 3 section (already drafted).
 2. Preconditions: IMP-141 + MEMORY-302 `done` before starting 9a.
 3. Per-cluster intent: re-spec/adopt against measured tree paths (`services/mcp-gateway/`, `services/shared/`), not abandoned claimed layouts.
 

@@ -443,11 +443,15 @@ function cmdAppend(storeArg, kind, payloadArg, opts) {
     // historically advanced only the binlog, so doctor ledger-mmr-cross-check
     // went RED after every gated HITL flip. Rebuild from every on-disk payload
     // (O(n), fine at doc-driven scale) so a cold/stale peaks.bin cannot lag.
+    // Fail closed: never report success when peaks lag the durable chain.
     try { syncMmrPeaks(store); }
     catch (e) {
-      // Chain is already durable — mirror writer.py's "never crash the writer"
-      // stance, but surface the failure so operators notice.
-      process.stderr.write(`memory-append: WARNING: MMR peaks sync failed (chain still durable): ${e.message}\n`);
+      process.stderr.write(`memory-append: ERROR: MMR peaks sync failed after durable append: ${e.message}\n`);
+      return {
+        code: 1, seq: Number(seq), chain, prev_chain: lastChain, kind, path: memPath,
+        actor, store,
+        message: `append: MMR sync failed after seq ${seq} (${kind}): ${e.message}`,
+      };
     }
 
     return {
