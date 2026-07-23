@@ -20,6 +20,7 @@ Added
 - `docs/batches/batch-9-post-120-followups.md` — schedule for MMR/MEMORY-302/ship-tasks evolution + MCP/OBS resume waves + v3.x/v4.0 draft tasks (TASK-IMP-142/143/144).
 - `modules/memory/tests/test_store_layout.py` — layout-root-canonical regression for MEMORY-302.
 - `test_memory_append.sh` t05 — MMR peaks stay in sync with HEAD.
+- G4 README headline counts refreshed to 577 tasks (batch/9 specs) so `docs/verification/benchmark-gates.md` + `test_benchmark_gates` stay green; 1.2.0 `R-EXT` / BRAIN audit deliverables unchanged.
 
 ## [1.2.0] - 2026-07-23
 
