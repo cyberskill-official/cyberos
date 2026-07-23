@@ -1,9 +1,7 @@
 ---
 id: TASK-MCP-003
 title: "MCP SEP-986 naming convention validator — `cyberos.{module}.{verb}_{noun}` pattern enforced at skill registration + CI gate"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
@@ -13,7 +11,9 @@ author: "@stephencheng"
 template: task@1
 module: mcp
 priority: p0
-status: implementing
+status: ready_to_implement
+entered_via: rework
+routed_back_count: 1
 verify: T
 phase: P1
 milestone: P1 · slice 2

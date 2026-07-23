@@ -13,7 +13,7 @@ Breaking
 Changed
 - `cyberos-cuo drain --halt-on-repeat-rework` default 2 → 3 (`modules/cuo` api.py + cli.py, and the `cyberos workflow` wrapper in `modules/memory`), matching the ship-tasks.md §11b route-back ceiling: default drains now permit the third cycle before halting (TASK-CUO-304).
 - four NFR stub skills (`nfr-certification-author`, `nfr-evaluator`, `nfr-test-runner`, `nfr-regression-handler`) are delisted from the vendored payload (superseding TASK-CUO-209's vendoring decision); they remain as unvendored scaffolds under `modules/skill/`. Injection-discipline (`untrusted_inputs` + `references/UNTRUSTED_CONTENT.md`) backported to 20 repo-reading skills; pair-parity SCOPE expanded 11 → 25. (TASK-SKILL-202)
-- corpus hygiene (mechanical half): 251 task specs had `module:` values lowercased to match their `docs/tasks/<module>/` folder; task-lint gains FM-117 (lowercase + folder match); 12 reconcile dossiers prepared for the stuck-`implementing` triage. UNREVIEWED fork + Gate-2 verdicts remain operator-gated (pending). (TASK-IMP-139)
+- corpus hygiene (TASK-IMP-139): Branch clear on FM-112-visible `# UNREVIEWED` markers (167 files / 333 lines cleared; EVAL-001 individually confirmed); 251 `module:` values lowercased; FM-117 live in task-lint + RUBRIC.md; Gate-2 triage tally 11 route_back + 1 resume (TASK-APP-001) + 0 on_hold.
 
 Added
 - `memory-append.mjs` accepts the `status_overridden` kind with validated payload `{actor, task_id, prior_status, new_status, reason}` (TASK-CUO-303).

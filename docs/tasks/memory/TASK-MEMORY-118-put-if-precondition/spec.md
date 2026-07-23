@@ -1,9 +1,7 @@
 ---
 id: TASK-MEMORY-118
 title: "memory put_if — optimistic-concurrency primitive with content-hash preconditions; many-agent contention without clobbering; canonical-ops extension §3.1"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature

@@ -1,9 +1,7 @@
 ---
 id: TASK-MEMORY-120
 title: "memory history — `cyberos history <path>` surfaces per-file version + attribution from the audit chain; REST `/api/v2/memories/<path>/history`; dream-applied + session_id annotations rendered inline"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature

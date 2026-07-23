@@ -22,7 +22,7 @@ fail() { FAIL=$((FAIL+1)); echo "  FAIL $1: $2"; }
 echo "test_corpus_hygiene.sh (TASK-IMP-139)"
 
 # Frontmatter-only marker scan (FM-112-equivalent): count non-draft specs whose
-# top-level frontmatter lines carry `# UNREVIEWED`.
+# top-level frontmatter has an OWN-LINE `# UNREVIEWED` comment (not title/quote substrings).
 nondraft_marker_count() {
   python3 - "$repo/docs/tasks" <<'PY'
 import re, sys
@@ -39,23 +39,20 @@ for spec in root.glob("*/TASK-*/spec.md"):
     status = status_m.group(1) if status_m else ""
     if status in ("", "draft"):
         continue
-    if any("# UNREVIEWED" in line for line in fm.splitlines()):
+    if any(line.lstrip().startswith("# UNREVIEWED") for line in fm.splitlines()):
         n += 1
 print(n)
 PY
 }
 
 t01_fork_verdict_recorded() {                                          # AC 1
-  # Operator Gate 1: dated fork verdict must land in the spec BEFORE any marker touch.
-  # Until then: dossiers + brief exist; defer loudly (IMP-139 stays implementing).
   local brief="$TASKDIR/assets/unreviewed-fork-brief.md" spec="$TASKDIR/spec.md"
   [ -f "$brief" ] || { fail t01 "missing assets/unreviewed-fork-brief.md"; return; }
-  if grep -qE 'fork_verdict|Gate 1 verdict|UNREVIEWED fork.*(clear|re-audit)' "$spec" \
-     && grep -qE '2026-0[0-9]-[0-9]{2}' "$spec"; then
+  if grep -qE 'Gate 1 verdict|Branch clear' "$spec" \
+     && grep -qE '2026-0[0-9]-[0-9]{2} operator Gate 1' "$spec"; then
     ok t01
   else
-    echo "  defer t01 — Gate-1 UNREVIEWED fork verdict not yet recorded in the spec (operator decision; see assets/unreviewed-fork-brief.md)"
-    ok t01
+    fail t01 "Gate-1 UNREVIEWED fork verdict missing from source_decisions (see assets/unreviewed-fork-brief.md)"
   fi
 }
 
@@ -64,8 +61,7 @@ t02_no_nondraft_markers() {                                            # AC 2
   if [ "$n" = "0" ]; then
     ok t02
   else
-    echo "  defer t02 — $n non-draft specs still carry # UNREVIEWED (Gate-1 pending; FM-112-equivalent census; markers untouched per batch boundary)"
-    ok t02
+    fail t02 "$n non-draft specs still carry own-line # UNREVIEWED (FM-112-equivalent census)"
   fi
 }
 
@@ -151,14 +147,39 @@ t05_triage_verdict_per_task() {                                        # AC 5
     [ -f "$TASKDIR/assets/reconcile/TASK-${id}.md" ] || { echo "  missing dossier TASK-${id}"; missing=1; }
   done
   [ "$missing" -eq 0 ] || { fail t05 "reconcile dossiers incomplete"; return; }
-  # Operator Gate 2: dated per-task verdicts not yet applied (IMP-139 stays implementing).
-  if grep -qE 'Gate 2|reconcile verdict|verdict recorded' "$TASKDIR/spec.md" \
-     && grep -qE 'route_back|resume|on_hold' "$TASKDIR/spec.md"; then
-    ok t05
-  else
-    echo "  defer t05 — 12 dossiers present; Gate-2 per-task verdicts not yet recorded/applied (operator decision)"
-    ok t05
+  if ! grep -qE '2026-0[0-9]-[0-9]{2} operator Gate 2' "$TASKDIR/spec.md"; then
+    fail t05 "Gate-2 dated verdict missing from source_decisions"; return
   fi
+  # Spot-check applied statuses match the recorded tally (11 route_back + 1 resume).
+  local rb=0
+  for id in MCP-003 MCP-005 MCP-006 MCP-007 MCP-008 \
+            OBS-001 OBS-003 OBS-005 OBS-007 OBS-008 OBS-009; do
+    local st
+    st="$(python3 - "$repo/docs/tasks" "$id" <<'PY'
+import re, sys
+from pathlib import Path
+root, needle = Path(sys.argv[1]), sys.argv[2]
+hits = list(root.glob(f"*/TASK-{needle}*/spec.md"))
+if len(hits) != 1:
+    print(f"AMBIGUOUS:{len(hits)}"); raise SystemExit(0)
+m = re.search(r"(?m)^status:\s*(\S+)", hits[0].read_text(encoding="utf-8", errors="replace"))
+print(m.group(1) if m else "MISSING")
+PY
+)"
+    [ "$st" = "ready_to_implement" ] || { fail t05 "TASK-$id expected ready_to_implement got $st"; return; }
+    rb=$((rb+1))
+  done
+  local app
+  app="$(python3 - "$repo/docs/tasks/app/TASK-APP-001-desktop-cyberos-operations/spec.md" <<'PY'
+import re, sys
+from pathlib import Path
+m = re.search(r"(?m)^status:\s*(\S+)", Path(sys.argv[1]).read_text(encoding="utf-8", errors="replace"))
+print(m.group(1) if m else "MISSING")
+PY
+)"
+  [ "$app" = "implementing" ] || { fail t05 "TASK-APP-001 resume expected implementing got $app"; return; }
+  [ "$rb" -eq 11 ] || { fail t05 "expected 11 route_backs counted $rb"; return; }
+  ok t05
 }
 
 t06_registered_and_idempotent() {                                      # AC 6
@@ -178,12 +199,11 @@ t07_changelog_records_hygiene() {                                      # AC 7
   local top
   top="$(awk '/^## \[/{n++} n==1{print} n==2{exit}' "$repo/CHANGELOG.md")"
   local all=1
-  for want in '251' 'FM-117' 'module'; do
+  for want in '251' 'FM-117' 'module' 'route_back' 'resume'; do
     echo "$top" | grep -q "$want" || { fail t07 "CHANGELOG top entry lacks '$want'"; all=0; }
   done
-  # Branch/tally may be "pending operator" — accept either a named branch or explicit pending.
-  if ! echo "$top" | grep -qiE 'UNREVIEWED|corpus|hygiene|IMP-139'; then
-    fail t07 "CHANGELOG top entry does not name corpus hygiene / IMP-139"; all=0
+  if ! echo "$top" | grep -qiE 'UNREVIEWED|Branch clear|corpus hygiene|IMP-139'; then
+    fail t07 "CHANGELOG top entry does not name corpus hygiene / Branch clear / IMP-139"; all=0
   fi
   [ "$all" -eq 1 ] && ok t07
 }

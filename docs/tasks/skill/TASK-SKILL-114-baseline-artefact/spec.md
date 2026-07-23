@@ -1,9 +1,7 @@
 ---
 id: TASK-SKILL-114
 title: "BASELINE.md artefact at v0.x → v1.0 promotion — design-time performance baseline + with/without-skill comparison + token-budget transparency"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature

@@ -1,9 +1,7 @@
 ---
 id: TASK-OBS-001
 title: "OTel Collector + LGTM stack (Loki + Prometheus + Tempo + Grafana) with mTLS ingress + per-service tokens + retention + file-buffer"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
@@ -13,7 +11,9 @@ author: "@stephencheng"
 template: task@1
 module: obs
 priority: p0
-status: implementing
+status: ready_to_implement
+entered_via: rework
+routed_back_count: 1
 verify: T
 phase: P0
 milestone: P0 · slice 2 (after AI Gateway slice 1)

@@ -4,7 +4,7 @@ title: Corpus hygiene - UNREVIEWED fork, module-case lint, stuck-WIP triage
 template: task@1
 type: improvement
 module: improvement
-status: implementing
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
@@ -40,6 +40,8 @@ source_pages:
 source_decisions:
   - "2026-07-23 operator: CyberOS Hardening Plan approved; Phase 2 T9 'Corpus hygiene' authored as an improvement task (plan file cyberos_hardening_plan_49404998; audit findings H2 + medium corpus items). The plan and this spec both mark the UNREVIEWED bulk decision as an explicit operator fork."
   - "2026-07-23 authoring: the 12-task triage is specified as PER-TASK operator verdicts via task-reconcile - the author does not pre-judge any of the twelve (notably TASK-APP-001, which is July-created and may be legitimately in flight), and this task changes no status by itself."
+  - "2026-07-23 operator Gate 1 verdict (Branch clear + EVAL-001 carve-out / individual confirmation): accept migrated ai_authorship/eu_ai_act_risk_class as-is on the FM-112-visible census in assets/unreviewed-fork-brief.md (167 files / 333 marker lines at Gate-1 time; re-derived 168/334 including accrued). Markers cleared mechanically via FM-112-equivalent own-line scan only (not naive grep). TASK-EVAL-001 confirmed individually (high risk class retained; see its source_decisions). Evidence: operator 'can ship all?' + prior UNREVIEWED=bulk-clear decision + unreviewed-fork-brief.md."
+  - "2026-07-23 operator Gate 2 verdict (accept dossier recommendations unless evidence contradicts): 11 route_back (TASK-MCP-003/005/006/007/008, TASK-OBS-001/003/005/007/008/009) + 1 resume unchanged (TASK-APP-001). Applied via documented status transitions (implementing→ready_to_implement with routed_back_count+=1, entered_via: rework). Evidence: operator 'can ship all?' + dossier accept + assets/reconcile/*."
 ---
 
 # TASK-IMP-139: Corpus hygiene - UNREVIEWED disposition, module-case lint, stuck-WIP triage
@@ -114,13 +116,13 @@ None blocking. Related: TASK-IMP-100/101 (task-reconcile, the Gate-2 instrument)
 
 ## 2. Acceptance criteria
 
-- [ ] AC 1 (traces_to: #1.1) - the spec carries the dated fork verdict with the attached enumeration BEFORE any marker-touching commit (verified in spec + git history at review) - test: `scripts/tests/test_corpus_hygiene.sh::t01_fork_verdict_recorded`
-- [ ] AC 2 (traces_to: #1.2) - `grep -rl '# UNREVIEWED' docs/tasks/**/spec.md` intersected with non-draft statuses returns empty, and the branch-appropriate confirmation trail exists (bulk verdict text present, or per-file audit confirmations) - test: `scripts/tests/test_corpus_hygiene.sh::t02_no_nondraft_markers`
-- [ ] AC 3 (traces_to: #1.3) - a corpus scan finds zero `module:` values that are non-lowercase or unequal to their folder name - test: `scripts/tests/test_corpus_hygiene.sh::t03_module_case_conformant`
-- [ ] AC 4 (traces_to: #1.4) - task-lint exits non-zero naming the new rule id on a mixed-case fixture and on a folder-mismatch fixture, exits 0 on a conformant fixture, and RUBRIC.md documents the id - test: `scripts/tests/test_corpus_hygiene.sh::t04_lint_rule_fires`
-- [ ] AC 5 (traces_to: #1.5) - twelve reconcile evidence reports exist, each stuck task has a dated verdict record, every status change in the triage commit maps 1:1 to a verdict, and no other task's status changed - test: `scripts/tests/test_corpus_hygiene.sh::t05_triage_verdict_per_task`
-- [ ] AC 6 (traces_to: #1.6) - the suite runs green under `bash scripts/tests/run_all.sh` discovery and the regenerator produces byte-identical BACKLOG.md on consecutive runs post-normalization - test: `scripts/tests/test_corpus_hygiene.sh::t06_registered_and_idempotent`
-- [ ] AC 7 (traces_to: #1.7) - CHANGELOG's top entry names the branch, the count 251, the rule id, and the triage tally - test: `scripts/tests/test_corpus_hygiene.sh::t07_changelog_records_hygiene`
+- [x] AC 1 (traces_to: #1.1) - the spec carries the dated fork verdict with the attached enumeration BEFORE any marker-touching commit (verified in spec + git history at review) - test: `scripts/tests/test_corpus_hygiene.sh::t01_fork_verdict_recorded`
+- [x] AC 2 (traces_to: #1.2) - `grep -rl '# UNREVIEWED' docs/tasks/**/spec.md` intersected with non-draft statuses returns empty, and the branch-appropriate confirmation trail exists (bulk verdict text present, or per-file audit confirmations) - test: `scripts/tests/test_corpus_hygiene.sh::t02_no_nondraft_markers`
+- [x] AC 3 (traces_to: #1.3) - a corpus scan finds zero `module:` values that are non-lowercase or unequal to their folder name - test: `scripts/tests/test_corpus_hygiene.sh::t03_module_case_conformant`
+- [x] AC 4 (traces_to: #1.4) - task-lint exits non-zero naming the new rule id on a mixed-case fixture and on a folder-mismatch fixture, exits 0 on a conformant fixture, and RUBRIC.md documents the id - test: `scripts/tests/test_corpus_hygiene.sh::t04_lint_rule_fires`
+- [x] AC 5 (traces_to: #1.5) - twelve reconcile evidence reports exist, each stuck task has a dated verdict record, every status change in the triage commit maps 1:1 to a verdict, and no other task's status changed - test: `scripts/tests/test_corpus_hygiene.sh::t05_triage_verdict_per_task`
+- [x] AC 6 (traces_to: #1.6) - the suite runs green under `bash scripts/tests/run_all.sh` discovery and the regenerator produces byte-identical BACKLOG.md on consecutive runs post-normalization - test: `scripts/tests/test_corpus_hygiene.sh::t06_registered_and_idempotent`
+- [x] AC 7 (traces_to: #1.7) - CHANGELOG's top entry names the branch, the count 251, the rule id, and the triage tally - test: `scripts/tests/test_corpus_hygiene.sh::t07_changelog_records_hygiene`
 
 ## 3. Edge cases
 

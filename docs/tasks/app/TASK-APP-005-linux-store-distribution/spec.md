@@ -1,9 +1,7 @@
 ---
 id: TASK-APP-005
 title: "Linux store distribution — Snap Store (snapcraft, strict confinement) and Flathub (flatpak-builder, external-manifest submission)"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature

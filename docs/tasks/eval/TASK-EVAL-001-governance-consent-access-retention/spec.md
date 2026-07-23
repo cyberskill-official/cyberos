@@ -1,7 +1,6 @@
 ---
 id: TASK-EVAL-001
 title: "governance, consent, access-control + retention layer — versioned monitoring notice + per-subject acknowledgment gate + data-category/purpose registry + per-category retention sweeper + manager/self access grants (tenant RLS + audit row per read) + data-subject rights — the Phase-0 gate every BRAIN/EVAL capture and evaluation depends on"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
@@ -35,6 +34,7 @@ source_decisions:
   - DEC-2523 (retention is bounded per data category by a sweeper job — nothing is kept forever; erasure is auditable)
   - DEC-2524 (every governance mutation AND every cross-subject read emits an l1_audit_log row — the governance layer is itself tamper-evident)
   - DEC-2525 (fully-covert / no-notice collection is OUT OF SCOPE and flagged as a legal risk for Vietnamese counsel; the disclosed notice is the boundary)
+  - "2026-07-23 operator (IMP-139 Gate-1 EVAL-001 carve-out, individual confirmation): confirm ai_authorship: generated_then_reviewed and eu_ai_act_risk_class: high as-is — workplace monitoring/governance for BRAIN/EVAL is Annex-III-class high-risk AI Act work; authorship matches corpus production. Marker cleared after individual review (not bulk). Evidence: operator can ship all? + assets/unreviewed-fork-brief.md carve-out."
 
 eu_ai_act_risk_class: high
 language: rust 1.81

@@ -1,9 +1,7 @@
 ---
 id: TASK-AUTH-110
 title: "AUTH OIDC Provider - first-party authorization server (OIDC Core + RFC 8414 discovery, authorize with SSO-session / upstream-IdP brokering, token + id_token, userinfo, first-party RP client registry, PKCE S256, JWKS reuse, revoke-gated authorize)"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
