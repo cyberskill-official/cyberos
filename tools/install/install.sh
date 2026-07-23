@@ -409,7 +409,9 @@ fi
 # its vendored materials assume; the platform repo keeps the commented corpus default so
 # the heavy profile stays operator-chosen (TASK-IMP-088, recorded decision IMP-06).
 is_platform_repo() {
-  # CyberOS monorepo: root AGENTS.md is the normative Layer-1 protocol source.
+  # CyberOS monorepo (schema present). Used for config.yaml scaffold defaults
+  # (TASK-IMP-088). Root AGENTS.md is the thin spine everywhere (TASK-IMP-138 Branch A);
+  # the Layer-1 protocol normative home is modules/memory/cyberos/data/AGENTS.md.
   [ -f "$root/modules/memory/memory.schema.json" ]
 }
 cfg_file="$root/.cyberos/config.yaml"
@@ -590,7 +592,7 @@ ENTRY
 # --- root AGENTS.md is a thin pointer (like CLAUDE.md / GEMINI.md), NOT the memory protocol ---
 # Full workflow one-pager: .cyberos/AGENT-ENTRY.md
 # Memory protocol (Layer-1):     .cyberos/memory/AGENTS.md
-# Platform monorepo exception: root AGENTS.md remains the normative protocol source.
+# (TASK-IMP-138 Branch A: no platform exception — thin spine everywhere.)
 agents_spine() {
   cat <<'SPINE'
 # AGENTS.md
@@ -616,10 +618,8 @@ if [ -L "$root/AGENTS.md" ] && [ ! -e "$root/AGENTS.md" ]; then
   rm -f "$root/AGENTS.md"
   write_agents_spine
   AGENTS_SET="replaced DANGLING AGENTS.md symlink with thin pointer → .cyberos/AGENT-ENTRY.md"
-elif is_platform_repo && { [ -L "$root/AGENTS.md" ] || is_protocol_dump; }; then
-  AGENTS_SET="kept platform AGENTS.md (Layer-1 protocol source; entry at .cyberos/AGENT-ENTRY.md)"
 elif [ -L "$root/AGENTS.md" ] && is_protocol_dump; then
-  # Consumer accidentally symlinked root AGENTS.md → protocol source. Replace with thin pointer.
+  # Symlink to protocol source (platform used to do this; TASK-IMP-138 Branch A retires it).
   rm -f "$root/AGENTS.md"
   write_agents_spine
   AGENTS_SET="replaced AGENTS.md protocol-symlink with thin pointer → .cyberos/AGENT-ENTRY.md"
@@ -629,9 +629,9 @@ elif [ ! -f "$root/AGENTS.md" ]; then
   write_agents_spine
   AGENTS_SET="created AGENTS.md (thin pointer → .cyberos/AGENT-ENTRY.md, like CLAUDE.md)"
 elif is_protocol_dump; then
-  # Mis-install: consumers must not host the dense protocol at root.
+  # Dense protocol must not live at root (platform or consumer) — TASK-IMP-138 Branch A.
   write_agents_spine
-  AGENTS_SET="replaced mis-installed memory protocol at root AGENTS.md with thin pointer → .cyberos/AGENT-ENTRY.md"
+  AGENTS_SET="replaced memory protocol at root AGENTS.md with thin pointer → .cyberos/AGENT-ENTRY.md"
 elif grep -q "$SP_MARK" "$root/AGENTS.md" 2>/dev/null \
   || grep -qE 'cyberos-agent-spine \(managed by cyberos' "$root/AGENTS.md" 2>/dev/null; then
   # Refresh managed pointer every install so it tracks AGENT-ENTRY wording.
@@ -654,14 +654,15 @@ pointer() {
   case "$style" in
     mdc)
       { printf -- '---\ndescription: CyberOS task workflow (HITL-gated). Always apply.\nalwaysApply: true\n---\n'
-        printf 'This repo runs CyberOS. Canonical instructions: AGENTS.md (root) and .cyberos/AGENT-ENTRY.md.\n'
+        printf 'This repo runs CyberOS. Canonical instructions: `.cyberos/AGENT-ENTRY.md` (workflow). Root `AGENTS.md` is the thin CyberOS spine (not the memory protocol). Memory protocol: `.cyberos/memory/AGENTS.md`.\n'
         printf 'Work is tasks; HITL is required at the two human-acceptance gates; run gates with `bash .cyberos/cuo/gates/run-gates.sh`. Never push/deploy/merge without an operator instruction.\n'; } > "$abs" ;;
     plain)
-      { printf 'This repo runs CyberOS. Canonical instructions: AGENTS.md (root) and .cyberos/AGENT-ENTRY.md.\n'
+      { printf 'This repo runs CyberOS. Canonical instructions: `.cyberos/AGENT-ENTRY.md` (workflow). Root `AGENTS.md` is the thin CyberOS spine (not the memory protocol). Memory protocol: `.cyberos/memory/AGENTS.md`.\n'
         printf 'Work is tasks; HITL is required at the two human-acceptance gates; gates: bash .cyberos/cuo/gates/run-gates.sh. Never push/deploy/merge without an operator instruction.\n'; } > "$abs" ;;
     *)
       { printf '# %s\n\n' "$(basename "$rel" .md)"
-        printf 'This repo runs **CyberOS**. Canonical agent instructions: `AGENTS.md` (root) and `.cyberos/AGENT-ENTRY.md`.\n\n'
+        printf 'This repo runs **CyberOS**. Canonical agent instructions: `.cyberos/AGENT-ENTRY.md`.\n\n'
+        printf 'Root `AGENTS.md` is the thin CyberOS spine (not the memory protocol). Memory protocol: `.cyberos/memory/AGENTS.md`.\n\n'
         printf 'Work is tasks; HITL is required at the two human-acceptance gates; run gates with `bash .cyberos/cuo/gates/run-gates.sh`. Never push, deploy, or merge without an explicit operator instruction.\n'; } > "$abs" ;;
   esac
   AGENT_FILES="$AGENT_FILES $rel"

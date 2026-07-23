@@ -4,6 +4,9 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 
 ## [Unreleased]
 
+Changed
+- platform entry-point identity (Branch A, thin spine everywhere): root `AGENTS.md` is the same thin workflow spine consumers get; Layer-1 memory protocol normative home is `modules/memory/cyberos/data/AGENTS.md` (installed `.cyberos/memory/AGENTS.md`); `CLAUDE.md` + pointer files name `.cyberos/AGENT-ENTRY.md` first; `install.sh` no longer keeps a platform AGENTS.md protocol exception. Decision recorded 2026-07-23. (TASK-IMP-138)
+
 Breaking
 - `run-gates.sh` now exits RED (code 3, distinct from 1 = a gate failed and 2 = missing/malformed config) when ZERO floor gate commands (build, lint, test, coverage) are configured — the old floor-only green verified nothing and lied to both downstream human gates. Consumer repos that relied on RED-on-empty's predecessor (vacuous green) must configure `gates.*` in `.cyberos/config.yaml`, re-run install (autodetect gained a monorepo fallback tier that seeds `bash scripts/tests/run_all.sh` or a Makefile `test:` target, provenance `fallback:*`), or — for intentionally gate-less repos — export `CYBEROS_ALLOW_EMPTY_GATES=1` (the literal `1`), which prints a distinct `GATES: EMPTY-ACKNOWLEDGED` line instead of green. (TASK-CUO-302)
 - `backlog-mutate.mjs flip` now REFUSES the two human-acceptance gate transitions (`reviewing -> ready_to_test`, `testing -> done`) with exit code 8 unless a recorded human verdict accompanies the flip (`--verdict-by <actor>` + `--verdict-evidence <existing non-empty file>`) — breaking for tooling that automates those two bare flips (STATUS-REFERENCE §1.4; TASK-CUO-303). On a gated flip with a resolvable BRAIN store, one `status_overridden` audit row is appended before the index moves; a present store that cannot take the row fails the flip (exit 9).

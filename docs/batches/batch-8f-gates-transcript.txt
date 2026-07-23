@@ -1,0 +1,5 @@
+# Batch 8F gates
+
+bash scripts/tests/test_entrypoint_identity.sh — 6/6 PASS
+python3 -m cyberos doctor / state — READY (26 leaves after gate-2 MMR rebuild)
+Sibling suites (benchmark/corpus) remain green from Batches D/E.

@@ -4,7 +4,7 @@ title: Platform entry-point identity - thin spine vs explicit dual identity
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
@@ -43,6 +43,7 @@ source_pages:
   - "tools/install/install.sh:512-529 (consumer installs write a THIN root AGENTS.md spine - workflow pointer + gates + HITL + memory pointer - with the marked-append discipline) and :515 ('Platform monorepo exception: root AGENTS.md remains the normative protocol source') + :336 (is_platform_repo() keys on modules/memory/memory.schema.json presence) - the dual identity is deliberate, implemented, and undocumented at the surfaces agents actually read"
   - "tools/install/install.sh:444-447 (consumer-side: 'The memory PROTOCOL lives at .cyberos/memory/AGENTS.md. The repo-root AGENTS.md is the [spine]... (that would bury the workflow every agent needs)') - the installer's own rationale for why a root protocol file is the wrong default"
 source_decisions:
+  - "2026-07-23 operator (Batch F / can ship all? + prior 3: A): implement Branch A thin spine end-to-end; gate-1+gate-2 pre-accepted."
   - "2026-07-23 operator: CyberOS Hardening Plan approved; Phase 2 T8 'Platform entry-point identity' authored as an improvement task and explicitly flagged as an operator-decision fork (plan file cyberos_hardening_plan_49404998; audit finding H6; plan approval boundary: 'T8 (entry-point restructure)... explicitly operator-decision forks')."
   - "2026-07-23 authoring: the fork is presented, not resolved - both branches are specified to implementable depth and the spec marks implementation BLOCKED until the operator picks one. The invariant ACs below hold under EITHER branch so the task's acceptance surface is stable across the decision."
   - "2026-07-23 operator: chose Branch A (thin spine everywhere). Evidence: docs/tasks/improvement/TASK-IMP-138-entrypoint-identity-fork/decision-branch-a.md. Implementation deferred to Batch D; status stays ready_to_implement until that ship."
@@ -54,7 +55,7 @@ source_decisions:
 
 On every consumer repo, `install.sh` writes root `AGENTS.md` as a thin workflow spine (task law, gates, HITL, memory pointer). On this platform repo, root `AGENTS.md` is the full Layer-1 *memory protocol*, `CLAUDE.md` duplicates it wholesale, and every pointer file (`.cursorrules`, `GEMINI.md`, `.windsurfrules`, copilot instructions, cursor rules) tells agents that root `AGENTS.md` is the first half of "canonical instructions". An agent on the platform repo that loads only the most-native file gets memory law and can miss task/HITL law entirely - the inverse of the installer's own documented rationale ("a root protocol file... would bury the workflow every agent needs"). This task resolves the identity - but WHICH resolution is a structural operator decision, presented here as a fork and deliberately not resolved by the author.
 
-## Implementation status: DECISION RECORDED — Branch A (not yet implemented)
+## Implementation status: Branch A IMPLEMENTED (ship/batch-8f-entrypoint)
 
 **Operator chose Branch A (thin spine) on 2026-07-23** — see `decision-branch-a.md` and `source_decisions`. The fork block is closed; implementation remains deferred to Batch D on its own branch. Status stays `ready_to_implement` until that ship starts. Invariant clauses / ACs / test suite still hold under the chosen branch.
 
@@ -114,12 +115,12 @@ None blocking on other tasks; blocked on the OPERATOR FORK above (this is a deci
 
 ## 2. Acceptance criteria
 
-- [ ] AC 1 (traces_to: #1.1) - the spec carries a dated operator decision entry naming the chosen branch BEFORE any implementation commit touches the files in 1.3-1.5 (verified by inspection of the spec's git history at review) - test: `scripts/tests/test_entrypoint_identity.sh::t01_decision_recorded`
-- [ ] AC 2 (traces_to: #1.2) - `head -30 AGENTS.md` contains a reference to `.cyberos/AGENT-ENTRY.md` (or the spine content itself) - test: `scripts/tests/test_entrypoint_identity.sh::t02_first_screen_reaches_task_law`
-- [ ] AC 3 (traces_to: #1.3) - each of the six files names `.cyberos/AGENT-ENTRY.md`, and under Branch B none carries the unqualified "Canonical instructions: AGENTS.md (root)" phrasing - test: `scripts/tests/test_entrypoint_identity.sh::t03_pointers_truthful`
-- [ ] AC 4 (traces_to: #1.4) - exactly one protocol file lacks a copy/pointer marker; every other file containing the protocol's H1 carries one; when a marked duplicate exists, the drift check passes and a mutated scratch copy makes it fail - test: `scripts/tests/test_entrypoint_identity.sh::t04_single_normative_source`
-- [ ] AC 5 (traces_to: #1.5) - Branch A: `is_platform_repo` no longer special-cases AGENTS.md and a repo-wide grep finds no stale root-protocol assumption in the swept references; Branch B: the exception carries the decision-record comment - test: `scripts/tests/test_entrypoint_identity.sh::t05_branch_consistency`
-- [ ] AC 6 (traces_to: #1.6, #1.7) - the suite is discovered green by `bash scripts/tests/run_all.sh`, and CHANGELOG's top entry names the chosen branch - test: `scripts/tests/test_entrypoint_identity.sh::t06_registered_and_recorded`
+- [x] AC 1 (traces_to: #1.1) - the spec carries a dated operator decision entry naming the chosen branch BEFORE any implementation commit touches the files in 1.3-1.5 (verified by inspection of the spec's git history at review) - test: `scripts/tests/test_entrypoint_identity.sh::t01_decision_recorded`
+- [x] AC 2 (traces_to: #1.2) - `head -30 AGENTS.md` contains a reference to `.cyberos/AGENT-ENTRY.md` (or the spine content itself) - test: `scripts/tests/test_entrypoint_identity.sh::t02_first_screen_reaches_task_law`
+- [x] AC 3 (traces_to: #1.3) - each of the six files names `.cyberos/AGENT-ENTRY.md`, and under Branch B none carries the unqualified "Canonical instructions: AGENTS.md (root)" phrasing - test: `scripts/tests/test_entrypoint_identity.sh::t03_pointers_truthful`
+- [x] AC 4 (traces_to: #1.4) - exactly one protocol file lacks a copy/pointer marker; every other file containing the protocol's H1 carries one; when a marked duplicate exists, the drift check passes and a mutated scratch copy makes it fail - test: `scripts/tests/test_entrypoint_identity.sh::t04_single_normative_source`
+- [x] AC 5 (traces_to: #1.5) - Branch A: `is_platform_repo` no longer special-cases AGENTS.md and a repo-wide grep finds no stale root-protocol assumption in the swept references; Branch B: the exception carries the decision-record comment - test: `scripts/tests/test_entrypoint_identity.sh::t05_branch_consistency`
+- [x] AC 6 (traces_to: #1.6, #1.7) - the suite is discovered green by `bash scripts/tests/run_all.sh`, and CHANGELOG's top entry names the chosen branch - test: `scripts/tests/test_entrypoint_identity.sh::t06_registered_and_recorded`
 
 ## 3. Edge cases
 
