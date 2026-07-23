@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",
+    "ai": "^7.0.36",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "unicode-emoji-json": "^0.9.0"
