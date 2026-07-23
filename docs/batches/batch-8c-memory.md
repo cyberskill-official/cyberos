@@ -18,11 +18,17 @@ Sub-batch of `batch/8-audit-hardening`. Branched from `ship/batch-8a-core-locks`
 3. Refresh this repo's installed `.cyberos/` so fail-closed + doctor gates activate.
 4. Record TASK-IMP-138 Branch A decision (no implementation).
 
-## Status after this pass
+## Gate-1 (2026-07-23)
+
+Operator ACCEPT for MEMORY-303. Evidence: `batch-8c-gate1-acceptance.md`.  
+Normalized `ready_to_review → reviewing`, then gated `reviewing → ready_to_test → testing`.  
+IMP-138 thin-spine **not** implemented this turn.
+
+## Status after gate-1 → testing pass
 
 | Task | Status | Note |
 |------|--------|------|
-| TASK-MEMORY-303 | ready_to_review | Repair executed; doctor READY; awaiting review HITL |
+| TASK-MEMORY-303 | testing | Halted at gate-2; doctor READY; gates GREEN |
 | TASK-IMP-138 | ready_to_implement | Branch A recorded; implement in Batch D |
 
 `ended` omitted until MEMORY-303 gate-2 (or operator closes the sub-batch).

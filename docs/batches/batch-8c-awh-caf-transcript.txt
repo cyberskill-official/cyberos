@@ -1,0 +1,294 @@
+=== awh memory ===
+[awh] running 3 task(s) x 1 seed(s); output is captured — progress below:
+[awh] (1/3) memory-module-suite …
+[awh] (2/3) memory-service-rust …
+[awh] (3/3) acceptance-task-memory-116 …
+[eval] 3 tasks x 1 seeds | weighted pass@1=100.0% | mean pass^1=100.0% | fully-consistent 3/3
+PASS: no task regressed > 0.0%; aggregate +0.0% (base 100.0% -> 100.0%).
+awh_memory_rc=0
+=== caf memory ===
+== caf-gate: memory ==
+-- 1/2 target health (/Users/stephencheng/Projects/CyberSkill/cyberos/modules/memory RUN_COMMANDS) --
+RUN_COMMANDS (from audit-profile.yaml): python -m pytest -q; cd ../../services && cargo test -p cyberos-memory
+
+::: $ python -m pytest -q   (timeout 600s)
+..............sssss..................................................... [ 13%]
+........................................................................ [ 27%]
+........................................................................ [ 40%]
+........................................................................ [ 54%]
+........................................................................ [ 68%]
+........................................................................ [ 81%]
+........................................................................ [ 95%]
+.......................                                                  [100%]
+=============================== warnings summary ===============================
+runtime/tests/chaos/test_chaos.py::test_tmp_atomicity
+  /Users/stephencheng/.local/lib/python3.12/site-packages/_pytest/python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but runtime/tests/chaos/test_chaos.py::test_tmp_atomicity returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+runtime/tests/chaos/test_chaos.py::test_enospc_simulation
+  /Users/stephencheng/.local/lib/python3.12/site-packages/_pytest/python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but runtime/tests/chaos/test_chaos.py::test_enospc_simulation returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+runtime/tests/chaos/test_chaos.py::test_concurrent_writers
+  /Users/stephencheng/.local/lib/python3.12/site-packages/_pytest/python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but runtime/tests/chaos/test_chaos.py::test_concurrent_writers returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+tests/core/test_consolidate_semantic_dedup.py: 9 warnings
+tests/core/test_serve.py: 1 warning
+tests/core/test_sth_and_consolidate.py: 1 warning
+  /Users/stephencheng/Projects/CyberSkill/cyberos/modules/memory/cyberos/core/invariants.py:366: DeprecationWarning: jsonschema.RefResolver is deprecated as of v4.18.0, in favor of the https://github.com/python-jsonschema/referencing library, which provides more compliant referencing behavior as well as more flexible APIs for customization. A future release will remove RefResolver. Please file a feature request (on referencing) if you are missing an API for the kind of customization you need.
+    resolver = jsonschema.RefResolver.from_schema(full)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+522 passed, 5 skipped, 14 warnings in 20.86s
+::: PASS — python -m pytest -q
+
+::: $ cd ../../services && cargo test -p cyberos-memory   (timeout 600s)
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.15s
+     Running unittests src/lib.rs (target/debug/deps/cyberos_memory-36b2c8bcd6cbb8fa)
+
+running 84 tests
+test brain::access_scope::tests::deny_reason_label_strings ... ok
+test auth::tests::forged_x_tenant_header_cannot_override_token ... ok
+test auth::tests::expired_token_is_refused ... ok
+test auth::tests::garbage_token_is_refused ... ok
+test auth::tests::claims_resolve_to_caller_from_token ... ok
+test auth::tests::missing_bearer_is_401 ... ok
+test auth::tests::valid_token_verifies_and_parses_ids ... ok
+test auth::tests::expired_token_via_claims_is_401 ... ok
+test auth::tests::unparseable_x_tenant_header_is_400 ... ok
+test auth::tests::matching_x_tenant_header_is_allowed ... ok
+test brain::access_scope::tests::self_path_is_allowed_without_grant ... ok
+test brain::embed_client::tests::empty_text_yields_unit_vector_not_nan ... ok
+test brain::backfill::tests::hex_lower_is_64_chars_for_sha256 ... ok
+test auth::tests::audience_is_enforced_only_when_required ... ok
+test brain::event_cursor::tests::parse_channel_extracts_channel_and_dm_uuids ... ok
+test brain::event_cursor::tests::parse_channel_ignores_non_channel_targets ... ok
+test brain::event_cursor::tests::parse_channel_rejects_non_uuid_id ... ok
+test brain::embed_client::tests::force_spend_cap_stub_returns_402_variant ... ok
+test brain::embed_client::tests::stub_is_deterministic_and_normalised ... ok
+test brain::embed_client::tests::stub_distinguishes_different_text ... ok
+test brain::provenance::tests::anchor_recompute_matches_layer2_compute ... ok
+test brain::provenance::tests::parse_rejects_malformed ... ok
+test brain::provenance::tests::parse_round_trips_with_make_audit_row_id ... ok
+test brain::provenance::tests::snippet_clips_long_plain_body ... ok
+test brain::provenance::tests::snippet_surfaces_interaction_verb ... ok
+test brain::recall::tests::drill_fires_when_best_summary_below_floor ... ok
+test brain::recall::tests::rrf_fuse_merges_same_audit_row ... ok
+test brain::recall::tests::rrf_score_rank0_beats_rank9 ... ok
+test brain::recall::tests::rrf_score_rewards_presence_in_both_retrievers ... ok
+test brain::recall::tests::subject_scope_empty_list_matches_nothing ... ok
+test brain::recall::tests::subject_scope_in_list_renders_uuids ... ok
+test brain::recall::tests::subject_scope_none_is_no_filter ... ok
+test brain::recall::tests::ts_window_builds_bounds ... ok
+test brain::summarize::tests::digest_compacts_kinds_with_frequencies_no_raw_body ... ok
+test brain::summarize::tests::iso_week_key_matches_expected_format ... ok
+test brain::summarize::tests::scope_filter_binds_for_subject_and_channel_not_time ... ok
+test brain::summarize::tests::scope_filter_renders_the_requested_placeholder_index ... ok
+test brain::tests::audit_row_id_is_stable_and_unique_per_seq ... ok
+test brain::tests::config_defaults_are_30d_hot_180d_warm ... ok
+test brain::tests::hit_source_serialises_snake_case ... ok
+test brain::tests::provenance_omits_covered_range_for_event_hits ... ok
+test brain::tests::recall_query_defaults ... ok
+test brain::tiering::tests::cutoffs_order_hot_newer_than_warm ... ok
+test brain::tiering::tests::tier_counts_default_is_zero ... ok
+test embeddings::tests::to_pgvector_literal_empty ... ok
+test embeddings::tests::to_pgvector_literal_handles_negative_and_zero ... ok
+test embeddings::tests::to_pgvector_literal_round_trip_shape ... ok
+test interaction::backfill::tests::dry_run_report_default_is_all_zero ... ok
+test interaction::backfill::tests::event_id_is_deterministic_over_source_message ... ok
+test interaction::backfill::tests::event_uses_original_time_and_import_source_and_pointer ... ok
+test interaction::consent_gate::tests::allow_all_allows_every_subject ... ok
+test interaction::consent_gate::tests::cache_collapses_a_burst_to_one_inner_call ... ok
+test interaction::consent_gate::tests::deny_all_denies_every_subject ... ok
+test interaction::content_ref::tests::display_is_redaction_safe ... ok
+test interaction::content_ref::tests::hash_of_records_digest_and_length_not_content ... ok
+test interaction::content_ref::tests::none_serialises_as_kind_none ... ok
+test interaction::content_ref::tests::pointer_serialises_with_kind_store_id ... ok
+test interaction::emit::tests::validate_accepts_well_formed ... ok
+test interaction::emit::tests::validate_rejects_empty_verb ... ok
+test interaction::emit::tests::validate_rejects_missing_module_prefix ... ok
+test interaction::emit::tests::validate_rejects_oversize_attributes ... ok
+test interaction::emit::tests::validate_rejects_wrong_schema_version ... ok
+test interaction::emit::tests::validate_rejects_oversize_body ... ok
+test interaction::event::tests::audit_path_is_stable_and_low_cardinality ... ok
+test interaction::event::tests::attributes_keys_serialise_sorted_for_determinism ... ok
+test interaction::event::tests::builder_accepts_well_formed_event ... ok
+test interaction::event::tests::builder_rejects_oversize_attributes ... ok
+test interaction::event::tests::builder_rejects_unknown_module_prefix ... ok
+test interaction::event::tests::canonical_body_is_deterministic ... ok
+test interaction::event::tests::canonical_body_wraps_with_row_kind_and_payload ... ok
+test interaction::event::tests::op_derives_from_class ... ok
+test interaction::event::tests::round_trips_through_serde_with_all_fields ... ok
+test layer2::chain_anchor::tests::anchor_differs_when_body_differs ... ok
+test layer2::chain_anchor::tests::anchor_differs_when_prev_differs ... ok
+test layer2::chain_anchor::tests::anchor_handles_genesis_row ... ok
+test layer2::chain_anchor::tests::anchor_is_deterministic ... ok
+test search::tests::rrf_honors_limit ... ok
+test search::tests::rrf_lexical_only_preserves_order ... ok
+test search::tests::rrf_merges_overlapping_docs ... ok
+test layer2::entity_extract::tests::extracts_projects_and_decisions ... ok
+test layer2::entity_extract::tests::dedupes_repeated_mentions ... ok
+test layer2::entity_extract::tests::extracts_people_via_at_handle ... ok
+test layer2::entity_extract::tests::extracts_wiki_links_as_docs ... ok
+test interaction::consent_gate::tests::cache_expires_after_ttl ... ok
+
+test result: ok. 84 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running unittests src/main.rs (target/debug/deps/cyberos_memory-2943e241e6b5b077)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/admin.rs (target/debug/deps/cyberos_memory_admin-4e26b9cb83f5d18e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/brain_common.rs (target/debug/deps/brain_common-56a50f1d288afc15)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/brain_confidence_floor_test.rs (target/debug/deps/brain_confidence_floor_test-657064be819a724a)
+
+running 1 test
+test best_summary_is_real_similarity_not_hardcoded_one ... ignored, requires Postgres + pgvector
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/brain_ingest_test.rs (target/debug/deps/brain_ingest_test-52e18b0e3e6d3f1e)
+
+running 3 tests
+test cursor_resumes_and_picks_up_new_events ... ignored, requires Postgres + pgvector
+test event_ingested_then_embedding_visible ... ignored, requires Postgres + pgvector — boot services/dev/docker-compose.yml first
+test idempotent_ingest_replay_produces_one_row ... ignored, requires Postgres + pgvector
+
+test result: ok. 0 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/brain_provenance_test.rs (target/debug/deps/brain_provenance_test-4608ea16f06643b8)
+
+running 3 tests
+test chain_anchor_mismatch_drops_hit ... ignored, requires Postgres + pgvector
+test provenance_points_back_to_audit_rows ... ignored, requires Postgres + pgvector
+test worker_never_writes_audit_chain ... ignored, requires Postgres + pgvector
+
+test result: ok. 0 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/brain_recall_access_scope_test.rs (target/debug/deps/brain_recall_access_scope_test-25f8017685b304af)
+
+running 4 tests
+test deny_by_default_on_unknown_subject ... ignored, requires Postgres + pgvector
+test founder_sees_any_subject_self_sees_own ... ignored, requires Postgres + pgvector
+test recall_excludes_closest_neighbour_outside_access_scope ... ignored, requires Postgres + pgvector
+test tenant_rls_excludes_other_tenants_rows ... ignored, requires Postgres + pgvector
+
+test result: ok. 0 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/brain_rls_test.rs (target/debug/deps/brain_rls_test-9a5a80e5fe2967c8)
+
+running 1 test
+test brain_tables_are_fail_closed_without_tenant_guc ... ignored, requires Postgres — boot services/dev/docker-compose.yml first
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/brain_summaries_test.rs (target/debug/deps/brain_summaries_test-29fa0f6941bb7d7c)
+
+running 3 tests
+test new_event_supersedes_prior_summary_version ... ignored, requires Postgres + pgvector
+test rolling_summary_covers_event_range ... ignored, requires Postgres + pgvector
+test summaries_first_then_drill ... ignored, requires Postgres + pgvector
+
+test result: ok. 0 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/brain_tiering_test.rs (target/debug/deps/brain_tiering_test-4cf80449448051ab)
+
+running 2 tests
+test cold_raw_retrievable_on_demand_and_absent_from_hot_index ... ignored, requires Postgres + pgvector
+test hot_warm_cold_tiering_is_idempotent ... ignored, requires Postgres + pgvector
+
+test result: ok. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/chain_anchor_test.rs (target/debug/deps/chain_anchor_test-1b1167737b93179b)
+
+running 3 tests
+test anchor_matches_known_vector ... ok
+test anchor_excludes_prev_when_genesis ... ok
+test anchor_changes_on_one_byte_body_flip ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/ingest_test.rs (target/debug/deps/ingest_test-f49c0c5283715dfa)
+
+running 4 tests
+test happy_path_ingests_two_rows_and_advances_cursor ... ignored, requires Postgres — boot services/dev/docker-compose.yml first
+test ingest_is_idempotent_under_replay ... ignored, requires Postgres
+test tampered_chain_anchor_fails_with_mismatch_error ... ignored, requires Postgres
+test tenant_isolation_a_cannot_see_b_rows ... ignored, requires Postgres
+
+test result: ok. 0 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/interaction_backfill_test.rs (target/debug/deps/interaction_backfill_test-4c91e8ef01080760)
+
+running 3 tests
+test backfill_is_idempotent_and_keeps_original_time ... ignored, requires DATABASE_URL with chat + memory migrations applied
+test backfill_skips_unacknowledged_authors ... ignored, requires DATABASE_URL with chat + memory migrations applied
+test dry_run_writes_nothing_but_counts ... ignored, requires DATABASE_URL with chat + memory migrations applied
+
+test result: ok. 0 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/interaction_event_contract_test.rs (target/debug/deps/interaction_event_contract_test-946dca2239bb7f02)
+
+running 6 tests
+test unknown_module_is_rejected_by_schema ... ok
+test hash_content_ref_without_sha256_is_rejected ... ok
+test event_type_must_carry_module_dot_verb_pattern ... ok
+test well_formed_event_with_all_optionals_null_validates ... ok
+test schema_pins_version_const_1 ... ok
+test every_emitted_body_validates_against_schema ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/interaction_event_rls_test.rs (target/debug/deps/interaction_event_rls_test-6f8529069fb18927)
+
+running 2 tests
+test per_subject_index_scan_is_tenant_scoped ... ignored, requires Postgres - boot services/dev/docker-compose.yml first
+test tenant_a_rows_invisible_to_tenant_b_read ... ignored, requires Postgres - boot services/dev/docker-compose.yml first
+
+test result: ok. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/interaction_event_test.rs (target/debug/deps/interaction_event_test-c6060c5b7f5b4558)
+
+running 7 tests
+test acknowledged_subject_records ... ignored, requires Postgres - boot services/dev/docker-compose.yml first
+test consent_gate_blocks_unacknowledged_subject_no_row_written ... ignored, requires Postgres - boot services/dev/docker-compose.yml first
+test read_class_records_as_view ... ignored, requires Postgres - boot services/dev/docker-compose.yml first
+test recorded_anchor_reverifies_like_memory_reconcile ... ignored, requires Postgres - boot services/dev/docker-compose.yml first
+test replay_same_event_id_is_idempotent ... ignored, requires Postgres - boot services/dev/docker-compose.yml first
+test system_actor_is_exempt_from_gate ... ignored, requires Postgres - boot services/dev/docker-compose.yml first
+test valid_event_chains_into_audit_log_as_put ... ignored, requires Postgres - boot services/dev/docker-compose.yml first
+
+test result: ok. 0 passed; 0 failed; 7 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests cyberos_memory
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+::: PASS — cd ../../services && cargo test -p cyberos-memory
+
+Target health: PASS — all RUN_COMMANDS passed
+-- 2/2 audit conformance --
+  (no sealed audit at /Users/stephencheng/Projects/CyberSkill/cyberos/modules/memory/.caf - target-health-only floor; generate one with tools/caf/core/evals/run-audit.sh)
+[caf] memory -> CLEAN
+caf_memory_rc=0

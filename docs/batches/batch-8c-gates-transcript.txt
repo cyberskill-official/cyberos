@@ -63,25 +63,25 @@ gate doctor: python3 -m cyberos doctor (source: autodetect:memory)
 GATE  doctor    python3 -m cyberos doctor
 cyberos doctor — /Users/stephencheng/Projects/CyberSkill/cyberos/.cyberos/memory/store
 
-  [PASS] layout-root-canonical              canonical layout  (0.4 ms)
+  [PASS] layout-root-canonical              canonical layout  (0.3 ms)
   [PASS] layout-no-sandbox-path             resolved=/Users/stephencheng/Projects/CyberSkill/cyberos/.cyberos/memory/store  (0.1 ms)
-  [PASS] layout-shard-uniformity            all memories sharded under <kind>/<hex>/<hex>/  (0.1 ms)
-  [PASS] layout-no-sync-conflict-siblings   no sync-FS conflict siblings  (2.8 ms)
-  [PASS] ledger-link-invariant              9 records, chain intact  (11.3 ms)
-  [PASS] ledger-hash-invariant              9 records, chain intact  (0.2 ms)
-  [PASS] ledger-crc-tail                    all 4187 bytes accounted for  (0.1 ms)
-  [PASS] ledger-mmr-cross-check             MMR consistent (9 leaves, root=f54d3717a20f62b5…)  (1.1 ms)
+  [PASS] layout-shard-uniformity            all memories sharded under <kind>/<hex>/<hex>/  (0.2 ms)
+  [PASS] layout-no-sync-conflict-siblings   no sync-FS conflict siblings  (2.0 ms)
+  [PASS] ledger-link-invariant              13 records, chain intact  (4.4 ms)
+  [PASS] ledger-hash-invariant              13 records, chain intact  (3.7 ms)
+  [PASS] ledger-crc-tail                    all 6129 bytes accounted for  (0.1 ms)
+  [PASS] ledger-mmr-cross-check             MMR consistent (13 leaves, root=37710c99104af610…)  (0.8 ms)
   [PASS] ledger-append-only                 no sealed segments to check  (0.0 ms)
-  [PASS] manifest-validates-against-schema  manifest validates  (537.9 ms)
-  [PASS] export-determinism                 sha256=5c40a51f1f86e410…  (3.5 ms)
+  [PASS] manifest-validates-against-schema  manifest validates  (487.7 ms)
+  [PASS] export-determinism                 sha256=f3ee2f46dff48dd4…  (3.3 ms)
   [PASS] crypto-crc-implementation          hardware-accelerated CRC-32C  (0.0 ms)
   [PASS] durability-platform-correct        auto → F_BARRIERFSYNC on Darwin  (0.0 ms)
-  [PASS] dream-applied-row-has-provenance   no dream-applier rows on the chain  (5.9 ms)
+  [PASS] dream-applied-row-has-provenance   no dream-applier rows on the chain  (4.2 ms)
   [PASS] store-yaml-acl-valid               no STORE.yaml declared  (0.7 ms)
   [PASS] session-lifecycle                  no sessions on the chain  (0.1 ms)
 
   total: 16  pass: 16  warn: 0  error: 0
-  overall: OK (564 ms)
+  overall: OK (508 ms)
 PASS  doctor
 ----------------------------------------------------------------------
 GATES: GREEN (machine gates only).
