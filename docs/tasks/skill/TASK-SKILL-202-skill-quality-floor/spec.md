@@ -4,7 +4,7 @@ title: Skill quality floor - NFR stubs, untrusted-content backport, pair parity
 template: task@1
 type: improvement
 module: skill
-status: ready_to_implement
+status: reviewing
 priority: p1
 author: "@stephencheng"
 department: engineering

@@ -32,6 +32,12 @@ triggers:
 blockers:
   - "no coverage tool configured in repo — must be resolved first"
   - "test framework is broken — diagnose before running this skill"
+
+# ── Untrusted-content discipline ─────────────────────────────────────
+untrusted_inputs:
+  wrap_in_marker: "untrusted_content"
+  injection_scan: required
+  on_marker_hit: surface_to_human
 ---
 
 # coverage-gate-author

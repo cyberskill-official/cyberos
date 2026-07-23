@@ -62,6 +62,8 @@ cyberos-cuo run cuo/chief-technology-officer/certify-nfrs \
 
 ## Skill chain — step by step
 
+> **NOTICE (TASK-SKILL-202):** the four NFR skills this chain routes to (`nfr-certification-author`, `nfr-evaluator`, `nfr-test-runner`, `nfr-regression-handler`) are **NOT yet shipped** — they exist only as unvendored scaffolds in `modules/skill/` and are no longer vendored into the payload. This workflow requires their full implementation before it can run; do not improvise their outputs.
+
 ### Step 1: `nfr-test-runner`
 - **What it does:** Reads the `verification` stanza of each NFR in the catalog. Orchestrates the necessary external testing harnesses (e.g., Gatling, K6, Lighthouse CI, SAST tools, Datadog queries) to run against the `target_environment`.
 - **Inputs:** `target_environment`, `nfr_catalog`, `telemetry_window`.

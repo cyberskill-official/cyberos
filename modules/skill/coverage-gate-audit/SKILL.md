@@ -25,6 +25,12 @@ inputs:
   - { name: report, format: coverage-gate@1, required: true }
 outputs:
   - { name: audit_report, format: coverage-gate-audit@1 }
+
+# ── Untrusted-content discipline ─────────────────────────────────────
+untrusted_inputs:
+  wrap_in_marker: "untrusted_content"
+  injection_scan: required
+  on_marker_hit: surface_to_human
 ---
 
 # coverage-gate-audit

@@ -25,6 +25,12 @@ inputs:
   - { name: context_map, format: repo-context-map@1, required: true }
 outputs:
   - { name: audit_report, format: repo-context-map-audit@1 }
+
+# ── Untrusted-content discipline ─────────────────────────────────────
+untrusted_inputs:
+  wrap_in_marker: "untrusted_content"
+  injection_scan: required
+  on_marker_hit: surface_to_human
 ---
 
 # repo-context-map-audit

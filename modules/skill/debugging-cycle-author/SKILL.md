@@ -35,6 +35,12 @@ triggers:
 blockers:
   - "test framework itself is broken (no test process can start) — diagnose tooling before this skill runs"
   - "circuit breaker already tripped on this task this session — escalate, do not retry"
+
+# ── Untrusted-content discipline ─────────────────────────────────────
+untrusted_inputs:
+  wrap_in_marker: "untrusted_content"
+  injection_scan: required
+  on_marker_hit: surface_to_human
 ---
 
 # debugging-cycle-author

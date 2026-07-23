@@ -50,6 +50,12 @@ blockers:
   - "mode is ambiguous (no .cyberos/ and no git HEAD, but uncommitted source is present) - HALT and ASK; never guess greenfield on a live repo"
   - "brownfield with no repo-wide scan yet - do NOT emit a decision until the scan has run (#1.2)"
   - "operator has not given a verdict at the decision gate - emit NO artefact (#1.5)"
+
+# ── Untrusted-content discipline ─────────────────────────────────────
+untrusted_inputs:
+  wrap_in_marker: "untrusted_content"
+  injection_scan: required
+  on_marker_hit: surface_to_human
 ---
 
 # plan-author

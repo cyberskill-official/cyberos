@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.plan-author.output/v1",
+  "title": "plan-author output envelope",
+  "type": "object",
+  "required": ["skill_id", "skill_version", "gate_outcome", "hitl_pending"],
+  "additionalProperties": false,
+  "properties": {
+    "skill_id": { "type": "string", "const": "plan-author" },
+    "skill_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(-[A-Za-z0-9.-]+)?$" },
+    "gate_outcome": {
+      "type": "string",
+      "enum": ["APPROVED", "REVISED_THEN_APPROVED", "ABORTED", "PENDING", "MODE_HALT"],
+      "description": "The §7 decision-gate result. PENDING = halted awaiting the operator verdict; MODE_HALT = halted at §2 ambiguous-mode detection (no gate reached). Only APPROVED / REVISED_THEN_APPROVED runs emit an artefact."
+    },
+    "plan_id": {
+      "type": ["string", "null"],
+      "pattern": "^PLAN-[a-z0-9-]+-[0-9]{8}$",
+      "description": "Null when no artefact was emitted (ABORTED / PENDING / MODE_HALT)."
+    },
+    "plan_path": {
+      "type": ["string", "null"],
+      "description": "docs/plans/PLAN-<slug>-<YYYYMMDD>/plan.md. Null when no artefact was emitted."
+    },
+    "mode": {
+      "type": ["string", "null"],
+      "enum": ["greenfield", "brownfield", null],
+      "description": "Detected mode. Null only on MODE_HALT (ambiguous — the operator names it on resume)."
+    },
+    "decision_confidence": {
+      "type": ["string", "null"],
+      "enum": ["low", "medium", "high", null]
+    },
+    "scan_ref": {
+      "type": ["string", "null"],
+      "description": "Path to the repo-context-map@1 produced by the brownfield pre-interview scan. Null only in greenfield (PLAN-SAFE-004)."
+    },
+    "memory_rows": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+      "default": [],
+      "description": "Chain hashes of the BRAIN rows appended via memory-append (kind artefact_write); must match frontmatter memory_rows (PLAN-BRAIN-001)."
+    },
+    "hitl_pending": { "type": "boolean" },
+    "next_skill_recommendation": { "type": "string", "default": "plan-audit" }
+  }
+}
