@@ -1,0 +1,90 @@
+=== awh skill ===
+[awh] running 3 task(s) x 1 seed(s); output is captured — progress below:
+[awh] (1/3) skill-broker-rust …
+[awh] (2/3) skill-validators …
+[awh] (3/3) acceptance-skill-broker-runtime-contracts …
+[eval] 3 tasks x 1 seeds | weighted pass@1=100.0% | mean pass^1=100.0% | fully-consistent 3/3
+PASS: no task regressed > 0.0%; aggregate +0.0% (base 100.0% -> 100.0%).
+awh_skill_rc=0
+=== caf skill ===
+== caf-gate: skill ==
+-- 1/2 target health (/Users/stephencheng/Projects/CyberSkill/cyberos/modules/skill RUN_COMMANDS) --
+RUN_COMMANDS (from audit-profile.yaml): cd ../../services && cargo test -p cyberos-skill-broker
+
+::: $ cd ../../services && cargo test -p cyberos-skill-broker   (timeout 600s)
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.07s
+     Running unittests src/lib.rs (target/debug/deps/cyberos_skill_broker-90cde8fb6f2477f0)
+
+running 15 tests
+test frontmatter::description_validator::tests::too_short ... ok
+test frontmatter::marker_validator::tests::registered_marker_passes ... ok
+test frontmatter::parser::tests::quoted_brackets_not_flagged ... ok
+test frontmatter::parser::tests::unquoted_brackets_flagged ... ok
+test transpilers::anthropic::tests::anthropic_skill_to_skill_md_reconstructs ... ok
+test transpilers::anthropic::tests::wrap_text_short ... ok
+test transpilers::anthropic::tests::wrap_text_long ... ok
+test frontmatter::description_validator::tests::forbidden_brackets ... ok
+test transpilers::anthropic::tests::transpile_rejects_legacy_xml_form ... ok
+test frontmatter::description_validator::tests::missing_what_verb ... ok
+test frontmatter::description_validator::tests::insufficient_triggers_single_positive ... ok
+test frontmatter::description_validator::tests::valid_description ... ok
+test frontmatter::description_validator::tests::negative_trigger_does_not_count ... ok
+test frontmatter::description_validator::tests::two_positive_plus_one_negative_accepts ... ok
+test transpilers::anthropic::tests::transpile_synthesised_skill ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/transpile_anthropic.rs (target/debug/deps/cyberos_skill_transpile_anthropic-a35eb4fa65765718)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/validate.rs (target/debug/deps/cyberos_skill_validate-3f2bb20fbbfad1f1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/integration.rs (target/debug/deps/integration-38882388c6f233b8)
+
+running 10 tests
+test legacy_wrap_in_form_rejected ... ok
+test missing_frontmatter_rejected ... ok
+test xml_bracket_in_other_field_rejected ... ok
+test task_author_validates ... ok
+test code_review_author_validates ... ok
+test task_audit_validates ... ok
+test transpile_task_author_to_anthropic_form ... ok
+test architecture_decision_record_author_validates ... ok
+test prd_author_validates ... ok
+test transpile_all_three_exemplars_succeed ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/runtime_contracts.rs (target/debug/deps/runtime_contracts-ceb95f000aea7a8a)
+
+running 4 tests
+test invocation_rows_have_closed_kinds ... ok
+test built_in_bundle_helpers_cover_memory_and_vietnam_pack ... ok
+test oci_publish_plan_requires_immutable_tag_and_tenant_scope ... ok
+test capability_policy_authorizes_tools_and_memory_scopes ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests cyberos_skill_broker
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+::: PASS — cd ../../services && cargo test -p cyberos-skill-broker
+
+Target health: PASS — all RUN_COMMANDS passed
+-- 2/2 audit conformance --
+  (no sealed audit at /Users/stephencheng/Projects/CyberSkill/cyberos/modules/skill/.caf - target-health-only floor; generate one with tools/caf/core/evals/run-audit.sh)
+[caf] skill -> CLEAN
+caf_skill_rc=0
+=== awh note: improvement module ===
+ls: modules/improvement/.awh: No such file or directory
+no improvement/.awh — awh N/A for IMP class per ship-tasks §1a
