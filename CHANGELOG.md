@@ -2,6 +2,17 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.3.0] - 2026-07-23
+
+Added
+- Wave 0–4 follow-ups — MMR sync, MEMORY-302, ship-tasks evolution
+
+Fixed
+- pin full rollout SHA256SUMS regex in t08
+- address CodeRabbit blockers on PR #133
+- fold batch/9 notes into 1.2.0 so top-entry token checks pass
+- refresh G4 task counts + keep t07 tokens under Unreleased
+
 ## [1.2.0] - 2026-07-23
 
 Fixed
