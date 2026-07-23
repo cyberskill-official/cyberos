@@ -204,8 +204,11 @@ t08_rollout_sums_exact_match() {                                        # rollou
     "$dig  cyberos-payloadXtar.gz" \
     | grep -cE '^[[:xdigit:]]{64}[[:space:]]+\*?cyberos-payload\.tar\.gz$' || true)"
   [ "$matched" = "2" ] || { fail t08 "exact-match filter accepted $matched rows (want 2 good forms)"; return; }
-  grep -qE "grep -E '\^\[\[:xdigit:\]\]\{64\}" "$repo/tools/install/rollout.sh" \
-    || { fail t08 "rollout.sh lacks the anchored exact-match checksum grep"; return; }
+  # Pin the full production regex from rollout.sh (digest + optional '*' + exact
+  # filename + EOL) — a prefix-only check would miss a dropped `$` or filename pin.
+  grep -qF "grep -E '^[[:xdigit:]]{64}[[:space:]]+\\*?cyberos-payload\\.tar\\.gz$'" \
+    "$repo/tools/install/rollout.sh" \
+    || { fail t08 "rollout.sh lacks the full anchored exact-match checksum grep"; return; }
   ok t08_rollout_sums_exact_match
 }
 
