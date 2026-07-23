@@ -581,9 +581,11 @@ def cmd_resume(
 @click.option(
     "--halt-on-repeat-rework",
     type=int,
-    default=2,
+    # Doctrine-bound default (ship-tasks.md §11b route-back ceiling); pinned by
+    # tests/test_doctrine_constants.py (TASK-CUO-304). Per-run override stays free.
+    default=3,
     help="Halt the drain loop when a task routes back this many times "
-         "(default 2). Set 0 to disable.",
+         "(default 3). Set 0 to disable.",
 )
 @click.option(
     "--rework/--no-rework",

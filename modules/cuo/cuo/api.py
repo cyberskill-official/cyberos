@@ -124,7 +124,10 @@ def run(
     invoker: str = "auto",
     memory_emit: bool = True,
     actor: str = "cuo-drain",
-    halt_on_repeat_rework: int = 2,
+    # Doctrine-bound default: ship-tasks.md §11b halts at routed_back_count >= 3
+    # ("a task at routed_back_count: 2 re-enters normally"). Pinned by
+    # tests/test_doctrine_constants.py — change the doctrine first (TASK-CUO-304).
+    halt_on_repeat_rework: int = 3,
     rework: bool = False,
     brief_output: Path | None = None,
     cuo_root: Path | None = None,
