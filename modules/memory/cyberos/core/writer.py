@@ -82,6 +82,11 @@ _GENESIS_CHAIN: Final[str] = "0" * 64
 _FLUSH_TIMEOUT_S: Final[float] = 30.0
 _THREAD_JOIN_TIMEOUT_S: Final[float] = 5.0
 
+# AGENTS.md §18.7 — ops whose audit rows are stamped with the active
+# transcript session id. Aux rows (memory.acl_denied, session.*, dream.*,
+# …) are exempt: the protocol binds the stamp to memory WRITES only.
+_SESSION_STAMPED_OPS: Final[frozenset[str]] = frozenset({"put", "move", "delete"})
+
 
 class AuditRecord(msgspec.Struct, kw_only=True, frozen=True, omit_defaults=False):
     """One row in the append-only Merkle-chained audit ledger.
@@ -312,6 +317,21 @@ class Writer:
         """Last durably-committed sequence number. Not lock-protected."""
         return self._last_seq
 
+    def _active_session_id(self) -> str | None:
+        """Read ``sessions/.active`` (§18.7 active-session marker).
+
+        Implemented as a direct file read rather than importing
+        :mod:`cyberos.core.transcript` — the writer is the bottom of the
+        dependency stack and stays import-light.
+        """
+        try:
+            content = (self.store / "sessions" / ".active").read_text(
+                encoding="utf-8",
+            )
+        except OSError:
+            return None
+        return content.strip() or None
+
     def submit(self, rec: AuditRecord) -> int:
         """Submit one audit record. Blocks until durably committed.
 
@@ -333,6 +353,19 @@ class Writer:
             raise WriterClosedError("Writer is closed")
         if self._fatal is not None:
             raise CommitFailed("writer is poisoned") from self._fatal
+
+        # AGENTS.md §18.7 — while sessions/.active names an active
+        # transcript session, every put/move/delete row carries
+        # extra.session_id. Stamping trusts the marker file: a stale
+        # marker (crashed session) means rows carry a dead session id —
+        # accepted; lifecycle hygiene is the transcript ledger's domain
+        # (TASK-MEMORY-119). A caller-supplied session_id wins.
+        if rec.op in _SESSION_STAMPED_OPS and "session_id" not in rec.extra:
+            session_id = self._active_session_id()
+            if session_id:
+                rec = msgspec.structs.replace(
+                    rec, extra={**rec.extra, "session_id": session_id},
+                )
 
         # Clear any caller-supplied chain/seq fields — only the commit
         # thread is allowed to assign these.

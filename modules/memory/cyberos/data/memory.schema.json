@@ -178,25 +178,37 @@
     },
     "StoreAclMode": {
       "type": "string",
-      "enum": ["read", "read-write", "deny"],
+      "enum": [
+        "read",
+        "read-write",
+        "deny"
+      ],
       "description": "Per AGENTS.md \u00a714.4. Closed enum. Reads are NOT subject to ACL enforcement at protocol level; `read` here means \"writes denied, body still readable via OS filesystem permissions\"."
     },
     "StoreAclEntry": {
       "type": "object",
-      "required": ["actor", "mode"],
+      "required": [
+        "actor",
+        "mode"
+      ],
       "properties": {
         "actor": {
           "type": "string",
           "minLength": 1,
           "description": "Glob pattern matching against the active actor identity. `*` is the wildcard. Built-in literals include `dream-runner`, `dream-applier`, `scheduled-importer`, `claude-code-hook`."
         },
-        "mode": {"$ref": "#/definitions/StoreAclMode"}
+        "mode": {
+          "$ref": "#/definitions/StoreAclMode"
+        }
       },
       "additionalProperties": false
     },
     "StoreAcl": {
       "type": "object",
-      "required": ["store_id", "acl"],
+      "required": [
+        "store_id",
+        "acl"
+      ],
       "properties": {
         "store_id": {
           "type": "string",
@@ -209,7 +221,9 @@
         },
         "acl": {
           "type": "array",
-          "items": {"$ref": "#/definitions/StoreAclEntry"},
+          "items": {
+            "$ref": "#/definitions/StoreAclEntry"
+          },
           "description": "Ordered list of (actor-pattern, mode) entries. First-match-wins. Explicit `deny` overrides subsequent allows."
         }
       },

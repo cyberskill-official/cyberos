@@ -167,3 +167,49 @@ invariants:
       cyberos/core/fsync.py module docstring.
     check: cyberos.core.invariants.check_durability_platform_correct
     citation: cyberos/core/fsync.py
+
+  # ===== Dreaming (§7.7) =====
+
+  - id: dream-applied-row-has-provenance
+    level: error
+    scope: ledger
+    description: |
+      Every audit row emitted by the dream-applier MUST carry both
+      extra.dream_id (matching the active dream.start row) and
+      extra.proposal_id (matching the source DreamProposal). Checked on
+      dream.proposal_applied aux rows and on put/move/delete mutation
+      rows that carry either provenance key. Runner rows (dream.start /
+      dream.complete / dream.detector_failed) carry only dream_id by
+      design and are exempt.
+    check: cyberos.core.invariants.check_dream_applied_provenance
+    citation: AGENTS.md §7.7.2
+
+  # ===== Store-level ACL (§14.4) =====
+
+  - id: store-yaml-acl-valid
+    level: error
+    scope: filesystem
+    description: |
+      Every STORE.yaml under the store MUST validate against
+      memory.schema.json#/definitions/StoreAcl: required store_id
+      (^[a-z][a-z0-9_-]{0,63}$) and acl list; entries are {actor, mode}
+      objects with mode in the closed enum read | read-write | deny;
+      no additional properties.
+    check: cyberos.core.invariants.check_store_yaml_acl_valid
+    citation: AGENTS.md §14.4.7
+
+  # ===== Session transcript ledger (§18) =====
+
+  - id: session-lifecycle
+    level: error
+    scope: ledger
+    description: |
+      §18.8 lifecycle invariants: every session.start has 0 or 1
+      session.end for the same session_id (duplicate starts for one id
+      mean the writer was bypassed); within a session's binlog,
+      turn_seq is strictly monotonically increasing from 0; no
+      session turn precedes its session.start or follows its
+      session.end. Retention-purged bodies (tombstones, §18.6) are
+      exempt from the turn checks.
+    check: cyberos.core.invariants.check_session_lifecycle
+    citation: AGENTS.md §18.8
