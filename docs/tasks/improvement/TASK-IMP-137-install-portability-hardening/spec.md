@@ -4,7 +4,7 @@ title: Install portability - MCP loopback+token, shasum fallback, atomic vendor
 template: task@1
 type: improvement
 module: improvement
-status: ready_to_implement
+status: reviewing
 priority: p1
 author: "@stephencheng"
 department: engineering

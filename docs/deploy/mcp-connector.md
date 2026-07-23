@@ -14,7 +14,7 @@ The CyberOS MCP server (`mcp/cyberos-mcp.mjs` in every payload / installed `.cyb
 
 1. Pick the public URL (e.g. `https://os.cyberskill.world/mcp`) and route it on the VPS reverse proxy to `localhost:8799` - TLS terminates at the proxy; the node process stays loopback-only.
 2. Run the server under a supervisor (systemd unit / docker compose alongside the existing services).
-3. Auth: the transport ships UNAUTHENTICATED - do not expose it publicly without either proxy-level auth (basic/bearer at nginx) or an allowlist. The ship_task/task_install tools execute repo workflows; treat the endpoint like CI credentials.
+3. Auth: `--http` binds `127.0.0.1` by default (loopback-only). Set `CYBEROS_MCP_TOKEN` non-empty to require `Authorization: Bearer <token>` on every `POST /mcp` (`GET /healthz` stays open). Binding beyond loopback without a token warns at startup (`--host <addr>`). Prefer the token (or proxy-level auth) before any public exposure — the ship_task/task_install tools execute repo workflows; treat the endpoint like CI credentials.
 4. Add the connector in each agent UI per above, then verify `tools/list` returns the 4 workflow tools.
 
 ## Local verification (no deploy needed)

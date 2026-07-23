@@ -189,11 +189,70 @@ _cy_lock_acquire() {
 }
 _cy_lock_acquire
 
-# 1. vendor the machine by module (replace any prior copy) --------------------
-rm -rf "$CY/cuo" "$CY/plugin" "$CY/mcp"
-cp -R "$src/cuo"    "$CY/cuo"
-cp -R "$src/plugin" "$CY/plugin"
-[ -d "$src/mcp" ] && cp -R "$src/mcp" "$CY/mcp"          # MCP server channel (optional; needs node)
+# 1. vendor the machine by module (stage + swap - TASK-IMP-137 §1.6) -----------
+# Replacing a subtree used to be `rm -rf` then `cp -R`: between the two, any reader of
+# .cyberos/ (agents read it constantly - it is their entry point) saw a missing or partial
+# machine for the whole copy duration; the TASK-IMP-103 lock serializes INSTALLERS only.
+# Now each subtree is fully staged BESIDE its destination first, then swapped into place:
+#   - first install: one clean rename of the staged tree;
+#   - identical re-vendor (the common reinstall): a content fingerprint short-circuits the
+#     swap entirely - nothing moves, so nothing can be observed missing;
+#   - changed payload: a per-path sync where every FILE is rename(2)'d over its
+#     destination - a path that exists in both the old and the new tree is NEVER absent or
+#     truncated (rename replaces atomically), and only payload-dropped paths are pruned.
+# The measured alternative (whole-tree mv old->trash + mv staged->live) still left a
+# multi-millisecond absence window - two separate mv processes - that a tight reader
+# caught thousands of times across 20 reinstalls; per-path rename is the form that
+# actually delivers "bounded by rename/move operations". A kill mid-install leaves the
+# old tree intact plus a stray staging dir; the cleanup below reclaims strays at the
+# next install start, and the re-vendor restores the machine.
+rm -rf "$CY"/*.tmp.* "$CY"/*.old.* 2>/dev/null || true   # stray staging dirs from killed installs
+_vnonce="$$.$(date +%s)"
+_tree_fp() {   # content fingerprint of a tree (names + bytes; payload filenames are ours: no whitespace)
+  ( cd "$1" 2>/dev/null && find . ! -type d | LC_ALL=C sort | xargs cksum 2>/dev/null | cksum )
+}
+vendor_swap() {   # $1 = subtree name under both $src and $CY
+  local name="${1:?}" staged live rel p
+  staged="$CY/$name.tmp.$_vnonce"; live="$CY/$name"
+  cp -R "$src/$name" "$staged"
+  if [ ! -e "$live" ] && [ ! -L "$live" ]; then
+    mv "$staged" "$live"                                   # first install: one rename
+    return 0
+  fi
+  if [ "$(_tree_fp "$staged")" = "$(_tree_fp "$live")" ]; then
+    rm -rf "$staged"                                       # identical re-vendor: no-op swap
+    return 0
+  fi
+  # changed payload: ensure the directory skeleton (clearing same-named non-dirs - shape
+  # changes across versions are real), then rename every staged file over its destination
+  while IFS= read -r p; do
+    rel="${p#"$staged"/}"
+    if [ -e "$live/$rel" ] && [ ! -d "$live/$rel" ]; then rm -f "$live/$rel"; fi
+    mkdir -p "$live/$rel"
+  done < <(find "$staged" -mindepth 1 -type d)
+  while IFS= read -r p; do
+    rel="${p#"$staged"/}"
+    if [ -d "$live/$rel" ] && [ ! -L "$live/$rel" ]; then rm -rf "$live/$rel"; fi
+    mv -f "$p" "$live/$rel"
+  done < <(find "$staged" -mindepth 1 ! -type d)
+  # prune paths the new payload no longer ships (files first, then now-empty dirs deepest-first)
+  while IFS= read -r p; do
+    rel="${p#"$live"/}"
+    [ -e "$src/$name/$rel" ] || [ -L "$src/$name/$rel" ] || rm -f "$p"
+  done < <(find "$live" -mindepth 1 ! -type d)
+  while IFS= read -r p; do
+    rel="${p#"$live"/}"
+    [ -d "$src/$name/$rel" ] || rm -rf "$p"
+  done < <(find "$live" -mindepth 1 -depth -type d)
+  rm -rf "$staged"
+}
+vendor_swap cuo
+vendor_swap plugin
+[ -d "$src/mcp" ] && vendor_swap mcp          # MCP server channel (optional; needs node)
+# TASK-IMP-137 §1.5: the GitHub Action channel is only real if install vendors it - the
+# README documented .cyberos/ci/ while install never created it. Same ownership as the
+# other machine trees (inside the wholly machine-owned .cyberos/; uninstall reclaims it).
+[ -d "$src/ci" ] && vendor_swap ci
 [ -f "$src/manifest.yaml" ] && cp "$src/manifest.yaml" "$CY/manifest.yaml"
 [ -f "$src/VERSION" ] && cp "$src/VERSION" "$CY/VERSION"
 [ -f "$src/install.sh" ] && cp "$src/install.sh" "$CY/install.sh" && chmod +x "$CY/install.sh"
@@ -203,8 +262,8 @@ cp -R "$src/plugin" "$CY/plugin"
 [ -f "$src/help.sh" ] && cp "$src/help.sh" "$CY/help.sh" && chmod +x "$CY/help.sh"
 [ -f "$src/check-latest.sh" ] && cp "$src/check-latest.sh" "$CY/check-latest.sh" && chmod +x "$CY/check-latest.sh"
 # lib (task-migrate, update-check, status-page) + docs-tools
-[ -d "$src/lib" ] && rm -rf "$CY/lib" && cp -R "$src/lib" "$CY/lib"
-[ -d "$src/docs-tools" ] && rm -rf "$CY/docs-tools" && cp -R "$src/docs-tools" "$CY/docs-tools"
+[ -d "$src/lib" ] && vendor_swap lib
+[ -d "$src/docs-tools" ] && vendor_swap docs-tools
 rm -f "$CY"/gates.env.bak.* 2>/dev/null || true   # not an orphan: our own backup churn
 chmod +x "$CY/cuo/gates/run-gates.sh" 2>/dev/null || true
 [ -f "$CY/mcp/cyberos-mcp.mjs" ] && chmod +x "$CY/mcp/cyberos-mcp.mjs" 2>/dev/null || true
@@ -280,6 +339,21 @@ if [ -f "$root/Gemfile" ]; then
   if [ -d "$root/spec" ]; then claim ruby test "bundle exec rspec"
   elif [ -f "$root/Rakefile" ]; then claim ruby test "bundle exec rake test"; fi
 fi
+# monorepo fallback tier for the TEST gate (TASK-CUO-302 §1.4): an ordered, CLOSED list -
+# the canonical suite entrypoint first, a Makefile test: target second - probed only when
+# no language stack above claimed a test command. It sits BEFORE the Makefile stack block
+# so the repo's own canonical suite outranks `make test` when both exist (the order is
+# contractual, asserted by test_fail_closed_gates.sh t04). Existence checks only: the
+# probed files are NEVER executed at install time. Provenance lands in SRC_TEST so
+# run-gates.sh's provenance line shows where the command came from (fallback:*), and
+# ECOSYSTEM is deliberately NOT touched - a fallback is not a detected ecosystem.
+if [ -z "$TEST_CMD" ]; then
+  if [ -f "$root/scripts/tests/run_all.sh" ]; then
+    TEST_CMD="bash scripts/tests/run_all.sh"; SRC_TEST="fallback:run_all"
+  elif [ -f "$root/Makefile" ] && grep -q '^test:' "$root/Makefile"; then
+    TEST_CMD="make test"; SRC_TEST="fallback:make"
+  fi
+fi
 if [ -f "$root/Makefile" ]; then
   grep -q '^build:'    "$root/Makefile" && claim make build "make build"
   grep -q '^lint:'     "$root/Makefile" && claim make lint "make lint"
@@ -296,7 +370,10 @@ if [ -f "$env_file" ]; then
   cp "$env_file" "$env_bak"
 fi
 cat > "$env_file" <<EOF
-# .cyberos/gates.env - gate commands for the task workflow (edit freely).
+# .cyberos/gates.env - machine-owned; regenerated on every install (the previous file is
+# backed up beside it). Durable overrides belong in .cyberos/config.yaml
+# (gates.build / gates.lint / gates.test / gates.coverage) - edits made HERE are wiped
+# by the next install.
 # Auto-detected ecosystem: $ECOSYSTEM. Empty command = that gate is skipped.
 # The reduced-profile floor = build + lint + test + coverage. These always run.
 BUILD_CMD="$BUILD_CMD"
@@ -316,7 +393,6 @@ AWH_ENABLED="false"
 AWH_CMD=""
 # HITL is required: the two human-acceptance gates (review acceptance, final
 # acceptance) are never automated. The agent halts; a human records each verdict.
-HITL_REQUIRED="true"
 EOF
 # A silent clobber of an operator-edited file is a trust leak even when the backup exists
 # (TASK-IMP-095): when regeneration CHANGED the file, say where the previous content went
@@ -437,7 +513,9 @@ if [ "${CYBEROS_NO_MEMORY:-0}" != "1" ] && [ -d "$src/memory" ]; then
   # vendor the protocol docs into .cyberos/memory/ WITHOUT touching the live
   # store at .cyberos/memory/store/ (an update refreshes docs, never the data).
   mkdir -p "$CY/memory"
-  for f in AGENTS.md memory.schema.json memory.invariants.yaml; do
+  # INTEROP.md joins the vendored protocol docs (TASK-MEMORY-303 §1.3; guarded by -f so
+  # payloads built before the doc exists still install cleanly).
+  for f in AGENTS.md memory.schema.json memory.invariants.yaml INTEROP.md; do
     [ -f "$src/memory/$f" ] && cp "$src/memory/$f" "$CY/memory/$f"
   done
 
