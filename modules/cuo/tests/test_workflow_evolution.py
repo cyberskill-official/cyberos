@@ -240,14 +240,15 @@ def test_ceiling_is_a_judgment_not_a_derivation() -> None:
     """The number is a judgment and the workflow says so - false precision is its own defect."""
     t = _ship_tasks_text()
     assert "Three is a judgment, not a derivation" in t
-    assert "evidence about the\n  spec, not the implementation" in t.replace("\r", "")
+    # Phase-1 polish reflowed the hard-wrap; pin the prose, not the line break.
+    assert "evidence about the spec, not the implementation" in t.replace("\r", "")
 
 
 def test_spec_rejected_pairs_with_the_ceiling() -> None:
     """§1.5 - a wrong SPEC routes to draft, not ready_to_implement."""
     t = _ship_tasks_text()
     assert "entered_via: spec_rejected` routes to `draft`" in t
-    assert "wearing an\n  implementation problem's clothes" in t.replace("\r", "")
+    assert "wearing an implementation problem's clothes" in t.replace("\r", "")
 
 
 # ----------------------------------------------------------------------------
@@ -468,7 +469,7 @@ def test_judgment_is_advisory_not_read() -> None:
     section = _section_11e()
     assert "ADVISORY" in section, "§11e does not say the field is advisory"
     assert "A host MAY route on it" in section
-    assert "Nothing in\n  the payload reads it to decide anything" in section.replace("\r", "")
+    assert "Nothing in the payload reads it to decide anything" in section.replace("\r", "")
     assert "NO MODEL STRINGS" in section, "§11e does not carry the no-model-strings rule"
 
     # A READ of the key would look like a subscript, a .get(), or an attribute - the bare

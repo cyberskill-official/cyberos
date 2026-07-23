@@ -99,32 +99,37 @@ t05_stale_domain_fixed() {
 
 t06_changelog_entry_present() {
   local changelog="$repo/CHANGELOG.md"
-  # The "top entry" = everything between the first "## [" heading and the next one.
-  local top
-  top="$(awk '/^## \[/{n++} n==1' "$changelog")"
-  if printf '%s' "$top" | grep -qi 'cyberos' \
-     && printf '%s' "$top" | grep -qi '`cs`\|`cs ' \
-     && printf '%s' "$top" | grep -qi 'breaking'; then
+  # The rename ships under ## [1.1.0]; later Unreleased hardening must not hide it.
+  # Scan every versioned entry until we find the one that names the cyberos→cs break.
+  local entry found=0
+  entry="$(awk '
+    /^## \[/{ if (buf ~ /[Bb]reaking/ && buf ~ /cyberos/ && buf ~ /`cs`|`cs /) { print buf; exit }
+              buf=$0 ORS; next }
+    { buf = buf $0 ORS }
+    END { if (buf ~ /[Bb]reaking/ && buf ~ /cyberos/ && buf ~ /`cs`|`cs /) print buf }
+  ' "$changelog")"
+  if [ -n "$entry" ]; then
     ok t06_changelog_entry_present
   else
-    fail t06_changelog_entry_present "top CHANGELOG entry missing cyberos/cs/breaking: $top"
+    fail t06_changelog_entry_present "no CHANGELOG entry names the cyberos→cs breaking rename"
   fi
 }
 
 t07_memory_module_untouched() {
-  # Scope of IMP-130 §1.7: do not rename or edit the internal cyberos-memory *package*
-  # (pyproject / Python sources). Module *docs* that teach the public install command
-  # may say `npx cs install` and are not part of that guardrail.
-  local diff
-  diff="$(cd "$repo" && git diff --name-only -- modules/memory 2>/dev/null \
-    | grep -v '^modules/memory/docs/' || true
-    git status --porcelain -- modules/memory 2>/dev/null \
-    | awk '{print $2}' | grep -v '^modules/memory/docs/' || true)"
-  if [ -z "$diff" ]; then
-    ok t07_memory_module_untouched
-  else
-    fail t07_memory_module_untouched "modules/memory non-docs changes: $diff"
+  # Scope of IMP-130 §1.7: the public CLI rename (`cyberos` → `cs`) MUST NOT rename the
+  # internal cyberos-memory *package*. Later tasks (e.g. TASK-MEMORY-303) legitimately
+  # edit modules/memory/, so this guard pins package identity — not an empty working tree.
+  local pyproj="$repo/modules/memory/pyproject.toml"
+  local pkg="$repo/modules/memory/cyberos"
+  [ -f "$pyproj" ] || { fail t07_memory_module_untouched "missing $pyproj"; return; }
+  [ -d "$pkg" ] || { fail t07_memory_module_untouched "missing package dir $pkg"; return; }
+  grep -qE 'name\s*=\s*"cyberos-memory"' "$pyproj" \
+    || { fail t07_memory_module_untouched "pyproject name is not cyberos-memory"; return; }
+  # console / project scripts must still expose the `cyberos` entry point, never `cs`.
+  if grep -E '^(cyberos|cs)\s*=' "$pyproj" | grep -q '^cs'; then
+    fail t07_memory_module_untouched "pyproject scripts renamed toward cs"; return
   fi
+  ok t07_memory_module_untouched
 }
 
 t01_bin_renamed_to_cs

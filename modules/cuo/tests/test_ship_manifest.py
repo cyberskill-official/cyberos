@@ -156,10 +156,12 @@ class TestShipManifest(unittest.TestCase):
 
     def test_gitignore_scaffold(self):  # AC 6
         gi = os.path.join(ROOT, "docs", "tasks", ".workflow", ".gitignore")
-        # Seed is two patterns since TASK-IMP-090: ship manifests (TASK-CUO-206) and
-        # task-author run manifests are both untracked session state.
+        # Seed is three patterns: ship manifests (TASK-CUO-206), task-author run
+        # manifests (TASK-IMP-090), and the skill-trust ledger (TASK-IMP-113 §1.6).
+        # The companion test_gitignore_seed_covers_skill_trust covers the append-once
+        # upgrade path; this arm pins the committed tree shape.
         self.assertEqual(open(gi).read().split(),
-                         ["*.ship.json", "*.manifest.json"])
+                         ["*.ship.json", "*.manifest.json", "skill-trust.tsv"])
         # The path is assembled from fragments, so a codemod that rewrites the literal
         # "tools/cyberos-install" cannot see it — this line survived the dir rename and
         # went red. Same blind spot as the rest of this epoch, one layer down.
@@ -167,8 +169,10 @@ class TestShipManifest(unittest.TestCase):
         self.assertIn(".workflow/.gitignore", install_sh)
         self.assertIn("*.ship.json", install_sh)
         self.assertIn("*.manifest.json", install_sh)  # TASK-IMP-090 seed pattern
+        self.assertIn("skill-trust.tsv", install_sh)  # TASK-IMP-113 seed pattern
         for probe in ("docs/tasks/.workflow/TASK-X.ship.json",
-                      "docs/tasks/.workflow/task-author.x.manifest.json"):
+                      "docs/tasks/.workflow/task-author.x.manifest.json",
+                      "docs/tasks/.workflow/skill-trust.tsv"):
             out = subprocess.run(["git", "check-ignore", probe],
                                  cwd=ROOT, capture_output=True)
             self.assertEqual(out.returncode, 0, f"{probe} is not gitignored")

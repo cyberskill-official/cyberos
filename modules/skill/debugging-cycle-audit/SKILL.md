@@ -25,6 +25,12 @@ inputs:
   - { name: debug_trace, format: debug-trace@1, required: true }
 outputs:
   - { name: audit_report, format: debug-trace-audit@1 }
+
+# ── Untrusted-content discipline ─────────────────────────────────────
+untrusted_inputs:
+  wrap_in_marker: "untrusted_content"
+  injection_scan: required
+  on_marker_hit: surface_to_human
 ---
 
 # debugging-cycle-audit

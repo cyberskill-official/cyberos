@@ -1,0 +1,72 @@
+name: caf-evals-gate
+
+# TASK-IMP-136 (audit finding H9): the CAF eval suite (40 fixtures + validate.py) previously
+# ran in NO CI — its only workflow sat nested at tools/caf/.github/workflows/evals.yml, a
+# directory GitHub Actions never evaluates — and scripts/caf_precommit_check.sh was wired
+# into no hook and no workflow. This root workflow is the monorepo's own gate for both.
+# (The nested file stays: it serves the standalone-CAF-repo split, not this repo.)
+#
+# The benchmark-gates job carries the TASK-IMP-140 drift checkers (G3 enum, G4 headline
+# counts, G5 payload walker, G6 vendored-gate smoke, G13 stuck-WIP report, G16 reinstall
+# idempotency) plus this task's own CI-truth suite. Both suites ALSO auto-register in
+# scripts/tests/run_all.sh via its test_*.sh glob, so they additionally ride the
+# run_all-in-CI job when TASK-IMP-128 (draft — that job is deliberately NOT duplicated
+# here; see TASK-IMP-136 spec Non-Goals) lands.
+#
+# Scheduled weekly as a drift net: path-filtered PR triggers cannot see drift that arrives
+# through paths outside the filter (e.g. a task-count change under docs/tasks/).
+
+on:
+  pull_request:
+    paths:
+      # the CAF gate's own surfaces (TASK-IMP-136 §1.1)
+      - 'tools/caf/**'
+      - 'scripts/caf_*'
+      # the benchmark/CI-truth checkers and every surface they measure (TASK-IMP-140)
+      - 'scripts/tests/**'
+      - '.github/workflows/**'
+      - '.githooks/**'
+      - 'docs/verification/benchmark-gates.md'
+      - 'docs/reference/risk-register.md'
+      - 'README.md'
+      - 'docs/README.md'
+      - 'modules/skill/contracts/task/**'
+      - 'modules/skill/task-audit/RUBRIC.md'
+      - 'tools/install/**'
+      - 'tools/docs-site/render-status-hub.mjs'
+  schedule:
+    - cron: '0 2 * * 1'   # Mondays 02:00 UTC — the weekly drift net
+  workflow_dispatch: {}
+
+# Repo-pinned scripts on default-token runners; no secrets, read-only token
+# (TASK-IMP-136 §3 security-class: declared explicitly, not inherited).
+permissions:
+  contents: read
+
+jobs:
+  caf-evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: CAF fixture suite — validate.py --all (all 40 fixtures; never a silent subset)
+        working-directory: tools/caf
+        run: python3 core/evals/validate.py --all
+      - name: CAF gate declared for every gated module — caf_precommit_check.sh
+        run: bash scripts/caf_precommit_check.sh
+
+  benchmark-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Benchmark gate checkers — TASK-IMP-140 (G3/G4/G5/G6/G13/G16)
+        run: bash scripts/tests/test_benchmark_gates.sh
+      - name: CI-truth checkers — TASK-IMP-136 §1.5
+        run: bash scripts/tests/test_ci_truth.sh

@@ -103,7 +103,7 @@ The payload vendors the FULL 14-stage SDP skill catalog (52 skills: 24 author/au
 
 ### 2b. Update awareness (TASK-IMP-070)
 
-`install.sh --check <repo>` reports three values - `installed=`, `payload=`, `latest=` (the newest published release, resolved by `check-latest.sh` with a 3s budget; `CYBEROS_OFFLINE=1` skips it) - plus one `verdict=` line (`up_to_date` | `repo_stale` | `payload_stale`) and the exact `next:` command. Machine-parseable key=value lines; the desktop Ops tab and `/version` consume them.
+`version.sh [repo]` reports three values - `installed=`, `payload=`, `latest=` (the newest published release, resolved by `check-latest.sh` with a 3s budget; `CYBEROS_OFFLINE=1` skips it) - plus one `verdict=` line (`up_to_date` | `not_installed` | `repo_stale` | `payload_stale` | `rules_drift`) and the exact `next:` command. Machine-parseable key=value lines; the desktop Ops tab and `/version` consume them.
 
 ### 3. One-liner curl | sh (from GitHub Releases - TASK-IMP-069)
 
@@ -155,7 +155,19 @@ The core is doc-driven, so no plugin is required for any agent. `install.sh` wri
 
 ### 5. GitHub Action (available)
 
-`dist/cyberos/ci/github-action/action.yml` is a composite action that runs the machine gates in CI. Point a workflow at it after `install.sh` has committed `.cyberos/` to the repo. CI runs the machine gates only; final acceptance stays a human verdict.
+`install.sh` vendors a composite action to `.cyberos/ci/github-action/` in the target repo (TASK-IMP-137 - earlier releases documented this path but never installed it). It runs the machine gates in CI; final acceptance stays a human verdict. `.cyberos/` is gitignored by the managed block, so give the workflow the action one of two ways:
+
+```yaml
+jobs:
+  task-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash .cyberos-install/install.sh .   # vendor .cyberos/ in the job (or your install channel)
+      - uses: ./.cyberos/ci/github-action
+```
+
+or commit the action once (`git add -f .cyberos/ci`) and drop the install step. Either way the `uses:` path is the installed `./.cyberos/ci/github-action` - never a `dist/` path, which exists only in a CyberOS build checkout.
 
 ### 6. Docker image (available, scaffold only)
 
@@ -225,7 +237,7 @@ Every agent is one data row in `install.sh`. For an instruction pointer file: ad
 
 ## After install: trigger, gate, sign off
 
-1. Write a task: `cp .cyberos/cuo/templates/task-TEMPLATE.md docs/tasks/TASK-001-<slug>.md`, fill section 1, set `status: ready_to_implement`, add the row to `BACKLOG.md`.
+1. Write a task: `mkdir -p docs/tasks/<module>/TASK-001-<slug> && cp .cyberos/cuo/templates/TASK-TEMPLATE.md docs/tasks/<module>/TASK-001-<slug>/spec.md`, fill section 1, set `status: ready_to_implement`, add the row to `BACKLOG.md`.
 2. Trigger: tell your agent to follow `.cyberos/cuo/ship-tasks.md` and drive the next eligible task, HITL required, `repo_root` = this repo. (Or `/ship-tasks` with the plugin.)
 3. Gate: `bash .cyberos/cuo/gates/run-gates.sh`.
 4. Sign off: you record the review verdict and the final acceptance. The agent never sets `done`.
@@ -251,4 +263,8 @@ The pack is a build artifact. When the workflow improves in CyberOS, rebuild (`b
 | ruby   | Gemfile            | -                          | -                                     | rspec (spec/) or rake test (Rakefile) | -                                        |
 | make   | Makefile           | make build (per target)    | make lint                             | make test                             | make coverage                            |
 
-Overrides live in `.cyberos/config.yaml` (scaffolded once, all-commented, detected values shown as comments): `gates.build/lint/test/coverage` (each overrides only its own gate), `coverage_threshold` (default 90, exported as CYBEROS_COVERAGE_THRESHOLD), `task_template`, `profile`. `run-gates.sh` prints one provenance line per gate: `gate <name>: <cmd> (source: config|autodetect:<stack>|absent)`. A malformed config fails loudly with its line number and runs no gate. Unknown keys warn only.
+When no stack claims a test command, a monorepo fallback tier probes an ordered, closed list (TASK-CUO-302): `scripts/tests/run_all.sh` (seeds `TEST_CMD="bash scripts/tests/run_all.sh"`, provenance `fallback:run_all`), then a `Makefile` with a `test:` target (seeds `make test`, provenance `fallback:make`). The probe is an existence check only - nothing is executed at install time - and `run_all.sh` outranks the Makefile when both exist.
+
+Overrides live in `.cyberos/config.yaml` (scaffolded once, all-commented, detected values shown as comments): `gates.build/lint/test/coverage` (each overrides only its own gate), `coverage_threshold` (default 90, exported as CYBEROS_COVERAGE_THRESHOLD), `task_template`, `profile`. `run-gates.sh` prints one provenance line per gate: `gate <name>: <cmd> (source: config|autodetect:<stack>|absent)`. A malformed config fails loudly with its line number and runs no gate. Unknown keys warn only. `gates.env` itself is machine-owned and regenerated on every install - durable overrides belong in `config.yaml`, not there.
+
+**Fail-closed floor (TASK-CUO-302).** When ALL FOUR floor commands (build, lint, test, coverage) resolve to empty after the config.yaml and gates.env layers, `run-gates.sh` exits **3** (`GATES: RED - EMPTY FLOOR`) instead of reporting a vacuous green - exit 3 is distinct from 1 (a configured gate failed) and 2 (missing/malformed config). Fix it by setting `gates.*` in `.cyberos/config.yaml` or re-running install so autodetect can seed commands. A repo with genuinely nothing to run (docs-only) acknowledges it per run with `CYBEROS_ALLOW_EMPTY_GATES=1` (the literal `1`; any other value behaves as unset), which prints a distinct `GATES: EMPTY-ACKNOWLEDGED` line - never `GATES: GREEN` - and exits 0. When a BRAIN store is installed and the memory CLI is importable, a `doctor` gate (`python3 -m cyberos doctor`) also joins the run (TASK-MEMORY-303); repos without memory see one SKIP line and no behavior change.

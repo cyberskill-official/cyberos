@@ -2445,7 +2445,7 @@ def _cmd_workflow(args: argparse.Namespace) -> int:
     invoker = "auto"
     no_memory_emit = "--no-memory-emit" in wf_args
     actor = "cuo-drain"
-    halt_on_repeat_rework = 2
+    halt_on_repeat_rework = 3
 
     # Simple flag parsing for the remaining args
     i = 1  # skip the workflow path
@@ -2496,7 +2496,7 @@ def _cmd_workflow(args: argparse.Namespace) -> int:
             print("  --invoker INVOKER     auto|subprocess|llm")
             print("  --no-memory-emit      skip memory audit emission")
             print("  --actor NAME          actor name for memory rows")
-            print("  --halt-on-repeat-rework N  halt after N re-routes (default 2)")
+            print("  --halt-on-repeat-rework N  halt after N re-routes (default 3)")
             return 0
         else:
             sys.stderr.write(f"error: unknown option '{arg}'\n")
@@ -2731,6 +2731,13 @@ def build_parser() -> argparse.ArgumentParser:
     sp.set_defaults(fn=_cmd_consolidate)
 
     sp = sub.add_parser("doctor", help="run the self-audit walker over the store")
+    # Standalone-gate ergonomics (TASK-MEMORY-303 §1.6): allow --store AFTER
+    # the subcommand too (`python3 -m cyberos doctor --store <path>`).
+    # default=SUPPRESS so an omitted flag here never clobbers the value the
+    # root parser already resolved.
+    sp.add_argument("--store", default=argparse.SUPPRESS,
+                    help="store root (same as the global --store; accepted "
+                         "here so gate scripts can append it last)")
     sp.add_argument("--json", action="store_true", help="emit JSON instead of human-readable")
     sp.add_argument("--only", default=None,
                     help="comma-separated list of invariant ids to run (default: all)")

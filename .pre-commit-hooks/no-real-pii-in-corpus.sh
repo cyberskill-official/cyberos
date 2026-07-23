@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # TASK-AI-013 §1 #14 — Pre-commit hook to detect real PII in the corpus.
 # Flags any 12-digit sequence with a valid CCCD province code prefix.
-set -euo pipehook
+set -euo pipefail
 
 CORPUS="services/ai-gateway/pii/fixtures/vn_pii_200_samples.yaml"
 

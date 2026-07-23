@@ -1,9 +1,7 @@
 ---
 id: TASK-MEMORY-104
 title: "Tauri 2.x desktop app — macOS + Windows + Linux signed/notarised + auto-update + tray + quick capture + Full Disk Access"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature

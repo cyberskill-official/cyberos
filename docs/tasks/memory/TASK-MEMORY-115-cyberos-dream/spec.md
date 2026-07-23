@@ -1,9 +1,7 @@
 ---
 id: TASK-MEMORY-115
 title: "memory dreaming — `cyberos dream` out-of-band batch reflection that mines transcripts + episode rows for cross-session patterns; produces reviewable diffs that consolidate / mark-stale / verify / propose-new memories under explicit operator gate"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature

@@ -16,7 +16,9 @@
 // Nothing but protocol JSON is ever written to stdout. Diagnostics go to stderr.
 
 import { spawnSync } from "node:child_process";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { readFileSync, existsSync, statSync } from "node:fs";
+import { createServer } from "node:http";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -182,16 +184,49 @@ function handle(msg) {
 function reply(id, result) { return id === undefined || id === null ? null : { jsonrpc: "2.0", id, result }; }
 function rpcError(id, code, message) { return { jsonrpc: "2.0", id, error: { code, message } }; }
 
-// --- remote connector mode: `--http [port]` (TASK-IMP-076) -----------------------
+// --- remote connector mode: `--http [port]` (TASK-IMP-076; hardened TASK-IMP-137) ----
 // MCP streamable-HTTP transport, zero-dep: POST /mcp carries one JSON-RPC message
 // (or a batch array) and gets application/json back; GET /healthz for probes.
 // This is the endpoint agent UIs' "custom connector" dialogs point at (Claude:
-// remote MCP server URL; Grok: MCP server URL). Serve it behind TLS + a reverse
-// proxy in production - transport here, deployment/auth are the operator's
-// (docs/deploy/mcp-connector.md).
+// remote MCP server URL; Grok: MCP server URL).
+//
+// Exposure posture (TASK-IMP-137 - the served tools rewrite repos and run shell):
+//   - binds 127.0.0.1 unless `--host <addr>` deliberately widens it (the flag is the
+//     ONLY way to bind another address; the old default bound every interface);
+//   - CYBEROS_MCP_TOKEN set non-empty => every POST must carry an exact
+//     `Authorization: Bearer <token>` (401 with a JSON-RPC error body otherwise);
+//     GET /healthz stays open for probes. An EMPTY token is treated as unset - an
+//     empty bearer is unusable as a credential (see mcp/README.md);
+//   - binding non-loopback WITHOUT a token warns loudly (the condition, never the secret).
+// TLS + reverse proxy remain the production story (docs/deploy/mcp-connector.md) -
+// now as defense-in-depth rather than the only defense.
 if (process.argv.includes("--http")) {
-  const { createServer } = await import("node:http");
   const port = Number(process.argv[process.argv.indexOf("--http") + 1]) || 8799;
+  const hostIdx = process.argv.indexOf("--host");
+  const host = hostIdx >= 0 ? process.argv[hostIdx + 1] : "127.0.0.1";
+  if (hostIdx >= 0 && (!host || host.startsWith("--"))) {
+    process.stderr.write("cyberos-mcp: --host requires an address (e.g. --host 0.0.0.0)\n");
+    process.exit(2);
+  }
+  const token = process.env.CYBEROS_MCP_TOKEN || "";        // empty == unset, by design
+  const loopback = host === "127.0.0.1" || host === "::1" || host === "localhost";
+  if (!loopback && !token) {
+    process.stderr.write(
+      `cyberos-mcp: WARNING --host ${host} binds beyond loopback with NO token. The served tools ` +
+      `(task_install, task_gates) rewrite the repo and run shell commands; anyone who can reach ` +
+      `this address can drive them. Set CYBEROS_MCP_TOKEN to require Authorization: Bearer.\n`,
+    );
+  }
+  // Constant-time-safe in intent: compare fixed-length digests via timingSafeEqual -
+  // no early-exit substring tricks (the threat model is LAN, not timing labs).
+  const authorized = (req) => {
+    if (!token) return true;
+    const h = String(req.headers.authorization || "");
+    if (!h.startsWith("Bearer ")) return false;
+    const got = createHash("sha256").update(h.slice(7)).digest();
+    const want = createHash("sha256").update(token).digest();
+    return timingSafeEqual(got, want);
+  };
   createServer((req, res) => {
     if (req.method === "GET" && req.url === "/healthz") {
       res.writeHead(200, { "content-type": "application/json" });
@@ -200,6 +235,10 @@ if (process.argv.includes("--http")) {
     if (req.method !== "POST") {
       res.writeHead(405, { "content-type": "application/json", allow: "POST" });
       return res.end(JSON.stringify({ error: "POST JSON-RPC to this endpoint (MCP streamable HTTP)" }));
+    }
+    if (!authorized(req)) {
+      res.writeHead(401, { "content-type": "application/json", "www-authenticate": "Bearer" });
+      return res.end(JSON.stringify(rpcError(null, -32001, "unauthorized: CYBEROS_MCP_TOKEN is set - send Authorization: Bearer <token>")));
     }
     let body = "";
     req.on("data", (c) => { body += c; if (body.length > 1_000_000) req.destroy(); });
@@ -216,7 +255,7 @@ if (process.argv.includes("--http")) {
       res.writeHead(200, { "content-type": "application/json" });
       res.end(JSON.stringify(out));
     });
-  }).listen(port, () => process.stderr.write(`cyberos-mcp ${SERVER.version} ready (http :${port}/mcp-style POST, /healthz)\n`));
+  }).listen(port, host, () => process.stderr.write(`cyberos-mcp ${SERVER.version} ready (http ${host}:${port}/mcp-style POST, /healthz${token ? ", bearer auth ON" : ""})\n`));
 } else {
   // --- stdio loop (newline-delimited JSON) ------------------------------------
   let buf = "";

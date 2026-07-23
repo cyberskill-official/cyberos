@@ -41,7 +41,7 @@ The full step-by-step runbook (first task, gates, human acceptance, multi-repo r
 
 ## Ship work
 
-All work is a task under `docs/tasks/` - net-new (`class: product`) and hardening (`class: improvement`) alike, indexed by ONE `BACKLOG.md`. The `ship-tasks` workflow drives each task through the lifecycle with two mandatory human-acceptance gates (review acceptance and final acceptance); an agent never sets `done` itself.
+All work is a task under `docs/tasks/` - net-new (`type: feature`), fixes (`type: bug`), hardening (`type: improvement`) and chores (`type: chore`) alike, indexed by ONE `BACKLOG.md`. The `ship-tasks` workflow drives each task through the lifecycle with two mandatory human-acceptance gates (review acceptance and final acceptance); an agent never sets `done` itself.
 
 ## Develop CyberOS itself
 

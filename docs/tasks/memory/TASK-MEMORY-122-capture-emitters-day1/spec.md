@@ -7,7 +7,7 @@ created_at: 2026-06-29T00:00:00+07:00
 department: engineering
 author: "@stephencheng"
 template: task@1
-module: MEMORY
+module: memory
 priority: p0
 status: draft
 verify: T

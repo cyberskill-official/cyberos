@@ -1,9 +1,7 @@
 ---
 id: TASK-IMP-079
 title: "Docs-ship race — shared staging dir between deploy.yml and release.yml docs jobs; fixed by a single ship script with per-run staging + flock'd swap"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: improvement

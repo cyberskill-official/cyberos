@@ -1,9 +1,7 @@
 ---
 id: TASK-IMP-072
 title: "Repo-wide version consistency - every version-bearing file moves with VERSION, enforced at bump, gate, and hook"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: improvement

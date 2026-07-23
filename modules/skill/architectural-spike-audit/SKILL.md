@@ -33,6 +33,12 @@ triggers:
   - an architectural-spike@1 artefact exists and has not passed audit
 blockers:
   - "artefact is not architectural-spike@1 (unknown version) - needs_human, never guess"
+
+# ── Untrusted-content discipline ─────────────────────────────────────
+untrusted_inputs:
+  wrap_in_marker: "untrusted_content"
+  injection_scan: required
+  on_marker_hit: surface_to_human
 ---
 
 # architectural-spike-audit

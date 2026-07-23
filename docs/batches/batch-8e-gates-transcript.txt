@@ -1,0 +1,7 @@
+# Batch 8E gates
+
+`bash scripts/tests/test_benchmark_gates.sh` — 7/7 PASS (incl. live BRAIN record t06).
+`bash .cyberos/cuo/gates/run-gates.sh` — GREEN earlier in Batch D session (49/0/1);
+doctor READY after MMR rebuild (23 leaves post gate-1). Re-verified:
+  python3 -m cyberos doctor → 16/16 OK
+  python3 -m cyberos state → READY

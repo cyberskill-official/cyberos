@@ -32,14 +32,22 @@ import sys
 import tempfile
 import time
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Iterator
 
 import msgspec
 
 from cyberos.core.fsync import _is_darwin
+# Session-binlog frame parsing belongs to the transcript module (§18.2);
+# the lifecycle invariant reuses it rather than duplicating the format.
+from cyberos.core.transcript import (
+    _iter_frames as _iter_session_frames,
+    _locate_binlog as _locate_session_binlog,
+)
 from cyberos.core.walker import MmapWalker, verify_segments
 from cyberos.core.writer import (
+    AuditRecord,
     _GENESIS_CHAIN,
     crc_implementation,
 )
@@ -89,6 +97,13 @@ _CANONICAL_TOP_LEVEL_DIRS = frozenset({
     # scripts/cleanup-v1.sh to remove stale directories.
     "memories", "meta", "company", "module", "member", "client",
     "project", "persona", "conflicts", "exports", "index", "audit",
+    # Protocol-mandated feature dirs (TASK-MEMORY-303 §1.4): §18.2 session
+    # bodies and §7.7.4 dream artefacts. NOTE the deliberate asymmetry with
+    # `_SANDBOX_FRAGMENTS` ("/sessions/"): that check tests the STORE'S OWN
+    # resolved path, never entries inside it — a `sessions/` child dir does
+    # not trip it, and a store installed under a path containing
+    # "/sessions/" remains rejected as before.
+    "sessions", "dreams",
 })
 _CANONICAL_TOP_LEVEL_FILES = frozenset({
     "manifest.json", "HEAD", ".lock", "README.md",
@@ -420,6 +435,281 @@ def check_durability_platform_correct(_store: Path) -> tuple[bool, str]:
     return True, f"non-Darwin platform ({sys.platform}); fdatasync path used"
 
 
+# --- TASK-MEMORY-303 invariants (dream / ACL / session) --------------------
+
+
+def _iter_chain_rows(store: Path) -> Iterator[AuditRecord]:
+    """Yield every audit row across all binlog segments, oldest first.
+
+    Mirrors the segment ordering of :func:`check_ledger_link`: sealed
+    monthly segments sorted by name, then ``current.binlog``.
+    """
+    audit = store / "audit"
+    if not audit.is_dir():
+        return
+    segs = sorted(p for p in audit.glob("*.binlog") if p.name != "current.binlog")
+    current = audit / "current.binlog"
+    if current.exists():
+        segs.append(current)
+    for seg in segs:
+        with MmapWalker(seg) as walker:
+            for _offset, rec in walker.iter_records():
+                yield rec
+
+
+def check_dream_applied_provenance(store: Path) -> tuple[bool, str]:
+    """AGENTS.md §7.7.2 — dream-applier rows carry dream_id + proposal_id.
+
+    Two row families are applier-emitted and MUST carry both keys:
+
+    * ``dream.proposal_applied`` aux rows;
+    * ``put`` / ``move`` / ``delete`` mutation rows carrying either
+      provenance key — the applier stamps both on every mutation, so a
+      row with one key but not the other is a provenance hole.
+
+    Runner rows (``dream.start`` / ``dream.complete`` /
+    ``dream.detector_failed``) legitimately carry only ``dream_id``;
+    they are not applier rows and are exempt.
+    """
+    checked = 0
+    violations: list[str] = []
+    for rec in _iter_chain_rows(store):
+        extra = rec.extra or {}
+        has_dream = bool(extra.get("dream_id"))
+        has_proposal = bool(extra.get("proposal_id"))
+        if rec.op == "dream.proposal_applied":
+            checked += 1
+            if not (has_dream and has_proposal):
+                missing = [
+                    k for k, present in (
+                        ("dream_id", has_dream), ("proposal_id", has_proposal),
+                    ) if not present
+                ]
+                violations.append(
+                    f"op={rec.op} path={rec.path!r} missing extra.{'/extra.'.join(missing)}"
+                )
+        elif rec.op in ("put", "move", "delete") and (has_dream or has_proposal):
+            checked += 1
+            if not (has_dream and has_proposal):
+                missing = "proposal_id" if has_dream else "dream_id"
+                violations.append(
+                    f"op={rec.op} path={rec.path!r} carries dream provenance "
+                    f"but missing extra.{missing}"
+                )
+    if violations:
+        sample = violations[:3]
+        more = "" if len(violations) <= 3 else f" (+{len(violations) - 3} more)"
+        return False, f"{len(violations)} row(s) missing provenance: {sample}{more}"
+    if checked == 0:
+        return True, "no dream-applier rows on the chain"
+    return True, f"{checked} dream-applier row(s), all with dream_id + proposal_id"
+
+
+_STORE_ACL_MODES = frozenset({"read", "read-write", "deny"})
+_STORE_ID_RE = re.compile(r"^[a-z][a-z0-9_-]{0,63}$")
+
+
+def _store_acl_shape_errors(doc: object, rel: str) -> list[str]:
+    """Structural validation of one STORE.yaml document.
+
+    Transcribes ``memory.schema.json#/definitions/StoreAcl`` exactly
+    (required keys, closed mode enum, store_id pattern, closed shapes) so
+    the invariant needs no optional jsonschema dependency.
+    """
+    if not isinstance(doc, dict):
+        return [f"{rel}: not a mapping (got {type(doc).__name__})"]
+    errors: list[str] = []
+    unknown = set(doc) - {"store_id", "default_mode", "acl"}
+    if unknown:
+        errors.append(f"{rel}: unknown key(s) {sorted(unknown)}")
+    store_id = doc.get("store_id")
+    if not isinstance(store_id, str) or not _STORE_ID_RE.match(store_id):
+        errors.append(
+            f"{rel}: store_id missing or not matching "
+            "^[a-z][a-z0-9_-]{0,63}$"
+        )
+    if "default_mode" in doc and doc["default_mode"] not in _STORE_ACL_MODES:
+        errors.append(
+            f"{rel}: default_mode={doc['default_mode']!r} not in "
+            f"{sorted(_STORE_ACL_MODES)}"
+        )
+    if "acl" not in doc:
+        errors.append(f"{rel}: required key 'acl' missing")
+    elif not isinstance(doc["acl"], list):
+        errors.append(f"{rel}: 'acl' must be a list")
+    else:
+        for i, entry in enumerate(doc["acl"]):
+            if not isinstance(entry, dict):
+                errors.append(f"{rel}: acl[{i}] not a mapping")
+                continue
+            extra_keys = set(entry) - {"actor", "mode"}
+            if extra_keys:
+                errors.append(f"{rel}: acl[{i}] unknown key(s) {sorted(extra_keys)}")
+            actor = entry.get("actor")
+            if not isinstance(actor, str) or not actor:
+                errors.append(f"{rel}: acl[{i}].actor missing or empty")
+            if entry.get("mode") not in _STORE_ACL_MODES:
+                errors.append(
+                    f"{rel}: acl[{i}].mode={entry.get('mode')!r} not in "
+                    f"{sorted(_STORE_ACL_MODES)}"
+                )
+    return errors
+
+
+def check_store_yaml_acl_valid(store: Path) -> tuple[bool, str]:
+    """AGENTS.md §14.4.7 — every STORE.yaml validates against StoreAcl."""
+    import yaml  # noqa: WPS433 — lazy; same pattern as load_invariants_yaml
+
+    yamls = sorted(store.rglob("STORE.yaml"))
+    if not yamls:
+        return True, "no STORE.yaml declared"
+    errors: list[str] = []
+    for path in yamls:
+        rel = str(path.relative_to(store))
+        try:
+            doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except (OSError, yaml.YAMLError) as exc:
+            errors.append(f"{rel}: unparseable ({exc})")
+            continue
+        errors.extend(_store_acl_shape_errors(doc, rel))
+    if errors:
+        sample = errors[:3]
+        more = "" if len(errors) <= 3 else f" (+{len(errors) - 3} more)"
+        return False, f"{len(errors)} STORE.yaml error(s): {sample}{more}"
+    return True, f"{len(yamls)} STORE.yaml file(s) validate against StoreAcl"
+
+
+def _iso_to_ns(value: object) -> int | None:
+    """ISO-8601 string → epoch nanoseconds (None on absence/garbage)."""
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return int(dt.timestamp() * 1_000_000_000)
+
+
+def _binlog_is_tombstone(binlog: Path) -> bool:
+    """True when the session body was replaced by a retention tombstone."""
+    try:
+        head = binlog.read_bytes()[:300]
+    except OSError:
+        return False
+    return b'"tombstone": true' in head or b'"tombstone":true' in head
+
+
+def check_session_lifecycle(store: Path) -> tuple[bool, str]:
+    """AGENTS.md §18.8 — the four session lifecycle invariants.
+
+    1. Every ``session.start`` has 0 or 1 ``session.end`` for the same id
+       (and duplicate ``session.start`` rows for one id are a violation —
+       the writer rejects them at the call site, so on-chain duplicates
+       mean the writer was bypassed).
+    2. Within a session's binlog, turn_seq is strictly monotonically
+       increasing from 0.
+    3. No session turn precedes its ``session.start`` or follows its
+       ``session.end`` (frame ts_ns vs the summary rows' timestamps);
+       turns in a binlog with no ``session.start`` row at all are the
+       degenerate case.
+    4. Retention-purged bodies (tombstones, §18.6) are exempt from the
+       turn checks; their summary rows still participate in pairing.
+    """
+    starts: dict[str, list[AuditRecord]] = {}
+    ends: dict[str, list[AuditRecord]] = {}
+    purged: set[str] = set()
+    violations: list[str] = []
+
+    for rec in _iter_chain_rows(store):
+        if rec.op not in ("session.start", "session.end", "session.purged"):
+            continue
+        sid = (rec.extra or {}).get("session_id")
+        if not sid:
+            violations.append(f"{rec.op} row without extra.session_id")
+            continue
+        sid = str(sid)
+        if rec.op == "session.start":
+            starts.setdefault(sid, []).append(rec)
+        elif rec.op == "session.end":
+            ends.setdefault(sid, []).append(rec)
+        else:
+            purged.add(sid)
+
+    for sid, rows in starts.items():
+        if len(rows) > 1:
+            violations.append(f"{len(rows)} session.start rows for {sid!r}")
+    for sid, rows in ends.items():
+        if sid not in starts:
+            violations.append(f"session.end without session.start for {sid!r}")
+        if len(rows) > 1:
+            violations.append(f"{len(rows)} session.end rows for {sid!r}")
+
+    # Turn-frame checks, per started session.
+    for sid, rows in starts.items():
+        binlog = _locate_session_binlog(store, sid)
+        if binlog is None or _binlog_is_tombstone(binlog):
+            continue
+        start_ns = _iso_to_ns((rows[0].extra or {}).get("started_at"))
+        end_ns: int | None = None
+        if sid in ends:
+            end_ns = _iso_to_ns((ends[sid][0].extra or {}).get("ended_at"))
+        prev_seq: int | None = None
+        try:
+            for turn_seq, ts_ns, _payload in _iter_session_frames(binlog):
+                if prev_seq is None and turn_seq != 0:
+                    violations.append(
+                        f"session {sid!r}: first turn_seq is {turn_seq}, not 0"
+                    )
+                elif prev_seq is not None and turn_seq <= prev_seq:
+                    violations.append(
+                        f"session {sid!r}: turn_seq not strictly increasing "
+                        f"({prev_seq} → {turn_seq})"
+                    )
+                prev_seq = turn_seq
+                if start_ns is not None and ts_ns < start_ns:
+                    violations.append(
+                        f"session {sid!r}: turn {turn_seq} precedes session.start"
+                    )
+                if end_ns is not None and ts_ns > end_ns:
+                    violations.append(
+                        f"session {sid!r}: turn {turn_seq} follows session.end"
+                    )
+        except Exception as exc:  # noqa: BLE001 — a corrupt body is a finding,
+            # not a harness crash (checks MUST NOT raise on expected violations)
+            violations.append(f"session {sid!r}: unreadable binlog ({exc})")
+
+    # Orphan bodies: turns on disk for a session the chain never started.
+    sessions_root = store / "sessions"
+    if sessions_root.is_dir():
+        for date_dir in sorted(sessions_root.iterdir()):
+            if not date_dir.is_dir():
+                continue
+            for binlog in sorted(date_dir.glob("*.binlog*")):
+                sid = binlog.name.split(".binlog")[0]
+                if sid in starts or sid in purged or _binlog_is_tombstone(binlog):
+                    continue
+                try:
+                    has_turns = next(iter(_iter_session_frames(binlog)), None) is not None
+                except Exception:  # noqa: BLE001 — same rationale as above
+                    has_turns = True
+                if has_turns:
+                    violations.append(
+                        f"session {sid!r}: turns on disk but no session.start row"
+                    )
+
+    if violations:
+        sample = violations[:3]
+        more = "" if len(violations) <= 3 else f" (+{len(violations) - 3} more)"
+        return False, f"{len(violations)} lifecycle violation(s): {sample}{more}"
+    if not starts and not ends:
+        return True, "no sessions on the chain"
+    return True, (
+        f"{len(starts)} session(s), pairing + turn_seq + boundary checks OK"
+    )
+
+
 # --- the registry & walker ------------------------------------------------
 
 
@@ -437,6 +727,9 @@ _REGISTRY: dict[str, Callable[[Path], tuple[bool, str]]] = {
     "export-determinism": check_export_determinism,
     "crypto-crc-implementation": check_crc_implementation,
     "durability-platform-correct": check_durability_platform_correct,
+    "dream-applied-row-has-provenance": check_dream_applied_provenance,
+    "store-yaml-acl-valid": check_store_yaml_acl_valid,
+    "session-lifecycle": check_session_lifecycle,
 }
 
 
@@ -767,4 +1060,7 @@ __all__ = [
     "check_export_determinism",
     "check_crc_implementation",
     "check_durability_platform_correct",
+    "check_dream_applied_provenance",
+    "check_store_yaml_acl_valid",
+    "check_session_lifecycle",
 ]

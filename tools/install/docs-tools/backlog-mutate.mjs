@@ -12,6 +12,7 @@
 // Usage:  node backlog-mutate.mjs [--json] [--root <repo-root>] <command> ...
 //
 //   flip <task-id> <from> <to> [--backlog <path>] [--old-line <text>]
+//        [--verdict-by <actor> --verdict-evidence <path>]
 //       Locate the row by task STEM (the `<task-id>-<slug>` token), verify the status
 //       cell equals <from> AND — when --old-line carries the recorded pre-image — the
 //       full old line byte-for-byte (line terminator excluded), then rewrite EXACTLY
@@ -27,6 +28,16 @@
 //       statuses omitted, statuses in lifecycle order) — an inherited wrong count is
 //       corrected, never propagated (TASK-IMP-092); a header without parseable counts
 //       is left untouched.
+//       HUMAN-ACCEPTANCE GATE (TASK-CUO-303): the two transitions doctrine reserves for
+//       a recorded human verdict — `reviewing -> ready_to_test` and `testing -> done`
+//       (STATUS-REFERENCE §1.4) — additionally require --verdict-by (non-empty actor)
+//       and --verdict-evidence (an existing, non-empty regular file), refusing with
+//       exit 8 AFTER every exit-6 refusal above; every other transition ignores the
+//       flags. On a gated flip, ONE status_overridden row is appended via the sibling
+//       memory-append.mjs BEFORE the index moves whenever a BRAIN store resolves
+//       (CYBEROS_STORE override, else <root>/.cyberos/memory/store); a present store
+//       that cannot take the row fails the flip (exit 9, audit-before-action), and no
+//       store at all means the evidence file is the record (noted on stderr).
 //   insert <task-id> <stem> <title> <status> [--backlog <path>] [--section <name>] [--class product|improvement]
 //       Uniqueness gate first: NO row for <task-id> (or <stem>) may pre-exist anywhere
 //       in the file — violation is exit 7 naming the line. The row is rendered in the
@@ -56,13 +67,23 @@
 //   6  flip refusal: missing row, duplicate rows, or drifted pre-image (status cell or
 //      --old-line bytes) — the optimistic-concurrency check from SKILL.md §3
 //   7  insert refusal: a row for the id already exists (uniqueness pre-image violated)
+//   8  flip refusal: the transition is a human-acceptance gate (reviewing->ready_to_test,
+//      testing->done; STATUS-REFERENCE §1.4) and no recorded verdict accompanied it —
+//      --verdict-by missing/empty, or --verdict-evidence missing/empty/not a regular
+//      file (TASK-CUO-303). Nothing written.
+//   9  flip failure: the status_overridden verdict row could not be appended to a
+//      PRESENT BRAIN store (audit-before-action: the index does not move without its
+//      audit row). Nothing written.
 //
 // Byte discipline: the file is split on '\n' and rejoined on '\n' only — CRLF endings,
 // a missing final newline, unicode titles, everything outside the mutated line(s)
 // round-trips byte-identically (t07 proves it with a whole-file diff). Inserted rows
 // take the line ending of their section. Writes are two-phase atomic (`.tmp.<nonce>`
 // then rename). No clock, no randomness in output: identical input + identical args =
-// byte-identical result file and stdout. Node stdlib only (docs-tools convention).
+// byte-identical result file and stdout — for verdict-gated flips "input" includes the
+// resolved BRAIN store's state, and the appended row inherits memory-append.mjs's
+// CYBEROS_NOW clock convention (pin it for deterministic runs). Node stdlib only
+// (docs-tools convention).
 
 import {
   readFileSync, writeFileSync, renameSync, existsSync, mkdirSync,
@@ -70,6 +91,8 @@ import {
 } from "node:fs";
 import { randomBytes } from "node:crypto";
 import { join, resolve, dirname, relative, isAbsolute } from "node:path";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 // STATUS-REFERENCE.md §1 enum; the first ten are regen_backlog()'s STATUS_ORDER —
 // header counts render in this order.
@@ -81,7 +104,10 @@ const PLACEHOLDER = "- (nothing remaining)";
 const ID_RE = /^[A-Za-z0-9._-]+$/;
 
 class UsageError extends Error {}
-class Refusal extends Error { constructor(code, msg) { super(msg); this.code = code; } }
+// `fields` (optional) rides into the --json refusal envelope — the verdict gate uses it
+// so ship-manifest consumers can record the verdict fields on refusals too (TASK-CUO-303
+// edge case: refusal AND success both carry them).
+class Refusal extends Error { constructor(code, msg, fields) { super(msg); this.code = code; if (fields) this.fields = fields; } }
 
 // ── deterministic serialization + atomic write (shared idiom) ────────────────
 function stableStringify(v, indent = 0) {
@@ -273,6 +299,73 @@ function frontmatterStatus(text) {
   return { status: v };
 }
 
+// ── verdict gate (TASK-CUO-303): the two human-acceptance transitions ─────────
+// STATUS-REFERENCE §1.4 reserves `reviewing -> ready_to_test` (review acceptance) and
+// `testing -> done` (final acceptance) for a RECORDED human verdict. This gate makes the
+// doctrine mechanical on the single documented backlog write path (TASK-CUO-205): those
+// two flips refuse with exit 8 unless --verdict-by (non-empty actor) and
+// --verdict-evidence (an existing, non-empty regular file the human produced — resolved
+// against --root when relative, same as --backlog) are both supplied. EXACTLY the two
+// forward gate transitions are locked: operator superset overrides (done ->
+// ready_to_review re-audit, ready_to_review -> ready_to_test skip-review, route-backs,
+// off-ramps) stay flag-free, and every other transition ignores the flags entirely.
+// The gate evaluates AFTER every existing refusal (missing/duplicate row, pre-image
+// drift, truth-precedes-index — all exit 6), so code 8 means exactly one thing: the
+// transition was otherwise legal but no verdict was recorded (spec §1.2). Known
+// residual, accepted in the spec: an agent editing spec.md frontmatter directly and
+// regenerating the backlog bypasses any tool gate; the v4.0 state engine closes that.
+const GATE_TRANSITIONS = new Set(["reviewing->ready_to_test", "testing->done"]);
+const isGateTransition = (from, to) => GATE_TRANSITIONS.has(`${from}->${to}`);
+
+// BRAIN store resolution for the verdict audit row (spec §1.4), mirroring the memory
+// protocol's order (memory AGENTS.md §0.4): the explicit CYBEROS_STORE override first,
+// else the repo-anchored .cyberos/memory/store under the SAME root whose backlog is
+// being flipped. An explicit override counts as "present" by fiat (the appender
+// bootstraps it); without one, only an existing directory counts — no store, no row,
+// the evidence file is the record.
+function resolveBrainStore(root) {
+  const env = process.env.CYBEROS_STORE;
+  if (env !== undefined && env.trim() !== "") return resolve(env);
+  const dflt = join(root, ".cyberos", "memory", "store");
+  try { if (statSync(dflt).isDirectory()) return dflt; } catch { /* absent/unreadable = no store */ }
+  return null;
+}
+
+// Appends the ONE status_overridden row via the sibling memory-append.mjs — the row
+// rides the appender's existing §4.2 lease + §4.1 two-phase write discipline. This is a
+// direct child-process invocation of the node binary with a fixed argv (spawnSync
+// without shell), NOT a shell-out: no string is interpreted, and the evidence path is
+// never executed or parsed — it travels only as payload data. Any failure on a PRESENT
+// store fails the flip with exit 9 (audit-before-action: the index does not move
+// without its audit row). Clock: the row inherits the appender's CYBEROS_NOW
+// convention, so pinned-clock runs stay deterministic.
+function appendVerdictRow(root, store, payload, jsonFields) {
+  const appender = join(dirname(fileURLToPath(import.meta.url)), "memory-append.mjs");
+  const failMsg = (detail) =>
+    `flip ${payload.task_id}: the status_overridden verdict row could not be appended to the BRAIN store at ${store} - ${detail}. ` +
+    `Audit-before-action (STATUS-REFERENCE §1.4, TASK-CUO-303): the index does not move without its audit row. Refusing; nothing written.`;
+  if (!existsSync(appender)) throw new Refusal(9, failMsg(`memory-append.mjs not found next to backlog-mutate.mjs (${appender})`), jsonFields);
+  const res = spawnSync(process.execPath, [appender, "--json", "append", store, "status_overridden", "-"], {
+    input: JSON.stringify(payload), encoding: "utf8",
+  });
+  if (res.error) throw new Refusal(9, failMsg(`appender could not be spawned (${res.error.message})`), jsonFields);
+  if (res.stderr) process.stderr.write(res.stderr); // pass the appender's notes through, already prefixed
+  if (res.status !== 0) {
+    let detail = "";
+    try { detail = JSON.parse(res.stdout).error || ""; } catch { /* non-JSON child output — fall back below */ }
+    if (!detail) {
+      // A crashed child prints a stack, not a --json envelope: surface its Error line
+      // (e.g. "Error: EACCES: permission denied"), not an arbitrary stack frame.
+      const lines = (res.stderr || "").split("\n").map((s) => s.trim()).filter(Boolean);
+      detail = lines.find((l) => /error/i.test(l)) || lines[lines.length - 1] || `appender exit ${res.status}`;
+    }
+    throw new Refusal(9, failMsg(detail), jsonFields);
+  }
+  let out = {};
+  try { out = JSON.parse(res.stdout); } catch { /* tolerated: row landed (exit 0); seq/chain just stay null */ }
+  return { seq: out.seq ?? null, chain: out.chain ?? null, store };
+}
+
 // ── flip ─────────────────────────────────────────────────────────────────────
 function cmdFlip(root, positionals, opts) {
   const [id, from, to] = positionals;
@@ -322,6 +415,49 @@ function cmdFlip(root, positionals, opts) {
     throw new Refusal(6, `flip ${id}: spec frontmatter status is '${fm.status}', but the flip targets '${to}' - truth precedes index (TASK-IMP-120): write '${to}' into ${relative(root, spec.hits[0])} first, then re-run. Refusing.`);
   }
 
+  // ── TASK-CUO-303: the two human-acceptance transitions require a recorded verdict ──
+  // Evaluated LAST among the refusals (spec §1.2): everything above kept its exit 6, so
+  // exit 8 means exactly "otherwise legal, but no verdict was recorded". Non-gate
+  // transitions skip this whole block — flags ignored, behavior byte-identical to today.
+  let verdictInfo = null;
+  if (isGateTransition(from, to)) {
+    const jsonFields = { verdict_by: opts["verdict-by"] ?? null, verdict_evidence: opts["verdict-evidence"] ?? null };
+    const by = opts["verdict-by"];
+    const ev = opts["verdict-evidence"];
+    const problems = [];
+    if (by === undefined) problems.push("--verdict-by is missing");
+    else if (by.trim() === "") problems.push("--verdict-by is empty (a verdict needs an identifiable actor)");
+    if (ev === undefined) problems.push("--verdict-evidence is missing");
+    else {
+      // Exists + regular file + non-empty, nothing else (spec §1.1): a directory or an
+      // unreadable path is treated as "does not exist" (edge case); content quality is
+      // the reviewer's judgment, not the tool's. The path is stat'ed only — never
+      // opened, executed, or parsed.
+      let st = null;
+      try { st = statSync(resolve(root, ev)); } catch { /* missing/unreadable = does not exist */ }
+      if (st === null) problems.push(`--verdict-evidence '${ev}' does not exist (an unreadable path counts as missing)`);
+      else if (!st.isFile()) problems.push(`--verdict-evidence '${ev}' is not a regular file (a directory counts as missing)`);
+      else if (st.size === 0) problems.push(`--verdict-evidence '${ev}' is empty - the evidence must preexist the flip with content`);
+    }
+    if (problems.length > 0) {
+      throw new Refusal(8,
+        `flip ${id}: '${from} -> ${to}' is a human-acceptance gate (STATUS-REFERENCE §1.4): a recorded human verdict must accompany it - ${problems.join("; ")}. ` +
+        `Pass --verdict-by <actor> and --verdict-evidence <path to the review/acceptance note the human produced>. Refusing; nothing written.`,
+        jsonFields);
+    }
+    // Audit-before-action (spec §1.4): the row lands BEFORE the index moves. A present
+    // store that cannot take the row fails the flip (exit 9); no store at all is legal —
+    // the evidence file is the record, said on stderr.
+    const store = resolveBrainStore(root);
+    if (store === null) {
+      process.stderr.write(`backlog-mutate: note: no BRAIN store resolvable (no CYBEROS_STORE override, no .cyberos/memory/store under the root) - the verdict evidence file is the record; no status_overridden row appended (TASK-CUO-303)\n`);
+      verdictInfo = { verdict_by: by, verdict_evidence: ev, audit_row: null };
+    } else {
+      const row = appendVerdictRow(root, store, { actor: by, task_id: id, prior_status: from, new_status: to, reason: ev }, jsonFields);
+      verdictInfo = { verdict_by: by, verdict_evidence: ev, audit_row: { seq: row.seq, chain: row.chain, store: row.store } };
+    }
+  }
+
   const cellPrefix = `- [${from}]`;
   const oldLine = lines[i];
   const newLine = `- [${to}]` + oldLine.slice(cellPrefix.length);
@@ -340,9 +476,16 @@ function cmdFlip(root, positionals, opts) {
   let totalsInfo = {};
   if (tot.line >= 0 && tot.text !== lines[tot.line]) { totalsInfo = { totals_line: tot.line + 1 }; lines[tot.line] = tot.text; }
   atomicWrite(path, lines.join("\n"));
+  // Gate flips carry the verdict fields (and the appended row's coordinates) in both the
+  // prose message and the --json envelope; non-gate flips emit exactly what they always
+  // did — verdictInfo is null there, so nothing spreads and nothing is appended.
+  const verdictNote = verdictInfo === null ? ""
+    : verdictInfo.audit_row ? `; status_overridden row seq ${verdictInfo.audit_row.seq} appended (verdict by ${verdictInfo.verdict_by})`
+    : `; no BRAIN store - the verdict evidence file is the record`;
   return {
     code: 0, backlog: given, line: i + 1, old_line: stripCR(oldLine), new_line: stripCR(newLine), ...headerInfo, ...totalsInfo,
-    message: `flip ${id}: [${from}] -> [${to}] at line ${i + 1}${headerInfo.header_line ? `; header retallied at line ${headerInfo.header_line}` : ""}${totalsInfo.totals_line ? `; Totals retallied at line ${totalsInfo.totals_line}` : ""}`,
+    ...(verdictInfo ?? {}),
+    message: `flip ${id}: [${from}] -> [${to}] at line ${i + 1}${headerInfo.header_line ? `; header retallied at line ${headerInfo.header_line}` : ""}${totalsInfo.totals_line ? `; Totals retallied at line ${totalsInfo.totals_line}` : ""}${verdictNote}`,
   };
 }
 
@@ -530,6 +673,7 @@ usage: node backlog-mutate.mjs [--json] [--root <repo-root>] <command> ...
 
 commands
   flip <task-id> <from> <to> [--backlog <path>] [--old-line <text>]
+       [--verdict-by <actor> --verdict-evidence <path>]
       rewrite ONE status cell: the row is located by stem, the cell must equal <from>,
       and --old-line (the recorded pre-image) must match the full line byte-for-byte
       when given; every other byte of the line is preserved. The task's spec.md
@@ -537,6 +681,16 @@ commands
       frontmatter is the record of truth, the index only catches up to it (TASK-IMP-120).
       A counted section header ('(N status, ...)') is rewritten from a full retally of
       the section's rows after the flip; bare headers stay untouched.
+      The two human-acceptance gates - reviewing -> ready_to_test and testing -> done
+      (STATUS-REFERENCE §1.4) - REQUIRE a recorded human verdict: --verdict-by (a
+      non-empty actor) plus --verdict-evidence (an existing, non-empty regular file,
+      resolved against --root when relative); a bare gate flip refuses with exit 8 and
+      writes nothing (TASK-CUO-303). Every other transition ignores the flags. When a
+      BRAIN store resolves (CYBEROS_STORE, else <root>/.cyberos/memory/store), the
+      gated flip first appends ONE status_overridden row via memory-append.mjs
+      (payload {actor, task_id, prior_status, new_status, reason: evidence-path});
+      an append failure on a present store fails the flip (exit 9) BEFORE the index
+      moves. With no store, the flip succeeds and the evidence file is the record.
   insert <task-id> <stem> <title> <status> [--backlog <path>] [--section <name>] [--class product|improvement]
       insert ONE row in the regenerator-identical grammar
       '- [<status>] <stem> - <title>' (+ ' (improvement)'), stem-ascending inside the
@@ -558,6 +712,12 @@ exit codes
      - OR the spec frontmatter does not already carry <to> (truth precedes index,
      TASK-IMP-120: unfindable / unreadable / ambiguous / disagreeing truth all refuse)
   7  insert refusal: a row for the id already exists (uniqueness pre-image violated)
+  8  flip refusal: a human-acceptance gate transition (reviewing -> ready_to_test,
+     testing -> done) with no recorded verdict - STATUS-REFERENCE §1.4 requires
+     --verdict-by + --verdict-evidence (existing, non-empty regular file); evaluated
+     AFTER every exit-6 refusal, so 8 means "otherwise legal, verdict missing"
+  9  flip failure: the status_overridden verdict row could not be appended to a
+     PRESENT BRAIN store - audit-before-action, the index never moves without its row
 
 discipline
     a mutation is exactly one row, at most one section header, and at most one Totals
@@ -572,7 +732,7 @@ discipline
 
 function main(argv) {
   const flags = new Set(["json", "help"]);
-  const valued = new Set(["root", "backlog", "old-line", "section", "class"]);
+  const valued = new Set(["root", "backlog", "old-line", "section", "class", "verdict-by", "verdict-evidence"]);
   const opts = {};
   const positionals = [];
   for (let i = 0; i < argv.length; i++) {
@@ -611,7 +771,7 @@ function main(argv) {
     if (e instanceof Refusal || e instanceof UsageError) {
       const code = e instanceof Refusal ? e.code : 2;
       if (opts.json) {
-        process.stdout.write(stableStringify({ command: command ?? null, task_id: rest[0] ?? null, ok: false, exit_code: code, error: e.message }) + "\n");
+        process.stdout.write(stableStringify({ command: command ?? null, task_id: rest[0] ?? null, ok: false, exit_code: code, error: e.message, ...(e.fields ?? {}) }) + "\n");
       } else {
         process.stderr.write(`backlog-mutate: ${e.message}\n`);
         if (code === 2) process.stderr.write("usage: node backlog-mutate.mjs [--json] [--root <dir>] <flip|insert> ... (--help for details)\n");

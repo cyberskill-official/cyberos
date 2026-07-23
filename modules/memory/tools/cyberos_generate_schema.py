@@ -53,9 +53,18 @@ _CANONICAL_OPS = [
 _KIND_ENUM = [
     "decision", "fact", "person", "project", "preference",
     "drift", "refinement",
+    "episode",  # event-shaped memory — one completed task (cyberos.core.episode)
     "unknown",  # forward-compat sentinel — write path uses this when no
                 # frontmatter kind is supplied
 ]
+
+_KIND_DESCRIPTION = (
+    "Closed memory kind. 'episode' is an event-shaped memory: the agent's "
+    "record of one completed task. Episode-specific fields (task, approach, "
+    "outcome, duration_ms, token_cost, quality_score, notes, error) live "
+    "under `extra` and are validated by "
+    "cyberos.core.episode.validate_episode_extras()."
+)
 
 _ACTOR_KIND_ENUM = ["human", "agent", "automation"]
 
@@ -128,6 +137,7 @@ def build_schema() -> dict:
 
     fm_schema.setdefault("properties", {})
     fm_schema["properties"].setdefault("kind", {})["enum"] = _KIND_ENUM
+    fm_schema["properties"]["kind"]["description"] = _KIND_DESCRIPTION
     fm_schema["additionalProperties"] = False
 
     # MemoryPath: a closed regex pattern matching the §4.1 traversal guard
@@ -145,10 +155,9 @@ def build_schema() -> dict:
         "description": (
             "Machine-validatable schema for the CyberOS memory. Generated "
             "from cyberos.core msgspec Structs by "
-            "memory/tools/cyberos_generate_schema.py. Do not hand-edit. "
+            "tools/cyberos_generate_schema.py. Do not hand-edit. "
             "The protocol document (AGENTS.md) is the prose "
-            "companion; this file is the contract. The protocol is "
-            "unversioned: there is no schema_version field."
+            "companion; this file is the contract."
         ),
         "definitions": {
             "MemoryPath": {
@@ -176,6 +185,7 @@ def build_schema() -> dict:
             "AuditRecord": audit_schema,
             "Frontmatter": fm_schema,
             "Manifest": _manifest_schema(),
+            **_store_acl_schemas(),
             "Envelope": _envelope_schema(),
         },
         "type": "object",
@@ -247,6 +257,78 @@ def _manifest_schema() -> dict:
             },
         },
         "additionalProperties": True,
+    }
+
+
+def _store_acl_schemas() -> dict:
+    """StoreAcl / StoreAclEntry / StoreAclMode — AGENTS.md §14.4.7 (P20).
+
+    Normative shape for per-subtree ``STORE.yaml`` ACL files, enforced by
+    ``cyberos.core.store_acl`` on every put/move/delete and by the
+    ``store-yaml-acl-valid`` doctor invariant. Kept in the generator so the
+    schema stays single-sourced (TASK-MEMORY-303 §1.1); the definitions
+    mirror the ``cyberos.core.store_acl`` parser exactly.
+    """
+    return {
+        "StoreAclMode": {
+            "type": "string",
+            "enum": ["read", "read-write", "deny"],
+            "description": (
+                "Per AGENTS.md §14.4. Closed enum. Reads are NOT subject to "
+                "ACL enforcement at protocol level; `read` here means "
+                "\"writes denied, body still readable via OS filesystem "
+                "permissions\"."
+            ),
+        },
+        "StoreAclEntry": {
+            "type": "object",
+            "required": ["actor", "mode"],
+            "properties": {
+                "actor": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": (
+                        "Glob pattern matching against the active actor "
+                        "identity. `*` is the wildcard. Built-in literals "
+                        "include `dream-runner`, `dream-applier`, "
+                        "`scheduled-importer`, `claude-code-hook`."
+                    ),
+                },
+                "mode": {"$ref": "#/definitions/StoreAclMode"},
+            },
+            "additionalProperties": False,
+        },
+        "StoreAcl": {
+            "type": "object",
+            "required": ["store_id", "acl"],
+            "properties": {
+                "store_id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+                    "description": (
+                        "Stable store identifier; matches "
+                        "`^[a-z][a-z0-9_-]{0,63}$`."
+                    ),
+                },
+                "default_mode": {
+                    "$ref": "#/definitions/StoreAclMode",
+                    "description": (
+                        "Applied when no `acl` entry matches the active "
+                        "actor. Default `read-write`."
+                    ),
+                },
+                "acl": {
+                    "type": "array",
+                    "items": {"$ref": "#/definitions/StoreAclEntry"},
+                    "description": (
+                        "Ordered list of (actor-pattern, mode) entries. "
+                        "First-match-wins. Explicit `deny` overrides "
+                        "subsequent allows."
+                    ),
+                },
+            },
+            "additionalProperties": False,
+        },
     }
 
 

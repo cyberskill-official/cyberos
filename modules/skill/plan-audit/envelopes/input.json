@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.plan-audit.input/v1",
+  "title": "plan-audit input envelope",
+  "type": "object",
+  "required": ["artefact_paths"],
+  "additionalProperties": false,
+  "properties": {
+    "artefact_paths": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "description": "Path to an existing plan@1 markdown (docs/plans/PLAN-<slug>-<YYYYMMDD>/plan.md) to audit." }
+    },
+    "rubric_version": {
+      "type": "string",
+      "default": "plan_rubric@1.0",
+      "description": "Override rubric version. Defaults to the skill's declared version; an unknown version is needs_human, never guessed."
+    },
+    "upstream_context": {
+      "type": "object",
+      "description": "The plan-author output envelope, when chained (gate_outcome, scan_ref, memory_rows for cross-checks).",
+      "additionalProperties": true
+    },
+    "caller_persona": {
+      "type": "string",
+      "default": "cuo-cpo",
+      "enum": ["cuo-cpo", "cuo-cto", "cuo-clo", "cuo-cseco", "cuo-coo", "cuo-ceo", "cuo-cfo", "cuo-chro", "cuo-cdo"]
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "UUID for genie.action_log correlation. Auto-generated if absent."
+    }
+  }
+}

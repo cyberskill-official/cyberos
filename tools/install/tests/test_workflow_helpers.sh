@@ -748,7 +748,12 @@ t14_flip_refuses_when_truth_disagrees() { # spec §1.1 / AC1
 
 t15_flip_proceeds_when_truth_agrees() { # spec §1.2 / AC2
   local d="$TMP/t15g"; emit_guard_fixture "$d" reviewing ready_to_test   # the truth already moved
+  # reviewing -> ready_to_test is a human-acceptance gate (TASK-CUO-303): the flip needs the
+  # recorded verdict flags; test_hitl_lock.sh owns the refusal matrix, this test keeps owning
+  # the truth-guard happy path.
+  printf 'review accepted (t15 fixture verdict note)\n' > "$d/verdict-note.md"
   bm flip TASK-GUARD-001 reviewing ready_to_test --root "$d" \
+    --verdict-by "t15-fixture-human" --verdict-evidence "$d/verdict-note.md" \
     || { fail t15_flip_proceeds_when_truth_agrees "flip refused despite agreeing truth: $(cat "$TMP/err")"; return; }
   grep -q '^- \[ready_to_test\] TASK-GUARD-001-truth-index' "$d/docs/tasks/BACKLOG.md" \
     || { fail t15_flip_proceeds_when_truth_agrees "index did not move"; return; }

@@ -175,10 +175,19 @@ t01_spine_green() {
   # the index (backlog-mutate flip). The flip now SUCCEEDS precisely because the truth already
   # carries <next> — the index catches up to a truth that already moved. (Index-first is the
   # forbidden order the guard refuses; t05 proves that refusal directly.)
-  local prev=draft next
+  # The two human-acceptance gate transitions (reviewing->ready_to_test, testing->done) now
+  # require a recorded verdict (TASK-CUO-303): flags + an existing non-empty evidence note.
+  # Every other flip stays flag-free — passing them only where the gate demands keeps this
+  # walk honest about which transitions are human gates.
+  printf 'human verdict note (e2e lifecycle fixture)\n' > "$d/verdict-note.md"
+  local prev=draft next verdict_flags
   for next in $LIFECYCLE; do
     write_spec "$spec" "$next"   # truth-half FIRST — the frontmatter now carries <next>
-    node "$d/.cyberos/docs-tools/backlog-mutate.mjs" --root "$d" flip "$ID" "$prev" "$next" >/dev/null 2>&1 \
+    verdict_flags=""
+    { [ "$prev" = reviewing ] && [ "$next" = ready_to_test ]; } || { [ "$prev" = testing ] && [ "$next" = done ]; } \
+      && verdict_flags="--verdict-by e2e-fixture-human --verdict-evidence $d/verdict-note.md"
+    # shellcheck disable=SC2086  # verdict_flags is deliberately word-split (two flag pairs)
+    node "$d/.cyberos/docs-tools/backlog-mutate.mjs" --root "$d" flip "$ID" "$prev" "$next" $verdict_flags >/dev/null 2>&1 \
       || { fail t01_spine_green "flip $prev -> $next exited nonzero (truth-first; the guard should permit it)"; all=0; break; }
     # the crux, proven inline: after a truth-first flip the index has CAUGHT UP to the truth —
     # both halves read <next> (flip moved the row; write_spec set the frontmatter; they agree).

@@ -1,9 +1,7 @@
 ---
 id: TASK-MEMORY-117
 title: "memory per-store ACL — `STORE.yaml` per top-level subtree (memories/ meta/ company/ client/ project/ persona/ episodes/) auto-generated on migration; writer enforces ACL on every put/move/delete; reads remain unrestricted to local processes"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature

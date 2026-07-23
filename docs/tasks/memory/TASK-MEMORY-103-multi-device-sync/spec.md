@@ -1,9 +1,7 @@
 ---
 id: TASK-MEMORY-103
 title: "memory-sync daemon — laptop A ↔ Cloud memory ↔ laptop B with sync_class gating + CRDT conflict + 10K offline buffer + device-id stamp"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature

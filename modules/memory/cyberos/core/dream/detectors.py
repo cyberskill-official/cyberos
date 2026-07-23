@@ -309,14 +309,51 @@ async def run_verify(
 # ────────────────────────────────────────────────────────────────────
 
 
+def _tombstoned_paths(store: Path) -> set[str]:
+    """Paths whose latest chain row soft-deleted them (AGENTS.md §3.5).
+
+    A tombstone keeps the body on disk, so bare file enumeration would
+    resurrect deleted memories into dream detection: a tombstoned
+    duplicate gets re-proposed for merge on every run, breaking
+    re-apply idempotency (TASK-MEMORY-116 AC #11). This was masked
+    until TASK-MEMORY-303 made `dreams/` a canonical dir — before that,
+    the first run's diff artefact failed `layout-root-canonical`, the
+    Walk phase went red, and no second SemanticDedup run ever executed
+    to expose it. Tombstone state follows the path through moves; a
+    later `put` at the same path resurrects it.
+    """
+    from cyberos.core.dream._audit_iter import iter_audit_rows  # lazy
+
+    dead: set[str] = set()
+    for row in iter_audit_rows(store):
+        op = row.get("op")
+        path = row.get("path") or ""
+        if op == "delete":
+            dead.add(path)
+        elif op == "put":
+            dead.discard(path)
+        elif op == "move" and path in dead:
+            dead.discard(path)
+            to = (row.get("extra") or {}).get("to") or ""
+            if to:
+                dead.add(to)
+    return dead
+
+
 def _enumerate_memories(store: Path, scope: str) -> list[tuple[str, bytes]]:
-    """Yield (relative_path, body_bytes) for every memory in scope."""
+    """Yield (relative_path, body_bytes) for every LIVE memory in scope.
+
+    Tombstoned memories (§3.5 — audit row says deleted, body preserved
+    on disk) are excluded: dreaming over deleted memories would merge,
+    stale-mark, or verify content the operator already removed.
+    """
     from cyberos.core.frontmatter import parse, parse_legacy_yaml, looks_like_yaml
 
     out: list[tuple[str, bytes]] = []
     root = store / scope if scope else store
     if not root.exists():
         return out
+    dead = _tombstoned_paths(store)
     for md_path in root.rglob("*.md"):
         try:
             raw = md_path.read_bytes()
@@ -328,6 +365,8 @@ def _enumerate_memories(store: Path, scope: str) -> list[tuple[str, bytes]]:
                 else:
                     continue
             rel = str(md_path.relative_to(store))
+            if rel in dead:
+                continue
             out.append((rel, body))
         except Exception:
             continue

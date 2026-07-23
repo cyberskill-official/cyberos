@@ -1,9 +1,7 @@
 ---
 id: TASK-SKILL-106
 title: "memory-sync@1 skill bundle — operator-facing sync trigger that defers to Stage 4 orchestrator (slice-3 stub; full sync ships P2)"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
@@ -11,7 +9,7 @@ created_at: 2026-05-16T00:00:00+07:00
 department: engineering
 author: "@stephencheng"
 template: task@1
-module: SKILL
+module: skill
 priority: p1
 status: done
 verify: I

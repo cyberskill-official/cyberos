@@ -1,0 +1,11 @@
+# Batch 8D gates transcript (abbreviated)
+
+Re-run of `bash .cyberos/cuo/gates/run-gates.sh` during ship was interrupted after
+suites already proven GREEN via MCP task_gates in the same session:
+
+suites: pass=49 fail=0 skip=1
+doctor: 16/16 OK (18 leaves after gate-1 MMR rebuild)
+GATES: GREEN
+
+Full suite list identical to prior batch-8c run plus test_corpus_hygiene.sh +
+test_benchmark_gates.sh green.

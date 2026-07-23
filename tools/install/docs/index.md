@@ -84,7 +84,7 @@ With the Claude plugin: `/install`. Idempotent: re-running install re-vendors th
 
    ```bash
    mkdir -p docs/tasks/<module>/TASK-001-my-first
-   cp .cyberos/cuo/templates/task-TEMPLATE.md docs/tasks/<module>/TASK-001-my-first/spec.md
+   cp .cyberos/cuo/templates/TASK-TEMPLATE.md docs/tasks/<module>/TASK-001-my-first/spec.md
    ```
 
 Fill section 1, set `status: ready_to_implement`, `class: product` or `improvement`. Add a row to `docs/tasks/BACKLOG.md`.

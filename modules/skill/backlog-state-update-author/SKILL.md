@@ -36,6 +36,12 @@ triggers:
 blockers:
   - "BACKLOG.md is locked by another concurrent workflow — wait for lock"
   - "BACKLOG.md has divergent uncommitted changes — escalate to operator"
+
+# ── Untrusted-content discipline ─────────────────────────────────────
+untrusted_inputs:
+  wrap_in_marker: "untrusted_content"
+  injection_scan: required
+  on_marker_hit: surface_to_human
 ---
 
 # backlog-state-update-author
@@ -67,7 +73,7 @@ The frontmatter `status` is the record of truth; `docs/tasks/BACKLOG.md` is only
 ## 2. Output schema
 
 ```yaml
-# backlog-state-update@1
+# backlog-state-update@2
 task_id: task-<MODULE>-<NNN>
 generated_at: <ISO-8601>
 backlog_path: docs/tasks/BACKLOG.md

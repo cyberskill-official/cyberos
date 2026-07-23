@@ -62,6 +62,32 @@ if matches "$status_trigger"; then
   fi
 fi
 
+# TASK-IMP-136 §1.2: staged module sources rerun the awh module gate. .pre-commit-hooks/
+# awh-gate.sh scopes itself to the staged modules/<m>/ paths that carry a golden set and
+# FAILS CLOSED on a golden set with no baseline — that judgment lives THERE; this block only
+# decides whether to invoke it, via matches() on the same staged snapshot (never the
+# `git diff --cached --name-only | grep -Eq` pipeline — see the SIGPIPE note at the top).
+# Degrade posture mirrors the docs-build block above: when neither an `awh` binary nor the
+# vendored source harness (tools/awh/harness) is present, WARN and continue — a missing
+# optional harness must never block a commit (spec §3 edge case). When the harness IS
+# present, a RED eval blocks the commit: that is the gate.
+awh_trigger='^modules/'
+if matches "$awh_trigger"; then
+  awh_gate="$root/.pre-commit-hooks/awh-gate.sh"
+  if ! [ -f "$awh_gate" ]; then
+    # Tolerate absence: scratch fixtures that copy this hook (e.g. test_check_version_sync
+    # t07) do not stub every gate script. A missing optional gate must never block a commit.
+    echo "cyberos: WARN awh gate script missing at $awh_gate - awh module gate skipped" >&2
+  elif command -v awh >/dev/null 2>&1 || [ -d "$root/tools/awh/harness" ]; then
+    sh "$awh_gate" || {
+      echo "cyberos: awh module gate RED - fix the regression or recapture the baseline (see .pre-commit-hooks/awh-gate.sh)" >&2
+      exit 1
+    }
+  else
+    echo "cyberos: WARN awh harness not found (no 'awh' on PATH, no tools/awh/harness) - awh module gate skipped" >&2
+  fi
+fi
+
 # the old words creep back through vendored skill prose. See docs/tasks/RENAME-EPOCH.md.
 # this line once and left the target behind, which aborted the rename commit —
 # frozen as a literal by the (now-deleted) rename codemod; see docs/tasks/RENAME-EPOCH.md.

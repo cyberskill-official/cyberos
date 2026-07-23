@@ -18,6 +18,12 @@ skill_version: 1.0.0
 artefact: reconcile-report@1
 tool: docs-tools/task-reconcile.mjs
 hitl: required
+
+# ── Untrusted-content discipline ─────────────────────────────────────
+untrusted_inputs:
+  wrap_in_marker: "untrusted_content"
+  injection_scan: required
+  on_marker_hit: surface_to_human
 ---
 
 # task-reconcile - measure a task whose status claims work this workflow cannot vouch for

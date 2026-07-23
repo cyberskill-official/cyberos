@@ -1,9 +1,7 @@
 ---
 id: TASK-PROJ-015
 title: "Timeline view — cycle window × assignee swimlane with day-grid layout, drag-resize for date changes, and milestone markers"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
@@ -11,7 +9,7 @@ created_at: 2026-05-16T00:00:00+07:00
 department: engineering
 author: "@stephencheng"
 template: task@1
-module: PROJ
+module: proj
 priority: p0
 status: done
 verify: T

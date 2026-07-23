@@ -10,6 +10,14 @@ fail() { FAIL=$((FAIL+1)); echo "  FAIL $1: $2"; }
 echo "building scratch payload..."
 bash "$repo/tools/install/build.sh" "$TMP/payload" >/dev/null 2>&1 || { echo FATAL build; exit 1; }
 
+# This suite tests AUTODETECT + config semantics, not the doctor gate (TASK-MEMORY-303).
+# On a machine with the memory package pip-installed the doctor gate would run the REAL
+# doctor inside these /tmp fixtures (and the sandbox-path invariant would fail them), so
+# the import probe is shadowed with a raising stub: doctor SKIPs deterministically here.
+# test_doctor_gate.sh owns the doctor gate's states.
+mkdir -p "$TMP/py-noimport/cyberos"
+printf 'raise ImportError("doctor gate stubbed out for autodetect tests")\n' > "$TMP/py-noimport/cyberos/__init__.py"
+
 initrepo() { # initrepo <dir> ; markers already placed by caller
   ( cd "$1" && git init -q . 2>/dev/null; bash "$TMP/payload/install.sh" "$1" >/dev/null 2>&1 )
 }
@@ -47,7 +55,7 @@ t03_marker_gating() {                                                  # AC 3
   [ "$(genv "$TMP/php" LINT_CMD)" = "composer validate --strict" ] && [ -z "$(genv "$TMP/php" TEST_CMD)" ] \
     && ok t03 || fail t03 "lint=$(genv "$TMP/php" LINT_CMD) test=$(genv "$TMP/php" TEST_CMD)"
 }
-rungates() { ( cd "$1" && bash "$1/.cyberos/cuo/gates/run-gates.sh" 2>&1 ); }
+rungates() { ( cd "$1" && env CYBEROS_OFFLINE=1 PYTHONPATH="$TMP/py-noimport" bash "$1/.cyberos/cuo/gates/run-gates.sh" 2>&1 ); }
 t04_config_per_key_override() {                                        # AC 4
   d="$TMP/go"  # reuse go fixture (real gates.env with SRC_*)
   printf 'gates:\n  lint: "echo lint-from-config"\n' > "$d/.cyberos/config.yaml"
@@ -75,11 +83,14 @@ t06_threshold_env() {                                                  # AC 6
   out="$(rungates "$d")"
   grep -q "thr=90" <<<"$out" && ok t06 || fail t06 "default: $out"
 }
-t07_reduced_floor_message() {                                          # AC 7
+t07_reduced_floor_message() {          # AC 7, superseded by TASK-CUO-302: empty floor is RED exit 3
+  # The original AC asserted an advisory "floor only" line above a green exit. TASK-CUO-302
+  # made the all-empty floor fail closed; the message must still name the config.yaml fix.
+  # Full empty-floor coverage (exit codes, ack line, message) lives in test_fail_closed_gates.sh.
   mkdir -p "$TMP/empty" && initrepo "$TMP/empty"
-  out="$(rungates "$TMP/empty")"
-  grep -q "config.yaml" <<<"$out" && grep -q "floor only" <<<"$out" \
-    && ok t07 || fail t07 "$out"
+  out="$(rungates "$TMP/empty")"; rc=$?
+  [ "$rc" -eq 3 ] && grep -q "config.yaml" <<<"$out" && grep -q "EMPTY FLOOR" <<<"$out" \
+    && ok t07 || fail t07 "rc=$rc $out"
 }
 t08_malformed_config_loud() {                                          # AC 8
   d="$TMP/go"

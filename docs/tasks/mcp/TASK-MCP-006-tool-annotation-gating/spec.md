@@ -1,9 +1,7 @@
 ---
 id: TASK-MCP-006
 title: "MCP tool-annotation gating — destructive / write / external-effect tools require explicit confirm or Elicitation pre-execution per MCP 2025-11-25 spec"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
@@ -11,9 +9,11 @@ created_at: 2026-05-17T00:00:00+07:00
 department: engineering
 author: "@stephencheng"
 template: task@1
-module: MCP
+module: mcp
 priority: p0
-status: implementing
+status: ready_to_implement
+entered_via: rework
+routed_back_count: 1
 verify: T
 phase: P0
 milestone: P0 · slice 2

@@ -2,6 +2,45 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [Unreleased]
+
+Changed
+- platform entry-point identity (Branch A, thin spine everywhere): root `AGENTS.md` is the same thin workflow spine consumers get; Layer-1 memory protocol normative home is `modules/memory/cyberos/data/AGENTS.md` (installed `.cyberos/memory/AGENTS.md`); `CLAUDE.md` + pointer files name `.cyberos/AGENT-ENTRY.md` first; `install.sh` no longer keeps a platform AGENTS.md protocol exception. Decision recorded 2026-07-23. (TASK-IMP-138)
+
+Breaking
+- `run-gates.sh` now exits RED (code 3, distinct from 1 = a gate failed and 2 = missing/malformed config) when ZERO floor gate commands (build, lint, test, coverage) are configured — the old floor-only green verified nothing and lied to both downstream human gates. Consumer repos that relied on RED-on-empty's predecessor (vacuous green) must configure `gates.*` in `.cyberos/config.yaml`, re-run install (autodetect gained a monorepo fallback tier that seeds `bash scripts/tests/run_all.sh` or a Makefile `test:` target, provenance `fallback:*`), or — for intentionally gate-less repos — export `CYBEROS_ALLOW_EMPTY_GATES=1` (the literal `1`), which prints a distinct `GATES: EMPTY-ACKNOWLEDGED` line instead of green. (TASK-CUO-302)
+- `backlog-mutate.mjs flip` now REFUSES the two human-acceptance gate transitions (`reviewing -> ready_to_test`, `testing -> done`) with exit code 8 unless a recorded human verdict accompanies the flip (`--verdict-by <actor>` + `--verdict-evidence <existing non-empty file>`) — breaking for tooling that automates those two bare flips (STATUS-REFERENCE §1.4; TASK-CUO-303). On a gated flip with a resolvable BRAIN store, one `status_overridden` audit row is appended before the index moves; a present store that cannot take the row fails the flip (exit 9).
+- the payload's npm `engines` floor is raised from `node >=18` to `>=24 <25`, matching every `.nvmrc` (24.18.0) and the shipped mcp subpackage — the payload admitted a Node nobody tests. Node-18 consumers now get a clear npm engines error; adopt 24.18.0. (TASK-IMP-137)
+- the MCP server's `--http` mode now binds `127.0.0.1` by default instead of every interface — the served tools rewrite repos and run shell commands, and the LAN was reachable with zero auth. Agent UIs that connected from another host must run the server on that host or opt in deliberately via the new `--host <addr>` flag. (TASK-IMP-137)
+
+Changed
+- `cyberos-cuo drain --halt-on-repeat-rework` default 2 → 3 (`modules/cuo` api.py + cli.py, and the `cyberos workflow` wrapper in `modules/memory`), matching the ship-tasks.md §11b route-back ceiling: default drains now permit the third cycle before halting (TASK-CUO-304).
+- four NFR stub skills (`nfr-certification-author`, `nfr-evaluator`, `nfr-test-runner`, `nfr-regression-handler`) are delisted from the vendored payload (superseding TASK-CUO-209's vendoring decision); they remain as unvendored scaffolds under `modules/skill/`. Injection-discipline (`untrusted_inputs` + `references/UNTRUSTED_CONTENT.md`) backported to 20 repo-reading skills; pair-parity SCOPE expanded 11 → 25. (TASK-SKILL-202)
+- corpus hygiene (TASK-IMP-139): Branch clear on FM-112-visible `# UNREVIEWED` markers (167 files / 333 lines cleared; EVAL-001 individually confirmed); 251 `module:` values lowercased; FM-117 live in task-lint + RUBRIC.md; Gate-2 triage tally 11 route_back + 1 resume (TASK-APP-001) + 0 on_hold.
+
+Added
+- `memory-append.mjs` accepts the `status_overridden` kind with validated payload `{actor, task_id, prior_status, new_status, reason}` (TASK-CUO-303).
+- `modules/cuo/tests/test_doctrine_constants.py` pins the Python route-back-ceiling defaults to the number parsed from ship-tasks.md §11b (TASK-CUO-304).
+- optional bearer-token auth on the MCP HTTP transport: set `CYBEROS_MCP_TOKEN` non-empty and every `POST /mcp` must carry `Authorization: Bearer <token>` (401 with a JSON-RPC error body otherwise); `GET /healthz` stays open for probes; binding non-loopback without a token warns loudly; an empty token is treated as unset. (TASK-IMP-137)
+- `install.sh` vendors the GitHub Action channel to `.cyberos/ci/github-action/` — the README documented that path while install never created it; the docs now show a working `uses: ./.cyberos/ci/github-action` example. (TASK-IMP-137)
+- run-gates gains a presence-gated `doctor` gate: when `.cyberos/memory/store/` exists and the cyberos memory module is importable, `python3 -m cyberos doctor` joins the machine floor (doctor FAIL = gate RED); repos without memory see exactly one SKIP provenance line and no behavior change. (TASK-MEMORY-303 §1.6, implemented with the gates hardening batch)
+- root CI gate `caf-evals-gate.yml`: the CAF eval suite (`validate.py --all`, all 40 fixtures) + `caf_precommit_check.sh` now run on PRs touching `tools/caf/**` / `scripts/caf_*` and on a weekly cron — previously the only workflow naming them sat nested under `tools/caf/.github/` where GitHub Actions never reads, so the suite ran in no CI at all. The same workflow's second job runs the TASK-IMP-140 benchmark-gate checkers. (TASK-IMP-136)
+- `.githooks/pre-commit` now runs the awh module gate (`.pre-commit-hooks/awh-gate.sh`) for staged `modules/` sources via the hook's matches() idiom; a missing awh harness (or missing gate script) warns and never blocks, a RED gate blocks the commit. (TASK-IMP-136)
+- `docs/verification/benchmark-gates.md` — the sixteen benchmark gates (G1–G16) from the 2026-07-23 deep audit, published as re-checkable pass/fail criteria with severities, tiers, checked files, and one owning checker per gate; the status table is the report-only/enforcing coordination surface. (TASK-IMP-140)
+- `scripts/tests/test_benchmark_gates` suite — automated checkers for the six unowned gates: G3 status-enum cross-check, G4 README headline-count truth, G5 payload reference walker, G6 vendored-gate executability smoke, G13 stuck-WIP detector (report-only, never mutates), G16 reinstall idempotency + config survival. Registered via the run_all glob and the caf-evals-gate CI workflow. (TASK-IMP-140)
+- `docs/reference/risk-register.md` gains R-EXT-01..07 — the audit's risk classes (self-approval, vacuous green gates, config wipe, prompt injection, payload divergence, partial-install window, frozen BRAIN), each with detection, preventing gate, and recovery. (TASK-IMP-140)
+- BRAIN recording of the audit verdict + gates + wave decisions: prepared as a guarded script (`brain-record.sh`, refuses below READY) and executed after TASK-MEMORY-303's store repair per the spec's depends_on edge. (TASK-IMP-140)
+- memory contract hardening: schema copies unified (StoreAcl-bearing), `INTEROP.md` (≤6k chars), walker allowlist + invariants for `sessions/`+`dreams/`, `extra.session_id` stamping, doctor gate wiring. Live store layout repair remains operator-gated. (TASK-MEMORY-303)
+
+Removed
+- `.pre-commit-config.yaml` — dead mechanism: the repo's hook path is `core.hooksPath=.githooks` and no tool read the framework config; its every live claim (payload build, docs build, awh gate) is covered by `.githooks/pre-commit` directly. (TASK-IMP-136)
+- the 9 always-green stub workflows (single-echo placeholders, auto-generated 2026-05-17): 9 deleted, 0 implemented — an always-green check manufactures false confidence under a gate-shaped name. Per-file disposition + declaring tasks in `docs/tasks/improvement/TASK-IMP-136-ci-caf-evals-and-stub-truth/stub-disposition.md`; `test_ci_truth.sh` fails the moment the placeholder marker regrows. (TASK-IMP-136)
+
+Fixed
+- `bootstrap.sh` checksum verification now works on stock macOS: it falls back from GNU `sha256sum` to `shasum -a 256` — the fallback VERIFIES (a corrupted payload still aborts) — and aborts naming both tools when neither exists. (TASK-IMP-137)
+- the generated `gates.env` header stopped saying "edit freely": the file is machine-owned and regenerated on every install; durable overrides belong in `.cyberos/config.yaml` (`gates.*` keys). (TASK-CUO-302)
+- `install.sh` replaces each vendored machine subtree via stage-then-swap (staged `<name>.tmp.<nonce>` copy, then two rename-class moves), closing the window where a reader of `.cyberos/` saw a missing or partial tree for the whole copy duration; stray staging dirs from killed installs are cleaned at the next install start. The payload's `memory.schema.json` also now vendors from the canonical package-data copy (`modules/memory/cyberos/data/`). (TASK-IMP-137, TASK-MEMORY-303)
+
 ## [1.1.0] - 2026-07-22
 
 Breaking

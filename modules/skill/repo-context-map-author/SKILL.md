@@ -32,11 +32,17 @@ outputs:
 
 # ── Triggers / blockers ──────────────────────────────────────────────
 triggers:
-  - any task moving from `accepted` → `building`
+  - any task moving from `ready_to_implement` → `implementing`
   - workflow `chief-technology-officer/ship-tasks` step 1
 blockers:
   - "repo has uncommitted divergent state — must be resolved first"
   - "task's declared module does not exist on disk — escalate to chief-product-officer"
+
+# ── Untrusted-content discipline ─────────────────────────────────────
+untrusted_inputs:
+  wrap_in_marker: "untrusted_content"
+  injection_scan: required
+  on_marker_hit: surface_to_human
 ---
 
 # repo-context-map-author

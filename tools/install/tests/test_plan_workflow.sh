@@ -192,14 +192,15 @@ t02_scan_first_task_scope_unchanged() {
   local got; got="$(rcm_s2_block "$RCM" | _sha | cut -d' ' -f1)"
   [ "$got" = "$RCM_S2_GOLDEN" ] \
     || { fail t02_scan_first_task_scope_unchanged "repo-context-map §2 Output schema changed (sha $got != golden $RCM_S2_GOLDEN) - task-scope output is NOT byte-identical"; return; }
-  # (b.2) additive proof (meaningful while uncommitted): the working tree change vs HEAD has ZERO deletions.
-  local numstat del add
-  numstat="$(cd "$repo" && git diff --numstat HEAD -- modules/skill/repo-context-map-author/SKILL.md 2>/dev/null)"
-  if [ -n "$numstat" ]; then
-    add="$(printf '%s' "$numstat" | awk '{print $1}')"; del="$(printf '%s' "$numstat" | awk '{print $2}')"
-    [ "$del" = 0 ] || { fail t02_scan_first_task_scope_unchanged "repo-context-map edit deleted/modified $del line(s) - not purely additive"; return; }
-    [ "$add" -gt 0 ] || { fail t02_scan_first_task_scope_unchanged "the arm is vacuous: no scope mode was actually added"; return; }
-  fi
+  # (b.2) RETIRED 2026-07-23. This arm was the LANDING-WINDOW proof that the TASK-IMP-111
+  # edit itself was purely additive ("meaningful while uncommitted" - its own words): it
+  # required the working-tree diff of repo-context-map-author/SKILL.md vs HEAD to carry zero
+  # deletions. Once 111 landed the arm could only false-positive: ANY later in-place edit to
+  # the file (069d4dff already rewrapped it with 37 deletions; the 2026-07-23 polish batch
+  # fixed a retired-vocab trigger line) trips it while uncommitted, and the pre-commit hook
+  # runs this suite - so the arm blocked every commit touching the file for any reason.
+  # The DURABLE guards stand: (b.1) pins the §2 Output schema (the task-scope output
+  # contract) byte-for-byte via golden sha, and (b.3) pins the doctrine greps below.
   # (b.3) task is the DEFAULT so ship-tasks' no-scope call is unchanged; and a repo mode was added
   grep -Eq 'default: *task' "$RCM" || { fail t02_scan_first_task_scope_unchanged "repo-context-map does not default scope to task"; return; }
   grep -q 'byte-identical' "$RCM" || { fail t02_scan_first_task_scope_unchanged "repo-context-map does not assert task-scope byte-identity"; return; }

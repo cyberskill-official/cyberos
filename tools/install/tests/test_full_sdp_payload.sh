@@ -16,21 +16,24 @@ OUT="$(bash "$BUILD" "$TMP/payload" 2>&1)" || { echo "FATAL: build failed: $OUT"
 t01_stage_matrix_ships() {                                            # AC 1
   local all=1
   # one representative pair per SDP stage 1..14 (spot matrix per AC 1)
+  # SDP stage spot matrix. nfr-certification-* delisted by TASK-SKILL-202 (unvendored
+  # scaffolds only); plan stands in as the stage-4 representative (deepened same wave).
   local matrix="statement-of-work product-requirements-document software-requirements-specification
-nfr-certification task architectural-spike software-design-document implementation-plan
+plan task architectural-spike software-design-document implementation-plan
 code-review coverage-gate deployment-checklist release-notes runbook retrospective"
   for s in $matrix; do
-    case "$s" in nfr-certification) names="$s-author" ;; *) names="$s-author $s-audit" ;; esac
+    names="$s-author $s-audit"
     for n in $names; do for t in cuo plugin; do
       [ -f "$TMP/payload/$t/skills/$n/SKILL.md" ] || { fail t01 "missing $t/skills/$n"; all=0; }
     done; done
   done
-  n="$(ls "$TMP/payload/cuo/skills" | wc -l)"
+  n="$(ls "$TMP/payload/cuo/skills" | wc -l | tr -d ' ')"
   # Census of the vendored set, not a stage assertion (the stage matrix is the loop above).
   # Bump it whenever VENDORED_SKILLS grows, and say what grew it:
   #   53 -> 54: workflow-improver (TASK-IMP-110, the outer loop).
   #   54 -> 56: plan-author + plan-audit (TASK-IMP-111, the plan front door).
-  [ "$n" -eq 56 ] || { fail t01 "expected 56 vendored skills, got $n"; all=0; }
+  #   56 -> 52: four nfr-* stubs delisted (TASK-SKILL-202).
+  [ "$n" -eq 52 ] || { fail t01 "expected 52 vendored skills, got $n"; all=0; }
   [ "$all" -eq 1 ] && ok t01
 }
 t02_set_is_reviewable_data() {                                        # AC 2

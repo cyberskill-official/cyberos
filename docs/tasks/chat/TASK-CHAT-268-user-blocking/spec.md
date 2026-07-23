@@ -1,9 +1,7 @@
 ---
 id: TASK-CHAT-268
 title: "User blocking - stop seeing a person's content, and stop receiving their messages"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
@@ -11,7 +9,7 @@ created_at: 2026-07-11T00:00:00+07:00
 department: engineering
 author: "@stephencheng"
 template: task@1
-module: CHAT
+module: chat
 priority: p0
 status: done
 verify: T

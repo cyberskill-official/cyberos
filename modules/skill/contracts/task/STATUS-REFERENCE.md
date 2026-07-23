@@ -9,7 +9,7 @@
 
 ## 1. The full status enum
 
-A task carries exactly one status at any point in time. There are **10** valid values, all lowercase snake_case, drawn from a single linear lifecycle axis (no embedded modifiers, no freeform tags).
+A task carries exactly one status at any point in time. There are **12** valid values (8 lifecycle states in §1.1 + 4 off-ramps in §1.2), all lowercase snake_case, drawn from a single linear lifecycle axis (no embedded modifiers, no freeform tags).
 
 ### 1.1 The lifecycle (in order)
 
@@ -145,7 +145,7 @@ Now that `status` is a single linear axis, two pieces of metadata that used to b
 
 ## 4. Cross-references
 
-- `audit_rubric@2.0` — `modules/skill/task-audit/RUBRIC.md` (FM-104 enforces the frontmatter `status:` field against the 10-value enum)
+- `audit_rubric@2.0` — `modules/skill/task-audit/RUBRIC.md` (FM-104 enforces the frontmatter `status:` field against the 12-value enum)
 - `coverage_rubric@1.0` — `modules/skill/coverage-gate-audit/RUBRIC.md` (gates the `testing → done` transition; every §1 clause's named test must pass — the transition itself still requires the mandatory human acceptance verdict, §1.4)
 - `backlog-state-update-author` skill — `modules/skill/backlog-state-update-author/SKILL.md` (writes status cells from workflow outcomes)
 - `ship-tasks` workflow — `modules/cuo/chief-technology-officer/workflows/ship-tasks.md` (drives `ready_to_implement → done` and back-routes on failure)

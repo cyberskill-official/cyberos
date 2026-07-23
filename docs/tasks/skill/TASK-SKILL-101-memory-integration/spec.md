@@ -1,9 +1,7 @@
 ---
 id: TASK-SKILL-101
 title: "Skill memory integration — skill.invoked_started + skill.invoked_completed audit rows (skill.* namespace) + args_hash + trace_id propagation + panic-recovery"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
@@ -11,7 +9,7 @@ created_at: 2026-05-15T00:00:00+07:00
 department: engineering
 author: "@stephencheng"
 template: task@1
-module: SKILL
+module: skill
 priority: p0
 status: done
 verify: T

@@ -1,9 +1,7 @@
 ---
 id: TASK-APP-001
 title: Desktop CyberOS operations - build payload, install/update projects from the UI
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature
@@ -17,6 +15,8 @@ priority: p0
 depends_on: []
 routed_back_count: 0
 awh: N/A
+source_decisions:
+  - "2026-07-23 operator (IMP-139 Gate 2): resume unchanged — desktop app actively shipping (1.0.9/1.1.0); dossier recommended resume over mechanical route_back. Evidence: can ship all? + assets/reconcile/TASK-APP-001.md."
 ---
 
 # TASK-APP-001 - Desktop CyberOS operations UI

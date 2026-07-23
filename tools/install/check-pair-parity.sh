@@ -9,9 +9,16 @@ dir="${1:-}"
 AUTHOR_CLASSES=(PIPELINE.md INVARIANTS.md envelopes/input.json envelopes/output.json references/FAILURE_MODES.md acceptance/README.md)
 AUDIT_CLASSES=(RUBRIC.md AUDIT_LOOP.md REPORT_FORMAT.md envelopes/input.json envelopes/output.json acceptance/README.md)
 
-# Scope list: pairs held to full parity (TASK-CUO-209 AC 5 wording - grows as pairs are deepened).
-SCOPE=(task implementation-plan architecture-decision-record debugging-cycle architectural-spike
-       repo-context-map edge-case-matrix mock-contract-test observability-injection backlog-state-update coverage-gate)
+# Scope list: EVERY author/audit pair in the vendored payload, in build.sh VENDORED_SKILLS
+# lifecycle order (TASK-SKILL-202 §1 #4 inverted TASK-CUO-209's grows-as-deepened design:
+# all pairs are held to the floor, and a pair vendored without SCOPE membership is a defect —
+# scripts/tests/test_skill_stub_lint.sh asserts SCOPE == the vendored pair set).
+SCOPE=(statement-of-work product-requirements-document software-requirements-specification
+       plan task architectural-spike architecture-decision-record threat-model
+       software-design-document repo-context-map implementation-plan edge-case-matrix
+       mock-contract-test observability-injection backlog-state-update code-review
+       test-strategy coverage-gate debugging-cycle deployment-checklist release-notes
+       runbook retrospective postmortem decommissioning)
 
 rc=0
 for name in "${SCOPE[@]}"; do

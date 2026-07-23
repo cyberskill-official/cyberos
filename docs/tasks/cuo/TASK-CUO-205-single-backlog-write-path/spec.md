@@ -1,9 +1,7 @@
 ---
 id: TASK-CUO-205
 title: "Single backlog write path - /create-tasks delegates BACKLOG.md rows to backlog-state-update@2 (insert-row)"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: improvement

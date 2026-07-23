@@ -35,6 +35,12 @@ triggers:
 blockers:
   - "task's external dependency is undeclared — author must list the dependency before this skill runs"
   - "downstream service is being actively built in parallel — mock is wasted effort; pause this task"
+
+# ── Untrusted-content discipline ─────────────────────────────────────
+untrusted_inputs:
+  wrap_in_marker: "untrusted_content"
+  injection_scan: required
+  on_marker_hit: surface_to_human
 ---
 
 # mock-contract-test-author

@@ -1,0 +1,90 @@
+gate build:  (source: absent)
+SKIP  build     (no command configured)
+gate lint:  (source: absent)
+SKIP  lint      (no command configured)
+gate test: bash scripts/tests/run_all.sh (source: config)
+GATE  test      bash scripts/tests/run_all.sh
+  [32mok[0m   test_benchmark_gates.sh
+  [32mok[0m   test_check_doc_anchors.sh
+  [32mok[0m   test_ci_truth.sh
+  [32mok[0m   test_corpus_hygiene.sh
+  [32mok[0m   test_regen_backlog.sh
+  [32mok[0m   test_render_stamp.sh
+  [32mok[0m   test_skill_stub_lint.sh
+  [32mok[0m   test_task_layout.sh
+  [32mok[0m   test_template_schema.sh
+  [32mok[0m   test_trace_006.sh
+  [32mok[0m   test_render_roadmap.sh
+  [32mok[0m   test_render_status_hub.sh
+  [32mok[0m   test_render_task_pages.sh
+  [32mok[0m   test_templates_module.sh
+  [32mok[0m   test_batch_economics.sh
+  [32mok[0m   test_batch_select.sh
+  [32mok[0m   test_chain_coverage.sh
+  [32mok[0m   test_channels.sh
+  [32mok[0m   test_check_latest.sh
+  [32mok[0m   test_check_version_sync.sh
+  [32mok[0m   test_cli_cuo_verb.sh
+  [32mok[0m   test_cli_memory_verb.sh
+  [32mok[0m   test_cli_rename.sh
+  [32mok[0m   test_cone_audit.sh
+  [32mok[0m   test_coverage_scope.sh
+  [32mok[0m   test_cs_rename_e2e.sh
+  [32mok[0m   test_doctor_gate.sh
+  [32mok[0m   test_e2e_skeleton.sh
+  [32mok[0m   test_fail_closed_gates.sh
+  [32mok[0m   test_fm001_migrate.sh
+  [32mok[0m   test_full_sdp_payload.sh
+  [32mok[0m   test_gate_autodetect.sh
+  [32mok[0m   test_hitl_lock.sh
+  [32mok[0m   test_install_hygiene.sh
+  [32mok[0m   test_install_lock.sh
+  [32mok[0m   test_install_portability.sh
+  [32mok[0m   test_install_version_guard.sh
+  [32mok[0m   test_memory_append.sh
+  [32mok[0m   test_pair_parity.sh
+  [32mok[0m   test_plan_workflow.sh
+  [33mskip[0m test_release_assets.sh — needs GNU tar (BSD/macOS host); runs on ubuntu/CI
+  [32mok[0m   test_review_findings.sh
+  [32mok[0m   test_rubrics_vendored.sh
+  [32mok[0m   test_skill_log.sh
+  [32mok[0m   test_sync_host_plugins.sh
+  [32mok[0m   test_task_lint.sh
+  [32mok[0m   test_task_reconcile.sh
+  [32mok[0m   test_verify_goals.sh
+  [32mok[0m   test_workflow_helpers.sh
+  [32mok[0m   test_workflow_improver.sh
+----
+suites: pass=49 fail=0 skip=1
+PASS  test
+gate coverage:  (source: absent)
+SKIP  coverage  (no command configured)
+gate doctor: python3 -m cyberos doctor (source: autodetect:memory)
+GATE  doctor    python3 -m cyberos doctor
+cyberos doctor — /Users/stephencheng/Projects/CyberSkill/cyberos/.cyberos/memory/store
+
+  [PASS] layout-root-canonical              canonical layout  (0.3 ms)
+  [PASS] layout-no-sandbox-path             resolved=/Users/stephencheng/Projects/CyberSkill/cyberos/.cyberos/memory/store  (0.1 ms)
+  [PASS] layout-shard-uniformity            all memories sharded under <kind>/<hex>/<hex>/  (0.2 ms)
+  [PASS] layout-no-sync-conflict-siblings   no sync-FS conflict siblings  (2.0 ms)
+  [PASS] ledger-link-invariant              13 records, chain intact  (4.4 ms)
+  [PASS] ledger-hash-invariant              13 records, chain intact  (3.7 ms)
+  [PASS] ledger-crc-tail                    all 6129 bytes accounted for  (0.1 ms)
+  [PASS] ledger-mmr-cross-check             MMR consistent (13 leaves, root=37710c99104af610…)  (0.8 ms)
+  [PASS] ledger-append-only                 no sealed segments to check  (0.0 ms)
+  [PASS] manifest-validates-against-schema  manifest validates  (487.7 ms)
+  [PASS] export-determinism                 sha256=f3ee2f46dff48dd4…  (3.3 ms)
+  [PASS] crypto-crc-implementation          hardware-accelerated CRC-32C  (0.0 ms)
+  [PASS] durability-platform-correct        auto → F_BARRIERFSYNC on Darwin  (0.0 ms)
+  [PASS] dream-applied-row-has-provenance   no dream-applier rows on the chain  (4.2 ms)
+  [PASS] store-yaml-acl-valid               no STORE.yaml declared  (0.7 ms)
+  [PASS] session-lifecycle                  no sessions on the chain  (0.1 ms)
+
+  total: 16  pass: 16  warn: 0  error: 0
+  overall: OK (508 ms)
+PASS  doctor
+----------------------------------------------------------------------
+GATES: GREEN (machine gates only).
+HITL still required: a human records the review verdict and the final acceptance.
+The agent must NOT set the task to done itself.
+status: docs/status/ regenerated

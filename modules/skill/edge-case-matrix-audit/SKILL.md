@@ -25,6 +25,12 @@ inputs:
   - { name: matrix, format: edge-case-matrix@1, required: true }
 outputs:
   - { name: audit_report, format: edge-case-matrix-audit@1 }
+
+# ── Untrusted-content discipline ─────────────────────────────────────
+untrusted_inputs:
+  wrap_in_marker: "untrusted_content"
+  injection_scan: required
+  on_marker_hit: surface_to_human
 ---
 
 # edge-case-matrix-audit

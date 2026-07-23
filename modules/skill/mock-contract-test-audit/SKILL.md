@@ -25,6 +25,12 @@ inputs:
   - { name: mock_contract, format: mock-contract-test@1, required: true }
 outputs:
   - { name: audit_report, format: mock-contract-test-audit@1 }
+
+# ── Untrusted-content discipline ─────────────────────────────────────
+untrusted_inputs:
+  wrap_in_marker: "untrusted_content"
+  injection_scan: required
+  on_marker_hit: surface_to_human
 ---
 
 # mock-contract-test-audit

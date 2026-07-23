@@ -80,7 +80,7 @@ An agent MAY emit a progress note at a milestone. Emitting a note MUST NOT block
 
 ## §5  Relationship to the lifecycle
 
-This doctrine sharpens, and is consistent with, `chief-technology-officer/ship-tasks.md` §12 (no partial-ship-and-pause within a task) and its outer loop §11 (`while ! stop_signal`). §12's "pause between tasks" is NOT a mandatory stop: the outer loop advances to the next eligible task on its own, and the agent halts between tasks only when a §2 condition applies. The same rule governs the `architect-new-system` workflow and any net-new project build (including projects CyberOS drives through an external executor such as Codex).
+This doctrine sharpens, and is consistent with, `chief-technology-officer/workflows/ship-tasks.md` §12 (no partial-ship-and-pause within a task) and its outer loop §11 (`while ! stop_signal`). §12's "pause between tasks" is NOT a mandatory stop: the outer loop advances to the next eligible task on its own, and the agent halts between tasks only when a §2 condition applies. The same rule governs the `architect-new-system` workflow and any net-new project build (including projects CyberOS drives through an external executor such as Codex).
 
 ## Run-state manifests (TASK-CUO-206)
 

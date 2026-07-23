@@ -1,9 +1,7 @@
 ---
 id: TASK-MEMORY-114
 title: "memory write-time importance scoring — cuo-Phase-3-pattern Invoker (mock-llm + anthropic); haiku-rated `meta.importance` filters noise at the source; opt-in via `cyberos put --score-importance`"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: feature

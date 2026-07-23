@@ -24,7 +24,7 @@ So an `ignored` line answers "does this context have a database", never "is this
 
 ## Run the gates locally
 
-One-time: `git config core.hooksPath .githooks` and install the pre-commit hooks per `.pre-commit-config.yaml`.
+One-time: `git config core.hooksPath .githooks` (the hooks are repo-tracked; no framework install needed).
 
 | Gate | Local command |
 |---|---|

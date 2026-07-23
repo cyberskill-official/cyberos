@@ -3,7 +3,7 @@
 //
 // Checks the MECHANICAL rule families of modules/skill/task-audit/RUBRIC.md on
 // `template: task@1` specs, tagging every finding with its exact rule_id:
-//   FM-001..004, FM-101..114   frontmatter structure + per-field rules (§1-§2)
+//   FM-001..004, FM-101..117   frontmatter structure + per-field rules (§1-§2)
 //   SEC-001..009               required sections + hierarchy (§3)
 //   COND-001..004              conditionally-required sections (§4)
 //   TRACE-001..003             structural traceability halves (§9)
@@ -345,6 +345,32 @@ function checkFrontmatterFields(findings, file, entries, root) {
     }
   } else if (sev.present && type !== undefined) {
     finding(findings, "error", "FM-114", file, sev.line, "severity is forbidden unless type is bug (severity is how bad if left alone; priority is when we get to it)");
+  }
+  // FM-117 module: when present, the value must be lowercase AND equal the containing
+  // docs/tasks/<module>/ folder name (TASK-IMP-139; its audit's ISS-006 pinned BOTH
+  // halves — `module: auth` inside improvement/ is lowercase and still wrong). The two
+  // halves fire independently so each failure names itself. Outside the
+  // docs/tasks/<module>/<task>/spec.md shape, and under the historical `_`/`.` trees,
+  // only the case half is judged — there is no module folder to equal. Absent stays
+  // legal: the rule governs values (the regenerator groups by folder either way).
+  const modF = scalarOf(entries, "module");
+  if (modF.present && modF.isList) {
+    finding(findings, "error", "FM-117", file, modF.line, "module must be a string scalar");
+  } else if (modF.present && modF.v !== null && modF.v !== "") {
+    if (modF.v !== modF.v.toLowerCase()) {
+      finding(findings, "error", "FM-117", file, modF.line, `module must be lowercase (got '${modF.v}')`);
+    }
+    const parts = resolve(file).split(/[\\/]/);
+    let tasksIdx = -1;
+    for (let k = parts.length - 1; k >= 1; k--) {
+      if (parts[k - 1] === "docs" && parts[k] === "tasks") { tasksIdx = k; break; }
+    }
+    if (tasksIdx !== -1 && parts.length - tasksIdx >= 4) { // docs/tasks/<module>/<task…>/spec.md
+      const folder = parts[tasksIdx + 1];
+      if (!folder.startsWith("_") && !folder.startsWith(".") && modF.v.toLowerCase() !== folder) {
+        finding(findings, "error", "FM-117", file, modF.line, `module must equal the containing docs/tasks/<module>/ folder name '${folder}' (got '${modF.v}')`);
+      }
+    }
   }
   return { clientVisible: cvV === "true", risk: riskV, aiAuthorship: aiAuth };
 }
