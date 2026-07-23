@@ -6,7 +6,7 @@ type: bug
 module: memory
 author: "@stephencheng"
 department: engineering
-status: draft
+status: done
 priority: p1
 severity: sev2
 created_at: 2026-07-15T12:00:00+07:00

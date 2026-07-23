@@ -191,7 +191,29 @@ t07_changelog_five_changes() {                                         # AC 7 (#
   ok t07_changelog_five_changes
 }
 
+t08_rollout_sums_exact_match() {                                        # rollout SHA256SUMS filename pin
+  # The rollout chooser must match only a valid digest + exact payload name —
+  # alternate filenames / non-hex digests must not be selected for -c verify.
+  local dig matched
+  dig="$(printf '%064d' 0 | tr '0' 'a')"
+  matched="$(printf '%s\n' \
+    "$dig  cyberos-payload.tar.gz" \
+    "$dig *cyberos-payload.tar.gz" \
+    "$dig  evil-payload.tar.gz" \
+    "notadigest  cyberos-payload.tar.gz" \
+    "$dig  cyberos-payloadXtar.gz" \
+    | grep -cE '^[[:xdigit:]]{64}[[:space:]]+\*?cyberos-payload\.tar\.gz$' || true)"
+  [ "$matched" = "2" ] || { fail t08 "exact-match filter accepted $matched rows (want 2 good forms)"; return; }
+  # Pin the full production regex from rollout.sh (digest + optional '*' + exact
+  # filename + EOL) — a prefix-only check would miss a dropped `$` or filename pin.
+  grep -qF "grep -E '^[[:xdigit:]]{64}[[:space:]]+\\*?cyberos-payload\\.tar\\.gz$'" \
+    "$repo/tools/install/rollout.sh" \
+    || { fail t08 "rollout.sh lacks the full anchored exact-match checksum grep"; return; }
+  ok t08_rollout_sums_exact_match
+}
+
 echo "test_install_portability.sh (TASK-IMP-137)"
 t01_loopback_default; t02_bearer_token_enforced; t03_shasum_fallback_verifies
 t04_engines_unified; t05_ci_channel_real; t06_atomic_swap_no_reader_gap; t07_changelog_five_changes
+t08_rollout_sums_exact_match
 echo "----"; echo "pass=$PASS fail=$FAIL"; [ "$FAIL" -eq 0 ]

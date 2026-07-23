@@ -116,6 +116,8 @@ const SAFE_TOKEN = /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/;  // MemoryPath segment chars
 // install.sh's canonical v2 top-level scaffold (layout-root-canonical invariant).
 const STORE_DIRS = ["memories", "meta", "company", "module", "member", "client",
   "project", "persona", "conflicts", "exports", "index", "audit"];
+// PROPOSAL.md P2 / TASK-IMP-141: peaks.bin header must match modules/memory/.../mmr.py.
+const PEAKS_HEADER = Buffer.from("CYBEROS-MMR-PEAKS-v1\n", "utf8");
 
 class UsageError extends Error {}
 class Refusal extends Error { constructor(code, msg) { super(msg); this.code = code; } }
@@ -436,6 +438,22 @@ function cmdAppend(storeArg, kind, payloadArg, opts) {
     atomicWriteBytes(segPath, Buffer.concat([old, hdr, payloadBytes]));
     atomicWriteBytes(join(store, "HEAD"), leU64(seq));
 
+    // TASK-IMP-141: keep audit/mmr/peaks.bin in lockstep with the chain. The
+    // canonical Writer appends each payload as an MMR leaf; this Node appender
+    // historically advanced only the binlog, so doctor ledger-mmr-cross-check
+    // went RED after every gated HITL flip. Rebuild from every on-disk payload
+    // (O(n), fine at doc-driven scale) so a cold/stale peaks.bin cannot lag.
+    // Fail closed: never report success when peaks lag the durable chain.
+    try { syncMmrPeaks(store); }
+    catch (e) {
+      process.stderr.write(`memory-append: ERROR: MMR peaks sync failed after durable append: ${e.message}\n`);
+      return {
+        code: 1, seq: Number(seq), chain, prev_chain: lastChain, kind, path: memPath,
+        actor, store,
+        message: `append: MMR sync failed after seq ${seq} (${kind}): ${e.message}`,
+      };
+    }
+
     return {
       code: 0, seq: Number(seq), chain, prev_chain: lastChain, kind, path: memPath,
       actor, store,
@@ -447,6 +465,74 @@ function cmdAppend(storeArg, kind, payloadArg, opts) {
 }
 
 function leU64(v) { const b = Buffer.alloc(8); b.writeBigUInt64LE(v, 0); return b; }
+
+// ── MMR peaks (writer.py OnDiskMMR / mmr_root_for_binlog parity) ──────────────
+function hashLeaf(data) {
+  return createHash("sha256").update(Buffer.from([0x00])).update(data).digest();
+}
+function hashNode(left, right) {
+  return createHash("sha256").update(Buffer.from([0x01])).update(left).update(right).digest();
+}
+
+/** Peak-stack MMR append — same algorithm as modules/memory/cyberos/core/mmr.py. */
+function mmrAppendLeaf(peaks, data) {
+  let digest = hashLeaf(data);
+  let height = 0;
+  while (peaks.length && peaks[peaks.length - 1].height === height) {
+    const sibling = peaks.pop();
+    digest = hashNode(sibling.digest, digest);
+    height += 1;
+  }
+  peaks.push({ digest, height });
+}
+
+/** Iterate every framed payload in audit/*.binlog (sealed first, then current). */
+function* iterBinlogPayloads(store) {
+  const audit = join(store, "audit");
+  if (!existsSync(audit)) return;
+  const sealed = readdirSync(audit)
+    .filter((n) => n.endsWith(".binlog") && n !== "current.binlog" && !n.endsWith(".zst"))
+    .sort();
+  const names = [...sealed];
+  if (existsSync(join(audit, "current.binlog"))) names.push("current.binlog");
+  for (const name of names) {
+    const buf = readFileSync(join(audit, name));
+    let off = 0;
+    while (off + FRAME_HDR <= buf.length) {
+      const len = buf.readUInt32BE(off);
+      const payload = buf.subarray(off + FRAME_HDR, off + FRAME_HDR + len);
+      if (payload.length < len) break;
+      yield payload;
+      off += FRAME_HDR + len;
+    }
+  }
+}
+
+/**
+ * Rebuild audit/mmr/peaks.bin from every on-disk payload so leaf_count matches
+ * the chain. Idempotent; safe after every append (TASK-IMP-141).
+ */
+function syncMmrPeaks(store) {
+  const peaks = [];
+  let leafCount = 0;
+  for (const payload of iterBinlogPayloads(store)) {
+    mmrAppendLeaf(peaks, payload);
+    leafCount += 1;
+  }
+  if (leafCount === 0) return;
+  const body = Buffer.alloc(PEAKS_HEADER.length + 12 + peaks.length * (4 + 32));
+  let o = 0;
+  PEAKS_HEADER.copy(body, o); o += PEAKS_HEADER.length;
+  body.writeBigUInt64BE(BigInt(leafCount), o); o += 8;
+  body.writeUInt32BE(peaks.length, o); o += 4;
+  for (const p of peaks) {
+    body.writeUInt32BE(p.height, o); o += 4;
+    p.digest.copy(body, o); o += 32;
+  }
+  const mmrDir = join(store, "audit", "mmr");
+  mkdirSync(mmrDir, { recursive: true });
+  atomicWriteBytes(join(mmrDir, "peaks.bin"), body.subarray(0, o));
+}
 
 // ── verify ────────────────────────────────────────────────────────────────────
 function cmdVerify(storeArg) {

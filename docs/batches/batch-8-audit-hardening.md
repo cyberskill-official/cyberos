@@ -12,75 +12,55 @@ members:
   - TASK-IMP-139
   - TASK-IMP-140
 started: 2026-07-23T00:00:00Z
-ended: 2026-07-23T12:45:00+07:00
+ended: 2026-07-23T18:23:36Z
 route_backs: 0
 gate_reasks: 0
 tokens: unknown
 ---
-# batch 8 — audit hardening (final sequential pass)
+# batch 8 — audit hardening (CLOSED — member tasks done; Wave-0 residual open)
 
-Closes the gap between CyberOS doctrine and enforcement: fail-closed gates, mechanical HITL, skill quality floor, memory contract hardening (plan only for live-store repair), CI/CAF truth, install portability, corpus hygiene (mechanical half), and benchmark-gate checkers. Phase 1 polish (`d3652a5b`) and task authoring (`be89966b`) were already on the branch; this pass landed the six workers' uncommitted implementations, applied missing ledger items, verified, and advanced statuses to the HITL-safe cells below.
+Closes the gap between CyberOS doctrine and enforcement: fail-closed gates, mechanical HITL, skill quality floor, memory contract hardening, CI/CAF truth, install portability, corpus hygiene, benchmark gates G1–G16, and the thin-spine entry point. Merged to `main` as [PR #132](https://github.com/cyberskill-official/cyberos/pull/132) → commit `1d8da66e` (released as **1.2.0**). Branch-protection stub-check confirmation remains an open operator follow-up (decision #7).
 
-## Member status after this pass
+## Member status (final)
 
-| ID | Task | Status | Why this cell |
+| ID | Task | Status | Evidence |
 |---|---|---|---|
-| T1 | TASK-CUO-302 | **done** | Gate-2 all-accept 2026-07-23 (`batch-8a-gate2-acceptance.md`) |
-| T2 | TASK-CUO-303 | **done** | Gate-2 all-accept 2026-07-23 (`batch-8a-gate2-acceptance.md`) |
-| T3 | TASK-CUO-304 | **done** | Gate-2 all-accept 2026-07-23 (`batch-8a-gate2-acceptance.md`) |
-| T4 | TASK-IMP-136 | **reviewing** | CAF root CI + awh hook + stub sweep + `test_ci_truth` |
-| T5 | TASK-SKILL-202 | **reviewing** | NFR delist, untrusted backport, stub lint 7/7 |
-| T6 | TASK-MEMORY-303 | **ready_to_review** | Live store repaired 2026-07-23 on `ship/batch-8c-memory`; doctor READY |
-| T7 | TASK-IMP-137 | **reviewing** | MCP loopback+token, shasum, atomic vendor, engines |
-| T8 | TASK-IMP-138 | **ready_to_implement** | Branch A (thin spine) recorded 2026-07-23; implement in Batch D |
-| T9 | TASK-IMP-139 | **implementing** | Mechanical half done; **Gate-1/Gate-2 operator-gated** |
-| P3 | TASK-IMP-140 | **implementing** | Checkers + risk rows landed; **BRAIN record deferred on T6** |
+| T1 | TASK-CUO-302 | **done** | `batch-8a-gate2-acceptance.md` |
+| T2 | TASK-CUO-303 | **done** | `batch-8a-gate2-acceptance.md` |
+| T3 | TASK-CUO-304 | **done** | `batch-8a-gate2-acceptance.md` |
+| T4 | TASK-IMP-136 | **done** | `batch-8b-gate2-acceptance.md` |
+| T5 | TASK-SKILL-202 | **done** | `batch-8b-gate2-acceptance.md` |
+| T6 | TASK-MEMORY-303 | **done** | `batch-8c-gate2-acceptance.md` |
+| T7 | TASK-IMP-137 | **done** | `batch-8b-gate2-acceptance.md` |
+| T8 | TASK-IMP-138 | **done** | Batch F / Branch A thin spine |
+| T9 | TASK-IMP-139 | **done** | Batch D (bulk-clear + reconcile) |
+| P3 | TASK-IMP-140 | **done** | Batch E (checkers + BRAIN record) |
 
-Hard boundaries observed: no push/merge/deploy; HITL gates crossed only with recorded verdicts; Batch A (CUO-302/303/304) closed done on 2026-07-23; live BRAIN store repair deferred to MEMORY-303 operator item; no `# UNREVIEWED` marker cleared; TASK-IMP-138 decision pending Batch D; hooks never bypassed.
+## Sub-batch branches (merged via `ship/batch-8f-entrypoint`)
 
-## Verification (verbatim summary)
+| Branch | Scope |
+|--------|--------|
+| `ship/batch-8a-core-locks` | CUO-302/303/304 |
+| `ship/batch-8b-install-ci-skills` | IMP-136/137, SKILL-202 |
+| `ship/batch-8c-memory` | MEMORY-303 |
+| `ship/batch-8-integrate` | merge A+B+C |
+| `ship/batch-8d-corpus` | IMP-139 |
+| `ship/batch-8e-benchmarks` | IMP-140 |
+| `ship/batch-8f-entrypoint` | IMP-138 (PR tip) |
 
-| Check | Result |
-|---|---|
-| `cd modules/cuo && python3 -m pytest -q` | **274 passed**, 2 skipped |
-| `cd modules/memory && python3 -m pytest -q` | **522 passed**, 5 skipped (≥519) |
-| `bash scripts/tests/run_all.sh` | **suites: pass=49 fail=0 skip=1** |
-| `bash tools/install/build.sh` + pair-parity | **skills=52**, parity OK 25/25 |
-| `bash scripts/tests/test_benchmark_gates.sh` (no SKIP_HEAVY) | **7 passed, 0 failed** |
-| `bash scripts/tests/test_ci_truth.sh` | **6 passed, 0 failed** |
-| Scratch install fail-closed | exit **3**, `GATES: RED - EMPTY FLOOR` |
-| Scratch `CYBEROS_ALLOW_EMPTY_GATES=1` | exit **0**, `EMPTY-ACKNOWLEDGED` (no GREEN) |
-| Scratch doctor SKIP | `SKIP doctor (no memory store…)` then GREEN with seeded test |
-| Live `bash .cyberos/cuo/gates/run-gates.sh` (no reinstall) | **GATES: GREEN** |
-| `bash scripts/check_doc_anchors.sh` | exit **0** (historical WARNs only) |
+Remote tip `origin/ship/batch-8f-entrypoint` deleted 2026-07-23 post-merge (Wave 0 cleanup).
 
-Note: the live installed `run-gates.sh` was **not** refreshed (ordering: store repair before doctor wiring on this repo). Scratch payload install proves the new gate script.
+## Operator decision list (1–6 + 8 executed; #7 pending)
 
-## OPERATOR DECISION LIST
+1. MEMORY-303 live-store repair — **done**
+2. IMP-139 UNREVIEWED bulk-clear (+ EVAL-001 carve-out) — **done**
+3. IMP-139 Gate-2 reconcile (11 route_back + APP-001 resume) — **done**
+4. IMP-138 Branch A thin spine — **done**
+5. IMP-140 BRAIN recording — **done**
+6. CAF B17/B18 — **fixed on main** (`46ceb8b4`); historical ledger warning obsolete
+7. Branch protection vs deleted stubs — **pending** (owner: Stephen Cheng). API probe 2026-07-23 got HTTP 403 (`administration:read` missing). Stub workflow files are absent under `.github/workflows/`. Acceptance: confirm in GitHub Settings → Branches that no required check still names a deleted stub.
+8. `.cyberos/` refresh after store repair — **done** on batch-8c
 
-Record a dated verdict in chat (or the owning task's `source_decisions`) before any follow-up that mutates markers, statuses past HITL, or the live BRAIN.
+## Follow-ups (post-1.2.0)
 
-1. **TASK-MEMORY-303 — live-store layout repair** — **EXECUTED 2026-07-23** on `ship/batch-8c-memory` (`store-repair-evidence.md`). Doctor READY 16/16; MMR cold-start follow-on repaired by binlog replay.
-
-2. **TASK-IMP-139 Gate-1 — UNREVIEWED fork?**  
-   Brief: `…/TASK-IMP-139-…/assets/unreviewed-fork-brief.md` (167 non-draft files / 333 marker lines). Choose **clear** (recommended, with TASK-EVAL-001 carve-out) vs **re-audit wave**. Record verdict in the IMP-139 spec **before** any marker-touching commit.
-
-3. **TASK-IMP-139 Gate-2 — 12 stuck-`implementing` verdicts?**  
-   Dossiers under `…/assets/reconcile/`. Recommended tally: **11 route_back · 1 resume (APP-001) · 0 on_hold**. Apply only through the standard override path after recording per-task verdicts.
-
-4. **TASK-IMP-138 — entry-point identity fork** — **Branch A (thin spine)** recorded 2026-07-23 (`decision-branch-a.md`). Implementation deferred to Batch D; status stays `ready_to_implement`.
-
-5. **TASK-IMP-140 — BRAIN recording after T6 repair?**  
-   Run `docs/tasks/improvement/TASK-IMP-140-…/brain-record.sh` only when doctor reports READY. Checklist in the same folder. Final acceptance for IMP-140 includes the executed recording.
-
-6. **CAF B17/B18 regressions (surfaced by TASK-IMP-136)?**  
-   `validate.py --all` is RED at HEAD on two expected-fail fixtures that now pass (H9 demonstrating itself). Schedule a CAF self-improvement cycle; do not weaken fixtures. First `caf-evals-gate` CI run will be honestly RED until fixed.
-
-7. **Branch protection before merge?**  
-   Confirm the 9 deleted stub workflows are not required checks (`stub-disposition.md` operator steps).
-
-8. **Refresh this repo's `.cyberos/` after store repair** — **DONE 2026-07-23** on `ship/batch-8c-memory`. Doctor gate + fail-closed floor active; post-refresh `run-gates.sh` GREEN with doctor PASS.
-
-## Final-pass ledger notes
-
-Prior aborted final-pass agents had already applied most of A–H. This pass confirmed and closed remaining gaps: OBS-001 live-token wording softened; OBS-009 dossier dead `docs/manifest-format.md` citation fixed; G5 structural exclusions extended; suite fallout from Unreleased CHANGELOG / NFR delist / FM-117 fixtures repaired. No `# UNREVIEWED` markers touched; no store repair executed.
+See plan `post-1.2.0_next_steps` / batch-9 schedule: MMR sync for `memory-append`, TASK-MEMORY-302, ship-tasks evolution, MCP/OBS resume wave, v3.x/v4.0 drafts. Decision #7 (branch-protection stub-check confirm) stays open until the owner ticks the acceptance criterion above.
