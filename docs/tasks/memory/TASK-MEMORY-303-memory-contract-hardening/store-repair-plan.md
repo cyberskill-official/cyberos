@@ -1,10 +1,11 @@
 # TASK-MEMORY-303 — live-store layout repair plan (OPERATOR-GATED)
 
-Status: **plan only — DO NOT EXECUTE without a recorded operator approval
-at this task's HITL gate** (spec §1.5; AC 5). Authored 2026-07-23 by the
-T6 implementation worker. The mechanical procedure below is proven
-end-to-end against a full copy of the live store (see §6); the live store
-itself was only ever read.
+Status: **EXECUTED 2026-07-23** on the live store under operator approval
+("MEMORY-303 store repair: NOW"). Evidence:
+`store-repair-evidence.md`. Body hashes were re-measured at execution
+(plan table hashes were stale — volatility §1). Authored 2026-07-23 by the
+T6 implementation worker; the mechanical procedure was proven first against
+a /tmp copy (see §6).
 
 ## 1. What is broken, measured
 

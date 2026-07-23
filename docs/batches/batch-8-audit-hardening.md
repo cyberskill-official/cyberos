@@ -30,9 +30,9 @@ Closes the gap between CyberOS doctrine and enforcement: fail-closed gates, mech
 | T3 | TASK-CUO-304 | **done** | Gate-2 all-accept 2026-07-23 (`batch-8a-gate2-acceptance.md`) |
 | T4 | TASK-IMP-136 | **reviewing** | CAF root CI + awh hook + stub sweep + `test_ci_truth` |
 | T5 | TASK-SKILL-202 | **reviewing** | NFR delist, untrusted backport, stub lint 7/7 |
-| T6 | TASK-MEMORY-303 | **implementing** | Code landed; **live store repair is operator-gated** |
+| T6 | TASK-MEMORY-303 | **ready_to_review** | Live store repaired 2026-07-23 on `ship/batch-8c-memory`; doctor READY |
 | T7 | TASK-IMP-137 | **reviewing** | MCP loopback+token, shasum, atomic vendor, engines |
-| T8 | TASK-IMP-138 | **ready_to_implement** | Operator fork — not implemented this wave |
+| T8 | TASK-IMP-138 | **ready_to_implement** | Branch A (thin spine) recorded 2026-07-23; implement in Batch D |
 | T9 | TASK-IMP-139 | **implementing** | Mechanical half done; **Gate-1/Gate-2 operator-gated** |
 | P3 | TASK-IMP-140 | **implementing** | Checkers + risk rows landed; **BRAIN record deferred on T6** |
 
@@ -60,7 +60,7 @@ Note: the live installed `run-gates.sh` was **not** refreshed (ordering: store r
 
 Record a dated verdict in chat (or the owning task's `source_decisions`) before any follow-up that mutates markers, statuses past HITL, or the live BRAIN.
 
-1. **TASK-MEMORY-303 — live-store layout repair** — **APPROVED NOW** (operator 2026-07-23: "yes repair after A"; A closed). Execute `store-repair-plan.md` on `ship/batch-8c-memory`; re-measure hashes at execution.
+1. **TASK-MEMORY-303 — live-store layout repair** — **EXECUTED 2026-07-23** on `ship/batch-8c-memory` (`store-repair-evidence.md`). Doctor READY 16/16; MMR cold-start follow-on repaired by binlog replay.
 
 2. **TASK-IMP-139 Gate-1 — UNREVIEWED fork?**  
    Brief: `…/TASK-IMP-139-…/assets/unreviewed-fork-brief.md` (167 non-draft files / 333 marker lines). Choose **clear** (recommended, with TASK-EVAL-001 carve-out) vs **re-audit wave**. Record verdict in the IMP-139 spec **before** any marker-touching commit.
@@ -68,8 +68,7 @@ Record a dated verdict in chat (or the owning task's `source_decisions`) before 
 3. **TASK-IMP-139 Gate-2 — 12 stuck-`implementing` verdicts?**  
    Dossiers under `…/assets/reconcile/`. Recommended tally: **11 route_back · 1 resume (APP-001) · 0 on_hold**. Apply only through the standard override path after recording per-task verdicts.
 
-4. **TASK-IMP-138 — entry-point identity fork?**  
-   Thin AGENTS.md spine vs explicit dual-identity pointers. Structural; stays `ready_to_implement` until chosen.
+4. **TASK-IMP-138 — entry-point identity fork** — **Branch A (thin spine)** recorded 2026-07-23 (`decision-branch-a.md`). Implementation deferred to Batch D; status stays `ready_to_implement`.
 
 5. **TASK-IMP-140 — BRAIN recording after T6 repair?**  
    Run `docs/tasks/improvement/TASK-IMP-140-…/brain-record.sh` only when doctor reports READY. Checklist in the same folder. Final acceptance for IMP-140 includes the executed recording.
@@ -80,8 +79,7 @@ Record a dated verdict in chat (or the owning task's `source_decisions`) before 
 7. **Branch protection before merge?**  
    Confirm the 9 deleted stub workflows are not required checks (`stub-disposition.md` operator steps).
 
-8. **Refresh this repo's `.cyberos/` after store repair?**  
-   After (1): `CYBEROS_SYNC_HOST_PLUGINS=0 bash tools/install/build.sh && CYBEROS_OFFLINE=1 bash dist/cyberos/install.sh .` so the vendored gate script + doctor gate activate without freezing sibling runs.
+8. **Refresh this repo's `.cyberos/` after store repair** — **DONE 2026-07-23** on `ship/batch-8c-memory`. Doctor gate + fail-closed floor active; post-refresh `run-gates.sh` GREEN with doctor PASS.
 
 ## Final-pass ledger notes
 

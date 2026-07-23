@@ -45,6 +45,7 @@ source_pages:
 source_decisions:
   - "2026-07-23 operator: CyberOS Hardening Plan approved; Phase 2 T8 'Platform entry-point identity' authored as an improvement task and explicitly flagged as an operator-decision fork (plan file cyberos_hardening_plan_49404998; audit finding H6; plan approval boundary: 'T8 (entry-point restructure)... explicitly operator-decision forks')."
   - "2026-07-23 authoring: the fork is presented, not resolved - both branches are specified to implementable depth and the spec marks implementation BLOCKED until the operator picks one. The invariant ACs below hold under EITHER branch so the task's acceptance surface is stable across the decision."
+  - "2026-07-23 operator: chose Branch A (thin spine everywhere). Evidence: docs/tasks/improvement/TASK-IMP-138-entrypoint-identity-fork/decision-branch-a.md. Implementation deferred to Batch D; status stays ready_to_implement until that ship."
 ---
 
 # TASK-IMP-138: Platform entry-point identity - thin spine vs explicit dual identity
@@ -53,9 +54,9 @@ source_decisions:
 
 On every consumer repo, `install.sh` writes root `AGENTS.md` as a thin workflow spine (task law, gates, HITL, memory pointer). On this platform repo, root `AGENTS.md` is the full Layer-1 *memory protocol*, `CLAUDE.md` duplicates it wholesale, and every pointer file (`.cursorrules`, `GEMINI.md`, `.windsurfrules`, copilot instructions, cursor rules) tells agents that root `AGENTS.md` is the first half of "canonical instructions". An agent on the platform repo that loads only the most-native file gets memory law and can miss task/HITL law entirely - the inverse of the installer's own documented rationale ("a root protocol file... would bury the workflow every agent needs"). This task resolves the identity - but WHICH resolution is a structural operator decision, presented here as a fork and deliberately not resolved by the author.
 
-## Implementation status: BLOCKED - operator decision fork
+## Implementation status: DECISION RECORDED — Branch A (not yet implemented)
 
-**Implementation MUST NOT begin until the operator picks Branch A or Branch B below (recorded as a source_decisions entry on this spec plus the standard HITL record).** Everything else in this spec - the invariant clauses, the ACs, the test suite - is written to hold under either branch, so the audit gate passes now and the build queue simply cannot pick the task up until the fork is closed. This block is the task's own §9.1-rule-5 marker: BLOCKED on decision "platform entry-point identity, Branch A vs Branch B".
+**Operator chose Branch A (thin spine) on 2026-07-23** — see `decision-branch-a.md` and `source_decisions`. The fork block is closed; implementation remains deferred to Batch D on its own branch. Status stays `ready_to_implement` until that ship starts. Invariant clauses / ACs / test suite still hold under the chosen branch.
 
 **Branch A - thin spine everywhere.** The platform repo's root `AGENTS.md` becomes the same thin workflow spine consumers get; the memory protocol's normative source moves to `modules/memory/cyberos/data/AGENTS.md` (already the vendored source of truth for installs), with `.cyberos/memory/AGENTS.md` as its installed copy; `install.sh`'s `is_platform_repo()` exception (:515, :336) is deleted; `CLAUDE.md` becomes a pointer. Consequence: one identity everywhere, but a structural move of the protocol's normative home - links, tooling, and §0.4-adjacent wording that assume "root AGENTS.md is the protocol" must be swept (the walker cites `AGENTS.md §3`; memory docs reference sections by bare `AGENTS.md`).
 
