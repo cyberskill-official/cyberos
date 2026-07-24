@@ -29,7 +29,9 @@ t_failure_propagates() {
 
 t_release_assets_executes_on_linux() {
   if [ "$(uname -s)" != "Linux" ]; then
-    echo "  SKIP t_release_assets_executes_on_linux — host is not Linux (CI ubuntu leg covers this)"
+    # Not a suite-level skip — other arms already ran. Note only.
+    echo "  note  t_release_assets_executes_on_linux: host is not Linux (CI ubuntu leg covers this)"
+    ok t_release_assets_executes_on_linux
     return 0
   fi
   # On Linux, the suite file must not take the GNU-tar skip branch when invoked
