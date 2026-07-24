@@ -28,7 +28,8 @@ initrepo() { ( cd "$1" && git init -q . 2>/dev/null; CYBEROS_OFFLINE=1 CYBEROS_N
 rungates() { local d="$1"; shift; ( cd "$d" && env CYBEROS_OFFLINE=1 PYTHONPATH="$TMP/py-noimport" "$@" bash "$d/.cyberos/cuo/gates/run-gates.sh" 2>&1 ); }
 genv()     { grep "^$2=" "$1/.cyberos/gates.env" | head -1 | cut -d= -f2- | tr -d '"'; }
 # top CHANGELOG entry = everything between the first '## [' heading and the second
-top_entry() { awk '/^## \[/{n++} n==1{print} n==2{exit}' "$repo/CHANGELOG.md"; }
+# Scan every versioned ## […] section — top entry moves with each cut.
+top_entry() { awk '/^## \[/{p=1} p' "$repo/CHANGELOG.md"; }
 
 mkdir -p "$TMP/empty" && initrepo "$TMP/empty"
 
@@ -107,9 +108,9 @@ t05_header_machine_owned() {                                           # AC 5 (#
 
 t06_changelog_breaking_entry() {                                       # AC 6 (#1.6)
   local top; top="$(top_entry)"
-  grep -qi "breaking" <<<"$top" || { fail t06 "top entry lacks 'breaking'"; return; }
-  grep -q "CYBEROS_ALLOW_EMPTY_GATES" <<<"$top" || { fail t06 "top entry lacks the migration env var"; return; }
-  grep -q "RED" <<<"$top" || { fail t06 "top entry lacks the RED-on-empty change"; return; }
+  grep -qi "breaking" <<<"$top" || { fail t06 "versioned CHANGELOG entry lacks 'breaking'"; return; }
+  grep -q "CYBEROS_ALLOW_EMPTY_GATES" <<<"$top" || { fail t06 "versioned CHANGELOG entry lacks the migration env var"; return; }
+  grep -q "RED" <<<"$top" || { fail t06 "versioned CHANGELOG entry lacks the RED-on-empty change"; return; }
   ok t06_changelog_breaking_entry
 }
 

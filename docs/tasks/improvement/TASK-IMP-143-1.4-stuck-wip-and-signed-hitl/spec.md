@@ -1,6 +1,6 @@
 ---
 id: TASK-IMP-143
-title: "v3.x — stuck-WIP hub sentinel + signed HITL verdict artifacts"
+title: "1.4.x — stuck-WIP hub sentinel + signed HITL verdict artifacts"
 template: task@1
 type: improvement
 module: improvement
@@ -20,7 +20,9 @@ owner: Stephen Cheng (CTO)
 created: 2026-07-23
 ---
 
-# TASK-IMP-143: v3.x stuck-WIP hub + signed HITL (draft)
+# TASK-IMP-143: 1.4.x stuck-WIP hub + signed HITL (draft)
+
+CyberOS stays on the **1.x** line. This milestone is the next minor wave after 1.3.0 (formerly mislabeled "v3.x" in early roadmap notes).
 
 ## Scope (draft — author full ACs before promoting)
 
@@ -29,5 +31,5 @@ created: 2026-07-23
 
 ## Non-goals
 
-- Transition-locked state engine (TASK-IMP-144 / v4.0).
+- Transition-locked state engine (TASK-IMP-144 / 1.5.0).
 - Changing the two HITL gate transitions themselves.

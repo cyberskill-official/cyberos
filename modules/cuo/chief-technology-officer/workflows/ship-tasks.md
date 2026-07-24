@@ -135,7 +135,7 @@ Human acceptance is mandatory (STATUS-REFERENCE.md §1.4, EXECUTION-DISCIPLINE.m
 
 **Sub-batches:** a parent ledger (e.g. `batch/8-audit-hardening.md`) MAY list many members while ship branches use nested ledgers (`ship/batch-8a-…`) with their own `batch:` / `members:` / `ended:`. Parent `ended` waits until every sub-batch gate-2 is recorded.
 
-Accepted residual (TASK-CUO-303 edge case): an agent that edits `status:` in spec.md frontmatter directly and regenerates the backlog bypasses the flip gate entirely — the mechanical lock closes the documented tool path (the only path compliant workflows use); the transition-locked state engine (v4.0 roadmap) closes the rest.
+Accepted residual (TASK-CUO-303 edge case): an agent that edits `status:` in spec.md frontmatter directly and regenerates the backlog bypasses the flip gate entirely — the mechanical lock closes the documented tool path (the only path compliant workflows use); the transition-locked state engine (1.5.0 roadmap on the 1.x line) closes the rest.
 
 Between the gates the agent runs continuously and self-resolves everything it can verify (compile, lint, a test it broke, a red module gate on its own change); it does not pause for self-resolvable work. The only mandatory stops inside a task are these two verdicts.
 

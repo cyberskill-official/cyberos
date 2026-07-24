@@ -14,7 +14,8 @@ fail() { FAIL=$((FAIL+1)); echo "  FAIL $1: $2"; }
 echo "building scratch payload..."
 bash "$repo/tools/install/build.sh" "$TMP/payload" >/dev/null 2>&1 || { echo FATAL build; exit 1; }
 MCP="$TMP/payload/mcp/cyberos-mcp.mjs"
-top_entry() { awk '/^## \[/{n++} n==1{print} n==2{exit}' "$repo/CHANGELOG.md"; }
+# Scan every versioned ## […] section — top entry moves with each cut.
+top_entry() { awk '/^## \[/{p=1} p' "$repo/CHANGELOG.md"; }
 
 # a non-loopback address of this host, when one exists (harness-conditional per AC 1)
 second_ip() {

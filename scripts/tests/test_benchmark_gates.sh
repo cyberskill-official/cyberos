@@ -526,10 +526,11 @@ t06_brain_record_fixture() {
 
 t07_changelog_four_deliverables() {
   local all=1 top want
-  top="$(awk '/^## \[/{n++} n==1{print} n==2{exit}' "$repo/CHANGELOG.md")"
+  # Scan every versioned ## […] section — top entry moves with each cut (same class as CUO doctrine pin).
+  top="$(awk '/^## \[/{p=1} p' "$repo/CHANGELOG.md")"
   for want in 'benchmark-gates.md' 'test_benchmark_gates' 'R-EXT' 'BRAIN'; do
     grep -qF "$want" <<<"$top" \
-      || { fail t07_changelog_four_deliverables "CHANGELOG.md top entry lacks '$want' — paste the prepared entry from docs/tasks/improvement/TASK-IMP-140-benchmark-gates-drift-protection/implementation-evidence.md"; all=0; }
+      || { fail t07_changelog_four_deliverables "CHANGELOG.md versioned entry lacks '$want' — paste the prepared entry from docs/tasks/improvement/TASK-IMP-140-benchmark-gates-drift-protection/implementation-evidence.md"; all=0; }
   done
   [ "$all" -eq 1 ] && ok t07_changelog_four_deliverables
 }

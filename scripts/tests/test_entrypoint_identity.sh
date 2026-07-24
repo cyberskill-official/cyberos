@@ -92,9 +92,10 @@ t05_branch_consistency() {
 t06_registered_and_recorded() {
   [ -f "$here/test_entrypoint_identity.sh" ] || { fail t06 "suite missing"; return; }
   local top
-  top="$(awk '/^## \[/{n++} n==1{print} n==2{exit}' "$repo/CHANGELOG.md")"
+  # Scan every versioned ## […] section — top entry moves with each cut (same class as CUO doctrine pin).
+  top="$(awk '/^## \[/{p=1} p' "$repo/CHANGELOG.md")"
   echo "$top" | grep -qiE 'Branch A|IMP-138|entrypoint' \
-    && ok t06 || fail t06 "CHANGELOG top entry does not name Branch A / IMP-138"
+    && ok t06 || fail t06 "CHANGELOG versioned entry does not name Branch A / IMP-138"
 }
 
 t01_decision_recorded

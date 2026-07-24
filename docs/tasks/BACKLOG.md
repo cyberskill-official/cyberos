@@ -389,8 +389,8 @@ Totals: 341 draft, 15 ready_to_implement, 1 implementing, 216 done, 2 on_hold, 2
 - [done] TASK-IMP-140-benchmark-gates-drift-protection - Benchmark gates G1-G16 - checkers, risk register, BRAIN recording (improvement)
 - [done] TASK-IMP-141-mmr-sync-memory-append - MMR sync for memory-append — doctor stays READY after gated flips (improvement)
 - [done] TASK-IMP-142-mcp-obs-resume-schedule - Schedule MCP/OBS resume wave after IMP-139 triage (improvement)
-- [draft] TASK-IMP-143-v3-stuck-wip-and-signed-hitl - v3.x — stuck-WIP hub sentinel + signed HITL verdict artifacts (improvement)
-- [draft] TASK-IMP-144-v4-transition-locked-state-engine - v4.0 — transition-locked state engine (close frontmatter bypass) (improvement)
+- [draft] TASK-IMP-143-1.4-stuck-wip-and-signed-hitl - 1.4.x — stuck-WIP hub sentinel + signed HITL verdict artifacts (improvement)
+- [draft] TASK-IMP-144-1.5-transition-locked-state-engine - 1.5.0 — transition-locked state engine (close frontmatter bypass) (improvement)
 
 ## inv  (10 draft, 1 ready_to_implement)
 

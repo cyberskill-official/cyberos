@@ -232,22 +232,44 @@ def test_missing_doctrine_pattern_fails_loud() -> None:
         doctrine_ceiling(reworded)
 
 
-# ── AC 5 (spec 1.5): the CHANGELOG top entry records the default change ──────
+# ── AC 5 (spec 1.5): CHANGELOG records the default change ─────────────────────
 
 def test_changelog_entry_present() -> None:
-    text = CHANGELOG.read_text(encoding="utf-8")
-    first = re.search(r"^## .*$", text, flags=re.MULTILINE)
-    assert first, "CHANGELOG.md carries no '## ' release section at all"
-    rest = text[first.end():]
-    nxt = re.search(r"^## ", rest, flags=re.MULTILINE)
-    top_entry = text[first.start():first.end() + (nxt.start() if nxt else len(rest))]
+    """CUO-304's 2→3 default must remain named in CHANGELOG after later cuts.
 
-    assert "halt-on-repeat-rework" in top_entry, (
-        "CHANGELOG.md's top entry must mention `halt-on-repeat-rework` — TASK-CUO-304 "
-        "1.5 requires an entry noting the default change (2 -> 3: default drains now "
-        f"permit the third cycle before halting). Top entry begins: {top_entry[:120]!r}"
+    Earlier this pinned the *top* ``## […]`` section only. That broke the moment
+    1.3.0 / 1.4.0 became top while the CUO-304 bullet stayed under ``## [1.2.0]``
+    — the same class of false red as IMP-140 t07 / Unreleased. Scan every
+    versioned section for the markers instead (same discipline as the CLI
+    rename suite).
+    """
+    text = CHANGELOG.read_text(encoding="utf-8")
+    assert re.search(r"^## ", text, flags=re.MULTILINE), (
+        "CHANGELOG.md carries no '## ' release section at all"
     )
-    assert re.search(r"2\s*(?:->|→|to)\s*3", top_entry), (
-        "CHANGELOG.md's top entry must state the 2-to-3 default change for "
-        f"halt-on-repeat-rework (TASK-CUO-304 1.5). Top entry begins: {top_entry[:120]!r}"
+
+    # Walk versioned entries until we find the CUO-304 default-change bullet.
+    entry = None
+    buf = ""
+    for line in text.splitlines(keepends=True):
+        if re.match(r"^## \[", line):
+            if (
+                "halt-on-repeat-rework" in buf
+                and re.search(r"2\s*(?:->|→|to)\s*3", buf)
+            ):
+                entry = buf
+                break
+            buf = line
+            continue
+        buf += line
+    if entry is None and (
+        "halt-on-repeat-rework" in buf
+        and re.search(r"2\s*(?:->|→|to)\s*3", buf)
+    ):
+        entry = buf
+
+    assert entry is not None, (
+        "CHANGELOG.md has no versioned entry mentioning `halt-on-repeat-rework` "
+        "with the 2→3 default change (TASK-CUO-304 1.5). The bullet shipped under "
+        "## [1.2.0]; later cuts must not erase it."
     )

@@ -64,7 +64,7 @@ Verified first-hand 2026-07-23:
 
 1. **Compliance fields unconfirmed at scale (audit H2).** The migration marked every auto-set `ai_authorship` / `eu_ai_act_risk_class` with `# UNREVIEWED ... a human MUST confirm before this task leaves draft`. 170 files left draft anyway - 151 all the way to `done`. FM-112 exists precisely to stop this (error, marker past draft) but only fires when the linter runs against a file, which happens at authoring/audit time, not retroactively over the corpus. The EU-AI-Act-adjacent fields on shipped work are, today, machine guesses wearing confirmed clothes.
 2. **`module:` field ungoverned.** 251 files say `module: AUTH`-style uppercase inside lowercase folders. Nothing breaks loudly (the regenerator groups by folder), but the field feeds the status hub and any future module-scoped tooling, and task-lint has NO rule for it - the only frontmatter field of its kind with zero validation.
-3. **Stale WIP, invisible.** 11 of 12 `implementing` tasks are ~10 weeks old with zero forward mid-states occupied corpus-wide; either work stalled silently or statuses were never advanced. Both are lifecycle-integrity failures, and nothing surfaces them (the stuck-WIP sentinel is a v3.x roadmap item; this triage is the manual pass that clears today's backlog of doubt).
+3. **Stale WIP, invisible.** 11 of 12 `implementing` tasks are ~10 weeks old with zero forward mid-states occupied corpus-wide; either work stalled silently or statuses were never advanced. Both are lifecycle-integrity failures, and nothing surfaces them (the stuck-WIP sentinel is a 1.4.x roadmap item; this triage is the manual pass that clears today's backlog of doubt).
 
 ## Proposed Solution
 
@@ -76,7 +76,7 @@ Verified first-hand 2026-07-23:
 - **Silently drop the markers as lint noise.** Rejected: the marker IS the record that a human never confirmed the fields; deleting it without a verdict manufactures confirmation - the exact laundering FM-112 exists to prevent.
 - **Make the module-case rule warning-severity.** Rejected: after the normalization commit the corpus is 100% conformant, so error-severity costs nothing and prevents re-drift; a warning would be the always-ignorable kind.
 - **Batch verdict for the 12 stuck tasks ("route all back").** Rejected: the set is heterogeneous - TASK-APP-001 is nine days old and plausibly live; the OBS/MCP eleven may have real partial implementations the evidence ladder will surface. Twelve two-minute decisions beat one wrong batch decision.
-- **Build the stuck-WIP sentinel (auto-detection) in this task.** Rejected: roadmap v3.x per the audit; this task clears the existing debt manually and leaves automated detection to its own spec (G13 in TASK-IMP-140 defines the gate; the hub work is future).
+- **Build the stuck-WIP sentinel (auto-detection) in this task.** Rejected: roadmap 1.4.x per the audit; this task clears the existing debt manually and leaves automated detection to its own spec (G13 in TASK-IMP-140 defines the gate; the hub work is future).
 
 ## Success Metrics
 
@@ -90,7 +90,7 @@ In scope: the marker enumeration + fork execution, the 251-file normalization, t
 ### Out of scope / Non-Goals
 
 - Re-auditing the CONTENT of any done task beyond the two compliance fields (Branch re-audit confirms fields, not whole specs).
-- The automated stuck-WIP sentinel on the status hub (v3.x; G13's definition lives in TASK-IMP-140).
+- The automated stuck-WIP sentinel on the status hub (1.4.x; G13's definition lives in TASK-IMP-140).
 - Changing FM-112's semantics or the draft-gate rules (TASK-IMP-108 owns status semantics).
 - The `memory.status_overridden` emission mechanics - TASK-CUO-303; Gate-2 verdicts use whatever recorded-override path exists when this task runs.
 
