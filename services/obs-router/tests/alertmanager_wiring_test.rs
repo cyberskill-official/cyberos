@@ -15,8 +15,8 @@ fn repo_root() -> PathBuf {
 #[test]
 fn alertmanager_config_wires_obs_router_alert_webhook() {
     let path = repo_root().join("deploy/obs/alertmanager-config.yaml");
-    let body = fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("missing {}: {e}", path.display()));
+    let body =
+        fs::read_to_string(&path).unwrap_or_else(|e| panic!("missing {}: {e}", path.display()));
     assert!(
         body.contains("cyberos-obs-router"),
         "receiver name must be cyberos-obs-router"
