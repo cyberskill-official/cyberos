@@ -12,8 +12,7 @@ use tauri::{
 
 pub fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let open_item = MenuItem::with_id(app, "open", "Open memory", true, None::<&str>)?;
-    let force_sync_item =
-        MenuItem::with_id(app, "force_sync", "Force Sync Now", true, None::<&str>)?;
+    let force_sync_item = MenuItem::with_id(app, "force_sync", "Force Sync Now", true, None::<&str>)?;
     let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
     let menu = Menu::with_items(app, &[&open_item, &force_sync_item, &quit_item])?;

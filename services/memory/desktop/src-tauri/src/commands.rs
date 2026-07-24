@@ -53,10 +53,7 @@ pub async fn search_memory(query: String, limit: u32) -> Result<Vec<SearchHit>, 
 
     let resp = client
         .post(MEMORY_SEARCH_URL)
-        .json(&SearchRequest {
-            query: &query,
-            limit,
-        })
+        .json(&SearchRequest { query: &query, limit })
         .send()
         .await
         .map_err(|e| format!("memory search request failed: {e}"))?;
@@ -112,9 +109,7 @@ pub async fn write_quick_note(text: String, tags: Vec<String>) -> Result<String,
 fn yaml_escape(s: &str) -> String {
     // Minimal YAML-flow escaping for tag values. Full escaping should land in a
     // helper crate; first-slice keeps it simple.
-    if s.chars()
-        .any(|c| matches!(c, ':' | '#' | '\'' | '"' | '\n'))
-    {
+    if s.chars().any(|c| matches!(c, ':' | '#' | '\'' | '"' | '\n')) {
         format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
     } else {
         s.to_string()
@@ -142,24 +137,14 @@ pub async fn get_sync_state() -> Result<SyncState, String> {
         Err(e) => return Err(format!("read last-status.json: {e}")),
     };
 
-    let v: serde_json::Value =
-        serde_json::from_slice(&raw).map_err(|e| format!("parse last-status.json: {e}"))?;
+    let v: serde_json::Value = serde_json::from_slice(&raw)
+        .map_err(|e| format!("parse last-status.json: {e}"))?;
 
     Ok(SyncState {
-        chain_head: v
-            .get("chain_head")
-            .and_then(|x| x.as_str())
-            .map(str::to_string),
-        last_sync_at: v
-            .get("last_sync_at")
-            .and_then(|x| x.as_str())
-            .map(str::to_string),
+        chain_head: v.get("chain_head").and_then(|x| x.as_str()).map(str::to_string),
+        last_sync_at: v.get("last_sync_at").and_then(|x| x.as_str()).map(str::to_string),
         last_sync_duration_ms: v.get("last_sync_duration_ms").and_then(|x| x.as_u64()),
-        cloud_state: v
-            .get("cloud_state")
-            .and_then(|x| x.as_str())
-            .unwrap_or("unknown")
-            .into(),
+        cloud_state: v.get("cloud_state").and_then(|x| x.as_str()).unwrap_or("unknown").into(),
     })
 }
 
