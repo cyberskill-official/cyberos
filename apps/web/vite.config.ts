@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { foglampAiPlugin } from "./vite-plugin-foglamp-ai";
 
 // CyberOS web console.
 //
@@ -8,10 +9,13 @@ import react from "@vitejs/plugin-react";
 // Caddy). API calls are ORIGIN-relative (/v1/auth, /v1/chat), so they resolve to the same Caddy origin.
 //
 // Dev: `npm run dev` serves http://localhost:5173/ and proxies the API to the local services
-// (auth :7700, chat :7720), including the chat websocket upgrade.
+// (auth :7700, chat :7720), including the chat websocket upgrade. Chat AI routes are intercepted by
+// foglampAiPlugin and run through the Vercel AI SDK + Foglamp (HUD + traces) before the proxy.
 export default defineConfig({
   base: "/",
-  plugins: [react()],
+  // Monorepo root holds FOGLAMP_API_KEY / AI_GATEWAY_URL from `foglamp login`.
+  envDir: "../..",
+  plugins: [react(), foglampAiPlugin()],
   server: {
     port: 5173,
     proxy: {

@@ -17,5 +17,5 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src", "server", "vite.config.ts", "vite-plugin-foglamp-ai.ts"]
 }

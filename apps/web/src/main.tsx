@@ -1,5 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { FoglampHUD } from "foglamp/hud";
 import { App } from "./App";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { AuthProvider } from "./lib/auth";
@@ -14,6 +15,8 @@ createRoot(el).render(
       <App />
       {/* Cross-surface "new build available" prompt; mounted at the root so it shows on any page. */}
       <UpdateBanner />
+      {/* Dev-only overlay: inert unless the Vite Foglamp broker is running. */}
+      <FoglampHUD />
     </AuthProvider>
   </React.StrictMode>,
 );
