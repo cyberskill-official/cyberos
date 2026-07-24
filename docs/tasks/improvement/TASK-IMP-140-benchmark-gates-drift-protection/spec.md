@@ -77,7 +77,7 @@ In scope: benchmark-gates.md, the six-checker suite, the risk-register extension
 ### Out of scope / Non-Goals
 
 - The checkers owned by sibling tasks (mapped in the doc; see source_decisions) and any change to those tasks' scopes.
-- The status-hub UI for G13 (the detector here is a report-only test output; the hub sentinel is the v3.x roadmap item).
+- The status-hub UI for G13 (the detector here is a report-only test output; the hub sentinel is the 1.4.x roadmap item).
 - Fixing any defect a checker finds - checkers measure; the owning tasks fix. A checker that fails on an unshipped fix runs report-only per the guardrail metric.
 - Editing the fifteen existing RSK rows or re-scoring them.
 

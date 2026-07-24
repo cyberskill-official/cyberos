@@ -67,7 +67,7 @@ Gate the two human-acceptance transitions in `cmdFlip` behind two new required f
 ## Alternatives Considered
 
 - **Consume `HITL_REQUIRED` (make the lock conditional on it).** Rejected: the lock is doctrine, not configuration - EXECUTION-DISCIPLINE §2a governs platform-wide and offers no opt-out; a flag that looks like it can disable the lock by editing a gitignored file would replace a dead lie with a live one.
-- **Verify the verdict actor is human (signature, identity attestation).** Rejected for this task: signed/attributed verdict artifacts are the v3.x roadmap item the audit already names. This task makes the verdict *recorded and refusable*, not cryptographically attributable - the honest increment that closes the self-approval path for compliant tooling.
+- **Verify the verdict actor is human (signature, identity attestation).** Rejected for this task: signed/attributed verdict artifacts are the 1.4.x roadmap item the audit already names. This task makes the verdict *recorded and refusable*, not cryptographically attributable - the honest increment that closes the self-approval path for compliant tooling.
 - **Lock the transitions in the spec frontmatter instead (a pre-commit hook rejecting status edits).** Rejected: frontmatter is written by humans and agents alike in editors; a commit-time reject fires after the work is staged, refuses legitimate operator overrides, and cannot capture WHO decided. The flip executor is where authority is asserted (TASK-CUO-205 made it the single write path); guarding there is both sufficient for tooling and non-intrusive for operators.
 - **Auto-generate the evidence file when absent.** Rejected: an auto-generated verdict is a self-approval with paperwork; the entire point is that the file preexists the flip because a human produced it.
 
@@ -82,8 +82,8 @@ In scope: `cmdFlip` verdict gate + exit code 8, `memory-append.mjs` kind extensi
 
 ### Out of scope / Non-Goals
 
-- Cryptographic signing or identity verification of verdict actors (v3.x roadmap; this task records, it does not attest).
-- Locking direct frontmatter edits or the `regen` path - an agent editing `spec.md` by hand bypasses any tool gate; that residual is explicitly accepted and documented in ship-tasks.md, with the transition-locked state engine (v4.0 roadmap) as the full closure. The G2 benchmark checker (TASK-IMP-140) asserts the tool-path refusal this task ships.
+- Cryptographic signing or identity verification of verdict actors (1.4.x roadmap; this task records, it does not attest).
+- Locking direct frontmatter edits or the `regen` path - an agent editing `spec.md` by hand bypasses any tool gate; that residual is explicitly accepted and documented in ship-tasks.md, with the transition-locked state engine (1.5.0 roadmap on the 1.x line) as the full closure. The G2 benchmark checker (TASK-IMP-140) asserts the tool-path refusal this task ships.
 - The route-back ceiling constant (TASK-CUO-304) and gate-floor behavior (TASK-CUO-302) - separate tasks in this batch.
 - Retroactively generating `status_overridden` rows for historical transitions.
 
@@ -119,7 +119,7 @@ None blocking. Builds on TASK-CUO-205 (done - made `backlog-mutate.mjs` the sing
 ## 3. Edge cases
 
 - **Operator superset overrides (STATUS-REFERENCE §1.4)** - e.g. `done -> ready_to_review` re-audit, `ready_to_review -> ready_to_test` skip-review - are NOT the two forward gate transitions and stay flag-free in this task. Widening verdict recording to all overrides is deliberate future scope; this task locks exactly the two transitions doctrine names as mandatory-human.
-- **Direct frontmatter edit + regen bypass:** an agent can write `status: done` into spec.md and regenerate the backlog without ever calling `flip`. Accepted residual, stated in ship-tasks.md: the lock closes the documented tool path (the only path compliant workflows use); the v4.0 state engine closes the rest. The G2 checker tests the tool path.
+- **Direct frontmatter edit + regen bypass:** an agent can write `status: done` into spec.md and regenerate the backlog without ever calling `flip`. Accepted residual, stated in ship-tasks.md: the lock closes the documented tool path (the only path compliant workflows use); the 1.5.0 state engine closes the rest. The G2 checker tests the tool path.
 - **Evidence file is a directory or unreadable:** treated as "does not exist" - refusal 8. The gate checks regular-file-ness and non-zero size, nothing else; content quality is the reviewer's judgment, not the tool's.
 - **`--json` output mode:** the refusal and the success MUST both carry the verdict fields in the JSON envelope so ship-manifest consumers can record them; the exit code is authoritative either way.
 - **Two flips racing on the same row:** unchanged from today - the pre-image/optimistic-concurrency refusal (exit 6) fires before the verdict gate (AC 3's precedence), so the race loser cannot consume a verdict.

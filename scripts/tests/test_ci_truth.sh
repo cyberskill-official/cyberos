@@ -147,9 +147,10 @@ t03_dead_config_gone() {
   assert_d "$cfg" "$HOOK" || { fail t03_dead_config_gone "assert (d): a declared hook entry is not invoked by .githooks/pre-commit"; all=0; }
   # top CHANGELOG entry = first "## [" block
   local top
-  top="$(awk '/^## \[/{n++} n==1{print} n==2{exit}' "$repo/CHANGELOG.md")"
+  # Scan every versioned ## […] section — top entry moves with each cut (same class as CUO doctrine pin).
+  top="$(awk '/^## \[/{p=1} p' "$repo/CHANGELOG.md")"
   grep -qF '.pre-commit-config.yaml' <<<"$top" \
-    || { fail t03_dead_config_gone "CHANGELOG.md top entry does not name the .pre-commit-config.yaml removal — paste the prepared entry from docs/tasks/improvement/TASK-IMP-136-ci-caf-evals-and-stub-truth/implementation-evidence.md"; all=0; }
+    || { fail t03_dead_config_gone "CHANGELOG.md versioned entry does not name the .pre-commit-config.yaml removal — paste the prepared entry from docs/tasks/improvement/TASK-IMP-136-ci-caf-evals-and-stub-truth/implementation-evidence.md"; all=0; }
   [ "$all" -eq 1 ] && ok t03_dead_config_gone
 }
 
@@ -168,7 +169,9 @@ t04_no_stub_survives() {
               vn-pii-quarterly-refresh.yml:TASK-AI-013 vn-pii-recall.yml:TASK-AI-013 \
               zdr-staleness-check.yml:TASK-AI-015; do
       declarer="${wf#*:}"; wf="${wf%%:*}"
-      grep -qF "$wf" "$table" && grep -F "$wf" "$table" | grep -qF "$declarer" \
+      # Avoid echo|grep -q / grep|grep -q under pipefail (SIGPIPE false fail).
+      row="$(grep -F "$wf" "$table" || true)"
+      grep -qF "$wf" <<<"$row" && grep -qF "$declarer" <<<"$row" \
         || { echo "    table row missing or unnamed declarer: $wf (expected $declarer)" >&2; missing=1; }
     done
     [ "$missing" -eq 0 ] || { fail t04_no_stub_survives "disposition table does not name every file + declaring task (see above)"; all=0; }
@@ -200,11 +203,12 @@ t05_self_test_negative_paths() {
 # ---- AC 6: the CHANGELOG records the sweep -----------------------------------------------
 t06_changelog_records_sweep() {
   local all=1 top
-  top="$(awk '/^## \[/{n++} n==1{print} n==2{exit}' "$repo/CHANGELOG.md")"
+  # Scan every versioned ## […] section — top entry moves with each cut (same class as CUO doctrine pin).
+  top="$(awk '/^## \[/{p=1} p' "$repo/CHANGELOG.md")"
   local want
   for want in 'caf-evals-gate' 'awh' '.pre-commit-config.yaml' '9 deleted'; do
     grep -qF "$want" <<<"$top" \
-      || { fail t06_changelog_records_sweep "CHANGELOG.md top entry lacks '$want' — paste the prepared entry from docs/tasks/improvement/TASK-IMP-136-ci-caf-evals-and-stub-truth/implementation-evidence.md"; all=0; }
+      || { fail t06_changelog_records_sweep "CHANGELOG.md versioned entry lacks '$want' — paste the prepared entry from docs/tasks/improvement/TASK-IMP-136-ci-caf-evals-and-stub-truth/implementation-evidence.md"; all=0; }
   done
   [ "$all" -eq 1 ] && ok t06_changelog_records_sweep
 }

@@ -63,4 +63,4 @@ Remote tip `origin/ship/batch-8f-entrypoint` deleted 2026-07-23 post-merge (Wave
 
 ## Follow-ups (post-1.2.0)
 
-See plan `post-1.2.0_next_steps` / batch-9 schedule: MMR sync for `memory-append`, TASK-MEMORY-302, ship-tasks evolution, MCP/OBS resume wave, v3.x/v4.0 drafts. Decision #7 (branch-protection stub-check confirm) stays open until the owner ticks the acceptance criterion above.
+See plan `post-1.2.0_next_steps` / batch-9 schedule: MMR sync for `memory-append`, TASK-MEMORY-302, ship-tasks evolution, MCP/OBS resume wave, 1.4.x / 1.5.0 drafts (stay on 1.x). Decision #7 (branch-protection stub-check confirm) stays open until the owner ticks the acceptance criterion above.

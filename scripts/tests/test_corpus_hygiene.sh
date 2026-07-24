@@ -128,13 +128,14 @@ EOF
   done
   local out rc
   out="$(node "$LINT" "$TMP/docs/tasks/improvement/TASK-IMP-991-mixed-case/spec.md" 2>&1)"; rc=$?
-  echo "$out" | grep -q 'FM-117' && [ "$rc" -ne 0 ] \
+  # Use <<< not echo|grep -q: under pipefail, grep -q SIGPIPEs echo and falsely fails the && chain.
+  grep -q 'FM-117' <<<"$out" && [ "$rc" -ne 0 ] \
     || { fail t04 "mixed-case fixture did not fire FM-117 (rc=$rc): $out"; return; }
   out="$(node "$LINT" "$TMP/docs/tasks/improvement/TASK-IMP-992-folder-mismatch/spec.md" 2>&1)"; rc=$?
-  echo "$out" | grep -q 'FM-117' && [ "$rc" -ne 0 ] \
+  grep -q 'FM-117' <<<"$out" && [ "$rc" -ne 0 ] \
     || { fail t04 "folder-mismatch fixture did not fire FM-117 (rc=$rc): $out"; return; }
   out="$(node "$LINT" "$TMP/docs/tasks/improvement/TASK-IMP-990-conformant/spec.md" 2>&1)"; rc=$?
-  if echo "$out" | grep -q 'FM-117'; then
+  if grep -q 'FM-117' <<<"$out"; then
     fail t04 "conformant fixture wrongly fired FM-117: $out"; return
   fi
   ok t04
@@ -197,13 +198,14 @@ t06_registered_and_idempotent() {                                      # AC 6
 
 t07_changelog_records_hygiene() {                                      # AC 7
   local top
-  top="$(awk '/^## \[/{n++} n==1{print} n==2{exit}' "$repo/CHANGELOG.md")"
+  # Scan every versioned ## […] section — top entry moves with each cut (same class as CUO doctrine pin).
+  top="$(awk '/^## \[/{p=1} p' "$repo/CHANGELOG.md")"
   local all=1
   for want in '251' 'FM-117' 'module' 'route_back' 'resume'; do
-    echo "$top" | grep -q "$want" || { fail t07 "CHANGELOG top entry lacks '$want'"; all=0; }
+    echo "$top" | grep -q "$want" || { fail t07 "CHANGELOG versioned entry lacks '$want'"; all=0; }
   done
   if ! echo "$top" | grep -qiE 'UNREVIEWED|Branch clear|corpus hygiene|IMP-139'; then
-    fail t07 "CHANGELOG top entry does not name corpus hygiene / Branch clear / IMP-139"; all=0
+    fail t07 "CHANGELOG versioned entry does not name corpus hygiene / Branch clear / IMP-139"; all=0
   fi
   [ "$all" -eq 1 ] && ok t07
 }

@@ -15,7 +15,7 @@ tokens: unknown
 ---
 # batch 9 — post-1.2.0 follow-ups
 
-Implements the post–batch/8 plan: Wave 0 chores, MMR sync, MEMORY-302, ship-tasks evolution, MCP/OBS schedule, and v3.x/v4.0 draft tasks.
+Implements the post–batch/8 plan: Wave 0 chores, MMR sync, MEMORY-302, ship-tasks evolution, MCP/OBS schedule, and 1.4.x / 1.5.0 draft tasks (stay on CyberOS 1.x — not a major bump).
 
 ## Gate-1 (2026-07-23)
 
@@ -41,8 +41,8 @@ Operator: **all-accept** for MEMORY-302, IMP-141, CUO-305, IMP-142 → `done` (e
 | (chore) | rollout.sh checksum chooser | 1 | match bootstrap.sh |
 | TASK-CUO-305 | ship-tasks evolution from batch/8 friction | 2 | doctrine + checklists |
 | TASK-IMP-142 | MCP/OBS + APP-001 resume schedule | 3 | schedule only (this batch) |
-| TASK-IMP-143 | v3.x stuck-WIP hub + signed HITL | 4 | draft |
-| TASK-IMP-144 | v4.0 transition-locked state engine | 4 | draft |
+| TASK-IMP-143 | 1.4.x stuck-WIP hub + signed HITL | 4 | draft |
+| TASK-IMP-144 | 1.5.0 transition-locked state engine | 4 | draft |
 
 ## MCP/OBS ship schedule (Wave 3)
 

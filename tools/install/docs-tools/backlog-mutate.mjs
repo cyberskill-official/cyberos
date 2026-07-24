@@ -313,7 +313,7 @@ function frontmatterStatus(text) {
 // drift, truth-precedes-index — all exit 6), so code 8 means exactly one thing: the
 // transition was otherwise legal but no verdict was recorded (spec §1.2). Known
 // residual, accepted in the spec: an agent editing spec.md frontmatter directly and
-// regenerating the backlog bypasses any tool gate; the v4.0 state engine closes that.
+// regenerating the backlog bypasses any tool gate; the 1.5.0 state engine closes that.
 const GATE_TRANSITIONS = new Set(["reviewing->ready_to_test", "testing->done"]);
 const isGateTransition = (from, to) => GATE_TRANSITIONS.has(`${from}->${to}`);
 

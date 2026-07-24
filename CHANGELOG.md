@@ -32,7 +32,7 @@ Changed
 - platform entry-point identity (Branch A, thin spine everywhere): root `AGENTS.md` is the same thin workflow spine consumers get; Layer-1 memory protocol normative home is `modules/memory/cyberos/data/AGENTS.md` (installed `.cyberos/memory/AGENTS.md`); `CLAUDE.md` + pointer files name `.cyberos/AGENT-ENTRY.md` first; `install.sh` no longer keeps a platform AGENTS.md protocol exception. Decision recorded 2026-07-23. (TASK-IMP-138)
 
 Added
-- `docs/batches/batch-9-post-120-followups.md` — schedule for MMR/MEMORY-302/ship-tasks evolution + MCP/OBS resume waves + v3.x/v4.0 draft tasks (TASK-IMP-142/143/144).
+- `docs/batches/batch-9-post-120-followups.md` — schedule for MMR/MEMORY-302/ship-tasks evolution + MCP/OBS resume waves + 1.4.x / 1.5.0 draft tasks on the 1.x line (TASK-IMP-142/143/144).
 - `modules/memory/tests/test_store_layout.py` — layout-root-canonical regression for MEMORY-302.
 - `test_memory_append.sh` t05 — MMR peaks stay in sync with HEAD.
 

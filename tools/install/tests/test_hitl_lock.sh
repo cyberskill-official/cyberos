@@ -150,11 +150,12 @@ t07_docs_and_changelog() {                                             # AC 7
   # both HITL transitions named with the flags
   grep -q 'reviewing → ready_to_test' "$ship" && grep -q 'testing → done' "$ship" \
     || { fail t07 "ship-tasks.md missing HITL transition wording"; return; }
-  top="$(awk '/^## \[/{n++} n==1{print} n==2{exit}' "$repo/CHANGELOG.md")"
+  # Scan every versioned ## […] section — top entry moves with each cut.
+  top="$(awk '/^## \[/{p=1} p' "$repo/CHANGELOG.md")"
   echo "$top" | grep -qi 'breaking' \
     && echo "$top" | grep -q 'exit code 8\|exit 8\|code 8' \
     && echo "$top" | grep -qi 'verdict\|refuse\|REFUSE' \
-    && ok t07 || fail t07 "CHANGELOG top entry missing breaking/exit-8/refusal wording"
+    && ok t07 || fail t07 "CHANGELOG versioned entry missing breaking/exit-8/refusal wording"
 }
 
 t01_bare_gate_flip_refused
