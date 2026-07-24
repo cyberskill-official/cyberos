@@ -38,10 +38,9 @@ fn four_dec2364_audit_kinds_are_named_in_oauth_audit() {
 
 #[test]
 fn register_router_emits_validated_and_rejected() {
-    let src = fs::read_to_string(
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/router.rs"),
-    )
-    .expect("read router.rs");
+    let src =
+        fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/router.rs"))
+            .expect("read router.rs");
     assert!(
         src.contains("skill_name_validated"),
         "router must emit skill_name_validated on successful register"
