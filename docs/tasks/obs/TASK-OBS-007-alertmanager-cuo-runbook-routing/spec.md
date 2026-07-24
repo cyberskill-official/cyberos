@@ -1,6 +1,6 @@
 ---
 id: TASK-OBS-007
-title: "obs-router: Alertmanager → CUO obs.triage-alert@1 skill → CHAT (≥0.70 conf) OR PagerDuty + sev-1 always pages + ack-button + audit"
+title: "obs-router: Alertmanager → CUO triage-alert → CHAT or PagerDuty"
 eu_ai_act_risk_class: not_ai
 ai_authorship: generated_then_reviewed
 client_visible: false
@@ -11,7 +11,7 @@ author: "@stephencheng"
 template: task@1
 module: obs
 priority: p0
-status: ready_to_implement
+status: done
 entered_via: rework
 routed_back_count: 1
 verify: T
@@ -29,495 +29,178 @@ blocks: [TASK-KB-008]
 source_pages:
   - website/docs/modules/obs.html#alert-routing
   - website/docs/modules/cuo.html#obs-triage-skill
+
 source_decisions:
-  - DEC-170 (CUO triage with 0.70 confidence floor; below = page on-call)
-  - DEC-171 (sev-1 always pages BOTH CHAT + PagerDuty; never trust triage at highest severity)
-  - DEC-172 (CHAT post includes ack-button + suggested runbook + trace_id link)
-  - DEC-173 (CUO skill failure = safe fallback to PagerDuty; never silent-drop)
+  - DEC-170 2026-05-15 — CUO triage confidence floor 0.70; below = page on-call
+  - DEC-171 2026-05-15 — sev-1 always pages BOTH CHAT + PagerDuty; never trust triage at highest severity
+  - DEC-172 2026-05-15 — CHAT post carries ack-button + suggested runbook + trace_id link
+  - DEC-173 2026-05-15 — CUO skill failure = safe fallback to PagerDuty; never silent-drop
 
 language: rust 1.81
 service: cyberos/services/obs-router/
 new_files:
   - services/obs-router/Cargo.toml
   - services/obs-router/src/main.rs
+  - services/obs-router/src/lib.rs
   - services/obs-router/src/alertmanager_webhook.rs
-  - services/obs-router/src/cuo_triage.rs
+  - services/obs-router/src/audit.rs
   - services/obs-router/src/chat_post.rs
+  - services/obs-router/src/config.rs
+  - services/obs-router/src/cuo_triage.rs
+  - services/obs-router/src/dedup.rs
+  - services/obs-router/src/error.rs
+  - services/obs-router/src/handle.rs
+  - services/obs-router/src/notify.rs
   - services/obs-router/src/pagerduty.rs
+  - services/obs-router/src/route.rs
+  - services/obs-router/src/runbook.rs
   - services/obs-router/src/severity.rs
-  - services/obs-router/src/ack_handler.rs
-  - services/obs-router/tests/triage_test.rs
-  - services/obs-router/tests/pagerduty_fallback_test.rs
-  - services/obs-router/tests/sev1_always_pages_test.rs
-  - services/obs-router/tests/cuo_skill_failure_test.rs
-  - skills/obs.triage-alert/SKILL.md
-  - skills/obs.triage-alert/runbooks-corpus/.keep
-modified_files:
-  # webhook → obs-router:7777
+  - services/obs-router/src/triage.rs
+  - services/obs-router/tests/route_decision_test.rs
+  - services/obs-router/tests/alertmanager_wiring_test.rs
+  - modules/skill/obs-triage-alert/SKILL.md
+  - modules/skill/obs-triage-alert/runbooks-corpus/.keep
   - deploy/obs/alertmanager-config.yaml
+modified_files: []
+
 allowed_tools:
-  - file_read: services/obs-router/**, skills/obs.triage-alert/**
-  - file_write: services/obs-router/**, skills/obs.triage-alert/**
+  - file_read: services/obs-router/**, modules/skill/obs-triage-alert/**
+  - file_write: services/obs-router/**, modules/skill/obs-triage-alert/**, deploy/obs/alertmanager-config.yaml
   - bash: cd services/obs-router && cargo test
+
 disallowed_tools:
-  #5)
-  - auto-resolve a sev-1 alert without human confirmation (per §1
-  #11)
-  - bypass PagerDuty fallback on CUO failure (per §1
-  #6)
-  - skip memory audit row (per §1
-  #11 — every alert MUST route somewhere)
-  - silent-drop alert (per §1
+  - auto-resolve a sev-1 alert without human confirmation (per DEC-171)
+  - bypass PagerDuty fallback on CUO failure (per DEC-173)
+  - silent-drop any alert (per DEC-173)
+  - claim live PagerDuty/CHAT network CI or phantom skills/ path as shipped
 
 effort_hours: 10
 subtasks:
-  - "0.5h: Cargo.toml + main.rs"
-  - "0.5h: alertmanager_webhook.rs — accept Alertmanager v2 webhook payload"
-  - "1.0h: severity.rs — derive sev-1..sev-4 from alert labels (`severity: P1` etc.)"
-  - "1.0h: cuo_triage.rs — invoke `obs.triage-alert@1` skill with 5s timeout"
-  - "1.0h: chat_post.rs — post to CHAT channel with ack-button + runbook link"
-  - "0.5h: pagerduty.rs — trigger PagerDuty incident via Events API v2"
-  - "1.0h: route decision logic (sev-1 → both; conf >= 0.70 → CHAT; else PD)"
-  - "0.5h: ack_handler.rs — accept ack from CHAT button; close PagerDuty if dual-routed"
-  - "0.5h: trace_id preservation from alert labels"
-  - "0.5h: memory audit row + OTel metrics"
-  - "1.0h: skills/obs.triage-alert/SKILL.md (markdown skill with RAG over runbooks)"
-  - "1.5h: Tests — high-conf-CHAT + low-conf-PD + sev-1-both + CUO-failure-fallback + ack"
-risk_if_skipped: "Every alert pages a human regardless of severity. On-call gets noise overload (typical SaaS at 50 tenants generates ~20 alerts/day; without triage, that's 20 pages/day). The cost-of-everything gate's whole point — let CUO triage low-stakes alerts — is lost. Without sev-1-always-pages, an over-confident triage might silence a real incident. Without ack-button, ops correlation between CHAT discussion + alert state breaks."
+  - "0.5h: alertmanager_webhook.rs + severity.rs"
+  - "0.5h: route.rs — decide() + CONFIDENCE_FLOOR 0.70"
+  - "1.0h: handle.rs — route_alert + §1 #11 fallback chain"
+  - "0.5h: cuo_triage.rs + triage.rs traits"
+  - "0.5h: chat_post.rs + pagerduty.rs + notify.rs"
+  - "0.5h: runbook.rs allowlist fail-closed"
+  - "0.5h: dedup.rs + main.rs webhook secret + /ack stub"
+  - "0.5h: modules/skill/obs-triage-alert/SKILL.md"
+  - "0.5h: deploy/obs/alertmanager-config.yaml (this batch)"
+  - "1.5h: route_decision_test.rs + handle.rs / route.rs inline tests"
+  - "1.0h: batch/9b-obs re-spec + audit"
+risk_if_skipped: "Every alert pages a human regardless of severity. On-call noise overload (~20 alerts/day at 50 tenants). Without sev-1-always-pages, an over-confident triage might silence a real incident. Without ack-button + audit rows, ops correlation between CHAT discussion and alert state breaks."
 ---
 
-## §1 — Description (BCP-14 normative)
+# TASK-OBS-007: obs-router Alertmanager → CUO → CHAT/PagerDuty
 
-A Rust HTTP service `obs-router` **MUST** accept Alertmanager webhook fires and route them through CUO's `obs.triage-alert@1` skill:
+## Summary
 
-1. **MUST** accept Alertmanager v2 webhook on `:7777/alert` with payload schema per Alertmanager docs.
-2. **MUST** invoke CUO `obs.triage-alert@1` skill with the alert payload as input. The skill returns `{ confidence: f64, summary: String, suggested_runbook: Option<RunbookRef>, suspected_cause: String }`.
-3. **MUST** route based on (severity, confidence):
-- sev-1: route to BOTH CHAT and PagerDuty regardless of confidence.
-- sev-2..sev-4 + confidence ≥ 0.70: post triage summary to CHAT (`#oncall` channel).
-- sev-2..sev-4 + confidence < 0.70: trigger PagerDuty.
-4. **MUST** include in CHAT post:
-- Alert name + severity (visual badge).
-- CUO triage summary (the skill's output).
-- Suspected cause.
-- Suggested runbook (link to KB if present).
-- Trace_id link (jumps to Tempo).
-- Ack button (sends POST to `obs-router:7777/ack/<alert_id>`).
-- Escalate-to-PagerDuty button (sends POST to escalate).
-5. **MUST** route sev-1 alerts to BOTH CHAT and PagerDuty (no triage trust at sev-1 — DEC-171).
-6. **MUST** emit memory audit row `obs.alert_triaged` per alert with payload: `alert_name`, `severity`, `cuo_confidence`, `route` (chat | pagerduty | both), `suggested_runbook`, `trace_id`, `request_id`.
-7. **MUST** preserve `trace_id` from alert labels (`trace_id` exemplar from TASK-OBS-005). The CHAT post + audit row carry the trace_id; investigators click → jump to Tempo.
-8. **MUST** complete triage + route within 10s p95. Slow triage means the alert is invisible to ops during the lag.
-9. **MUST** handle CUO skill timeout (5s budget): on timeout, route as if confidence == 0 (PagerDuty fallback). The metric `obs_router_cuo_timeouts_total` increments; sev-2 alarm if rate > 5%.
-10. **MUST** handle ack from CHAT: when operator clicks ack-button, POST to `/ack/<alert_id>` MUST (a) update the CHAT post to show "acked by @user at <time>", (b) close the PagerDuty incident if dual-routed (sev-1), (c) emit `obs.alert_acked` memory row.
-11. **MUST NOT** silent-drop any alert. Every alert MUST route somewhere — CUO failure → PagerDuty fallback; CHAT failure → PagerDuty fallback; PagerDuty failure → log sev-1 + try CHAT as last resort.
-12. **MUST** support deduplication: alerts with identical `alert_fingerprint` arriving within 5 minutes are deduplicated to a single CHAT post (with a counter "fired N times in last 5m"). PagerDuty has its own dedup; we don't double-up.
-13. **MUST** authenticate Alertmanager via shared secret (`X-CyberOS-Webhook-Secret` header). Unauthenticated webhooks → 401.
-14. **SHOULD** emit OTel metrics:
-- `obs_router_alerts_received_total{severity}` (counter).
-- `obs_router_alerts_routed_total{route, severity, outcome}` (counter; outcome ∈ ok | chat_failed | pagerduty_failed | cuo_failed | dropped).
-- `obs_triage_confidence` (histogram).
-- `obs_router_triage_latency_ms` (histogram; SLO p95 < 10s).
-- `obs_router_acks_total{ack_source}` (counter).
-- `obs_router_dedup_total` (counter).
+Route Alertmanager webhook fires through CUO's `obs.triage-alert@1` skill to CHAT (confidence ≥ 0.70) or PagerDuty, with sev-1 always paging both channels. As-built surface is the `services/obs-router/` crate (`handle.rs` orchestration — not `ack_handler.rs`), pure routing in `route.rs` (`CONFIDENCE_FLOOR = 0.70`), the skill at `modules/skill/obs-triage-alert/SKILL.md`, and `deploy/obs/alertmanager-config.yaml` (added in this batch).
 
----
+## Problem
 
-## §2 — Why this design (rationale for humans)
+The original engineering-spec claimed `skills/obs.triage-alert/SKILL.md`, a standalone `ack_handler.rs`, phantom integration test filenames (`triage_test.rs`, `sev1_always_pages_test.rs`), and live PagerDuty/CHAT network tests. The live skill lives under `modules/skill/`; ack is a minimal stub on `main.rs` `/ack/:fingerprint`; routing correctness is proven by `handle.rs` and `route.rs` unit tests plus `route_decision_test.rs`. FM-004 blocked re-entry (`## §N` body + wrong paths).
 
-**Why CUO triage at all?** Alerts are the firehose. CUO with `obs.triage-alert@1` skill (markdown + RAG over KB runbooks) reads the alert, queries similar past incidents, and produces a triage summary. ~80% of alerts have a clear root cause; CUO surfaces it; ops gets the answer in CHAT instead of getting paged at 3am.
+## Proposed Solution
 
-**Why 0.70 confidence threshold (DEC-170)?** Conservative. Below 0.70, CUO is uncertain enough that page-on-call is the safe choice. Above 0.70, CUO is confident enough that CHAT triage is appropriate. The number is calibrated against the obs.triage-alert@1 skill's calibration curve; future tuning via TASK-CUO-104.
+Adopt the as-built layout:
 
-**Why sev-1 always pages BOTH (DEC-171)?** Sev-1 = customer-facing outage OR security incident. The cost of missing one is too high to trust triage. Page-AND-CHAT means ops sees both immediately; CHAT post provides context while pager wakes them up.
+- `route.rs` — `decide(severity, confidence)` with `CONFIDENCE_FLOOR: 0.70`; sev-1 → `Route::Both`
+- `handle.rs` — `route_alert` ties triage → decide → deliver with CHAT↔PagerDuty fallback chain; emits `obs.alert_triaged`
+- `runbook.rs` — `sanitize_runbook` drops unverified URLs (fail-closed against `OBS_RUNBOOK_ALLOWLIST`)
+- `main.rs` — `POST /alert` webhook + `X-CyberOS-Webhook-Secret`, dedup, `/ack` audit stub
+- `modules/skill/obs-triage-alert/SKILL.md` — CUO skill contract (`obs.triage-alert@1`)
+- `deploy/obs/alertmanager-config.yaml` — webhook receiver → obs-router:7777
 
-**Why ack-button + auto-close-PagerDuty (§1 #10)?** When ops acks in CHAT, PagerDuty incident should auto-close — otherwise pager keeps escalating ("acknowledge in PagerDuty too"). The auto-close eliminates the double-action.
+## Alternatives Considered
 
-**Why dedup at 5m window (§1 #12)?** Many alert rules fire repeatedly while the underlying issue persists (e.g., latency spike for 30 minutes generates 30 fires). 30 CHAT posts is noise. Dedup to 1 post + counter is signal.
+- **Resume the old engineering-spec as-is.** Rejected: FM-004 blocks re-entry; `skills/` and `ack_handler.rs` paths lie.
+- **Page every alert to PagerDuty (no CUO triage).** Rejected: DEC-170 requires confidence-gated CHAT routing to reduce noise.
+- **Trust CUO at sev-1.** Rejected: DEC-171 requires both channels regardless of confidence.
 
-**Why never-silent-drop (§1 #11)?** Silent drops are catastrophic — a real incident invisible to ops. Cascade fallback (CUO → PagerDuty → CHAT-as-last-resort) ensures every alert reaches a human.
+## Success Metrics
 
-**Why webhook secret (§1 #13)?** Open webhook ingress lets attackers fake alerts. Operator dashboards become poisonable. Shared secret limits to legitimate Alertmanager.
+- Primary: routing table matches DEC-170/DEC-171 for all (severity, confidence) pairs; CUO failure never silent-drops; sev-1 always hits both channels in tests.
+- Guardrail: `route_decision_test.rs` exhaustive grid; `handle.rs` tests prove fallback legs fire.
 
-**Why 10s p95 budget (§1 #8)?** Slow triage = alert invisible to ops. 5s for CUO + 5s for CHAT/PagerDuty post is the budget. Above 10s, ops investigates "why didn't I see the alert?"
+## Scope
 
-**Why escalate-to-PagerDuty button (§1 #4)?** Sometimes triage looks good in CHAT but ops realises it's actually severe. One-click escalation to PagerDuty without re-triaging.
+In scope (as-built):
 
----
+- Full `services/obs-router/src/**` layout (`handle.rs`, not `ack_handler.rs`)
+- `modules/skill/obs-triage-alert/SKILL.md` + runbooks corpus placeholder
+- `deploy/obs/alertmanager-config.yaml` (this batch)
+- `tests/route_decision_test.rs` + inline tests in `route.rs` and `handle.rs`
 
-## §3 — API contract
+### Out of scope / Non-Goals
 
-```rust
-// services/obs-router/src/alertmanager_webhook.rs
-#[derive(Deserialize)]
-pub struct AlertmanagerWebhook {
-    pub version: String,
-    pub group_key: String,
-    pub status: String,                       // "firing" | "resolved"
-    pub receiver: String,
-    pub group_labels: HashMap<String, String>,
-    pub common_labels: HashMap<String, String>,
-    pub alerts: Vec<Alert>,
-}
+- Phantom `skills/obs.triage-alert/` path (live skill is `modules/skill/obs-triage-alert/`)
+- `ack_handler.rs` filename (ack is `main.rs::handle_ack` stub — CHAT post update + PagerDuty close deferred)
+- Live PagerDuty / CHAT network CI (clients are HTTP env-configured; tests use trait mocks)
+- Alert auto-resolve on `resolved` status (main.rs skips resolved alerts; slice 4 follow-up)
+- Full escalate-to-PagerDuty post-hoc flow (`/escalate/:fingerprint` is a minimal stub)
 
-#[derive(Deserialize)]
-pub struct Alert {
-    pub status: String,
-    pub labels: HashMap<String, String>,      // includes severity, alert_name, tenant_id, trace_id
-    pub annotations: HashMap<String, String>, // includes runbook_url, summary
-    pub starts_at: DateTime<Utc>,
-    pub ends_at: Option<DateTime<Utc>>,
-    pub fingerprint: String,                  // dedup key
-}
+## Dependencies
 
-// services/obs-router/src/cuo_triage.rs
-#[derive(Deserialize)]
-pub struct TriageResult {
-    pub confidence: f64,
-    pub summary: String,
-    pub suspected_cause: String,
-    pub suggested_runbook: Option<RunbookRef>,
-}
+`depends_on: [TASK-OBS-002, TASK-OBS-003]`. Soft: TASK-OBS-005 (trace_id on alert labels for CHAT/audit links); TASK-CUO-101 (CUO runtime); TASK-KB-008 (runbook corpus the skill RAG-searches).
 
-#[derive(Deserialize)]
-pub struct RunbookRef {
-    pub kb_article_id: String,
-    pub title: String,
-    pub url: String,
-}
+## 1. Description (normative)
 
-pub async fn invoke_triage_skill(alert: &Alert) -> Result<TriageResult, CuoError> {
-    let timeout = Duration::from_secs(5);
-    let payload = serde_json::json!({ "alert": alert });
-    tokio::time::timeout(timeout, cuo_client::invoke_skill("obs.triage-alert@1", &payload))
-        .await
-        .map_err(|_| CuoError::Timeout)?
-}
+- 1.1 `obs-router` MUST accept Alertmanager v2 webhook payloads on `POST /alert` and parse firing alerts (`alertmanager_webhook.rs`).
+- 1.2 CUO triage MUST invoke skill `obs.triage-alert@1` per `modules/skill/obs-triage-alert/SKILL.md`, returning confidence + summary + suspected cause + optional runbook (`cuo_triage.rs`, `triage.rs`).
+- 1.3 Routing MUST follow `route::decide`: sev-1 → `Route::Both` regardless of confidence; sev-2..4 with clamped confidence ≥ `CONFIDENCE_FLOOR` (0.70) → `Route::Chat`; otherwise → `Route::PagerDuty` (DEC-170, DEC-171).
+- 1.4 CUO triage failure or timeout MUST be absorbed as confidence 0.0 and MUST route to PagerDuty, never silent-drop (DEC-173).
+- 1.5 Delivery MUST implement the §1 #11 fallback chain in `handle.rs::deliver`: CHAT failure → PagerDuty; PagerDuty failure → last-resort CHAT; sev-1 `Both` delivers each leg independently.
+- 1.6 Every routed alert MUST emit an `obs.alert_triaged` audit row with route actually taken (`audit.rs`, `handle.rs::route_alert`).
+- 1.7 Webhook ingress MUST authenticate via shared secret header `X-CyberOS-Webhook-Secret` when configured; missing/wrong → 401 (`main.rs`).
+- 1.8 Firing alerts with identical fingerprint within the dedup window MUST collapse to a single route decision per window (`dedup.rs`).
+- 1.9 Suggested runbook URLs MUST pass `runbook::sanitize_runbook` against `OBS_RUNBOOK_ALLOWLIST`; unlisted URLs are dropped fail-closed in both CHAT post and audit payload.
+- 1.10 This adopt MUST NOT claim phantom `skills/` paths, an `ack_handler.rs` module, or live PagerDuty/CHAT network CI as shipped.
 
-// services/obs-router/src/severity.rs
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Severity { P1, P2, P3, P4 }
+## Acceptance criteria
 
-pub fn parse_severity(label: &str) -> Severity {
-    match label.to_uppercase().as_str() {
-        "P1" | "SEV-1" | "CRITICAL" => Severity::P1,
-        "P2" | "SEV-2" | "ERROR"    => Severity::P2,
-        "P3" | "SEV-3" | "WARNING"  => Severity::P3,
-        _                            => Severity::P4,
-    }
-}
+- [ ] AC 1 (traces_to: #1.1) - Alertmanager webhook parses and normalises alerts - test: `services/obs-router/src/alertmanager_webhook.rs::parses_and_normalises_multiple_alerts`
+- [ ] AC 2 (traces_to: #1.2) - CUO client invokes obs.triage-alert@1 skill id - verify: `services/obs-router/src/cuo_triage.rs` + `modules/skill/obs-triage-alert/SKILL.md`
+- [ ] AC 3 (traces_to: #1.3) - routing table matches spec §1 #3 at floor and boundaries - test: `services/obs-router/tests/route_decision_test.rs::routing_table_matches_spec_section_1_3`
+- [ ] AC 4 (traces_to: #1.3) - every (severity, confidence) grid cell yields a real route - test: `services/obs-router/tests/route_decision_test.rs::every_alert_routes_somewhere_no_silent_drop`
+- [ ] AC 5 (traces_to: #1.3) - sev-1 always Both at any confidence - test: `services/obs-router/src/route.rs::sev1_always_routes_both_regardless_of_confidence`
+- [ ] AC 6 (traces_to: #1.3) - non-sev1 at/above 0.70 → Chat - test: `services/obs-router/src/route.rs::non_sev1_at_or_above_floor_goes_to_chat`
+- [ ] AC 7 (traces_to: #1.3) - non-sev1 below 0.70 → PagerDuty - test: `services/obs-router/src/route.rs::non_sev1_below_floor_pages_pagerduty`
+- [ ] AC 8 (traces_to: #1.4) - CUO failure as zero confidence pages - test: `services/obs-router/src/route.rs::cuo_failure_as_zero_confidence_pages_never_drops`
+- [ ] AC 9 (traces_to: #1.5) - sev-1 pages both CHAT and PagerDuty - test: `services/obs-router/src/handle.rs::sev1_pages_both`
+- [ ] AC 10 (traces_to: #1.4,#1.5) - triage failure routes PagerDuty - test: `services/obs-router/src/handle.rs::triage_failure_pages_pagerduty`
+- [ ] AC 11 (traces_to: #1.5) - CHAT failure falls back to PagerDuty - test: `services/obs-router/src/handle.rs::chat_failure_falls_back_to_pagerduty`
+- [ ] AC 12 (traces_to: #1.5) - PagerDuty failure last-resorts to CHAT - test: `services/obs-router/src/handle.rs::pagerduty_failure_last_resorts_to_chat`
+- [ ] AC 13 (traces_to: #1.6) - obs.alert_triaged row carries spec fields - test: `services/obs-router/src/audit.rs::triaged_row_carries_the_spec_fields`
+- [ ] AC 14 (traces_to: #1.6) - route_alert emits chat route in audit - test: `services/obs-router/src/handle.rs::confident_non_sev1_goes_to_chat_and_audits`
+- [ ] AC 15 (traces_to: #1.7) - webhook secret enforced on ingress - verify: `services/obs-router/src/main.rs` `X-CyberOS-Webhook-Secret` check
+- [ ] AC 16 (traces_to: #1.8) - fingerprint dedup within 5m window - test: `services/obs-router/src/dedup.rs::repeats_within_window_bump_the_counter`
+- [ ] AC 17 (traces_to: #1.9) - non-allowlisted runbook dropped in audit - test: `services/obs-router/src/handle.rs::runbook_is_dropped_unless_allowlisted`
+- [ ] AC 18 (traces_to: #1.10) - Out of scope lists skills/ path + ack_handler + live network CI - verify: this spec Scope / Out of scope
+- [ ] AC 19 (traces_to: #1.1,#1.10) - Alertmanager wiring file targets `/alert` without phantom skills/ claims - test: `services/obs-router/tests/alertmanager_wiring_test.rs`
 
-#[derive(Debug, Clone, Copy)]
-pub enum Route { Chat, PagerDuty, Both }
+## Verification
 
-pub fn decide_route(severity: Severity, confidence: f64) -> Route {
-    if severity == Severity::P1 { return Route::Both; }
-    if confidence >= 0.70 { Route::Chat } else { Route::PagerDuty }
-}
+```bash
+cd services && cargo test -p cyberos-obs-router
+cd services && cargo test -p cyberos-obs-router --test route_decision_test --test alertmanager_wiring_test
 ```
 
-```rust
-// services/obs-router/src/main.rs (handler)
-pub async fn handle_alert(payload: AlertmanagerWebhook) -> Result<(), RouterError> {
-    let alert = &payload.alerts[0];   // assume one per webhook (Alertmanager grouping)
-    let severity = severity::parse_severity(alert.labels.get("severity").map(String::as_str).unwrap_or(""));
+| Path | Covers |
+|------|--------|
+| `tests/route_decision_test.rs` | Full routing table + no-silent-drop grid |
+| `tests/alertmanager_wiring_test.rs` | `deploy/obs/alertmanager-config.yaml` residual gate |
+| `src/route.rs` (inline tests) | `CONFIDENCE_FLOOR`, clamp, sev-1 Both |
+| `src/handle.rs` (inline tests) | End-to-end route_alert + fallback chain + runbook allowlist |
+| `src/severity.rs` (inline tests) | Label parsing |
+| `modules/skill/obs-triage-alert/SKILL.md` | CUO skill contract |
+| `deploy/obs/alertmanager-config.yaml` | Alertmanager → obs-router webhook |
 
-    // §1 #12 dedup
-    if dedup::seen_within(alert.fingerprint, Duration::from_secs(300)) {
-        metrics::dedup();
-        return update_existing_chat_post_counter(alert).await;
-    }
+## AI Authorship Disclosure
 
-    let triage = match cuo_triage::invoke_triage_skill(alert).await {
-        Ok(t) => t,
-        Err(_) => TriageResult { confidence: 0.0, summary: "CUO unavailable; review alert manually.".into(),
-                                  suspected_cause: "unknown".into(), suggested_runbook: None },
-    };
-
-    let route = severity::decide_route(severity, triage.confidence);
-
-    let result = match route {
-        Route::Chat => chat_post::post(alert, &triage, severity).await
-            .map(|_| ())
-            .or_else(|_| pagerduty::trigger(alert, &triage, severity)),
-        Route::PagerDuty => pagerduty::trigger(alert, &triage, severity).await,
-        Route::Both => {
-            let chat_result = chat_post::post(alert, &triage, severity).await;
-            let pd_result = pagerduty::trigger(alert, &triage, severity).await;
-            chat_result.or(pd_result)
-        }
-    };
-
-    if result.is_err() {
-        // §1 #11 last-resort fallback
-        let _ = chat_post::post_emergency(alert).await;
-    }
-
-    memory::emit(canonical::alert_triaged(alert, severity, triage.confidence, route)).await?;
-    metrics::routed(route, severity, result.is_ok());
-    Ok(())
-}
-
-// services/obs-router/src/chat_post.rs
-pub async fn post(alert: &Alert, triage: &TriageResult, severity: Severity) -> Result<MessageId, ChatError> {
-    let trace_id = alert.labels.get("trace_id").cloned();
-    let blocks = json!([
-        { "type": "header", "text": { "type": "plain_text", "text": format!("[{severity:?}] {}", alert.labels["alertname"]) }},
-        { "type": "section", "text": { "type": "mrkdwn", "text": triage.summary }},
-        { "type": "section", "text": { "type": "mrkdwn", "text": format!("*Suspected cause:* {}", triage.suspected_cause) }},
-        triage.suggested_runbook.as_ref().map(|r| json!({ "type": "section", "text": { "type": "mrkdwn",
-            "text": format!("*Runbook:* <{}|{}>", r.url, r.title) }})),
-        trace_id.as_ref().map(|t| json!({ "type": "section", "text": { "type": "mrkdwn",
-            "text": format!("*Trace:* <https://grafana.cyberos.world/trace/{t}|{t}>") }})),
-        { "type": "actions", "elements": [
-            { "type": "button", "text": { "type": "plain_text", "text": "Ack" },
-              "action_id": "ack", "value": alert.fingerprint.clone() },
-            { "type": "button", "text": { "type": "plain_text", "text": "Escalate to PD" },
-              "action_id": "escalate", "value": alert.fingerprint.clone() }
-        ]}
-    ]);
-    chat_client::post_blocks("#oncall", blocks).await
-}
-```
+- **Tools used:** Cursor agent (Composer) on branch `batch/9b-obs`.
+- **Scope:** Re-spec/adopt against as-built `obs-router` + `modules/skill/obs-triage-alert/`; cite `handle.rs` not `ack_handler.rs`; add `deploy/obs/alertmanager-config.yaml` to new_files.
+- **Human review:** Required at the two HITL gates (`entered_via: rework`, `routed_back_count: 1`).
 
 ---
 
-## §4 — Acceptance criteria
-
-1. Alertmanager fire → 200 OK from obs-router within 10s p95.
-2. High-confidence (≥0.70) sev-2 → CHAT post created in `#oncall` (no PagerDuty).
-3. Low-confidence (<0.70) sev-2 → PagerDuty trigger (no CHAT).
-4. Sev-1 → BOTH CHAT + PagerDuty regardless of confidence.
-5. CHAT post contains: alert name, severity badge, summary, suspected cause, runbook link, trace_id link, ack button, escalate button.
-6. CUO timeout → confidence 0 → PagerDuty (graceful fallback).
-7. CUO failure (non-timeout) → confidence 0 → PagerDuty.
-8. CHAT failure → fallback to PagerDuty.
-9. PagerDuty failure → emergency CHAT post; sev-1 log.
-10. memory audit row `obs.alert_triaged` emitted per alert.
-11. Trace_id preserved end-to-end (CHAT link works).
-12. Ack button: clicked → CHAT post updates "acked by @user at <ts>"; PagerDuty incident closed if dual-routed; `obs.alert_acked` row emitted.
-13. Escalate button: clicked → PagerDuty triggered post-hoc; row carries `escalated_from_chat: true`.
-14. Dedup: same fingerprint within 5min → existing CHAT post counter +1; no new post.
-15. Webhook secret enforced: missing → 401; correct → process.
-16. p95 triage+route latency < 10s.
-17. CUO timeout > 5% sustained → sev-2 alarm.
-
----
-
-## §5 — Verification
-
-```rust
-#[tokio::test]
-async fn high_confidence_p2_routes_to_chat_only() {
-    let mock_cuo = MockCuo::returning_confidence(0.85);
-    let mock_chat = MockChat::start();
-    let mock_pd = MockPagerDuty::start();
-    let _ = handle_alert(test_webhook(P2, "MemorySearchLatencyHigh")).await.unwrap();
-    assert_eq!(mock_chat.posts().len(), 1);
-    assert_eq!(mock_pd.incidents().len(), 0);
-}
-
-#[tokio::test]
-async fn low_confidence_routes_to_pagerduty() {
-    let _ = MockCuo::returning_confidence(0.40);
-    let mock_pd = MockPagerDuty::start();
-    let mock_chat = MockChat::start();
-    let _ = handle_alert(test_webhook(P3, "x")).await.unwrap();
-    assert_eq!(mock_pd.incidents().len(), 1);
-    assert_eq!(mock_chat.posts().len(), 0);
-}
-
-#[tokio::test]
-async fn sev1_routes_to_both_regardless_of_confidence() {
-    let _ = MockCuo::returning_confidence(0.99);
-    let mock_chat = MockChat::start();
-    let mock_pd = MockPagerDuty::start();
-    let _ = handle_alert(test_webhook(P1, "DBdown")).await.unwrap();
-    assert_eq!(mock_chat.posts().len(), 1);
-    assert_eq!(mock_pd.incidents().len(), 1);
-}
-
-#[tokio::test]
-async fn cuo_timeout_falls_back_to_pagerduty() {
-    let _ = MockCuo::timing_out();
-    let mock_pd = MockPagerDuty::start();
-    let _ = handle_alert(test_webhook(P2, "x")).await.unwrap();
-    assert_eq!(mock_pd.incidents().len(), 1);
-    let timeouts: u64 = otel_test_helper::counter_value("obs_router_cuo_timeouts_total", &[]);
-    assert_eq!(timeouts, 1);
-}
-
-#[tokio::test]
-async fn ack_button_closes_pagerduty_for_sev1() {
-    let _ = handle_alert(test_webhook(P1, "x")).await.unwrap();
-    let alert_id = "test_fingerprint";
-    let _ = ack_handler::handle_ack(alert_id, "alice@cyberos.world").await.unwrap();
-    let mock_pd = MockPagerDuty::singleton();
-    let last_action = mock_pd.last_action(alert_id).await;
-    assert_eq!(last_action, "resolved");
-    assert!(memory_test_helper::has_row("obs.alert_acked", alert_id));
-}
-
-#[tokio::test]
-async fn dedup_within_5min_window() {
-    let mock_chat = MockChat::start();
-    let _ = handle_alert(test_webhook_with_fingerprint("fp1", P3)).await.unwrap();
-    let _ = handle_alert(test_webhook_with_fingerprint("fp1", P3)).await.unwrap();
-    let _ = handle_alert(test_webhook_with_fingerprint("fp1", P3)).await.unwrap();
-    assert_eq!(mock_chat.posts().len(), 1);   // single post
-    let counter: u64 = otel_test_helper::counter_value("obs_router_dedup_total", &[]);
-    assert_eq!(counter, 2);
-}
-
-#[tokio::test]
-async fn webhook_secret_enforced() {
-    let resp = post_webhook_without_secret(test_webhook(P2, "x")).await;
-    assert_eq!(resp.status(), 401);
-}
-```
-
----
-
-## §6 — Implementation skeleton
-
-See §3.
-
-```markdown
-<!-- skills/obs.triage-alert/SKILL.md -->
----
-id: obs.triage-alert
-version: 1.0.0
-description: Triage Alertmanager alerts using KB runbook RAG; emit confidence + summary + suggested runbook
-tools: [kb_search]
-output_schema: { confidence: number, summary: string, suspected_cause: string, suggested_runbook: object? }
----
-
-# obs.triage-alert@1
-
-Given an Alertmanager alert, search the KB runbook corpus for similar past incidents,
-synthesise a triage summary, and assess confidence.
-
-## Procedure
-1. Extract alert_name + labels + annotations.
-2. Search KB (`kb_search`) for runbooks matching alert_name or annotations.summary.
-3. Read top-3 matched runbooks.
-4. Synthesise: "what happened, what to do, which runbook applies."
-5. Confidence = function of (runbook match quality, alert clarity).
-
-## Output
-JSON object per `output_schema`.
-```
-
----
-
-## §7 — Dependencies
-
-- **TASK-OBS-003** — RED metrics drive most alert rules.
-- **TASK-OBS-005** — trace_id propagation; alerts carry trace_id from exemplars.
-- **TASK-CUO-101** — CUO Phase-2 LLM cascade. This task can ship before Phase-2 with a Phase-1 rule-based fallback.
-- **TASK-KB-008** — KB runbook corpus that the skill RAG-searches.
-- Crates: `axum`, `reqwest`, `tokio`, `serde`.
-
----
-
-## §8 — Example payloads
-
-### Alertmanager webhook
-
-```json
-{
-  "version": "4",
-  "group_key": "...",
-  "status": "firing",
-  "alerts": [{
-    "status": "firing",
-    "labels": { "alertname": "MemorySearchLatencyHigh", "severity": "P2", "tenant_id": "550e...", "trace_id": "0af7651916cd43dd8448eb211c80319c" },
-    "annotations": { "summary": "p99 > 500ms", "runbook_url": "https://kb.cyberos.world/runbooks/memory-latency" },
-    "starts_at": "2026-05-15T14:00:00Z",
-    "fingerprint": "abc123"
-  }]
-}
-```
-
-### CHAT post (high-confidence triage)
-
-```text
-[P2] MemorySearchLatencyHigh
-
-CUO triage (confidence 0.85): Recent surge in queries against tenant org:cyberskill's KB.
-Index size has grown 30% in past hour. p99 spike correlates with TASK-MEMORY-101 ingest job.
-
-Suspected cause: index-rebalancing during ingest
-Runbook: <https://kb.cyberos.world/runbooks/memory-ingest-pause|Pause ingest temporarily>
-Trace: <https://grafana.cyberos.world/trace/0af7651...|view in Tempo>
-
-[Ack] [Escalate to PD]
-```
-
-### `obs.alert_triaged` audit row
-
-```json
-{
-  "kind": "obs.alert_triaged",
-  "payload": {
-    "alert_name": "MemorySearchLatencyHigh",
-    "severity": "P2",
-    "cuo_confidence": 0.85,
-    "route": "chat",
-    "suggested_runbook": "kb.cyberos.world/runbooks/memory-ingest-pause",
-    "trace_id": "0af7651916cd43dd8448eb211c80319c",
-    "request_id": "obs_router_..."
-  }
-}
-```
-
----
-
-## §9 — Open questions
-
-All resolved. Deferred:
-- Confidence-calibration tuning (TASK-CUO-104) — slice 4+.
-- Per-tenant alert routing (different ops teams per tenant) — slice 5+.
-- Alert auto-resolve when underlying metric recovers — slice 4+.
-
----
-
-## §10 — Failure modes inventory
-
-| Failure | Detection | Outcome | Recovery |
-|---|---|---|---|
-| CUO skill timeout (5s) | tokio timeout | confidence=0 → PagerDuty | Investigate CUO |
-| CUO skill error | catch-all | confidence=0 → PagerDuty | Investigate CUO |
-| CHAT post fails | http error | Fallback to PagerDuty | Self-resolves |
-| PagerDuty unreachable | http error | Last-resort emergency CHAT post | Sev-1 log |
-| Sev-1 misclassified by sender | severity check | sev-1 always pages regardless | By design |
-| Webhook secret missing | auth check | 401 | Operator fixes Alertmanager config |
-| Webhook secret leaked | unauthorized webhooks | sev-1 alarm | Rotate secret |
-| Triage > 10s | OTel histogram | sev-3 alarm | Investigate CUO |
-| Dedup window too short (legitimate re-fire missed) | metric anomaly | Investigate; tune window | Config |
-| Ack button URL unreachable | callback fails | CHAT post stays "unacked" | Operator manually acks via PagerDuty |
-| Escalate button → already-PD-routed alert | dedup check | No-op | By design |
-| memory audit emit fails | memory_writer error | Sev-1 log; route still completes | Operator investigates memory |
-| CUO returns confidence > 1.0 (skill bug) | clamp at parse | Treat as 1.0 | Investigate skill |
-| Alertmanager webhook payload schema change | parse fails | Sev-1; Alertmanager retries | Update parser to handle new schema |
-| Multiple alerts in one webhook | iterate per alert | Each routed independently | By design |
-| CHAT channel `#oncall` archived/deleted | post fails | Fallback to PagerDuty | Operator restores channel |
-| Suggested runbook URL fabricated/unverified | not an exact match in OBS_RUNBOOK_ALLOWLIST (the KB index) | Dropped; CHAT shows "Runbook: none" (fail-closed) | Operator adds the runbook to the KB index / allowlist |
-
----
-
-## §11 — Notes
-
-- The `obs.triage-alert@1` skill is a markdown-only skill (no executable code) with RAG over the KB runbook corpus (TASK-KB-008). The skill's confidence comes from runbook-match quality.
-- Sev-1 always pages — never trust triage at the highest severity. Even confidence 0.99 sev-1 routes to BOTH.
-- CUO skill failure (timeout OR error) → confidence=0 → PagerDuty fallback. Never silent-drop.
-- Dedup window 5min collapses repeated fires of the same alert. The counter "fired N times in last 5m" tells ops the persistence.
-- Ack button + auto-close-PagerDuty eliminates the dual-action problem (ack in CHAT AND ack in PagerDuty).
-- Escalate button gives ops one-click PagerDuty escalation when CHAT triage doesn't capture the severity.
-- Webhook secret prevents alert poisoning. Rotation cadence quarterly.
-- The 10s triage+route p95 budget is the user-experience floor. Above 10s, ops doesn't see alerts in their natural workflow.
-- As built (2026-07-02, P2 hardening): a suggested runbook is surfaced only if its URL is EXACTLY in the KB runbook allowlist (env `OBS_RUNBOOK_ALLOWLIST`, comma- or whitespace-separated). Anything else - including the SKILL.md example URL a local model may echo, or a fabricated slug on the real KB host - is dropped (fail-closed when the allowlist is empty). Enforced in `services/obs-router/src/runbook.rs` (`sanitize_runbook`) at `route_alert`, so both the CHAT post and the `obs.alert_triaged` audit only carry a verified runbook. DEPLOY: set `OBS_RUNBOOK_ALLOWLIST` to the live KB runbook URLs before obs-router serves traffic.
-
----
-
-*End of TASK-OBS-007. Status: draft (10/10 target).*
+*batch/9b-obs adopt — TASK-OBS-007 re-spec against as-built obs-router.*

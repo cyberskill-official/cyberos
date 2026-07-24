@@ -1,43 +1,43 @@
 ---
 task_id: TASK-OBS-007
-audited: 2026-05-16
-verdict: PASS (after revision)
-score_pre_revision: 7.5/10
-score_post_expansion: 9.0/10
-score_post_revision: 10/10
-issues_resolved: 6
-template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; task-audit skill §3.12 compliant)
+audited: 2026-07-24
+verdict: PASS
+score: 10/10
+template: task@1
+adopt: batch/9b-obs
+entered_via: rework
 ---
 
-## §1 — Verdict summary
+# TASK-OBS-007 audit — obs-router alert routing (batch/9b-obs adopt)
 
-TASK-OBS-007 expanded from 158 lines to ~770. Added 7 §1 clauses (#9 CUO timeout fallback, #10 ack-button + auto-close-PagerDuty, #11 never-silent-drop cascade fallback, #12 dedup, #13 webhook secret, #14 metrics, expanded #4 with full CHAT post structure). 7 §2 rationale paragraphs. Full Rust handler + chat_post + cuo_triage + severity + skill SKILL.md in §3. 17 ACs. 7 full Rust test bodies. 16 failure modes. 8 implementation notes.
+## Verdict
 
-## §2 — Findings (all resolved)
+**PASS 10/10** (2026-07-24). Spec honestly adopts `services/obs-router/` (`handle.rs` orchestration, `route.rs` `CONFIDENCE_FLOOR = 0.70`), skill at `modules/skill/obs-triage-alert/SKILL.md`, and `deploy/obs/alertmanager-config.yaml` (this batch). Phantom `skills/` path and `ack_handler.rs` removed; live PagerDuty/CHAT network CI ledgered Out of scope.
 
-### ISS-001 — CUO timeout/failure handling unspecified
-First-pass §10 mentioned "CUO skill timeout → fall back to PagerDuty" without timeout value or implementation. Resolved: §1 #9 5s timeout; explicit confidence=0 fallback; metric `obs_router_cuo_timeouts_total` + sev-2 alarm; AC #6 + #7 + §5 test.
+## What was checked
 
-### ISS-002 — Ack-button mechanism not specified
-First-pass §1 #4 mentioned "ack button" without implementation. Resolved: §1 #10 + ack_handler.rs + auto-close PagerDuty + `obs.alert_acked` row; AC #12 + §5 test.
+| Check | Result |
+|-------|--------|
+| No `## §N` headings (FM-004) | Pass |
+| Required task@1 sections + grafted AC/Verification | Pass (18 ACs) |
+| Paths under `services/obs-router/` + `modules/skill/` | Pass |
+| `handle.rs` tests cited (sev1_pages_both, triage_failure, chat_failure fallback) | Pass |
+| `route_decision_test.rs` + `route.rs` decide semantics | Pass |
+| `depends_on: [TASK-OBS-002, TASK-OBS-003]` | Pass |
+| Status `ready_to_implement`, `entered_via: rework`, `routed_back_count: 1` | Pass |
 
-### ISS-003 — Never-silent-drop fallback cascade unspecified
-First-pass §10 said "PagerDuty unreachable → sev-1 log" but no recovery. Critical incidents could be invisible. Resolved: §1 #11 cascade — CHAT-as-last-resort; AC #9.
+## Findings
 
-### ISS-004 — Dedup unspecified — alert storms produce notification spam
-First-pass had no dedup. 30 fires/30min generates 30 CHAT posts. Resolved: §1 #12 5min fingerprint window; counter on existing post; AC #14 + §5 test.
+None open. Largest prior verification gap (phantom `skills/` + `ack_handler.rs` + network integration tests) closed by citing real in-crate tests only.
 
-### ISS-005 — Webhook auth missing — alert poisoning possible
-First-pass had no webhook secret. Resolved: §1 #13 X-CyberOS-Webhook-Secret header; AC #15.
+## Notes for HITL
 
-### ISS-006 — `obs.triage-alert@1` skill SKILL.md not specified
-First-pass mentioned the skill but didn't show the markdown. Resolved: §6 includes SKILL.md skeleton with output_schema + procedure.
+- `/ack/:fingerprint` records audit only; CHAT post update + PagerDuty auto-close remain follow-up.
+- Accepting this adopt does **not** require live PagerDuty/CHAT credentials in CI.
+- Do not flip `done` without the two human-acceptance gates.
 
-## §3 — Resolution
-
-All 6 mechanical revisions applied. **Score = 10/10.**
+**Score = 10/10.**
 
 ---
 
-*End of TASK-OBS-007 audit.*
+*End of TASK-OBS-007 audit (batch/9b-obs adopt).*

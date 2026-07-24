@@ -1,43 +1,41 @@
 ---
 task_id: TASK-OBS-001
-audited: 2026-05-16
-verdict: PASS (after revision)
-score_pre_revision: 7.5/10
-score_post_expansion: 9.0/10
-score_post_revision: 10/10
-issues_resolved: 6
-template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; task-audit skill §3.12 compliant)
+audited: 2026-07-24
+verdict: PASS
+score: 10/10
+template: task@1
+adopt: batch/9b-obs
+entered_via: rework
 ---
 
-## §1 — Verdict summary
+# TASK-OBS-001 audit — OTel collector scaffold (batch/9b-obs adopt)
 
-TASK-OBS-001 expanded from 242 lines to ~700. Added 6 §1 clauses (#5 grafana provisioning + dashboards placeholder, #10 collector self-telemetry, #11 PII-scrub processor as defence-in-depth, #12 horizontal scalability, #13 sizing baseline, #14 self-metrics). 7 §2 rationale paragraphs. Full collector + per-service tokens + docker-compose + Loki/Tempo retention + grafana datasources in §3. 17 ACs. 3 full bash test scripts. 19 failure modes. 8 implementation notes.
+## Verdict
 
-## §2 — Findings (all resolved)
+**PASS 10/10** (2026-07-24). Spec is honest task@1 against as-built `services/obs-collector/` validation crate, canonical config under `config/`, and `deploy/obs/` LGTM + obs-proxy compose. Phantom flat deploy configs, rotation/healthcheck scripts, smoke shell suites, and live collector container removed; inline config/auth tests and AWH `acceptance-obs-pii-scrub` cited.
 
-### ISS-001 — No PII-scrub at collector (caller-side is primary; collector should be defence-in-depth)
-First-pass had no PII filter at collector. TASK-AI-022's typed-attribute-keys is primary, but defence-in-depth requires collector-side scrub. Resolved: §1 #11 normative + `attributes/pii_scrub` processor in pipeline + AC #10 + sev-1 alarm.
+## What was checked
 
-### ISS-002 — Collector self-metrics not specified
-First-pass mentioned health-check endpoints but not "is the collector itself healthy?" metrics. Resolved: §1 #10 + #14 self-metrics; `obs_collector_*` set; Prometheus scrape from collector's own :8888.
+| Check | Result |
+|-------|--------|
+| No `## §N` headings (FM-004) | Pass |
+| Required task@1 sections + grafted AC/Verification | Pass (8 ACs) |
+| Paths under `services/obs-collector/` + `deploy/obs/` | Pass |
+| Status `ready_to_implement`, `entered_via: rework`, `routed_back_count: 1` | Pass |
+| Compose is LGTM + obs-proxy without collector service | Pass |
+| new_files lists real paths only | Pass |
 
-### ISS-003 — Per-service token rotation procedure not specified
-First-pass mentioned 90d rotation in §11 but no script. Resolved: §1 #2 + `scripts/rotate_tokens.sh` skeleton; SIGHUP reload; AC #17 asserts safe rotation.
+## Findings
 
-### ISS-004 — Resource limits not specified; no sizing baseline
-First-pass §7 said "4GB RAM" without per-service breakdown. Operators couldn't right-size. Resolved: §1 #13 + docker-compose `deploy.resources.limits` per service; total = 6.5 vCPU + 11.5GB.
+None open. Prior FM-004 / phantom-path drift closed by re-scope.
 
-### ISS-005 — Grafana provisioning incomplete (datasources OK; dashboards path missing)
-First-pass set up datasources but no hook for TASK-OBS-002's dashboards. Resolved: §1 #5 + provisioning/dashboards mount in compose; TASK-OBS-002 drops dashboards into the dir.
+## Notes for HITL
 
-### ISS-006 — Buffer-survives-restart not testable as written
-First-pass §4 AC #8 said "in-flight data not lost" without test methodology. Resolved: `buffer_survives_restart_test.sh` in §5 with concrete 100-span workload + restart + recovery assertion.
+- `cyberos-obs` validate subcommands ship; otelcol process supervision + Helm/mTLS remain Out of scope.
+- Do not flip `done` without the two human-acceptance gates.
 
-## §3 — Resolution
-
-All 6 mechanical revisions applied. **Score = 10/10.**
+**Score = 10/10.**
 
 ---
 
-*End of TASK-OBS-001 audit.*
+*End of TASK-OBS-001 audit (batch/9b-obs adopt).*
