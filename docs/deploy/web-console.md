@@ -29,6 +29,8 @@ The push auto-deploys (apps/console is in deploy.yml's paths): the VPS git-pulls
 
 The dev server proxies `/v1/auth` and `/.well-known` to auth (`127.0.0.1:7700`) and `/v1/chat` (including the websocket) to chat (`127.0.0.1:7720`) - see `vite.config.ts`. Start the local stack first (`scripts/dev/dev-up.sh`).
 
+Chat AI in **Vite dev** can be traced with Foglamp (AI SDK + HUD). Production still uses Rust chat → ai-gateway only — see [foglamp.md](./foglamp.md) for the handoff and production options.
+
 ## Promoting to root
 
 When the React console should become the default at `/`, point the catch-all `handle` in `deploy/vps/Caddyfile.p0` at `/srv/console/web` with a SPA fallback and set the Vite `base` back to `/`. Keep the legacy pages reachable at a path (for example `/classic`) until every page has a React equivalent. This is a deliberate, separate change - not part of the additive `/web/` rollout.
