@@ -9,7 +9,7 @@
 #     needs a documented functional justification in the task's §9 first (code-review norm)
 name: cyberos
 base: core22
-version: '1.3.0'
+version: '1.4.0'
 summary: CyberOS — Turn Your Will Into Real
 description: |
   CyberOS is CyberSkill's desktop shell for the CyberOS platform. This snap

@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.4.0] - 2026-07-24
+
+Added
+- instrument chat AI with Foglamp (AI SDK v7)
+
 ## [1.3.0] - 2026-07-23
 
 Added
