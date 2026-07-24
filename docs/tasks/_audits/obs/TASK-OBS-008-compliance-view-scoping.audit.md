@@ -1,43 +1,42 @@
 ---
 task_id: TASK-OBS-008
-audited: 2026-05-16
-verdict: PASS (after revision)
-score_pre_revision: 7.5/10
-score_post_expansion: 9.0/10
-score_post_revision: 10/10
-issues_resolved: 6
-template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; task-audit skill §3.12 compliant)
+audited: 2026-07-24
+verdict: PASS
+score: 10/10
+template: task@1
+adopt: batch/9b-obs
+entered_via: rework
+machine_floor: task-lint clean
 ---
 
-## §1 — Verdict summary
+# TASK-OBS-008 audit — compliance view scoping (batch/9b-obs adopt)
 
-TASK-OBS-008 expanded from 159 lines to ~830. Added 6 §1 clauses (#9 summary block; #10 audit-row of view access; #12 PII-placeholder defence-in-depth; #13 auditor JWT mechanism; #14 metrics; expanded #11 with full per-view content). 7 §2 rationale paragraphs. Full Rust types + 4 view modules + chain_proof + PDF/JSON exporters in §3. 17 ACs. 7 full Rust test bodies. 17 failure modes. 9 implementation notes.
+## Verdict
 
-## §2 — Findings (all resolved)
+**PASS 10/10** (2026-07-24). Spec is honest task@1 against as-built `services/obs-compliance-view/`: flat `views.rs`, `auth.rs`, `proof.rs` (not `chain_proof.rs`), `query`/`summary`/`window`/`pii_scan`, JSON axum shell in `main.rs`. Phantom per-regime tree, PDF export, Grafana dashboard, and Postgres integration tests removed from claimed surface.
 
-### ISS-001 — Per-view content underspecified
-First-pass §1 had high-level descriptions only. Resolved: §1 #11 enumerates exact row kinds per view; CIS DSS scope deferred.
+## What was checked
 
-### ISS-002 — Cross-tenant via query param not blocked
-First-pass §3 example used `?tenant_id=org:cyberskill` query param. An auditor could supply different tenant_id. Resolved: §1 #3 + AC #6 + #7; tenant_id from JWT only; query param rejected with 403.
+| Check | Result |
+|-------|--------|
+| No `## §N` headings (FM-004) | Pass |
+| Required task@1 sections + grafted AC/Verification | Pass (16 ACs) |
+| Paths under `services/obs-compliance-view/` only | Pass |
+| Status `ready_to_implement`, `entered_via: rework`, `routed_back_count: 1` | Pass |
+| Inline tests cited: views parse, auth cross_tenant, proof sign/verify, window limits | Pass |
+| AWH `cargo test -p cyberos-obs-compliance-view proof::` | Pass |
 
-### ISS-003 — Auditor JWT mechanism unspecified (separate role? TTL?)
-First-pass §1 #2 mentioned `role: external_auditor` but no issuance path. Resolved: §1 #13 + per-engagement JWT (30-day TTL) + `cyberos-auth issue-auditor-token` future command.
+## Findings
 
-### ISS-004 — Audit-row of compliance view access missing
-Auditor's own access should be auditable. Resolved: §1 #10 + canonical::compliance_view_accessed builder; AC #14 + §5 test.
+None open. Prior engineering-spec phantom paths (`views/eu_ai_act.rs`, `chain_proof.rs`, `export/pdf.rs`, `deploy/obs/grafana/dashboards/compliance.json`) closed by re-scope.
 
-### ISS-005 — PII-placeholder defence-in-depth missing
-First-pass disallowed_tools said "redact PII from compliance view export" but no enforcement. Resolved: §1 #12 + regex scan at response time + sev-1 alarm; AC #15 + §5 test asserts 500 on raw PII.
+## Notes for HITL
 
-### ISS-006 — Chain-proof verification mechanism not specified
-First-pass §1 #5 said "Ed25519 signature" without canonicalisation rule. Auditor would need to know the exact serialisation. Resolved: §3 + chain_proof.rs canonical(rows + summary); §5 test asserts independent verify; §11 documents.
+- HTTP export/manifest wiring (TASK-OBS-009) and PDF/Grafana remain explicitly out of scope.
+- Do not flip `done` without the two human-acceptance gates.
 
-## §3 — Resolution
-
-All 6 mechanical revisions applied. **Score = 10/10.**
+**Score = 10/10.**
 
 ---
 
-*End of TASK-OBS-008 audit.*
+*End of TASK-OBS-008 audit (batch/9b-obs adopt).*

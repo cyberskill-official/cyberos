@@ -5,11 +5,12 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 ## [Unreleased]
 
 ### Changed
-- batch/9a-mcp: re-spec/adopt TASK-MCP-003/005/006/007/008 against as-built `services/mcp-gateway/` (task@1 grammar; deferred worker/NATS/drift surfaces ledgered Out of scope).
-- `scripts/check_sep986_naming.sh` is bash 3.2-portable (no `mapfile`) so macOS `/bin/bash` can run the DEC-2362 CI gate locally.
+- batch/9b-obs: re-spec/adopt TASK-OBS-001/003/005/007/008/009 against as-built obs services + `services/shared/cyberos-obs-sdk/` (task@1; phantom `crates/` / `skills/` paths ledgered Out of scope).
+- batch/9a-mcp members (TASK-MCP-003/005/006/007/008) advanced `reviewing → done` under the 2026-07-24 session HITL override (evidence `docs/batches/batch-9b-obs-session-hitl.md`).
 
 ### Added
-- `services/mcp-gateway/tests/sep986_ci_grep_test.rs` and `sep986_audit_emission_test.rs` close the TASK-MCP-003 residual verification gap.
+- `deploy/obs/alertmanager-config.yaml` + `services/obs-router/tests/alertmanager_wiring_test.rs` (TASK-OBS-007 residual wiring).
+- `services/obs-compliance-view/docs/manifest-format.md` (TASK-OBS-009 auditor contract).
 
 ## [1.4.0] - 2026-07-24
 

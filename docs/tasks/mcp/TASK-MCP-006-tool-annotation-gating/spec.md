@@ -11,7 +11,7 @@ author: "@stephencheng"
 template: task@1
 module: mcp
 priority: p0
-status: reviewing
+status: done
 entered_via: rework
 routed_back_count: 1
 verify: T
