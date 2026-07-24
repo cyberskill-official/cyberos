@@ -53,7 +53,9 @@ fn default_checkout() -> String {
 pub async fn ops_get_settings() -> Result<OpsSettings, String> {
     match std::fs::read(settings_path()) {
         Ok(bytes) => serde_json::from_slice(&bytes).map_err(|e| format!("settings parse: {e}")),
-        Err(_) => Ok(OpsSettings { checkout: default_checkout() }),
+        Err(_) => Ok(OpsSettings {
+            checkout: default_checkout(),
+        }),
     }
 }
 
@@ -97,7 +99,9 @@ fn require_project(root: &Path, project: &str) -> Result<PathBuf, String> {
     if !p.join(".git").exists() {
         return Err(format!("not a git repository: {project}"));
     }
-    let canon_root = root.canonicalize().map_err(|e| format!("checkout path: {e}"))?;
+    let canon_root = root
+        .canonicalize()
+        .map_err(|e| format!("checkout path: {e}"))?;
     let canon_p = p.canonicalize().map_err(|e| format!("project path: {e}"))?;
     if canon_p == canon_root {
         return Err("refusing to init the CyberOS checkout itself (§1 #5)".into());
@@ -134,7 +138,10 @@ async fn run_bash_env(
             }
             text.push_str(&err);
         }
-        Ok(OpResult { ok: out.status.success(), output: text })
+        Ok(OpResult {
+            ok: out.status.success(),
+            output: text,
+        })
     })
     .await
     .map_err(|e| format!("blocking task: {e}"))?
@@ -193,7 +200,10 @@ pub async fn ops_list_projects() -> Result<Vec<ProjectInfo>, String> {
                     .map(|s| s.trim().to_string());
                 found.push(ProjectInfo {
                     path: dir.to_string_lossy().into_owned(),
-                    name: dir.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(),
+                    name: dir
+                        .file_name()
+                        .map(|n| n.to_string_lossy().into_owned())
+                        .unwrap_or_default(),
                     installed_version: installed,
                 });
             }
@@ -222,4 +232,60 @@ pub async fn ops_list_projects() -> Result<Vec<ProjectInfo>, String> {
     })
     .await
     .map_err(|e| format!("blocking task: {e}"))?
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    fn scratch_dir(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("cyberos-ops-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).expect("scratch dir");
+        dir
+    }
+
+    #[test]
+    fn require_checkout_rejects_non_checkout() {
+        let dir = scratch_dir("non-checkout");
+        let err = require_checkout(dir.to_str().unwrap()).unwrap_err();
+        assert!(err.contains("missing tools/install/build.sh"), "{err}");
+    }
+
+    #[test]
+    fn require_checkout_accepts_build_sh() {
+        let dir = scratch_dir("checkout");
+        let script = dir.join("tools/install/build.sh");
+        fs::create_dir_all(script.parent().unwrap()).unwrap();
+        fs::write(&script, "#!/bin/bash\n").unwrap();
+        let ok = require_checkout(dir.to_str().unwrap()).unwrap();
+        assert_eq!(ok, dir);
+    }
+
+    #[test]
+    fn require_project_rejects_non_git() {
+        let checkout = scratch_dir("checkout-git");
+        let project = scratch_dir("plain-dir");
+        let script = checkout.join("tools/install/build.sh");
+        fs::create_dir_all(script.parent().unwrap()).unwrap();
+        fs::write(&script, "#!/bin/bash\n").unwrap();
+        let err = require_project(&checkout, project.to_str().unwrap()).unwrap_err();
+        assert!(err.contains("not a git repository"), "{err}");
+    }
+
+    #[test]
+    fn require_project_rejects_checkout_root() {
+        let checkout = scratch_dir("self-init");
+        let script = checkout.join("tools/install/build.sh");
+        fs::create_dir_all(script.parent().unwrap()).unwrap();
+        fs::write(&script, "#!/bin/bash\n").unwrap();
+        // Make checkout look like a git repo so we reach the self-init guard.
+        fs::create_dir_all(checkout.join(".git")).unwrap();
+        let err = require_project(&checkout, checkout.to_str().unwrap()).unwrap_err();
+        assert!(
+            err.contains("refusing to init the CyberOS checkout"),
+            "{err}"
+        );
+    }
 }
