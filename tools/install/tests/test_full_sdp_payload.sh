@@ -97,6 +97,11 @@ t07_reduced_floor_intact() {                                          # AC 7
   cp "$repo/AGENTS.md" "$F/AGENTS.md" 2>/dev/null || cp "$repo/modules/memory/cyberos/data/AGENTS.md" "$F/AGENTS.md"
   echo "9.9.9" > "$F/VERSION"
   rm -rf "$F/modules/skill"/*-author "$F/modules/skill"/*-audit 2>/dev/null
+  # TASK-IMP-127: build reads from git HEAD. A fakerepo without .git must either fail
+  # loudly (covered elsewhere) or be a real commit; this arm needs a successful reduced
+  # floor, so initialise git and commit the fixture tree.
+  (cd "$F" && git init -q && git add -A && git -c user.email=t@t -c user.name=t commit -qm fixture) \
+    || { fail t07 "could not git-init fixture"; return; }
   out7="$(bash "$F/tools/install/build.sh" "$F/dist" 2>&1)" || { fail t07 "skill-less build failed: $(echo "$out7" | tail -1)"; return; }
   echo "$out7" | grep -q "profile=reduced" && grep -q "cyberos_version: 9.9.9" "$F/dist/manifest.yaml" \
     && ok t07 || fail t07 "reduced floor broken: $(echo "$out7" | grep done)"

@@ -527,8 +527,9 @@ t21_uninstall_summary_derived_not_hardcoded() {
   grep -qi 'kept' <<<"$out" \
     && { fail t21_uninstall_summary_derived_not_hardcoded "printed a kept list for a machine that was never there"; all=0; }
   # arm 4: machine present, everything else absent -> a kept block would be an empty rm -rf
+  # (TASK-IMP-129: also drop config.yaml so the durable-override keep does not fire)
   local e="$TMP/u21-e"; mkrepo "$e"; _t06_install "$e" >/dev/null
-  rm -rf "$e/docs" "$e/CHANGELOG.md"
+  rm -rf "$e/docs" "$e/CHANGELOG.md" "$e/.cyberos/config.yaml"
   out="$(CYBEROS_UNINSTALL_KEEP_BRAIN=0 bash "$e/.cyberos/uninstall.sh" "$e" 2>&1)"
   grep -qF 'removed:' <<<"$out" \
     || { fail t21_uninstall_summary_derived_not_hardcoded "arm 4 vacuous: not even the removed list printed"; all=0; }
@@ -904,6 +905,62 @@ t25_marker_removed_and_adoption_honoured
 t26_gitignore_strip_byte_exact
 t27_hook_strip_byte_exact_no_trailing_newline
 t28_native_channel_parent_survives
+
+
+# --- TASK-IMP-129: config.yaml survives uninstall ---
+t_config_yaml_preserved() {
+  local d="$TMP/cfg-keep"; mkrepo "$d"; _t06_install "$d" >/dev/null
+  printf 'gates:\n  test: "echo operator-override"\n' > "$d/.cyberos/config.yaml"
+  local out; out="$(bash "$d/.cyberos/uninstall.sh" "$d" 2>&1)"
+  [ -f "$d/.cyberos/config.yaml" ] || { fail t_config_yaml_preserved "config.yaml missing after uninstall"; return; }
+  grep -q 'operator-override' "$d/.cyberos/config.yaml" \
+    || { fail t_config_yaml_preserved "override content lost"; return; }
+  grep -qE '\.cyberos/config\.yaml' <<<"$out" \
+    && ok t_config_yaml_preserved \
+    || fail t_config_yaml_preserved "banner did not name config.yaml"
+}
+
+t_overrides_survive_reinstall() {
+  local d="$TMP/cfg-re"; mkrepo "$d"; _t06_install "$d" >/dev/null
+  printf 'gates:\n  test: "echo operator-override"\n' > "$d/.cyberos/config.yaml"
+  bash "$d/.cyberos/uninstall.sh" "$d" >/dev/null 2>&1
+  _t06_install "$d" >/dev/null
+  grep -q 'operator-override' "$d/.cyberos/config.yaml" \
+    && ok t_overrides_survive_reinstall \
+    || fail t_overrides_survive_reinstall "override not present after reinstall"
+}
+
+t_autodetect_shell_suite() {
+  local d="$TMP/shell-suite"; mkrepo "$d"
+  mkdir -p "$d/scripts/tests"
+  printf '#!/usr/bin/env bash\nexit 0\n' > "$d/scripts/tests/run_all.sh"
+  _t06_install "$d" >/dev/null
+  local tc; tc="$(grep '^TEST_CMD=' "$d/.cyberos/gates.env" | head -1 | cut -d= -f2- | tr -d '"')"
+  [ -n "$tc" ] && [ "$tc" = "bash scripts/tests/run_all.sh" ] \
+    && ok t_autodetect_shell_suite \
+    || fail t_autodetect_shell_suite "TEST_CMD='$tc'"
+}
+
+t_machine_files_still_removed() {
+  local d="$TMP/cfg-machine"; mkrepo "$d"; _t06_install "$d" >/dev/null
+  printf 'gates:\n  test: "echo x"\n' > "$d/.cyberos/config.yaml"
+  local before; before="$(cksum "$d/.cyberos/gates.env" | awk '{print $1}')"
+  bash "$d/.cyberos/uninstall.sh" "$d" >/dev/null 2>&1
+  [ -f "$d/.cyberos/config.yaml" ] || { fail t_machine_files_still_removed "config lost"; return; }
+  [ -f "$d/.cyberos/gates.env" ] && { fail t_machine_files_still_removed "gates.env survived uninstall"; return; }
+  [ -d "$d/.cyberos/cuo" ] && { fail t_machine_files_still_removed "cuo machine survived"; return; }
+  _t06_install "$d" >/dev/null
+  local after; after="$(cksum "$d/.cyberos/gates.env" | awk '{print $1}')"
+  # Fresh gates.env exists; config preserved
+  [ -f "$d/.cyberos/gates.env" ] && [ -f "$d/.cyberos/config.yaml" ] \
+    && ok t_machine_files_still_removed \
+    || fail t_machine_files_still_removed "reinstall state wrong (before=$before after=$after)"
+}
+
+t_config_yaml_preserved
+t_overrides_survive_reinstall
+t_autodetect_shell_suite
+t_machine_files_still_removed
 
 echo "install-hygiene: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

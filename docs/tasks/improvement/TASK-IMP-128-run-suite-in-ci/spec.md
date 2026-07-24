@@ -4,7 +4,7 @@ title: Run the test suite in CI on ubuntu
 template: task@1
 type: improvement
 module: improvement
-status: draft
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering

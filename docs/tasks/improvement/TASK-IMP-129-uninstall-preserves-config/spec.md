@@ -4,7 +4,7 @@ title: Uninstall MUST preserve .cyberos/config.yaml, the override home
 template: task@1
 type: improvement
 module: improvement
-status: draft
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering

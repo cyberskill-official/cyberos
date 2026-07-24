@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# test_ci_runs_suite.sh - TASK-IMP-128 ACs
+set -uo pipefail
+here="$(cd "$(dirname "$0")" && pwd)"
+repo="$(cd "$here/../../.." && pwd)"
+PASS=0; FAIL=0
+ok()   { PASS=$((PASS+1)); echo "  ok   $1"; }
+fail() { FAIL=$((FAIL+1)); echo "  FAIL $1: $2"; }
+
+WF="$repo/.github/workflows/suite-gate.yml"
+
+t_suite_job_declared() {
+  [ -f "$WF" ] || { fail t_suite_job_declared "missing suite-gate.yml"; return; }
+  grep -q 'ubuntu-latest' "$WF" \
+    && grep -q 'scripts/tests/run_all.sh' "$WF" \
+    && grep -q 'pull_request' "$WF" \
+    && grep -q 'push' "$WF" \
+    && ok t_suite_job_declared \
+    || fail t_suite_job_declared "workflow missing required shape"
+}
+
+t_failure_propagates() {
+  # No continue-on-error / || true on the suite step
+  ! grep -q 'continue-on-error:\s*true' "$WF" \
+    && ! grep -E 'run_all\.sh.*\|\|\s*true' "$WF" \
+    && ok t_failure_propagates \
+    || fail t_failure_propagates "failure may be swallowed"
+}
+
+t_release_assets_executes_on_linux() {
+  if [ "$(uname -s)" != "Linux" ]; then
+    echo "  SKIP t_release_assets_executes_on_linux — host is not Linux (CI ubuntu leg covers this)"
+    return 0
+  fi
+  # On Linux, the suite file must not take the GNU-tar skip branch when invoked
+  if bash "$repo/tools/install/tests/test_release_assets.sh" >/tmp/ra-linux.log 2>&1; then
+    grep -q '^  SKIP test_release_assets' /tmp/ra-linux.log \
+      && fail t_release_assets_executes_on_linux "skipped on Linux" \
+      || ok t_release_assets_executes_on_linux
+  else
+    # Failures in release-assets assertions still prove it executed
+    grep -q '^  SKIP test_release_assets' /tmp/ra-linux.log \
+      && fail t_release_assets_executes_on_linux "skipped on Linux" \
+      || ok t_release_assets_executes_on_linux
+  fi
+}
+
+t_counts_reported() {
+  grep -q 'suites: pass=' "$repo/scripts/tests/run_all.sh" \
+    && ok t_counts_reported \
+    || fail t_counts_reported "run_all.sh does not emit pass/fail/skip counts"
+}
+
+t_suite_job_declared
+t_failure_propagates
+t_release_assets_executes_on_linux
+t_counts_reported
+echo "----"; echo "pass=$PASS fail=$FAIL"
+[ "$FAIL" -eq 0 ]

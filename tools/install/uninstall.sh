@@ -225,8 +225,14 @@ for _mf in .mcp.json .cursor/mcp.json; do
 done
 rm -f "$_mcp_ours"
 
-# 3. BRAIN store
+# 3. BRAIN store + operator config.yaml (TASK-IMP-129)
 brain="$CY/memory/store"
+cfg_keep=""
+if [ -f "$CY/config.yaml" ]; then
+  cfg_keep="$(mktemp "${TMPDIR:-/tmp}/cyberos-config.XXXXXX")"
+  cp "$CY/config.yaml" "$cfg_keep"
+  echo "  stashing .cyberos/config.yaml (operator override home; TASK-IMP-129)"
+fi
 if [ "${CYBEROS_UNINSTALL_KEEP_BRAIN:-1}" = "1" ] && [ -d "$brain" ]; then
   stash="$(mktemp -d "${TMPDIR:-/tmp}/cyberos-brain.XXXXXX")"
   mv "$brain" "$stash/store"
@@ -259,12 +265,17 @@ rm -rf "$CY"
 echo "  removed .cyberos/"
 _note_removed ".cyberos/ (the vendored machine: workflows, skills, plugin, docs-tools)"
 
-# 5. optional restore brain only (minimal rehydrate)
+# 5. optional restore brain + config.yaml (operator durable home)
 if [ -n "${KEEP_BRAIN_STASH:-}" ] && [ -d "$KEEP_BRAIN_STASH" ]; then
   mkdir -p "$root/.cyberos/memory"
   mv "$KEEP_BRAIN_STASH" "$root/.cyberos/memory/store"
   rmdir "$(dirname "$KEEP_BRAIN_STASH")" 2>/dev/null || true
   echo "  restored BRAIN at .cyberos/memory/store/ (machine removed; re-install to restore workflow)"
+fi
+if [ -n "${cfg_keep:-}" ] && [ -f "$cfg_keep" ]; then
+  mkdir -p "$root/.cyberos"
+  mv "$cfg_keep" "$root/.cyberos/config.yaml"
+  echo "  restored .cyberos/config.yaml (operator overrides preserved; TASK-IMP-129)"
 fi
 
 # 6. summary — what went, what stayed and why, and how to finish the job by hand (TASK-IMP-106).
@@ -312,6 +323,7 @@ _keep "docs/tasks/"     "your task corpus - specs, audits, the backlog"
 _keep "docs/status/"    "the rendered status page for that corpus"
 _keep "CHANGELOG.md"    "your release history"
 _keep ".cyberos/memory" "the BRAIN store - everything the machine remembered for you"
+_keep ".cyberos/config.yaml" "operator gate overrides (durable home; TASK-IMP-129)"
 
 if [ -n "$_kept_paths" ]; then
   echo "  kept on purpose - this is your work, not the machine's, so uninstall never removes it:"

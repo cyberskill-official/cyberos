@@ -4,7 +4,7 @@ title: Payload build MUST read from git, not the working tree
 template: task@1
 type: improvement
 module: improvement
-status: draft
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering

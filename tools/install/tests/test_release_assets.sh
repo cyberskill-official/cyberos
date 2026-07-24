@@ -103,5 +103,55 @@ t09_docs_real_urls() {                                               # AC 9
 t01_deterministic_tarball; t02_five_files_two_name_forms; t03_sha256sums_roundtrip
 t04_version_triple_check; t05_workflow_shape; t06_bootstrap_url_happy_path
 t07_bootstrap_bad_checksum; t08_rollout_from_release; t09_docs_real_urls
+
+# --- TASK-IMP-127: git-driven payload + dirty-tree guard ---
+t_build_fails_on_dirty_module_tree() {
+  local probe="$repo/tools/caf/_imp127_test_probe"
+  mkdir -p "$probe" && touch "$probe/.DS_Store"
+  if bash "$repo/tools/install/build.sh" "$TMP/payload-dirty" >/tmp/imp127-dirty.log 2>&1; then
+    rm -rf "$probe"
+    fail t_build_fails_on_dirty_module_tree "build succeeded with untracked .DS_Store"
+    return
+  fi
+  grep -q '\.DS_Store' /tmp/imp127-dirty.log \
+    && ok t_build_fails_on_dirty_module_tree \
+    || fail t_build_fails_on_dirty_module_tree "stderr did not name offending path"
+  rm -rf "$probe"
+}
+
+t_build_ignores_untracked() {
+  local probe="$repo/tools/caf/_imp127_test_probe"
+  mkdir -p "$probe" && touch "$probe/.DS_Store"
+  # Clean baseline already built at file start into $TMP/payload
+  if ! CYBEROS_BUILD_ALLOW_DIRTY=1 bash "$repo/tools/install/build.sh" "$TMP/payload-allow" >/dev/null 2>&1; then
+    rm -rf "$probe"
+    fail t_build_ignores_untracked "allow-dirty build failed"; return
+  fi
+  if find "$TMP/payload-allow" -path '*_imp127_test_probe*' | grep -q .; then
+    rm -rf "$probe"
+    fail t_build_ignores_untracked "untracked probe leaked into payload"; return
+  fi
+  local a b
+  a="$(grep '^rules_sha:' "$TMP/payload/manifest.yaml" | awk '{print $2}')"
+  b="$(grep '^rules_sha:' "$TMP/payload-allow/manifest.yaml" | awk '{print $2}')"
+  rm -rf "$probe"
+  [ -n "$a" ] && [ "$a" = "$b" ] && ok t_build_ignores_untracked \
+    || fail t_build_ignores_untracked "rules_sha clean=$a allow-dirty=$b"
+}
+
+t_payload_file_set_unchanged() {
+  # File set of a clean git-driven build equals the committed baseline build at suite start.
+  (cd "$TMP/payload" && find . -type f | LC_ALL=C sort > "$TMP/files-clean.txt")
+  bash "$repo/tools/install/build.sh" "$TMP/payload-clean2" >/dev/null 2>&1 || { fail t_payload_file_set_unchanged "rebuild failed"; return; }
+  (cd "$TMP/payload-clean2" && find . -type f | LC_ALL=C sort > "$TMP/files-clean2.txt")
+  cmp -s "$TMP/files-clean.txt" "$TMP/files-clean2.txt" \
+    && ok t_payload_file_set_unchanged \
+    || fail t_payload_file_set_unchanged "file sets differ between clean builds"
+}
+
+t_build_fails_on_dirty_module_tree
+t_build_ignores_untracked
+t_payload_file_set_unchanged
+
 echo "----"; echo "pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]
