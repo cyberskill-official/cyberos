@@ -152,27 +152,12 @@ t05_triage_verdict_per_task() {                                        # AC 5
     fail t05 "Gate-2 dated verdict missing from source_decisions"; return
   fi
   # Spot-check applied statuses match the recorded tally (11 route_back + 1 resume).
-  # OBS (batch/9b not started) must stay ready_to_implement. MCP (batch/9a) may have
-  # advanced past ready_to_implement through the normal ship-tasks ladder, but must not
+  # MCP (batch/9a) and OBS (batch/9b) may have advanced past ready_to_implement through
+  # the normal ship-tasks ladder (incl. session HITL override → done), but must not
   # regress into undiagnosed stuck-WIP (implementing without entered_via: rework).
   local rb=0
-  for id in OBS-001 OBS-003 OBS-005 OBS-007 OBS-008 OBS-009; do
-    local st
-    st="$(python3 - "$repo/docs/tasks" "$id" <<'PY'
-import re, sys
-from pathlib import Path
-root, needle = Path(sys.argv[1]), sys.argv[2]
-hits = list(root.glob(f"*/TASK-{needle}*/spec.md"))
-if len(hits) != 1:
-    print(f"AMBIGUOUS:{len(hits)}"); raise SystemExit(0)
-m = re.search(r"(?m)^status:\s*(\S+)", hits[0].read_text(encoding="utf-8", errors="replace"))
-print(m.group(1) if m else "MISSING")
-PY
-)"
-    [ "$st" = "ready_to_implement" ] || { fail t05 "TASK-$id expected ready_to_implement got $st"; return; }
-    rb=$((rb+1))
-  done
-  for id in MCP-003 MCP-005 MCP-006 MCP-007 MCP-008; do
+  for id in OBS-001 OBS-003 OBS-005 OBS-007 OBS-008 OBS-009 \
+            MCP-003 MCP-005 MCP-006 MCP-007 MCP-008; do
     local st entered rb_count
     st="$(python3 - "$repo/docs/tasks" "$id" <<'PY'
 import re, sys

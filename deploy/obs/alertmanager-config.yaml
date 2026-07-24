@@ -1,0 +1,45 @@
+# Alertmanager → cyberos-obs-router (TASK-OBS-007)
+#
+# Wire Alertmanager so firing alerts POST to obs-router's /alert webhook.
+# The router expects optional header X-CyberOS-Webhook-Secret when
+# OBS_ROUTER_WEBHOOK_SECRET is set on the router process.
+#
+# This file is the as-built wiring contract for local / compose deployments.
+# Substitute OBS_ROUTER_URL (default http://obs-router:7777) and the shared secret
+# from your environment — do not commit live secrets.
+
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: cyberos-obs-router
+  group_by: [alertname, severity, tenant_id]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers:
+        - severity =~ "critical|sev1|p1|P1"
+      receiver: cyberos-obs-router
+      continue: false
+    - receiver: cyberos-obs-router
+
+receivers:
+  - name: cyberos-obs-router
+    webhook_configs:
+      - url: "${OBS_ROUTER_URL:-http://obs-router:7777}/alert"
+        send_resolved: true
+        http_config:
+          # When OBS_ROUTER_WEBHOOK_SECRET is set on the router, Alertmanager must
+          # present the same value. Prefer a sealed secret mount over inline text.
+          authorization:
+            type: Bearer
+            credentials: "${OBS_ROUTER_WEBHOOK_SECRET:-}"
+        max_alerts: 0
+
+inhibit_rules:
+  - source_matchers:
+      - severity = "critical"
+    target_matchers:
+      - severity =~ "warning|info"
+    equal: [alertname, tenant_id]

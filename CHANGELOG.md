@@ -6,9 +6,13 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 
 ### Changed
 - batch/9c-app: re-spec/adopt TASK-APP-001 against as-built `services/memory/desktop` Ops (Check = `version.sh`; phantom `install.sh --check` / `apps/desktop` ops claims ledgered Out of scope).
+- batch/9b-obs: re-spec/adopt TASK-OBS-001/003/005/007/008/009 against as-built obs services + `services/shared/cyberos-obs-sdk/` (task@1; phantom `crates/` / `skills/` paths ledgered Out of scope).
+- batch/9a-mcp members (TASK-MCP-003/005/006/007/008) advanced `reviewing → done` under the 2026-07-24 session HITL override (evidence `docs/batches/batch-9b-obs-session-hitl.md`).
 
 ### Added
 - Residual guard unit tests in `services/memory/desktop/src-tauri/src/ops.rs` (checkout + self-init refusal).
+- `deploy/obs/alertmanager-config.yaml` + `services/obs-router/tests/alertmanager_wiring_test.rs` (TASK-OBS-007 residual wiring).
+- `services/obs-compliance-view/docs/manifest-format.md` (TASK-OBS-009 auditor contract).
 
 ## [1.4.0] - 2026-07-24
 
