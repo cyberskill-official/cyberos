@@ -1,6 +1,6 @@
 ---
 id: TASK-MCP-003
-title: "MCP SEP-986 naming convention validator — `cyberos.{module}.{verb}_{noun}` pattern enforced at skill registration + CI gate"
+title: "MCP SEP-986 naming validator + CI gate (cyberos.module.verb_noun)"
 eu_ai_act_risk_class: not_ai
 ai_authorship: generated_then_reviewed
 client_visible: false
@@ -11,7 +11,7 @@ author: "@stephencheng"
 template: task@1
 module: mcp
 priority: p0
-status: ready_to_implement
+status: reviewing
 entered_via: rework
 routed_back_count: 1
 verify: T
@@ -33,190 +33,142 @@ source_decisions:
   - DEC-2360 2026-05-17 — SEP-986 naming: skill ID = `cyberos.{module}.{verb}_{noun}` where module ∈ approved enum, verb ∈ approved enum, noun = snake_case identifier
   - DEC-2361 2026-05-17 — Closed enum `sep986_verb` = {get, list, create, update, delete, send, fetch, sync, validate, generate, execute, search, replay, accept, reject}; cardinality 15
   - DEC-2362 2026-05-17 — Validation at registration (TASK-MCP-001) + CI gate scanning code for skill_id constants
-  - DEC-2363 2026-05-17 — Module name validated against active tenant modules list (TEN/HR/REW/EMAIL/etc.); unknown module → reject
+  - DEC-2363 2026-05-17 — Module name validated against the 23-module registry; unknown module → reject
   - DEC-2364 2026-05-17 — memory audit kinds: mcp.skill_name_validated, mcp.skill_name_rejected, mcp.naming_ci_check_passed, mcp.naming_ci_check_failed
 
 language: rust 1.81
-service: cyberos/services/mcp/
+service: cyberos/services/mcp-gateway/
 new_files:
-  - services/mcp/src/naming/mod.rs
-  - services/mcp/src/naming/validator.rs
-  - services/mcp/src/naming/module_registry.rs
-  - services/mcp/src/audit/naming_events.rs
+  - services/mcp-gateway/src/naming/mod.rs
+  - services/mcp-gateway/src/naming/validator.rs
+  - services/mcp-gateway/src/naming/module_registry.rs
   - scripts/check_sep986_naming.sh
   - .github/workflows/mcp-sep986-check.yml
-  - services/mcp/tests/sep986_verb_enum_cardinality_test.rs
-  - services/mcp/tests/sep986_regex_test.rs
-  - services/mcp/tests/sep986_module_validation_test.rs
-  - services/mcp/tests/sep986_ci_grep_test.rs
-  - services/mcp/tests/sep986_audit_emission_test.rs
+  - services/mcp-gateway/tests/sep986_verb_enum_cardinality_test.rs
+  - services/mcp-gateway/tests/sep986_regex_test.rs
+  - services/mcp-gateway/tests/sep986_module_validation_test.rs
+  - services/mcp-gateway/tests/sep986_ci_grep_test.rs
+  - services/mcp-gateway/tests/sep986_audit_emission_test.rs
 
 modified_files:
-  - services/mcp/src/lib.rs
+  - services/mcp-gateway/src/lib.rs
+  - services/mcp-gateway/src/federation/register.rs
+  - services/mcp-gateway/src/router.rs
+  - services/mcp-gateway/src/oauth/audit.rs
 
 allowed_tools:
-  - file_read: services/mcp/**
-  - file_write: services/mcp/{src,tests}/**
-  - bash: cd services/mcp && cargo test naming
+  - file_read: services/mcp-gateway/**
+  - file_write: services/mcp-gateway/{src,tests}/**
+  - bash: cd services && cargo test -p cyberos-mcp-gateway sep986
 
 disallowed_tools:
   - register without validation (per DEC-2362)
   - bypass CI gate (per DEC-2362)
+  - claim a standalone services/mcp/ tree as the live path
 
 effort_hours: 3
 subtasks:
-  - "0.3h: naming/mod.rs"
-  - "0.4h: validator.rs"
-  - "0.3h: module_registry.rs"
-  - "0.3h: audit/naming_events.rs"
-  - "0.4h: CI workflow + grep script"
-  - "1.0h: tests — 5 test files"
-  - "0.3h: docs"
+  - "0.5h: naming/{mod,validator,module_registry}.rs"
+  - "0.5h: registration + router audit emit"
+  - "0.5h: CI workflow + bash-3.2-safe grep script"
+  - "1.0h: sep986_* integration tests (regex/module/verb/ci/audit)"
+  - "0.5h: batch/9a-mcp re-spec + audit"
 
 risk_if_skipped: "Without naming validator, skill ID sprawl → discovery broken + collision risk. Without DEC-2362 CI gate, code drift introduces non-conforming names. Without DEC-2361 verb enum, every new skill invents its own pattern."
 ---
 
-## §1 — Description (BCP-14 normative)
+# TASK-MCP-003: MCP SEP-986 naming convention validator
 
-The MCP service **MUST** ship SEP-986 naming validator at `services/mcp/src/naming/` enforcing skill ID pattern at registration + CI gate, 4 memory audit kinds.
+## Summary
 
-1. **MUST** validate `sep986_verb` against closed enum per DEC-2361.
+Enforce `cyberos.{module}.{verb}_{noun}` at skill registration and in CI. As-built surface lives under `services/mcp-gateway/src/naming/` (pure validator + 23-module registry + closed 15-verb enum), is wired into `federation::register::validate` / `router` register paths, emits the four DEC-2364 kinds via `oauth::audit`, and is guarded by `scripts/check_sep986_naming.sh` + `.github/workflows/mcp-sep986-check.yml`.
 
-2. **MUST** parse + validate at `validator.rs::validate(skill_id)` per DEC-2360:
-- Regex: `^cyberos\.([a-z][a-z0-9_]*)\.([a-z]+)_([a-z][a-z0-9_]*)$`
-- Extract module, verb, noun
-- Module ∈ TASK-MCP-002 registered modules
-- Verb ∈ closed enum
-- Noun: snake_case identifier
+## Problem
 
-3. **MUST** hook into TASK-MCP-001 skill registration per DEC-2362 — reject with sev-2 audit if invalid.
+The original engineering-spec claimed `services/mcp/` (never existed), a standalone `audit/naming_events.rs`, and five integration tests by name. The live crate is `mcp-gateway`; slices 1–3 already shipped the validator, registration gate, CI script, and audit helpers, but the process evidence failed FM-004 (task@1 frontmatter + `## §N` body) and two residual tests (`sep986_ci_grep_test`, `sep986_audit_emission_test`) were missing. The CI script also used bash-4-only `mapfile`, so it failed on macOS `/bin/bash` 3.2.
 
-4. **MUST** ship CI grep workflow per DEC-2362 — `.github/workflows/mcp-sep986-check.yml`:
-   ```yaml
-   - name: SEP-986 naming check
-     run: bash scripts/check_sep986_naming.sh
-   ```
+## Proposed Solution
 
-5. **MUST** validate module per DEC-2363 at `module_registry.rs::is_valid_module(name)`:
-- Hardcoded list: ten, hr, rew, email, inv, crm, doc, kb, okr, res, learn, esop, cuo, mcp, auth, memory, ai, time, proj, chat, obs, portal, skill
-- Unknown → reject
+Adopt the as-built layout:
 
-6. **MUST** emit 4 memory audit kinds per DEC-2364. PII: skill IDs (public) ok.
+- `naming/validator.rs` — `validate_sync`, `Sep986Verb` (15), precompiled regex
+- `naming/module_registry.rs` — 23-module binary-search registry; `NAMING_EXEMPT_MODULES` for the demo fixture
+- Registration reject path → `oauth::audit::skill_name_rejected`; success → `skill_name_validated`
+- CI grep gate (bash 3.2+ portable) + Actions workflow
+- Integration tests covering regex, modules, verb cardinality, CI grep (live + planted violation), and audit-kind surface pins
 
-7. **MUST** thread trace_id from validation → audit.
+## Alternatives Considered
 
-8. **MUST NOT** register without validation per DEC-2362.
+- **Resume the old engineering-spec as-is.** Rejected: FM-004 blocks re-entry; paths lie.
+- **Standalone `services/mcp/src/audit/naming_events.rs`.** Rejected: house style puts MCP audit kinds on `oauth::audit` next to the other mcp.* kinds.
+- **Drop the CI gate and rely on runtime only.** Rejected: DEC-2362 requires defense-in-depth at review time.
 
-9. **MUST NOT** bypass CI gate per DEC-2362.
+## Success Metrics
 
----
+- Primary: non-conforming tool IDs cannot register; CI fails closed on planted violations; four DEC-2364 kind names remain present.
+- Guardrail: `bash scripts/check_sep986_naming.sh` exits 0 on the live tree on macOS bash 3.2 and Ubuntu CI bash.
 
-## §2 — Why this design
+## Scope
 
-**Why SEP-986 (DEC-2360)?** Consistent naming across modules; discovery by pattern; collision avoidance.
+In scope (as-built):
 
-**Why verb enum (DEC-2361)?** Without bounded set, every developer invents synonyms (get/fetch/retrieve/read).
+- `services/mcp-gateway/src/naming/**`
+- Registration + router audit emit for validated/rejected
+- `scripts/check_sep986_naming.sh` (bash 3.2+), `.github/workflows/mcp-sep986-check.yml`
+- Five `sep986_*` integration test files under `services/mcp-gateway/tests/`
 
-**Why CI gate (DEC-2362)?** Catches violations at PR review; runtime check is safety net.
+### Out of scope / Non-Goals
 
----
+- A separate `services/mcp/` crate or `audit/naming_events.rs` module
+- Emitting `naming_ci_check_passed/failed` from GitHub Actions into the live memory chain (helpers exist; CI exit code is the gate signal until CI can reach Postgres)
+- Extending the verb enum or module registry without RFC / owner sign-off (governance tripwire already in cardinality tests)
 
-## §3 — API contract
+## Dependencies
 
-Sample validation request:
-```json
-POST /v1/mcp/naming/validate
-{
-  "skill_id": "cyberos.calendar.list_events"
-}
+`depends_on: [TASK-MCP-001]`. Soft: TASK-MCP-002 module registry concepts; TASK-MEMORY-111 PII scrub (skill IDs are public identifiers).
 
-{"valid": true, "module": "calendar", "verb": "list", "noun": "events"}
+## 1. Description (normative)
+
+- 1.1 `Sep986Verb` MUST have exactly 15 variants matching DEC-2361; unknown verbs MUST fail validation.
+- 1.2 `validate_sync(skill_id)` MUST enforce `^cyberos\.([a-z][a-z0-9_]*)\.([a-z]+)_([a-z][a-z0-9_]*)$` with module ∈ registry (or exempt), verb ∈ enum, noun snake_case.
+- 1.3 Module registration MUST reject non-conforming tool IDs before they become callable (except `NAMING_EXEMPT_MODULES`).
+- 1.4 CI MUST run `scripts/check_sep986_naming.sh` and fail closed on registry-module violations; the script MUST run on bash 3.2+.
+- 1.5 `oauth::audit` MUST expose the four DEC-2364 kinds; router register success/reject MUST call validated/rejected emitters.
+- 1.6 This adopt MUST NOT claim a `services/mcp/` tree or CI→BRAIN emission as shipped.
+
+## Acceptance criteria
+
+- [ ] AC 1 (traces_to: #1.1) - verb enum cardinality 15 - test: `services/mcp-gateway/tests/sep986_verb_enum_cardinality_test.rs`
+- [ ] AC 2 (traces_to: #1.2) - regex accepts valid / rejects camelCase, missing prefix, bad shape - test: `services/mcp-gateway/tests/sep986_regex_test.rs`
+- [ ] AC 3 (traces_to: #1.2,#1.3) - module registry accepts 23 known modules, rejects unknown - test: `services/mcp-gateway/tests/sep986_module_validation_test.rs`
+- [ ] AC 4 (traces_to: #1.3) - registration rejects non-conforming tool IDs - test: `services/mcp-gateway/src/federation/register.rs::validate_rejects_a_malformed_tool_name`
+- [ ] AC 5 (traces_to: #1.4) - live tree passes CI grep; planted `cyberos.obs.triage` fails - test: `services/mcp-gateway/tests/sep986_ci_grep_test.rs`
+- [ ] AC 6 (traces_to: #1.5) - four DEC-2364 kinds + router emit sites present - test: `services/mcp-gateway/tests/sep986_audit_emission_test.rs`
+- [ ] AC 7 (traces_to: #1.4) - script is bash 3.2 portable (no `mapfile`) - verify: `scripts/check_sep986_naming.sh` header + `bash scripts/check_sep986_naming.sh` on macOS
+- [ ] AC 8 (traces_to: #1.6) - Out of scope lists phantom `services/mcp/` paths; new_files cite mcp-gateway only - verify: this spec Scope / new_files
+
+## Verification
+
+```bash
+bash scripts/check_sep986_naming.sh
+cd services && cargo test -p cyberos-mcp-gateway --test sep986_regex_test --test sep986_module_validation_test --test sep986_verb_enum_cardinality_test --test sep986_ci_grep_test --test sep986_audit_emission_test
 ```
 
-Invalid:
-```json
-{
-  "skill_id": "cyberos.calendar.getEvents"   # camelCase noun + 'get' may be OK but format wrong
-}
+| Path | Covers |
+|------|--------|
+| `tests/sep986_regex_test.rs` | Shape / verb / error messages |
+| `tests/sep986_module_validation_test.rs` | 23-module registry |
+| `tests/sep986_verb_enum_cardinality_test.rs` | DEC-2361 cardinality tripwire |
+| `tests/sep986_ci_grep_test.rs` | DEC-2362 CI gate live + planted |
+| `tests/sep986_audit_emission_test.rs` | DEC-2364 kind surface + router wiring |
+| `src/federation/register.rs` naming tests | Runtime registration gate |
 
-{"valid": false, "error": "noun must be snake_case"}
-```
+## AI Authorship Disclosure
 
----
-
-## §4 — Acceptance criteria
-1. **sep986_verb enum cardinality 15**. 2. **Regex matches valid IDs**. 3. **Module ∈ registered list**. 4. **Verb ∈ closed enum**. 5. **Noun snake_case**. 6. **Registration gated**. 7. **CI grep catches violations**. 8. **4 memory audit kinds emitted**. 9. **PII: skill IDs (public) ok**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Append-only validations log**. 13. **CI script in repo**. 14. **Bypass impossible (required check)**. 15. **Error messages specific**. 16. **Validation perf < 1ms**. 17. **Module list maintained in code**. 18. **New module addition documented**. 19. **Capitalization rejected**. 20. **Reserved verb additions need RFC**.
-
----
-
-## §5 — Verification
-
-```rust
-#[tokio::test]
-async fn valid_skill_id_passes() {
-    let ok = vec![
-        "cyberos.calendar.list_events",
-        "cyberos.email.send_message",
-        "cyberos.inv.create_invoice",
-    ];
-    for id in ok {
-        let r = validator::validate(id).await;
-        assert!(r.is_ok());
-    }
-}
-
-#[tokio::test]
-async fn invalid_skill_id_rejected() {
-    let bad = vec![
-        "cyberos.calendar.listEvents",  // camelCase
-        "calendar.list_events",  // missing prefix
-        "cyberos.unknown.list_things",  // unknown module
-        "cyberos.calendar.fetch_events",  // wait, fetch IS in enum
-        "cyberos.calendar.retrieve_events",  // 'retrieve' not in enum
-    ];
-    let mut bad_count = 0;
-    for id in bad {
-        if validator::validate(id).await.is_err() { bad_count += 1; }
-    }
-    assert!(bad_count >= 3);
-}
-
-#[tokio::test]
-async fn ci_grep_catches_non_conforming() {
-    let test_dir = create_test_dir_with_code(r#"const SKILL: &str = "myskill.getStuff";"#);
-    let r = run_shell("scripts/check_sep986_naming.sh", test_dir);
-    assert!(!r.success());
-}
-
-// 5.4..5.10
-```
+- **Tools used:** Cursor agent (Composer) on branch `batch/9a-mcp`.
+- **Scope:** Re-spec/adopt against as-built mcp-gateway; bash 3.2 CI fix; residual ci/audit tests; deferred CI→BRAIN emission ledgered.
+- **Human review:** Required at the two HITL gates (`entered_via: rework`, `routed_back_count: 1`).
 
 ---
 
-## §7 — Dependencies
-**Upstream:** TASK-MCP-001. **Cross-module:** TASK-MCP-002 (module registry), TASK-MEMORY-111 (audit).
-
-## §10 — Failure modes
-| Failure | Detection | Outcome | Recovery |
-|---|---|---|---|
-| Verb not in enum | regex + enum | reject; sev-2 audit | use valid verb |
-| Module unknown | registry check | reject; sev-2 | add to registry |
-| Camelcase noun | regex | reject | use snake_case |
-| Missing prefix | regex | reject | add cyberos. |
-| CI script bug | tests | CI fails | fix script |
-| Validator perf | benchmark | inherent | inherent |
-| Cross-tenant validation | RLS | inherent | inherent |
-| Concurrent register | inherent | each isolated | inherent |
-| Verb enum extension | RFC process | inherent | governance |
-| Module list drift | maintained | inherent | code review |
-
-## §11 — Implementation notes
-- §11.1 Regex compiled once; reused for perf.
-- §11.2 CI script greps `*.rs` and `*.toml` for skill_id constants; fails on non-conforming pattern.
-- §11.3 memory audit body: skill_id, validation result; no PII (skill IDs public).
-- §11.4 Module list reviewed quarterly; additions require module owner sign + RFC.
-- §11.5 Verb enum additions require SEP RFC + community discussion.
-
----
-
-*End of TASK-MCP-003 spec.*
+*batch/9a-mcp adopt — TASK-MCP-003 re-spec against as-built mcp-gateway naming.*

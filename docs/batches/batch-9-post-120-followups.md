@@ -48,8 +48,8 @@ Operator: **all-accept** for MEMORY-302, IMP-141, CUO-305, IMP-142 → `done` (e
 
 Gate-2 of IMP-139 routed these to `ready_to_implement` (except APP-001 resume). Suggested ship order:
 
-1. **batch/9a-mcp** — TASK-MCP-003, 005, 006, 007, 008 (re-spec/adopt under `services/mcp-gateway/`)
-2. **batch/9b-obs** — TASK-OBS-001, 003, 005, 007, 008, 009 (re-spec against `services/shared/` reality)
-3. **batch/9c-app** — TASK-APP-001 (resume; process hygiene)
+1. **batch/9a-mcp** — TASK-MCP-003, 005, 006, 007, 008 (re-spec/adopt under `services/mcp-gateway/`) — **in flight** on branch `batch/9a-mcp` (2026-07-24): task@1 re-spec + audits; SEP-986 CI script bash-3.2 portability; residual `sep986_ci_grep` / `sep986_audit_emission` tests. Halt at HITL review acceptance before `ready_to_test` / `done`.
+2. **batch/9b-obs** — TASK-OBS-001, 003, 005, 007, 008, 009 (re-spec against `services/shared/` reality) — not started
+3. **batch/9c-app** — TASK-APP-001 (resume; process hygiene) — not started
 
-Do not start 9a–9c until IMP-141 + MEMORY-302 are `done` (doctor floor must stay trustworthy).
+Preconditions met: IMP-141 + MEMORY-302 are `done` (doctor floor trustworthy).

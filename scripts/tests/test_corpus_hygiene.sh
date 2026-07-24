@@ -152,9 +152,11 @@ t05_triage_verdict_per_task() {                                        # AC 5
     fail t05 "Gate-2 dated verdict missing from source_decisions"; return
   fi
   # Spot-check applied statuses match the recorded tally (11 route_back + 1 resume).
+  # OBS (batch/9b not started) must stay ready_to_implement. MCP (batch/9a) may have
+  # advanced past ready_to_implement through the normal ship-tasks ladder, but must not
+  # regress into undiagnosed stuck-WIP (implementing without entered_via: rework).
   local rb=0
-  for id in MCP-003 MCP-005 MCP-006 MCP-007 MCP-008 \
-            OBS-001 OBS-003 OBS-005 OBS-007 OBS-008 OBS-009; do
+  for id in OBS-001 OBS-003 OBS-005 OBS-007 OBS-008 OBS-009; do
     local st
     st="$(python3 - "$repo/docs/tasks" "$id" <<'PY'
 import re, sys
@@ -168,6 +170,35 @@ print(m.group(1) if m else "MISSING")
 PY
 )"
     [ "$st" = "ready_to_implement" ] || { fail t05 "TASK-$id expected ready_to_implement got $st"; return; }
+    rb=$((rb+1))
+  done
+  for id in MCP-003 MCP-005 MCP-006 MCP-007 MCP-008; do
+    local st entered rb_count
+    st="$(python3 - "$repo/docs/tasks" "$id" <<'PY'
+import re, sys
+from pathlib import Path
+root, needle = Path(sys.argv[1]), sys.argv[2]
+hits = list(root.glob(f"*/TASK-{needle}*/spec.md"))
+if len(hits) != 1:
+    print("AMBIGUOUS"); raise SystemExit(0)
+text = hits[0].read_text(encoding="utf-8", errors="replace")
+st = re.search(r"(?m)^status:\s*(\S+)", text)
+ev = re.search(r"(?m)^entered_via:\s*(\S+)", text)
+rb = re.search(r"(?m)^routed_back_count:\s*(\d+)", text)
+print(st.group(1) if st else "MISSING")
+print(ev.group(1) if ev else "MISSING")
+print(rb.group(1) if rb else "0")
+PY
+)"
+    entered="$(printf '%s\n' "$st" | sed -n '2p')"
+    rb_count="$(printf '%s\n' "$st" | sed -n '3p')"
+    st="$(printf '%s\n' "$st" | sed -n '1p')"
+    case "$st" in
+      ready_to_implement|implementing|ready_to_review|reviewing|ready_to_test|testing|done) ;;
+      *) fail t05 "TASK-$id unexpected status $st"; return ;;
+    esac
+    [ "$entered" = "rework" ] || { fail t05 "TASK-$id expected entered_via: rework got $entered"; return; }
+    [ "$rb_count" -ge 1 ] || { fail t05 "TASK-$id expected routed_back_count>=1 got $rb_count"; return; }
     rb=$((rb+1))
   done
   local app

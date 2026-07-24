@@ -2,6 +2,15 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [Unreleased]
+
+### Changed
+- batch/9a-mcp: re-spec/adopt TASK-MCP-003/005/006/007/008 against as-built `services/mcp-gateway/` (task@1 grammar; deferred worker/NATS/drift surfaces ledgered Out of scope).
+- `scripts/check_sep986_naming.sh` is bash 3.2-portable (no `mapfile`) so macOS `/bin/bash` can run the DEC-2362 CI gate locally.
+
+### Added
+- `services/mcp-gateway/tests/sep986_ci_grep_test.rs` and `sep986_audit_emission_test.rs` close the TASK-MCP-003 residual verification gap.
+
 ## [1.4.0] - 2026-07-24
 
 Added
