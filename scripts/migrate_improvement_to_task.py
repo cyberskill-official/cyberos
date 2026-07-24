@@ -172,8 +172,39 @@ def status_line(tally):
     return ", ".join(f"{tally[s]} {s}" for s in order if tally.get(s))
 
 def regen_backlog():
+    # TASK-IMP-144: refuse to invent transition edges. Parse the previous BACKLOG status
+    # cells; when an existing stem would change status from the frontmatter alone, require
+    # a flip receipt under docs/tasks/_state/receipts/ for (task_id, from, to).
+    prev = {}
+    backlog_path = task / "BACKLOG.md"
+    if backlog_path.exists():
+        row_re = re.compile(r"^- \[([a-z_]+)\] (TASK-[A-Z0-9]+-\d+\S*) ")
+        for line in backlog_path.read_text().splitlines():
+            m = row_re.match(line)
+            if not m:
+                continue
+            st, stem = m.group(1), m.group(2)
+            tid_m = re.match(r"(TASK-[A-Z0-9]+-\d+)", stem)
+            if tid_m:
+                prev[tid_m.group(1)] = st
+
+    receipts_dir = task / "_state" / "receipts"
+    def has_receipt(task_id, frm, to):
+        if not receipts_dir.is_dir():
+            return False
+        for p in receipts_dir.glob(f"{task_id}--{frm}--{to}--*.json"):
+            try:
+                import json
+                data = json.loads(p.read_text())
+            except Exception:
+                continue
+            if data.get("task_id") == task_id and data.get("from") == frm and data.get("to") == to:
+                return True
+        return False
+
     mods = {}
     unparseable = []
+    invented = []
     for f in sorted(task.glob("*/TASK-*/spec.md")):
         if "_audits" in f.parts or "_archive" in f.parts:
             continue
@@ -186,8 +217,15 @@ def regen_backlog():
         # it); read type first, keep class as a transition fallback, so regen keeps tagging
         # improvement rows on the post-migration corpus.
         klass = str(fm.get("type", fm.get("class", "product")) or "product").strip() or "product"
+        stem = f.parent.name
+        st = str(fm.get("status", "")).strip()
+        tid_m = re.match(r"(TASK-[A-Z0-9]+-\d+)", stem)
+        tid = tid_m.group(1) if tid_m else None
+        if tid and tid in prev and prev[tid] != st:
+            if not has_receipt(tid, prev[tid], st):
+                invented.append(f"{tid}: backlog had '{prev[tid]}', frontmatter wants '{st}' — no transition receipt (TASK-IMP-144)")
         mods.setdefault(mod, []).append(
-            (f.parent.name, str(fm.get("status", "")).strip(), str(fm.get("title", "")), klass)
+            (stem, st, str(fm.get("title", "")), klass)
         )
     if unparseable:
         # TASK-IMP-091 §3: unparseable frontmatter HALTS the regen BEFORE any write,
@@ -196,6 +234,13 @@ def regen_backlog():
         for u in unparseable:
             print(f"regen_backlog: unparseable frontmatter: {u}", file=sys.stderr)
         sys.exit(f"regen_backlog: {len(unparseable)} unparseable spec.md file(s); BACKLOG.md NOT written")
+    if invented:
+        for msg in invented:
+            print(f"regen_backlog: invented transition refused: {msg}", file=sys.stderr)
+        sys.exit(
+            f"regen_backlog: {len(invented)} invented transition(s) without engine receipt; "
+            "BACKLOG.md NOT written (TASK-IMP-144). Use task-state.mjs transition / backlog-mutate flip."
+        )
     totals = {}
     out = ["# CyberOS task backlog (regenerated 2026-07-09)", "",
            "Source of truth = task frontmatter. This file lists EVERY task folder - one row per",

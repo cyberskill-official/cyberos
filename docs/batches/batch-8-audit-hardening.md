@@ -58,9 +58,9 @@ Remote tip `origin/ship/batch-8f-entrypoint` deleted 2026-07-23 post-merge (Wave
 4. IMP-138 Branch A thin spine — **done**
 5. IMP-140 BRAIN recording — **done**
 6. CAF B17/B18 — **fixed on main** (`46ceb8b4`); historical ledger warning obsolete
-7. Branch protection vs deleted stubs — **pending** (owner: Stephen Cheng). API probe 2026-07-23 got HTTP 403 (`administration:read` missing). Stub workflow files are absent under `.github/workflows/`. Acceptance: confirm in GitHub Settings → Branches that no required check still names a deleted stub.
+7. Branch protection vs deleted stubs — **closed 2026-07-25** (owner: Stephen Cheng). No existing ruleset / nothing to scrub; stub workflow files absent under `.github/workflows/`.
 8. `.cyberos/` refresh after store repair — **done** on batch-8c
 
 ## Follow-ups (post-1.2.0)
 
-See plan `post-1.2.0_next_steps` / batch-9 schedule: MMR sync for `memory-append`, TASK-MEMORY-302, ship-tasks evolution, MCP/OBS resume wave, 1.4.x / 1.5.0 drafts (stay on 1.x). Decision #7 (branch-protection stub-check confirm) stays open until the owner ticks the acceptance criterion above.
+See plan `post-1.2.0_next_steps` / batch-9 schedule: MMR sync for `memory-append`, TASK-MEMORY-302, ship-tasks evolution, MCP/OBS resume wave, 1.4.x / 1.5.0 drafts (stay on 1.x). Decision #7 closed 2026-07-25 (no ruleset / nothing to scrub).

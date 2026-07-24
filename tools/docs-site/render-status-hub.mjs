@@ -156,7 +156,8 @@ for (const mod of readdirSync(TASK_ROOT, { withFileTypes: true }).sort((a, b) =>
       c: str(m.type) || str(m.class) || (mod.name === 'improvement' ? 'improvement' : 'product'),
       p: str(m.priority), s: str(m.status) || '(none)',
       ph: str(m.phase), ms: str(m.milestone), sl: str(m.slice),
-      o: str(m.owner), cr: str(m.created), sh: str(m.shipped),
+      o: str(m.owner), cr: str(m.created) || str(m.created_at), sh: str(m.shipped),
+      ca: str(m.created_at) || str(m.created),
       e: str(m.effort_hours), v: str(m.verify), r: str(m.risk_if_skipped),
       // TASK-IMP-108 §1.7: WHICH KIND of draft / ready_to_implement. Absent renders as 'unknown',
       // which is the truth for every task this run did not author - the page must not invent a
@@ -410,6 +411,78 @@ const bound = [...new Set(releases.flatMap(r => [...r.cited, ...r.dated]))].sort
 const VERSION = existsSync(join(ROOT, 'VERSION'))
   ? readFileSync(join(ROOT, 'VERSION'), 'utf-8').trim()
   : (LENIENT ? 'unversioned' : die('VERSION missing'));
+
+// ---- stuck WIP (G13 → hub) TASK-IMP-143 ------------------------------------------------
+// Report-only sentinel: in-flight tasks older than N days against a DETERMINISTIC as-of.
+// Never Date.now() — wall clock would churn the page and break TASK-IMP-082's fp- stamp.
+// As-of: CYBEROS_NOW / CYBEROS_HUB_ASOF, else the CHANGELOG date for the current VERSION.
+const WIP_STATUSES = new Set(['implementing', 'ready_to_review', 'reviewing', 'ready_to_test', 'testing']);
+const G13_THRESHOLD = Number(process.env.CYBEROS_G13_THRESHOLD_DAYS || 30);
+const hubAsofRaw = (process.env.CYBEROS_NOW || process.env.CYBEROS_HUB_ASOF || '').trim()
+  || (() => {
+    const hit = releases.find(r => r.v === VERSION && r.d);
+    return hit ? hit.d : '';
+  })();
+function parseHubDay(s) {
+  if (!s) return null;
+  const m = String(s).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+const hubAsofMs = parseHubDay(hubAsofRaw);
+const stuckWip = (() => {
+  const rows = [];
+  const unparseable = [];
+  if (hubAsofMs === null) {
+    return { asof: hubAsofRaw || null, threshold_days: G13_THRESHOLD, stale: [], unparseable: [], asof_missing: true };
+  }
+  for (const t of tasks) {
+    if (!WIP_STATUSES.has(t.s)) continue;
+    const src = t.ca || t.cr || '';
+    const createdMs = parseHubDay(src);
+    if (createdMs === null) {
+      unparseable.push({ id: t.i, status: t.s, created: src || '(missing)' });
+      continue;
+    }
+    const age = Math.floor((hubAsofMs - createdMs) / 86400000);
+    if (age > G13_THRESHOLD) {
+      rows.push({ id: t.i, status: t.s, age_days: age, created: src });
+    }
+  }
+  rows.sort((a, b) => b.age_days - a.age_days || a.id.localeCompare(b.id));
+  return { asof: hubAsofRaw, threshold_days: G13_THRESHOLD, stale: rows, unparseable, asof_missing: false };
+})();
+
+const stuckWipHtml = (() => {
+  if (stuckWip.asof_missing) {
+    return `
+<section class="now" id="stuck-wip">
+  <h2>Stuck WIP (G13)</h2>
+  <p class="muted">As-of date unavailable (no CYBEROS_NOW / CYBEROS_HUB_ASOF and no dated CHANGELOG entry for VERSION ${esc(VERSION)}) — age classification skipped. Detector stays report-only.</p>
+</section>`;
+  }
+  const body = stuckWip.stale.length
+    ? `<table class="nojs-t">
+      <thead><tr><th>task</th><th>status</th><th>age</th><th>created</th><th>triage</th></tr></thead>
+      <tbody>${stuckWip.stale.map(r =>
+        `<tr><td class="code"><button class="chip active" data-task="${esc(r.id)}" type="button">${esc(r.id.replace(/^TASK-/, ''))}</button></td>` +
+        `<td>${esc(r.status)}</td><td>${r.age_days}d</td><td>${esc(r.created)}</td>` +
+        `<td class="muted">resume / route_back / on_hold</td></tr>`
+      ).join('')}</tbody>
+    </table>`
+    : `<p class="muted">No in-flight tasks older than ${stuckWip.threshold_days}d (as-of ${esc(stuckWip.asof)}).</p>`;
+  const unp = stuckWip.unparseable.length
+    ? `<p class="muted">Unparseable created_at on ${stuckWip.unparseable.length} in-flight task(s) — listed in payload only.</p>`
+    : '';
+  return `
+<section class="now" id="stuck-wip">
+  <h2>Stuck WIP (G13) · ${stuckWip.stale.length} stale · threshold ${stuckWip.threshold_days}d · as-of ${esc(stuckWip.asof)}</h2>
+  ${body}
+  ${unp}
+  <p class="muted">Report-only (G13 tier): no status changed. Operator triage links are the decision surface.</p>
+</section>`;
+})();
+
 // The default stamp is a fingerprint of the render inputs, not a git sha: 'fp-' + the first
 // 12 hex of sha256 over every task spec's raw bytes in bytewise-sorted repo-relative path
 // order, then CHANGELOG.md, then VERSION, when present. A HEAD default self-chased: the page
@@ -588,7 +661,7 @@ const data = {
 const KEEP = new Set(['i', 'k', 'dm', 't', 'm', 's', 'd', 'b', 'rl', 'st']);
 const compact = f => Object.fromEntries(Object.entries(f)
   .filter(([k, v]) => KEEP.has(k) || (Array.isArray(v) ? v.length : v !== '' && v !== null && v !== 0)));
-const dataJson = JSON.stringify({ ...data, draft_staleness: draftStaleness, tasks: tasks.map(compact) }).replace(/</g, '\\u003c');
+const dataJson = JSON.stringify({ ...data, draft_staleness: draftStaleness, stuck_wip: stuckWip, tasks: tasks.map(compact) }).replace(/</g, '\\u003c');
 
 // ---- templates ------------------------------------------------------------------------
 const tpl = (sub, name) => {
@@ -629,7 +702,7 @@ for (const [k, v] of Object.entries({
   'search_placeholder': `Search ${tasks.length} tasks — id, title, module, owner, phase…`,
   'meta:html': `VERSION <span class="code">${esc(VERSION)}</span> · built from <span class="code">${esc(COMMIT)}</span> · ${tasks.length} tasks · ${releases.length} releases`,
   'deck:html': deck + economicsHtml,
-  'now:html': nowHtml,
+  'now:html': nowHtml + stuckWipHtml,
   'staleness:html': stalenessHtml,
   'facets:html': facets,
   'nojs:html': nojs,

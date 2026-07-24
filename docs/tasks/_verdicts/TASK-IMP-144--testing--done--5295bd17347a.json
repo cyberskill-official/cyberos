@@ -1,0 +1,11 @@
+{
+  "schema": "cyberos.verdict@1",
+  "actor": "Stephen Cheng (session operator)",
+  "timestamp": "2026-07-24T17:26:20Z",
+  "task_id": "TASK-IMP-144",
+  "from": "testing",
+  "to": "done",
+  "evidence_path": "docs/batches/batch-9d-imp-143-144-session-hitl.md",
+  "evidence_sha256": "5295bd17347af3095ab7779d3bd8fffecf290e1fe56085deb147c682b5cb92a8",
+  "artifact_sha256": "46e24f4b05f44eda51067be2a3d7468b1fbae22cbae7f38f3787d7b3cff2ac8a"
+}
