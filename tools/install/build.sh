@@ -211,6 +211,9 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   # workflow helpers: ship-manifest@1 executor + backlog-state-update byte-discipline executor (TASK-IMP-085)
   [ -f "$here/docs-tools/ship-manifest.mjs" ] && cp "$here/docs-tools/ship-manifest.mjs" "$out/docs-tools/"
   [ -f "$here/docs-tools/backlog-mutate.mjs" ] && cp "$here/docs-tools/backlog-mutate.mjs" "$out/docs-tools/"
+  # verdict-artifact + task-state: attributed HITL + transition-locked engine (TASK-IMP-143/144)
+  [ -f "$here/docs-tools/verdict-artifact.mjs" ] && cp "$here/docs-tools/verdict-artifact.mjs" "$out/docs-tools/"
+  [ -f "$here/docs-tools/task-state.mjs" ] && cp "$here/docs-tools/task-state.mjs" "$out/docs-tools/"
   # memory-append: doc-driven appender for the BRAIN audit chain (TASK-IMP-093)
   [ -f "$here/docs-tools/memory-append.mjs" ] && cp "$here/docs-tools/memory-append.mjs" "$out/docs-tools/"
   # coverage-scope: task diff -> per-file coverage skeleton (TASK-IMP-098)

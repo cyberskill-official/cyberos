@@ -12,7 +12,7 @@
 // Usage:  node backlog-mutate.mjs [--json] [--root <repo-root>] <command> ...
 //
 //   flip <task-id> <from> <to> [--backlog <path>] [--old-line <text>]
-//        [--verdict-by <actor> --verdict-evidence <path>]
+//        [--verdict-by <actor> --verdict-evidence <path>] [--verdict-artifact <path>]
 //       Locate the row by task STEM (the `<task-id>-<slug>` token), verify the status
 //       cell equals <from> AND — when --old-line carries the recorded pre-image — the
 //       full old line byte-for-byte (line terminator excluded), then rewrite EXACTLY
@@ -28,16 +28,19 @@
 //       statuses omitted, statuses in lifecycle order) — an inherited wrong count is
 //       corrected, never propagated (TASK-IMP-092); a header without parseable counts
 //       is left untouched.
-//       HUMAN-ACCEPTANCE GATE (TASK-CUO-303): the two transitions doctrine reserves for
-//       a recorded human verdict — `reviewing -> ready_to_test` and `testing -> done`
-//       (STATUS-REFERENCE §1.4) — additionally require --verdict-by (non-empty actor)
-//       and --verdict-evidence (an existing, non-empty regular file), refusing with
-//       exit 8 AFTER every exit-6 refusal above; every other transition ignores the
-//       flags. On a gated flip, ONE status_overridden row is appended via the sibling
-//       memory-append.mjs BEFORE the index moves whenever a BRAIN store resolves
-//       (CYBEROS_STORE override, else <root>/.cyberos/memory/store); a present store
-//       that cannot take the row fails the flip (exit 9, audit-before-action), and no
-//       store at all means the evidence file is the record (noted on stderr).
+//       HUMAN-ACCEPTANCE GATE (TASK-CUO-303 + TASK-IMP-143): the two transitions doctrine
+//       reserves for a recorded human verdict — `reviewing -> ready_to_test` and
+//       `testing -> done` (STATUS-REFERENCE §1.4) — additionally require --verdict-by
+//       (non-empty actor) and --verdict-evidence (an existing, non-empty regular file),
+//       refusing with exit 8 AFTER every exit-6 refusal above; every other transition
+//       ignores the flags. On a gated flip the tool mints a content-addressed verdict
+//       artifact under docs/tasks/_verdicts/ (or validates --verdict-artifact when
+//       supplied) binding actor+transition+evidence_sha256 (TASK-IMP-143). ONE
+//       status_overridden row is appended via the sibling memory-append.mjs BEFORE the
+//       index moves whenever a BRAIN store resolves (CYBEROS_STORE override, else
+//       <root>/.cyberos/memory/store); a present store that cannot take the row fails
+//       the flip (exit 9, audit-before-action), and no store at all means the evidence
+//       file is the record (noted on stderr).
 //   insert <task-id> <stem> <title> <status> [--backlog <path>] [--section <name>] [--class product|improvement]
 //       Uniqueness gate first: NO row for <task-id> (or <stem>) may pre-exist anywhere
 //       in the file — violation is exit 7 naming the line. The row is rendered in the
@@ -89,10 +92,15 @@ import {
   readFileSync, writeFileSync, renameSync, existsSync, mkdirSync,
   openSync, fsyncSync, closeSync, readdirSync, statSync,
 } from "node:fs";
-import { randomBytes } from "node:crypto";
+import { randomBytes, createHash } from "node:crypto";
 import { join, resolve, dirname, relative, isAbsolute } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import {
+  mintVerdictArtifact,
+  validateVerdictArtifact,
+  sha256File,
+} from "./verdict-artifact.mjs";
 
 // STATUS-REFERENCE.md §1 enum; the first ten are regen_backlog()'s STATUS_ORDER —
 // header counts render in this order.
@@ -445,16 +453,49 @@ function cmdFlip(root, positionals, opts) {
         `Pass --verdict-by <actor> and --verdict-evidence <path to the review/acceptance note the human produced>. Refusing; nothing written.`,
         jsonFields);
     }
+    // TASK-IMP-143: content-addressed verdict artifact (mint or validate) — closes the
+    // honor-system --verdict-by residual CUO-303 deferred. Runs AFTER evidence checks and
+    // BEFORE the BRAIN append / index write so a bad artifact refuses with exit 8 and
+    // nothing is written.
+    const evidenceAbs = resolve(root, ev);
+    const evidenceSha = sha256File(evidenceAbs);
+    jsonFields.evidence_sha256 = evidenceSha;
+    let artifactMeta;
+    if (opts["verdict-artifact"] !== undefined) {
+      const artPath = resolve(root, opts["verdict-artifact"]);
+      const checked = validateVerdictArtifact(artPath, {
+        actor: by, task_id: id, from, to, evidence_abs: evidenceAbs, evidence_path: ev,
+      });
+      if (!checked.ok) {
+        throw new Refusal(8,
+          `flip ${id}: '${from} -> ${to}' verdict artifact failed attribution checks - ${checked.error}. Refusing; nothing written.`,
+          { ...jsonFields, verdict_artifact: opts["verdict-artifact"] });
+      }
+      artifactMeta = {
+        verdict_artifact: relative(root, artPath) || opts["verdict-artifact"],
+        evidence_sha256: evidenceSha,
+        artifact_sha256: checked.artifact.artifact_sha256,
+      };
+    } else {
+      const minted = mintVerdictArtifact(root, {
+        actor: by, task_id: id, from, to, evidence_path: ev, evidence_abs: evidenceAbs,
+      });
+      artifactMeta = {
+        verdict_artifact: minted.relative,
+        evidence_sha256: evidenceSha,
+        artifact_sha256: minted.artifact.artifact_sha256,
+      };
+    }
     // Audit-before-action (spec §1.4): the row lands BEFORE the index moves. A present
     // store that cannot take the row fails the flip (exit 9); no store at all is legal —
     // the evidence file is the record, said on stderr.
     const store = resolveBrainStore(root);
     if (store === null) {
       process.stderr.write(`backlog-mutate: note: no BRAIN store resolvable (no CYBEROS_STORE override, no .cyberos/memory/store under the root) - the verdict evidence file is the record; no status_overridden row appended (TASK-CUO-303)\n`);
-      verdictInfo = { verdict_by: by, verdict_evidence: ev, audit_row: null };
+      verdictInfo = { verdict_by: by, verdict_evidence: ev, audit_row: null, ...artifactMeta };
     } else {
       const row = appendVerdictRow(root, store, { actor: by, task_id: id, prior_status: from, new_status: to, reason: ev }, jsonFields);
-      verdictInfo = { verdict_by: by, verdict_evidence: ev, audit_row: { seq: row.seq, chain: row.chain, store: row.store } };
+      verdictInfo = { verdict_by: by, verdict_evidence: ev, audit_row: { seq: row.seq, chain: row.chain, store: row.store }, ...artifactMeta };
     }
   }
 
@@ -476,17 +517,44 @@ function cmdFlip(root, positionals, opts) {
   let totalsInfo = {};
   if (tot.line >= 0 && tot.text !== lines[tot.line]) { totalsInfo = { totals_line: tot.line + 1 }; lines[tot.line] = tot.text; }
   atomicWrite(path, lines.join("\n"));
+  // TASK-IMP-144: transition receipt — regenerators refuse invented edges without one.
+  const receipt = writeTransitionReceipt(root, {
+    task_id: id, from, to,
+    evidence_sha256: verdictInfo?.evidence_sha256 ?? null,
+    verdict_artifact: verdictInfo?.verdict_artifact ?? null,
+  });
   // Gate flips carry the verdict fields (and the appended row's coordinates) in both the
   // prose message and the --json envelope; non-gate flips emit exactly what they always
   // did — verdictInfo is null there, so nothing spreads and nothing is appended.
   const verdictNote = verdictInfo === null ? ""
-    : verdictInfo.audit_row ? `; status_overridden row seq ${verdictInfo.audit_row.seq} appended (verdict by ${verdictInfo.verdict_by})`
-    : `; no BRAIN store - the verdict evidence file is the record`;
+    : verdictInfo.audit_row ? `; status_overridden row seq ${verdictInfo.audit_row.seq} appended (verdict by ${verdictInfo.verdict_by}; artifact ${verdictInfo.verdict_artifact})`
+    : `; no BRAIN store - the verdict evidence file is the record; artifact ${verdictInfo.verdict_artifact}`;
   return {
     code: 0, backlog: given, line: i + 1, old_line: stripCR(oldLine), new_line: stripCR(newLine), ...headerInfo, ...totalsInfo,
     ...(verdictInfo ?? {}),
-    message: `flip ${id}: [${from}] -> [${to}] at line ${i + 1}${headerInfo.header_line ? `; header retallied at line ${headerInfo.header_line}` : ""}${totalsInfo.totals_line ? `; Totals retallied at line ${totalsInfo.totals_line}` : ""}${verdictNote}`,
+    transition_receipt: receipt.relative,
+    message: `flip ${id}: [${from}] -> [${to}] at line ${i + 1}${headerInfo.header_line ? `; header retallied at line ${headerInfo.header_line}` : ""}${totalsInfo.totals_line ? `; Totals retallied at line ${totalsInfo.totals_line}` : ""}${verdictNote}; receipt ${receipt.relative}`,
   };
+}
+
+function writeTransitionReceipt(root, { task_id, from, to, evidence_sha256, verdict_artifact }) {
+  const dir = join(root, "docs", "tasks", "_state", "receipts");
+  mkdirSync(dir, { recursive: true });
+  const payload = {
+    schema: "cyberos.transition@1",
+    task_id,
+    from,
+    to,
+  };
+  if (evidence_sha256) payload.evidence_sha256 = evidence_sha256;
+  if (verdict_artifact) payload.verdict_artifact = verdict_artifact;
+  const canon = `${JSON.stringify(payload)}\n`;
+  const digest = createHash("sha256").update(canon).digest("hex");
+  const full = { ...payload, receipt_sha256: digest };
+  const name = `${task_id}--${from}--${to}--${digest.slice(0, 12)}.json`;
+  const abs = join(dir, name);
+  writeFileSync(abs, `${JSON.stringify(full, null, 2)}\n`);
+  return { path: abs, relative: join("docs", "tasks", "_state", "receipts", name) };
 }
 
 // ── insert ───────────────────────────────────────────────────────────────────
@@ -673,7 +741,7 @@ usage: node backlog-mutate.mjs [--json] [--root <repo-root>] <command> ...
 
 commands
   flip <task-id> <from> <to> [--backlog <path>] [--old-line <text>]
-       [--verdict-by <actor> --verdict-evidence <path>]
+       [--verdict-by <actor> --verdict-evidence <path>] [--verdict-artifact <path>]
       rewrite ONE status cell: the row is located by stem, the cell must equal <from>,
       and --old-line (the recorded pre-image) must match the full line byte-for-byte
       when given; every other byte of the line is preserved. The task's spec.md
@@ -685,12 +753,15 @@ commands
       (STATUS-REFERENCE §1.4) - REQUIRE a recorded human verdict: --verdict-by (a
       non-empty actor) plus --verdict-evidence (an existing, non-empty regular file,
       resolved against --root when relative); a bare gate flip refuses with exit 8 and
-      writes nothing (TASK-CUO-303). Every other transition ignores the flags. When a
-      BRAIN store resolves (CYBEROS_STORE, else <root>/.cyberos/memory/store), the
-      gated flip first appends ONE status_overridden row via memory-append.mjs
-      (payload {actor, task_id, prior_status, new_status, reason: evidence-path});
-      an append failure on a present store fails the flip (exit 9) BEFORE the index
-      moves. With no store, the flip succeeds and the evidence file is the record.
+      writes nothing (TASK-CUO-303). On success the flip mints a content-addressed
+      verdict artifact under docs/tasks/_verdicts/ (or validates --verdict-artifact)
+      binding actor+transition+evidence_sha256 (TASK-IMP-143). Every other transition
+      ignores the flags. When a BRAIN store resolves (CYBEROS_STORE, else
+      <root>/.cyberos/memory/store), the gated flip first appends ONE status_overridden
+      row via memory-append.mjs (payload {actor, task_id, prior_status, new_status,
+      reason: evidence-path}); an append failure on a present store fails the flip
+      (exit 9) BEFORE the index moves. With no store, the flip succeeds and the
+      evidence file is the record.
   insert <task-id> <stem> <title> <status> [--backlog <path>] [--section <name>] [--class product|improvement]
       insert ONE row in the regenerator-identical grammar
       '- [<status>] <stem> - <title>' (+ ' (improvement)'), stem-ascending inside the
@@ -732,7 +803,7 @@ discipline
 
 function main(argv) {
   const flags = new Set(["json", "help"]);
-  const valued = new Set(["root", "backlog", "old-line", "section", "class", "verdict-by", "verdict-evidence"]);
+  const valued = new Set(["root", "backlog", "old-line", "section", "class", "verdict-by", "verdict-evidence", "verdict-artifact"]);
   const opts = {};
   const positionals = [];
   for (let i = 0; i < argv.length; i++) {

@@ -8,7 +8,7 @@ members:
   - TASK-IMP-143
   - TASK-IMP-144
 started: 2026-07-23T18:34:00Z
-ended: null
+ended: 2026-07-25T17:40:00Z
 route_backs: 0
 gate_reasks: 0
 tokens: unknown
@@ -30,7 +30,7 @@ Operator: **all-accept** for MEMORY-302, IMP-141, CUO-305, IMP-142 → `done` (e
 - [x] Delete remote `ship/batch-8f-entrypoint`
 - [x] Close parent ledger `batch-8-audit-hardening.md`
 - [x] Delete `scripts/awh_finalize.sh`
-- [x] Branch-protection probe: stub workflows absent; Settings API 403 to this token — operator confirm in UI
+- [x] Branch-protection probe / decision #7: **closed 2026-07-25** — no existing ruleset / nothing to scrub (operator session note). Stub workflow files remain absent under `.github/workflows/`.
 
 ## Wave 1–4 members
 
@@ -41,8 +41,8 @@ Operator: **all-accept** for MEMORY-302, IMP-141, CUO-305, IMP-142 → `done` (e
 | (chore) | rollout.sh checksum chooser | 1 | match bootstrap.sh |
 | TASK-CUO-305 | ship-tasks evolution from batch/8 friction | 2 | doctrine + checklists |
 | TASK-IMP-142 | MCP/OBS + APP-001 resume schedule | 3 | schedule only (this batch) |
-| TASK-IMP-143 | 1.4.x stuck-WIP hub + signed HITL | 4 | draft |
-| TASK-IMP-144 | 1.5.0 transition-locked state engine | 4 | draft |
+| TASK-IMP-143 | 1.4.x stuck-WIP hub + signed HITL | 4 | shipped (batch/9d) |
+| TASK-IMP-144 | 1.5.0 transition-locked state engine | 4 | shipped (batch/9d) |
 
 ## MCP/OBS ship schedule (Wave 3)
 

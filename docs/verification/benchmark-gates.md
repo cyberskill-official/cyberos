@@ -27,6 +27,9 @@ run_all-in-CI job when TASK-IMP-128 lands).
 
 ## Status table
 
+G13 remains report-only in the suite; TASK-IMP-143 additionally renders the same detector on the status hub (`Stuck WIP (G13)`).
+
+
 Per gate: whether its checker is live (enforcing) or report-only, and which task owns it.
 This table is the coordination surface between sibling tasks (TASK-IMP-140 §1.3): a
 checker whose gate measures a defect fixed by a not-yet-shipped sibling runs report-only
