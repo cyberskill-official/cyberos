@@ -1,54 +1,43 @@
 ---
 task_id: TASK-MCP-006
-audited: 2026-05-17
-verdict: PASS (after revision)
-score_pre_revision: 8.5/10
-score_post_expansion: 9.5/10
-score_post_revision: 10/10
-issues_resolved: 6
-template: engineering-spec@1
+audited: 2026-07-24
+verdict: PASS
+score: 10/10
+template: task@1
+adopt: batch/9a-mcp
+entered_via: rework
 ---
 
-## §1 — Verdict summary
+# TASK-MCP-006 audit — tool-annotation gating (batch/9a-mcp adopt)
 
-The spec lands MCP tool-annotation gating at the gateway entry per MCP 2025-11-25 spec, with per-tenant policy + confirm-mode ack + elicit-mode placeholder (delegating to TASK-MCP-008) + bypass-token + audit-only transition mode + nightly drift detection + 5 memory audit kinds. Final form: 1,070 lines, 25 §1 normative clauses, 20 acceptance criteria, 10 verification tests, 21 failure-mode rows, 19 implementation notes. 3 migrations, 4 REST endpoints (1 caller-facing + 3 admin), defense-in-depth gating at the single ingress point.
+## Verdict
 
-6 issues caught by self-audit, all resolved.
+**PASS 10/10** (2026-07-24). The spec is honest task@1 grammar against the as-built `services/mcp-gateway/` surface: single-file `gating.rs` + `annotations.rs`, router wire-up with TASK-MCP-008 confirmation elicitation, and real in-crate / router tests. Deferred policy/bypass/drift/openWorld/audit-sampling and the non-existent `gating_*` integration filenames are explicitly Out of scope.
 
-## §2 — Findings (all resolved)
+## What was checked
 
-### ISS-001 — Fail-open vs fail-closed on audit-row insert failure
+| Check | Result |
+|-------|--------|
+| No `## §N` engineering-spec headings (FM-004) | Pass |
+| Required task@1 sections (Summary → Dependencies) + AI Authorship Disclosure | Pass |
+| Grafted Acceptance criteria + Verification with real test paths | Pass (10 ACs) |
+| `service` / `new_files` / `modified_files` under `services/mcp-gateway/` | Pass |
+| Status `ready_to_implement`, `entered_via: rework`, `routed_back_count: 1` | Pass |
+| Scope matches as-built (`evaluate` / hold / confirm / decline); deferred ledgered | Pass |
+| ACs do not claim missing `gating_*` integration test files | Pass |
 
-§10 row "Audit log row insert fails post-decision" said "decision proceeds (FAIL-OPEN on audit)". This is a deliberate choice but the rationale needed to be explicit. Resolved: §10 row now spells out the choice — FAIL-OPEN preferred because alternative (FAIL-CLOSED) denies all tool calls during Postgres incident, which is worse blast radius than missing one audit row. Sev-2 alert ensures the missed audit is forensically traceable via OBS even if memory chain row is absent. Task-audit skill §8.2d-style absence-claim applies — CI lint enforces the audit emit path.
+## Findings
 
-### ISS-002 — Bypass-scope provenance + revocation
+None open. Prior engineering-spec issues (7-file tree, policy YAML, confirm-TTL table, bypass, drift detector, phantom test names) are closed by re-scope, not by inventing code.
 
-§1 #14 + DEC-1045 say bypass requires `mcp_gating_bypass` scope. But scope claims are issued at JWT mint — once minted, the bypass JWT lives until exp. There's no fast-revocation. Resolved: §11.3 explicitly states bypass scope is granted ONLY via TASK-AUTH-004's admin mint endpoint with explicit operator approval — not self-service; combined with the short TASK-AUTH-004 JWT TTL (default 24h), revocation window is bounded. §10 row covers tampered JWT (impossible with signed JWTs). Documented + accepted.
+## Notes for HITL
 
-### ISS-003 — Tool annotations `idempotentHint=true` + `destructiveHint=true` semantics
-
-A delete-by-id call is idempotent (delete twice = same outcome) AND destructive. §1 #20 says "idempotent hint surfaces in audit but doesn't relax gating" — good — but the resolver in §6.1 didn't explicitly handle this case. Resolved: §11.6 + §11.18 affirm idempotent is INFORMATIONAL per spec; resolver in §6.1 only branches on destructive + read_only + open_world. AC #20 specifically tests this case.
-
-### ISS-004 — Cross-task contract with TASK-MCP-007 Tasks primitive
-
-§1 #22 says destructive long-running tasks confirm at start; status polls don't re-confirm. But TASK-MCP-007 hasn't shipped yet. If TASK-MCP-007 ships with a different gating model, this task's claim is broken. Resolved: §22 wording marks this as a cross-task contract obligation — when TASK-MCP-007 ships, its spec must reference this task's §1 #22 + comply. Added §22 as a cross-task primitive callable by TASK-MCP-007.
-
-### ISS-005 — Policy YAML reload race
-
-§11.9 says NATS-driven hot-reload of policy cache. Race: gating decision starts with old policy, NATS reload arrives mid-decision, decision finishes with mixed state. Resolved: in-memory cache uses `Arc<GatingPolicy>` swap — atomic pointer replacement; in-flight decisions complete with the snapshot they read. New decisions start with new policy. No mixed-state.
-
-### ISS-006 — Tenant has no policy row at all
-
-§10 row "Tenant has no policy row" said "falls through to platform-default `confirm`". But the implementation in §6.1 doesn't show this fallback. Resolved: §11.4 + §10 row clarify — `policy_for(tenant_id)` returns `Result<GatingPolicy>`; `Err(NotFound)` → platform-default policy (declared in `services/mcp/src/gating/policy.rs::PLATFORM_DEFAULT`). New tenants get the default until tenant_admin sets policy explicitly.
-
-## §3 — Resolution
-
-All 6 mechanical concerns addressed. Fail-open audit semantic justified; bypass-scope hardening clear; idempotent hint semantics explicit; cross-task contract with TASK-MCP-007 declared; policy reload race-free via Arc-swap; platform-default fallback explicit.
-
-The 1,070-line length is justified by 3 migrations + 4 endpoints + 5 memory kinds + 6 enum values + 20 ACs + drift detection sub-system. Density matches peer tasks.
+- Gate only on `destructive_hint` today; `openWorldHint` is intentionally Out of scope.
+- Confirmation persistence is owned/verified with TASK-MCP-008 (`elicitation_pg` / `db_slice_test`).
+- Do not flip `done` without the two human-acceptance gates.
 
 **Score = 10/10.**
 
 ---
 
-*End of TASK-MCP-006 audit.*
+*End of TASK-MCP-006 audit (batch/9a-mcp adopt).*

@@ -6,8 +6,10 @@
 //! module that registers a non-conforming tool ID is rejected before the tool can become callable.
 //! As part of that, the one pre-existing non-conforming production tool was migrated
 //! (`cyberos.obs.triage` -> `cyberos.obs.execute_triage`); the dev/reference fixture
-//! (`cyberos.demo.echo` / `cyberos.demo.now`) is exempt via `NAMING_EXEMPT_MODULES`. The CI grep gate
-//! (DEC-2362) and the memory-audit emission (DEC-2364) are the remaining slice-3 work.
+//! (`cyberos.demo.echo` / `cyberos.demo.now`) is exempt via `NAMING_EXEMPT_MODULES`. Slice 3 shipped
+//! the CI grep gate (`scripts/check_sep986_naming.sh` + `.github/workflows/mcp-sep986-check.yml`,
+//! DEC-2362) and the four DEC-2364 audit kinds on `oauth::audit` (`skill_name_validated` /
+//! `_rejected` / `naming_ci_check_passed` / `_failed`), emitted from the register path in `router`.
 //!
 //! ## Governance
 //!

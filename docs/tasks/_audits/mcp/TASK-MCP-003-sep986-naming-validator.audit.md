@@ -1,14 +1,40 @@
 ---
 task_id: TASK-MCP-003
-audited: 2026-05-17
-verdict: PASS (after revision)
-score_pre_revision: 8.5/10
-score_post_expansion: 9.5/10
-score_post_revision: 10/10
-issues_resolved: 6
-template: engineering-spec@1
+audited: 2026-07-24
+verdict: PASS
+score: 10/10
+template: task@1
+adopt: batch/9a-mcp
+entered_via: rework
 ---
 
-MCP SEP-986 naming validator with regex + verb enum + module registry + CI grep gate. 200 lines, 9 §1 clauses, 20 ACs, 3 tests, 10 failure modes, 5 notes. 6 issues resolved (sep986_verb enum cardinality 15, regex enforces cyberos.{module}.{verb}_{noun} pattern, module ∈ hardcoded list (24 modules), CI gate cannot be bypassed, runtime + CI defense-in-depth, append-only audit). **Score = 10/10.**
+# TASK-MCP-003 audit — SEP-986 naming validator (batch/9a-mcp adopt)
 
-*End of TASK-MCP-003 audit.*
+## Verdict
+
+**PASS 10/10** (2026-07-24). Spec is honest task@1 against as-built `services/mcp-gateway/src/naming/`, CI grep gate, and DEC-2364 audit kinds on `oauth::audit`. Phantom `services/mcp/` paths removed; residual ci/audit tests cited.
+
+## What was checked
+
+| Check | Result |
+|-------|--------|
+| No `## §N` headings (FM-004) | Pass |
+| Required task@1 sections + grafted AC/Verification | Pass (8 ACs) |
+| Paths under `services/mcp-gateway/` + scripts/workflow | Pass |
+| Status `ready_to_implement`, `entered_via: rework`, `routed_back_count: 1` | Pass |
+| Bash 3.2 CI portability called out | Pass |
+
+## Findings
+
+None open. Prior FM-004 / path-literal drift closed by re-scope + residual tests.
+
+## Notes for HITL
+
+- `naming_ci_check_passed/failed` helpers exist; Actions does not yet write them to the BRAIN (Out of scope).
+- Do not flip `done` without the two human-acceptance gates.
+
+**Score = 10/10.**
+
+---
+
+*End of TASK-MCP-003 audit (batch/9a-mcp adopt).*
