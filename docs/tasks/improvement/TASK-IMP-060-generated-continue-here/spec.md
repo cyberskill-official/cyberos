@@ -13,7 +13,7 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p1
-status: draft
+status: closed
 phase: Wave 5 - platform and process
 refs: [R52]
 depends_on: []
@@ -24,6 +24,8 @@ verify: N
 # TASK-IMP-060: Generated CONTINUE-HERE
 
 ## 1. Description
+
+**Groomed 2026-07-25 (batch/10):** closed obsolete — `CONTINUE-HERE` was retired; BACKLOG.md + status hub are the operator continue surfaces. Stub never authored.
 
 Author the normative clauses when this task is picked up; it was migrated as a draft stub.
 
