@@ -49,7 +49,7 @@ Operator: **all-accept** for MEMORY-302, IMP-141, CUO-305, IMP-142 → `done` (e
 Gate-2 of IMP-139 routed these to `ready_to_implement` (except APP-001 resume). Suggested ship order:
 
 1. **batch/9a-mcp** — TASK-MCP-003, 005, 006, 007, 008 (re-spec/adopt under `services/mcp-gateway/`) — **merged** PR #139; statuses `done` via session HITL override 2026-07-24 (evidence `batch-9b-obs-session-hitl.md`).
-2. **batch/9b-obs** — TASK-OBS-001, 003, 005, 007, 008, 009 (re-spec against as-built obs + `services/shared/cyberos-obs-sdk/`) — **shipped** on branch `batch/9b-obs` (2026-07-24): task@1 adopt specs + audits; Alertmanager wiring + manifest-format residual; statuses `done` via session HITL override. Operator merges PR when ready.
-3. **batch/9c-app** — TASK-APP-001 (resume; process hygiene) — not started
+2. **batch/9b-obs** — TASK-OBS-001, 003, 005, 007, 008, 009 (re-spec against as-built obs + `services/shared/cyberos-obs-sdk/`) — **merged** PR #140; statuses `done` via session HITL override (evidence `docs/batches/batch-9b-obs-session-hitl.md`).
+3. **batch/9c-app** — TASK-APP-001 (resume; process hygiene) — **shipped** on branch `batch/9c-app` (2026-07-24): task@1 adopt against `services/memory/desktop` Ops; residual guard tests; statuses `done` via session HITL override (evidence `docs/batches/batch-9c-app-session-hitl.md`). Operator merges PR when ready.
 
 Preconditions met: IMP-141 + MEMORY-302 are `done` (doctor floor trustworthy).

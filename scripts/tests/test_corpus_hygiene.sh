@@ -194,7 +194,12 @@ m = re.search(r"(?m)^status:\s*(\S+)", Path(sys.argv[1]).read_text(encoding="utf
 print(m.group(1) if m else "MISSING")
 PY
 )"
-  [ "$app" = "implementing" ] || { fail t05 "TASK-APP-001 resume expected implementing got $app"; return; }
+  # APP-001 may still be implementing (resume) or have advanced through the ship ladder
+  # (batch/9c-app adopt → done under session HITL override).
+  case "$app" in
+    implementing|ready_to_review|reviewing|ready_to_test|testing|done) ;;
+    *) fail t05 "TASK-APP-001 unexpected status $app (expected resume ladder)"; return ;;
+  esac
   [ "$rb" -eq 11 ] || { fail t05 "expected 11 route_backs counted $rb"; return; }
   ok t05
 }
