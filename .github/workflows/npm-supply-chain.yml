@@ -1,7 +1,6 @@
 name: npm-supply-chain
 on:
   push:
-    branches: [main]
   pull_request:
 jobs:
   audit-and-licenses:

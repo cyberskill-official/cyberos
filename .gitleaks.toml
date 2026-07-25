@@ -1,6 +1,7 @@
 # TASK-IMP-003
 title = "CyberOS gitleaks"
 [extend]
+useDefault = true
 [allowlist]
 description = "Documented false positives and intentional fixtures"
 paths = [

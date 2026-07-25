@@ -8,10 +8,15 @@ fail() { FAIL=$((FAIL+1)); echo "  FAIL $1: $2"; }
 WF="$repo/.github/workflows/npm-supply-chain.yml"
 CHK="$repo/tools/install/check-npm-supply-chain.sh"
 FIX="$repo/tools/install/tests/fixtures/npm-supply-chain"
+LOGS=()
+cleanup() { rm -f "${LOGS[@]:-}"; }
+trap cleanup EXIT
+mklog() { local f; f="$(mktemp "${TMPDIR:-/tmp}/npm-sc.XXXXXX")"; LOGS+=("$f"); printf '%s' "$f"; }
 t_workflow_declared() {
   [ -f "$WF" ] || { fail t_workflow_declared "missing workflow"; return; }
   grep -q 'pull_request' "$WF" && grep -q 'push' "$WF" && grep -q 'check-npm-supply-chain.sh' "$WF" \
     && grep -q 'ubuntu-latest' "$WF" && ! grep -q 'continue-on-error:\s*true' "$WF" \
+    && ! grep -q 'branches: \[main\]' "$WF" \
     && ok t_workflow_declared || fail t_workflow_declared "workflow shape wrong"
 }
 t_docs_tools_package_json() {
@@ -24,13 +29,16 @@ t_license_allowlist_exists() {
 }
 t_planted_critical_fails() {
   chmod +x "$CHK"
-  if bash "$CHK" --audit-json "$FIX/critical-audit.json" >/tmp/npm-sc-crit.$$.log 2>&1; then fail t_planted_critical_fails "expected fail"; else ok t_planted_critical_fails; fi
+  local log; log="$(mklog)"
+  if bash "$CHK" --audit-json "$FIX/critical-audit.json" >"$log" 2>&1; then fail t_planted_critical_fails "expected fail"; else ok t_planted_critical_fails; fi
 }
 t_planted_gpl_fails() {
-  if bash "$CHK" --license-package "$FIX/gpl-package.json" >/tmp/npm-sc-gpl.$$.log 2>&1; then fail t_planted_gpl_fails "expected fail"; else ok t_planted_gpl_fails; fi
+  local log; log="$(mklog)"
+  if bash "$CHK" --license-package "$FIX/gpl-package.json" >"$log" 2>&1; then fail t_planted_gpl_fails "expected fail"; else ok t_planted_gpl_fails; fi
 }
 t_clean_scopes_pass() {
-  if bash "$CHK" --root "$repo" >/tmp/npm-sc-clean.$$.log 2>&1; then ok t_clean_scopes_pass; else fail t_clean_scopes_pass "$(tail -3 /tmp/npm-sc-clean.$$.log)"; fi
+  local log; log="$(mklog)"
+  if bash "$CHK" --root "$repo" >"$log" 2>&1; then ok t_clean_scopes_pass; else fail t_clean_scopes_pass "$(tail -3 "$log")"; fi
 }
 t_workflow_declared; t_docs_tools_package_json; t_license_allowlist_exists
 t_planted_critical_fails; t_planted_gpl_fails; t_clean_scopes_pass
