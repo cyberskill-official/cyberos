@@ -2,7 +2,7 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
-## [Unreleased]
+## [1.5.0] - 2026-07-25
 
 ### Changed
 - batch/9c-app: re-spec/adopt TASK-APP-001 against as-built `services/memory/desktop` Ops (Check = `version.sh`; phantom `install.sh --check` / `apps/desktop` ops claims ledgered Out of scope).

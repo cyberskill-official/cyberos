@@ -15,7 +15,7 @@
   <Identity
       Name="CHANGEME-PENDING-PARTNER-CENTER-RESERVATION"
       Publisher="CHANGEME-PENDING-PARTNER-CENTER-RESERVATION"
-      Version="1.4.0.10718" />
+      Version="1.5.0.10719" />
 
   <Properties>
     <DisplayName>CyberOS</DisplayName>
