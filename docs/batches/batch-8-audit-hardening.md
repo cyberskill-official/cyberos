@@ -17,9 +17,9 @@ route_backs: 0
 gate_reasks: 0
 tokens: unknown
 ---
-# batch 8 — audit hardening (CLOSED — member tasks done; Wave-0 residual open)
+# batch 8 — audit hardening (CLOSED — Wave 0 complete)
 
-Closes the gap between CyberOS doctrine and enforcement: fail-closed gates, mechanical HITL, skill quality floor, memory contract hardening, CI/CAF truth, install portability, corpus hygiene, benchmark gates G1–G16, and the thin-spine entry point. Merged to `main` as [PR #132](https://github.com/cyberskill-official/cyberos/pull/132) → commit `1d8da66e` (released as **1.2.0**). Branch-protection stub-check confirmation remains an open operator follow-up (decision #7).
+Closes the gap between CyberOS doctrine and enforcement: fail-closed gates, mechanical HITL, skill quality floor, memory contract hardening, CI/CAF truth, install portability, corpus hygiene, benchmark gates G1–G16, and the thin-spine entry point. Merged to `main` as [PR #132](https://github.com/cyberskill-official/cyberos/pull/132) → commit `1d8da66e` (released as **1.2.0**). Wave 0 chores complete 2026-07-25 (decision #7 closed; see operator decision list).
 
 ## Member status (final)
 
@@ -50,7 +50,7 @@ Closes the gap between CyberOS doctrine and enforcement: fail-closed gates, mech
 
 Remote tip `origin/ship/batch-8f-entrypoint` deleted 2026-07-23 post-merge (Wave 0 cleanup).
 
-## Operator decision list (1–6 + 8 executed; #7 pending)
+## Operator decision list (1–8 executed)
 
 1. MEMORY-303 live-store repair — **done**
 2. IMP-139 UNREVIEWED bulk-clear (+ EVAL-001 carve-out) — **done**
@@ -58,9 +58,9 @@ Remote tip `origin/ship/batch-8f-entrypoint` deleted 2026-07-23 post-merge (Wave
 4. IMP-138 Branch A thin spine — **done**
 5. IMP-140 BRAIN recording — **done**
 6. CAF B17/B18 — **fixed on main** (`46ceb8b4`); historical ledger warning obsolete
-7. Branch protection vs deleted stubs — **closed 2026-07-25** (owner: Stephen Cheng). No existing ruleset / nothing to scrub; stub workflow files absent under `.github/workflows/`.
+7. Branch protection vs deleted stubs — **closed 2026-07-25** (owner: Stephen Cheng; re-verified 2026-07-25). Classic `/branches/main/protection` is absent (404). Active ruleset `AWH gate` (id 17883269) requires only context `awh-gate`; none of the nine deleted stub workflow contexts are required. Stub workflow files remain absent under `.github/workflows/`. Nothing to scrub; do not invent a ruleset.
 8. `.cyberos/` refresh after store repair — **done** on batch-8c
 
 ## Follow-ups (post-1.2.0)
 
-See plan `post-1.2.0_next_steps` / batch-9 schedule: MMR sync for `memory-append`, TASK-MEMORY-302, ship-tasks evolution, MCP/OBS resume wave, 1.4.x / 1.5.0 drafts (stay on 1.x). Decision #7 closed 2026-07-25 (no ruleset / nothing to scrub).
+See plan `post-1.2.0_next_steps` / batch-9 schedule: MMR sync for `memory-append`, TASK-MEMORY-302, ship-tasks evolution, MCP/OBS resume wave, 1.4.x / 1.5.0 drafts (stay on 1.x). Wave 0 complete 2026-07-25: `ship/batch-8*` pruned, decision #7 confirmed (ruleset requires only `awh-gate`), ledger closed, `scripts/awh_finalize.sh` absent.
