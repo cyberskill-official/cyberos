@@ -145,8 +145,11 @@ baseline_measured_at: 2025-04-01T00:00:00+07:00
 attested_by: cuo-cpo
 next_review_due: 2026-04-01T00:00:00+07:00""")
     result = validate(path)
-    # Whether this is valid depends on whether other rules pass; the warning is what matters
-    assert any("review_overdue" in w for w in result.warnings) or any("review_overdue" in i for i in result.issues)
+    # Within a year overdue is a WARNING, not an issue - the channel is the contract, so both
+    # sides are asserted. The previous `warnings or issues` disjunction passed either way and
+    # would have stayed green if the rule ever escalated to an issue (TASK-IMP-022 DA-001).
+    assert any("review_overdue" in w for w in result.warnings)
+    assert not any("review_overdue" in i for i in result.issues)
 
 
 def test_review_stale_over_year_fails(tmp_path: Path):

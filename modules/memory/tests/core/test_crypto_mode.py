@@ -203,9 +203,12 @@ def test_link_invariant_passes_advisory_in_sth_only(tmp_path):
     )
     passed, details = check_ledger_link(store)
     assert passed
-    # Either "no binlog segments" (empty store) or note about sth_only mode.
-    # Empty store path returns "no binlog segments" before mode check kicks in.
-    assert "no binlog segments" in details or "sth_only" in details
+    # The empty-store path returns "no binlog segments" and short-circuits BEFORE the mode
+    # check, so that — not the sth_only advisory — is the detail this fixture produces. The
+    # previous disjunction accepted both and could not tell the two paths apart, which is the
+    # whole point of the test (TASK-IMP-022 DA-001). The sibling test below covers the
+    # sth_only advisory on a store that actually has binlog data.
+    assert details == "no binlog segments"
 
 
 def test_link_invariant_records_sth_only_advisory_with_data(tmp_path):

@@ -76,7 +76,11 @@ def test_all_copies_identical_and_acl_bearing() -> None:
     # (c) every schema source build.sh vendors from is the canonical content
     assert _BUILD_SH.is_file(), f"build.sh not found at {_BUILD_SH}"
     build_text = _BUILD_SH.read_text(encoding="utf-8")
+    # Prefer _git_materialise paths (IMP-127); keep $repo/ for legacy builds.
     referenced = re.findall(r'\$repo/([^"\s]*memory\.schema\.json)', build_text)
+    referenced += re.findall(
+        r'_git_materialise\s+"([^"]*memory\.schema\.json)"', build_text
+    )
     assert referenced, (
         "build.sh no longer references any memory.schema.json vendoring "
         "source — payload schema vendoring was silently dropped"

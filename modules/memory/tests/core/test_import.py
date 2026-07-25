@@ -216,7 +216,10 @@ def test_dry_run_writes_nothing(target_store: Path, source_store: Path) -> None:
     # No files moved, no audit rows appended
     assert not (target_store / "memories/facts/F-001.md").exists()
     binlog = target_store / "audit" / "current.binlog"
-    assert not binlog.exists() or binlog.stat().st_size == 0
+    # A dry run must not create the binlog at all. The previous `not exists() or size == 0`
+    # also passed on a created-but-empty file, i.e. on a dry run that touched the audit
+    # directory — the one regression this line exists to catch (TASK-IMP-022 DA-001).
+    assert not binlog.exists()
 
 
 # ---------------------------------------------------------------------- zip source

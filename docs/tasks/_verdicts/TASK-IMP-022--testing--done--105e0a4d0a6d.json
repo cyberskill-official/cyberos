@@ -1,0 +1,11 @@
+{
+  "schema": "cyberos.verdict@1",
+  "actor": "@stephencheng",
+  "timestamp": "2026-07-25T17:27:22Z",
+  "task_id": "TASK-IMP-022",
+  "from": "testing",
+  "to": "done",
+  "evidence_path": "docs/batches/batch-12g-imp-022-session-hitl.md",
+  "evidence_sha256": "105e0a4d0a6ddf6fede5e093d0a97ca16c281c49f25f01d16d638777c876f5ef",
+  "artifact_sha256": "d7949a755695f2e077d829a36702af8209934960a9451c159e10469b197b8ee0"
+}

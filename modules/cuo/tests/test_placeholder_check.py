@@ -136,7 +136,10 @@ def test_yaml_parse_error(tmp_path: Path):
     skill.write_text("---\nname: foo\n  bad: indent\n nope\n---\n", encoding="utf-8")
     result = scan(skill)
     assert result.error is not None
-    assert "yaml_parse" in result.error or result.error == "frontmatter_not_dict"
+    # This fixture parses as YAML-invalid, never as a valid non-dict mapping, so the error is
+    # `yaml_parse: ...` and only that. The previous `or result.error == "frontmatter_not_dict"`
+    # arm made the test pass on a classification it never produces (TASK-IMP-022 DA-001).
+    assert result.error.startswith("yaml_parse:")
 
 
 # ─── run_all walk tests ─────────────────────────────────────────────────────────
