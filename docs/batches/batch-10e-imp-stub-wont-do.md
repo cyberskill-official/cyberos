@@ -47,7 +47,7 @@ Each spec carries a `## Groom note (batch/10e, 2026-07-25)` with the won't-do re
 
 ## IMP-122 investigation (operator Q3)
 
-**Outcome: CLEAR UNBLOCK — unpark and ship after #145 (IMP-127).**
+**Outcome: UNBLOCKED — remain on hold until #145 merges; then unpark and ship (IMP-127).**
 
 | Check | Result |
 |---|---|
@@ -66,6 +66,6 @@ Each spec carries a `## Groom note (batch/10e, 2026-07-25)` with the won't-do re
 2. #144 IMP-125
 3. #145 IMP-127/128/129
 4. #146 IMP-124
-5. **This PR (#10e)** stub won't-do closes
+5. **This PR (#147 / batch 10e)** stub won't-do closes
 6. IMP-122 ship PR (next — rebase onto #145)
 7. Remaining ~20 valid-1.x stubs (author + ship by theme)

@@ -26,10 +26,10 @@ verify: N
 
 **Groomed 2026-07-25 (batch/10e):** closed — won't-do for 1.x: external uptime probes are ops-infra, not the installable payload.
 
-Author the normative clauses when this task is picked up; it was migrated as a draft stub.
+Closed without further authoring — out of CyberOS 1.x payload scope (batch/10e won't-do). Reopen only if a later release revisits this work.
 
 Migrated 2026-07-08 from the deep-audit improvement backlog, folded into the task system as `class: improvement`. Source report refs: R30.
 
 ## Acceptance criteria
 
-- [ ] (to be authored from the source report before this task leaves draft)
+- [x] N/A — closed won't-do for CyberOS 1.x (batch/10e); acceptance criteria not authored.
