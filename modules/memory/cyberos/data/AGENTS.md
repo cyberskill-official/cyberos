@@ -50,7 +50,8 @@ Read-only operations MAY skip steps 3–4 if they accept stale-up-to-last- HEAD 
 │   ├── checkpoints/         per-consolidation tree-head anchors
 │   └── current.binlog       active segment
 ├── memories/<kind>/<hex>/<hex>/<file>.md[.meta.json]
-├── meta/  company/  module/  member/  client/  project/  persona/
+├── meta/                    incl. meta/consent/ (§19 Phase 0 consent records)
+├── company/  module/  member/  client/  project/  persona/
 ├── conflicts/               soft-tombstone bodies (§3.5)
 ├── exports/                 deterministic export targets
 └── index/manifest.json      rebuild marker for the derived SQLite index
@@ -308,6 +309,37 @@ The v1 four-tier `sync_class` (`local-only / publishable / shared / client-visib
 * Two simultaneous `session.start` rows for the same id are rejected by the writer at the call site (cannot occur on-chain)
 
 §18.9  Per-store ACL (§14.4) applies to the `sessions/` subtree. Operators may set a `sessions/STORE.yaml` to restrict which actors can `start`/`append`/`end` sessions. Reads remain unrestricted at the protocol level (same DEC-232 as §14.4.3).
+
+---
+
+## §19  Phase 0 consent (added by TASK-IMP-061 — approved 2026-07-25 per operator ship session)
+
+§19.1  Phase 0 for the Layer-1 BRAIN is the consent gate on **personnel** memories. Capture/evaluation product activation (TASK-EVAL-001 notice publication, employment-document acknowledgment, `CAPTURE_ENABLED`) is out of scope of this section; see `docs/deploy/brain-capture-activation.md` and TASK-EVAL-001.
+
+§19.2  A memory file is **personnel-gated** when ANY of the following holds in its frontmatter (or sidecar meta):
+
+* `classification: personnel`
+* `kind: person`
+* `scope` is a string containing the path segment `people` (e.g. `memories/people`)
+
+§19.3  Every personnel-gated memory **MUST** carry a `consent` object with:
+
+* `has_consent: true` (boolean; string `"true"` is NOT accepted)
+* `consent_event: <id>` — a non-empty string id of the consent moment
+* `consent_scope` — a list of scope tags (RECOMMENDED; MAY be empty only when the body documents scope)
+
+§19.4  `consent.consent_event` **MUST** resolve to exactly one of:
+
+1. a consent record file at `<memory-root>/meta/consent/<consent_event>.md`, or
+2. an `audit_id` equal to `<consent_event>` on a row in a legacy `audit/*.jsonl` segment.
+
+Unresolved ids **MUST** fail walker invariant `personnel-requires-consent` (error). `meta/consent/README.md` is documentation and MUST NOT count as a consent event.
+
+§19.5  Consent records under `meta/consent/` **MUST** use the `CONSENT` starter template shape (subject id, method, timestamp, scope, optional notice hash). They are append-only disclosures for the agent BRAIN. They are **not** the product EVAL `subject_acknowledgment` ledger and MUST NOT be treated as lawful basis for workplace monitoring capture.
+
+§19.6  Agents MUST NOT invent `has_consent: true` without a resolvable `consent_event`. Writing a personnel-gated memory without completing §19.3–§19.4 is a protocol violation, not a soft warning.
+
+§19.7  Walker invariant `personnel-requires-consent` enforces §19.2–§19.4 at `cyberos doctor` time. A violating store transitions toward `FROZEN_RECOVERABLE` until repaired (§12).
 
 ---
 

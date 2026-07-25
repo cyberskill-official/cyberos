@@ -213,3 +213,18 @@ invariants:
       exempt from the turn checks.
     check: cyberos.core.invariants.check_session_lifecycle
     citation: AGENTS.md §18.8
+
+  # ===== Phase 0 consent (§19) =====
+
+  - id: personnel-requires-consent
+    level: error
+    scope: filesystem
+    description: |
+      §19 Phase 0 consent: every personnel-gated memory
+      (classification=personnel, kind=person, or scope containing
+      "people") MUST carry consent.has_consent: true and a non-null
+      consent.consent_event that resolves to meta/consent/<id>.md or
+      a matching audit/*.jsonl audit_id. Unresolved or missing consent
+      is an error — not a warning.
+    check: cyberos.core.invariants.check_personnel_requires_consent
+    citation: AGENTS.md §19
