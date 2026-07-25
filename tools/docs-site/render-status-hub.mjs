@@ -478,7 +478,7 @@ const stuckWipHtml = (() => {
 <section class="now" id="stuck-wip">
   <h2>Stuck WIP (G13) · ${stuckWip.stale.length} stale · threshold ${stuckWip.threshold_days}d · as-of ${esc(stuckWip.asof)}</h2>
   ${body}
-  ${unp}
+${unp ? `  ${unp}` : ''}
   <p class="muted">Report-only (G13 tier): no status changed. Operator triage links are the decision surface.</p>
 </section>`;
 })();
@@ -640,7 +640,7 @@ ${tasks.map(f => `<tr><td class="code">${f.pg ? `<a href="${esc(f.pg)}">${esc(f.
 <h3 class="groupq">Releases</h3>
 ${releases.map(r => `<article class="rel"><span class="tick">✓</span><div>
   <div class="rel-h"><b>${esc(r.vl)}</b>${r.d ? `<span class="muted">${esc(r.d)}</span>` : ''}</div>
-  ${[...r.cited, ...r.dated].length ? `<p class="relnote">tasks: ${[...r.cited, ...r.dated].map(esc).join(', ')}</p>` : ''}
+${[...r.cited, ...r.dated].length ? `  <p class="relnote">tasks: ${[...r.cited, ...r.dated].map(esc).join(', ')}</p>` : ''}
   ${r.sec.map(s => `<div class="rel-sec"><h4>${esc(s.h)}</h4><ul>${s.items.map(x => `<li>${x}</li>`).join('')}</ul></div>`).join('')}
 </div></article>`).join('\n')}`;
 

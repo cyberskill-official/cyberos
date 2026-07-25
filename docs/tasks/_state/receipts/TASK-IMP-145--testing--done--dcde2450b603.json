@@ -1,0 +1,9 @@
+{
+  "schema": "cyberos.transition@1",
+  "task_id": "TASK-IMP-145",
+  "from": "testing",
+  "to": "done",
+  "evidence_sha256": "474c36726af7189ee9085cf347bafe4135bf519a955ae525eb9ffa5a74df849c",
+  "verdict_artifact": "docs/tasks/_verdicts/TASK-IMP-145--testing--done--474c36726af7.json",
+  "receipt_sha256": "dcde2450b6037ca376209e75164f83ae21466235fb6c3baf77d415e36e601fc5"
+}

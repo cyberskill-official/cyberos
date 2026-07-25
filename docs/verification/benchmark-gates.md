@@ -168,15 +168,16 @@ behind TASK-MEMORY-303's store repair and tracked in the task folder's
 
 - **Purpose:** vendored skills meet a minimum body/section floor and every author/audit
   pair carries its file classes — no more ~20-line stubs shipped as product.
-- **Pass/fail:** `check-skill-floor.sh` green over the payload AND `check-pair-parity.sh`
-  green with SCOPE = every vendored pair. Fail: any undersized skill or missing class
-  file. Human half: periodic prompt-quality review (not mechanical).
+- **Pass/fail:** `scripts/tests/test_skill_stub_lint.sh` green over the vendored source set
+  AND `check-pair-parity.sh` green with SCOPE = every vendored pair. Fail: any undersized
+  skill or missing class file. Human half: periodic prompt-quality review (not mechanical).
 - **Severity:** high
 - **Tier:** ci+human
-- **Test method:** the two checkers against a scratch payload.
+- **Test method:** the floor suite against the vendored source list plus pair parity
+  against a scratch payload.
 - **Checked files:** `dist/cyberos/cuo/skills/**`, `tools/install/check-pair-parity.sh`,
-  `tools/install/check-skill-floor.sh`.
-- **Owner:** `tools/install/tests/test_skill_floor.sh` (TASK-SKILL-202).
+  `scripts/tests/test_skill_stub_lint.sh`.
+- **Owner:** `scripts/tests/test_skill_stub_lint.sh` (TASK-SKILL-202).
 
 ### G8 — Injection-discipline coverage
 
@@ -189,7 +190,8 @@ behind TASK-MEMORY-303's store repair and tracked in the task folder's
 - **Tier:** ci+human
 - **Test method:** presence + shape scan over the payload skill set.
 - **Checked files:** `dist/cyberos/cuo/skills/*/SKILL.md` + `references/`.
-- **Owner:** `tools/install/tests/test_skill_floor.sh::t03` (TASK-SKILL-202).
+- **Owner:** `scripts/tests/test_skill_stub_lint.sh::t05_injection_discipline_present`
+  (TASK-SKILL-202).
 
 ### G9 — BRAIN health in gates
 

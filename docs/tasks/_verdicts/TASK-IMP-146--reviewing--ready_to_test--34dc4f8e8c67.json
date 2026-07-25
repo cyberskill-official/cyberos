@@ -1,0 +1,11 @@
+{
+  "schema": "cyberos.verdict@1",
+  "actor": "operator-session-override",
+  "timestamp": "2026-07-25T10:41:07Z",
+  "task_id": "TASK-IMP-146",
+  "from": "reviewing",
+  "to": "ready_to_test",
+  "evidence_path": "docs/batches/batch-11-gate1-acceptance.md",
+  "evidence_sha256": "34dc4f8e8c67ce93d3b1bff19695cff7cc32a234afaa4d6957c2b11756913da2",
+  "artifact_sha256": "3cb52cfdcde5d38c2bebe8b06aa5e05a73d30c8703068ee7f6a7bdefedf80bcd"
+}
