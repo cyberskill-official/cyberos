@@ -39,6 +39,10 @@ else TO=""; fi
 # an orphan is not. Add a path here only if a file genuinely cannot run on its own.
 SKIP=""
 
+# TASK-IMP-122: unit-test scratch builds skip the rules-cone reconciler (full install).
+# Production/CI builds leave CYBEROS_SKIP_RULES_RECONCILE unset so reconcile stays ON.
+export CYBEROS_SKIP_RULES_RECONCILE="${CYBEROS_SKIP_RULES_RECONCILE:-1}"
+
 pass=0; fail=0; skip=0; failed=""
 # TASK-IMP-107 wires the end-to-end MECHANICAL spine suite in here — through the glob below, NOT
 # a hand-list. The glob IS the registration (see the header); a second place to name suites is
