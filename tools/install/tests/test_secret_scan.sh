@@ -14,7 +14,8 @@ t_workflow_hard_fail() {
     && ! grep -q 'continue-on-error:\s*true' "$WF" && ok t_workflow_hard_fail || fail t_workflow_hard_fail "shape"
 }
 t_action_sha_pinned() {
-  grep -E 'gitleaks/gitleaks-action@[0-9a-f]{40}' "$WF" >/dev/null && ok t_action_sha_pinned || fail t_action_sha_pinned "not pinned"
+  # Prefer OSS binary over gitleaks-action (org license required). Checkout must stay SHA-pinned.
+  grep -E 'actions/checkout@[0-9a-f]{40}' "$WF" >/dev/null     && grep -q 'check-secrets.sh' "$WF"     && grep -q 'gitleaks_' "$WF"     && ok t_action_sha_pinned     || fail t_action_sha_pinned "not pinned / not using check-secrets.sh"
 }
 t_allowlist_present() {
   [ -f "$CFG" ] && grep -q 'docs/status/' "$CFG" && grep -q 'tools/caf/core/evals/fixtures/' "$CFG" \

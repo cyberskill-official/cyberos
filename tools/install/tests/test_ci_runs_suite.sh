@@ -16,7 +16,7 @@ t_suite_job_declared() {
     && grep -q 'pull_request' "$WF" \
     && grep -q 'push' "$WF" \
     && awk '
-         /uses:[[:space:]]*actions\/checkout@v7/ { in_co=1; next }
+         /uses:[[:space:]]*actions\/checkout@/ { in_co=1; next }
          in_co && /^[[:space:]]+-[[:space:]]/ { exit }
          in_co && /fetch-depth:[[:space:]]*0/ { found=1; exit }
          END { exit !found }
