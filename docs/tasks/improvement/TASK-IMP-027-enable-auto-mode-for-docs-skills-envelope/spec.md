@@ -2,6 +2,11 @@
 id: TASK-IMP-027
 title: "Enable auto mode for docs/skills envelope"
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+
+
+## Groom note (batch/10e, 2026-07-25)
+
+**Closed — won't-do for 1.x: docs/skills auto-mode envelope is research; keep manual.**
 eu_ai_act_risk_class: not_ai
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
@@ -13,7 +18,7 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p1
-status: draft
+status: closed
 phase: Wave 3 - widen the envelope
 refs: [Stage, 2]
 depends_on: [TASK-IMP-020, TASK-IMP-021, TASK-IMP-024, TASK-IMP-025, TASK-IMP-026]

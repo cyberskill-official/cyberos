@@ -2,6 +2,11 @@
 id: TASK-IMP-040
 title: "Mutation testing pilot on shared crates"
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+
+
+## Groom note (batch/10e, 2026-07-25)
+
+**Closed — won't-do for 1.x: mutation testing pilot is research/hardening beyond 1.x.**
 eu_ai_act_risk_class: not_ai
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
@@ -13,7 +18,7 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p1
-status: draft
+status: closed
 phase: Wave 4 - hardening
 refs: [R18]
 depends_on: []

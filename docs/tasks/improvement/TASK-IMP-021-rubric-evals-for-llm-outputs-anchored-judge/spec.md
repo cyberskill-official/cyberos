@@ -2,6 +2,11 @@
 id: TASK-IMP-021
 title: "Rubric evals for LLM outputs, anchored judge"
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+
+
+## Groom note (batch/10e, 2026-07-25)
+
+**Closed — won't-do for 1.x: anchored LLM judge is research/eval platform.**
 eu_ai_act_risk_class: not_ai
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
@@ -13,7 +18,7 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p1
-status: draft
+status: closed
 phase: Wave 2 - measure and evaluate
 refs: [Stage, 1]
 depends_on: [TASK-IMP-008]

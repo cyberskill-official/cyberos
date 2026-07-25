@@ -2,6 +2,11 @@
 id: TASK-IMP-009
 title: "LLM call ledger in ai-gateway"
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+
+
+## Groom note (batch/10e, 2026-07-25)
+
+**Closed — won't-do for 1.x: LLM call ledger is ai-gateway platform work.**
 eu_ai_act_risk_class: not_ai
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
@@ -13,7 +18,7 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p0
-status: draft
+status: closed
 phase: Wave 1 - see and survive
 refs: [R41]
 depends_on: []

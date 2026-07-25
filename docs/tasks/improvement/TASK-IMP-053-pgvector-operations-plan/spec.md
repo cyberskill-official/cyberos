@@ -2,6 +2,11 @@
 id: TASK-IMP-053
 title: "pgvector operations plan"
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+
+
+## Groom note (batch/10e, 2026-07-25)
+
+**Closed — won't-do for 1.x: pgvector ops plan is platform data.**
 eu_ai_act_risk_class: not_ai
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
@@ -13,7 +18,7 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p1
-status: draft
+status: closed
 phase: Wave 5 - platform and process
 refs: [R44]
 depends_on: []

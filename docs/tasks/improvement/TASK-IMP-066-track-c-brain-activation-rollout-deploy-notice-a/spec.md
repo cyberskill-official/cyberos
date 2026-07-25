@@ -2,6 +2,11 @@
 id: TASK-IMP-066
 title: "Track C: brain activation rollout (deploy, notice, ack, capture)"
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+
+
+## Groom note (batch/10e, 2026-07-25)
+
+**Closed — won't-do for 1.x: Track C brain activation rollout is a product fork.**
 eu_ai_act_risk_class: not_ai
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
@@ -13,7 +18,7 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p0
-status: draft
+status: closed
 phase: Wave 6 - go-live
 refs: [go-live, C, Stage, 5]
 depends_on: [TASK-IMP-061]

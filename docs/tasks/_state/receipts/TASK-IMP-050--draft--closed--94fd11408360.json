@@ -1,0 +1,7 @@
+{
+  "schema": "cyberos.transition@1",
+  "task_id": "TASK-IMP-050",
+  "from": "draft",
+  "to": "closed",
+  "receipt_sha256": "94fd1140836013e9ed14aabc9bcdcf36958ee4db03ea0a70bf4fe2090cf6ee70"
+}
