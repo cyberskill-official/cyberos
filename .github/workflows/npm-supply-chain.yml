@@ -1,0 +1,19 @@
+name: npm-supply-chain
+on:
+  push:
+  pull_request:
+jobs:
+  audit-and-licenses:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+      - name: npm audit + license allowlist (mcp, docs-tools)
+        run: bash tools/install/check-npm-supply-chain.sh

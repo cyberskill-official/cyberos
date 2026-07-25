@@ -1,0 +1,31 @@
+version: 2
+# TASK-IMP-044 — merge still requires existing CI + human acceptance.
+updates:
+  - package-ecosystem: npm
+    directory: /tools/install/mcp
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    groups:
+      npm-install-mcp:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /tools/install/docs-tools
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    groups:
+      npm-install-docs-tools:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 10
+    groups:
+      github-actions:
+        patterns: ["*"]
+  - package-ecosystem: cargo
+    directory: /services
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    groups:
+      cargo-services:
+        patterns: ["*"]
