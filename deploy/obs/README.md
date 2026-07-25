@@ -16,10 +16,10 @@ The proxy verifies tenant JWTs against the auth service JWKS in a full deploymen
 cd deploy/obs
 
 # 1. Mint a tenant token signed with the dev secret (same secret the proxy falls back to).
-export OBS_DEV_HS256_SECRET="dev-insecure-secret"
+export OBS_DEV_HS256_SECRET="${OBS_DEV_HS256_SECRET:-<YOUR_DEV_SECRET_HERE>}"
 export OBS_TENANT_TOKEN="$(python3 - <<'PY'
-import base64, hmac, hashlib, json, time
-secret = b"dev-insecure-secret"
+import os, base64, hmac, hashlib, json, time
+secret = os.environ.get("OBS_DEV_HS256_SECRET", "<YOUR_DEV_SECRET_HERE>").encode()
 def b64(b): return base64.urlsafe_b64encode(b).rstrip(b"=")
 header = b64(json.dumps({"alg":"HS256","typ":"JWT"}).encode())
 payload = b64(json.dumps({"sub":"grafana","tenant_id":"org:cyberskill","exp":int(time.time())+86400}).encode())
