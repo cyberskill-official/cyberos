@@ -54,8 +54,10 @@ jobs:
       # carried [skip ci] - TASK-IMP-071 removed that. See the header.)
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
-      - uses: actions/checkout@v7
-        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          ref: "${{ github.event.inputs.tag || github.ref_name }}"
       - name: Tag must equal v$(cat VERSION)
         run: test "v$(cat VERSION)" = "$TAG"
       - name: Build the payload
@@ -64,6 +66,12 @@ jobs:
         run: bash tools/install/check-version-sync.sh "$RUNNER_TEMP/payload"
       - name: Produce deterministic release assets
         run: bash tools/install/release-assets.sh "$RUNNER_TEMP/payload" "$RUNNER_TEMP/assets"
+      - name: Emit payload CycloneDX SBOM (TASK-IMP-043)
+        run: |
+          ver="$(tr -d ' \n\r' < VERSION)"
+          bash tools/install/emit-payload-sbom.sh "$RUNNER_TEMP/payload" "$RUNNER_TEMP/assets/cyberos-payload.cdx.json"
+          cp "$RUNNER_TEMP/assets/cyberos-payload.cdx.json" "$RUNNER_TEMP/assets/cyberos-payload-$ver.cdx.json"
+          (cd "$RUNNER_TEMP/assets" && sha256sum cyberos-payload.cdx.json "cyberos-payload-$ver.cdx.json" >> SHA256SUMS)
       - name: Render release notes (asset guide + CHANGELOG section)
         # GH_TOKEN: the renderer asks gh whether a previous PUBLISHED release exists (first-release
         # detection). Without the token it fails open to the old splice-the-section behaviour.
@@ -97,9 +105,10 @@ jobs:
     env:
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
-      - uses: actions/checkout@v7
-        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
-
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          ref: "${{ github.event.inputs.tag || github.ref_name }}"
       - name: Build the payload the channels deliver
         run: bash tools/install/build.sh "$RUNNER_TEMP/payload"
 
@@ -180,10 +189,13 @@ jobs:
     env:
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
-      - uses: actions/checkout@v7
-        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
+          ref: "${{ github.event.inputs.tag || github.ref_name }}"
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          package-manager-cache: false
           node-version: "24.18.0"
           registry-url: "https://registry.npmjs.org"
       - name: npm must be >= 11.5.1 for OIDC
@@ -253,11 +265,13 @@ jobs:
       TAURI_SIGNING_PRIVATE_KEY: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
     steps:
-      - uses: actions/checkout@v7
-        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
-
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
+          ref: "${{ github.event.inputs.tag || github.ref_name }}"
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          package-manager-cache: false
           node-version: '24.18.0'
 
       # The installers carry their OWN version fields and had drifted from the platform VERSION
@@ -374,8 +388,10 @@ jobs:
     if: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          ref: "${{ github.event.inputs.tag || github.ref_name }}"
       - name: Rebuild latest.json across every platform on the release
         env:
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
@@ -393,8 +409,10 @@ jobs:
     env:
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
-      - uses: actions/checkout@v7
-        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          ref: "${{ github.event.inputs.tag || github.ref_name }}"
       # The same guard the payload job has carried since TASK-IMP-068, and it belongs here for a stronger
       # reason: payload only writes a release asset, whereas this job PUBLISHES to a live store.
       #
@@ -408,9 +426,11 @@ jobs:
       # recalled, only superseded, so this guard belongs on every externally publishing job.
       - name: Tag must equal v$(cat VERSION)
         run: test "v$(cat VERSION)" = "$TAG"
-      - uses: actions/setup-node@v7
-        with: { node-version: 24 }
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          package-manager-cache: false
+          node-version: 24
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
         with: { distribution: temurin, java-version: 21 }
       # versionName + versionCode were hardcoded ("1.0" / 1). Play REJECTS any upload whose versionCode it
       # has already seen, so publishing could never work twice. The stamper writes versionName from the
@@ -469,7 +489,7 @@ jobs:
             -Pandroid.injected.signing.store.password=$ANDROID_KEYSTORE_PASSWORD \
             -Pandroid.injected.signing.key.alias=$ANDROID_KEY_ALIAS \
             -Pandroid.injected.signing.key.password=$ANDROID_KEY_PASSWORD
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: cyberos-android-aab
           path: apps/web/android/app/build/outputs/bundle/release/*.aab
@@ -519,16 +539,20 @@ jobs:
     env:
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
-      - uses: actions/checkout@v7
-        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          ref: "${{ github.event.inputs.tag || github.ref_name }}"
       # See the identical guard, and the run #81 post-mortem, in the android job above. The same mis-pointed
       # tag put a 1.0.0-labelled build into App Store Connect, which then had to be discarded by hand.
       # ASC burns a build number permanently the moment an upload is accepted, so failing here costs nothing
       # and failing to fail here costs a build number plus a manual cleanup, every time.
       - name: Tag must equal v$(cat VERSION)
         run: test "v$(cat VERSION)" = "$TAG"
-      - uses: actions/setup-node@v7
-        with: { node-version: 24 }
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          package-manager-cache: false
+          node-version: 24
 
       # Refuse to be a green job that ships nothing. If the credentials are absent, say exactly what is
       # missing and stop - do not archive for 20 minutes first, and do not pretend to have succeeded.
@@ -617,11 +641,13 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           ref: "${{ github.event.inputs.tag || github.ref_name }}"
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
+          package-manager-cache: false
           node-version: 24.18.0
       - name: Build the site from the markdown sources
         run: bash tools/docs-site/build.sh

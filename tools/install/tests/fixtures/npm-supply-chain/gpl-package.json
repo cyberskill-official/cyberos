@@ -1,0 +1,7 @@
+{
+  "name": "planted-gpl-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {"gpl-only-planted": "1.0.0"},
+  "dependencyLicenses": {"gpl-only-planted": "GPL-3.0-only"}
+}
