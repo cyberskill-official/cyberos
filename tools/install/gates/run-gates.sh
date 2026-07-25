@@ -6,6 +6,10 @@
 # final acceptance) are always still required and are never run here.
 # Exit codes: 0 green (or acknowledged-empty), 1 a gate ran and failed, 2 missing
 # gates.env / malformed config.yaml, 3 empty floor (nothing configured - fail closed).
+#
+# TASK-IMP-011: on RED (exit 1 or 3) emit structured failure taxonomy —
+#   .cyberos/last-gate-failure.json  +  one GATE_FAILURE_JSON:{...} stdout line.
+# Classes: build|lint|test|coverage|doctor|caf|awh|empty-floor|other
 set -uo pipefail
 
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
@@ -50,6 +54,50 @@ CFG_TEST="$(cfg_get gates test)";  CFG_COVERAGE="$(cfg_get gates coverage)"
 thr="$(cfg_get coverage_threshold)"
 export CYBEROS_COVERAGE_THRESHOLD="${thr:-${COVERAGE_MIN:-90}}"
 
+# --- TASK-IMP-011 failure taxonomy --------------------------------------------
+FAILURE_FILE="$root/.cyberos/last-gate-failure.json"
+# Accumulate failure records as lines: class|gate|cmd|source  (cmd/source may contain spaces — use SOH)
+_fail_records=""
+gate_class() {
+  case "$1" in
+    build|lint|test|coverage|doctor|caf|awh) printf '%s' "$1" ;;
+    empty-floor) printf 'empty-floor' ;;
+    *) printf 'other' ;;
+  esac
+}
+json_escape() {
+  # minimal JSON string escape for gate cmds
+  printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()), end="")' 2>/dev/null \
+    || printf '"%s"' "$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g')"
+}
+record_failure() {
+  local class="$1" gname="$2" cmd="$3" src="$4"
+  _fail_records="${_fail_records}${class}"$'\t'"${gname}"$'\t'"${cmd}"$'\t'"${src}"$'\n'
+}
+emit_failure_artifact() {
+  local exit_code="$1"
+  local tmp failures_json first=1
+  tmp="$(mktemp)"
+  failures_json="["
+  while IFS=$'\t' read -r class gname cmd src; do
+    [ -n "${class:-}" ] || continue
+    [ "$first" -eq 1 ] || failures_json+=","
+    first=0
+    failures_json+=$(printf '{"class":%s,"gate":%s,"cmd":%s,"source":%s}' \
+      "$(json_escape "$class")" "$(json_escape "$gname")" \
+      "$(json_escape "$cmd")" "$(json_escape "$src")")
+  done <<< "$_fail_records"
+  failures_json+="]"
+  printf '{"schema":"gate-failure@1","exit_code":%s,"failures":%s}\n' "$exit_code" "$failures_json" > "$tmp"
+  mkdir -p "$root/.cyberos"
+  mv "$tmp" "$FAILURE_FILE"
+  # single-line miner hook
+  printf 'GATE_FAILURE_JSON:%s\n' "$(tr -d '\n' < "$FAILURE_FILE")"
+}
+clear_failure_artifact() {
+  rm -f "$FAILURE_FILE"
+}
+
 fail=0
 gate() {
   desc="$1"; auto="$2"; cfg="$3"; stack="$4"
@@ -59,7 +107,13 @@ gate() {
   echo "gate $desc: ${cmd:-} (source: $src)"
   if [ -z "$cmd" ]; then printf 'SKIP  %-9s (no command configured)\n' "$desc"; return; fi
   printf 'GATE  %-9s %s\n' "$desc" "$cmd"
-  if ( cd "$root" && eval "$cmd" ); then printf 'PASS  %s\n' "$desc"; else printf 'FAIL  %s\n' "$desc"; fail=1; fi
+  if ( cd "$root" && eval "$cmd" ); then
+    printf 'PASS  %s\n' "$desc"
+  else
+    printf 'FAIL  %s\n' "$desc"
+    record_failure "$(gate_class "$desc")" "$desc" "$cmd" "$src"
+    fail=1
+  fi
 }
 
 gate build    "${BUILD_CMD:-}"    "$CFG_BUILD"    "${SRC_BUILD:-}"
@@ -89,6 +143,7 @@ fi
 echo "----------------------------------------------------------------------"
 if [ "$fail" -ne 0 ]; then
   echo "GATES: RED - route the task back to ready_to_implement and fix; do not advance."
+  emit_failure_artifact 1
   exit 1
 fi
 # --- fail-closed floor (TASK-CUO-302 #1.1-#1.3) ---------------------------------
@@ -102,15 +157,19 @@ fi
 if [ -z "${BUILD_CMD:-}$CFG_BUILD${LINT_CMD:-}$CFG_LINT${TEST_CMD:-}$CFG_TEST${COVERAGE_CMD:-}$CFG_COVERAGE" ]; then
   if [ "${CYBEROS_ALLOW_EMPTY_GATES:-}" = "1" ]; then
     echo "GATES: EMPTY-ACKNOWLEDGED - the floor ran nothing (build/lint/test/coverage all empty); CYBEROS_ALLOW_EMPTY_GATES=1 accepted that for THIS run only."
+    clear_failure_artifact
   else
     echo "GATES: RED - EMPTY FLOOR: zero gate commands are configured, so nothing was verified and this run cannot be green."
     echo "  Fix durably: set gates.build / gates.lint / gates.test / gates.coverage in .cyberos/config.yaml,"
     echo "  or re-run the install (bash .cyberos/install.sh) so autodetect can seed commands from your repo."
     echo "  Genuinely nothing to run (docs-only repo)? Acknowledge it per run: CYBEROS_ALLOW_EMPTY_GATES=1"
+    record_failure "empty-floor" "floor" "" "fail-closed"
+    emit_failure_artifact 3
     exit 3
   fi
 else
   echo "GATES: GREEN (machine gates only)."
+  clear_failure_artifact
 fi
 echo "HITL still required: a human records the review verdict and the final acceptance."
 echo "The agent must NOT set the task to done itself."

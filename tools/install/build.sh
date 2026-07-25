@@ -286,6 +286,9 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   [ -f "$here/docs-tools/memory-append.mjs" ] && cp "$here/docs-tools/memory-append.mjs" "$out/docs-tools/"
   # coverage-scope: task diff -> per-file coverage skeleton (TASK-IMP-098)
   [ -f "$here/docs-tools/coverage-scope.mjs" ] && cp "$here/docs-tools/coverage-scope.mjs" "$out/docs-tools/"
+  # coverage-ratchet: install-suite coverage floor (TASK-IMP-012)
+  [ -f "$here/docs-tools/coverage-ratchet.mjs" ] && cp "$here/docs-tools/coverage-ratchet.mjs" "$out/docs-tools/"
+  [ -f "$here/coverage-baseline.json" ] && cp "$here/coverage-baseline.json" "$out/"
   # TASK-IMP-100: reconcile the third state - work this workflow did not perform.
   [ -f "$here/docs-tools/task-reconcile.mjs" ] && cp "$here/docs-tools/task-reconcile.mjs" "$out/docs-tools/"
   # skill-log: the skill-trust ledger appender (TASK-IMP-113). ship-tasks step 27 logs its

@@ -136,3 +136,32 @@ jobs:
       - name: Tear down dev stack
         if: always()
         run: cd services/dev && docker compose down -v
+
+  # TASK-IMP-008: payload/install goldenset — offline-safe, no docker/Postgres.
+  install-goldenset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Run install goldenset
+        run: |
+          set -euo pipefail
+          gs=tools/install/.awh/goldenset.yaml
+          base=tools/install/.awh/eval-baseline.json
+          if [ ! -f "$gs" ]; then
+            echo "no install goldenset; nothing to gate"
+            exit 0
+          fi
+          if [ ! -f "$base" ]; then
+            echo "::error::install goldenset present but baseline missing ($base); failing closed."
+            exit 1
+          fi
+          bash tools/install/run-goldenset.sh

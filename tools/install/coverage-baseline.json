@@ -1,0 +1,8 @@
+{
+  "schema": "coverage-ratchet@1",
+  "metric": "install-script-test-touch",
+  "pct": 84.2,
+  "covered": 32,
+  "total": 38,
+  "written_note": "seeded by coverage-ratchet.mjs --write-baseline"
+}
