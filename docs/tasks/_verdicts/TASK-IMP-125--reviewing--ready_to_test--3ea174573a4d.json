@@ -1,0 +1,11 @@
+{
+  "schema": "cyberos.verdict@1",
+  "actor": "Stephen Cheng (session operator)",
+  "timestamp": "2026-07-24T19:37:10Z",
+  "task_id": "TASK-IMP-125",
+  "from": "reviewing",
+  "to": "ready_to_test",
+  "evidence_path": "docs/batches/batch-10b-imp-125-session-hitl.md",
+  "evidence_sha256": "3ea174573a4dfb73d861447f48411ccb58f42313b881ff5943c9d1417fcdd3af",
+  "artifact_sha256": "d61f8acd11d48140072503729b7b9ea004e513078256c62b9ac5a502f08be72b"
+}

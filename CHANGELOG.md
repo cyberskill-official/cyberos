@@ -2,7 +2,7 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
-## [Unreleased]
+## [1.5.0] - 2026-07-25
 
 ### Changed
 - batch/10a: groom older draft IMP-* stubs — close/duplicate 014/015/023/024/025/034/060; defer list for operator (see `docs/batches/batch-10-imp-draft-groom.md`).

@@ -50,7 +50,7 @@ The constraint is equally clear: a `claude-fable-5` literal in a skill is a rule
 
 ## Proposed Solution
 
-One optional field per `skill_chain` step: `judgment: high | medium | mechanical`. `mechanical` means a deterministic helper does the work and a model is not deciding anything. `high` means the step's output is a judgment the workflow depends on. A host MAY route on it; nothing in the payload reads it. That is the whole change: information, not instruction.
+One optional field per `skill_chain` step: `judgment: high | medium | mechanical`. `mechanical` means a deterministic executor does the work and a model is not deciding anything, wherever that executor lives. `high` means the step's output is a judgment the workflow depends on. A host MAY route on it; nothing in the payload reads it. That is the whole change: information, not instruction.
 
 ## Alternatives Considered
 
@@ -60,7 +60,7 @@ One optional field per `skill_chain` step: `judgment: high | medium | mechanical
 
 ## Success Metrics
 
-- Primary: every `skill_chain` step carries a valid `judgment`, and the mechanical ones are precisely the steps whose work is done by a docs-tools helper - suite-asserted. Baseline: no such information exists.
+- Primary: every `skill_chain` step carries a valid `judgment`, and the mechanical ones are precisely the steps whose result is produced by a deterministic executor with no model deciding - suite-asserted. Baseline: no such information exists.
 - Guardrail: no model string, price, or effort name appears anywhere in the payload - suite-asserted as a negative.
 
 ## Scope
@@ -88,7 +88,7 @@ None. Additive and optional.
 ## 1. Description (normative)
 
 - 1.1 Each `skill_chain` step in ship-tasks MUST carry `judgment: high | medium | mechanical`.
-- 1.2 `mechanical` MUST mean the step's work is performed by a deterministic helper with no model judgment in the result.
+- 1.2 `mechanical` MUST mean the step's work is performed by a deterministic executor with no model judgment in the result, wherever its executor lives.
 - 1.3 The field MUST be documented as ADVISORY: a host MAY route on it, and nothing in the payload may read it to decide anything.
 - 1.4 No model string, price, or effort name may appear in the payload as a result of this task.
 - 1.5 A step whose judgment level is genuinely ambiguous MUST be `medium` rather than guessed high - overstating a step's need is how the expensive default returns.
@@ -96,7 +96,7 @@ None. Additive and optional.
 ## 2. Acceptance criteria
 
 - [ ] AC 1 (traces_to: #1.1) - every skill_chain step carries a value from the enum - test: `modules/cuo/tests/test_workflow_evolution.py::test_every_step_has_judgment`
-- [ ] AC 2 (traces_to: #1.2) - every step marked mechanical is one whose skill delegates to a docs-tools helper - test: `modules/cuo/tests/test_workflow_evolution.py::test_mechanical_steps_are_helper_backed`
+- [ ] AC 2 (traces_to: #1.2) - every step marked mechanical is one whose skill delegates to a deterministic executor named in the payload for that skill - test: `modules/cuo/tests/test_workflow_evolution.py::test_mechanical_steps_are_helper_backed`
 - [ ] AC 3 (traces_to: #1.4) - no model string, price, or effort literal in the payload - test: `modules/cuo/tests/test_workflow_evolution.py::test_no_host_specific_literals`
 - [ ] AC 4 (traces_to: #1.3) - the field is documented as advisory and nothing in the payload reads it - verify: recorded grep in the gate log (a negative structural claim; same rationale as TASK-IMP-090 AC 1).
 - [ ] AC 5 (traces_to: #1.5) - no step is marked `high` without a named reason in the review; ambiguous steps carry `medium` - verify: recorded reviewer walk of the assigned levels in the gate log (a judgment claim about a prose table - no suite can decide whether a level was guessed; same rationale as TASK-IMP-090 AC 1).
