@@ -15,6 +15,7 @@ t_suite_job_declared() {
     && grep -q 'scripts/tests/run_all.sh' "$WF" \
     && grep -q 'pull_request' "$WF" \
     && grep -q 'push' "$WF" \
+    && grep -qE 'fetch-depth:\s*0' "$WF" \
     && ok t_suite_job_declared \
     || fail t_suite_job_declared "workflow missing required shape"
 }

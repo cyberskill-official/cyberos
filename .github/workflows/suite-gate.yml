@@ -17,6 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          # Full history: test_authorship_derivation t04 git cat-file pins (TRACE-007).
+          fetch-depth: 0
           persist-credentials: false
       - name: Run scripts/tests/run_all.sh
         run: bash scripts/tests/run_all.sh
