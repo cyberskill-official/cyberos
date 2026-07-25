@@ -32,6 +32,7 @@ new_files:
   - modules/memory/runtime/starter/templates/CONSENT.md
   - modules/memory/runtime/starter/cyberos-starter/.cyberos/memory/store/meta/consent/README.md
   - modules/memory/tests/test_personnel_consent.py
+  - tools/install/tests/test_memory_agents_protocol.sh
   - docs/batches/batch-12f-imp-061.md
   - docs/batches/batch-12f-gate1-acceptance.md
   - docs/batches/batch-12f-gate2-acceptance.md
@@ -46,6 +47,7 @@ modified_files:
   - tools/install/build.sh
   - tools/install/install.sh
   - docs/tasks/BACKLOG.md
+  - docs/tasks/improvement/TASK-IMP-061-brain-phase-0-consent-completion/spec.md
 source_pages:
   - "docs/strategy/cyberos-deep-audit-and-auto-evolution-plan-2026-07-06.md:154 — Complete BRAIN Phase 0 before capture widens; monitoring notice drafted but not cleared."
   - "docs/strategy/cyberos-brain-evaluation-plan.md — Phase 0 governance first: notice + acknowledgment before capture."
@@ -110,7 +112,7 @@ None blocking. Related: EVAL-001 (product gate, separate), IMP-138 (Branch A alr
 ## AI Authorship Disclosure
 
 - **Tools used:** Composer (Cursor agent) under CyberOS ship-tasks / session HITL for batch/12f.
-- **Scope:** Layer-1 BRAIN Phase 0 consent scaffolding only (protocol §19, meta/consent, invariant, build AGENTS vendor). Product EVAL notice clearance and capture activation excluded.
+- **Scope:** Layer-1 BRAIN Phase 0 consent scaffolding only. Re-derived and CONFIRMED: fixture 21 previously expected no critical codes and documented the missing rule (`generate_vectors.py`); gateguard PERSON path already required consent_event; PERSON template used `${CONSENT_EVENT_ID}` with no CONSENT template; build.sh materialised root thin AGENTS.md into memory/. Re-derived and CORRECTED: build vendor path root `AGENTS.md` -> `modules/memory/cyberos/data/AGENTS.md` (IMP-138 Branch A home). Measured and ADDED: AGENTS.md §19, `personnel-requires-consent` invariant, `meta/consent/` scaffold, `CONSENT.md` template, `test_personnel_consent.py` (8 cases). Product EVAL notice clearance and capture activation excluded.
 - **Human review:** session HITL override for batch/12f (operator Stephen Cheng); Gate-1 and Gate-2 evidence under docs/batches/batch-12f-*.
 
 ## 1. Description (BCP-14 normative)
@@ -129,14 +131,14 @@ None blocking. Related: EVAL-001 (product gate, separate), IMP-138 (Branch A alr
 
 ## Acceptance criteria
 
-- [x] AC1 (traces_to: #1.1): AGENTS.md §19 present with BCP-14 MUST clauses for personnel consent + resolution rules.
-- [x] AC2 (traces_to: #1.4,#1.5): `meta/consent/` scaffolded in starter + fresh install; `CONSENT.md` template exists.
-- [x] AC3 (traces_to: #1.6,#1.7): `personnel-requires-consent` invariant fails open violations and passes resolved consent — test: `modules/memory/tests/test_personnel_consent.py`.
-- [x] AC4 (traces_to: #1.7): `modules/memory/tests/test_personnel_consent.py` green (8 cases).
-- [x] AC5 (traces_to: #1.8): fixture 21 expects `personnel-requires-consent`.
-- [x] AC6 (traces_to: #1.9): `build.sh` vendors dense protocol; built `memory/AGENTS.md` contains `§19`.
-- [x] AC7 (traces_to: #1.10): Spec states non-goals (notice clearance / EVAL activation) explicitly; no capture env flips in the diff.
-- [x] AC8 (traces_to: #1.11): Task reaches `done` with Gate-1 + Gate-2 session HITL evidence under `docs/batches/`.
+- [x] AC 1 (traces_to: #1.1) - AGENTS.md §19 present with BCP-14 MUST clauses for personnel consent + resolution rules - verify: `grep -n '§19' modules/memory/cyberos/data/AGENTS.md`
+- [x] AC 2 (traces_to: #1.2,#1.4,#1.5) - `meta/consent/` scaffolded in starter + fresh install; consent_event resolution documented; `CONSENT.md` template exists - verify: paths exist on disk
+- [x] AC 3 (traces_to: #1.6,#1.7) - `personnel-requires-consent` fails open violations and passes resolved consent - test: `modules/memory/tests/test_personnel_consent.py`
+- [x] AC 4 (traces_to: #1.7) - personnel consent suite green (8 cases) - test: `modules/memory/tests/test_personnel_consent.py`
+- [x] AC 5 (traces_to: #1.8) - fixture 21 expects `personnel-requires-consent` - verify: `modules/memory/tools/tests/vectors/21-personnel-no-consent/expected.json`
+- [x] AC 6 (traces_to: #1.9) - `build.sh` vendors dense protocol; payload `memory/AGENTS.md` contains `§19` - verify: `grep data/AGENTS.md tools/install/build.sh`
+- [x] AC 7 (traces_to: #1.3,#1.10) - Spec non-goals exclude notice clearance / EVAL activation; no capture env flips - verify: recorded diff review
+- [x] AC 8 (traces_to: #1.11) - Task reaches `done` with Gate-1 + Gate-2 session HITL evidence under `docs/batches/` - verify: `docs/batches/batch-12f-gate1-acceptance.md`
 
 ## Verification
 

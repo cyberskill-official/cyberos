@@ -1,17 +1,14 @@
 ---
-batch: batch/12f-imp-061-brain-consent
-gate: testing -> done
-recorded: 2026-07-25
+batch: batch/12f-imp-061
+members: [TASK-IMP-061]
+gate: final-acceptance
+verdict: accept
 actor: Stephen Cheng (session operator)
+date: 2026-07-25
 ---
 
-# Gate-2 acceptance — batch/12f
+# Gate 2 — final acceptance
 
-**Operator session override:** auto-approve & accept; pause only for decisions.
-
-**Actor:** Stephen Cheng (session operator)  
-**Verdict:** ACCEPT  
-**Member:** TASK-IMP-061
-
-Focused tests: `pytest modules/memory/tests/test_personnel_consent.py` → 8 passed.
-Fixture 21 expects `personnel-requires-consent`. Ready for `done`.
+Session HITL override continuum. Accept to done.
+Evidence: docs/batches/batch-12f-imp-061.md; personnel consent + AGENTS vendor tests green.
+Remaining product Phase 0 (notice clearance / EVAL ack) is explicitly out of scope.
