@@ -76,7 +76,10 @@ function measure(root) {
   const uncovered = [];
   for (const abs of scripts) {
     const base = basename(abs);
-    if (corpus.includes(base)) covered.push(base);
+    // Whole-basename match: avoid install.sh counting as covered via uninstall.sh.
+    const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(`(?:^|[^A-Za-z0-9._-])${escaped}(?:$|[^A-Za-z0-9._-])`);
+    if (re.test(corpus)) covered.push(base);
     else uncovered.push(base);
   }
   const total = scripts.length;

@@ -10,4 +10,4 @@ template: task@1
 
 Opt-in revert-PR helper; dry-run is the testable path; never force-push/merge is normative and suite-enforced. depends_on IMP-008 for goldenset case citation. Safe under CyberOS push/merge doctrine.
 
-SUMMARY verdict: pass issues_open: 0 next_action: implement
+SUMMARY verdict: pass issues_open: 0 next_action: none

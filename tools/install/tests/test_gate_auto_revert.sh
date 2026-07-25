@@ -14,5 +14,13 @@ grep -q 'gh pr create\|dry-run\|DRY_RUN' "$S" && ok dry_or_gh || fail dry_or_gh 
 grep -qiE 'push --force|git push -f' "$S" && fail force "force push present" || ok no_force
 out="$(CYBEROS_AUTO_REVERT=0 bash "$S" --dry-run HEAD~1 2>&1 || true)"
 echo "$out" | grep -qiE 'skip|disabled|dry|off|AUTO_REVERT' && ok default_off || ok default_off_soft
+# Live path (no --dry-run) must refuse when opt-in env is unset/off.
+live_out="$(CYBEROS_AUTO_REVERT=0 bash "$S" HEAD 2>&1)"
+live_rc=$?
+if [ "$live_rc" -eq 2 ] && echo "$live_out" | grep -qiE 'AUTO_REVERT|disabled|refusing|opt-?in|set CYBEROS'; then
+  ok live_opt_in_guard
+else
+  fail live_opt_in_guard "rc=$live_rc out=$(echo "$live_out" | head -3)"
+fi
 echo "----"; echo "pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

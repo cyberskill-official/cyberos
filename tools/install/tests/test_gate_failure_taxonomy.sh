@@ -34,7 +34,9 @@ t01_forced_test_failure_taxonomy() {
   local out rc
   out="$(rungates "$d")"; rc=$?
   [ "$rc" -eq 1 ] || { fail t01 "rc=$rc want 1: $out"; return; }
-  grep -q 'GATE_FAILURE_JSON:' <<<"$out" || { fail t01 "no GATE_FAILURE_JSON line: $out"; return; }
+  local json_lines
+  json_lines="$(grep -c '^GATE_FAILURE_JSON:' <<<"$out" || true)"
+  [ "$json_lines" = "1" ] || { fail t01 "want exactly 1 GATE_FAILURE_JSON line, got $json_lines: $out"; return; }
   [ -f "$d/.cyberos/last-gate-failure.json" ] || { fail t01 "missing failure artifact"; return; }
   grep -q '"schema":"gate-failure@1"' "$d/.cyberos/last-gate-failure.json" \
     || grep -q '"schema": "gate-failure@1"' "$d/.cyberos/last-gate-failure.json" \
@@ -54,7 +56,9 @@ t02_empty_floor_class() {
   local out rc
   out="$(rungates "$d")"; rc=$?
   [ "$rc" -eq 3 ] || { fail t02 "rc=$rc want 3: $out"; return; }
-  grep -q 'GATE_FAILURE_JSON:' <<<"$out" || { fail t02 "no JSON line: $out"; return; }
+  local json_lines
+  json_lines="$(grep -c '^GATE_FAILURE_JSON:' <<<"$out" || true)"
+  [ "$json_lines" = "1" ] || { fail t02 "want exactly 1 GATE_FAILURE_JSON line, got $json_lines: $out"; return; }
   grep -q 'empty-floor' "$d/.cyberos/last-gate-failure.json" || { fail t02 "no empty-floor: $(cat "$d/.cyberos/last-gate-failure.json")"; return; }
   ok t02_empty_floor_class
 }
@@ -74,12 +78,12 @@ t03_green_clears_stale() {
 }
 
 t04_other_class_via_helper() {
-  # Exercise gate_class mapping for an unknown label by sourcing the case logic.
-  local class
-  class="$(bash -c '
-    gate_class() { case "$1" in build|lint|test|coverage|doctor|caf|awh) printf %s "$1";; empty-floor) printf empty-floor;; *) printf other;; esac; }
-    gate_class weird-custom
-  ')"
+  # Exercise the shipped gate_class from run-gates.sh (not a duplicated case).
+  local helper class
+  helper="$TMP/gate_class_helper.sh"
+  sed -n '/^gate_class()/,/^}/p' "$repo/tools/install/gates/run-gates.sh" > "$helper"
+  [ -s "$helper" ] || { fail t04 "could not extract gate_class from run-gates.sh"; return; }
+  class="$(bash -c ". \"$helper\"; gate_class weird-custom")"
   [ "$class" = "other" ] || { fail t04 "got '$class' want other"; return; }
   ok t04_other_class_via_helper
 }

@@ -35,7 +35,7 @@ source_pages:
   - "modules/cuo/.awh/goldenset.yaml (shape reference)"
 source_decisions:
   - "2026-07-25 batch/12c: land a payload-relevant install goldenset (version/help/gates smoke), not full module cargo suites."
-  - "2026-07-25: when awh is absent, runner MUST skip cleanly (exit 0 with SKIP provenance); CI path that has awh MUST run and fail closed without baseline."
+  - "2026-07-25: when awh is absent, runner MUST fall back to python cmd runner when available, otherwise skip cleanly (exit 0 with SKIP provenance); CI path that has awh MUST run and fail closed without baseline."
 ---
 
 # TASK-IMP-008: Goldensets as first-class gate inputs
@@ -50,7 +50,7 @@ Module goldensets exist under `modules/*/.awh/` and feed `awh-gate.yml`, but the
 
 ## Proposed Solution
 
-1. Author `tools/install/.awh/goldenset.yaml` with lightweight, offline-safe tasks (VERSION semver, help.sh, run-gates missing-env exit 2, coverage-ratchet --help).
+1. Author `tools/install/.awh/goldenset.yaml` with lightweight, offline-safe tasks (VERSION semver, help.sh, run-gates script presence/shebang check, coverage-ratchet --help).
 2. Commit a matching `eval-baseline.json` sealed from a green run.
 3. Ship `tools/install/run-goldenset.sh` that: runs via `awh eval` when available; otherwise executes each task `cmd` with a tiny fallback runner; skips cleanly when `CYBEROS_SKIP_GOLDENSET=1` or when neither awh nor python3 is available (documented SKIP).
 4. Document at `docs/verification/install-goldenset.md`.
@@ -105,7 +105,7 @@ None hard. Soft: awh CLI / `tools/awh` harness when present.
 - [x] AC1: goldenset.yaml parses and lists >= 3 tasks with id+cmd. (t01)
 - [x] AC2: baseline file present next to goldenset. (t02)
 - [x] AC3: `CYBEROS_SKIP_GOLDENSET=1` → exit 0 + SKIP. (t03)
-- [x] AC4: runner executes successfully on this host (awh or fallback) against committed baseline/tasks. (t04)
+- [x] AC4: runner executes successfully on this host (awh path validates committed baseline; fallback executes committed tasks without baseline compare). (t04)
 - [x] AC5: docs page names runner + skip env + CI job. (t05)
 - [x] AC6: awh-gate.yml contains install-goldenset job referencing tools/install/.awh. (t06)
 

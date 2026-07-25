@@ -21,6 +21,11 @@ for a in "$@"; do
       echo "  CYBEROS_SKIP_GOLDENSET=1  skip cleanly (exit 0)"
       exit 0
       ;;
+    *)
+      echo "run-goldenset: unknown option: $a" >&2
+      echo "usage: run-goldenset.sh [--no-baseline]" >&2
+      exit 2
+      ;;
   esac
 done
 
@@ -34,6 +39,13 @@ if [ ! -f "$GS" ]; then
   exit 2
 fi
 
+harness_cli_ok() {
+  command -v python3 >/dev/null 2>&1 || return 1
+  [ -d "$root/tools/awh" ] || return 1
+  ( cd "$root" && PYTHONPATH="tools/awh${PYTHONPATH:+:$PYTHONPATH}" \
+      python3 -c "import harness.cli" >/dev/null 2>&1 )
+}
+
 run_awh() {
   if command -v awh >/dev/null 2>&1; then
     if [ "$NO_BASELINE" -eq 1 ]; then
@@ -44,7 +56,7 @@ run_awh() {
     fi
     return $?
   fi
-  if command -v python3 >/dev/null 2>&1 && [ -d "$root/tools/awh" ]; then
+  if harness_cli_ok; then
     local args=(eval "$GS" --base-dir "$root" --seeds 1)
     if [ "$NO_BASELINE" -eq 0 ]; then
       [ -f "$BASE" ] || { echo "run-goldenset: goldenset present but baseline missing ($BASE) — fail closed" >&2; return 1; }
@@ -66,7 +78,6 @@ from pathlib import Path
 try:
     import yaml
 except ImportError:
-    # stdlib-only tiny parser for our sealed shape: id/cmd/weight/timeout_sec lines
     yaml = None
 
 gs = Path(os.environ["INSTALL_GS"])
@@ -77,18 +88,27 @@ if yaml is not None:
     data = yaml.safe_load(text) or {}
     tasks = data.get("tasks") or ([data] if "cmd" in data else [])
 else:
-    # Extremely small extractor: blocks starting with "  - id:" 
+    # Extremely small extractor: blocks starting with "  - id:"
     cur = None
     for line in text.splitlines():
         if line.strip().startswith("- id:"):
-            if cur and "cmd" in cur: tasks.append(cur)
-            cur = {"id": line.split(":",1)[1].strip().strip('"').strip("'")}
+            if cur and "cmd" in cur:
+                tasks.append(cur)
+            cur = {"id": line.split(":", 1)[1].strip().strip('"').strip("'")}
         elif cur is not None and line.strip().startswith("cmd:"):
-            raw = line.split(":",1)[1].strip()
-            if raw.startswith('"') and raw.endswith('"'): raw = raw[1:-1]
-            if raw.startswith("'") and raw.endswith("'"): raw = raw[1:-1]
+            raw = line.split(":", 1)[1].strip()
+            if raw.startswith('"') and raw.endswith('"'):
+                raw = raw[1:-1]
+            if raw.startswith("'") and raw.endswith("'"):
+                raw = raw[1:-1]
             cur["cmd"] = raw
-    if cur and "cmd" in cur: tasks.append(cur)
+        elif cur is not None and line.strip().startswith("timeout_sec:"):
+            try:
+                cur["timeout_sec"] = float(line.split(":", 1)[1].strip())
+            except ValueError:
+                pass
+    if cur and "cmd" in cur:
+        tasks.append(cur)
 
 if not tasks:
     print("run-goldenset fallback: no tasks parsed", file=sys.stderr)
@@ -97,10 +117,18 @@ failed = 0
 for t in tasks:
     tid = t.get("id", "?")
     cmd = t.get("cmd")
+    timeout = t.get("timeout_sec")
     if not cmd:
-        print(f"FAIL {tid}: missing cmd"); failed = 1; continue
+        print(f"FAIL {tid}: missing cmd")
+        failed = 1
+        continue
     print(f"GATE  goldenset/{tid}: {cmd}")
-    r = subprocess.run(cmd, shell=True, cwd=str(root))
+    try:
+        r = subprocess.run(cmd, shell=True, cwd=str(root), timeout=timeout)
+    except subprocess.TimeoutExpired:
+        print(f"FAIL  {tid} (timed out)")
+        failed = 1
+        continue
     if r.returncode != 0:
         print(f"FAIL  {tid} (exit {r.returncode})")
         failed = 1

@@ -9,8 +9,12 @@ fail(){ FAIL=$((FAIL+1)); echo "  FAIL $1: $2"; }
 R="$repo/tools/install/run-goldenset.sh"
 [ -f "$R" ] || { echo FATAL missing runner; exit 1; }
 [ -f "$repo/tools/install/.awh/goldenset.yaml" ] && ok goldenset_yaml || fail goldenset_yaml "missing"
-bash "$R" --help >/dev/null 2>&1 || bash "$R" 2>&1 | head -5 >/dev/null
-ok runner_invocable
-grep -q 'awh-gate\|run-goldenset' "$repo/.github/workflows/awh-gate.yml" && ok awh_wired || fail awh_wired "not wired"
+if bash "$R" --help >/dev/null 2>&1 && bash "$R" >/dev/null 2>&1; then
+  ok runner_invocable
+else
+  fail runner_invocable "runner did not complete successfully"
+fi
+grep -Fq 'bash tools/install/run-goldenset.sh' "$repo/.github/workflows/awh-gate.yml" \
+  && ok awh_wired || fail awh_wired "runner not wired in awh-gate.yml"
 echo "----"; echo "pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

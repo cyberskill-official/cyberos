@@ -119,12 +119,22 @@ if [ "$DRY" -eq 1 ]; then
 fi
 
 # Live mode — still never force-push, never merge.
-git fetch origin "$BASE_BRANCH" 2>/dev/null || true
+if ! git fetch origin "$BASE_BRANCH"; then
+  echo "gate-auto-revert: failed to fetch base branch: $BASE_BRANCH" >&2
+  rm -f "$BODY_FILE"
+  exit 1
+fi
 if ! git show-ref --verify --quiet "refs/heads/$BASE_BRANCH" \
   && ! git show-ref --verify --quiet "refs/remotes/origin/$BASE_BRANCH"; then
   echo "gate-auto-revert: base branch not found: $BASE_BRANCH" >&2
   rm -f "$BODY_FILE"
   exit 2
+fi
+if ! git merge-base --is-ancestor "$FULL" "origin/$BASE_BRANCH" \
+  && ! git merge-base --is-ancestor "$FULL" "$BASE_BRANCH"; then
+  echo "gate-auto-revert: $FULL is not an ancestor of $BASE_BRANCH — refusing stale/foreign SHA" >&2
+  rm -f "$BODY_FILE"
+  exit 1
 fi
 
 git checkout -B "$BRANCH" "origin/${BASE_BRANCH}" 2>/dev/null \
