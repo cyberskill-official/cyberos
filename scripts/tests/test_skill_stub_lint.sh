@@ -193,7 +193,52 @@ t07_parity_scope_complete() {
     || fail t07 "SCOPE drift - vendored pairs not in SCOPE:${missing:- none}; SCOPE names not vendored pairs:${extra:- none}"
 }
 
+# ── t08: the TASK-SKILL-202 NFR disposition stays complete ───────────
+t08_delist_and_allowlist_clean() {
+  local bad=""
+  grep -Eq '(^|[[:space:]])nfr-[a-z-]+' <<<"$VENDORED" && bad="$bad vendored-list"
+  grep -q 'nfr-' "$repo/tools/install/chain-allowlist.txt" && bad="$bad chain-allowlist"
+  [ -z "$bad" ] && ok t08 || fail t08 "NFR stub delist regressed:$bad"
+}
+
+# ── t09: the workflow refuses to improvise absent NFR skills ─────────
+t09_workflow_degrades_loud() {
+  local bad="" f
+  while IFS= read -r f; do
+    grep -qi 'NOT yet shipped' "$repo/$f" \
+      && grep -q 'requires their full implementation before it can run' "$repo/$f" \
+      || bad="$bad $f"
+  done < <(git -C "$repo" ls-files '*certify-nfrs.md')
+  [ -z "$bad" ] && ok t09 || fail t09 "NFR workflow lacks the loud degradation notice:$bad"
+}
+
+# ── t10: the shipped floor remains recorded as a measured change ─────
+t10_changelog_records_floor() {
+  local c="$repo/CHANGELOG.md"
+  grep -q 'TASK-CUO-209' "$c" \
+    && grep -Eq '20[- ]skill|20 (remaining )?(gap )?skills|backport count[^0-9]*20' "$c" \
+    && grep -qiE 'pair[- ]parity SCOPE|SCOPE expansion|parity expansion' "$c" \
+    && ok t10 || fail t10 "CHANGELOG lacks TASK-CUO-209 + 20-skill backport + full SCOPE record"
+}
+
+# ── t11: every SKILL-202 AC citation resolves to real code ───────────
+t11_skill_202_citations_resolve() {
+  local spec="$repo/docs/tasks/skill/TASK-SKILL-202-skill-quality-floor/spec.md"
+  local bad="" count=0 citation path fn
+  while IFS= read -r citation; do
+    count=$((count+1))
+    path="${citation%%::*}"; fn="${citation#*::}"
+    [ -f "$repo/$path" ] || { bad="$bad $path(missing)"; continue; }
+    grep -Eq "^${fn}\\(\\)" "$repo/$path" || bad="$bad $path::$fn(missing-function)"
+  done < <(sed -n '/^## 2\. Acceptance criteria/,/^## 3\./p' "$spec" \
+    | grep -oE 'test: `[^`]+::[^`]+`' | sed -E 's/^test: `//; s/`$//')
+  [ "$count" -eq 7 ] || bad="$bad citation-count=$count(want-7)"
+  [ -z "$bad" ] && ok t11 || fail t11 "SKILL-202 acceptance citation rot:$bad"
+}
+
 t01_detector_passes_real_shape; t02_detector_fails_stub; t03_detector_fails_missing_sections
 t04_vendored_set_meets_floor; t05_injection_discipline_present
 t06_backport_is_per_skill; t07_parity_scope_complete
+t08_delist_and_allowlist_clean; t09_workflow_degrades_loud
+t10_changelog_records_floor; t11_skill_202_citations_resolve
 echo "----"; echo "pass=$PASS fail=$FAIL"; [ "$FAIL" -eq 0 ]

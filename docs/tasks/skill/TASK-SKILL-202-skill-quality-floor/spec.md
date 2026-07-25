@@ -24,10 +24,9 @@ created: 2026-07-23
 memory_chain_hash: null
 effort_hours: 16
 service: modules/skill
-new_files:
-  - tools/install/check-skill-floor.sh
-  - tools/install/tests/test_skill_floor.sh
+new_files: []
 modified_files:
+  - scripts/tests/test_skill_stub_lint.sh
   - tools/install/build.sh
   - tools/install/chain-allowlist.txt
   - tools/install/check-pair-parity.sh
@@ -44,6 +43,7 @@ source_decisions:
   - "2026-07-23 operator: CyberOS Hardening Plan approved; Phase 2 T5 'Skill quality' authored as an improvement task (plan file cyberos_hardening_plan_49404998; audit findings H7 + H8)."
   - "2026-07-23 authoring: NFR stub default disposition is DELIST from the vendored payload (drop the four names from build.sh's VENDORED_SKILLS + their chain-allowlist entries; source dirs stay in modules/skill as unvendored scaffolds) rather than implement - authoring four real skill contracts is its own project and must not gate this floor task. certify-nfrs.md gains an explicit not-yet-shipped notice instead of silently losing its skills. Recorded for the review gate."
   - "2026-07-23 authoring: plan said 21 skills missing injection discipline and 24 total pairs; measured 24 missing and 25 pairs. Specs are written to the measured numbers with the checker keyed to properties, not counts, so drift in either direction fails honestly."
+  - "2026-07-25 TASK-IMP-145 truth repair: the floor implementation shipped inside scripts/tests/test_skill_stub_lint.sh (run_all-discovered), not the proposed tools/install/check-skill-floor.sh + tools/install/tests/test_skill_floor.sh split. Batch-8b testing-evidence recorded and gate-2 accepted that F4 deviation; §1.5/§1.6 and all AC citations now name the as-built mechanism rather than files that never existed."
 ---
 
 # TASK-SKILL-202: Skill quality floor - NFR stub disposition, untrusted-content backport, full pair parity
@@ -104,19 +104,19 @@ None blocking. TASK-SKILL-118 (done) established the pair file-class policy and 
 - 1.2 `certify-nfrs.md` MUST state at its skill-routing step that the four NFR skills are not yet shipped and the workflow requires their full implementation before it can run - a loud degradation replacing today's silent improvisation surface.
 - 1.3 Every remaining vendored skill that reads repo files or artefact bodies as input - the 20 measured gap skills, enumerated in source_pages - MUST carry BOTH an `untrusted_inputs` frontmatter block (wrap_in_marker `untrusted_content`, injection_scan required, on_marker_hit surface_to_human, matching the task-author pattern) AND a `references/UNTRUSTED_CONTENT.md` adapted to that skill's specific input surface.
 - 1.4 `check-pair-parity.sh` SCOPE MUST enumerate every author/audit pair present in the vendored payload (25 at authoring time), and the 14 newly-scoped pairs MUST carry the AUTHOR_CLASSES / AUDIT_CLASSES file sets so the expanded check passes - authored at parity with the existing deepened pairs, not as empty placeholder files.
-- 1.5 A new checker `tools/install/check-skill-floor.sh <skills-dir>` MUST fail (distinct non-zero exit) when any vendored SKILL.md has fewer than 60 non-frontmatter lines OR lacks the required floor sections, and `build.sh` MUST run it against the assembled payload so an undersized skill fails the build. Placeholder-syntax detection stays with the existing sweep tooling; this floor is size + structure.
-- 1.6 The new suite `tools/install/tests/test_skill_floor.sh` MUST cover: floor-checker pass on the real payload, fail on a synthetic stub fixture, fail on a missing-section fixture, delisting (payload contains no nfr-* skill dir), allowlist cleanliness, and parity-SCOPE completeness (SCOPE equals the payload's measured pair set - a pair vendored but unscoped fails).
+- 1.5 The floor detector inside `scripts/tests/test_skill_stub_lint.sh` MUST fail (distinct non-zero exit) when any vendored skill's contract surface has fewer than 60 lines OR its SKILL.md body has fewer than two contract sections. Placeholder-syntax detection stays with the existing sweep tooling; this floor is size + structure. The originally proposed standalone `tools/install/check-skill-floor.sh` + build-time wiring was the optional F4 half and did not ship; batch-8b gate-2 accepted that deviation.
+- 1.6 The `run_all.sh`-discovered suite `scripts/tests/test_skill_stub_lint.sh` MUST cover: floor-detector pass on a real-shaped fixture, fail on a synthetic stub fixture, fail on a missing-section fixture, every vendored source skill meeting the floor, both injection-discipline halves, per-skill reference uniqueness, parity-SCOPE completeness, NFR delisting + allowlist cleanliness, loud certify-nfrs degradation, CHANGELOG record, and acceptance-citation resolution.
 - 1.7 `CHANGELOG.md` MUST record the delisting (naming TASK-CUO-209 as the superseded vendoring decision), the injection-discipline backport count, and the parity expansion.
 
 ## 2. Acceptance criteria
 
-- [ ] AC 1 (traces_to: #1.1) - a scratch payload build contains no `cuo/skills/nfr-*` directory and `chain-allowlist.txt` contains no `nfr-` line; the chain-coverage checker stays green (no rot warnings) - test: `tools/install/tests/test_skill_floor.sh::t01_nfr_delisted_clean`
-- [ ] AC 2 (traces_to: #1.2) - `certify-nfrs.md` contains the not-yet-shipped notice at its routing step - test: `tools/install/tests/test_skill_floor.sh::t02_workflow_degrades_loud`
-- [ ] AC 3 (traces_to: #1.3) - for each of the 20 enumerated gap skills: SKILL.md frontmatter parses and contains the `untrusted_inputs` block with the three required keys, and `references/UNTRUSTED_CONTENT.md` exists non-empty and names that skill's own input surface (not a byte-copy of another skill's file) - test: `tools/install/tests/test_skill_floor.sh::t03_injection_discipline_backported`
-- [ ] AC 4 (traces_to: #1.4) - `check-pair-parity.sh` against the built payload exits 0 with SCOPE size equal to the payload's pair count, and deleting one required class file from a newly-scoped pair in a scratch copy makes it exit 10 naming the file - test: `tools/install/tests/test_skill_floor.sh::t04_full_scope_parity`
-- [ ] AC 5 (traces_to: #1.5) - `check-skill-floor.sh` exits 0 on the real payload, non-zero on a fixture stub (< 60 lines) and on a fixture missing the required sections, and a build with an injected stub fixture fails - test: `tools/install/tests/test_skill_floor.sh::t05_floor_checker_blocks_build`
-- [ ] AC 6 (traces_to: #1.6) - the suite runs green under `bash scripts/tests/run_all.sh` discovery (glob `tools/install/tests/test_*.sh`) - test: `tools/install/tests/test_skill_floor.sh::t06_registered_by_glob`
-- [ ] AC 7 (traces_to: #1.7) - CHANGELOG's top entry names the delisting with TASK-CUO-209, a backport count of 20, and the SCOPE expansion - test: `tools/install/tests/test_skill_floor.sh::t07_changelog_records_floor`
+- [x] AC 1 (traces_to: #1.1) - the vendored list and `chain-allowlist.txt` contain no `nfr-` entry - test: `scripts/tests/test_skill_stub_lint.sh::t08_delist_and_allowlist_clean`
+- [x] AC 2 (traces_to: #1.2) - every tracked `certify-nfrs.md` contains the not-yet-shipped notice at its routing step - test: `scripts/tests/test_skill_stub_lint.sh::t09_workflow_degrades_loud`
+- [x] AC 3 (traces_to: #1.3) - for each of the 20 enumerated gap skills, SKILL.md carries the required `untrusted_inputs` keys and a non-empty per-skill `references/UNTRUSTED_CONTENT.md` names its own input surface - test: `scripts/tests/test_skill_stub_lint.sh::t05_injection_discipline_present`
+- [x] AC 4 (traces_to: #1.4) - parity SCOPE equals the complete vendored author/audit pair set in both directions; the parity suite owns missing-class negative fixtures - test: `scripts/tests/test_skill_stub_lint.sh::t07_parity_scope_complete`
+- [x] AC 5 (traces_to: #1.5) - the floor detector passes a real-shaped fixture and fails a <60-line stub and a padded fixture missing contract sections - test: `scripts/tests/test_skill_stub_lint.sh::t02_detector_fails_stub`
+- [x] AC 6 (traces_to: #1.6) - the suite is discovered by `bash scripts/tests/run_all.sh` through the `scripts/tests/test_*.sh` glob and every SKILL-202 citation resolves to a real function - test: `scripts/tests/test_skill_stub_lint.sh::t11_skill_202_citations_resolve`
+- [x] AC 7 (traces_to: #1.7) - CHANGELOG names the delisting with TASK-CUO-209, the 20-skill backport and the full pair-parity SCOPE expansion - test: `scripts/tests/test_skill_stub_lint.sh::t10_changelog_records_floor`
 
 ## 3. Edge cases
 

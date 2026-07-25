@@ -250,11 +250,118 @@ t05_mmr_peaks_stay_in_sync() { # TASK-IMP-141 — gated flips must not RED docto
   ok t05
 }
 
+t06_dry_run_writes_nothing() { # TASK-IMP-146 §1.1/§1.4/§1.5
+  # A rehearsal must project exactly what the real append writes and touch nothing. The
+  # clock is pinned (ma() sets CYBEROS_NOW), which is the tool's determinism contract:
+  # ts_ns is inside the hashed record, so an unpinned clock changes the chain hash.
+  local d="$TMP/t06"; emit_payloads "$d"; local s="$d/store"
+  ma append "$s" artefact_write "$d/p1.json" || { fail t06 "seed append failed: $(cat "$TMP/err")"; return; }
+  store_sum "$s" > "$d/sum.before"
+  printf '{"actor":"operator","task_id":"TASK-T-001","prior_status":"testing","new_status":"done","reason":"docs/x.md"}\n' > "$d/verdict.json"
+  CYBEROS_NOW="$NOW" CYBEROS_ACTOR="suite" node "$MA" --json --dry-run append "$s" status_overridden "$d/verdict.json" > "$TMP/out" 2> "$TMP/err"
+  local rc=$?
+  [ "$rc" -eq 0 ] || { fail t06 "dry run rc=$rc err=$(cat "$TMP/err")"; return; }
+  node -e '
+    const j=JSON.parse(require("node:fs").readFileSync(process.argv[1],"utf8"));
+    if (j.dry_run!==true) { console.error("envelope missing dry_run:true"); process.exit(1); }
+    if (j.seq!==2 || !/^[0-9a-f]{64}$/.test(j.chain)) { console.error("projection wrong: "+JSON.stringify(j)); process.exit(1); }
+    process.stdout.write(j.chain);
+  ' "$TMP/out" > "$d/projected" || { fail t06 "--json envelope wrong: $(cat "$TMP/out")"; return; }
+  store_sum "$s" > "$d/sum.after"
+  cmp -s "$d/sum.before" "$d/sum.after" \
+    || { fail t06 "dry run mutated the store: $(diff "$d/sum.before" "$d/sum.after")"; return; }
+  # the projection is the truth: the real append writes exactly that seq + chain
+  ma append "$s" status_overridden "$d/verdict.json" || { fail t06 "real append after dry run failed: $(cat "$TMP/err")"; return; }
+  grep -q "seq 2 " "$TMP/out" || { fail t06 "real append did not land at the projected seq: $(cat "$TMP/out")"; return; }
+  grep -q "$(cut -c1-12 "$d/projected")" "$TMP/out" \
+    || { fail t06 "real chain differs from the projected chain: $(cat "$TMP/out") vs $(cat "$d/projected")"; return; }
+  ma verify "$s" || { fail t06 "store no longer verifies: $(cat "$TMP/err")"; return; }
+  ok t06
+}
+
+t07_dry_run_refuses_identically() { # TASK-IMP-146 §1.2/§1.3
+  local d="$TMP/t07"; emit_payloads "$d"; local s="$d/store"
+  ma append "$s" artefact_write "$d/p1.json" || { fail t07 "seed append failed"; return; }
+  store_sum "$s" > "$d/sum.before"
+  local rc
+  dry() { CYBEROS_NOW="$NOW" CYBEROS_ACTOR="suite" node "$MA" --dry-run append "$@" > "$TMP/out" 2> "$TMP/err"; }
+  # exit 2: unknown kind / non-object payload / missing verdict field / unsafe token
+  dry "$s" episode_logged "$d/p1.json"; rc=$?
+  [ "$rc" -eq 2 ] || { fail t07 "unknown kind under --dry-run rc=$rc"; return; }
+  printf '[1,2,3]' > "$d/arr.json"
+  dry "$s" workflow_complete "$d/arr.json"; rc=$?
+  [ "$rc" -eq 2 ] || { fail t07 "non-object payload under --dry-run rc=$rc"; return; }
+  printf '{"actor":"operator","task_id":"TASK-T-001","prior_status":"testing","new_status":"done"}' > "$d/partial.json"
+  dry "$s" status_overridden "$d/partial.json"; rc=$?
+  { [ "$rc" -eq 2 ] && grep -q "reason" "$TMP/err"; } \
+    || { fail t07 "missing status_overridden field under --dry-run rc=$rc err=$(cat "$TMP/err")"; return; }
+  printf '{"task_id":"../escape","phase":"x"}' > "$d/token.json"
+  dry "$s" artefact_write "$d/token.json"; rc=$?
+  [ "$rc" -eq 2 ] || { fail t07 "unsafe task token under --dry-run rc=$rc"; return; }
+  # exit 3: a live foreign lease refuses the rehearsal too - and is NOT clobbered
+  node -e 'const now=process.hrtime.bigint(); process.stdout.write(JSON.stringify({pid:99999,host:"other",monotonic_ns:Number(now),expiry_ns:Number(now+8000000000n),version:1}))' > "$s/.lock"
+  dry "$s" artefact_write "$d/p1.json"; rc=$?
+  { [ "$rc" -eq 3 ] && grep -q "locked" "$TMP/err"; } \
+    || { fail t07 "held lease under --dry-run rc=$rc err=$(cat "$TMP/err")"; return; }
+  grep -q '"pid":99999' "$s/.lock" || { fail t07 "dry run clobbered the held lease"; return; }
+  printf '' > "$s/.lock"
+  # exit 4: a tampered chain refuses the rehearsal (the walk is the same walk)
+  node -e '
+    const fs=require("node:fs");const b=fs.readFileSync(process.argv[1]);
+    b[24+5]^=0x01; fs.writeFileSync(process.argv[1],b);' "$s/audit/current.binlog"
+  dry "$s" artefact_write "$d/p1.json"; rc=$?
+  { [ "$rc" -eq 4 ] && grep -q "first bad ordinal 1" "$TMP/err"; } \
+    || { fail t07 "tampered chain under --dry-run rc=$rc err=$(cat "$TMP/err")"; return; }
+  node -e '
+    const fs=require("node:fs");const b=fs.readFileSync(process.argv[1]);
+    b[24+5]^=0x01; fs.writeFileSync(process.argv[1],b);' "$s/audit/current.binlog"
+  store_sum "$s" > "$d/sum.after"
+  cmp -s "$d/sum.before" "$d/sum.after" \
+    || { fail t07 "a refused dry run mutated the store: $(diff "$d/sum.before" "$d/sum.after")"; return; }
+  ok t07
+}
+
+t08_dry_run_bootstrap_and_head_report() { # TASK-IMP-146 §1.6/§1.7
+  local d="$TMP/t08"; emit_payloads "$d"
+  # a store root that does not exist: report the bootstrap, create nothing
+  CYBEROS_NOW="$NOW" CYBEROS_ACTOR="suite" node "$MA" --dry-run append "$d/never" artefact_write "$d/p1.json" > "$TMP/out" 2> "$TMP/err"
+  local rc=$?
+  { [ "$rc" -eq 0 ] && grep -q "would bootstrap" "$TMP/out"; } \
+    || { fail t08 "nonexistent store rc=$rc out=$(cat "$TMP/out") err=$(cat "$TMP/err")"; return; }
+  [ ! -e "$d/never" ] || { fail t08 "dry run created the store root it only described"; return; }
+  # a HEAD one behind the rows: reported, never re-published
+  local s="$d/store"
+  ma append "$s" artefact_write "$d/p1.json" || { fail t08 "seed append failed"; return; }
+  ma append "$s" artefact_write "$d/p2.json" || { fail t08 "second seed append failed"; return; }
+  node -e 'const fs=require("node:fs");const b=Buffer.alloc(8);b.writeBigUInt64LE(1n,0);fs.writeFileSync(process.argv[1],b)' "$s/HEAD"
+  store_sum "$s" > "$d/sum.before"
+  CYBEROS_NOW="$NOW" CYBEROS_ACTOR="suite" node "$MA" --dry-run append "$s" artefact_write "$d/p3.json" > "$TMP/out" 2> "$TMP/err"
+  rc=$?
+  { [ "$rc" -eq 0 ] && grep -q "would re-publish HEAD=2" "$TMP/out"; } \
+    || { fail t08 "one-behind HEAD rc=$rc out=$(cat "$TMP/out")"; return; }
+  [ "$(head_val "$s")" = "1" ] || { fail t08 "dry run re-published HEAD (now $(head_val "$s"), want 1)"; return; }
+  store_sum "$s" > "$d/sum.after"
+  cmp -s "$d/sum.before" "$d/sum.after" || { fail t08 "one-behind dry run mutated the store"; return; }
+  ok t08
+}
+
+t09_dry_run_documented() { # TASK-IMP-146 §1.8
+  node "$MA" --help > "$TMP/out" 2>&1 || { fail t09 "--help exited non-zero"; return; }
+  grep -q -- "--dry-run" "$TMP/out" || { fail t09 "--help does not document --dry-run"; return; }
+  grep -qi "nothing" "$TMP/out" || { fail t09 "--help does not say a dry run writes nothing"; return; }
+  grep -q -- "--dry-run" "$repo/CHANGELOG.md" || { fail t09 "CHANGELOG does not record --dry-run"; return; }
+  ok t09
+}
+
 want t01 && t01_fresh_store_three_appends
 want t02 && t02_verify_and_tamper
 want t03 && t03_bad_kind_refused
 want t04 && t04_payload_vendored
 want t05 && t05_mmr_peaks_stay_in_sync
+want t06 && t06_dry_run_writes_nothing
+want t07 && t07_dry_run_refuses_identically
+want t08 && t08_dry_run_bootstrap_and_head_report
+want t09 && t09_dry_run_documented
 
 echo "test_memory_append: pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

@@ -139,17 +139,17 @@ The content contract for `docs/verification/benchmark-gates.md`. Severity: how b
 
 ### G7 - Skill quality floor (severity: high, tier: ci+human)
 - **Purpose:** vendored skills meet a minimum body/section floor and every author/audit pair carries its file classes - no more ~20-line stubs shipped as product.
-- **Pass/fail:** `check-skill-floor.sh` green over the payload AND `check-pair-parity.sh` green with SCOPE = every vendored pair. Fail: any undersized skill or missing class file. Human half: periodic prompt-quality review (not mechanical).
+- **Pass/fail:** `scripts/tests/test_skill_stub_lint.sh` green over the vendored source set AND `check-pair-parity.sh` green with SCOPE = every vendored pair. Fail: any undersized skill or missing class file. Human half: periodic prompt-quality review (not mechanical).
 - **Test method:** the two checkers against a scratch payload.
-- **Checked files:** `dist/cyberos/cuo/skills/**`, `tools/install/check-pair-parity.sh`, `tools/install/check-skill-floor.sh`.
-- **Owner:** `tools/install/tests/test_skill_floor.sh` (TASK-SKILL-202).
+- **Checked files:** `dist/cyberos/cuo/skills/**`, `tools/install/check-pair-parity.sh`, `scripts/tests/test_skill_stub_lint.sh`.
+- **Owner:** `scripts/tests/test_skill_stub_lint.sh` (TASK-SKILL-202).
 
 ### G8 - Injection-discipline coverage (severity: high, tier: ci+human)
 - **Purpose:** every repo-reading vendored skill declares `untrusted_inputs` + wrapping rules - prompt-injection posture is a floor, not a virtue of the best skills.
 - **Pass/fail:** each repo/artefact-reading vendored skill carries the `untrusted_inputs` frontmatter block AND a non-empty per-skill `references/UNTRUSTED_CONTENT.md`. Fail: either half missing on any such skill. Human half: quality of the wrapping rules.
 - **Test method:** presence + shape scan over the payload skill set.
 - **Checked files:** `dist/cyberos/cuo/skills/*/SKILL.md` + `references/`.
-- **Owner:** `tools/install/tests/test_skill_floor.sh::t03` (TASK-SKILL-202).
+- **Owner:** `scripts/tests/test_skill_stub_lint.sh::t05_injection_discipline_present` (TASK-SKILL-202).
 
 ### G9 - BRAIN health in gates (severity: high, tier: ci)
 - **Purpose:** where memory is installed, store health is part of the machine floor - a frozen BRAIN silently dropping the audit trail is a gate matter, not a curiosity.

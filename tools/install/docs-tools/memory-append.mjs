@@ -12,14 +12,18 @@
 // a verify mode, so a governed run can keep the chain truthful from any environment
 // that has node.
 //
-// Usage:  node memory-append.mjs [--json] [--actor <name>] [--now <ISO-8601>] <command> ...
+// Usage:  node memory-append.mjs [--json] [--dry-run] [--actor <name>] [--now <ISO-8601>] <command> ...
 //
-//   append <store-root> <kind> <payload.json|->
+//   append <store-root> <kind> <payload.json|-> [--dry-run]
 //       Validate kind + payload (refusals happen BEFORE any write), acquire the §4.2
 //       lease lock, bootstrap a fresh store (HEAD=0, canonical dirs) when needed, clean
 //       stale two-phase tmp files, walk + re-verify the whole chain, then append ONE
 //       framed record to audit/current.binlog and advance HEAD — both via §4.1 two-phase
 //       writes (tmp + fsync + rename + parent-dir fsync). Payload '-' reads stdin.
+//       With --dry-run (TASK-IMP-146) the same refusal ladder and the same store-state
+//       checks run, the projected seq/chain/path are reported, and NOTHING is written —
+//       the lease is inspected rather than minted, bootstrap is described rather than
+//       performed. §6.5 makes every real row permanent, so rehearsals belong here.
 //   verify <store-root>
 //       Recompute every frame (crc32c, seq continuity, prev_chain linkage, §6.3 chain
 //       hash) across all audit/*.binlog segments and compare the tip to HEAD. Exits
@@ -202,7 +206,10 @@ function nowNs(opts) {
 }
 
 // ── §4.2 lease lock (no flock in node stdlib — see header caveat) ────────────
-function acquireLease(store) {
+// Inspection and minting are SEPARATE (TASK-IMP-146 §1.3): the --dry-run rehearsal must
+// raise the identical refusal from the identical rule without writing a lease of its own.
+// One implementation of "is this store claimed?", two callers.
+function inspectLease(store, { dryRun = false } = {}) {
   const lockPath = join(store, ".lock");
   let cur = null;
   try { cur = readFileSync(lockPath, "utf8"); } catch { cur = null; }
@@ -228,14 +235,20 @@ function acquireLease(store) {
     if (lease.host === hostname() && Number.isInteger(lease.pid) && lease.pid > 0) {
       try { process.kill(lease.pid, 0); } catch (e) { pidGone = (e.code === "ESRCH"); }
     }
+    const verb = dryRun ? "would reap" : "reaping";
     if (horizonExceeded || pidGone) {
-      process.stderr.write(`memory-append: note: reaping stale lease (pid=${lease.pid ?? "?"} host=${lease.host ?? "?"}) - ${pidGone ? "holder pid is gone (§4.2 orphan)" : "expiry beyond one TTL horizon (boot-epoch skew)"}\n`);
+      process.stderr.write(`memory-append: note: ${verb} stale lease (pid=${lease.pid ?? "?"} host=${lease.host ?? "?"}) - ${pidGone ? "holder pid is gone (§4.2 orphan)" : "expiry beyond one TTL horizon (boot-epoch skew)"}\n`);
     } else if (Number.isFinite(expN) && expN > nowN) {
       throw new Refusal(3, `store is locked (lease pid=${lease.pid ?? "?"} host=${lease.host ?? "?"}, ~${((expN - nowN) / 1e9).toFixed(1)}s left on the §4.2 TTL) - failing fast, nothing written`);
     } else {
-      process.stderr.write(`memory-append: note: reaping stale lease (pid=${lease.pid ?? "?"} host=${lease.host ?? "?"}) - §4.2 expiry passed\n`);
+      process.stderr.write(`memory-append: note: ${verb} stale lease (pid=${lease.pid ?? "?"} host=${lease.host ?? "?"}) - §4.2 expiry passed\n`);
     }
   }
+}
+
+function acquireLease(store) {
+  inspectLease(store);
+  const lockPath = join(store, ".lock");
   const now = process.hrtime.bigint();
   const lease = {
     pid: process.pid, host: hostname(),
@@ -386,6 +399,10 @@ function cmdAppend(storeArg, kind, payloadArg, opts) {
   const tsNs = nowNs(opts);
   const store = resolve(storeArg);
 
+  // Every refusal above happens before EITHER path touches the store, so the rehearsal
+  // and the real append share one validation ladder (TASK-IMP-146 §1.2).
+  if (opts["dry-run"]) return projectAppend({ store, kind, payload, memPath, actor, tsNs });
+
   // Fresh-store bootstrap part 1: the root must exist before the lease can land.
   mkdirSync(store, { recursive: true });
   const release = acquireLease(store);
@@ -419,12 +436,7 @@ function cmdAppend(storeArg, kind, payloadArg, opts) {
     }
 
     const seq = lastSeq + 1n;
-    const recMinus = {
-      actor, chain: "", content_sha256: "", extra: payload,
-      op: kind, path: memPath, prev_chain: lastChain, ts_ns: tsNs,
-    };
-    const minusBytes = Buffer.from(canonicalJSON(recMinus), "utf8");
-    const chain = createHash("sha256").update(minusBytes).update(Buffer.from(lastChain, "hex")).digest("hex");
+    const { recMinus, chain } = chainRecord({ actor, kind, memPath, payload, lastChain, tsNs });
     const payloadBytes = Buffer.from(canonicalJSON({ ...recMinus, chain }), "utf8");
     const hdr = Buffer.alloc(FRAME_HDR);
     hdr.writeUInt32BE(payloadBytes.length, 0);
@@ -465,6 +477,66 @@ function cmdAppend(storeArg, kind, payloadArg, opts) {
 }
 
 function leU64(v) { const b = Buffer.alloc(8); b.writeBigUInt64LE(v, 0); return b; }
+
+/**
+ * The §6.3 record shape and its chain hash. Shared by the real append and the --dry-run
+ * projection so a rehearsal can never disagree with what the append would write.
+ */
+function chainRecord({ actor, kind, memPath, payload, lastChain, tsNs }) {
+  const recMinus = {
+    actor, chain: "", content_sha256: "", extra: payload,
+    op: kind, path: memPath, prev_chain: lastChain, ts_ns: tsNs,
+  };
+  const minusBytes = Buffer.from(canonicalJSON(recMinus), "utf8");
+  const chain = createHash("sha256").update(minusBytes).update(Buffer.from(lastChain, "hex")).digest("hex");
+  return { recMinus, chain };
+}
+
+/**
+ * --dry-run (TASK-IMP-146): run every store-state check the real append runs and report
+ * the row it WOULD write. Nothing under the store root is created, modified or removed —
+ * no root mkdir, no .lock, no bootstrap scaffold, no tmp sweep, no segment, no HEAD, no
+ * peaks.bin. The chain is append-only (§6.5), so a probe row is permanent; this is how an
+ * operator tests a verdict payload without leaving one on the live BRAIN.
+ */
+function projectAppend({ store, kind, payload, memPath, actor, tsNs }) {
+  const exists = existsSync(store);
+  // Same order as the real path: lease first (a claimed store refuses before any read of
+  // the chain), then HEAD, then the walk.
+  if (exists) inspectLease(store, { dryRun: true });
+
+  let head = exists ? readHead(store) : null;
+  let wouldBootstrap = false;
+  if (head === null) {
+    if (exists && listSegments(store).some((s) => readFileSync(s).length > 0)) {
+      throw new Refusal(4, "store has audit rows but no HEAD - inconsistent; refusing to bootstrap over data (run the canonical walker)");
+    }
+    wouldBootstrap = true;
+    head = 0n;
+  }
+
+  const { lastSeq, lastChain } = exists ? walkChain(store) : { lastSeq: 0n, lastChain: GENESIS };
+  let headNote = null;
+  if (lastSeq !== head) {
+    if (lastSeq === head + 1n) {
+      headNote = `HEAD is one behind the intact rows (interrupted publish) - the real append would re-publish HEAD=${lastSeq}`;
+    } else {
+      throw new Refusal(4, `HEAD says ${head} but the rows end at seq ${lastSeq} - inconsistent store, refusing to append (run verify)`);
+    }
+  }
+
+  const seq = lastSeq + 1n;
+  const { chain } = chainRecord({ actor, kind, memPath, payload, lastChain, tsNs });
+  const notes = [];
+  if (wouldBootstrap) notes.push(`would bootstrap a fresh store at ${store} (HEAD=0, null-root prev_chain, canonical dirs)`);
+  if (headNote) notes.push(headNote);
+  return {
+    code: 0, dry_run: true, seq: Number(seq), chain, prev_chain: lastChain, kind,
+    path: memPath, actor, store, would_bootstrap: wouldBootstrap,
+    head_note: headNote,
+    message: `dry-run: WOULD append seq ${seq} (${kind}) chaining at ${chain.slice(0, 12)}... path ${memPath} HEAD would become ${seq}; nothing was written${notes.length ? `\ndry-run: ${notes.join("\ndry-run: ")}` : ""}`,
+  };
+}
 
 // ── MMR peaks (writer.py OnDiskMMR / mmr_root_for_binlog parity) ──────────────
 function hashLeaf(data) {
@@ -571,6 +643,10 @@ commands
       deterministically (HEAD=0, null-root prev_chain, canonical dirs). Stale two-phase
       tmp files are cleaned; a held §4.2 lease fails fast. The whole chain is
       re-verified before every append.
+      --dry-run runs every one of those refusals and reports the seq/chain the append
+      WOULD produce, writing nothing at all - no store root, no .lock, no bootstrap, no
+      tmp sweep, no segment, no HEAD, no peaks.bin. The chain is append-only (§6.5), so
+      a probe row is permanent: rehearse verdict payloads here, not on the live store.
   verify <store-root>
       recompute every link (crc32c, seq continuity, prev_chain, §6.3 chain hash) across
       all audit/*.binlog segments and compare the tip to HEAD; exits non-zero naming the
@@ -593,11 +669,12 @@ darwin  node exposes fsync only - no F_BARRIERFSYNC/F_FULLFSYNC (documented §4.
         rename atomicity still guarantees crash consistency).
 writes  two-phase (.tmp.<nonce> + fsync + rename + parent-dir fsync); readers and the
         walker open exact final paths, so tmp litter is never state.
---json  prints a stable-stringified result envelope (sorted keys) instead of prose.
+--json  prints a stable-stringified result envelope (sorted keys) instead of prose;
+        a dry run carries dry_run: true alongside the projected seq/chain.
 `;
 
 function main(argv) {
-  const flags = new Set(["json", "help"]);
+  const flags = new Set(["json", "help", "dry-run"]);
   const valued = new Set(["actor", "now"]);
   const opts = {};
   const positionals = [];

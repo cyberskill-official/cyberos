@@ -2,6 +2,14 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## Unreleased
+
+### Added
+- `memory-append.mjs append --dry-run` validates the payload, lease and live chain and projects the seq/hash without creating or changing any store byte (TASK-IMP-146).
+
+### Fixed
+- SKILL-202 acceptance criteria and benchmark gates G7/G8 now cite the live `scripts/tests/test_skill_stub_lint.sh` suite; added coverage for the TASK-CUO-209 NFR delist, 20-skill untrusted-input backport, full pair-parity SCOPE and loud workflow degradation (TASK-IMP-145).
+
 ## [1.5.1] - 2026-07-25
 
 Fixed
