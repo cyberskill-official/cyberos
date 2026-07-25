@@ -13,17 +13,21 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p1
-status: draft
+status: duplicate
 phase: Wave 2 - measure and evaluate
 refs: [R21]
 depends_on: []
 created: 2026-07-08
 # awh N/A until a goldenset is sealed for this area
 verify: N
+duplicate_of: TASK-MEMORY-243
+
 ---
 # TASK-IMP-015: Nightly chain-integrity monitor
 
 ## 1. Description
+
+**Groomed 2026-07-25 (batch/10):** duplicate of TASK-MEMORY-243 (nightly chain-integrity folded into the same memory task). Stub never authored.
 
 Author the normative clauses when this task is picked up; it was migrated as a draft stub.
 

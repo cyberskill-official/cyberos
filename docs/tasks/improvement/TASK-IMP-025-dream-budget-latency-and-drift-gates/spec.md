@@ -13,17 +13,21 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p1
-status: draft
+status: duplicate
 phase: Wave 3 - widen the envelope
 refs: [Stage, 2]
 depends_on: [TASK-IMP-009]
 created: 2026-07-08
 # awh N/A until a goldenset is sealed for this area
 verify: N
+duplicate_of: TASK-MEMORY-247
+
 ---
 # TASK-IMP-025: Dream budget, latency and drift gates
 
 ## 1. Description
+
+**Groomed 2026-07-25 (batch/10):** duplicate of TASK-MEMORY-247 (dream budget/latency/drift gates). Stub never authored.
 
 Author the normative clauses when this task is picked up; it was migrated as a draft stub.
 
