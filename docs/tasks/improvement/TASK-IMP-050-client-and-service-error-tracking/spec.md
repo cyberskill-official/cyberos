@@ -3,10 +3,6 @@ id: TASK-IMP-050
 title: "Client and service error tracking"
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 
-
-## Groom note (batch/10e, 2026-07-25)
-
-**Closed — won't-do for 1.x: client/service error tracking is platform.**
 eu_ai_act_risk_class: not_ai
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
@@ -29,6 +25,8 @@ verify: N
 # TASK-IMP-050: Client and service error tracking
 
 ## 1. Description
+
+**Groomed 2026-07-25 (batch/10e):** closed — won't-do for 1.x: client/service error tracking is platform.
 
 Author the normative clauses when this task is picked up; it was migrated as a draft stub.
 

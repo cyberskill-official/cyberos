@@ -13,17 +13,21 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p1
-status: draft
+status: duplicate
 phase: Wave 4 - hardening
 refs: [R4]
 depends_on: []
 created: 2026-07-08
 # awh N/A until a goldenset is sealed for this area
 verify: N
+duplicate_of: TASK-CHAT-238
+
 ---
 # TASK-IMP-034: Chat realtime fanout seam
 
 ## 1. Description
+
+**Groomed 2026-07-25 (batch/10):** duplicate of TASK-CHAT-238 (fan-out seam trait + LISTEN/NOTIFY). Stub never authored.
 
 Author the normative clauses when this task is picked up; it was migrated as a draft stub.
 

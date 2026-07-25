@@ -3,10 +3,6 @@ id: TASK-IMP-007
 title: "apps/web test spine"
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 
-
-## Groom note (batch/10e, 2026-07-25)
-
-**Closed — won't-do for 1.x: apps/web test spine is platform frontend (POST-1.0.0 Tier C).**
 eu_ai_act_risk_class: not_ai
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
@@ -29,6 +25,8 @@ verify: N
 # TASK-IMP-007: apps/web test spine
 
 ## 1. Description
+
+**Groomed 2026-07-25 (batch/10e):** closed — won't-do for 1.x: apps/web test spine is platform frontend (POST-1.0.0 Tier C).
 
 Author the normative clauses when this task is picked up; it was migrated as a draft stub.
 

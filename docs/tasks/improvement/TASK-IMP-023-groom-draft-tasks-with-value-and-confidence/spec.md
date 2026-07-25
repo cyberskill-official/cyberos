@@ -13,7 +13,7 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p1
-status: draft
+status: closed
 phase: Wave 3 - widen the envelope
 refs: [R49]
 depends_on: []
@@ -24,6 +24,8 @@ verify: N
 # TASK-IMP-023: Groom draft tasks with value and confidence
 
 ## 1. Description
+
+**Groomed 2026-07-25 (batch/10):** closed — meta groom completed by batch/10 (`docs/batches/batch-10-imp-draft-groom.md`). Stub never needed separate ACs; the groom report is the deliverable.
 
 Author the normative clauses when this task is picked up; it was migrated as a draft stub.
 

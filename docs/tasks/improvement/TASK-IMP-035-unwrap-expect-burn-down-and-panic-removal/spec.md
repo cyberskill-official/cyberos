@@ -3,10 +3,6 @@ id: TASK-IMP-035
 title: "unwrap/expect burn-down and panic removal"
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 
-
-## Groom note (batch/10e, 2026-07-25)
-
-**Closed — won't-do for 1.x: unwrap/expect burn-down is a multi-crate platform campaign.**
 eu_ai_act_risk_class: not_ai
 # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
@@ -29,6 +25,8 @@ verify: N
 # TASK-IMP-035: unwrap/expect burn-down and panic removal
 
 ## 1. Description
+
+**Groomed 2026-07-25 (batch/10e):** closed — won't-do for 1.x: unwrap/expect burn-down is a multi-crate platform campaign.
 
 Author the normative clauses when this task is picked up; it was migrated as a draft stub.
 
