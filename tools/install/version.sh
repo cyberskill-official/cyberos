@@ -54,17 +54,71 @@ if [ "${CYBEROS_OFFLINE:-0}" != "1" ]; then
 fi
 latest="${latest_line#latest=}"; latest="${latest%% *}"
 
-# rules_sha — the rule-content fingerprint (TASK-IMP-074 §10). Reported alongside the versions
-# because two payloads can share a VERSION and still ship different rules.
-_rs() {
+# rules_sha — TASK-IMP-122: INSTALLED side is ALWAYS recomputed; REFERENCE is a build token
+# (or a reachable payload tree). Never derive the installed side from the stored manifest.
+_rc="$here/lib/rules-cone.sh"
+[ -f "$_rc" ] || _rc="$(dirname "$0")/lib/rules-cone.sh"
+if [ -f "$_rc" ]; then
+  # shellcheck source=/dev/null
+  . "$_rc"
+else
+  _rc=""
+fi
+
+_manifest_token() {
   [ -f "${1:-}" ] || return 1
   local v; v="$(grep -E '^rules_sha:' "$1" 2>/dev/null | head -1 | awk '{print $2}' | tr -d ' \n\r')"
   printf '%s' "$v"; [ -n "$v" ]
 }
-inst_sha="$(_rs "$root/.cyberos/manifest.yaml" || true)"
-pay_sha="$(_rs "$here/manifest.yaml" || true)"
-if [ -z "$pay_sha" ] && [ -n "${CYBEROS_PAYLOAD:-}" ]; then
-  pay_sha="$(_rs "${CYBEROS_PAYLOAD}/manifest.yaml" || true)"
+
+inst_sha=""
+pay_sha=""
+can_name_paths=0
+ref_is_install_token=0
+
+if [ -z "$_rc" ]; then
+  :
+elif [ -d "$root/.cyberos" ]; then
+  inst_sha="$(_rules_sha_of "$root/.cyberos" || true)"
+fi
+
+# Reference + path-naming (§1.9). An install-shaped $here (path ends in /.cyberos) always
+# takes its reference from the install manifest token and never names paths — covers both
+# `bash .cyberos/version.sh` and `bash .cyberos/version.sh <other-repo>`. A payload-shaped
+# $here recomputes the reference from the tree and may name paths.
+_here_phys="$(cd "$here" 2>/dev/null && pwd -P || echo "$here")"
+if [ -n "$_rc" ]; then
+  case "$_here_phys" in
+    */.cyberos)
+      pay_sha="$(_manifest_token "$here/manifest.yaml" || true)"
+      ref_is_install_token=1
+      can_name_paths=0
+      if [ -z "$pay_sha" ] && [ -n "${CYBEROS_PAYLOAD:-}" ]; then
+        # Fallback only when install manifest lacks the token; naming stays off (§1.9).
+        if _rules_cone_is_payload_tree "${CYBEROS_PAYLOAD}" 2>/dev/null; then
+          pay_sha="$(_rules_sha_of "${CYBEROS_PAYLOAD}" || true)"
+        else
+          pay_sha="$(_manifest_token "${CYBEROS_PAYLOAD}/manifest.yaml" || true)"
+        fi
+      fi
+      ;;
+    *)
+      if _rules_cone_is_payload_tree "$here" 2>/dev/null; then
+        pay_sha="$(_rules_sha_of "$here" || true)"
+        can_name_paths=1
+      else
+        pay_sha="$(_manifest_token "$here/manifest.yaml" || true)"
+        if [ -z "$pay_sha" ] && [ -n "${CYBEROS_PAYLOAD:-}" ]; then
+          if _rules_cone_is_payload_tree "${CYBEROS_PAYLOAD}" 2>/dev/null; then
+            pay_sha="$(_rules_sha_of "${CYBEROS_PAYLOAD}" || true)"
+            can_name_paths=1
+          else
+            pay_sha="$(_manifest_token "${CYBEROS_PAYLOAD}/manifest.yaml" || true)"
+          fi
+        fi
+      fi
+      ;;
+  esac
 fi
 
 echo "installed=$inst"
@@ -86,9 +140,9 @@ elif [ "$inst" = "none" ]; then
 elif { is_ver "$latest" && is_ver "$inst" && ver_lt "$inst" "$latest"; } \
   || { is_ver "$inst" && is_ver "$payload_ver" && ver_lt "$inst" "$payload_ver"; }; then
   verdict="repo_stale"
-elif [ -n "$pay_sha" ] && [ "$inst_sha" != "$pay_sha" ]; then
-  # Same VERSION, different rules — invisible to the version compare above. This is the
-  # case that let 23/24 repos keep running the pre-rename ruleset while reporting healthy.
+elif [ -z "$_rc" ] || [ -z "$inst_sha" ] || [ -z "$pay_sha" ]; then
+  verdict="unknown"
+elif [ "$inst_sha" != "$pay_sha" ]; then
   verdict="rules_drift"
 fi
 
@@ -106,7 +160,21 @@ case "$verdict" in
     ;;
   rules_drift)
     echo "  same version ($inst), different rules — vendored copy does not match this payload"
+    if [ "$can_name_paths" -eq 1 ] && [ -d "$root/.cyberos" ]; then
+      echo "  differing paths:"
+      _rules_sha_diff "$here" "$root/.cyberos" | while IFS= read -r _p; do
+        [ -n "$_p" ] && echo "    $_p"
+      done
+    else
+      echo "  (cannot name differing paths — no reachable payload tree for this invocation)"
+      if [ "$ref_is_install_token" -eq 1 ]; then
+        echo "  reference is a build token read from an install manifest, not a payload tree"
+      fi
+    fi
     echo "next: bash ${CYBEROS_PAYLOAD:-$here}/install.sh $root"
+    ;;
+  unknown)
+    echo "  rules comparison could not be computed (missing tree, cone lib, or reference token)"
     ;;
   up_to_date)
     case "$latest_line" in latest=unknown*) echo "  note: remote check skipped or unavailable — answer only as fresh as the local payload" ;; esac
@@ -122,6 +190,10 @@ fi
 
 if [ -z "$installer" ]; then
   echo "cyberos version: no install.sh reachable (set CYBEROS_PAYLOAD) — apply with install after fetching payload" >&2
+  exit 0
+fi
+
+if [ "$verdict" = "unknown" ]; then
   exit 0
 fi
 
