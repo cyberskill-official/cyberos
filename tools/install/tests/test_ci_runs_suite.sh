@@ -15,8 +15,10 @@ t_suite_job_declared() {
     && grep -q 'scripts/tests/run_all.sh' "$WF" \
     && grep -q 'pull_request' "$WF" \
     && grep -q 'push' "$WF" \
+    && grep -Eq 'uses:[[:space:]]*actions/checkout@[0-9a-f]{40}' "$WF" \
+    && ! grep -Eq 'uses:[[:space:]]*actions/checkout@(v[0-9]|main|master)' "$WF" \
     && awk '
-         /uses:[[:space:]]*actions\/checkout@v7/ { in_co=1; next }
+         /uses:[[:space:]]*actions\/checkout@/ { in_co=1; next }
          in_co && /^[[:space:]]+-[[:space:]]/ { exit }
          in_co && /fetch-depth:[[:space:]]*0/ { found=1; exit }
          END { exit !found }

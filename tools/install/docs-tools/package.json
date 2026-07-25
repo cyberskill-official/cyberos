@@ -1,0 +1,9 @@
+{
+  "name": "cyberos-docs-tools",
+  "version": "1.5.1",
+  "description": "CyberOS install docs-tools. Private package root for npm audit / Dependabot.",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24 <25" },
+  "license": "MIT"
+}

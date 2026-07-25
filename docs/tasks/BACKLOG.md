@@ -248,9 +248,9 @@ Totals: 280 draft, 4 ready_to_implement, 242 done, 1 on_hold, 47 closed, 5 dupli
 
 ## improvement  (12 draft, 82 done, 46 closed, 5 duplicate)
 
-- [draft] TASK-IMP-001-dependency-audit-in-ci-cargo-audit-cargo-deny - Dependency audit in CI (cargo-audit + cargo-deny) (improvement)
+- [done] TASK-IMP-001-dependency-audit-in-ci-cargo-audit-cargo-deny - npm audit + license gate for install tooling (improvement)
 - [closed] TASK-IMP-002-refuse-dev-cors-in-production-boot - Refuse dev CORS in production boot (improvement)
-- [draft] TASK-IMP-003-secret-scanning-in-ci-and-pre-push - Secret scanning in CI and pre-push (improvement)
+- [done] TASK-IMP-003-secret-scanning-in-ci-and-pre-push - Secret scanning in CI and pre-push (improvement)
 - [closed] TASK-IMP-004-deploy-observability-stack-to-p0 - Deploy observability stack to P0 (improvement)
 - [closed] TASK-IMP-005-external-uptime-probes-and-alerting - External uptime probes and alerting (improvement)
 - [closed] TASK-IMP-006-canary-healthcheck-and-auto-rollback-in-deploy - Canary healthcheck and auto-rollback in deploy (improvement)
@@ -290,8 +290,8 @@ Totals: 280 draft, 4 ready_to_implement, 242 done, 1 on_hold, 47 closed, 5 dupli
 - [closed] TASK-IMP-040-mutation-testing-pilot-on-shared-crates - Mutation testing pilot on shared crates (improvement)
 - [draft] TASK-IMP-041-secrets-inventory-and-rotation-runbook - Secrets inventory and rotation runbook (improvement)
 - [closed] TASK-IMP-042-rate-limits-beyond-login - Rate limits beyond login (improvement)
-- [draft] TASK-IMP-043-supply-chain-hardening-pin-sbom-sign - Supply-chain hardening (pin, SBOM, sign) (improvement)
-- [draft] TASK-IMP-044-automated-dependency-updates - Automated dependency updates (improvement)
+- [done] TASK-IMP-043-supply-chain-hardening-pin-sbom-sign - Payload supply-chain: pin Actions, emit SBOM, checksum posture (improvement)
+- [done] TASK-IMP-044-automated-dependency-updates - Automated dependency updates (Dependabot) (improvement)
 - [closed] TASK-IMP-045-session-and-token-security-validation - Session and token security validation (improvement)
 - [closed] TASK-IMP-046-backup-independence-and-restore-drill - Backup independence and restore drill (improvement)
 - [closed] TASK-IMP-047-rebuild-in-60-minutes-runbook - Rebuild-in-60-minutes runbook (improvement)
