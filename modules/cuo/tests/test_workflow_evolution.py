@@ -352,11 +352,11 @@ def test_every_step_has_judgment() -> None:
     )
 
 
-def _mechanical_helper_table() -> dict[str, str]:
-    """§11e's mechanical table, parsed: skill -> helper filename."""
+def _mechanical_executor_table() -> dict[str, str]:
+    """§11e's mechanical table, parsed: skill -> executor path token."""
     table: dict[str, str] = {}
     row = re.compile(
-        r"^\s*\|[^|]*\|\s*`([a-z0-9-]+)`\s*\|\s*`docs-tools/([a-z0-9._-]+\.mjs)`\s*\|"
+        r"^\s*\|[^|]*\|\s*`([a-z0-9-]+)`\s*\|\s*`([^`]+)`\s*\|"
     )
     for line in _section_11e().splitlines():
         m = row.match(line)
@@ -365,60 +365,81 @@ def _mechanical_helper_table() -> dict[str, str]:
     return table
 
 
+def _resolve_executor(name: str) -> Path:
+    """Resolve a table executor token to an on-disk path."""
+    if name.startswith("docs-tools/"):
+        return _DOCS_TOOLS / name.split("/", 1)[1]
+    return _REPO_ROOT / name
+
+
 def test_mechanical_steps_are_helper_backed() -> None:
-    """AC 2 (§1.2) - `mechanical` means a docs-tools helper performs the step's work.
+    """AC 2 (§1.2, TASK-IMP-125) - `mechanical` means a deterministic executor does the work.
 
     Three things must hold for every mechanical step, and each closes a different way
     of lying with the label:
-      1. the step's skill is in §11e's table          - stops a judgment step being
-                                                        relabelled cheap in silence;
-      2. the named helper EXISTS on disk              - stops an invented helper;
-      3. the payload's own record of THAT skill names THAT helper, outside §11e
-                                                      - stops the table pointing a
-                                                        judgment skill at some other
-                                                        real helper to satisfy (1)+(2).
+      1. the step's skill is in §11e's table
+      2. the named executor EXISTS on disk
+      3. the payload's own record of THAT skill names THAT executor, outside §11e
     """
     chain = _chain_steps()
     mechanical = sorted({s["skill"] for s in chain if s.get("judgment") == "mechanical"})
     assert mechanical, "no step is `mechanical` - this arm would pass vacuously"
 
-    table = _mechanical_helper_table()
-    assert table, "§11e names no mechanical helper - every mechanical claim is unanchored"
+    table = _mechanical_executor_table()
+    assert table, "§11e names no mechanical executor - every mechanical claim is unanchored"
 
     outside = _text_outside_11e()
     for skill in mechanical:
         assert skill in table, (
             f"step skill `{skill}` is marked mechanical but §11e's table does not name "
-            "the helper that does its work"
+            "the executor that does its work"
         )
-        helper_name = table[skill]
-        helper = _DOCS_TOOLS / helper_name
-        assert helper.is_file(), (
-            f"`{skill}` is mechanical via `{helper_name}`, which does not exist at {helper}"
+        executor_name = table[skill]
+        executor = _resolve_executor(executor_name)
+        assert executor.exists(), (
+            f"`{skill}` is mechanical via `{executor_name}`, which does not exist at {executor}"
         )
 
-        # The delegation must be on the record for THIS skill, in the payload's own
-        # words: the skill's SKILL.md, or the workflow's executor prose outside §11e.
-        # `-author`/`-audit` are two halves of one contract, so the stem is what the
-        # prose names (ship-tasks §1 says "executor for `backlog-state-update`").
         stem = skill
         for suffix in ("-author", "-audit"):
             if stem.endswith(suffix):
                 stem = stem[: -len(suffix)]
+        needle = Path(executor_name).name
         sources = [outside]
         skill_md = _REPO_ROOT / "modules/skill" / skill / "SKILL.md"
         if skill_md.is_file():
             sources.append(skill_md.read_text(encoding="utf-8"))
         anchored = any(
-            stem in line and helper_name in line
+            (stem in line or skill in line) and (needle in line or executor_name in line)
             for src in sources
             for line in src.splitlines()
         )
         assert anchored, (
-            f"`{skill}` is marked mechanical via `{helper_name}`, but nothing outside "
-            f"§11e's own table says `{helper_name}` does `{stem}`'s work - the "
+            f"`{skill}` is marked mechanical via `{executor_name}`, but nothing outside "
+            f"§11e's own table says `{needle}` does `{stem}`'s work - the "
             "mechanical claim is asserted, not anchored"
         )
+
+
+def test_gates_28_29_are_mechanical() -> None:
+    """TASK-IMP-125 AC 3 - awh-gate and caf-gate are judgment: mechanical."""
+    chain = _chain_steps()
+    by_step = {s["step"]: s for s in chain}
+    assert by_step[28]["skill"] == "awh-gate"
+    assert by_step[29]["skill"] == "caf-gate"
+    assert by_step[28]["judgment"] == "mechanical"
+    assert by_step[29]["judgment"] == "mechanical"
+
+
+def test_mechanical_executor_may_live_outside_docs_tools() -> None:
+    """TASK-IMP-125 AC 5 - behaviour reading admits non-docs-tools executors."""
+    table = _mechanical_executor_table()
+    assert "awh-gate" in table and not table["awh-gate"].startswith("docs-tools/")
+    assert "caf-gate" in table and not table["caf-gate"].startswith("docs-tools/")
+    assert _resolve_executor(table["awh-gate"]).exists()
+    assert _resolve_executor(table["caf-gate"]).exists()
+    fake = _resolve_executor("docs-tools/no-such-helper-ever.mjs")
+    assert not fake.exists()
 
 
 # Host-specific literals: what §1.4 forbids the payload to ever carry. A model name is a
