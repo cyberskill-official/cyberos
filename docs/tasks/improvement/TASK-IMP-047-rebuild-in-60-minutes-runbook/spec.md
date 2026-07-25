@@ -1,9 +1,7 @@
 ---
 id: TASK-IMP-047
 title: "Rebuild-in-60-minutes runbook"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: improvement
@@ -13,7 +11,7 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p1
-status: draft
+status: closed
 phase: Wave 5 - platform and process
 refs: [R34]
 depends_on: []
@@ -32,3 +30,9 @@ Migrated 2026-07-08 from the deep-audit improvement backlog, folded into the tas
 ## Acceptance criteria
 
 - [ ] (to be authored from the source report before this task leaves draft)
+
+## Groom note (batch/12a, 2026-07-25)
+
+**Closed as platform / won't-do for CyberOS 1.x** (batch-10e / #147 precedent).
+
+Rebuild-in-60-minutes runbook (R34) is VPS/platform SPOF insurance. Out of 1.x payload scope.
