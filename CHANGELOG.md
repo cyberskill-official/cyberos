@@ -2,7 +2,7 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
-## [Unreleased]
+## [1.5.0] - 2026-07-25
 
 ### Changed
 - batch/10e: close 39 platform/product IMP stubs as won't-do for CyberOS 1.x payload (batch-10e report).
