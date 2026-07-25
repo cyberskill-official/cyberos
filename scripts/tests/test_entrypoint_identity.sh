@@ -95,7 +95,8 @@ t06_registered_and_recorded() {
   local top
   # Scan every versioned ## […] section — top entry moves with each cut (same class as CUO doctrine pin).
   top="$(awk '/^## \[/{p=1} p' "$repo/CHANGELOG.md")"
-  echo "$top" | grep -qiE 'Branch A|IMP-138|entrypoint' \
+  # Use here-string (not echo|grep -q): large CHANGELOG + pipefail makes SIGPIPE flake FAIL.
+  grep -qiE 'Branch A|IMP-138|entrypoint' <<<"$top" \
     && ok t06 || fail t06 "CHANGELOG versioned entry does not name Branch A / IMP-138"
 }
 
