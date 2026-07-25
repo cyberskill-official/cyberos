@@ -15,7 +15,12 @@ t_suite_job_declared() {
     && grep -q 'scripts/tests/run_all.sh' "$WF" \
     && grep -q 'pull_request' "$WF" \
     && grep -q 'push' "$WF" \
-    && grep -qE 'fetch-depth:\s*0' "$WF" \
+    && awk '
+         /uses:[[:space:]]*actions\/checkout@v7/ { in_co=1; next }
+         in_co && /^[[:space:]]+-[[:space:]]/ { exit }
+         in_co && /fetch-depth:[[:space:]]*0/ { found=1; exit }
+         END { exit !found }
+       ' "$WF" \
     && ok t_suite_job_declared \
     || fail t_suite_job_declared "workflow missing required shape"
 }
