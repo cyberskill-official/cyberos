@@ -39,9 +39,9 @@ repository = "https://github.com/cyberskill/cyberos"
 [workspace.dependencies]
 # Async runtime
 tokio       = { version = "1.42", features = ["full"] }
-axum        = { version = "0.7", features = ["macros"] }
+axum        = { version = "0.8", features = ["macros"] }
 tower       = "0.5"
-tower-http  = { version = "0.6", features = ["trace", "cors"] }
+tower-http  = { version = "0.7", features = ["trace", "cors"] }
 hyper       = "1.5"
 
 # Postgres + migrations
@@ -65,15 +65,15 @@ chrono      = { version = "0.4", features = ["serde"] }
 clap        = { version = "4.5", features = ["derive"] }
 
 # Crypto
-sha2        = { version = "0.10", features = ["oid"] }
-bcrypt      = "0.16"
-jsonwebtoken = "9.3"
+sha2        = { version = "0.11", features = ["oid"] }
+bcrypt      = "0.19"
+jsonwebtoken = "11.0"
 
 # Observability (TASK-AI-022)
-opentelemetry         = { version = "0.27", default-features = false }
-opentelemetry-otlp    = { version = "0.27", features = ["grpc-tonic"] }
-opentelemetry_sdk     = { version = "0.27", features = ["rt-tokio"] }
-tracing-opentelemetry = "0.28"
+opentelemetry         = { version = "0.32", default-features = false }
+opentelemetry-otlp    = { version = "0.32", features = ["grpc-tonic"] }
+opentelemetry_sdk     = { version = "0.32", features = ["rt-tokio"] }
+tracing-opentelemetry = "0.33"
 http                  = "1"
 
 # Test helpers

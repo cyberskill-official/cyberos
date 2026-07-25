@@ -15,13 +15,13 @@ path = "src/lib.rs"
 [dependencies]
 # The pure core: the per-view audit-kind table, window validation, the Ed25519 chain-proof, and the
 # defence-in-depth PII scan. Later slices add serde / axum / sqlx / a PDF lib for the HTTP shell.
-ed25519-dalek = "2"
+ed25519-dalek = "3"
 regex = "1"
 jsonwebtoken.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 sha2.workspace = true
-base64 = "0.22"
+base64 = "0.23"
 thiserror.workspace = true
 # The read-only HTTP service (the four view endpoints): axum server, sqlx query over l1_audit_log.
 tokio.workspace = true
