@@ -2,21 +2,48 @@
 # audit-fleet.sh — deep audit: every .cyberos module/channel after install must be present and usable.
 # Usage: bash tools/install/audit-fleet.sh <expected-version> <root-dir> [...]
 #
-# env: CYBEROS_EXPECT_RULES_SHA  rules_sha every install must match. Defaults to the repo's own
-#                                dist/ payload manifest. VERSION alone cannot see rule content —
-#                                a rules-only change keeps the version and every filename identical,
-#                                so without this the audit reports drifted repos green.
+# env: CYBEROS_EXPECT_RULES_SHA  expected rules_sha token. When unset, defaults to recomputing
+#                                over the repo's own dist/cyberos payload tree (TASK-IMP-122).
+#                                With no expected token AND no reachable payload → unknown fail
+#                                (no longer warn-and-pass).
 set -uo pipefail
 WANT="${1:?usage: audit-fleet.sh <expected-version> <root> [...]}"; shift
 FAILED=0
 
-_rs() { [ -f "${1:-}" ] || return 1; grep -E '^rules_sha:' "$1" 2>/dev/null | head -1 | awk '{print $2}' | tr -d ' \n\r'; }
-WANT_SHA="${CYBEROS_EXPECT_RULES_SHA:-}"
-if [ -z "$WANT_SHA" ]; then
-  _self="$(cd "$(dirname "$0")/../.." 2>/dev/null && pwd || true)"
-  [ -n "$_self" ] && WANT_SHA="$(_rs "$_self/dist/cyberos/manifest.yaml" || true)"
+_self="$(cd "$(dirname "$0")/../.." 2>/dev/null && pwd || true)"
+_rc=""
+if [ -f "$(dirname "$0")/lib/rules-cone.sh" ]; then
+  _rc="$(dirname "$0")/lib/rules-cone.sh"
+elif [ -n "$_self" ] && [ -f "$_self/tools/install/lib/rules-cone.sh" ]; then
+  _rc="$_self/tools/install/lib/rules-cone.sh"
 fi
-[ -n "$WANT_SHA" ] || echo "audit-fleet: WARNING — no expected rules_sha resolved; rule-drift check DISABLED" >&2
+if [ -n "$_rc" ]; then
+  # shellcheck source=/dev/null
+  . "$_rc"
+fi
+
+_manifest_token() {
+  [ -f "${1:-}" ] || return 1
+  grep -E '^rules_sha:' "$1" 2>/dev/null | head -1 | awk '{print $2}' | tr -d ' \n\r'
+}
+
+WANT_SHA="${CYBEROS_EXPECT_RULES_SHA:-}"
+PAY_TREE=""
+CAN_NAME=0
+if [ -z "$WANT_SHA" ]; then
+  if [ -n "$_self" ] && [ -d "$_self/dist/cyberos" ] && [ -n "$_rc" ]; then
+    PAY_TREE="$_self/dist/cyberos"
+    WANT_SHA="$(_rules_sha_of "$PAY_TREE" || true)"
+    CAN_NAME=1
+  elif [ -n "$_self" ] && [ -f "$_self/dist/cyberos/manifest.yaml" ]; then
+    WANT_SHA="$(_manifest_token "$_self/dist/cyberos/manifest.yaml" || true)"
+  fi
+fi
+# §1.13: no expected token → unknown fail (not warn-and-pass).
+if [ -z "$WANT_SHA" ]; then
+  echo "audit-fleet: FAIL — no expected rules_sha resolved (verdict=unknown); set CYBEROS_EXPECT_RULES_SHA or build dist/cyberos" >&2
+  exit 1
+fi
 
 for base in "$@"; do
   for r in "$base"/*; do
@@ -29,18 +56,27 @@ for base in "$@"; do
     inst="none"; [ -f "$cy/VERSION" ] && inst="$(tr -d ' \n\r' < "$cy/VERSION")"
     [ "$inst" = "$WANT" ] || bad="$bad version($inst)"
 
-    # --- rule content (TASK-IMP-074 §10) ---
-    # The version above is a promise; this is the evidence. Both were 1.0.0 across the fleet
-    # while 23/24 repos ran the pre-rename ruleset.
-    if [ -n "$WANT_SHA" ]; then
-      inst_sha="$(_rs "$cy/manifest.yaml" || true)"
-      [ "$inst_sha" = "$WANT_SHA" ] || bad="$bad rules_sha(${inst_sha:-none})"
+    # --- rule content (TASK-IMP-122): RECOMPUTE installed side ---
+    if [ -n "$_rc" ] && [ -d "$cy" ]; then
+      inst_sha="$(_rules_sha_of "$cy" || true)"
+      if [ -z "$inst_sha" ]; then
+        bad="$bad rules_sha(unknown)"
+      elif [ "$inst_sha" != "$WANT_SHA" ]; then
+        if [ "$CAN_NAME" -eq 1 ] && [ -n "$PAY_TREE" ]; then
+          _diffs="$(_rules_sha_diff "$PAY_TREE" "$cy" | tr '\n' ',' | sed 's/,$//')"
+          bad="$bad rules_sha(drift:${_diffs:-unnamed})"
+        else
+          bad="$bad rules_sha(${inst_sha:-none})"
+        fi
+      fi
+    elif [ -z "$_rc" ]; then
+      bad="$bad rules_sha(unknown:no-cone-lib)"
     fi
 
     # --- core modules (must exist after install) ---
     for p in \
       install.sh uninstall.sh version.sh status.sh help.sh VERSION manifest.yaml \
-      lib/task-migrate.sh lib/update-check.sh lib/status-page.sh \
+      lib/task-migrate.sh lib/update-check.sh lib/status-page.sh lib/rules-cone.sh \
       cuo/gates/run-gates.sh \
       cuo/ship-tasks.md \
       cuo/EXECUTION-DISCIPLINE.md \
