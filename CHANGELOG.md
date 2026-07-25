@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.5.1] - 2026-07-25
+
+Fixed
+- suite-gate full-history checkout for TRACE-007 pins (#148)
+
 ## [1.5.0] - 2026-07-25
 
 ### Changed
