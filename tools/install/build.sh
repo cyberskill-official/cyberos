@@ -297,6 +297,9 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   # terminal pass/fail verdict through it, so a payload without it ships a workflow step
   # that cannot reach its own floor (the same class as workflow-improve.mjs below).
   [ -f "$here/docs-tools/skill-log.mjs" ] && cp "$here/docs-tools/skill-log.mjs" "$out/docs-tools/"
+  # wiki-link-check: docs gate for broken relative links + missing TASK refs (TASK-IMP-059)
+  [ -f "$here/docs-tools/wiki-link-check.mjs" ] && cp "$here/docs-tools/wiki-link-check.mjs" "$out/docs-tools/"
+  [ -f "$here/docs-tools/wiki-link-allowlist.txt" ] && cp "$here/docs-tools/wiki-link-allowlist.txt" "$out/docs-tools/"
   # fm001-migrate: clean a repo's task corpus of FM-001 trailing frontmatter comments (TASK-IMP-117).
   # Vendored so any installed repo can run it against its OWN specs - the TASK-TEMPLATE.md that taught
   # the trailing-comment shape is itself vendored, so every consumer corpus inherited the violation.

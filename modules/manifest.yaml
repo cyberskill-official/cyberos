@@ -1,0 +1,59 @@
+# CyberOS module manifest — TASK-IMP-055
+# Companion human table: docs/modules/MANIFEST.md
+version: 1
+generated_for: cyberos-1.x-payload
+modules:
+  - id: ai
+    kind: docs_skills_only
+  - id: auth
+    kind: docs_skills_only
+  - id: chat
+    kind: docs_skills_only
+  - id: crm
+    kind: docs_skills_only
+  - id: cuo
+    kind: ships_code
+    notes: Python cuo package + persona workflows
+  - id: doc
+    kind: docs_skills_only
+  - id: email
+    kind: docs_skills_only
+  - id: esop
+    kind: docs_skills_only
+  - id: hr
+    kind: docs_skills_only
+  - id: inv
+    kind: docs_skills_only
+  - id: kb
+    kind: docs_skills_only
+  - id: learn
+    kind: docs_skills_only
+  - id: mcp
+    kind: docs_skills_only
+    notes: Install MCP server lives under tools/install/mcp/
+  - id: memory
+    kind: ships_code
+  - id: obs
+    kind: docs_skills_only
+  - id: okr
+    kind: docs_skills_only
+  - id: plugin
+    kind: docs_skills_only
+  - id: portal
+    kind: docs_skills_only
+  - id: proj
+    kind: docs_skills_only
+  - id: res
+    kind: docs_skills_only
+  - id: rew
+    kind: docs_skills_only
+  - id: skill
+    kind: ships_code
+  - id: templates
+    kind: ships_code
+  - id: ten
+    kind: docs_skills_only
+  - id: time
+    kind: docs_skills_only
+  - id: website
+    kind: docs_skills_only

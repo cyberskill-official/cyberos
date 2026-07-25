@@ -1,0 +1,28 @@
+# wiki-link-allowlist.txt — TASK-IMP-059
+# One entry per line. Forms accepted:
+#   <relpath> -> <link-target>     exact broken-link key
+#   TASK-XXX                       missing frontmatter TASK id
+#   <relpath>                      ignore all link failures in that file
+#   <link-target>                  ignore that target wherever it appears
+# Lines starting with # are comments.
+
+# Module README indexes still point at pre-renumber / archived stems.
+# Remediating those indexes is a separate docs sweep; gate stays green.
+docs/tasks/app/README.md
+docs/tasks/chat/README.md
+docs/tasks/skill/README.md
+docs/tasks/plugin/README.md
+
+# Malformed / prose-broken targets left in historical specs (not real links).
+docs/tasks/memory/TASK-MEMORY-115-cyberos-dream/spec.md -> writer,
+
+# IMP-062 depends_on IMP-027 (closed won't-do); keep the historical edge.
+TASK-IMP-027
+
+# Historical dangling related_tasks / blocks / depends_on (renumbered or archived).
+# Do not invent stub folders; remediate specs in a dedicated link-sweep.
+TASK-AUTH-007
+TASK-CHAT-002
+TASK-CHAT-005
+TASK-SKILL-001
+TASK-TEN-203
