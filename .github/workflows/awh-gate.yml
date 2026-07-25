@@ -164,4 +164,6 @@ jobs:
             echo "::error::install goldenset present but baseline missing ($base); failing closed."
             exit 1
           fi
+          pip install 'pyyaml>=6'
+          pip install -e tools/awh
           bash tools/install/run-goldenset.sh

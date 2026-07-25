@@ -8,7 +8,7 @@
 # gates.env / malformed config.yaml, 3 empty floor (nothing configured - fail closed).
 #
 # TASK-IMP-011: on RED (exit 1 or 3) emit structured failure taxonomy —
-#   .cyberos/last-gate-failure.json  +  one GATE_FAILURE_JSON:{...} stdout line.
+#   .cyberos/last-gate-failure.json  +  one GATE_FAILURE_JSON:{...} stdout line.  # benchmark-gates:exempt — runtime artifact, not vendored (IMP-011)
 # Classes: build|lint|test|coverage|doctor|caf|awh|empty-floor|other
 set -uo pipefail
 
