@@ -285,6 +285,16 @@ Part of the model auditor's "TRACE semantic sufficiency" work (the machine floor
 
 RECORD BOTH HALVES in the audit body — the clause's verb-demand AND the test's actual assertion — in the ISSUE block (`evidence` / `description`, per `REPORT_FORMAT.md`) for every clause you compare, PASS or FAIL, so the comparison is auditable by the next reader and not merely its verdict. A passing cited test is necessary but not sufficient: TRACE-004 says the test is green; TRACE-006 says it is green FOR THIS CLAUSE. This is judgment, not a lint — a structural "the clause's words appear in the test" check would pass TASK-IMP-108 §1.7's original present-in-payload assertion (RUBRIC.md §9), which is why it is absent from `task-lint` and is yours to perform on every audit.
 
+### TRACE-007 originated-claim derivation — and the disclosure as a claim
+
+Part of the same "TRACE semantic sufficiency" work (TASK-IMP-124). TRACE-007 is judgment-family and ABSENT from `task-lint` except COND-004's shape-only partition check on authoring statuses. For every governed claim the spec ORIGINATES:
+
+1. Partition governed claims into originated vs inherited; scrutinise ORIGINATED first.
+2. State the claim, state its derivation, RE-RUN the derivation (NUMERIC / CITATION / UNIVERSAL NEGATIVE per RUBRIC.md §9 TRACE-007).
+3. FAIL when the derivation is absent, does not re-run, does not reproduce, or supports a narrower scope than the claim asserts. Attempt one counter-example before accepting a universal negative.
+
+Treat the `## AI Authorship Disclosure` as a claim under TRACE-007, never as evidence of diligence. Test each of the three Scope partitions against the document: a value in `CONFIRMED` that no derivation reproduces is a finding; a governed originated claim in none of the three sets is a finding. Record both the claim and its re-run in the audit body. NEVER credit the disclosure as proof the author checked — that is the defect TRACE-007 exists to remove.
+
 ## §4  Mode B aggregation
 
 After looping over every `artefact_path`, emit `AUDIT_BATCH_SUMMARY` (output envelope above). If any artefact is `needs_human`, emit `HITL_BATCH_REQUEST` (per `references/HITL_PROTOCOL.md`) AFTER the summary, aggregating issues across all paused artefacts.

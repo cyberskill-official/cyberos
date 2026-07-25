@@ -4,7 +4,7 @@ title: Authors do not check what they originate
 template: task@1
 type: improvement
 module: improvement
-status: draft
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering

@@ -336,6 +336,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
 - Cite memory source for every claim that didn't come from the source files.
+- **(TASK-IMP-124)** Record a governed claim's derivation into `source_pages` at origination time — the moment the claim is written — not at review time. The command is in the author's scrollback when the number is written and gone when it is audited.
 
 ### MUST NOT
 
@@ -491,6 +492,10 @@ depends_on: [task-..., task-...]
 blocks: [task-..., task-...]
 source_pages:
   - <URL or path>
+  # TASK-IMP-124: record a governed claim's derivation into source_pages AT THE
+  # MOMENT the claim is ORIGINATED (command / file:line@rev / witness search),
+  # not at review time — the command is in scrollback when the number is written
+  # and gone when it is audited.
 source_decisions:
   - <DEC-NNN (one-line description)>
 language: <e.g. rust 1.81>
