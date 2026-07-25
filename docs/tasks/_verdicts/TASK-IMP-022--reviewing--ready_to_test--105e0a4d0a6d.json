@@ -1,11 +1,11 @@
 {
   "schema": "cyberos.verdict@1",
   "actor": "@stephencheng",
-  "timestamp": "2026-07-25T17:14:09Z",
+  "timestamp": "2026-07-25T17:27:22Z",
   "task_id": "TASK-IMP-022",
   "from": "reviewing",
   "to": "ready_to_test",
   "evidence_path": "docs/batches/batch-12g-imp-022-session-hitl.md",
   "evidence_sha256": "105e0a4d0a6ddf6fede5e093d0a97ca16c281c49f25f01d16d638777c876f5ef",
-  "artifact_sha256": "c024abf1f7ed1208ff55872c4bac5f16860cc8ea866530c2ddcf0a3d3a715104"
+  "artifact_sha256": "477a52f75b18ddcda16e92894b344335f54c641a357a2960faf4dfb4d8ec41d6"
 }
