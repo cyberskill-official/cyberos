@@ -4,8 +4,8 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 
 ## [Unreleased]
 
-- batch/10e: close 39 platform/product IMP stubs as won't-do for CyberOS 1.x payload (batch-10e report).
 ### Changed
+- batch/10e: close 39 platform/product IMP stubs as won't-do for CyberOS 1.x payload (batch-10e report).
 - batch/9c-app: re-spec/adopt TASK-APP-001 against as-built `services/memory/desktop` Ops (Check = `version.sh`; phantom `install.sh --check` / `apps/desktop` ops claims ledgered Out of scope).
 - batch/9b-obs: re-spec/adopt TASK-OBS-001/003/005/007/008/009 against as-built obs services + `services/shared/cyberos-obs-sdk/` (task@1; phantom `crates/` / `skills/` paths ledgered Out of scope).
 - batch/9a-mcp members (TASK-MCP-003/005/006/007/008) advanced `reviewing → done` under the 2026-07-24 session HITL override (evidence `docs/batches/batch-9b-obs-session-hitl.md`).
