@@ -532,9 +532,23 @@ if [ "${CYBEROS_NO_MEMORY:-0}" != "1" ] && [ -d "$src/memory" ]; then
     # canonical v2 top-level dirs only (memory.invariants.yaml layout-root-canonical);
     # CUO artifact kinds (adrs, audits, impl-plans, ...) are NOT top-level - they
     # nest under their memory kind and are created on demand.
-    for d in memories meta company module member client project persona conflicts exports index audit; do
+    for d in memories meta meta/consent company module member client project persona conflicts exports index audit; do
       mkdir -p "$brain/$d"
     done
+    # Phase 0 consent scaffold (TASK-IMP-061 §19) — README explains the consent-record contract.
+    if [ ! -f "$brain/meta/consent/README.md" ]; then
+      cat > "$brain/meta/consent/README.md" <<'EOF'
+# Consent records (Layer-1 BRAIN Phase 0)
+
+Personnel-gated memories (`classification: personnel`, `kind: person`, or
+`scope` under `people`) MUST reference a consent event id that resolves to a
+file in this directory: `meta/consent/<consent_event>.md`.
+
+Use the `CONSENT` starter template (`modules/memory/runtime/starter/templates/CONSENT.md`).
+These records are agent-BRAIN disclosures; they are NOT the product EVAL
+acknowledgment ledger (see `docs/deploy/brain-capture-activation.md`).
+EOF
+    fi
     : > "$brain/.lock"
     head -c 8 /dev/zero > "$brain/HEAD"                       # 8-byte LE u64 seq counter = 0
     fp="$( (head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n') 2>/dev/null || echo 0000000000000000 )"

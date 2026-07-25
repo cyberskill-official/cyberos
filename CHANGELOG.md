@@ -5,6 +5,7 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 ## Unreleased
 
 ### Added
+- BRAIN Phase 0 Layer-1 consent: AGENTS.md §19, `meta/consent/` scaffold, `personnel-requires-consent` invariant, dense protocol vendored by `build.sh` (TASK-IMP-061).
 - `memory-append.mjs append --dry-run` validates the payload, lease and live chain and projects the seq/hash without creating or changing any store byte (TASK-IMP-146).
 
 ### Fixed

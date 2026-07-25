@@ -52,10 +52,11 @@ source_freshness_tier: ${FRESHNESS_TIER:20}
 
 ## Consent
 - **Consent given for:** [people-graph inclusion / decisions tracking / etc.]
-- **Consent event:** [audit row ID referencing the consent moment]
+- **Consent event:** MUST equal the basename of `meta/consent/<id>.md` (AGENTS.md §19)
 - **Retention:** [per-classification — usually 7 years post-employment-end for personnel]
 
 ## Privacy
 - This is a `personnel`-class memory; conflicts NEVER auto-resolve (always human review per §9.1)
 - Compensation, gov-ID, home address, health PII are DENYLISTED per §9.3 — do not record here
 - For sensitive ops, see `member/${SUBJECT_ID_TARGET}/private/`
+- Phase 0: do NOT set `has_consent: true` without a resolvable `consent_event`

@@ -492,20 +492,20 @@ def fixture_20_merkle_checkpoint_divergence() -> None:
 
 
 def fixture_21_classification_personnel_no_consent() -> None:
-    """personnel-classification memory missing consent.has_consent: true."""
+    """personnel-classification memory missing consent.has_consent: true.
+
+    TASK-IMP-061: walker invariant ``personnel-requires-consent`` enforces
+    AGENTS.md §19. Expected critical code matches the invariant id.
+    """
     fix = VECTORS / "21-personnel-no-consent"
     store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")
     a = "mem_01HSAAA0000000000000000001"
-    # Note: validator currently doesn't enforce consent; this fixture serves as
-    # a forward-compat check that we'll catch it once the rule lands.
     write(store / "memories" / "people" / "PEOPLE-001-bob.md",
           memory_md(a, classification="personnel"))
-    # Currently no CRITICAL — validator hasn't implemented this rule yet
-    write(fix / "expected.json", expected([]))
-
+    write(fix / "expected.json", expected(["personnel-requires-consent"]))
 
 def fixture_16_stale_checkpoint() -> None:
     """manifest.reconciliation_checkpoint.chain doesn't match the ledger

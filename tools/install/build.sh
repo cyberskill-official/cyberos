@@ -215,10 +215,12 @@ if git -C "$repo" cat-file -e "HEAD:scripts/caf_gate.sh" 2>/dev/null \
 fi
 
 # --- memory module: Layer-1 protocol + schema + invariants ---
-# AGENTS.md is required Layer-1 protocol — fail closed if missing from HEAD.
-# Never fall back to a working-tree cp (IMP-127: no untracked/gitignored junk).
-_git_materialise "AGENTS.md" "$out/memory/AGENTS.md" \
-  || { echo "cyberos: ERROR: AGENTS.md missing from git HEAD" >&2; exit 2; }
+# Layer-1 protocol normative home is modules/memory/cyberos/data/AGENTS.md
+# (IMP-138 Branch A; IMP-061). Root AGENTS.md is the thin cross-agent spine —
+# never vendor that into memory/AGENTS.md. Fail closed if the dense protocol
+# is missing from HEAD (IMP-127: no untracked/gitignored junk).
+_git_materialise "modules/memory/cyberos/data/AGENTS.md" "$out/memory/AGENTS.md" \
+  || { echo "cyberos: ERROR: modules/memory/cyberos/data/AGENTS.md missing from git HEAD" >&2; exit 2; }
 memory_vendored="protocol"
 # Schema vendors from the CANONICAL package-data copy (TASK-MEMORY-303 §1.1) - the copy the
 # Python package actually loads and the generator maintains. The root copy at

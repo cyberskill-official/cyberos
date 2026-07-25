@@ -710,6 +710,143 @@ def check_session_lifecycle(store: Path) -> tuple[bool, str]:
     )
 
 
+# --- Phase 0 consent (§19) ------------------------------------------------
+
+
+_FRONTMATTER_RE = re.compile(
+    r"\A---\s*\n(.*?)\n---\s*(?:\n|$)",
+    re.DOTALL,
+)
+
+
+def _parse_md_frontmatter(path: Path) -> dict | None:
+    """Best-effort YAML frontmatter parse; returns None if absent/unreadable."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    match = _FRONTMATTER_RE.match(text)
+    if not match:
+        return None
+    try:
+        import yaml  # noqa: WPS433 — lazy; same pattern as STORE.yaml checks
+        doc = yaml.safe_load(match.group(1))
+    except Exception:  # noqa: BLE001 — unreadable frontmatter is not a harness crash
+        return None
+    return doc if isinstance(doc, dict) else None
+
+
+def _is_personnel_gated(fm: dict) -> bool:
+    """AGENTS.md §19.2 — classification, kind, or people scope."""
+    if fm.get("classification") == "personnel":
+        return True
+    if fm.get("kind") == "person":
+        return True
+    scope = fm.get("scope")
+    if isinstance(scope, str) and "people" in scope.split("/"):
+        return True
+    if isinstance(scope, str) and scope.endswith("people"):
+        return True
+    # Also accept substring path forms like memories/people without split edge cases.
+    if isinstance(scope, str) and "/people" in f"/{scope.strip('/')}":
+        return True
+    return False
+
+
+def _known_consent_events(store: Path) -> set[str]:
+    """Ids resolvable via meta/consent/<id>.md (README excluded)."""
+    known: set[str] = set()
+    consent_dir = store / "meta" / "consent"
+    if not consent_dir.is_dir():
+        return known
+    for path in consent_dir.glob("*.md"):
+        if path.name.lower() == "readme.md":
+            continue
+        known.add(path.stem)
+    return known
+
+
+def _known_audit_ids(store: Path) -> set[str]:
+    """Ids resolvable via legacy audit/*.jsonl audit_id fields."""
+    known: set[str] = set()
+    audit = store / "audit"
+    if not audit.is_dir():
+        return known
+    for seg in audit.glob("*.jsonl"):
+        try:
+            text = seg.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for line in text.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(row, dict):
+                aid = row.get("audit_id")
+                if isinstance(aid, str) and aid:
+                    known.add(aid)
+    return known
+
+
+def check_personnel_requires_consent(store: Path) -> tuple[bool, str]:
+    """AGENTS.md §19 — personnel-gated memories need resolvable consent."""
+    if not store.is_dir():
+        return False, f"store not a directory: {store}"
+
+    consent_events = _known_consent_events(store)
+    audit_ids = _known_audit_ids(store)
+    resolvable = consent_events | audit_ids
+
+    candidates: list[Path] = []
+    memories = store / "memories"
+    if memories.is_dir():
+        candidates.extend(sorted(memories.rglob("*.md")))
+
+    violations: list[str] = []
+    gated = 0
+    for path in candidates:
+        fm = _parse_md_frontmatter(path)
+        if fm is None or not _is_personnel_gated(fm):
+            continue
+        gated += 1
+        try:
+            rel = str(path.relative_to(store))
+        except ValueError:
+            rel = str(path)
+        consent = fm.get("consent")
+        if not isinstance(consent, dict):
+            violations.append(f"{rel}: missing consent object")
+            continue
+        if consent.get("has_consent") is not True:
+            violations.append(f"{rel}: consent.has_consent is not true")
+            continue
+        event = consent.get("consent_event")
+        if event is None or event == "" or event is False:
+            violations.append(f"{rel}: consent.consent_event missing")
+            continue
+        event_id = str(event).strip()
+        if not event_id or event_id.lower() == "null":
+            violations.append(f"{rel}: consent.consent_event missing")
+            continue
+        if event_id not in resolvable:
+            violations.append(
+                f"{rel}: consent_event {event_id!r} unresolved "
+                f"(no meta/consent/{event_id}.md and no matching audit_id)"
+            )
+
+    if violations:
+        sample = violations[:3]
+        more = "" if len(violations) <= 3 else f" (+{len(violations) - 3} more)"
+        return False, f"{len(violations)} consent violation(s): {sample}{more}"
+    if gated == 0:
+        return True, "no personnel-gated memories"
+    return True, f"{gated} personnel-gated memor(ies) with resolvable consent"
+
+
 # --- the registry & walker ------------------------------------------------
 
 
@@ -730,6 +867,7 @@ _REGISTRY: dict[str, Callable[[Path], tuple[bool, str]]] = {
     "dream-applied-row-has-provenance": check_dream_applied_provenance,
     "store-yaml-acl-valid": check_store_yaml_acl_valid,
     "session-lifecycle": check_session_lifecycle,
+    "personnel-requires-consent": check_personnel_requires_consent,
 }
 
 
@@ -1063,4 +1201,5 @@ __all__ = [
     "check_dream_applied_provenance",
     "check_store_yaml_acl_valid",
     "check_session_lifecycle",
+    "check_personnel_requires_consent",
 ]
