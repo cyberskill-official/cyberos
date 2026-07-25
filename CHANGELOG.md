@@ -10,6 +10,7 @@ Fixed
 ## [1.5.0] - 2026-07-25
 
 ### Changed
+- batch/10e: close 39 platform/product IMP stubs as won't-do for CyberOS 1.x payload (batch-10e report).
 - batch/10d: TRACE-007 (originated claims carry derivations) + COND-004 Scope partition shape in `task-lint` on authoring statuses (TASK-IMP-124).
 - batch/10c: payload build reads module/caf trees from git HEAD; suite-gate runs `run_all.sh` on ubuntu; uninstall preserves `.cyberos/config.yaml` (TASK-IMP-127 / 128 / 129).
 - batch/10b: `judgment: mechanical` means deterministic executor behaviour, not `docs-tools/` path; awh-gate + caf-gate retagged (TASK-IMP-125).
