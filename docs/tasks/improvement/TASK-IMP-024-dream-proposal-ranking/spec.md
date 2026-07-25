@@ -13,17 +13,21 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p1
-status: draft
+status: duplicate
 phase: Wave 3 - widen the envelope
 refs: [Stage, 2]
 depends_on: [TASK-IMP-023]
 created: 2026-07-08
 # awh N/A until a goldenset is sealed for this area
 verify: N
+duplicate_of: TASK-MEMORY-247
+
 ---
 # TASK-IMP-024: Dream proposal ranking
 
 ## 1. Description
+
+**Groomed 2026-07-25 (batch/10):** duplicate of TASK-MEMORY-247 (BRAIN dream loop / proposal ranking). Stub never authored.
 
 Author the normative clauses when this task is picked up; it was migrated as a draft stub.
 
