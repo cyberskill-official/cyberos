@@ -1,0 +1,32 @@
+# CyberOS install/payload goldenset (TASK-IMP-008).
+#
+# Offline-safe tasks for the 1.x payload surface. Run:
+#   bash tools/install/run-goldenset.sh
+#   awh eval tools/install/.awh/goldenset.yaml --base-dir . --seeds 1 \
+#     --baseline tools/install/.awh/eval-baseline.json --max-regression 0.0
+#
+# When awh is absent, run-goldenset.sh falls back to a python cmd runner or SKIP.
+tasks:
+  - id: install-version-semver
+    description: Root VERSION is X.Y.Z semver
+    cmd: "grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' VERSION >/dev/null"
+    weight: 1.0
+    timeout_sec: 30
+
+  - id: install-help-exits-zero
+    description: tools/install/help.sh exits 0
+    cmd: "bash tools/install/help.sh >/dev/null"
+    weight: 1.0
+    timeout_sec: 60
+
+  - id: install-run-gates-usage
+    description: run-gates.sh is a non-empty bash script
+    cmd: "test -s tools/install/gates/run-gates.sh && head -1 tools/install/gates/run-gates.sh | grep -q bash"
+    weight: 2.0
+    timeout_sec: 30
+
+  - id: install-coverage-ratchet-help
+    description: coverage-ratchet --help exits 0
+    cmd: "node tools/install/docs-tools/coverage-ratchet.mjs --help >/dev/null"
+    weight: 1.0
+    timeout_sec: 30

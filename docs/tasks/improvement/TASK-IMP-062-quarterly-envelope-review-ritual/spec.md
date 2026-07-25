@@ -1,9 +1,7 @@
 ---
 id: TASK-IMP-062
 title: "Quarterly envelope review ritual"
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 eu_ai_act_risk_class: not_ai
-# UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
 ai_authorship: generated_then_reviewed
 client_visible: false
 type: improvement
@@ -13,22 +11,61 @@ author: "@stephencheng"
 template: task@1
 module: improvement
 priority: p1
-status: draft
+status: done
 phase: Wave 5 - platform and process
 refs: [Stage, 5]
 depends_on: [TASK-IMP-027]
 created: 2026-07-08
-# awh N/A until a goldenset is sealed for this area
-verify: N
+verify: T
+service: docs/runbooks
+owner: Stephen Cheng (CTO)
 ---
 # TASK-IMP-062: Quarterly envelope review ritual
 
-## 1. Description
+## Summary
 
-Author the normative clauses when this task is picked up; it was migrated as a draft stub.
+Author a quarterly checklist + calendar reminder stub for reviewing the
+docs/skills envelope (Stage 5). Remains manual — IMP-027 auto-mode is closed
+won't-do for 1.x; dependency retained historically and allowlisted for the
+wiki-link gate.
 
-Migrated 2026-07-08 from the deep-audit improvement backlog, folded into the task system as `class: improvement`. Source report refs: Stage, 5.
+## Problem
 
-## Acceptance criteria
+Without a ritual, allow/deny edges and judge anchors drift until an incident.
 
-- [ ] (to be authored from the source report before this task leaves draft)
+## Proposed Solution
+
+`docs/runbooks/quarterly-envelope-review.md` with checklist + calendar stub +
+BACKLOG pointer.
+
+## Alternatives Considered
+
+- Automate dream replay now — rejected: 1.x payload scope; doc-first.
+- Drop because IMP-027 closed — rejected: ritual still valuable manually.
+
+## Success Metrics
+
+- Runbook exists with checklist + calendar fields + ADR cross-links.
+
+## Scope
+
+Doc + backlog pointer only. No cron/automation.
+
+## AI Authorship Disclosure
+
+- Session agent; HITL Stephen Cheng (session operator).
+
+## 1. Description (normative)
+
+- 1.1 MUST add `docs/runbooks/quarterly-envelope-review.md` with purpose,
+  calendar reminder stub, and operator checklist.
+- 1.2 MUST point BACKLOG or batch notes at the runbook so agents can find it.
+
+## 2. Acceptance criteria
+
+- [x] AC 1 (traces_to: #1.1) - runbook present with checklist + calendar stub
+- [x] AC 2 (traces_to: #1.2) - BACKLOG carries a pointer line to the runbook
+
+## 3. Edge cases
+
+- `depends_on: TASK-IMP-027` remains even though 027 is closed (historical edge).
