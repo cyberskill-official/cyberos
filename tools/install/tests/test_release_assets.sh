@@ -29,6 +29,9 @@ if ! gnu_tar; then
   exit 0
 fi
 
+# Fixture builds must not inherit CI PR/release refs (GITHUB_REF_NAME=145/merge etc.).
+unset GITHUB_REF_NAME GITHUB_REF TAG || true
+
 echo "building scratch payload + assets..."
 bash "$repo/tools/install/build.sh" "$TMP/payload" >/dev/null 2>&1 || { echo FATAL build; exit 1; }
 bash "$RA" "$TMP/payload" "$TMP/assets" >/dev/null || { echo FATAL assets; exit 1; }
@@ -107,34 +110,33 @@ t07_bootstrap_bad_checksum; t08_rollout_from_release; t09_docs_real_urls
 # --- TASK-IMP-127: git-driven payload + dirty-tree guard ---
 t_build_fails_on_dirty_module_tree() {
   local probe="$repo/tools/caf/_imp127_test_probe"
+  local log
+  log="$(mktemp "${TMPDIR:-/tmp}/imp127-dirty.XXXXXX")"
   mkdir -p "$probe" && touch "$probe/.DS_Store"
-  if bash "$repo/tools/install/build.sh" "$TMP/payload-dirty" >/tmp/imp127-dirty.log 2>&1; then
-    rm -rf "$probe"
+  trap 'rm -rf "$probe"; rm -f "$log"' RETURN
+  if bash "$repo/tools/install/build.sh" "$TMP/payload-dirty" >"$log" 2>&1; then
     fail t_build_fails_on_dirty_module_tree "build succeeded with untracked .DS_Store"
     return
   fi
-  grep -q '\.DS_Store' /tmp/imp127-dirty.log \
+  grep -q '\.DS_Store' "$log" \
     && ok t_build_fails_on_dirty_module_tree \
     || fail t_build_fails_on_dirty_module_tree "stderr did not name offending path"
-  rm -rf "$probe"
 }
 
 t_build_ignores_untracked() {
   local probe="$repo/tools/caf/_imp127_test_probe"
   mkdir -p "$probe" && touch "$probe/.DS_Store"
+  trap 'rm -rf "$probe"' RETURN
   # Clean baseline already built at file start into $TMP/payload
   if ! CYBEROS_BUILD_ALLOW_DIRTY=1 bash "$repo/tools/install/build.sh" "$TMP/payload-allow" >/dev/null 2>&1; then
-    rm -rf "$probe"
     fail t_build_ignores_untracked "allow-dirty build failed"; return
   fi
   if find "$TMP/payload-allow" -path '*_imp127_test_probe*' | grep -q .; then
-    rm -rf "$probe"
     fail t_build_ignores_untracked "untracked probe leaked into payload"; return
   fi
   local a b
   a="$(grep '^rules_sha:' "$TMP/payload/manifest.yaml" | awk '{print $2}')"
   b="$(grep '^rules_sha:' "$TMP/payload-allow/manifest.yaml" | awk '{print $2}')"
-  rm -rf "$probe"
   [ -n "$a" ] && [ "$a" = "$b" ] && ok t_build_ignores_untracked \
     || fail t_build_ignores_untracked "rules_sha clean=$a allow-dirty=$b"
 }

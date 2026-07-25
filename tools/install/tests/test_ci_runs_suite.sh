@@ -34,17 +34,19 @@ t_release_assets_executes_on_linux() {
     ok t_release_assets_executes_on_linux
     return 0
   fi
-  # On Linux, the suite file must not take the GNU-tar skip branch when invoked
-  if bash "$repo/tools/install/tests/test_release_assets.sh" >/tmp/ra-linux.log 2>&1; then
-    grep -q '^  SKIP test_release_assets' /tmp/ra-linux.log \
-      && fail t_release_assets_executes_on_linux "skipped on Linux" \
-      || ok t_release_assets_executes_on_linux
-  else
-    # Failures in release-assets assertions still prove it executed
-    grep -q '^  SKIP test_release_assets' /tmp/ra-linux.log \
-      && fail t_release_assets_executes_on_linux "skipped on Linux" \
-      || ok t_release_assets_executes_on_linux
-  fi
+  # On Linux, the suite file must not take the GNU-tar skip branch when invoked.
+  # Exit status is irrelevant here — only that it ran (didn't skip). Use mktemp so
+  # the log path is not a predictable /tmp name (CWE-377).
+  local log
+  log="$(mktemp "${TMPDIR:-/tmp}/ra-linux.XXXXXX")"
+  # shellcheck disable=SC2064
+  trap 'rm -f "$log"' RETURN
+  # Unset PR/release env so fixture release-assets calls don't inherit GITHUB_REF_NAME.
+  env -u GITHUB_REF_NAME -u GITHUB_REF -u TAG \
+    bash "$repo/tools/install/tests/test_release_assets.sh" >"$log" 2>&1 || true
+  grep -q '^  SKIP test_release_assets' "$log" \
+    && fail t_release_assets_executes_on_linux "skipped on Linux" \
+    || ok t_release_assets_executes_on_linux
 }
 
 t_counts_reported() {

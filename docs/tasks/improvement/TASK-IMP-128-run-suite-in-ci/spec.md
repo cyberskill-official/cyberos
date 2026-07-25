@@ -101,10 +101,10 @@ None blocking. Adjacent to TASK-IMP-127: both concern guarantees the release mak
 
 ## 2. Acceptance criteria
 
-- [ ] AC 1 (traces_to: #1.1) - the workflow file declares a job on `ubuntu-latest` whose run step invokes `scripts/tests/run_all.sh`, triggered on push and pull_request - test: `tools/install/tests/test_ci_runs_suite.sh::t_suite_job_declared`
-- [ ] AC 2 (traces_to: #1.2) - a deliberately failing test in a fixture suite causes the runner to exit non-zero, and no step in the job path swallows that exit code - test: `tools/install/tests/test_ci_runs_suite.sh::t_failure_propagates`
-- [ ] AC 3 (traces_to: #1.3) - on a Linux host `test_release_assets.sh` runs its assertions instead of taking the GNU-tar skip branch - test: `tools/install/tests/test_ci_runs_suite.sh::t_release_assets_executes_on_linux`
-- [ ] AC 4 (traces_to: #1.4) - the suite entrypoint emits pass, fail, and skip counts to stdout - test: `tools/install/tests/test_ci_runs_suite.sh::t_counts_reported`
+- [x] AC 1 (traces_to: #1.1) - the workflow file declares a job on `ubuntu-latest` whose run step invokes `scripts/tests/run_all.sh`, triggered on push and pull_request - test: `tools/install/tests/test_ci_runs_suite.sh::t_suite_job_declared`
+- [x] AC 2 (traces_to: #1.2) - a deliberately failing test in a fixture suite causes the runner to exit non-zero, and no step in the job path swallows that exit code - test: `tools/install/tests/test_ci_runs_suite.sh::t_failure_propagates`
+- [x] AC 3 (traces_to: #1.3) - on a Linux host `test_release_assets.sh` runs its assertions instead of taking the GNU-tar skip branch - test: `tools/install/tests/test_ci_runs_suite.sh::t_release_assets_executes_on_linux`
+- [x] AC 4 (traces_to: #1.4) - the suite entrypoint emits pass, fail, and skip counts to stdout - test: `tools/install/tests/test_ci_runs_suite.sh::t_counts_reported`
 
 ## 3. Edge cases
 

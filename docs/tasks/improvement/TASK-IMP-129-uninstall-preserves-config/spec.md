@@ -114,10 +114,10 @@ None blocking. Extends the operator-file principle established by TASK-IMP-126 Â
 
 ## 2. Acceptance criteria
 
-- [ ] AC 1 (traces_to: #1.1) - a fixture writes an override into `config.yaml`, runs uninstall, and the file is present afterwards and named in the banner output - test: `tools/install/tests/test_install_hygiene.sh::t_config_yaml_preserved`
-- [ ] AC 2 (traces_to: #1.2) - after uninstall then install, `run-gates.sh` resolves the gate command set by the operator's `config.yaml`, not the autodetected default - test: `tools/install/tests/test_install_hygiene.sh::t_overrides_survive_reinstall`
-- [ ] AC 3 (traces_to: #1.3) - installing into a fixture whose only test entrypoint is a shell script produces a non-empty `TEST_CMD` - test: `tools/install/tests/test_install_hygiene.sh::t_autodetect_shell_suite`
-- [ ] AC 4 (traces_to: #1.4) - after the same cycle, `gates.env` is a freshly regenerated file and no other machine-owned path under `.cyberos/` survived uninstall - test: `tools/install/tests/test_install_hygiene.sh::t_machine_files_still_removed`
+- [x] AC 1 (traces_to: #1.1) - a fixture writes an override into `config.yaml`, runs uninstall, and the file is present afterwards and named in the banner output - test: `tools/install/tests/test_install_hygiene.sh::t_config_yaml_preserved`
+- [x] AC 2 (traces_to: #1.2) - after uninstall then install, `run-gates.sh` resolves the gate command set by the operator's `config.yaml`, not the autodetected default - test: `tools/install/tests/test_install_hygiene.sh::t_overrides_survive_reinstall`
+- [x] AC 3 (traces_to: #1.3) - installing into a fixture whose only test entrypoint is a shell script produces a non-empty `TEST_CMD` - test: `tools/install/tests/test_install_hygiene.sh::t_autodetect_shell_suite`
+- [x] AC 4 (traces_to: #1.4) - after the same cycle, `gates.env` is a freshly regenerated file and no other machine-owned path under `.cyberos/` survived uninstall - test: `tools/install/tests/test_install_hygiene.sh::t_machine_files_still_removed`
 
 ## 3. Edge cases
 

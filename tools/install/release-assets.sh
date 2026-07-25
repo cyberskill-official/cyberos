@@ -24,7 +24,14 @@ root_ver="$(tr -d ' \n\r' < "$repo/VERSION" 2>/dev/null || echo MISSING)"
 [ "$ver" = "$root_ver" ] || err10 "payload VERSION ($ver) != root VERSION ($root_ver)"
 # Tag agreement: TAG (set by the release workflow for both tag-push AND workflow_dispatch,
 # where GITHUB_REF_NAME is the branch, not the tag) takes precedence over GITHUB_REF_NAME.
-ref="${TAG:-${GITHUB_REF_NAME:-}}"
+# Only enforce when the ref looks like a version tag — PR merge refs (e.g. "145/merge")
+# and branch names must not trip this; suite-gate runs release-assets fixtures on PRs.
+ref="${TAG:-}"
+if [ -z "$ref" ]; then
+  case "${GITHUB_REF_NAME:-}" in
+    v[0-9]*.[0-9]*.[0-9]*) ref="$GITHUB_REF_NAME" ;;
+  esac
+fi
 if [ -n "$ref" ]; then
   [ "v$ver" = "$ref" ] || err10 "tag $ref != v$ver"
 fi

@@ -76,7 +76,10 @@ _git_materialise() {
     fi
     mkdir -p "$(dirname "$dest")"
     rm -rf "$dest"
-    mv "$tmp/$src" "$dest"
+    if ! mv "$tmp/$src" "$dest"; then
+      rm -rf "$tmp"
+      return 1
+    fi
     rm -rf "$tmp"
     return 0
   fi
@@ -212,7 +215,10 @@ if git -C "$repo" cat-file -e "HEAD:scripts/caf_gate.sh" 2>/dev/null \
 fi
 
 # --- memory module: Layer-1 protocol + schema + invariants ---
-_git_materialise "AGENTS.md" "$out/memory/AGENTS.md" || cp "$repo/AGENTS.md" "$out/memory/AGENTS.md"
+# AGENTS.md is required Layer-1 protocol — fail closed if missing from HEAD.
+# Never fall back to a working-tree cp (IMP-127: no untracked/gitignored junk).
+_git_materialise "AGENTS.md" "$out/memory/AGENTS.md" \
+  || { echo "cyberos: ERROR: AGENTS.md missing from git HEAD" >&2; exit 2; }
 memory_vendored="protocol"
 # Schema vendors from the CANONICAL package-data copy (TASK-MEMORY-303 §1.1) - the copy the
 # Python package actually loads and the generator maintains. The root copy at

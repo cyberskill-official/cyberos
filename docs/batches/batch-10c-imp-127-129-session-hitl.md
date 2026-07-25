@@ -11,9 +11,10 @@ actor: Stephen Cheng (session operator)
 # batch/10c-imp-127-129 — session HITL override
 
 **Operator session override:** auto-approve & accept to done; pause only for decisions.
+(Explicit operator instruction for this batch — not a silent gate bypass. Recorded for audit.)
 
 **Actor:** Stephen Cheng (session operator)
-**Verdict:** ACCEPT
+**Verdict:** ACCEPT (session override)
 
 | Task | What landed |
 |---|---|

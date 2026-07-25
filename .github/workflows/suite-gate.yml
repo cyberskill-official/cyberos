@@ -12,7 +12,11 @@ jobs:
   run-all:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Run scripts/tests/run_all.sh
         run: bash scripts/tests/run_all.sh
