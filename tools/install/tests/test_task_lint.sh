@@ -17,6 +17,8 @@
 #        modules/ AND in the payload's cuo/skills + plugin/skills copies.
 #   t09  FM-115/FM-116: draft_reason + entered_via are OPTIONAL enums - absent is legal
 #        (the 336 untriaged drafts must not red), present-and-wrong names its rule.
+#   t09_cond_004_partition_shape_only (TASK-IMP-124 AC 8): Scope partition labels
+#        required on authoring statuses; message says shape-only; no exec from body.
 #
 # Origin: 2026-07-16 sachviet run (IMPROVEMENT_HANDOFF.md IMP-03) - six spec audits
 # re-derived every mechanical rubric rule by model. The rubric calls itself
@@ -303,6 +305,70 @@ t09_optional_status_reason_enums() {
   ok t09_optional_status_reason_enums
 }
 
+t09_cond_004_partition_shape_only() {
+  # TASK-IMP-124 AC 8: shape-only partition on authoring statuses; never exec from body.
+  local d="$TMP/t09p"; emit_green "$d/base/spec.md"
+  # Build a draft disclosure without partition labels
+  mkdir -p "$d/bad"
+  {
+    sed -e 's/^ai_authorship: none$/ai_authorship: assisted/' \
+        -e 's/^status: draft$/status: draft/' "$d/base/spec.md"
+    printf '\n## AI Authorship Disclosure\n\n- Tools used: fixture\n- Scope: every claim was re-measured against source\n- Human review: none yet\n'
+  } > "$d/bad/spec.md"
+  run_lint "$d/bad/spec.md"; local rc=$?
+  [ "$rc" -eq 2 ] || { fail t09_cond_004_partition_shape_only "expected exit 2 on missing partitions, got $rc"; return; }
+  grep -q '^error COND-004 ' "$TMP/out" || { fail t09_cond_004_partition_shape_only "expected COND-004: $(cat "$TMP/out")"; return; }
+  grep -qi 'shape' "$TMP/out" || { fail t09_cond_004_partition_shape_only "message must name shape-only: $(cat "$TMP/out")"; return; }
+
+  # Good partition labels pass
+  mkdir -p "$d/good"
+  {
+    sed 's/^ai_authorship: none$/ai_authorship: assisted/' "$d/base/spec.md"
+    printf '\n## AI Authorship Disclosure\n\n- Tools used: fixture\n- Scope: re-derived and CONFIRMED: none. re-derived and CORRECTED: none. measured and ADDED: this fixture. Audit figures treated as claims to verify.\n- Human review: none yet\n'
+  } > "$d/good/spec.md"
+  run_lint "$d/good/spec.md"; rc=$?
+  { [ "$rc" -eq 0 ] && [ ! -s "$TMP/out" ]; } \
+    || { fail t09_cond_004_partition_shape_only "partitioned Scope should pass: rc=$rc $(cat "$TMP/out")"; return; }
+
+  # Done-status grandfather: old Scope without partitions stays clean
+  mkdir -p "$d/done"
+  {
+    sed -e 's/^ai_authorship: none$/ai_authorship: assisted/' \
+        -e 's/^status: draft$/status: done/' "$d/base/spec.md"
+    printf '\n## AI Authorship Disclosure\n\n- Tools used: fixture\n- Scope: drafted by the model from a handoff note.\n- Human review: accepted\n'
+  } > "$d/done/spec.md"
+  run_lint "$d/done/spec.md"; rc=$?
+  { [ "$rc" -eq 0 ] && [ ! -s "$TMP/out" ]; } \
+    || { fail t09_cond_004_partition_shape_only "done grandfather should pass: rc=$rc $(cat "$TMP/out")"; return; }
+
+  # Body must not be executed: plant a command that would create a sentinel
+  local sentinel="$TMP/t09p-sentinel-$$"
+  rm -f "$sentinel"
+  mkdir -p "$d/exec"
+  {
+    sed 's/^ai_authorship: none$/ai_authorship: assisted/' "$d/base/spec.md"
+    printf '\n## AI Authorship Disclosure\n\n- Tools used: fixture\n- Scope: re-derived and CONFIRMED: none. re-derived and CORRECTED: none. measured and ADDED: `touch %s`. Audit figures treated as claims to verify.\n- Human review: none yet\n' "$sentinel"
+  } > "$d/exec/spec.md"
+  run_lint "$d/exec/spec.md"; rc=$?
+  [ -e "$sentinel" ] && { fail t09_cond_004_partition_shape_only "lint executed a command from the spec body (sentinel exists)"; return; }
+  { [ "$rc" -eq 0 ] && [ ! -s "$TMP/out" ]; } \
+    || { fail t09_cond_004_partition_shape_only "exec fixture should lint clean: rc=$rc $(cat "$TMP/out")"; return; }
+
+  # COND-004 path must not call exec/spawn/eval/Function(
+  local lint_src="$LINT"
+  if grep -nE 'execSync|spawnSync|child_process|\beval\(|new Function\(' "$lint_src" \
+       | grep -i 'COND-004\|partition\|aiAuthorship\|Authorship' >/dev/null 2>&1; then
+    fail t09_cond_004_partition_shape_only "COND-004 path appears to exec/spawn/eval"
+    return
+  fi
+  # Stronger: no child_process import in the whole lint (docs-tools convention)
+  if grep -qE "require\\(['\"]child_process['\"]\\)|from ['\"]child_process['\"]" "$lint_src"; then
+    fail t09_cond_004_partition_shape_only "task-lint imports child_process"
+    return
+  fi
+  ok t09_cond_004_partition_shape_only
+}
+
 want t01 && t01_cli_and_determinism
 want t02 && t02_fm_family
 want t03 && t03_sec_family
@@ -312,6 +378,7 @@ want t06 && t06_green_corpus
 want t07 && t07_payload_and_install
 want t08 && t08_skill_wiring_present
 want t09 && t09_optional_status_reason_enums
+want t09_cond_004_partition_shape_only && t09_cond_004_partition_shape_only
 
 echo "test_task_lint: pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

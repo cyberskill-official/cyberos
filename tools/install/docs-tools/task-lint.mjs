@@ -372,7 +372,7 @@ function checkFrontmatterFields(findings, file, entries, root) {
       }
     }
   }
-  return { clientVisible: cvV === "true", risk: riskV, aiAuthorship: aiAuth };
+  return { clientVisible: cvV === "true", risk: riskV, aiAuthorship: aiAuth, status };
 }
 
 // ── body model ───────────────────────────────────────────────────────────────
@@ -478,6 +478,56 @@ function checkConditionalSections(findings, file, body, fm) {
       const missing = ["Tools used:", "Scope:", "Human review:"].filter((l) => !bullets.some((b) => b.text.includes(l)));
       if (missing.length > 0) {
         finding(findings, "error", "COND-004", file, ad.line, `'## AI Authorship Disclosure' must carry bullets labeled 'Tools used:', 'Scope:', 'Human review:' (missing: ${missing.join(", ")})`);
+      } else {
+        // TASK-IMP-124: shape-only partition check on authoring statuses.
+        // MUST NOT execute any command from the spec body. A green shape check
+        // is never a verified disclosure — message names itself "shape-only".
+        const authoring = fm.status === "draft" || fm.status === "ready_to_implement";
+        if (authoring) {
+          const rows = sectionRows(body, ad, false).filter((r) => !r.shadowed);
+          let scopeStart = -1;
+          for (let i = 0; i < rows.length; i++) {
+            if (/^\s*[-*]\s+.*Scope:/i.test(rows[i].text)) { scopeStart = i; break; }
+          }
+          let scopeText = "";
+          let scopeLine = ad.line;
+          if (scopeStart >= 0) {
+            scopeLine = rows[scopeStart].line;
+            const parts = [rows[scopeStart].text];
+            for (let j = scopeStart + 1; j < rows.length; j++) {
+              if (/^\s*[-*]\s/.test(rows[j].text)) break;
+              parts.push(rows[j].text);
+            }
+            scopeText = parts.join("\n");
+          }
+          const scopeLower = scopeText.toLowerCase();
+          const partitionLabels = [
+            "re-derived and CONFIRMED",
+            "re-derived and CORRECTED",
+            "measured and ADDED",
+          ];
+          const missingParts = partitionLabels.filter((l) => !scopeLower.includes(l.toLowerCase()));
+          if (missingParts.length > 0) {
+            finding(
+              findings,
+              "error",
+              "COND-004",
+              file,
+              scopeLine,
+              `COND-004 shape-only: Scope: bullet must carry partition labels ${partitionLabels.map((l) => `'${l}'`).join(", ")} (missing: ${missingParts.join(", ")}). This check verifies shape only — it does not re-run derivations or assert claim truth.`,
+            );
+          }
+          if (/every\s+claim\s+was\s+re-?measured/i.test(scopeText) && missingParts.length === partitionLabels.length) {
+            finding(
+              findings,
+              "error",
+              "COND-004",
+              file,
+              scopeLine,
+              `COND-004 shape-only: Scope: forbids unscoped universal attestation 'every claim was re-measured' (the 1525 case — TASK-IMP-124). Use the three partition labels instead.`,
+            );
+          }
+        }
       }
     }
   }
