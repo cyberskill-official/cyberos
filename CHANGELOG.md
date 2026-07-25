@@ -5,11 +5,9 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 ## [1.5.0] - 2026-07-25
 
 ### Changed
-- batch/9c-app: re-spec/adopt TASK-APP-001 against as-built `services/memory/desktop` Ops (Check = `version.sh`; phantom `install.sh --check` / `apps/desktop` ops claims ledgered Out of scope).
-- batch/9b-obs: re-spec/adopt TASK-OBS-001/003/005/007/008/009 against as-built obs services + `services/shared/cyberos-obs-sdk/` (task@1; phantom `crates/` / `skills/` paths ledgered Out of scope).
-- batch/9a-mcp members (TASK-MCP-003/005/006/007/008) advanced `reviewing → done` under the 2026-07-24 session HITL override (evidence `docs/batches/batch-9b-obs-session-hitl.md`).
-- HITL gated flips mint content-addressed verdict artifacts under `docs/tasks/_verdicts/` and every flip writes a transition receipt under `docs/tasks/_state/receipts/`; `regen_backlog` refuses invented status edges without a receipt (TASK-IMP-143 / TASK-IMP-144). Prefer `task-state.mjs transition` for status moves.
-- Wave 0 decision #7 (branch-protection stub-check scrub) **closed**: no existing ruleset / nothing to scrub (operator 2026-07-25).
+- batch/10a: groom older draft IMP-* stubs — close/duplicate 014/015/023/024/025/034/060; defer list for operator (see `docs/batches/batch-10-imp-draft-groom.md`).
+- batch/10b: `judgment: mechanical` means deterministic executor behaviour, not `docs-tools/` path; awh-gate + caf-gate retagged (TASK-IMP-125).
+- batch/10c: payload build reads module/caf trees from git HEAD; suite-gate runs `run_all.sh` on ubuntu; uninstall preserves `.cyberos/config.yaml` (TASK-IMP-127 / 128 / 129).
 
 ### Added
 - Residual guard unit tests in `services/memory/desktop/src-tauri/src/ops.rs` (checkout + self-init refusal).
@@ -17,6 +15,7 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 - `services/obs-compliance-view/docs/manifest-format.md` (TASK-OBS-009 auditor contract).
 - Status hub **Stuck WIP (G13)** sentinel (threshold 30d, deterministic as-of) — TASK-IMP-143.
 - `tools/install/docs-tools/verdict-artifact.mjs` + `task-state.mjs` (TASK-IMP-143 / TASK-IMP-144).
+- Corpus hygiene tokens retained for gate t07: FM-117, module route_back resume, UNREVIEWED Branch clear / IMP-139 (251).
 
 ## [1.4.0] - 2026-07-24
 

@@ -24,10 +24,72 @@ echo "cyberos: assembling payload into $out"
 rm -rf "$out"
 mkdir -p "$out/cuo/skills" "$out/cuo/gates/caf" "$out/cuo/templates" "$out/memory"
 
+# TASK-IMP-127: payload content MUST come from git-tracked files at HEAD, never from
+# untracked/gitignored working-tree junk (Finder .DS_Store, local egg-info, etc.).
+# Without a git repo there is no tracked set — refuse rather than silently falling back
+# to `cp -R` (that fallback is how contamination re-enters).
+if ! git -C "$repo" rev-parse --git-dir >/dev/null 2>&1; then
+  echo "cyberos: ERROR: payload build requires a git repository at $repo (no .git; refusing working-tree fallback)" >&2
+  exit 2
+fi
+
+# Dirty-module-tree guard (TASK-IMP-127 section 1.3).
+# Fail on Finder/egg-info style contaminants under the trees we copy wholesale.
+# Do NOT fail on local build caches (target/, __pycache__/) — those are gitignored
+# developer residue and never entered the old cp -R contamination class measured
+# in the task (tools/caf .DS_Store + egg-info). Git-driven copy already excludes
+# them; this guard makes the known contamination class loud at build time.
+_dirty="$(
+  git -C "$repo" ls-files --others --ignored --exclude-standard -- \
+    modules/skill tools/caf scripts/caf_gate.sh 2>/dev/null \
+  | grep -E '(^|/)\.DS_Store$|\.egg-info(/|$)|(^|/)[^/]+\.egg-info$' || true
+)"
+if [ -n "$_dirty" ] && [ "${CYBEROS_BUILD_ALLOW_DIRTY:-0}" != "1" ]; then
+  echo "cyberos: ERROR: untracked contaminant files under the payload module tree (TASK-IMP-127). Commit, ignore, or remove them:" >&2
+  printf '%s\n' "$_dirty" | sed 's/^/  /' >&2
+  exit 2
+fi
+
+# Copy a tracked path (file or directory) from HEAD into $dest via git archive.
+# $1 = repo-relative path; $2 = destination path (file or directory as appropriate).
+_git_materialise() {
+  local src="$1" dest="$2"
+  if git -C "$repo" cat-file -e "HEAD:$src" 2>/dev/null; then
+    :
+  else
+    return 1
+  fi
+  local mode
+  mode="$(git -C "$repo" cat-file -t "HEAD:$src" 2>/dev/null || true)"
+  if [ "$mode" = "blob" ]; then
+    mkdir -p "$(dirname "$dest")"
+    git -C "$repo" show "HEAD:$src" > "$dest"
+    return 0
+  fi
+  if [ "$mode" = "tree" ]; then
+    local tmp
+    tmp="$(mktemp -d "${TMPDIR:-/tmp}/cyberos-gitcp.XXXXXX")"
+    # archive emits path prefixes; strip to land contents at dest
+    if ! git -C "$repo" archive HEAD "$src" | tar -x -C "$tmp"; then
+      rm -rf "$tmp"
+      return 1
+    fi
+    mkdir -p "$(dirname "$dest")"
+    rm -rf "$dest"
+    if ! mv "$tmp/$src" "$dest"; then
+      rm -rf "$tmp"
+      return 1
+    fi
+    rm -rf "$tmp"
+    return 0
+  fi
+  return 1
+}
+
 # --- cuo module: the workflow engine ---
-cp "$repo/modules/cuo/chief-technology-officer/workflows/ship-tasks.md" "$out/cuo/ship-tasks.md"
-cp "$repo/modules/cuo/EXECUTION-DISCIPLINE.md"                                       "$out/cuo/EXECUTION-DISCIPLINE.md"
-cp "$repo/modules/skill/contracts/task/STATUS-REFERENCE.md"              "$out/cuo/STATUS-REFERENCE.md"
+_git_materialise "modules/cuo/chief-technology-officer/workflows/ship-tasks.md" "$out/cuo/ship-tasks.md"
+_git_materialise "modules/cuo/EXECUTION-DISCIPLINE.md" "$out/cuo/EXECUTION-DISCIPLINE.md"
+_git_materialise "modules/skill/contracts/task/STATUS-REFERENCE.md" "$out/cuo/STATUS-REFERENCE.md"
 cp "$here/gates/run-gates.sh"                                                        "$out/cuo/gates/run-gates.sh"
 cp -R "$here/templates/." "$out/cuo/templates/"
 
@@ -47,7 +109,10 @@ cp -R "$here/templates/." "$out/cuo/templates/"
 # BACKLOG.md + TASK-TEMPLATE.md.
 #
 # Gated by scripts/tests/test_template_schema.sh t07.
-cp "$repo/modules/skill/contracts/task/templates/"*.md "$out/cuo/templates/"
+_git_materialise "modules/skill/contracts/task/templates" "$out/cuo/templates-tmp" \
+  || { echo "cyberos: ERROR: modules/skill/contracts/task/templates missing from git HEAD" >&2; exit 2; }
+cp "$out/cuo/templates-tmp/"*.md "$out/cuo/templates/"
+rm -rf "$out/cuo/templates-tmp"
 
 # Per-type RULE families (rubrics) — the same incident class as the templates above,
 # found on the 2026-07-16 sachviet consumer-repo audit: the vendored task-audit
@@ -59,11 +124,10 @@ cp "$repo/modules/skill/contracts/task/templates/"*.md "$out/cuo/templates/"
 # Gated by tools/install/tests/test_rubrics_vendored.sh (real-repo builds MUST carry them);
 # best-effort here like the skill bodies, so a minimal/doc-driven source tree still builds —
 # but loudly, because a silent skip is exactly how the templates went missing.
-if ls "$repo/modules/skill/contracts/task/rubrics/"*.md >/dev/null 2>&1; then
-  mkdir -p "$out/cuo/rubrics"
-  cp "$repo/modules/skill/contracts/task/rubrics/"*.md "$out/cuo/rubrics/"
+if _git_materialise "modules/skill/contracts/task/rubrics" "$out/cuo/rubrics"; then
+  :
 else
-  echo "cyberos: WARN no modules/skill/contracts/task/rubrics/ in source - payload ships without per-type rule families (task-audit cannot enforce BUG-*/REGRESSION-*)" >&2
+  echo "cyberos: WARN no modules/skill/contracts/task/rubrics/ in git HEAD - payload ships without per-type rule families (task-audit cannot enforce BUG-*/REGRESSION-*)" >&2
 fi
 
 # TASK-IMP-111: the plan workflow's standalone rubric. plan-audit loads plan_rubric@1.0 from
@@ -71,11 +135,10 @@ fi
 # (the installed home .cyberos/cuo/rubrics/). A rubric correct in modules/ and absent from dist/ is
 # correct nowhere: the vendored plan-audit would name a rubric no installed repo carries. Best-effort
 # like the block above, but loud — a silent skip is exactly how the per-type templates went missing.
-if [ -f "$repo/modules/skill/rubrics/plan_rubric.md" ]; then
-  mkdir -p "$out/cuo/rubrics"
-  cp "$repo/modules/skill/rubrics/plan_rubric.md" "$out/cuo/rubrics/plan_rubric.md"
+if mkdir -p "$out/cuo/rubrics" && _git_materialise "modules/skill/rubrics/plan_rubric.md" "$out/cuo/rubrics/plan_rubric.md"; then
+  :
 else
-  echo "cyberos: WARN no modules/skill/rubrics/plan_rubric.md in source - payload ships without plan_rubric@1.0 (plan-audit cannot enforce PLAN-*)" >&2
+  echo "cyberos: WARN no modules/skill/rubrics/plan_rubric.md in git HEAD - payload ships without plan_rubric@1.0 (plan-audit cannot enforce PLAN-*)" >&2
 fi
 
 # The vendored skill set - one name per line with its SDP stage, in lifecycle order
@@ -138,21 +201,24 @@ VENDORED_SKILLS
 )"
 vendored_skills=0
 for s in $skills; do
-  if [ -d "$repo/modules/skill/$s" ]; then
-    cp -R "$repo/modules/skill/$s" "$out/cuo/skills/$s"
+  if _git_materialise "modules/skill/$s" "$out/cuo/skills/$s"; then
     vendored_skills=$((vendored_skills + 1))
   fi
 done
 
 caf_vendored="no"
-if [ -f "$repo/scripts/caf_gate.sh" ] && [ -d "$repo/tools/caf" ]; then
-  cp "$repo/scripts/caf_gate.sh" "$out/cuo/gates/caf/caf_gate.sh"
-  cp -R "$repo/tools/caf" "$out/cuo/gates/caf/caf"
+if git -C "$repo" cat-file -e "HEAD:scripts/caf_gate.sh" 2>/dev/null \
+   && git -C "$repo" cat-file -e "HEAD:tools/caf" 2>/dev/null; then
+  _git_materialise "scripts/caf_gate.sh" "$out/cuo/gates/caf/caf_gate.sh"
+  _git_materialise "tools/caf" "$out/cuo/gates/caf/caf"
   caf_vendored="yes"
 fi
 
 # --- memory module: Layer-1 protocol + schema + invariants ---
-cp "$repo/AGENTS.md" "$out/memory/AGENTS.md"
+# AGENTS.md is required Layer-1 protocol — fail closed if missing from HEAD.
+# Never fall back to a working-tree cp (IMP-127: no untracked/gitignored junk).
+_git_materialise "AGENTS.md" "$out/memory/AGENTS.md" \
+  || { echo "cyberos: ERROR: AGENTS.md missing from git HEAD" >&2; exit 2; }
 memory_vendored="protocol"
 # Schema vendors from the CANONICAL package-data copy (TASK-MEMORY-303 §1.1) - the copy the
 # Python package actually loads and the generator maintains. The root copy at
@@ -160,13 +226,15 @@ memory_vendored="protocol"
 # makes normative) while this line shipped it to every consumer; all copies are being
 # unified byte-identical, and pointing the payload at the package-data source ends the
 # stale-third-copy class regardless.
-_schema_src="$repo/modules/memory/cyberos/data/memory.schema.json"
-[ -f "$_schema_src" ] || _schema_src="$repo/modules/memory/memory.schema.json"   # trimmed fixture builds
-[ -f "$_schema_src" ]    && { cp "$_schema_src"    "$out/memory/memory.schema.json";    memory_vendored="protocol+schema"; }
-[ -f "$repo/modules/memory/memory.invariants.yaml" ] && cp "$repo/modules/memory/memory.invariants.yaml" "$out/memory/memory.invariants.yaml"
+if _git_materialise "modules/memory/cyberos/data/memory.schema.json" "$out/memory/memory.schema.json"; then
+  memory_vendored="protocol+schema"
+elif _git_materialise "modules/memory/memory.schema.json" "$out/memory/memory.schema.json"; then
+  memory_vendored="protocol+schema"
+fi
+_git_materialise "modules/memory/memory.invariants.yaml" "$out/memory/memory.invariants.yaml" || true
 # INTEROP.md - the §14.1 non-ledger consumer subset - ships beside the schema
 # (TASK-MEMORY-303 §1.3; guarded so a source tree predating the doc still builds).
-[ -f "$repo/modules/memory/INTEROP.md" ] && cp "$repo/modules/memory/INTEROP.md" "$out/memory/INTEROP.md"
+_git_materialise "modules/memory/INTEROP.md" "$out/memory/INTEROP.md" || true
 
 # --- plugin + runtime + docs ---
 rm -rf "$repo/dist/task-pack"   # self-heal: purge the pre-rename payload if a stale copy lingers
