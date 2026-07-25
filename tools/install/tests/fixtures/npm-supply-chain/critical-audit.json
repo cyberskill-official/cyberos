@@ -1,0 +1,19 @@
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "planted-critical-pkg": {
+      "name": "planted-critical-pkg",
+      "severity": "critical",
+      "isDirect": true,
+      "via": ["GHSA-planted-for-test"],
+      "effects": [],
+      "range": "*",
+      "nodes": ["node_modules/planted-critical-pkg"],
+      "fixAvailable": true
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {"info": 0, "low": 0, "moderate": 0, "high": 0, "critical": 1, "total": 1},
+    "dependencies": {"prod": 1, "dev": 0, "optional": 0, "peer": 0, "peerOptional": 0, "total": 1}
+  }
+}

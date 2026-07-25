@@ -1,0 +1,17 @@
+# TASK-IMP-003
+title = "CyberOS gitleaks"
+[extend]
+[allowlist]
+description = "Documented false positives and intentional fixtures"
+paths = [
+  '''docs/status/''',
+  '''docs/status/reference/''',
+  '''docs/feature-requests/''',
+  '''tools/caf/core/evals/fixtures/''',
+  '''\.env\.example$''',
+  '''runtime/tests/''',
+  '''services/email/src/dkim/keystore\.rs$''',
+  '''tools/install/mcp/README\.md$''',
+  '''tools/install/tests/test_install_portability\.sh$''',
+  '''tools/install/tests/fixtures/secret-scan/''',
+]

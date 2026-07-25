@@ -23,6 +23,14 @@ fi
 
 ROOT="$(git rev-parse --show-toplevel)"
 
+# TASK-IMP-003: secret scan. Soft-skip when gitleaks missing; CI hard-fails.
+if [ -x "$ROOT/tools/install/check-secrets.sh" ]; then
+  echo "==> tools/install/check-secrets.sh --soft"
+  bash "$ROOT/tools/install/check-secrets.sh" --soft --root "$ROOT"
+else
+  echo "pre-push: check-secrets.sh missing — skip secret scan"
+fi
+
 # Gate only when the commits being pushed actually touch services/ (a console- or apps/web-only push deploys
 # via the VPS git-pull and needs no Rust build or image rebuild, so it stays instant).
 changed=1
