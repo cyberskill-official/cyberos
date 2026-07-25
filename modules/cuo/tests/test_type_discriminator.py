@@ -59,8 +59,13 @@ def test_bug_rubric_exists_and_is_loaded():
     assert (RUBRICS / "bug.md").is_file()
     assert (RUBRICS / "common.md").is_file(), "the composition contract must exist"
     audit_skill = (ROOT / "modules" / "skill" / "task-audit" / "SKILL.md").read_text(encoding="utf-8")
-    assert "rubrics/{type}.md" in audit_skill or "rubrics/common" in audit_skill, (
+    # Composition needs BOTH halves named: the per-type file and the common base it composes
+    # onto. The previous disjunction stayed green with either one deleted (TASK-IMP-022 DA-001).
+    assert "rubrics/{type}.md" in audit_skill, (
         "task-audit does not compose per-type rubrics — the BUG-* family never fires"
+    )
+    assert "rubrics/common" in audit_skill, (
+        "task-audit names no common rubric base — per-type composition has nothing to compose onto"
     )
 
 

@@ -6,9 +6,11 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 
 ### Added
 - `memory-append.mjs append --dry-run` validates the payload, lease and live chain and projects the seq/hash without creating or changing any store byte (TASK-IMP-146).
+- `scripts/check_defensive_asserts.sh` — DA-001..005 over the gated test corpus (Python by AST, shell by line scan), gated by `scripts/tests/test_assert_lint.sh`; and rubric rule `TRACE-008` ("an assertion that cannot fail is not evidence"), completing the TRACE-006 / TRACE-007 family (TASK-IMP-022, R13).
 
 ### Fixed
 - SKILL-202 acceptance criteria and benchmark gates G7/G8 now cite the live `scripts/tests/test_skill_stub_lint.sh` suite; added coverage for the TASK-CUO-209 NFR delist, 20-skill untrusted-input backport, full pair-parity SCOPE and loud workflow degradation (TASK-IMP-145).
+- Six test assertions that no code change could falsify — disjunctions in `modules/cuo/tests/{test_baseline,test_placeholder_check,test_type_discriminator}.py` and `modules/memory/tests/core/{test_crypto_mode,test_import,test_store_acl}.py` — now assert the single behaviour the code produces (TASK-IMP-022).
 
 ## [1.5.1] - 2026-07-25
 

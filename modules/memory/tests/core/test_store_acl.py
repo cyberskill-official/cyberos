@@ -236,8 +236,12 @@ def test_built_in_actor_literal(tmp_path: Path) -> None:
                           {"actor": "*", "mode": "read"},
                       ])
     assert check_write(store, "memories/facts/x.md", actor="dream-runner").allowed
-    assert not check_write(store, "memories/facts/x.md", actor="alice").allowed \
-        or check_write(store, "memories/facts/x.md", actor="alice").mode == "read"
+    # alice matches only the `*: read` row, so she is refused AND the matched mode is `read` —
+    # both halves, from one call. The previous `not allowed or mode == "read"` passed whenever
+    # either held, including on a refusal that matched no row at all (TASK-IMP-022 DA-001).
+    alice = check_write(store, "memories/facts/x.md", actor="alice")
+    assert alice.allowed is False
+    assert alice.mode == "read"
 
 
 # ---- writer / ops integration --------------------------------------------

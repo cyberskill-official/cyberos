@@ -113,6 +113,7 @@ These rules apply to tasks that use the cyberos template (numbered §1 normative
 | `TRACE-005` | When a task uses the deferred-slice pattern (e.g. "§1 #8 — deferred to slice 2"), §10.7 of the `.audit.md` MUST enumerate the deferred clauses with a scope estimate per the TASK-AUTH-006 slice-2 precedent. Missing §10.7 with deferred clauses → fail. | warning | false |
 | `TRACE-006` | For every §1 clause that cites a test, the audit MUST name the clause's VERB (the observable it demands, per the verb→evidence table in "TRACE-006 — the cited test must exercise its clause's verb" below), name what the cited test actually ASSERTS, and fail when the assertion is weaker than the verb. A cited test that PASSES (TRACE-004) but exercises something weaker than its clause is not evidence the clause holds. Judgment family — a model-audit rule, ABSENT from `task-lint`; fires at the spec-correctness gate, never the coverage gate. | error → needs_human (`clause_verb_untested`) | false |
 | `TRACE-007` | For every governed claim the spec ORIGINATES (NUMERIC / CITATION / UNIVERSAL NEGATIVE — see "TRACE-007 — originated claims carry their derivation" below), the audit states the claim, states its derivation, RE-RUNS that derivation, and MUST fail when the derivation is ABSENT, does not RE-RUN, does not REPRODUCE the claimed value, or SUPPORTS A NARROWER SCOPE than the claim asserts. Judgment family — ABSENT from `task-lint` except COND-004's shape-only partition check; fires at the spec-correctness gate. Pre-existing `done` specs are reported, never auto-failed (TASK-IMP-124 §1.10). | error → needs_human (`originated_claim_underived`) | false |
+| `TRACE-008` | For every §5 verification entry, the audit MUST state what the test ASSERTS and MUST fail when that assertion is true for every input the code can produce — a disjunction satisfied by either arm, a statically-true expression, a count comparison that holds at zero, or a probe whose exit status is discarded. Has a MECHANICAL FLOOR (`scripts/check_defensive_asserts.sh`, DA-001..005, gated by `scripts/tests/test_assert_lint.sh`); the residue is judgment. See "TRACE-008 — an assertion that cannot fail is not evidence" below. | error → needs_human (`assertion_cannot_fail`) | false |
 
 **Rationale:** the audit-fix loop on TASK-AUTH-001 surfaced 7 spec-vs-code gaps where §1 MUST clauses had no §4 AC or no §5 test backing them — the implementer passed all declared tests while quietly missing 7 normative clauses. TRACE-001..005 close that gap structurally: a task can't score 10/10 (and thus can't move from `draft` → `ready_to_implement` → ... → `done`) if any of its §1 clauses lacks a downstream test. **The audit becomes the source of truth for "what's actually shipped" instead of `BACKLOG.md` status alone.**
 
@@ -176,6 +177,30 @@ Added 2026-07-25 (TASK-IMP-124) after seven audits across TASK-IMP-121 and TASK-
 **COND-004 partition (mechanical shape half):** the `Scope:` bullet's three labels enter `task-lint` as a shape-only check on authoring statuses (`draft` / `ready_to_implement`). The lint MUST NOT execute any command from a spec body. A green shape check is never a verified disclosure — the auditor still tests each partition under TRACE-007.
 
 **Degradation:** TRACE-007 applied to a task audited before it existed is reported, never auto-failed. A derivation that re-runs and yields a different value than when written is STALE-001, not a TRACE-007 failure.
+
+### TRACE-008 — an assertion that cannot fail is not evidence (mechanical floor + judgment)
+
+Added 2026-07-25 (TASK-IMP-022) from **R13** (`docs/strategy/cyberos-deep-audit-and-auto-evolution-plan-2026-07-06.md:50`): "the memory-writer contract bug shipped because a test asserted `processed == 3 || failed > 0`". That assertion is true whenever the writer FAILED, so the suite stayed green straight through the defect it existed to catch. R13's two asks are this rule's two halves — the grep-audit (mechanised as DA-001..005) and the review rule ("a test must fail when the feature is broken").
+
+**Where it sits in the family.** TRACE-006 fails an assertion weaker than its clause's VERB. TRACE-007 fails a derivation narrower than its claim's SCOPE. TRACE-008 fails an assertion with no failing input at all — the degenerate case of both, and the only one of the three with a mechanical floor, because "true for every input" is decidable for a closed set of shapes while "weaker than this verb" is not.
+
+**How the auditor runs it (per §5 entry).** (1) Name what the test asserts. (2) Ask what change to the implementation would make that assertion false; if the honest answer is "none", TRACE-008 fails. (3) Where an arm is genuinely admissible, the fix is to assert the ONE behaviour the code has — run it and look — not to widen the assertion until it holds.
+
+**The five mechanised shapes** (`scripts/check_defensive_asserts.sh`; corpus = the three shell roots `scripts/tests/run_all.sh` globs plus every `tests/` tree under `modules/`):
+
+| rule | Shape | Why it cannot fail |
+| ---- | ----- | ------------------ |
+| `DA-001` | Python `assert` whose test contains a `BoolOp(Or)` | either arm alone passes it; the failing arm is unreachable as a verdict |
+| `DA-002` | statically-true test — truthy constant, non-empty literal container, lambda / f-string, `len(...) >= 0`, `len(...) > -1` | no input makes it false. `assert False` is EXEMPT: an unreachable marker, not a defensive assertion |
+| `DA-003` | shell probe (`grep`/`rg`/`test`/`[`/`diff`/`cmp`) whose status is discarded by `\|\| true` / `\|\| :` | the verdict is computed and thrown away. An output capture (`n="$(grep -c …)" \|\| true`) is EXEMPT — grep exits 1 on zero matches and the status is not the assertion |
+| `DA-004` | shell numeric comparison `-ge 0` / `-gt -1` | holds at zero — AUTH-005 #6's shape, a test that passes when nothing happened |
+| `DA-005` | a waiver comment carrying no reason (< 12 chars) | the defect wearing the fix's clothes |
+
+**Parsed, never grepped (Python side).** R13 asks for a grep-audit; a grep does not survive contact with this corpus. `assert sources == {"dropbox-or-gdrive"}` matches `assert .* or .*` and is not a disjunction, while `assert not check(...).allowed \` + `    or check(...).mode == "read"` is a disjunction and does not match. Both live in `modules/memory/tests/core/`; the AST sees the `BoolOp` and nothing else, and `test_assert_lint.sh` t02/t03 pin both directions.
+
+**Waivers are inline and reasoned.** `# defensive-assert-ok: <reason>` on the flagged line or the line above, reason ≥ 12 characters. Deliberately NOT the sibling-exemptions-file pattern used by `check_doc_anchors.sh`: a path-granular exemption suits "this document is a historical archive", but an assert waiver is line-granular and a reviewer reading the assertion must see why the disjunction is admissible without opening a second file. Every active waiver prints on every run.
+
+**Bound (state it, do not silently narrow it).** The floor scans Python and shell in the payload corpus. `services/**` — Rust `assert!` / `assert_eq!`, Go, and platform Python — is NOT scanned: it is outside CyberOS 1.x per `docs/batches/batch-10e-imp-stub-wont-do.md`. A green floor there means "not looked at", and TRACE-008's judgment half is the only rule covering it.
 
 ---
 
