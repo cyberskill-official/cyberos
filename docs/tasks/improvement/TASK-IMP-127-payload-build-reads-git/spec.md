@@ -4,7 +4,7 @@ title: Payload build MUST read from git, not the working tree
 template: task@1
 type: improvement
 module: improvement
-status: draft
+status: done
 priority: p1
 author: "@stephencheng"
 department: engineering
@@ -112,9 +112,9 @@ They compose in one direction worth stating: once the payload cannot carry untra
 
 ## 2. Acceptance criteria
 
-- [ ] AC 1 (traces_to: #1.1, #1.2) - a fixture plants an untracked `.DS_Store` and an untracked `egg-info/` dir under `modules/`, builds, and the payload and `rules_sha` are byte-identical to a build of the same commit from a clean tree - test: `tools/install/tests/test_release_assets.sh::t_build_ignores_untracked`
-- [ ] AC 2 (traces_to: #1.3) - a build with untracked files under `modules/` exits non-zero and its stderr names at least one offending path - test: `tools/install/tests/test_release_assets.sh::t_build_fails_on_dirty_module_tree`
-- [ ] AC 3 (traces_to: #1.4) - the file list of a git-driven payload from a clean checkout equals the file list the pre-change build produces from the same checkout - test: `tools/install/tests/test_release_assets.sh::t_payload_file_set_unchanged`
+- [x] AC 1 (traces_to: #1.1, #1.2) - a fixture plants an untracked `.DS_Store` and an untracked `egg-info/` dir under `modules/`, builds, and the payload and `rules_sha` are byte-identical to a build of the same commit from a clean tree - test: `tools/install/tests/test_release_assets.sh::t_build_ignores_untracked`
+- [x] AC 2 (traces_to: #1.3) - a build with untracked files under `modules/` exits non-zero and its stderr names at least one offending path - test: `tools/install/tests/test_release_assets.sh::t_build_fails_on_dirty_module_tree`
+- [x] AC 3 (traces_to: #1.4) - the file list of a git-driven payload from a clean checkout equals the file list the pre-change build produces from the same checkout - test: `tools/install/tests/test_release_assets.sh::t_payload_file_set_unchanged`
 
 ## 3. Edge cases
 

@@ -223,9 +223,10 @@ t07_changelog_records_hygiene() {                                      # AC 7
   top="$(awk '/^## \[/{p=1} p' "$repo/CHANGELOG.md")"
   local all=1
   for want in '251' 'FM-117' 'module' 'route_back' 'resume'; do
-    echo "$top" | grep -q "$want" || { fail t07 "CHANGELOG versioned entry lacks '$want'"; all=0; }
+    # here-string avoids pipefail+SIGPIPE false fails from `echo | grep -q` on large CHANGELOGs
+    grep -q "$want" <<<"$top" || { fail t07 "CHANGELOG versioned entry lacks '$want'"; all=0; }
   done
-  if ! echo "$top" | grep -qiE 'UNREVIEWED|Branch clear|corpus hygiene|IMP-139'; then
+  if ! grep -qiE 'UNREVIEWED|Branch clear|corpus hygiene|IMP-139' <<<"$top"; then
     fail t07 "CHANGELOG versioned entry does not name corpus hygiene / Branch clear / IMP-139"; all=0
   fi
   [ "$all" -eq 1 ] && ok t07
