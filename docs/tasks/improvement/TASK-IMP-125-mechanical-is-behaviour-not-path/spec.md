@@ -4,7 +4,7 @@ title: mechanical means deterministic, not docs-tools/
 template: task@1
 type: improvement
 module: improvement
-status: draft
+status: done
 priority: p3
 author: "@stephencheng"
 department: engineering

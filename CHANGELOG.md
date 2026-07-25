@@ -2,7 +2,7 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
-## [Unreleased]
+## [1.5.0] - 2026-07-25
 
 ### Changed
 - batch/10d: TRACE-007 (originated claims carry derivations) + COND-004 Scope partition shape in `task-lint` on authoring statuses (TASK-IMP-124).
