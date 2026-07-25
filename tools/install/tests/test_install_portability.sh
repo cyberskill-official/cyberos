@@ -89,7 +89,9 @@ t03_shasum_fallback_verifies() {                                       # AC 3 (#
   # masked PATH: every tool bootstrap + its children need, EXCEPT sha256sum
   local mask="$TMP/mask"; mkdir -p "$mask"
   local t p
-  for t in bash sh env mktemp curl grep shasum dirname basename mkdir tar find head mv rm cat sed date sleep touch; do
+  # gzip is required: tar -xzf spawns it as a child; without it Linux CI fails with
+  # "tar (child): Error is not recoverable" under the masked PATH.
+  for t in bash sh env mktemp curl grep shasum dirname basename mkdir tar gzip gunzip find head mv rm cat sed date sleep touch tr uname; do
     p="$(command -v "$t" 2>/dev/null || true)"; [ -n "$p" ] && ln -s "$p" "$mask/$t"
   done
   [ -e "$mask/sha256sum" ] && { fail t03 "mask dir leaked sha256sum"; return; }
@@ -107,7 +109,7 @@ t03_shasum_fallback_verifies() {                                       # AC 3 (#
   [ ! -f "$tgt2/.bootstrap-installed" ] || { fail t03 "corrupted payload was INSTALLED"; return; }
   # neither tool: abort naming both, before anything is fetched
   local mask2="$TMP/mask2"; mkdir -p "$mask2"
-  for t in bash sh env mktemp curl grep dirname basename mkdir tar find head mv rm cat sed date sleep touch; do
+  for t in bash sh env mktemp curl grep dirname basename mkdir tar gzip gunzip find head mv rm cat sed date sleep touch tr uname; do
     p="$(command -v "$t" 2>/dev/null || true)"; [ -n "$p" ] && ln -s "$p" "$mask2/$t"
   done
   local tgt3="$TMP/btgt3"; mkdir -p "$tgt3"

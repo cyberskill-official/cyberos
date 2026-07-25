@@ -1,0 +1,22 @@
+name: suite-gate
+
+# TASK-IMP-128: run the full shell suite on ubuntu so GNU-tar-only tests execute
+# and BSD-vs-GNU defects cannot hide behind a single macOS laptop pre-commit.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  run-all:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Run scripts/tests/run_all.sh
+        run: bash scripts/tests/run_all.sh

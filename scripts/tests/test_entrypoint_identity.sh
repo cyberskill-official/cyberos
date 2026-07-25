@@ -19,7 +19,8 @@ t01_decision_recorded() {
 t02_first_screen_reaches_task_law() {
   local head30
   head30="$(head -30 "$repo/AGENTS.md")"
-  echo "$head30" | grep -q '\.cyberos/AGENT-ENTRY\.md' \
+  # here-string avoids pipefail+SIGPIPE false fails from `echo | grep -q`
+  grep -q '\.cyberos/AGENT-ENTRY\.md' <<<"$head30" \
     && ok t02 || fail t02 "first 30 lines of AGENTS.md missing AGENT-ENTRY"
 }
 

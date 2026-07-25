@@ -60,7 +60,7 @@ This rubric is a port of the proven rule set from the legacy `cuo/cpo/task-audit
 | `COND-001` | `client_visible: true` | `## Customer Quotes` with ≥1 quote in `<untrusted_content>`, attribution outside | error |
 | `COND-002` | `client_visible: true` | `## Sales/CS Summary` in plain English (no jargon — see QA-009) | error |
 | `COND-003` | `eu_ai_act_risk_class ∈ {limited, high}` | `## AI Risk Assessment` with H3s `### Data Sources`, `### Human Oversight`, `### Failure Modes` in that order | error |
-| `COND-004` | `ai_authorship != none` | `## AI Authorship Disclosure` with three bullets labeled `Tools used:`, `Scope:`, `Human review:` | error |
+| `COND-004` | `ai_authorship != none` | `## AI Authorship Disclosure` with three bullets labeled `Tools used:`, `Scope:`, `Human review:`. The `Scope:` bullet MUST partition its verification claims into three labelled sets — `re-derived and CONFIRMED`, `re-derived and CORRECTED`, `measured and ADDED` — MUST state whether the audit's own figures were treated as claims to verify, and MUST NOT make an unscoped universal attestation of the form "every claim was re-measured" (which is unfalsifiable and which certified the false 1525 published beneath it — TASK-IMP-124). Tasks already past `ready_to_implement` before TRACE-007 landed MAY carry a pre-partition Scope without error; the machine floor enforces the partition shape on authoring statuses only (`draft` / `ready_to_implement`). | error |
 
 ## §5  Quality heuristics (anti-patterns)
 
@@ -112,6 +112,7 @@ These rules apply to tasks that use the cyberos template (numbered §1 normative
 | `TRACE-004` | If `status: done`, every §1 clause's cited test is `passed` in the most recent `implementation_audit.coverage_report` (§10.3 audit-fix log). Tests in `implementing`/`ready_to_review`/`reviewing`/`ready_to_test`/`testing`/`draft`/`ready_to_implement` tasks are exempt (coverage is enforced separately by `coverage-gate-audit` during the `testing → done` transition). | error → needs_human (`done_with_untested_clause`) | false |
 | `TRACE-005` | When a task uses the deferred-slice pattern (e.g. "§1 #8 — deferred to slice 2"), §10.7 of the `.audit.md` MUST enumerate the deferred clauses with a scope estimate per the TASK-AUTH-006 slice-2 precedent. Missing §10.7 with deferred clauses → fail. | warning | false |
 | `TRACE-006` | For every §1 clause that cites a test, the audit MUST name the clause's VERB (the observable it demands, per the verb→evidence table in "TRACE-006 — the cited test must exercise its clause's verb" below), name what the cited test actually ASSERTS, and fail when the assertion is weaker than the verb. A cited test that PASSES (TRACE-004) but exercises something weaker than its clause is not evidence the clause holds. Judgment family — a model-audit rule, ABSENT from `task-lint`; fires at the spec-correctness gate, never the coverage gate. | error → needs_human (`clause_verb_untested`) | false |
+| `TRACE-007` | For every governed claim the spec ORIGINATES (NUMERIC / CITATION / UNIVERSAL NEGATIVE — see "TRACE-007 — originated claims carry their derivation" below), the audit states the claim, states its derivation, RE-RUNS that derivation, and MUST fail when the derivation is ABSENT, does not RE-RUN, does not REPRODUCE the claimed value, or SUPPORTS A NARROWER SCOPE than the claim asserts. Judgment family — ABSENT from `task-lint` except COND-004's shape-only partition check; fires at the spec-correctness gate. Pre-existing `done` specs are reported, never auto-failed (TASK-IMP-124 §1.10). | error → needs_human (`originated_claim_underived`) | false |
 
 **Rationale:** the audit-fix loop on TASK-AUTH-001 surfaced 7 spec-vs-code gaps where §1 MUST clauses had no §4 AC or no §5 test backing them — the implementer passed all declared tests while quietly missing 7 normative clauses. TRACE-001..005 close that gap structurally: a task can't score 10/10 (and thus can't move from `draft` → `ready_to_implement` → ... → `done`) if any of its §1 clauses lacks a downstream test. **The audit becomes the source of truth for "what's actually shipped" instead of `BACKLOG.md` status alone.**
 
@@ -150,6 +151,31 @@ These six are the recurring cases, not a closed set: a clause verb not in the ta
 - Why the assertion was weaker than the verb: the string appears only inside a JSON blob injected into the payload that no code reads — `status-app.js` has zero references to the key, so nothing renders it. `grep`-in-payload proves PRESENT-IN-PAYLOAD; **render** demands PRESENT-IN-RENDERED-VIEW. The test passes on an implementation that computes the report, ships it in the JSON, and never draws it — which is exactly what shipped `done`. Under TRACE-006 the original assertion FAILS the **render** row above. Its replacement discharges the verb: it strips the data island and asserts the report is visible markup outside the payload ("Drafts awaiting triage", a reason column, an age column) — the DOM a reader sees. (External review 2026-07-17; `tools/docs-site/tests/test_render_status_hub.sh::t11_draft_staleness_report` carries both the history and the fix.)
 
 **TRACE-006 is judgment-family and is ABSENT from `task-lint`.** Like TRACE-004 and TRACE-005 — and unlike the structural halves TRACE-001..003, which the machine floor `task-lint.mjs` implements — TRACE-006 cannot be mechanised: deciding whether a test exercises a clause's verb means reading a test and a sentence and comparing their meaning. It therefore lives with the judgment families and MUST NOT be added to `task-lint` (TASK-IMP-118 §1.5). A structural check that appeared to enforce it — e.g. "the clause's key string appears in the cited test" — would PASS TASK-IMP-108 §1.7's original test (the string genuinely is in the file) and restore exactly the false assurance TRACE-006 exists to remove. The auditor runs it under "TRACE semantic sufficiency" (task-audit skill §3); the coverage gate does not — TRACE-004's mechanical pass/fail is a different job at a different gate. TRACE-006 fails a test that asserts less than its clause's VERB; a spec that cannot fail its own motivating case is decoration, so re-auditing 108 §1.7 against this rule MUST fail the original assertion and pass its replacement.
+
+### TRACE-007 — originated claims carry their derivation (judgment)
+
+Added 2026-07-25 (TASK-IMP-124) after seven audits across TASK-IMP-121 and TASK-IMP-122 found authors verifying what they INHERIT while shipping falsehoods they ORIGINATE. TRACE-006 fails a test that asserts less than its clause's VERB. TRACE-007 fails a derivation that supports less than its claim's SCOPE. They are one defect at two levels — the author is the wrong reader of their own work.
+
+**How the auditor runs it.** (1) Partition the spec's governed claims into ORIGINATED (provenance is this document) and INHERITED (cited prior artefact); scrutinise the ORIGINATED set FIRST. (2) For each originated claim in a governed class, state the claim, state its derivation, and RE-RUN the derivation. (3) FAIL when the derivation is ABSENT, does not RE-RUN, does not REPRODUCE the claimed value, or SUPPORTS A NARROWER SCOPE than the claim asserts.
+
+**Three governed classes (exactly these):**
+
+| Class | What discharges the derivation | What does NOT |
+| --- | --- | --- |
+| NUMERIC | a command, a script invocation, or an arithmetic composition of other derived values that reproduces the value | a value with prose provenance and no reproducing form |
+| CITATION | a `file:line` plus the text found there; where the cited document is itself in flight, the REVISION it was read at | a line number alone; a bare path into a moving document |
+| UNIVERSAL NEGATIVE | a record of the witness search naming what was tried and how each failed; the audit MUST attempt one counter-example before accepting it | a measurement of the author's own candidate (does not discharge a claim about all candidates) |
+
+**Worked anti-examples (pinned to the revision that shipped the false claim):**
+
+1. **NUMERIC — TASK-IMP-122 rewrite 4 AC 10** (`63705483:280`): claimed `102dc507` "over 1525 files per side". True count for the mandated cone is **1534** (digest `102dc507`); **1525** / `86cafee8` is the cone §1.4 REJECTS. Reproduce: `cd dist/cyberos && find cuo plugin mcp lib docs-tools -type f | LC_ALL=C sort | wc -l` → 1525; append `memory` minus `memory/store/` plus the six root scripts → 1534. A derivation was ABSENT for the originated 1525.
+2. **UNIVERSAL NEGATIVE — TASK-IMP-121** (`15894b1e:spec.md:168`): claimed byte-exact restore of a no-trailing-newline operator hook is "IMPOSSIBLE". Counter-example (GNU Awk): byte-oriented strip yields 6B→6B BYTE-EXACT while the author's line-oriented rule yields 6B→7B. The author's measurement of THEIR candidate does NOT discharge a claim about all candidates.
+
+**Kinship to TRACE-006 (`rule_id`):** TRACE-006 compares verb vs assertion; TRACE-007 compares claim scope vs derivation. Both refuse the author as the sole reader of their own work.
+
+**COND-004 partition (mechanical shape half):** the `Scope:` bullet's three labels enter `task-lint` as a shape-only check on authoring statuses (`draft` / `ready_to_implement`). The lint MUST NOT execute any command from a spec body. A green shape check is never a verified disclosure — the auditor still tests each partition under TRACE-007.
+
+**Degradation:** TRACE-007 applied to a task audited before it existed is reported, never auto-failed. A derivation that re-runs and yields a different value than when written is STALE-001, not a TRACE-007 failure.
 
 ---
 

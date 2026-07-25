@@ -18,6 +18,15 @@ CYBEROS_SYNC_HOST_PLUGINS=0 bash "$BUILD" "$TMP/payload" >/dev/null 2>&1 \
   || { echo "FATAL: scratch build failed"; exit 1; }
 pv="$(tr -d ' \n\r' < "$TMP/payload/VERSION")"
 
+# CI ubuntu runners typically lack claude/grok CLIs. Stub them so dry-run arms that
+# assert install plans can still exercise the sync script (real CLIs exit 0 unused).
+_STUBS="$TMP/stubs"
+mkdir -p "$_STUBS"
+printf '#!/bin/sh\nexit 0\n' > "$_STUBS/claude"
+printf '#!/bin/sh\nexit 0\n' > "$_STUBS/grok"
+chmod +x "$_STUBS/claude" "$_STUBS/grok"
+export PATH="$_STUBS:$PATH"
+
 t01_missing_payload_exits_2() {
   out="$(bash "$SYNC" "$TMP/no-such-dir" 2>&1)" && rc=0 || rc=$?
   [ "$rc" -eq 2 ] && echo "$out" | grep -qi 'missing\|ERROR' && ok t01 || fail t01 "rc=$rc out=$out"
