@@ -1,0 +1,9 @@
+{
+  "schema": "cyberos.transition@1",
+  "task_id": "TASK-OBS-004",
+  "from": "testing",
+  "to": "done",
+  "evidence_sha256": "0128d1cbf2d7f433f9633e23e88608926328095c097db187f7cc2c6fd695c756",
+  "verdict_artifact": "docs/tasks/_verdicts/TASK-OBS-004--testing--done--0128d1cbf2d7.json",
+  "receipt_sha256": "85d6a1f361784398cd84eca7b9f75c40f23adfcfe06ffb50d7c9e8d89431c182"
+}

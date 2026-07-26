@@ -11,7 +11,7 @@ author: "@stephencheng"
 template: task@1
 module: inv
 priority: p1
-status: ready_to_implement
+status: done
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng
 verify: T
