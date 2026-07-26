@@ -33,8 +33,8 @@ Plan: `docs/plans/PLAN-status-v3-platform-2026-07-27/plan.md` §9
 2. DONE — On `main`, set branch protection required checks: `traceability-gate`, `suite-gate`.
 3. DONE — Mothership cutoff = merge SHA `14e4ee5551d19af743739ed7ab9a0727ec89ef48` (`scripts/check_task_link.sh` `_DEFAULT_CUTOFF`; PR #172).
 4. DONE — **P2 visual HITL** — operator approved as-is (2026-07-27). See [`status-v3-p2-review/README.md`](status-v3-p2-review/README.md).
-5. IN FLIGHT — **P6** — Release-As **1.12.0** (not 2.0.0); flip release-range preflight to blocking; tag `v1.12.0` per `docs/deploy/RELEASE.md`.
-6. IN FLIGHT — **P7** — fleet discovery/pilots/rollout under commit-all / push-none; skip `cyberos-12g-clone` + known clones/worktrees.
+5. DONE — **P6** — VERSION **1.12.0**; tag `v1.12.0` @ `4a4c2cb9`; release-range preflight **blocking**; no `v2.0.0` tag.
+6. DONE (pending push allowlist) — **P7** — rollout clean; 21 local upgrade commits; push: none; report `docs/reviews/fleet-status-v3-migration-2026-07-27.md`.
 7. DONE — **DOCS-021** — accept-all 148 pre-cutoff (triage note + operator lock).
 
 ## Phase execution snapshot (2026-07-27)
@@ -47,8 +47,8 @@ Plan: `docs/plans/PLAN-status-v3-platform-2026-07-27/plan.md` §9
 | 3 | P3 | **Largely done** — wide regen + coverage-only + deploy trigger work landed |
 | 4 | P4 | **Done for release** — installer/cutoff/preflight; DOCS-021 accept-all locked; no mass ledger edit |
 | 5 | P5 | **Mostly done** — matrix + offline cert green; full `fleet-install-test.sh` at P7 |
-| 6 | P6 | **GO for 1.12.0** — operator override (not 2.0.0) |
-| 7 | P7 | **GO** — commit-all / push-none confirmed |
+| 6 | P6 | **Done** — tagged `v1.12.0` (not 2.0.0); preflight blocking |
+| 7 | P7 | **Rollout done** — commits local; push deferred; see migration report |
 | 8 | P8 | **Docs mostly landed** — feed spec + runbook + AGENT-ENTRY text; watch/`improve` scaffolded only |
 
 ## Still needs Stephen (true blockers only)
