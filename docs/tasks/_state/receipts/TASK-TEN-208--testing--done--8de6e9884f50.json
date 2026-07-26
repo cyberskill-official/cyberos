@@ -1,0 +1,9 @@
+{
+  "schema": "cyberos.transition@1",
+  "task_id": "TASK-TEN-208",
+  "from": "testing",
+  "to": "done",
+  "evidence_sha256": "50ab8048638b24d887c6a46491c0043ae5e22f6847013f047945c4ffa9e37b7f",
+  "verdict_artifact": "docs/tasks/_verdicts/TASK-TEN-208--testing--done--50ab8048638b.json",
+  "receipt_sha256": "8de6e9884f50e135a77ed65317704becbe232a2b49dc9004cc2f4ee322139716"
+}

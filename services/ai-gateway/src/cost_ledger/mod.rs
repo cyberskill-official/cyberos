@@ -101,6 +101,23 @@ pub async fn precheck(
         }
     }
 
+    // 0c. TASK-TEN-208 — plan-tier ai_tokens metering admit (estimate, before hold).
+    let estimated_tokens = (req.prompt_tokens as u64)
+        .saturating_add(req.expected_completion_tokens as u64);
+    if let Err(over) = crate::metering_admit::admit_ai_tokens(pool, &req.tenant_id, estimated_tokens)
+        .await
+    {
+        PRECHECK_CALLS.with_label_values(&["refuse"]).inc();
+        return Ok(PrecheckOutcome::Refuse {
+            reason: RefuseReason::MeteringTokenOverage {
+                current: over.current,
+                cap: over.cap,
+            },
+            current_spent_usd: Decimal::ZERO,
+            cap_usd: policy.ai_policy.monthly_cap_usd,
+        });
+    }
+
     // 1. Resolve provider + model from alias via TASK-AI-006
     let resolved = match alias::resolve(&req.model_alias, policy) {
         Ok(resolved) => resolved,

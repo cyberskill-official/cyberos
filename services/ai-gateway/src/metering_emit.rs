@@ -4,7 +4,7 @@
 
 use std::sync::{Mutex, OnceLock};
 
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use cyberos_metering::axes::MeteringAxis;
 use cyberos_metering::recorder::{validate_quantity, InMemoryRecorder, MeteringEvent, Recorder};
 use cyberos_metering::wal_queue::{WalError, WalQueue};
@@ -80,6 +80,14 @@ pub fn emit_ai_tokens(
 /// Recorded event count (idempotent inserts count once). Used by integration tests.
 pub fn recorded_len() -> usize {
     recorder().lock().map(|r| r.len()).unwrap_or(0)
+}
+
+/// Period sum of ai_tokens for admission (TASK-TEN-208).
+pub fn ai_tokens_sum(tenant_id: &str, period_start: DateTime<Utc>) -> u64 {
+    recorder()
+        .lock()
+        .map(|r| r.sum_for(tenant_id, MeteringAxis::AiTokens, period_start))
+        .unwrap_or(0)
 }
 
 #[cfg(test)]

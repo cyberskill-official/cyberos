@@ -999,6 +999,7 @@ dependencies = [
  "cyberos-cli-exit",
  "cyberos-metering",
  "cyberos-obs-sdk",
+ "cyberos-ten",
  "cyberos-types",
  "dashmap",
  "futures",

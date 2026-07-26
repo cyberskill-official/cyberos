@@ -33,6 +33,8 @@ pub enum RefuseReason {
     InvalidIdempotencyKey,
     /// agent_persona not in allowed_personas.
     PersonaNotAllowed,
+    /// Plan-tier ai_tokens metering overage (TASK-TEN-208) — HTTP 402.
+    MeteringTokenOverage { current: u64, cap: u64 },
 }
 
 /// Error taxonomy for precheck.

@@ -115,6 +115,8 @@ cyberos-types.workspace = true
 cyberos-cli-exit.workspace = true
 # TASK-TEN-204 — ai_tokens metering emit at reconcile
 cyberos-metering = { path = "../metering" }
+# TASK-TEN-208 — plan-tier caps for ai_tokens admission
+cyberos-ten = { path = "../ten" }
 
 [dev-dependencies]
 tokio.workspace = true
