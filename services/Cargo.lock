@@ -1187,8 +1187,11 @@ dependencies = [
 name = "cyberos-inv"
 version = "0.1.0"
 dependencies = [
+ "axum",
  "base64 0.22.1",
  "chrono",
+ "http",
+ "http-body-util",
  "rand 0.8.6",
  "rsa",
  "serde",
@@ -1196,7 +1199,10 @@ dependencies = [
  "sha2",
  "signature",
  "thiserror 2.0.18",
+ "tokio",
+ "tower 0.5.3",
  "tracing",
+ "tracing-subscriber",
  "uuid",
 ]
 

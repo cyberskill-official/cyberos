@@ -4,11 +4,15 @@ version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "INV — Wise webhook intake (TASK-INV-004)"
+description = "INV — Wise webhook intake + HTTP host (TASK-INV-004 / TASK-INV-012)"
 
 [lib]
 name = "cyberos_inv"
 path = "src/lib.rs"
+
+[[bin]]
+name = "cyberos-inv"
+path = "src/bin/cyberos-inv.rs"
 
 [dependencies]
 serde = { workspace = true }
@@ -17,11 +21,18 @@ thiserror = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
 tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 sha2 = { workspace = true }
 base64 = "0.22"
 rsa = { version = "0.9", features = ["pem", "sha2"] }
 signature = "2"
+tokio = { workspace = true }
+axum = { workspace = true }
+tower = { workspace = true }
+http = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }
 rand = "0.8"
+tower = { workspace = true }
+http-body-util = "0.1"
