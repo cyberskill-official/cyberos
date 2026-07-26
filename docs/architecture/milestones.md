@@ -4,6 +4,8 @@ source: website/docs/architecture/milestones.html
 migrated: TASK-DOCS-002
 ---
 
+For the as-of product and delivery pulse (release line, NOW/NEXT/LATER, now-shipping queue), see [Roadmap status](roadmap-status.md).
+
 ## The horizontal timeline
 
 Five phases, five compliance gates, five module-count milestones. The slope changes after P3: P0-P3 is internal-first execution; P4 is the external-GA arc.
