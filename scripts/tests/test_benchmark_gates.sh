@@ -361,6 +361,7 @@ t02_checkers_fail_on_violations() {
   cp "$repo/modules/skill/task-audit/RUBRIC.md" "$d/modules/skill/task-audit/"
   sed 's/, "duplicate"\]/]/' "$repo/tools/install/docs-tools/task-lint.mjs" > "$d/tools/install/docs-tools/task-lint.mjs"
   cp "$repo/tools/docs-site/render-status-hub.mjs" "$d/tools/docs-site/"
+  cp "$repo/tools/docs-site/status-feed.mjs" "$d/tools/docs-site/"
   cp "$repo/tools/install/templates/BACKLOG.md" "$d/tools/install/templates/"
   if t_g03 "$d" >/dev/null 2>&1; then
     fail t02_checkers_fail_on_violations "g03 passed a fixture whose task-lint.mjs lost the 'duplicate' status"; all=0

@@ -81,8 +81,10 @@ t08_spec_chunks() {                                                    # full sp
     && grep -q 'First task body paragraph' "$c" \
     && grep -q '"sp":1' "$TMP/a/out/reference/status.html" || { fail t08 "chunk missing"; return; }
   CYBEROS_STATUS_SPECS=0 node "$R" "$TMP/a" "$TMP/a/out3" >/dev/null 2>&1
-  [ ! -d "$TMP/a/out3/reference/data" ] && ! grep -q '"sp":1' "$TMP/a/out3/reference/status.html" \
-    && ok t08 || fail t08 "CYBEROS_STATUS_SPECS=0 still emitted chunks"
+  # Phase 1: data/ always holds status-feed.json; task chunks must still be absent.
+  [ ! -d "$TMP/a/out3/reference/data/task" ] && [ -f "$TMP/a/out3/reference/data/status-feed.json" ] \
+    && ! grep -q '"sp":1' "$TMP/a/out3/reference/status.html" \
+    && ok t08 || fail t08 "CYBEROS_STATUS_SPECS=0 still emitted chunks (or feed missing)"
 }
 t09_nojs_and_honest_failures() {                                       # degrade, and fail loudly
   h="$TMP/a/out/reference/status.html"

@@ -1,16 +1,17 @@
 #!/usr/bin/env node
-// tools/docs-site/render-status-hub.mjs - TASK-DOCS-006 / TASK-DOCS-007 / TASK-IMP-074.
+// tools/docs-site/render-status-hub.mjs - TASK-DOCS-006 / TASK-DOCS-007 / TASK-IMP-074 / TASK-DOCS-010.
 // ONE page answers "where is the project". Roadmap, Backlog and Changelog stopped being
 // three tabs: they are three lenses (board / table / releases) over one filtered corpus,
 // with a task detail drawer that carries the full spec.
-// Inputs (four): task frontmatter, CHANGELOG.md version sections, VERSION, and the per-batch
-// economics ledgers under docs/batches/ (TASK-IMP-114). All four are committed bytes; all four
-// are hashed into the fp- stamp, because a stamp that does not cover an input is a stamp that
-// lies about what determined the page.
-// Node stdlib only; deterministic stamp (corpus fingerprint - no git, no wall clock); honest failures.
-// Emits: reference/status.html, reference/data/task/<ID>.js (per-task spec chunks, lazy-loaded),
-//        reference/assets/{status.css,status.js,favicon.svg} when CYBEROS_PAGE_ASSETS=1,
-//        reference/roadmap.html (redirect stub - bookmarks stay alive).
+// Inputs: task frontmatter, CHANGELOG.md, VERSION, docs/batches/ (TASK-IMP-114),
+//         docs/tasks/_state/commit-links.yaml, modules/manifest.yaml, and status
+//         client/shell/CSS template bytes — all hashed into the fp- stamp.
+//         Git history feeds status-feed@1 coverage (TASK-DOCS-010/011) but is NOT folded
+//         into the page stamp (a live commit-set hash would restore the IMP-082 HEAD chase).
+// Node stdlib only; deterministic stamp (no wall clock); honest failures.
+// Emits: reference/status.html (status-hub@2; Phase 1: visually unchanged),
+//        reference/data/status-feed.json (status-feed@1),
+//        reference/data/task/<ID>.js, assets when CYBEROS_PAGE_ASSETS=1, roadmap.html stub.
 // Usage: node render-status-hub.mjs [repoRoot] [outDir]
 // Env:   CYBEROS_PROJECT     page title (default: basename of repoRoot)
 //        CYBEROS_PAGE_ASSETS 1 = emit assets/ and link them instead of inlining
@@ -21,6 +22,7 @@ import { createHash } from 'node:crypto';
 import { join, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderMarkdown } from './md.mjs';
+import { buildStatusFeed } from './status-feed.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(process.argv[2] || resolve(__dirname, '..', '..'));
@@ -483,22 +485,46 @@ ${unp ? `  ${unp}` : ''}
 </section>`;
 })();
 
+// Templates are stamp inputs (TASK-DOCS-010): a client/shell edit must move fp-.
+const tpl = (sub, name) => {
+  const env = process.env.CYBEROS_TEMPLATES;
+  for (const c of [
+    env && join(env, name),
+    join(ROOT, 'modules', 'templates', sub, name),
+    join(__dirname, 'templates', name),
+  ]) if (c && existsSync(c)) return { abs: c, rel: c, body: readFileSync(c, 'utf-8') };
+  return die(`template not found: ${name} (set CYBEROS_TEMPLATES)`);
+};
+const SHELL_T = tpl('html', 'status-hub.html');
+const TOKENS_T = tpl('cds', 'tokens.css');
+const STATUS_CSS_T = tpl('cds', 'status.css');
+const APP_T = tpl('html', 'status-app.js');
+const SHELL = SHELL_T.body;
+const CSS = TOKENS_T.body + '\n' + STATUS_CSS_T.body;
+const APP = APP_T.body;
+
+const ledgerPath = join(ROOT, 'docs', 'tasks', '_state', 'commit-links.yaml');
+const manifestPath = join(ROOT, 'modules', 'manifest.yaml');
+
 // The default stamp is a fingerprint of the render inputs, not a git sha: 'fp-' + the first
 // 12 hex of sha256 over every task spec's raw bytes in bytewise-sorted repo-relative path
-// order, then CHANGELOG.md, then VERSION, when present. A HEAD default self-chased: the page
-// staged by the pre-commit hook carried the PARENT sha (the new commit did not exist yet),
-// so every re-render differed by the stamp alone, and committing THAT armed the next diff.
-// The page's own bytes are never an input, so render -> commit -> render is byte-stable,
-// git checkout or not. CYBEROS_COMMIT still pins an explicit stamp when set and non-empty.
+// order, then batch ledgers, CHANGELOG.md, VERSION, commit-links ledger, manifest.yaml,
+// and the status shell/client/CSS template bytes, when present.
+// Live git commit-set is intentionally NOT hashed here (IMP-082 chase). CYBEROS_COMMIT pins.
 function corpusFingerprint() {
   const h = createHash('sha256');
-  // batch ledgers join the specs here (TASK-IMP-114): they determine rendered bytes, so a stamp
-  // that skipped them would report the same fp- for two different pages.
   const files = [...specFiles, ...batchFiles].sort((a, b) => Buffer.compare(Buffer.from(a.rel), Buffer.from(b.rel)));
   for (const f of files) h.update(readFileSync(f.abs));   // per-file update - no concat buffer
   if (existsSync(clPath)) h.update(readFileSync(clPath));
   const vPath = join(ROOT, 'VERSION');
   if (existsSync(vPath)) h.update(readFileSync(vPath));
+  if (existsSync(ledgerPath)) h.update(readFileSync(ledgerPath));
+  if (existsSync(manifestPath)) h.update(readFileSync(manifestPath));
+  // template bytes by basename (stable across checkout roots)
+  for (const t of [SHELL_T, TOKENS_T, STATUS_CSS_T, APP_T]
+    .sort((a, b) => basename(a.abs).localeCompare(basename(b.abs)))) {
+    h.update(t.body);
+  }
   return 'fp-' + h.digest('hex').slice(0, 12);
 }
 const COMMIT = process.env.CYBEROS_COMMIT || corpusFingerprint();
@@ -663,20 +689,6 @@ const compact = f => Object.fromEntries(Object.entries(f)
   .filter(([k, v]) => KEEP.has(k) || (Array.isArray(v) ? v.length : v !== '' && v !== null && v !== 0)));
 const dataJson = JSON.stringify({ ...data, draft_staleness: draftStaleness, stuck_wip: stuckWip, tasks: tasks.map(compact) }).replace(/</g, '\\u003c');
 
-// ---- templates ------------------------------------------------------------------------
-const tpl = (sub, name) => {
-  const env = process.env.CYBEROS_TEMPLATES;
-  for (const c of [
-    env && join(env, name),
-    join(ROOT, 'modules', 'templates', sub, name),
-    join(__dirname, 'templates', name),
-  ]) if (c && existsSync(c)) return readFileSync(c, 'utf-8');
-  return die(`template not found: ${name} (set CYBEROS_TEMPLATES)`);
-};
-const SHELL = tpl('html', 'status-hub.html');
-const CSS = tpl('cds', 'tokens.css') + '\n' + tpl('cds', 'status.css');
-const APP = tpl('html', 'status-app.js');
-
 // ---- write ----------------------------------------------------------------------------
 const REF = join(OUT, 'reference');
 mkdirSync(REF, { recursive: true });
@@ -684,6 +696,7 @@ mkdirSync(REF, { recursive: true });
 let specBytes = 0;
 const dataDir = join(REF, 'data', 'task');
 rmSync(join(REF, 'data'), { recursive: true, force: true });   // stale chunks must not linger
+mkdirSync(join(REF, 'data'), { recursive: true });
 if (specs.size) {
   mkdirSync(dataDir, { recursive: true });
   for (const [id, html] of [...specs].sort((a, b) => a[0].localeCompare(b[0]))) {
@@ -692,6 +705,20 @@ if (specs.size) {
     writeFileSync(join(dataDir, `${id}.js`), js);
   }
 }
+
+// status-feed@1 (TASK-DOCS-010): additive JSON beside the v2 page; no visual change yet.
+const feed = buildStatusFeed({
+  root: ROOT,
+  project: NAME,
+  version: VERSION,
+  tasks,
+  lenient: LENIENT,
+  snapshotFallback: hubAsofRaw || '',
+  warn: m => console.error(m),
+  fail: die,
+});
+const feedJson = JSON.stringify(feed).replace(/</g, '\\u003c');
+writeFileSync(join(REF, 'data', 'status-feed.json'), feedJson + '\n');
 
 const initial = esc((NAME[0] || 'C').toUpperCase());
 let page = SHELL;
@@ -746,4 +773,5 @@ console.log(`status-hub: ${tasks.length} tasks (${summary}), ${modules.length} m
   `VERSION ${VERSION} - one page, three lenses` +
   (specs.size ? `, ${specs.size} spec chunks (${(specBytes / 1048576).toFixed(1)} MB)` : ', no spec chunks (CYBEROS_STATUS_SPECS=0)') +
   (batches.length ? `, ${batches.length} batch economics rows` : '') +
-  (invalid.length ? `, ${invalid.length} invalid status` : ''));
+  (invalid.length ? `, ${invalid.length} invalid status` : '') +
+  `, status-feed@1 ${feed.fp}`);

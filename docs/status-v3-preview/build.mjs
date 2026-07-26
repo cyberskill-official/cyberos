@@ -285,7 +285,7 @@ const EXEMPT = [
    made it into the message. History is never rewritten; the ledger is the fix. */
 const ledger = {};
 try {
-  const lf = readFileSync(join(__dirname, 'commit-links.yaml'), 'utf8');
+  const lf = readFileSync(join(ROOT, 'docs', 'tasks', '_state', 'commit-links.yaml'), 'utf8');
   for (const line of lf.split('\n')) {
     const m = line.match(/^\s*([0-9a-f]{7,40})\s*:\s*\[([^\]]*)\]/);
     if (!m) continue;

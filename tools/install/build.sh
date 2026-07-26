@@ -265,8 +265,9 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   mkdir -p "$out/docs-tools/templates"
   cp "$here/../../scripts/migrate_task_layout.py" "$out/docs-tools/"
   [ -f "$here/../../scripts/repair_task_yaml.py" ] && cp "$here/../../scripts/repair_task_yaml.py" "$out/docs-tools/"
-  # status page: render-status-hub.mjs + md.mjs + templates (all five or half-render fails loudly)
+  # status page: render-status-hub.mjs + status-feed.mjs + md.mjs + templates
   [ -f "$here/../docs-site/render-status-hub.mjs" ] && cp "$here/../docs-site/render-status-hub.mjs" "$out/docs-tools/"
+  [ -f "$here/../docs-site/status-feed.mjs" ] && cp "$here/../docs-site/status-feed.mjs" "$out/docs-tools/"
   [ -f "$here/../docs-site/md.mjs" ] && cp "$here/../docs-site/md.mjs" "$out/docs-tools/"
   # task-lint: deterministic machine floor under audit_rubric@2.0 (TASK-IMP-084)
   [ -f "$here/docs-tools/task-lint.mjs" ] && cp "$here/docs-tools/task-lint.mjs" "$out/docs-tools/"

@@ -29,6 +29,7 @@
 
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
+import { execFileSync } from "node:child_process";
 
 // ── rubric enums (RUBRIC.md §2; FM-104 per STATUS-REFERENCE.md §1) ───────────
 const DEPARTMENTS = ["engineering", "design", "product", "sales", "operations", "hr", "client_success"];
@@ -676,6 +677,60 @@ function main(argv) {
   const files = [];
   for (const p of paths) collectSpecs(p, files, findings);
   for (const f of files) lintFile(f, findings);
+
+  // LEDGER-001/002 (TASK-DOCS-012): validate docs/tasks/_state/commit-links.yaml when present
+  // under any scanned root (unknown task = error; unknown hash prefix = warn when git exists).
+  const roots = new Set(files.map(repoRootFor));
+  if (roots.size === 0) {
+    for (const p of paths) roots.add(repoRootFor(p));
+  }
+  for (const root of roots) {
+    const ledger = join(root, "docs", "tasks", "_state", "commit-links.yaml");
+    if (!existsSync(ledger)) continue;
+    let text;
+    try { text = readFileSync(ledger, "utf8"); } catch { continue; }
+    const live = new Set();
+    const base = join(root, "docs", "tasks");
+    if (existsSync(base)) {
+      const stack = [base];
+      while (stack.length) {
+        const dir = stack.pop();
+        let ents;
+        try { ents = readdirSync(dir, { withFileTypes: true }); } catch { continue; }
+        for (const e of ents) {
+          if (e.name.startsWith(".")) continue;
+          if (e.isDirectory()) {
+            const id = e.name.match(/^TASK-[A-Z0-9]+-\d+/);
+            if (id) live.add(id[0]);
+            stack.push(join(dir, e.name));
+          }
+        }
+      }
+    }
+    let known = null;
+    try {
+      const raw = execFileSync("git", ["-C", root, "log", "--format=%h"], {
+        encoding: "utf8", maxBuffer: 64 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"],
+      });
+      known = new Set(raw.split("\n").map((h) => h.trim()).filter(Boolean));
+    } catch { known = null; }
+    let lineNo = 0;
+    for (const line of text.split("\n")) {
+      lineNo++;
+      const m = line.match(/^\s*([0-9a-f]{7,40})\s*:\s*\[([^\]]*)\]/);
+      if (!m) continue;
+      const full = m[1];
+      const short = full.slice(0, 8);
+      if (known && known.size && ![...known].some((h) => h.startsWith(short) || short.startsWith(h.slice(0, Math.min(short.length, h.length))))) {
+        finding(findings, "warning", "LEDGER-002", ledger, lineNo, `hash prefix '${full}' not found in git log`);
+      }
+      for (const id of (m[2].match(/\bTASK-[A-Z][A-Z0-9]*-\d+\b/g) || [])) {
+        if (!live.has(id) && !taskIdResolves(root, id)) {
+          finding(findings, "error", "LEDGER-001", ledger, lineNo, `cites unknown task '${id}'`);
+        }
+      }
+    }
+  }
 
   const lineOf = (f) => `${f.severity} ${f.rule_id} ${f.file}:${f.line} ${f.message}`;
   findings.sort((a, b) => { const x = lineOf(a), y = lineOf(b); return x < y ? -1 : x > y ? 1 : 0; });

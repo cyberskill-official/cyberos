@@ -22,6 +22,13 @@ set -uo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$root"
 
+# When invoked from a git hook (pre-commit), GIT_INDEX_FILE / GIT_DIR / GIT_WORK_TREE /
+# GIT_PREFIX are exported into this process. Nested `git init` + `git commit` fixtures in
+# the suites then inherit them and silently commit onto the parent branch (measured:
+# 80+ "fixture" commits on feat/status-v3-platform during a Phase 1 commit attempt).
+# Clear the hook env so every scratch repo is a real scratch repo.
+unset GIT_INDEX_FILE GIT_DIR GIT_WORK_TREE GIT_PREFIX GIT_COMMON_DIR 2>/dev/null || true
+
 # `timeout` is GNU coreutils and is NOT on stock macOS — the dev machine this hook runs on.
 # The first cut hard-coded `timeout 300`, which exits 127 (command not found) for EVERY
 # suite: pass=0 fail=6 on macOS, pass=6 fail=0 on the Linux CI box. A uniform failure

@@ -83,6 +83,7 @@ for base in "$@"; do
       cuo/STATUS-REFERENCE.md \
       plugin/.claude-plugin/plugin.json \
       docs-tools/render-status-hub.mjs \
+      docs-tools/status-feed.mjs \
       docs-tools/md.mjs \
       docs-tools/templates/status-hub.html \
       docs-tools/templates/status-app.js \

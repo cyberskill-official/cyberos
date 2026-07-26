@@ -22,8 +22,7 @@
 #
 # Cutoff: commits at or before CUTOFF are history — visible on the status page,
 # never retro-failed here. Fixing a historical link happens in the reviewed ledger
-# (docs/status-v3-preview/commit-links.yaml; docs/tasks/_state/commit-links.yaml
-# after integration), never by rewriting git history.
+# (docs/tasks/_state/commit-links.yaml), never by rewriting git history.
 set -euo pipefail
 
 # Enforcement starts at the commit AFTER this one (set 2026-07-26, status-v3 review).
