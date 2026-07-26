@@ -1,0 +1,11 @@
+{
+  "schema": "cyberos.verdict@1",
+  "actor": "operator-session",
+  "timestamp": "2026-07-26T03:09:40Z",
+  "task_id": "TASK-OBS-004",
+  "from": "reviewing",
+  "to": "ready_to_test",
+  "evidence_path": "docs/batches/batch-obs-004-session-hitl.md",
+  "evidence_sha256": "0128d1cbf2d7f433f9633e23e88608926328095c097db187f7cc2c6fd695c756",
+  "artifact_sha256": "244fd371e8c18fbe1682659d9558901b2265cfc7e384cdb46b9fc354fe1f11f2"
+}
