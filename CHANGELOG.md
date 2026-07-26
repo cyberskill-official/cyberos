@@ -12,6 +12,11 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 ### Fixed
 - SKILL-202 acceptance criteria and benchmark gates G7/G8 now cite the live `scripts/tests/test_skill_stub_lint.sh` suite; added coverage for the TASK-CUO-209 NFR delist, 20-skill untrusted-input backport, full pair-parity SCOPE and loud workflow degradation (TASK-IMP-145).
 
+## [1.6.0] - 2026-07-26
+
+Added
+- finish TASK-OBS-004 LangSmith AI-trace export (#162)
+
 ## [1.5.1] - 2026-07-25
 
 Fixed
