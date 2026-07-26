@@ -1,4 +1,4 @@
-//! INV — invoice / cash rails. TASK-INV-004 ships the Wise webhook intake.
+//! INV — invoice / cash rails. TASK-INV-004 library + TASK-INV-012 Wise HTTP host.
 
 #![deny(missing_debug_implementations)]
 

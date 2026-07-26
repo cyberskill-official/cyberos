@@ -6,6 +6,9 @@ use super::types::{WiseEventType, WISE_STALE_DAYS};
 #[derive(Debug, Clone, Deserialize)]
 pub struct WiseEvent {
     pub event_type: String,
+    /// Wise delivery idempotency key (DEC-843). Optional on wire; handler falls back.
+    #[serde(default)]
+    pub event_id: Option<String>,
     pub data: WiseEventData,
 }
 
@@ -17,9 +20,25 @@ pub struct WiseEventData {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct WiseResource {
+    /// Wise resource id — string or number on the wire.
+    #[serde(deserialize_with = "deserialize_resource_id")]
     pub id: String,
     #[serde(default)]
     pub profile_id: Option<i64>,
+}
+
+fn deserialize_resource_id<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value = serde_json::Value::deserialize(deserializer)?;
+    match value {
+        serde_json::Value::String(s) => Ok(s),
+        serde_json::Value::Number(n) => Ok(n.to_string()),
+        other => Err(serde::de::Error::custom(format!(
+            "resource.id must be string or number, got {other}"
+        ))),
+    }
 }
 
 pub fn parse_event_type(raw: &str) -> Option<WiseEventType> {
