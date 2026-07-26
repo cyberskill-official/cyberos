@@ -1,0 +1,17 @@
+# Commit → task backfill ledger (traceability rule, retroactive fixes).
+#
+# Purpose: some commits shipped without a task reference in their message. Git
+# history is never rewritten to fix that; instead a REVIEWED entry here binds the
+# commit to its task(s), and the status page counts it as linked (badge: "ledger").
+#
+# Rules:
+#   - One line per commit:  <short-or-full-hash>: [TASK-XXX-000, TASK-YYY-000]
+#   - Only add an entry after verifying the commit's diff really belongs to the
+#     cited task(s). This file is an audit surface, not a whitewash.
+#   - Unknown task ids are dropped at build time with a warning.
+#   - On integration this file moves to docs/tasks/_state/commit-links.yaml and
+#     regen tooling validates it.
+#
+# Verified seed (commit subject matches the Unreleased changelog entries for
+# TASK-IMP-145 / TASK-IMP-146 word for word):
+bb161013: [TASK-IMP-145, TASK-IMP-146]
