@@ -2,10 +2,11 @@
 
 - Date: 2026-07-27
 - Author: Claude (session with operator Stephen Cheng), for handoff to executing models
-- Status: proposed - awaiting operator approval; NOTHING in this plan is implemented by the plan itself
-- Baseline: cyberos @ `a7e0e212` (v1.10.0), branch `batch/ten-inv-host-e`
-- Approved input: `docs/status-v3-preview/` (operator-reviewed preview, this session)
-- Consumes into backlog via: `/cyberos:create-tasks` (task set in §7)
+- Status: **in execution** — P0 locked & executed (PR #171/#172); Phases 0–1/3 code on `main`; Phase 2 awaiting visual HITL; Phases 6–7 blocked on Stephen GO. See `docs/notes/status-v3-p0-decisions.md`.
+- Baseline at plan write: cyberos @ `a7e0e212` (v1.10.0), branch `batch/ten-inv-host-e`
+- Execution tip (2026-07-27): `main` @ `51041133` / VERSION 1.11.0 after Status v3 merge + cutoff
+- Approved input: `docs/status-v3-preview/` (operator-reviewed preview; deleted after Phase 2 land)
+- Consumes into backlog via: `/cyberos:create-tasks` (task set in §7; TASK-DOCS-008..029)
 
 ## 0. Intent and non-negotiables
 
@@ -217,6 +218,7 @@ Goal: nothing valuable exists only in a working tree.
    checks (operator action, needs repo admin).
 
 Gate P0 (HITL): PR merged; CI green including the new gate on its own commits.
+**Status 2026-07-27: PASSED** — PR #171 merged; branch protection + cutoff via #172.
 Rollback: revert the PR; the gate is additive and nothing else depends on it yet.
 
 ### Phase 1 - status-feed@1 in the generator
@@ -239,6 +241,7 @@ Goal: render-status-hub v3 emits the feed; old page still ships.
 Gate P1: suite green; `node tools/docs-site/render-status-hub.mjs` output byte-
 identical on double-run; feed validates against a JSON schema checked into
 `tools/docs-site/tests/status-feed.schema.json`.
+**Status 2026-07-27: PASSED** — feed + classification + ledger on `main` (suite green).
 Rollback: feed emission is additive - revert the commit.
 
 ### Phase 2 - page swap with legacy fallback
@@ -263,6 +266,8 @@ Goal: the v3 canvas becomes the emitted page everywhere the generator runs.
 
 Gate P2 (HITL): operator reviews the emitted page (paper + night, file:// and
 served); legacy page reachable; DOM suite green.
+**Status 2026-07-27: CODE COMPLETE / HITL OPEN** — DOM suite 50/50; review package at
+`docs/notes/status-v3-p2-review/README.md`. Awaiting Stephen approve/changes.
 Rollback: `CYBEROS_STATUS_LEGACY=1` env in the hook/workflow callers, or revert.
 
 ### Phase 3 - regeneration on every relevant change
@@ -289,6 +294,8 @@ Goal: the page can never lag its inputs, without manual steps.
 Gate P3: three scripted scenarios pass in a scratch clone: task edit commit,
 code-only commit, version bump - each leaves `docs/status/` consistent with HEAD
 per the disclosure rule.
+**Status 2026-07-27: LARGELY PASSED** — wide trigger + coverage-only + deploy path
+work landed with Status v3 PR; residual polish only.
 Rollback: restore the narrow trigger regex (one-line revert); page correctness
 does not depend on the wide trigger.
 
@@ -317,6 +324,9 @@ does not depend on the wide trigger.
 Gate P4: `fleet-install-test.sh` proves a fresh scratch install carries hook +
 config + (when applicable) CI template; strict mode blocks an unlinked commit in
 the scratch repo; advisory mode warns.
+**Status 2026-07-27: MOSTLY PASSED** — installer/cutoff/preflight warn + offline
+cert 9/9. Full `fleet-install-test.sh` deferred to P7 (mutates consumers). DOCS-021
+triage: accept 148 as pre-cutoff (`docs/notes/status-v3-do021-violation-triage.md`).
 Rollback: `traceability.strict: false` + remove required-check status; hook stays
 advisory (informational only).
 
@@ -347,6 +357,9 @@ advisory (informational only).
 
 Gate P5: matrix above executed and recorded in the PR description; payload-gate,
 suite-gate, npm-supply-chain workflows green.
+**Status 2026-07-27: MOSTLY PASSED** — matrix at
+`docs/notes/status-v3-phase5-verification-matrix.md`; live docs curl shows
+status-hub@3 @ 1.11.0. Channel publishes still wait on P6 tag.
 Rollback: payload is rebuilt from source on revert; no channel pins v3
 independently.
 
@@ -373,6 +386,7 @@ changes. Mechanics:
 
 Gate P6 (HITL): operator cuts the tag. Rollback: do not tag; or tag v2.0.1 with
 `CYBEROS_STATUS_LEGACY` default if the page must revert while keeping the gate.
+**Status 2026-07-27: BLOCKED — needs Stephen GO** (Release-As / tag / flip blocking).
 
 ### Phase 7 - fleet discovery and migration (`/Users/stephencheng/Projects`)
 
@@ -412,6 +426,7 @@ Use the existing fleet tooling; do not write a new orchestrator.
    taken, exception detail if any. Template in §6.
 
 Gate P7 (HITL): operator reviews the report; exceptions get follow-up tasks.
+**Status 2026-07-27: BLOCKED — needs Stephen GO** (confirm `push: none`; skip 12g-clone).
 Rollback per repo: the `pre-cyberos-2.0` tag; fleet-wide: re-run rollout with the
 v1.10.0 payload (kept at `dist/` from the pre-bump commit or rebuilt from the tag).
 
@@ -427,6 +442,10 @@ v1.10.0 payload (kept at `dist/` from the pre-bump commit or rebuilt from the ta
    tasks for any hook-cost complaint (target: <1s on code-only commits).
 3. Run `/cyberos:improve` after the first 10 gated tasks complete, per house
    process, to fold lessons back into skills.
+
+**Status 2026-07-27: DOCS MOSTLY LANDED** — `docs/reference/status-feed.md` +
+`docs/runbooks/traceability.md` + AGENT-ENTRY/plugin wording. Watch/`improve`
+scaffold only: `docs/notes/status-v3-do029-watch-improve-scaffold.md` (no prod loop).
 
 ## 4. Test plan (consolidated)
 
@@ -546,4 +565,4 @@ Recorded also at `docs/notes/status-v3-p0-decisions.md`.
 | 6 | Cutoff | **A — after merge**, follow-up commit on `main` sets cutoff = merge SHA (do **not** invent a cutoff while the PR is open) |
 | 7 | Ship path | **A — one PR** for the whole `feat/status-v3-platform` branch as-is |
 
-Still blocked / later HITL: P2 visual review welcome; P6 tag and P7 fleet rollout remain blocked until their gates.
+Still blocked / later HITL: **P2 visual review** (package ready); **P6 tag** and **P7 fleet** remain blocked until Stephen GO.
