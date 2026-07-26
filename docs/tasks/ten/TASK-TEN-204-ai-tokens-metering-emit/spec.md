@@ -4,7 +4,7 @@ title: "Metering ai_tokens emit at cost_reconcile — WalQueue push from ai-gate
 template: task@1
 type: feature
 module: ten
-status: reviewing
+status: testing
 priority: p0
 author: "@stephencheng"
 department: engineering

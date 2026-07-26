@@ -4,7 +4,7 @@ title: "TEN plan-change HTTP host — POST/GET plan + history TX trigger + plan_
 template: task@1
 type: feature
 module: ten
-status: reviewing
+status: testing
 priority: p0
 author: "@stephencheng"
 department: engineering
