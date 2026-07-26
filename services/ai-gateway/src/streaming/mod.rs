@@ -390,9 +390,17 @@ pub async fn handle_streaming_chat(
     let hold_id = match cost_ledger::precheck(&precheck_req, &pool, &policy).await {
         Ok(cost_ledger::PrecheckOutcome::Allow { hold_id, .. }) => hold_id,
         Ok(cost_ledger::PrecheckOutcome::Refuse { reason, .. }) => {
+            let http_status =
+                if matches!(reason, cost_ledger::RefuseReason::MeteringTokenOverage { .. }) {
+                    402
+                } else if matches!(reason, cost_ledger::RefuseReason::BudgetCapExceeded) {
+                    402
+                } else {
+                    429
+                };
             return Err(StreamingHandlerError::PrecheckFailed {
                 reason: format!("{reason:?}"),
-                http_status: 429,
+                http_status,
             });
         }
         Err(e) => {

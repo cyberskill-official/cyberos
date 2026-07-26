@@ -71,6 +71,9 @@ jobs:
       - name: Apply migrations — auth
         run: cd services/auth && sqlx migrate run
 
+      - name: Apply migrations — metering
+        run: cd services/metering && sqlx migrate run
+
       - name: Apply migrations — memory
         run: cat services/memory/migrations/*.sql | docker exec -i cyberos-postgres psql -U cyberos -d cyberos
 

@@ -999,6 +999,7 @@ dependencies = [
  "cyberos-cli-exit",
  "cyberos-metering",
  "cyberos-obs-sdk",
+ "cyberos-ten",
  "cyberos-types",
  "dashmap",
  "futures",
@@ -1276,7 +1277,9 @@ dependencies = [
  "chrono",
  "serde",
  "serde_json",
+ "sqlx",
  "thiserror 2.0.18",
+ "tokio",
  "tracing",
  "uuid",
 ]
