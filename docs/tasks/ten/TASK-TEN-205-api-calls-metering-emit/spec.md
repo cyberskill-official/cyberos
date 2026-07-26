@@ -4,7 +4,7 @@ title: "Metering api_calls emit at auth verify_jwt — WalQueue push on success"
 template: task@1
 type: feature
 module: ten
-status: reviewing
+status: testing
 priority: p0
 author: "@stephencheng"
 department: engineering
