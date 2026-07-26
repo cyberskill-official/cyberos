@@ -3,7 +3,7 @@ batch: batch/ten-inv-host-b
 members:
   - TASK-TEN-205
 started: 2026-07-26T08:40:00Z
-ended: null
+ended: 2026-07-26T09:31:00Z
 route_backs: 0
 gate_reasks: 0
 tokens: unknown
