@@ -16,7 +16,28 @@ Plan: `docs/plans/PLAN-status-v3-platform-2026-07-27/plan.md` §9
 
 ## Post-merge operator checklist
 
-1. DONE — Merge the Status v3 PR (do not tag v2.0.0 yet — P6 still blocked).
+1. DONE — Merge the Status v3 PR (#171). Do not tag v2.0.0 yet — P6 still blocked.
 2. DONE — On `main`, set branch protection required checks: `traceability-gate`, `suite-gate`.
-3. DONE — Mothership cutoff = merge SHA `14e4ee5551d19af743739ed7ab9a0727ec89ef48` (`scripts/check_task_link.sh` `_DEFAULT_CUTOFF` + local `.cyberos/config.yaml`).
-4. P2 visual review of the emitted page remains welcome; P6/P7 stay blocked.
+3. DONE — Mothership cutoff = merge SHA `14e4ee5551d19af743739ed7ab9a0727ec89ef48` (`scripts/check_task_link.sh` `_DEFAULT_CUTOFF`; PR #172).
+4. OPEN — **P2 visual HITL** — review package at [`status-v3-p2-review/README.md`](status-v3-p2-review/README.md). Machine DOM suite green; human eyes still required.
+
+## Phase execution snapshot (2026-07-27)
+
+| Phase | Gate | State |
+| --- | --- | --- |
+| 0 | P0 | **Done** — PR #171 + protection + cutoff #172 |
+| 1 | P1 | **Done** — status-feed@1 on main |
+| 2 | P2 | **Code shipped; waiting on visual HITL** |
+| 3 | P3 | **Largely done** — wide regen + coverage-only + deploy trigger work landed |
+| 4 | P4 | **Mostly done** — installer/cutoff/preflight warn landed; 148-row triage ledger recorded (accept-as-history); no mass ledger edit |
+| 5 | P5 | **Mostly done** — matrix + offline cert green; full `fleet-install-test.sh` deferred (mutates consumers; re-run at P7) |
+| 6 | P6 | **Blocked** — needs Stephen GO (changelog, Release-As, tag, flip release-range blocking) |
+| 7 | P7 | **Blocked** — needs Stephen GO (discovery/pilots/rollout; confirm `push: none`) |
+| 8 | P8 | **Docs mostly landed** — feed spec + runbook + AGENT-ENTRY text; watch/`improve` scaffolded only |
+
+## Still needs Stephen
+
+1. P2 visual accept / change list  
+2. P6 v2.0.0 GO  
+3. P7 fleet GO (+ confirm push:none)  
+4. Any destructive choice (delete 12g-clone, push fleet, further branch-protection changes)
