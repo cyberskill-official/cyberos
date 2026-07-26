@@ -53,7 +53,7 @@ sha2.workspace = true
 serde_yaml = "0.9"
 schemars = { version = "0.8", features = ["rust_decimal", "chrono", "uuid1"] }
 rust_decimal = { version = "1.36", features = ["serde-with-str"] }
-notify = "6.1"
+notify = "8.2"
 arc-swap = "1.7"
 once_cell = "1.20"
 
@@ -61,7 +61,7 @@ once_cell = "1.20"
 # default-features = false drops the `protobuf` exposition feature (pulls the vulnerable protobuf 2.28,
 # RUSTSEC-2024-0437); we only use the text format + core metric types, so this removes the advisory with
 # no API change.
-prometheus = { version = "0.13", default-features = false }
+prometheus = { version = "0.14", default-features = false }
 
 # TASK-AI-014 specific (persona version stamping)
 semver = "1"
@@ -79,7 +79,7 @@ regex = "1"
 
 # TASK-AI-008 specific (multi-provider router)
 async-trait = "0.1"
-rand = "0.8"
+rand = "0.10"
 reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
 
 # TASK-AI-009 specific (circuit breaker)
@@ -89,7 +89,7 @@ dashmap = "6"
 cyberos-obs-sdk = { path = "../shared/cyberos-obs-sdk" }
 
 # TASK-AI-017 specific (per-tenant cache)
-redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
+redis = { version = "1.4", features = ["tokio-comp", "connection-manager"] }
 
 # TASK-AI-010 specific (streaming SSE)
 tokio-stream = "0.1"
@@ -121,7 +121,7 @@ tokio.workspace = true
 tempfile = "3.13"
 proptest = "1.5"
 rust_decimal_macros = "1.36"
-criterion = { version = "0.5", features = ["html_reports"] }
+criterion = { version = "0.8", features = ["html_reports"] }
 assert_cmd = "2"
 predicates = "3"
 

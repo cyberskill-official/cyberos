@@ -18,10 +18,10 @@ chrono = { workspace = true }
 uuid = { workspace = true }
 tracing = { workspace = true }
 sha2 = { workspace = true }
-base64 = "0.22"
+base64 = "0.23"
 rsa = { version = "0.9", features = ["pem", "sha2"] }
-signature = "2"
+signature = "3"
 
 [dev-dependencies]
 serde_json = { workspace = true }
-rand = "0.8"
+rand = "0.10"
