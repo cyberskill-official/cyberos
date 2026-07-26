@@ -258,6 +258,16 @@ pub async fn reconcile(
             );
             emit_audit(&mut tx, emit_req).await?;
 
+            // TASK-TEN-204 — ai_tokens metering (non-blocking).
+            crate::metering_emit::emit_ai_tokens(
+                &hold.tenant_id,
+                hold_id,
+                &hold.resolved_provider,
+                &hold.resolved_model,
+                usage.prompt_tokens,
+                usage.completion_tokens,
+            );
+
             RECONCILE_CALLS.with_label_values(&["reconciled"]).inc();
             HOLDS_RECONCILED.with_label_values(&[&hold.tenant_id]).inc();
             SPEND_TOTAL
@@ -326,6 +336,16 @@ pub async fn reconcile(
                 .unwrap()
                 .insert("cancelled".to_string(), serde_json::json!(true));
             emit_audit(&mut tx, emit_req).await?;
+
+            // TASK-TEN-204 — partial usage still bills tokens.
+            crate::metering_emit::emit_ai_tokens(
+                &hold.tenant_id,
+                hold_id,
+                &hold.resolved_provider,
+                &hold.resolved_model,
+                usage.prompt_tokens,
+                usage.completion_tokens,
+            );
 
             RECONCILE_CALLS.with_label_values(&["reconciled"]).inc();
             HOLDS_RECONCILED.with_label_values(&[&hold.tenant_id]).inc();

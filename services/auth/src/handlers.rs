@@ -176,6 +176,11 @@ pub fn router(state: AppState) -> Router {
             "/v1/admin/tenants/:tenant_id/travel-policy/cidrs/:cidr_id",
             axum::routing::delete(crate::travel_admin::delete_cidr),
         )
+        // TASK-TEN-203 — plan show + change (cyberos-ten decide_plan_change)
+        .route(
+            "/v1/admin/tenants/:tenant_id/plan",
+            get(crate::plan_admin::get_plan).post(crate::plan_admin::post_plan),
+        )
         .route_layer(axum::middleware::from_fn_with_state(
             state.clone(),
             crate::middleware::verify_jwt,
@@ -280,6 +285,10 @@ async fn create_tenant(
         span.record("outcome", "invalid_input");
         return Err(e);
     }
+    if let Err(e) = crate::plan_admin::validate_plan_tier_str(&req.plan_tier) {
+        span.record("outcome", "invalid_input");
+        return Err(e);
+    }
 
     // Only the root tenant can create new tenants. The auth middleware
     // (TASK-AUTH-004) will validate the JWT and set `app.current_tenant_id`.
@@ -329,8 +338,8 @@ async fn create_tenant(
     let new_id = TenantId::new();
     let insert_result: Result<(Uuid, String, String, String, String, String, String, chrono::DateTime<chrono::Utc>, chrono::DateTime<chrono::Utc>), sqlx::Error> = sqlx::query_as::<_, (Uuid, String, String, String, String, String, String, chrono::DateTime<chrono::Utc>, chrono::DateTime<chrono::Utc>)>(
         "INSERT INTO tenants (id, slug, display_name, country, plan_tier, status, residency)
-              VALUES ($1, $2, $3, $4, $5, 'active', $6)
-            RETURNING id, slug, display_name, country, plan_tier, status, residency, created_at, updated_at",
+              VALUES ($1, $2, $3, $4, $5::plan_tier, 'active', $6)
+            RETURNING id, slug, display_name, country, plan_tier::text, status, residency, created_at, updated_at",
     )
     .bind(new_id.as_uuid())
     .bind(&req.slug)
@@ -1469,7 +1478,7 @@ async fn list_tenants(
     };
 
     let rows: Vec<(Uuid, String, String, String, String, String, String, chrono::DateTime<chrono::Utc>, chrono::DateTime<chrono::Utc>)> = sqlx::query_as(
-        "SELECT id, slug, display_name, country, plan_tier, status, residency, created_at, updated_at
+        "SELECT id, slug, display_name, country, plan_tier::text, status, residency, created_at, updated_at
             FROM tenants
            WHERE ($1::uuid IS NULL OR id > $1)
         ORDER BY id ASC

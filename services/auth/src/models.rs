@@ -11,7 +11,8 @@ pub struct Tenant {
     pub slug: String,
     pub display_name: String,
     pub country: String,   // ISO-3166-1 alpha-2
-    pub plan_tier: String, // 'starter' | 'team' | 'enterprise' | 'sandbox'
+    /// Closed set: starter | team | enterprise (TASK-TEN-203; sandbox removed).
+    pub plan_tier: String,
     pub status: String,    // 'active' | 'terminating' | 'terminated' | 'hostile'
     pub residency: String, // 'sg-1' | 'eu-1' | 'us-1' | 'vn-1'
     pub created_at: DateTime<Utc>,

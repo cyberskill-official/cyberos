@@ -113,6 +113,8 @@ jsonschema = "0.18"
 # Internal
 cyberos-types.workspace = true
 cyberos-cli-exit.workspace = true
+# TASK-TEN-204 — ai_tokens metering emit at reconcile
+cyberos-metering = { path = "../metering" }
 
 [dev-dependencies]
 tokio.workspace = true

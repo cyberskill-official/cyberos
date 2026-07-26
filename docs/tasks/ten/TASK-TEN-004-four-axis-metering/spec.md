@@ -24,7 +24,7 @@ shipped: null
 memory_chain_hash: null
 related_tasks: [TASK-AI-001, TASK-TEN-001, TASK-TEN-002, TASK-TEN-003, TASK-DOC-001, TASK-MEMORY-111]
 depends_on: [TASK-AI-001, TASK-TEN-001, TASK-AUTH-003, TASK-MEMORY-111]
-blocks: [TASK-TEN-003]
+blocks: [TASK-TEN-003, TASK-TEN-204]
 
 source_pages:
   - website/docs/modules/ten.html#metering

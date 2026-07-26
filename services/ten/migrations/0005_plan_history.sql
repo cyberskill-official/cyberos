@@ -21,3 +21,6 @@ DO $$ BEGIN
   REVOKE UPDATE, DELETE ON tenant_plan_history FROM cyberos_app;
 EXCEPTION WHEN undefined_object THEN NULL;
 END $$;
+
+-- P0301 same-TX guard ships in services/auth/migrations/0034_plan_tier_enum_and_history.sql
+-- (auth owns the live tenants table + sqlx migrate in CI).
