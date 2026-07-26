@@ -210,20 +210,20 @@ Totals: 269 draft, 22 ready_to_implement, 261 done, 1 on_hold, 47 closed, 5 dupl
 - [ready_to_implement] TASK-DOCS-013-status-v3-client-shell-swap - v3 client into modules/templates + shell swap + legacy emission
 - [ready_to_implement] TASK-DOCS-014-legacy-hash-redirect-noscript - Legacy hash redirect map + noscript regeneration from feed
 - [ready_to_implement] TASK-DOCS-015-status-dom-suite-port - Port v3 DOM suite to tools/docs-site/tests with jsdom (improvement)
-- [ready_to_implement] TASK-DOCS-016-delete-status-v3-preview - Delete docs/status-v3-preview and move integration docs (improvement)
+- [ready_to_implement] TASK-DOCS-016-delete-status-v3-preview - Delete docs/status-v3-preview and move integration docs
 - [ready_to_implement] TASK-DOCS-017-coverage-only-regen-trigger - Wide regen trigger + --coverage-only fast path (improvement)
 - [ready_to_implement] TASK-DOCS-018-deploy-trigger-served-freshness - deploy.yml trigger widening + served-page freshness check (improvement)
 - [ready_to_implement] TASK-DOCS-019-installer-traceability-scaffold - Installer: checker in payload lib, config scaffold, CI template (improvement)
 - [ready_to_implement] TASK-DOCS-020-release-range-traceability-preflight - Release-range preflight (warn now, block at 2.0.0) (improvement)
-- [ready_to_implement] TASK-DOCS-021-mothership-violation-triage-ledger - Mothership violation triage into reviewed ledger (148 rows) (improvement)
+- [ready_to_implement] TASK-DOCS-021-mothership-violation-triage-ledger - Mothership violation triage into reviewed ledger (148 rows)
 - [ready_to_implement] TASK-DOCS-022-payload-channel-verification-matrix - Payload/channel verification matrix execution (improvement)
 - [ready_to_implement] TASK-DOCS-023-offline-scratch-repo-certification - Offline scratch-repo certification for status v3 (improvement)
 - [ready_to_implement] TASK-DOCS-024-release-v2-0-0-status-v3 - v2.0.0 release: changelog, Release-As PR, tag runbook, artifacts
-- [ready_to_implement] TASK-DOCS-025-fleet-discovery-classification-report - Fleet discovery re-scan + classification report (improvement)
+- [ready_to_implement] TASK-DOCS-025-fleet-discovery-classification-report - Fleet discovery re-scan + classification report
 - [ready_to_implement] TASK-DOCS-026-fleet-pilot-migrations - Pilot migrations (zero-task, medium, sachviet layout) (improvement)
 - [ready_to_implement] TASK-DOCS-027-fleet-rollout-remaining-repos - Fleet rollout remaining repos + exception handling (improvement)
 - [ready_to_implement] TASK-DOCS-028-status-feed-docs-runbook - Docs: status-feed spec, traceability runbook, help/AGENT-ENTRY text (improvement)
-- [ready_to_implement] TASK-DOCS-029-post-rollout-watch-improve - Post-rollout watch + /cyberos:improve pass (improvement)
+- [ready_to_implement] TASK-DOCS-029-post-rollout-watch-improve - Post-rollout watch + /cyberos:improve pass
 
 ## email  (6 draft, 5 done)
 
