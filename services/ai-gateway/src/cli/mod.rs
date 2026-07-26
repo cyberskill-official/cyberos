@@ -123,6 +123,9 @@ pub enum PolicyAction {
         /// Allowed persona IDs.
         #[arg(long, num_args = 1..)]
         allowed_personas: Option<Vec<String>>,
+        /// Opt in/out of self-hosted LangSmith AI-trace export (TASK-OBS-004).
+        #[arg(long)]
+        langsmith_export: Option<bool>,
     },
     /// Validate a YAML file without applying.
     Validate {

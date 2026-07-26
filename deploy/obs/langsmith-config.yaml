@@ -1,0 +1,26 @@
+# TASK-OBS-004 — per-region self-hosted LangSmith endpoints (DEC-155).
+# The langchain.com SaaS host is forbidden; egress must reject it.
+#
+# Runtime resolution (services/ai-gateway/src/langsmith/mod.rs):
+#   1. LANGSMITH_URL env override (local/dev + tests)
+#   2. residency → URL below
+#   3. vn-1 has no deploy yet → export drops with outcome=dropped_residency_no_langsmith
+
+regions:
+  sg-1:
+    url: https://langsmith.sg-1.cyberos.world
+  eu-1:
+    url: https://langsmith.eu-1.cyberos.world
+  us-1:
+    url: https://langsmith.us-1.cyberos.world
+  vn-1:
+    url: null  # no VN LangSmith until a regional deploy lands
+
+auth:
+  # Bearer token from the environment; never commit secrets.
+  token_env: LANGSMITH_API_TOKEN
+
+retention_days: 30
+forbidden_hosts:
+  - api.smith.langchain.com
+  - langchain.com

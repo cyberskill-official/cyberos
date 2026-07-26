@@ -56,6 +56,7 @@ pub async fn run(
             zdr_required,
             residency,
             allowed_personas,
+            langsmith_export,
         } => {
             super::auth::require_role(claims, &Role::Mutate).map_err(|e| {
                 CliError::InsufficientRole {
@@ -70,6 +71,7 @@ pub async fn run(
                 zdr_required,
                 residency,
                 allowed_personas,
+                langsmith_export,
                 json,
                 confirm,
             )
@@ -153,6 +155,15 @@ async fn diff(pool: &PgPool, tenant: &str, yaml_file: &Path, json: bool) -> Resu
         });
     }
 
+    if current.ai_policy.langsmith_export != proposed.ai_policy.langsmith_export {
+        changes.push(PolicyChange {
+            field: "langsmith_export".into(),
+            before: json!(current.ai_policy.langsmith_export),
+            after: json!(proposed.ai_policy.langsmith_export),
+            secret_changed: None,
+        });
+    }
+
     let data = DiffOutput {
         schema_version: "v1",
         tenant: tenant.to_string(),
@@ -170,6 +181,7 @@ async fn set(
     zdr_required: Option<bool>,
     residency: Option<String>,
     allowed_personas: Option<Vec<String>>,
+    langsmith_export: Option<bool>,
     _json: bool,
     confirm: bool,
 ) -> Result<(), CliError> {
@@ -220,6 +232,17 @@ async fn set(
         });
     }
 
+    if let Some(ls) = langsmith_export {
+        if current.ai_policy.langsmith_export != ls {
+            changes.push(PolicyChange {
+                field: "langsmith_export".into(),
+                before: json!(current.ai_policy.langsmith_export),
+                after: json!(ls),
+                secret_changed: None,
+            });
+        }
+    }
+
     if changes.is_empty() {
         println!("No changes to apply.");
         return Ok(());
@@ -256,11 +279,20 @@ async fn set(
             .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
     }
 
+    if let Some(ls) = langsmith_export {
+        sqlx::query("UPDATE tenant_policies SET ai_policy = jsonb_set(ai_policy, '{langsmith_export}', to_jsonb($1::bool), true) WHERE tenant_id = $2")
+            .bind(ls)
+            .bind(tenant)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
+    }
+
     tx.commit().await.map_err(|e| CliError::RemoteUnreachable {
         reason: e.to_string(),
     })?;
 
-    // Emit audit row
+    // Emit audit row (policy update).
     let _ = crate::memory_writer::emit(crate::memory_writer::MemoryEmit {
         kind: crate::memory_writer::AiInvocationKind::Precheck,
         path: format!("memories/ai-policy-updates/{}_{}.md", tenant, chrono::Utc::now().timestamp_millis()),
@@ -270,6 +302,24 @@ async fn set(
             "changes": diff.changes.iter().map(|c| serde_json::json!({"field": c.field, "before": c.before, "after": c.after})).collect::<Vec<_>>(),
         }),
     }).await;
+
+    // TASK-OBS-004 §1 #3 / AC16 — dedicated opt-in audit when langsmith_export flips on.
+    if langsmith_export == Some(true) {
+        let _ = crate::memory_writer::emit(crate::memory_writer::MemoryEmit {
+            kind: crate::memory_writer::AiInvocationKind::Precheck,
+            path: format!(
+                "memories/obs/langsmith_export_enabled/{}_{}.md",
+                tenant,
+                chrono::Utc::now().timestamp_millis()
+            ),
+            extra: serde_json::json!({
+                "kind": "obs.langsmith_export_enabled",
+                "tenant_id": tenant,
+                "enabled_by_subject_id": "cli-operator",
+            }),
+        })
+        .await;
+    }
 
     println!("{diff}");
     println!("Policy updated successfully.");

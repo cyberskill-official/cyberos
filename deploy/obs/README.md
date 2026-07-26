@@ -44,9 +44,25 @@ The proxy routes by request path (`detect_backend`): `/api/v1/...` and `/api/lab
 
 Endpoints that carry no `query` parameter (Prometheus `/api/v1/labels`, Loki `/loki/api/v1/labels`, and the series endpoints) are forwarded as-is today. Scoping label and series results per tenant is a documented follow-up; the query path (the data path) is fully scoped.
 
+## LangSmith (TASK-OBS-004)
+
+Self-hosted LangSmith is separate from the LGTM stack. Per-region URLs live in
+`langsmith-config.yaml`. For a local lab instance:
+
+```sh
+docker compose -f deploy/obs/langsmith-docker-compose.yml up -d
+export LANGSMITH_URL=http://127.0.0.1:8090
+export LANGSMITH_API_TOKEN=<dev-token>
+```
+
+The AI Gateway exports only when `ai_policy.langsmith_export` is true
+(`cyberos-ai policy set <tenant> --langsmith-export=true --confirm`). The
+langchain.com SaaS host is forbidden.
+
 ## Files
 
 - `docker-compose.yml` - the stack (obs-proxy, grafana, prometheus, loki, tempo).
+- `langsmith-docker-compose.yml` / `langsmith-config.yaml` - self-hosted LangSmith (TASK-OBS-004).
 - `Dockerfile.obs-proxy` - builds the obs-proxy binary from the `services/` workspace.
 - `grafana/provisioning/datasources/datasources.yaml` - the three datasources, all via the proxy.
 - `prometheus/prometheus.yml`, `tempo/tempo.yaml` - minimal backend configs (Loki uses its image default).
