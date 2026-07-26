@@ -49,6 +49,7 @@ pub mod cost_reconcile;
 pub mod cost_table;
 pub mod langsmith;
 pub mod memory_writer;
+pub mod metering_emit;
 pub mod otel;
 pub mod persona;
 pub mod policy;

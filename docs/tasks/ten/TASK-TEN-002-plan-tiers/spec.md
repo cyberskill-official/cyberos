@@ -36,7 +36,7 @@ shipped: null
 memory_chain_hash: null
 related_tasks: [TASK-TEN-001, TASK-TEN-003, TASK-TEN-004, TASK-TEN-005]
 depends_on: [TASK-TEN-001]
-blocks: [TASK-TEN-003, TASK-TEN-005, TASK-TEN-101]
+blocks: [TASK-TEN-003, TASK-TEN-005, TASK-TEN-101, TASK-TEN-203]
 
 source_pages:
   - website/docs/modules/ten.html#plans

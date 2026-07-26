@@ -1,6 +1,6 @@
 # CyberOS
 
-CyberSkill's AI-native internal operations platform. 26 federated modules, 244 agent Skills, 224 CUO workflows, 48 C-roles, 579 tasks.
+CyberSkill's AI-native internal operations platform. 26 federated modules, 244 agent Skills, 224 CUO workflows, 48 C-roles, 581 tasks.
 
 ## Documentation
 
