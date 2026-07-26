@@ -16,8 +16,11 @@ mkfix() {
   mkdir -p "$d/docs/tasks/aa/TASK-AA-001-first" "$d/docs/tasks/aa/TASK-AA-002-second" \
            "$d/docs/tasks/bb/TASK-BB-001-third" "$d/.git/refs/heads" \
            "$d/modules/templates/html" "$d/modules/templates/cds"
-  cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" "$d/modules/templates/html/"
-  cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" "$d/modules/templates/cds/"
+  cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" \
+     "$repo/modules/templates/html/status-hub-legacy.html" "$repo/modules/templates/html/status-app-legacy.js" \
+     "$d/modules/templates/html/"
+  cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" \
+     "$repo/modules/templates/cds/status-legacy.css" "$d/modules/templates/cds/"
   echo "ref: refs/heads/main" > "$d/.git/HEAD"; echo "abcdef1234567890" > "$d/.git/refs/heads/main"
   printf -- '---\nid: TASK-AA-001\ntitle: First\nmodule: aa\npriority: MUST\nstatus: done\nclass: product\n---\nbody\n' > "$d/docs/tasks/aa/TASK-AA-001-first/spec.md"
   printf -- '---\nid: TASK-AA-002\ntitle: Second\nmodule: aa\npriority: SHOULD\nstatus: draft\nclass: improvement\n---\nbody\n' > "$d/docs/tasks/aa/TASK-AA-002-second/spec.md"
@@ -33,13 +36,13 @@ t01_builds_from_three_inputs() {
 }
 t02_board_counts_and_release_order() {
   h="$TMP/a/out/reference/status.html"
+  leg="$TMP/a/out/reference/status-legacy.html"
   grep -q 'VERSION' "$h" && grep -Eq 'built from <span class="code">fp-[0-9a-f]{12}</span>' "$h" \
     && grep -q '"s":"done"' "$h" && grep -q '"s":"implementing"' "$h" \
-    && grep -Eq 'data-bucket="done"[^>]*><b>1</b>' "$h" && grep -Eq 'data-bucket="active"[^>]*><b>1</b>' "$h" \
-    && grep -q '"vl":"v2.0.0"' "$h" && grep -q '"vl":"v1.0.0"' "$h" \
+    && grep -Eq 'data-bucket="done"[^>]*><b>1</b>' "$leg" && grep -Eq 'data-bucket="active"[^>]*><b>1</b>' "$leg" \
     && node -e 'const fs=require("fs");const h=fs.readFileSync(process.argv[1],"utf8");
-        const d=JSON.parse(h.match(/id="cs-data">([\s\S]*?)<\/script>/)[1].replace(/\\u003c/g,"<"));
-        process.exit(d.releases[0].v==="2.0.0"&&d.releases[1].v==="1.0.0"?0:1);' "$h" \
+        const d=JSON.parse(h.match(/id="sv3-data">([\s\S]*?)<\/script>/)[1].replace(/\\u003c/g,"<"));
+        const rs=d.releases.filter(r=>!r.lg); process.exit(rs[0]&&rs[0].v==="2.0.0"&&rs.some(r=>r.v==="1.0.0")?0:1);' "$h" \
     && ok t02 || fail t02 "board counts / release order"
 }
 t03_supersession_stub() {
@@ -71,7 +74,11 @@ t06_honest_failures() {
 }
 t07_token_clean() {
   h="$TMP/a/out/reference/status.html"
-  hexes="$(sed -e '/:root {/,/^}/d' -e '/^\[data-theme="dark"\] {/,/^}/d' "$h" \
+  hexes="$(sed -e '/:root {/,/^}/d' \
+    -e '/^\[data-theme="dark"\] {/,/^}/d' \
+    -e '/^body\[data-theme="paper"\]/,/^}/d' \
+    -e '/^body\[data-theme="night"\] {/,/^}/d' \
+    -e '/^body\[data-theme="paper"\], :root {/,/^}/d' "$h" \
     | grep -oE '#[0-9a-fA-F]{3,6}\b' | wc -l | tr -d ' ')"
   [ "$hexes" -eq 0 ] && grep -q -- "--cs-color-brand-umber" "$h" && ok t07 || fail t07 "$hexes hex outside tokens"
 }

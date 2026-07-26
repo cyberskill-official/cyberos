@@ -1,7 +1,7 @@
-/* Status v3 preview — one canvas, no tabs.
-   Everything renders from the single embedded corpus (#sv3-data).
-   Zero dependencies; works over file://.
-   Selection model: one {kind, id} drives cross-highlighting in every band. */
+/* status-app.js - client for status-hub@3 (one tabless canvas).
+   Reads status-feed@1 from #sv3-data. Zero runtime deps; works over file://.
+   Selection model: one {kind, id} drives cross-highlighting in every band.
+   Spec chunks load lazily from D.specDir (window.CS_SPEC) when task.sp is set. */
 (function () {
   "use strict";
 
@@ -146,17 +146,20 @@
     x: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>',
   };
 
+  const initial = esc((D.project || "C").charAt(0).toUpperCase());
   app.innerHTML =
-    '<div class="ribbon">PREVIEW · NOT WIRED</div>' +
     '<div class="bar"><div class="bar-in">' +
-      '<div class="logo">C</div>' +
+      '<div class="logo" aria-hidden="true">' + initial + '</div>' +
       '<div class="ttl">' + esc(D.project) + ' · Status<small>one page, no tabs</small></div>' +
       extA(GH ? GH + "/releases" : null, "vpill", "v" + esc(D.version)) +
       (D.branch ? extA(GH ? GH + "/tree/" + encodeURIComponent(D.branch) : null, "vpill branch",
         "⎇ " + esc(D.branch), "snapshot branch on GitHub") : "") +
-      '<span class="stamp">' + extA(ghc(D.head), "stamp-a", "snapshot " + esc(TODAY) + " @ " + esc(D.head)) + "</span>" +
-      (staleDays > 1 ? '<span class="vpill stale" title="Regenerate: node docs/status-v3-preview/build.mjs (on integration this happens automatically on every commit)">snapshot ' +
+      '<span class="stamp">' + extA(ghc(D.head), "stamp-a", "snapshot " + esc(TODAY) +
+        (D.head ? " @ " + esc(D.head) : "") +
+        (D.commit ? " · " + esc(D.commit) : "")) + "</span>" +
+      (staleDays > 1 ? '<span class="vpill stale" title="Snapshot is more than a day old — regenerate via status-page / pre-commit">snapshot ' +
         staleDays + "d old</span>" : "") +
+      (D.noGit ? '<span class="vpill stale" title="Git history was unavailable at render time">no git history available</span>' : "") +
       '<div class="bar-spring"></div>' +
       '<div id="selslot"></div>' +
       '<div class="search"><span class="sicon">' + ICONS.search + '</span>' +
@@ -193,9 +196,9 @@
         '<div class="card idx-card" id="idxcard"></div></section>' +
       '<div class="foot">' +
         '<span>Generated from task frontmatter + CHANGELOG.md + git history.</span>' +
-        '<span class="mono">' + esc(D.fp || "") + '</span>' +
-        '<span>Standalone preview — the live page at <a href="../status/index.html">docs/status/</a> is untouched.</span>' +
-        '<span><a href="../status-v2-preview/index.html">v2 preview</a> for comparison.</span>' +
+        '<span class="mono">' + esc(D.commit || D.fp || "") + '</span>' +
+        '<span>Feed <span class="mono">' + esc(D.fp || "") + '</span></span>' +
+        '<span><a href="status-legacy.html">Legacy status page (v2 lenses)</a></span>' +
       '</div>' +
     '</div>' +
     '<div class="scrim" id="scrim" data-act="close-drawer"></div>' +
@@ -913,14 +916,38 @@
       '<div class="d-sec"><h4>Commits citing this task · ' + (COMOF[id] || []).length + "</h4>" +
       ((COMOF[id] || []).slice(0, 8).map(c => '<div class="d-rel">' + extA(ghc(c.h), "h", esc(c.h), "open commit on GitHub") +
         "<span>" + esc(c.s) + "</span></div>").join("") || '<span class="ig-meta">none yet</span>') + "</div>" +
+      '<div class="d-sec" id="dw-spec"><h4>Spec</h4><div id="dw-spec-body"><p class="ig-meta">Loading…</p></div></div>' +
       '<div class="d-links">' +
-      '<a class="btn" target="_blank" rel="noopener" href="' + esc(D.specBase + t.k + "/spec.md") + '">' + ICONS.open + " Open spec</a>" +
+      '<a class="btn" target="_blank" rel="noopener" href="' + esc((D.specBase || '') + t.k + "/spec.md") + '">' + ICONS.open + " Open spec</a>" +
       '<button class="btn" data-act="cone" data-id="' + esc(t.i) + '">' + ICONS.graph + " Trace in graph</button>" +
       '<button class="btn" data-act="mod" data-id="' + esc(t.m) + '">' + ICONS.graph + " Focus module " + esc(t.m) + "</button>" +
       "</div></div>";
     drawer.classList.add("open");
     scrim.classList.add("open");
     setHash("t/" + id);
+    loadSpec(t);
+  }
+  function loadSpec(t) {
+    const body = document.getElementById("dw-spec-body");
+    if (!body) return;
+    if (!t.sp) {
+      body.innerHTML = '<p class="ig-meta">No spec chunk shipped with this page. Use Open spec for the markdown source.</p>';
+      return;
+    }
+    const W = window.CS_SPEC || (window.CS_SPEC = {});
+    function paint() {
+      body.innerHTML = '<div class="spec">' + W[t.i] + "</div>";
+    }
+    if (W[t.i]) { paint(); return; }
+    body.innerHTML = '<p class="ig-meta">Loading the full spec …</p>';
+    const dir = D.specDir || "data/task";
+    const sc = document.createElement("script");
+    sc.src = dir + "/" + t.i + ".js";
+    sc.onerror = function () {
+      body.innerHTML = '<p class="ig-meta">The spec chunk did not load. Use Open spec for the markdown source.</p>';
+    };
+    sc.onload = function () { if (W[t.i]) paint(); else sc.onerror(); };
+    document.head.appendChild(sc);
   }
   function closeDrawer() {
     if (!drawer.classList.contains("open")) return;
@@ -1051,6 +1078,17 @@
     S.lastSetHash = null;
     const h = decodeURIComponent(location.hash.replace(/^#/, ""));
     if (!h) return;
+    /* status-hub@2 bookmarks stay alive */
+    const LEGACY_BAND = {
+      board: "indexband", table: "indexband", timeline: "ledger",
+      roadmap: "roadmap", backlog: "indexband", changelog: "ledger",
+    };
+    if (LEGACY_BAND[h]) {
+      const el = document.getElementById(LEGACY_BAND[h]);
+      if (el) el.scrollIntoView({ block: "start" });
+      return;
+    }
+    if (h.indexOf("task/") === 0 && BY[h.slice(5)]) { openTask(h.slice(5)); return; }
     const kind = h.slice(0, 2), id = h.slice(2);
     if (kind === "t/" && BY[id]) openTask(id);
     else if (kind === "m/") selectModule(id, { scroll: true });

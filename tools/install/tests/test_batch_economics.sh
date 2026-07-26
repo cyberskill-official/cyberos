@@ -28,8 +28,11 @@ member(){
 }
 mkrepo(){
   local d="$1"; mkdir -p "$d/modules/templates/html" "$d/modules/templates/cds" "$d/docs/batches"
-  cp "$root/modules/templates/html/status-hub.html" "$root/modules/templates/html/status-app.js" "$d/modules/templates/html/"
-  cp "$root/modules/templates/cds/tokens.css" "$root/modules/templates/cds/status.css" "$d/modules/templates/cds/"
+  cp "$root/modules/templates/html/status-hub.html" "$root/modules/templates/html/status-app.js" \
+     "$root/modules/templates/html/status-hub-legacy.html" "$root/modules/templates/html/status-app-legacy.js" \
+     "$d/modules/templates/html/"
+  cp "$root/modules/templates/cds/tokens.css" "$root/modules/templates/cds/status.css" \
+     "$root/modules/templates/cds/status-legacy.css" "$d/modules/templates/cds/"
   printf '# CL\n\n## [2.0.0] - 2026-07-01\n\nAdded\n- a thing\n' > "$d/CHANGELOG.md"
   echo "2.0.0" > "$d/VERSION"
 }

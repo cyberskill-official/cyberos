@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // tools/docs-site/status-feed.mjs - status-feed@1 builder (TASK-DOCS-010 / TASK-DOCS-011).
-// Folded from docs/status-v3-preview/build.mjs into the generator pipeline.
+// Folded from the former docs/status-v3-preview/build.mjs into the generator pipeline.
 // Pure helpers are exported for unit tests; buildStatusFeed assembles the payload.
 import { readFileSync, existsSync, readdirSync, realpathSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';

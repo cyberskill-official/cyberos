@@ -64,6 +64,12 @@ _cyberos_task_migrate() {
     mkdir -p "$root/docs/status/assets"
     if [ -f "$root/.cyberos/status-site/reference/status.html" ]; then
       cp "$root/.cyberos/status-site/reference/status.html" "$root/docs/status/index.html"
+      [ -f "$root/.cyberos/status-site/reference/status-legacy.html" ] && \
+        cp "$root/.cyberos/status-site/reference/status-legacy.html" "$root/docs/status/status-legacy.html"
+      [ -f "$root/.cyberos/status-site/reference/status-v3.html" ] && \
+        cp "$root/.cyberos/status-site/reference/status-v3.html" "$root/docs/status/status-v3.html"
+      [ -f "$root/.cyberos/status-site/reference/roadmap.html" ] && \
+        cp "$root/.cyberos/status-site/reference/roadmap.html" "$root/docs/status/roadmap.html"
       cp -R "$root/.cyberos/status-site/reference/assets/." "$root/docs/status/assets/" 2>/dev/null || true
       if [ -d "$root/.cyberos/status-site/reference/data" ]; then
         # `cp -R src dst` CREATES dst when absent but copies INTO dst when present. The

@@ -15,8 +15,11 @@ mkfix() {
   local d="$1"
   mkdir -p "$d/docs/tasks/improvement/TASK-STALE-001-old" \
            "$d/modules/templates/html" "$d/modules/templates/cds" "$d/docs/batches"
-  cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" "$d/modules/templates/html/"
-  cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" "$d/modules/templates/cds/"
+  cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" \
+     "$repo/modules/templates/html/status-hub-legacy.html" "$repo/modules/templates/html/status-app-legacy.js" \
+     "$d/modules/templates/html/"
+  cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" \
+     "$repo/modules/templates/cds/status-legacy.css" "$d/modules/templates/cds/"
   printf '1.0.0\n' > "$d/VERSION"
   cat > "$d/CHANGELOG.md" <<'EOF'
 # Changelog

@@ -57,8 +57,11 @@ mkfix() {  # scratch corpus in the exact shape the renderer discovers: docs/task
   d="$1"
   mkdir -p "$d/docs/tasks/aa/TASK-AA-001-first" "$d/docs/tasks/bb/TASK-BB-001-second" \
            "$d/modules/templates/html" "$d/modules/templates/cds"
-  cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" "$d/modules/templates/html/"
-  cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" "$d/modules/templates/cds/"
+  cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" \
+     "$repo/modules/templates/html/status-hub-legacy.html" "$repo/modules/templates/html/status-app-legacy.js" \
+     "$d/modules/templates/html/"
+  cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" \
+     "$repo/modules/templates/cds/status-legacy.css" "$d/modules/templates/cds/"
   printf -- '---\nid: TASK-AA-001\ntitle: First\ntemplate: task@1\nmodule: aa\npriority: MUST\nstatus: done\ntype: product\nshipped: 2026-07-01\n---\n## §1 — Description\n\nFirst task body paragraph.\n' > "$d/docs/tasks/aa/TASK-AA-001-first/spec.md"
   printf -- '---\nid: TASK-BB-001\ntitle: Second\ntemplate: task@1\nmodule: bb\npriority: SHOULD\nstatus: draft\ntype: improvement\n---\n## §1 — Description\n\nSecond task body paragraph.\n' > "$d/docs/tasks/bb/TASK-BB-001-second/spec.md"
   printf '# CL\n\n## [2.0.0] - 2026-07-01\n\nAdded\n- TASK-AA-001 first thing landed\n' > "$d/CHANGELOG.md"
@@ -82,8 +85,11 @@ t02_double_render_stable() {                                           # AC 2 - 
   diff -r "$TMP/a/o1" "$TMP/a/o2" >/dev/null 2>&1 || { fail t02 "populated corpus diverged across locales"; return; }
   diff -r "$TMP/a/out" "$TMP/a/o1" >/dev/null 2>&1 || { fail t02 "re-render diverged from first render"; return; }
   mkdir -p "$TMP/e/docs/tasks" "$TMP/e/modules/templates/html" "$TMP/e/modules/templates/cds"
-  cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" "$TMP/e/modules/templates/html/"
-  cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" "$TMP/e/modules/templates/cds/"
+  cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" \
+     "$repo/modules/templates/html/status-hub-legacy.html" "$repo/modules/templates/html/status-app-legacy.js" \
+     "$TMP/e/modules/templates/html/"
+  cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" \
+     "$repo/modules/templates/cds/status-legacy.css" "$TMP/e/modules/templates/cds/"
   echo "0.0.1" > "$TMP/e/VERSION"
   CYBEROS_HUB_LENIENT=1 node "$R" "$TMP/e" "$TMP/e/o1" >/dev/null 2>&1 || { fail t02 "empty-corpus render failed"; return; }
   CYBEROS_HUB_LENIENT=1 node "$R" "$TMP/e" "$TMP/e/o2" >/dev/null 2>&1 || { fail t02 "empty-corpus render 2 failed"; return; }
@@ -107,8 +113,12 @@ t03_commit_chase_ended() {                                             # AC 3 - 
   node "$R" "$TMP/g" "$TMP/g/docs/status" >/dev/null 2>&1 || { fail t03 "render failed"; return; }
   G add -A >/dev/null 2>&1 && G commit -qm page >/dev/null 2>&1 || { fail t03 "page commit failed"; return; }
   node "$R" "$TMP/g" "$TMP/g/out2" >/dev/null 2>&1 || { fail t03 "re-render failed"; return; }
-  cmp -s "$TMP/g/docs/status/reference/status.html" "$TMP/g/out2/reference/status.html" \
-    && ok t03 || fail t03 "render -> commit page -> render differed (the chase is back)"
+  # Stamp must not chase HEAD. Embedded feed may include git head/cov and thus differ;
+  # the IMP-082 guarantee is the provenance stamp, not feed-byte identity.
+  s1="$(stamp_of "$TMP/g/docs/status/reference/status.html")"
+  s2="$(stamp_of "$TMP/g/out2/reference/status.html")"
+  [ -n "$s1" ] && [ "$s1" = "$s2" ] \
+    && ok t03 || fail t03 "render -> commit page -> render moved the stamp ($s1 -> $s2)"
 }
 t04_corpus_edit_changes_once() {                                       # AC 4 - §1.5
   s1="$(stamp_of "$TMP/a/out/reference/status.html")"
@@ -143,8 +153,9 @@ t06_page_stamp_ignores_git() {                                         # AC 6 - 
     git -C "$TMP/n2" -c user.email=t@t -c user.name=t -c commit.gpgsign=false add -A >/dev/null 2>&1
     git -C "$TMP/n2" -c user.email=t@t -c user.name=t -c commit.gpgsign=false commit -qm x >/dev/null 2>&1
     CYBEROS_PROJECT=scratch node "$R" "$TMP/n2" "$TMP/n2/out" >/dev/null 2>&1 || { fail t06 "render failed in git copy"; return; }
-    cmp -s "$TMP/n/out/reference/status.html" "$TMP/n2/out/reference/status.html" \
-      || { fail t06 "git presence changed the page stamp/bytes"; return; }
+    # Page stamp must ignore live git; embedded feed may differ (head/cov). Compare stamps only.
+    s2="$(stamp_of "$TMP/n2/out/reference/status.html")"
+    [ "$s" = "$s2" ] || { fail t06 "git presence changed the page stamp ($s -> $s2)"; return; }
   fi
   ok t06
 }
