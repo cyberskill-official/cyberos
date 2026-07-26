@@ -17,6 +17,14 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 ### Fixed
 - SKILL-202 acceptance criteria and benchmark gates G7/G8 now cite the live `scripts/tests/test_skill_stub_lint.sh` suite; added coverage for the TASK-CUO-209 NFR delist, 20-skill untrusted-input backport, full pair-parity SCOPE and loud workflow degradation (TASK-IMP-145).
 
+## [1.12.0] - 2026-07-26
+
+Added
+- Status v3 P6 closeout as 1.12.0 — P2/DOCS-021 accept (TASK-DOCS-024, TASK-DOCS-020, TASK-DOCS-021)
+
+Fixed
+- restore CHANGELOG Unreleased tokens for suite gates (TASK-DOCS-024)
+
 ## [1.11.0] - 2026-07-26
 
 Added
