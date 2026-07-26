@@ -58,9 +58,10 @@ flowchart LR
 
 Module pills on the public page: Identity / Chat / Console **live**; AI / GENIE / MCP / OBS / Skills **built**; Memory **in progress**; Projects / Email / Plugins **specified**.
 
-## Delivery pulse (status hub as of 2026-07-25)
+## Delivery pulse (status hub as of 2026-07-26)
 
-- **291** done/closed · **4** in flight · **283** draft · **1** on hold · **0** stuck WIP (>30d)
+- **579** tasks · **253** done · **47** closed · **4** ready_to_implement · **269** draft · **1** on hold · **5** duplicate · **0** stuck WIP (>30d)
+- Roughly half the corpus is done/closed; open effort remains concentrated in draft piles (especially chat and memory)
 - Latest ship band: **v1.5.0** (17 tasks, 2026-07-25) then patch **v1.5.1**; recent work was batches 9–10 (MCP/OBS/app adopt, HITL verdicts, IMP stub grooming)
 
 **Now shipping (`ready_to_implement`):**
