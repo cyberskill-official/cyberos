@@ -66,6 +66,7 @@ pub mod oidc;
 pub mod op;
 pub mod passkey;
 pub mod password;
+pub mod metering_admit;
 pub mod metering_emit;
 pub mod plan_admin;
 pub mod rate_limit;

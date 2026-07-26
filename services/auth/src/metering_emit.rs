@@ -4,7 +4,7 @@
 
 use std::sync::{Mutex, OnceLock};
 
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use cyberos_metering::axes::MeteringAxis;
 use cyberos_metering::recorder::{validate_quantity, InMemoryRecorder, MeteringEvent, Recorder};
 use cyberos_metering::wal_queue::{WalError, WalQueue};
@@ -73,6 +73,14 @@ pub fn path_without_query(uri_path_and_query: &str) -> &str {
 
 pub fn recorded_len() -> usize {
     recorder().lock().map(|r| r.len()).unwrap_or(0)
+}
+
+/// Period sum of api_calls for admission (TASK-TEN-207).
+pub fn api_calls_sum(tenant_id: &str, period_start: DateTime<Utc>) -> u64 {
+    recorder()
+        .lock()
+        .map(|r| r.sum_for(tenant_id, MeteringAxis::ApiCalls, period_start))
+        .unwrap_or(0)
 }
 
 #[cfg(test)]

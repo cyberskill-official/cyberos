@@ -4,7 +4,7 @@ version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Metering — 4-axis append-only usage events (TASK-TEN-004)"
+description = "Metering — 4-axis append-only usage events (TASK-TEN-004 / TEN-206)"
 
 [lib]
 name = "cyberos_metering"
@@ -17,6 +17,8 @@ thiserror = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
 tracing = { workspace = true }
+sqlx = { workspace = true }
+tokio = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }
