@@ -512,7 +512,7 @@ if [ ! -f "$bl" ]; then
 fi
 
 # 4b. scaffold CHANGELOG.md exactly once (never clobber) -----------------------
-# The status page's Changelog tab reads root CHANGELOG.md `## [X.Y.Z] - date` sections.
+# The status page Releases band reads root CHANGELOG.md `## [X.Y.Z] - date` sections.
 # A pre-existing docs/CHANGELOG.md is ADOPTED to the root first (content preserved);
 # only a repo with neither gets the Keep-a-Changelog seed with release 0.1.0.
 cl="$root/CHANGELOG.md"; CHANGELOG_SET="kept your CHANGELOG.md"
@@ -525,20 +525,20 @@ if [ ! -f "$cl" ]; then
 # Changelog
 
 All notable changes to this project live here - one \`## [X.Y.Z] - YYYY-MM-DD\` section per
-release (Keep-a-Changelog style; the CyberOS status page's releases lens reads these sections,
+release (Keep-a-Changelog style; the CyberOS status page Releases band reads these sections,
 and every task id you name in an entry becomes a chip that opens that task).
 
 ## [0.1.0] - $(date +%Y-%m-%d)
 
 - CyberOS initialised: task workflow vendored to .cyberos/, backlog at docs/tasks/BACKLOG.md, status page at docs/status/.
 EOF
-  CHANGELOG_SET="created CHANGELOG.md (seeds the status page's releases lens)"
+  CHANGELOG_SET="created CHANGELOG.md (seeds the status page Releases band)"
 fi
 
 # 4c. Task migration + status page (auto; skip with CYBEROS_NO_MIGRATE=1) --------
 # Brings pre-existing tasks to the folder-per-task rule (root-level flat tasks included) and
-# (re)generates the status page at docs/status/ - ONE page, three lenses (board | table |
-# releases) over the task corpus, with a drawer carrying each task's full spec.
+# (re)generates the status page at docs/status/ - status-hub@3 tabless canvas (status-feed@1)
+# over the task corpus, with a drawer carrying each task's full spec.
 # Idempotent and verified: cyberos-migrate ends with a machine-readable verify line and
 # WARNs for anything it could not place. A failure here never aborts install.
 MIGRATE_SET="skipped (CYBEROS_NO_MIGRATE=1)"
@@ -563,9 +563,9 @@ if [ -f "$root/docs/status/index.html" ]; then
   status_parts="index.html"
   [ -d "$root/docs/status/assets" ] && status_parts="$status_parts + assets/"
   [ -d "$root/docs/status/data" ]   && status_parts="$status_parts + data/"
-  STATUS_SET="docs/status/ ($status_parts; ONE page, three lenses - board | table |
-                                       releases - over THIS repo's tasks, with a drawer carrying each
-                                       full spec. data/ spec chunks appear once tasks land. Replaces
+  STATUS_SET="docs/status/ ($status_parts; status-hub@3 tabless canvas + status-feed@1
+                                       over THIS repo's tasks, with a drawer carrying each full spec.
+                                       data/ holds the feed + spec chunks once tasks land. Replaces
                                        the old standalone docs; tracked)"
 else
   # A successful install always renders the page (CHANGELOG.md seeds >=1 release even with
@@ -665,6 +665,8 @@ This repository runs CyberOS. Any coding agent operating here follows these rule
 4. Memory: record decisions, audits, and plans into the BRAIN at
    `.cyberos/memory/store/` per the protocol in `.cyberos/memory/AGENTS.md`.
 5. Never push, deploy, merge, or delete without an explicit operator instruction.
+6. Status + traceability: open `docs/status/index.html` (status-hub@3 tabless canvas).
+   Every commit cites a canonical `TASK-*` id (advisory locally; CI may hard-fail).
 ENTRY
 
 # --- root AGENTS.md is a thin pointer (like CLAUDE.md / GEMINI.md), NOT the memory protocol ---
