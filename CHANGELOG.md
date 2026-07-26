@@ -13,6 +13,15 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 ### Fixed
 - SKILL-202 acceptance criteria and benchmark gates G7/G8 now cite the live `scripts/tests/test_skill_stub_lint.sh` suite; added coverage for the TASK-CUO-209 NFR delist, 20-skill untrusted-input backport, full pair-parity SCOPE and loud workflow degradation (TASK-IMP-145).
 
+## [1.11.0] - 2026-07-26
+
+Added
+- cutoff config, installer scaffold, release preflight warn (TASK-DOCS-009, TASK-DOCS-019, TASK-DOCS-020)
+- coverage-only regen + truth-window disclosure (TASK-DOCS-017, TASK-DOCS-018)
+- land status-hub@3 canvas with legacy escape hatch (TASK-DOCS-013, TASK-DOCS-014, TASK-DOCS-015, TASK-DOCS-016)
+- status-feed@1 emission, classification, and ledger (TASK-DOCS-010, TASK-DOCS-011, TASK-DOCS-012)
+- add commit-task link checker + CI gate (TASK-DOCS-008)
+
 ## [1.10.0] - 2026-07-26
 
 Added
