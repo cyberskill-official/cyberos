@@ -9,7 +9,7 @@ Orient the user. Present concisely:
 - `/install` — install or re-vendor (once / when updating)
 - `/uninstall` — remove the machine
 - `/version` — check for a newer CyberOS; on yes → install
-- `/status` — open `docs/status/index.html` in the browser
+- `/status` — open `docs/status/index.html` (tabless status-hub@3 canvas) in the browser
 - `/help` — this overview
 - `/ship-tasks` — drive the next task (HITL)
 - `/create-tasks` — draft tasks into the backlog

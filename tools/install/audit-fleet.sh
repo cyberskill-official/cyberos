@@ -83,6 +83,7 @@ for base in "$@"; do
       cuo/STATUS-REFERENCE.md \
       plugin/.claude-plugin/plugin.json \
       docs-tools/render-status-hub.mjs \
+      docs-tools/status-feed.mjs \
       docs-tools/md.mjs \
       docs-tools/templates/status-hub.html \
       docs-tools/templates/status-app.js \
@@ -190,13 +191,26 @@ for base in "$@"; do
       if [ ! -f "$page" ]; then
         bad="$bad missing:docs/status/index.html"
       else
-        grep -q 'data-template-id="status-hub@2"' "$page" || bad="$bad page-not-v2"
-        for lens in board table timeline; do
-          grep -q "data-lens=\"$lens\"" "$page" || bad="$bad lens:$lens"
-        done
+        grep -qE 'data-template-id="status-hub@[23]"' "$page" || bad="$bad page-not-hub"
+        if grep -q 'data-template-id="status-hub@3"' "$page"; then
+          for band in pulse roadmap sysmap flowband ledger indexband; do
+            grep -q "id=\"$band\"" "$page" || grep -q "id=\\\\\"$band\\\\\"" "$page" || bad="$bad band:$band"
+          done
+          # v3 canvas is JS-built; bands live in the client source when assets are linked
+          if grep -q 'src="assets/status.js"' "$page" && [ -f "$r/docs/status/assets/status.js" ]; then
+            for band in pulse roadmap sysmap flowband ledger indexband; do
+              grep -q "id=\"$band\"" "$r/docs/status/assets/status.js" || bad="$bad band:$band"
+            done
+          fi
+        else
+          for lens in board table timeline; do
+            grep -q "data-lens=\"$lens\"" "$page" || bad="$bad lens:$lens"
+          done
+        fi
         grep -q 'role="tabpanel"' "$page" && bad="$bad old-tabs-present"
         [ -f "$r/docs/status/assets/status.css" ] || bad="$bad missing:status.css"
         [ -f "$r/docs/status/assets/status.js" ]  || bad="$bad missing:status.js"
+        # corpus count: v3 uses sv3-data / status-feed; v2 uses cs-data
         inpage="$(grep -o '"i":"' "$page" 2>/dev/null | wc -l | tr -d ' ')"
         [ "$inpage" -eq "$specs" ] || bad="$bad corpus-drift(page=$inpage disk=$specs)"
         # stderr dropped yields 0, so this silently counted 0 chunks against 509 specs
@@ -207,7 +221,7 @@ for base in "$@"; do
         # freshness re-render
         if command -v node >/dev/null 2>&1 && [ -f "$cy/docs-tools/render-status-hub.mjs" ]; then
           t="$(mktemp -d)"
-          pinned="$(grep -o '"commit":"[^"]*"' "$page" | head -1 | cut -d'"' -f4)"
+          pinned="$(grep -oE '"commit":"[^"]*"' "$page" | head -1 | cut -d'"' -f4)"
           if CYBEROS_HUB_LENIENT=1 CYBEROS_PAGE_ASSETS=1 \
              CYBEROS_PROJECT="$(basename "$r")" CYBEROS_TASK_BASE="../tasks/" \
              CYBEROS_COMMIT="${pinned:-unknown}" \

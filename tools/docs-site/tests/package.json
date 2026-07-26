@@ -1,0 +1,9 @@
+{
+  "name": "cyberos-docs-site-tests",
+  "private": true,
+  "type": "module",
+  "description": "Dev-only deps for docs-site DOM / unit tests. Never a runtime or payload dependency.",
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  }
+}

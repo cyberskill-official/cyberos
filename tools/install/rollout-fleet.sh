@@ -18,10 +18,25 @@ has_tasks() {   # a repo "has tasks" when a spec.md exists, or a flat TASK-*.md 
   return 1
 }
 
+# P0 locked 2026-07-27: permanent exclusions (mothership clones / duplicate trees).
+fleet_skip_repo() {
+  case "$(basename "$1")" in
+    cyberos-12g-clone|cyberos-12c-pr153|practice) return 0 ;;
+  esac
+  case "$(basename "$1")" in
+    *-wt-*|cyberos-wt-*) return 0 ;;
+  esac
+  return 1
+}
+
 for base in "$@"; do
   for r in "$base"/*; do
     [ -d "$r" ] || continue
     name="$(basename "$base")/$(basename "$r")"
+    if fleet_skip_repo "$r"; then
+      printf 'SKIP  %-46s excluded from fleet migration (P0)\n' "$name"
+      continue
+    fi
     if has_tasks "$r"; then why="has tasks"; mig=0
     elif [ -d "$r/docs/status" ]; then why="no tasks, but publishes a status page"; mig=0
     else why="no tasks"; mig=1; fi

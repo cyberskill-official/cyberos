@@ -15,8 +15,11 @@ mkfix() {
   d="$1"
   mkdir -p "$d/docs/tasks/aa/TASK-AA-001-first" "$d/docs/tasks/bb/TASK-BB-001-third" \
            "$d/.git/refs/heads" "$d/modules/templates/html" "$d/modules/templates/cds"
-  cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" "$d/modules/templates/html/"
-  cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" "$d/modules/templates/cds/"
+  cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" \
+     "$repo/modules/templates/html/status-hub-legacy.html" "$repo/modules/templates/html/status-app-legacy.js" \
+     "$d/modules/templates/html/"
+  cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" \
+     "$repo/modules/templates/cds/status-legacy.css" "$d/modules/templates/cds/"
   echo "ref: refs/heads/main" > "$d/.git/HEAD"; echo "abcdef1234567890" > "$d/.git/refs/heads/main"
   printf -- '---\nid: TASK-AA-001\ntitle: First\nmodule: aa\npriority: MUST\nstatus: done\nclass: product\nphase: P0\nowner: Ada\neffort_hours: 3\nshipped: 2026-07-01\ndepends_on: []\nblocks: [TASK-BB-001]\nsubtasks:\n  - "wire it"\n  - "prove it"\n---\n## §1 — Description\n\nFirst task body paragraph.\n\n## §4 — Acceptance criteria\n\n- one\n' > "$d/docs/tasks/aa/TASK-AA-001-first/spec.md"
   printf -- '---\nid: TASK-BB-001\ntitle: Third\nmodule: bb\npriority: SHOULD\nstatus: draft\nclass: improvement\nphase: P1\ndepends_on: [TASK-AA-001]\n---\n## §1 — Description\n\nThird task body paragraph.\n' > "$d/docs/tasks/bb/TASK-BB-001-third/spec.md"
@@ -24,31 +27,39 @@ mkfix() {
   echo "2.0.0" > "$d/VERSION"
 }
 
-t01_deck_true() {                                                      # AC 1 - the deck is generated truth
+t01_deck_true() {                                                      # AC 1 - stamp on primary; deck on legacy
   mkfix "$TMP/a"
   node "$R" "$TMP/a" "$TMP/a/out" >/dev/null 2>&1
   h="$TMP/a/out/reference/status.html"
-  grep -q 'Overall progress · 2 tasks · 2 modules' "$h" \
-    && grep -q 'VERSION <span class="code">2.0.0</span>' "$h" \
+  leg="$TMP/a/out/reference/status-legacy.html"
+  grep -q 'data-template-id="status-hub@3"' "$h" \
     && grep -Eq 'built from <span class="code">fp-[0-9a-f]{12}</span>' "$h" \
-    && grep -Eq 'data-bucket="done"[^>]*><b>1</b>' "$h" \
-    && grep -q 'seg-done" style="width:50.0%"' "$h" \
+    && grep -q 'VERSION <span class="code">2.0.0</span>' "$h" \
+    && grep -q 'Overall progress · 2 tasks · 2 modules' "$leg" \
+    && grep -Eq 'data-bucket="done"[^>]*><b>1</b>' "$leg" \
+    && grep -q 'seg-done" style="width:50.0%"' "$leg" \
     && ok t01 || fail t01 "deck counts / stamp wrong"
 }
-t02_one_page_three_lenses() {                                          # AC 2 - the merge itself
+t02_v3_canvas_and_legacy() {                                           # AC 2 - v3 bands + legacy lenses
   h="$TMP/a/out/reference/status.html"
+  leg="$TMP/a/out/reference/status-legacy.html"
   ! grep -q 'role="tabpanel"' "$h" \
-    && [ "$(grep -co 'class="ln" role="tab"' "$h")" -eq 3 ] \
-    && grep -q 'data-lens="board"' "$h" && grep -q 'data-lens="table"' "$h" && grep -q 'data-lens="timeline"' "$h" \
-    && grep -q 'roadmap: "board", backlog: "table", changelog: "timeline"' "$h" \
-    && ok t02 || fail t02 "lenses / legacy hash mapping"
+    && grep -q 'id="sv3-data"' "$h" \
+    && grep -q 'id="pulse"' "$h" \
+    && grep -q 'LEGACY_BAND' "$h" \
+    && [ "$(grep -co 'class="ln" role="tab"' "$leg")" -eq 3 ] \
+    && grep -q 'data-lens="board"' "$leg" \
+    && grep -q 'roadmap: "board", backlog: "table", changelog: "timeline"' "$leg" \
+    && [ -f "$TMP/a/out/reference/status-legacy.html" ] \
+    && ok t02 || fail t02 "v3 canvas / legacy emission"
 }
-t03_facets_and_search() {                                              # AC 3 - one filter set, every lens
+t03_facets_and_search() {                                              # AC 3 - feed fields on primary; facets on legacy
   h="$TMP/a/out/reference/status.html"
-  for id in f-m f-s f-p f-c f-ph f-g; do grep -q "id=\"$id\"" "$h" || { fail t03 "facet $id missing"; return; }; done
+  leg="$TMP/a/out/reference/status-legacy.html"
+  for id in f-m f-s f-p f-c f-ph f-g; do grep -q "id=\"$id\"" "$leg" || { fail t03 "facet $id missing"; return; }; done
   grep -q 'id="q"' "$h" && grep -q '"p":"MUST"' "$h" && grep -q '"c":"improvement"' "$h" \
-    && grep -q '"ph":"P0"' "$h" && grep -q '"st":\["wire it","prove it"\]' "$h" \
-    && ok t03 || fail t03 "search box or corpus fields missing"
+    && grep -q '"ph":"P0"' "$h" && grep -q '"feed":1' "$h" \
+    && ok t03 || fail t03 "search box or feed fields missing"
 }
 t04_supersession() {                                                   # AC 4 - bookmarks survive
   grep -q 'url=status.html#roadmap' "$TMP/a/out/reference/roadmap.html" \
@@ -61,18 +72,21 @@ t05_deterministic() {                                                  # AC 5 - 
     && cmp -s "$TMP/a/out/reference/data/task/TASK-AA-001.js" "$TMP/a/out2/reference/data/task/TASK-AA-001.js" \
     && ok t05 || fail t05 "nondeterministic"
 }
-t06_task_page_links() {                                                  # AC 6 - the drawer links the task page
+t06_task_page_links() {                                                  # AC 6 - task page link in legacy corpus; feed has folder key
   mkfix "$TMP/d"
   mkdir -p "$TMP/d/out/tasks/aa/TASK-AA-001-first"; touch "$TMP/d/out/tasks/aa/TASK-AA-001-first/index.html"
   node "$R" "$TMP/d" "$TMP/d/out" >/dev/null 2>&1
-  grep -q '"pg":"../tasks/aa/TASK-AA-001-first/index.html"' "$TMP/d/out/reference/status.html" \
-    && ok t06 || fail t06 "task page link absent from the corpus"
+  grep -q '"pg":"../tasks/aa/TASK-AA-001-first/index.html"' "$TMP/d/out/reference/status-legacy.html" \
+    && grep -q '"k":"aa/TASK-AA-001-first"' "$TMP/d/out/reference/status.html" \
+    && ok t06 || fail t06 "task page link / feed key absent"
 }
 t07_changelog_binds_tasks() {                                            # the changelog references tasks, not prose
   h="$TMP/a/out/reference/status.html"
-  grep -q '"cited":\["TASK-AA-001"\]' "$h" \
-    && grep -q 'data-task=\\"TASK-AA-001\\"' "$h" \
-    && grep -q '"bound":\["TASK-AA-001"\]' "$h" \
+  leg="$TMP/a/out/reference/status-legacy.html"
+  grep -q '"cited":\["TASK-AA-001"\]' "$leg" \
+    && grep -q 'data-task=\\"TASK-AA-001\\"' "$leg" \
+    && grep -q '"bound":\["TASK-AA-001"\]' "$leg" \
+    && grep -q 'TASK-AA-001' "$h" \
     && ok t07 || fail t07 "release -> task binding missing"
 }
 t08_spec_chunks() {                                                    # full spec, lazily
@@ -81,8 +95,10 @@ t08_spec_chunks() {                                                    # full sp
     && grep -q 'First task body paragraph' "$c" \
     && grep -q '"sp":1' "$TMP/a/out/reference/status.html" || { fail t08 "chunk missing"; return; }
   CYBEROS_STATUS_SPECS=0 node "$R" "$TMP/a" "$TMP/a/out3" >/dev/null 2>&1
-  [ ! -d "$TMP/a/out3/reference/data" ] && ! grep -q '"sp":1' "$TMP/a/out3/reference/status.html" \
-    && ok t08 || fail t08 "CYBEROS_STATUS_SPECS=0 still emitted chunks"
+  # Phase 1: data/ always holds status-feed.json; task chunks must still be absent.
+  [ ! -d "$TMP/a/out3/reference/data/task" ] && [ -f "$TMP/a/out3/reference/data/status-feed.json" ] \
+    && ! grep -q '"sp":1' "$TMP/a/out3/reference/status.html" \
+    && ok t08 || fail t08 "CYBEROS_STATUS_SPECS=0 still emitted chunks (or feed missing)"
 }
 t09_nojs_and_honest_failures() {                                       # degrade, and fail loudly
   h="$TMP/a/out/reference/status.html"
@@ -93,9 +109,13 @@ t09_nojs_and_honest_failures() {                                       # degrade
   out="$(node "$R" "$TMP/b" "$TMP/b/out" 2>&1)"; rc=$?
   [ "$rc" -ne 0 ] && grep -q "TASK-AA-009" <<<"$out" && ok t09 || fail t09 "broken frontmatter did not fail loudly (rc=$rc)"
 }
-t10_token_clean() {                                                    # colour literals stay in the token layer
+t10_token_clean() {                                                    # colour literals stay in the token / theme layers
   h="$TMP/a/out/reference/status.html"
-  hexes="$(sed -e '/:root {/,/^}/d' -e '/^\[data-theme="dark"\] {/,/^}/d' "$h" \
+  hexes="$(sed -e '/:root {/,/^}/d' \
+    -e '/^\[data-theme="dark"\] {/,/^}/d' \
+    -e '/^body\[data-theme="paper"\]/,/^}/d' \
+    -e '/^body\[data-theme="night"\] {/,/^}/d' \
+    -e '/^body\[data-theme="paper"\], :root {/,/^}/d' "$h" \
     | grep -oE '#[0-9a-fA-F]{3,6}\b' | wc -l | tr -d ' ')"
   [ "$hexes" -eq 0 ] && grep -q -- '--cs-color-brand-umber' "$h" \
     && ok t10 || fail t10 "$hexes raw hex outside the token blocks"
@@ -233,8 +253,18 @@ t10_economics_row_deterministic() {                                    # TASK-IM
   ok t10_economics_row_deterministic
 }
 
-t01_deck_true; t02_one_page_three_lenses; t03_facets_and_search; t04_supersession
+t01_deck_true; t02_v3_canvas_and_legacy; t03_facets_and_search; t04_supersession
 t05_deterministic; t06_task_page_links; t07_changelog_binds_tasks; t08_spec_chunks
 t09_nojs_and_honest_failures; t10_token_clean; t11_draft_staleness_report
 t09_economics_row; t10_economics_row_deterministic
+# Phase 2: rollback lever
+t12_legacy_primary() {
+  mkfix "$TMP/lp"
+  CYBEROS_STATUS_LEGACY=1 node "$R" "$TMP/lp" "$TMP/lp/out" >/dev/null 2>&1
+  grep -q 'data-template-id="status-hub@2"' "$TMP/lp/out/reference/status.html" \
+    && grep -q 'data-template-id="status-hub@3"' "$TMP/lp/out/reference/status-v3.html" \
+    && grep -q 'data-template-id="status-hub@2"' "$TMP/lp/out/reference/status-legacy.html" \
+    && ok t12_legacy_primary || fail t12_legacy_primary "CYBEROS_STATUS_LEGACY=1 did not swap primary"
+}
+t12_legacy_primary
 echo "----"; echo "pass=$PASS fail=$FAIL"; [ "$FAIL" -eq 0 ]

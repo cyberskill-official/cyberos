@@ -33,4 +33,4 @@ Install steps, day-to-day usage, and everything else live in the official docs �
 
 {{CHANGELOG_SECTION}}
 
-Full history: [CHANGELOG.md](https://github.com/cyberskill-official/cyberos/blob/main/CHANGELOG.md) · Status hub releases lens is generated from the same file.
+Full history: [CHANGELOG.md](https://github.com/cyberskill-official/cyberos/blob/main/CHANGELOG.md) · Status page Releases band is generated from the same file.

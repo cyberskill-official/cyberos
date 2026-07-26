@@ -284,7 +284,9 @@ t_g16() { # $1 = payload dir
   ( cd "$d" && git init -q . && git config user.email g16@test && git config user.name g16 )
   # a PRE-SET operator override: the C1 wipe class is exactly this file degrading silently
   mkdir -p "$d/.cyberos"
-  printf '# operator override (g16 fixture)\ngates:\n  test: "echo g16-config-survived"\n' > "$d/.cyberos/config.yaml"
+  # Include traceability.cutoff so TASK-DOCS-019's one-time additive write is a no-op
+  # (the fixture asserts byte-identical survival of the pre-set operator file).
+  printf '# operator override (g16 fixture)\ngates:\n  test: "echo g16-config-survived"\ntraceability:\n  cutoff: deadbeefdeadbeefdeadbeefdeadbeefdeadbeef\n  strict: false\n  scaffold_ci: false\n' > "$d/.cyberos/config.yaml"
   local cfg_before; cfg_before="$(_sha "$d/.cyberos/config.yaml" | awk '{print $1}')"
 
   bash "$pay/install.sh" "$d" >"$TMP/g16.install1.log" 2>&1 \
@@ -361,6 +363,7 @@ t02_checkers_fail_on_violations() {
   cp "$repo/modules/skill/task-audit/RUBRIC.md" "$d/modules/skill/task-audit/"
   sed 's/, "duplicate"\]/]/' "$repo/tools/install/docs-tools/task-lint.mjs" > "$d/tools/install/docs-tools/task-lint.mjs"
   cp "$repo/tools/docs-site/render-status-hub.mjs" "$d/tools/docs-site/"
+  cp "$repo/tools/docs-site/status-feed.mjs" "$d/tools/docs-site/"
   cp "$repo/tools/install/templates/BACKLOG.md" "$d/tools/install/templates/"
   if t_g03 "$d" >/dev/null 2>&1; then
     fail t02_checkers_fail_on_violations "g03 passed a fixture whose task-lint.mjs lost the 'duplicate' status"; all=0

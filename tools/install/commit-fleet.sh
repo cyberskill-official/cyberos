@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# commit-fleet.sh - commit ONLY the CyberOS-owned paths in every repo under the given roots, and
-# push to main. A repo's own uncommitted work is never staged: the allowlist below is exactly what
+# commit-fleet.sh - commit ONLY the CyberOS-owned paths in every repo under the given roots.
+# Push is OFF by default (P0: push none until a second explicit allowlist); set
+# CYBEROS_FLEET_PUSH=1 to restore push-to-main for repos on main with a remote.
+# A repo's own uncommitted work is never staged: the allowlist below is exactly what
 # install + migration write as TRACKED files, and the run ABORTS a repo if anything outside it got
 # staged. Repos with no remote are committed and reported as unpushable; repos on a branch other
 # than main are committed but never pushed (this script does not decide someone's branching).
@@ -14,13 +16,29 @@ OWNED=(docs/status docs/tasks AGENTS.md CLAUDE.md GEMINI.md .cursorrules
        .windsurfrules .gitignore CHANGELOG.md .mcp.json .agents)
 ALLOW='^(docs/status/|docs/tasks/|AGENTS\.md$|CLAUDE\.md$|GEMINI\.md$|\.cursorrules$|\.windsurfrules$|\.gitignore$|CHANGELOG\.md$|\.mcp\.json$|\.agents/)'
 
+# P0 locked 2026-07-27: push none until a second explicit allowlist.
+# Set CYBEROS_FLEET_PUSH=1 only when that allowlist is approved.
+FLEET_PUSH="${CYBEROS_FLEET_PUSH:-0}"
+
+fleet_skip_repo() {
+  case "$(basename "$1")" in
+    cyberos|cyberos-12g-clone|cyberos-12c-pr153|practice) return 0 ;;
+  esac
+  case "$(basename "$1")" in
+    *-wt-*|cyberos-wt-*) return 0 ;;
+  esac
+  return 1
+}
+
 SKIP=0; DONE=0; PUSHED=0; FAILED=0
 
 for base in "$@"; do
   for r in "$base"/*; do
     [ -d "$r" ] || continue
     name="$(basename "$base")/$(basename "$r")"
-    [ "$(basename "$r")" = "cyberos" ] && continue          # self-host: released on its own
+    if fleet_skip_repo "$r"; then
+      printf 'SKIP  %-46s excluded from fleet commit (P0)\n' "$name"; SKIP=$((SKIP+1)); continue
+    fi
     if [ ! -d "$r/.git" ]; then
       printf 'SKIP  %-46s no git repo\n' "$name"; SKIP=$((SKIP+1)); continue
     fi
@@ -51,7 +69,9 @@ for base in "$@"; do
     br="$(git -C "$r" branch --show-current)"
     rem="$(git -C "$r" remote | head -1)"
     left="$(git -C "$r" status --porcelain | wc -l | tr -d ' ')"
-    if [ -z "$rem" ]; then
+    if [ "$FLEET_PUSH" != "1" ]; then
+      printf 'OK    %-46s committed %-3s paths | push deferred (P0: push none) | %s left dirty\n' "$name" "$n" "$left"
+    elif [ -z "$rem" ]; then
       printf 'OK    %-46s committed %-3s paths | NO REMOTE (nothing to push) | %s left dirty\n' "$name" "$n" "$left"
     elif [ "$br" != "main" ]; then
       printf 'OK    %-46s committed %-3s paths | on branch %s, NOT pushed | %s left dirty\n' "$name" "$n" "$br" "$left"

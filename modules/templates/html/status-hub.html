@@ -8,65 +8,21 @@
 {{slot:styles:html}}
 {{slot:head:html}}
 </head>
-<body data-template-id="status-hub@2">
-<a class="skip" href="#lens">Skip to content</a>
+<body data-template-id="status-hub@3" data-theme="paper">
+<a class="skip" href="#pulse">Skip to content</a>
+<p class="sr-only">VERSION <span class="code">{{slot:version}}</span> · built from <span class="code">{{slot:stamp}}</span> · {{slot:meta_plain}}</p>
 
-<header class="hd">
-  <div class="wrap hd-in">
-    <div class="hd-id">
-      <span class="hd-mark" aria-hidden="true">{{slot:initial}}</span>
-      <div>
-        <h1>{{slot:title}}</h1>
-        <p class="hd-sub">{{slot:subtitle}}</p>
-      </div>
-    </div>
-    <div class="hd-side">
-      <p class="hd-meta">{{slot:meta:html}}</p>
-      <button id="theme" class="btn ghost" type="button" title="Toggle light / dark" aria-label="Toggle light / dark">◐</button>
-    </div>
-  </div>
-</header>
-
-<main class="wrap">
-  <section class="deck" aria-label="Project pulse">{{slot:deck:html}}</section>
-
-  {{slot:now:html}}
-
-  <nav class="bar" id="bar" aria-label="Search, filters and views">
-    <div class="bar-top">
-      <label class="srch">
-        <span class="ic" aria-hidden="true">⌕</span>
-        <input id="q" type="search" placeholder="{{slot:search_placeholder}}" autocomplete="off" spellcheck="false">
-      </label>
-      <div class="lenses" role="tablist" aria-label="View">
-        <button class="ln" role="tab" type="button" data-lens="board" aria-selected="true">▦ Board</button>
-        <button class="ln" role="tab" type="button" data-lens="table" aria-selected="false">☰ Table</button>
-        <button class="ln" role="tab" type="button" data-lens="timeline" aria-selected="false">◷ Releases</button>
-      </div>
-    </div>
-    <div class="bar-bot">
-      {{slot:facets:html}}
-      <button id="clear" class="btn ghost sm" type="button">Clear</button>
-      <output id="count" class="cnt" for="q"></output>
-    </div>
-    <div class="chipbar" id="active-filters" hidden></div>
-  </nav>
-
-  <div id="lens" class="lens" role="region" aria-live="polite" aria-label="Tasks"></div>
-
-  {{slot:staleness:html}}
-
+<div id="app">
   <noscript>
-    <div class="nojs">{{slot:nojs:html}}</div>
+    <div class="nojs wrap">{{slot:nojs:html}}</div>
   </noscript>
+</div>
 
-  <footer class="ft">{{slot:footer}}</footer>
-</main>
+{{slot:reports:html}}
 
-<div id="scrim" class="scrim" hidden></div>
-<aside id="drawer" class="drawer" hidden role="dialog" aria-modal="true" aria-labelledby="dw-title"></aside>
+<footer class="gen-foot wrap">{{slot:footer}}</footer>
 
-<script type="application/json" id="cs-data">{{slot:data:json}}</script>
+<script type="application/json" id="sv3-data">{{slot:data:json}}</script>
 {{slot:script:html}}
 </body>
 </html>

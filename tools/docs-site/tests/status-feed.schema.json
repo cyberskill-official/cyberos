@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberos.local/schemas/status-feed@1.json",
+  "title": "status-feed@1",
+  "type": "object",
+  "required": [
+    "project", "version", "snapshot", "head", "branch", "repoUrl", "tags", "fp",
+    "tasks", "modules", "medges", "phases", "releases", "unreleased", "burnup"
+  ],
+  "properties": {
+    "project": { "type": "string", "minLength": 1 },
+    "version": { "type": "string" },
+    "feed": { "type": "integer", "const": 1 },
+    "snapshot": { "type": "string" },
+    "head": { "type": "string" },
+    "coverageAsOf": { "type": "string" },
+    "branch": { "type": "string" },
+    "repoUrl": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "fp": { "type": "string", "pattern": "^fp-[0-9a-f]{12}$" },
+    "statuses": { "type": "array", "items": { "type": "string" } },
+    "specBase": { "type": "string" },
+    "rule": { "type": "string" },
+    "enforcement": { "type": "string" },
+    "noGit": { "type": "boolean" },
+    "ghosts": { "type": "array", "items": { "type": "string" } },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["i", "k", "t", "m", "s", "b", "d", "bl", "rl"],
+        "properties": {
+          "i": { "type": "string" },
+          "k": { "type": "string" },
+          "t": { "type": "string" },
+          "m": { "type": "string" },
+          "c": { "type": "string" },
+          "p": { "type": "string" },
+          "s": { "type": "string" },
+          "b": { "type": "string", "enum": ["done", "active", "hold", "draft"] },
+          "ph": { "type": "string" },
+          "pg": { "type": ["string", "null"] },
+          "o": { "type": "string" },
+          "cr": { "type": ["string", "null"] },
+          "sh": { "type": ["string", "null"] },
+          "e": { "type": ["number", "null"] },
+          "d": { "type": "array", "items": { "type": "string" } },
+          "bl": { "type": "array", "items": { "type": "string" } },
+          "rl": { "type": "array", "items": { "type": "string" } },
+          "sm": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "modules": { "type": "array", "items": { "type": "object" } },
+    "medges": { "type": "array", "items": { "type": "object" } },
+    "phases": { "type": "array", "items": { "type": "object" } },
+    "releases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["v", "notes", "cov"],
+        "properties": {
+          "v": { "type": "string" },
+          "d": { "type": ["string", "null"] },
+          "rc": { "type": "string" },
+          "lg": { "type": "integer" },
+          "label": { "type": "string" },
+          "notes": { "type": "object" },
+          "cov": {
+            "type": "object",
+            "required": ["commits", "linked", "exempt", "unlinked"],
+            "properties": {
+              "commits": { "type": "array" },
+              "linked": { "type": "integer" },
+              "exempt": { "type": "integer" },
+              "unlinked": { "type": "integer" }
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "unreleased": {
+      "type": "object",
+      "required": ["notes", "cov"],
+      "properties": {
+        "notes": { "type": "object" },
+        "cov": { "type": "object" }
+      }
+    },
+    "burnup": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["d", "n"],
+        "properties": {
+          "d": { "type": "string" },
+          "n": { "type": "integer" }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

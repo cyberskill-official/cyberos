@@ -1,0 +1,40 @@
+# CyberOS consumer CI template — commit→task traceability gate (TASK-DOCS-019).
+# Scaffolded into .github/workflows/cyberos-traceability.yml only when the operator
+# sets traceability.scaffold_ci: true in .cyberos/config.yaml (opt-in default;
+# P0 open question #3 answered as opt-in / false).
+#
+# Requires the CyberOS payload installed (.cyberos/lib/check_task_link.sh).
+name: cyberos-traceability
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  traceability-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Traceability gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          checker=".cyberos/lib/check_task_link.sh"
+          if [ ! -f "$checker" ]; then
+            echo "::error::$checker missing — run cyberos install.sh in this repo first."
+            exit 2
+          fi
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+            bash "$checker" --range "${base}..${head}"
+          else
+            # Push to default branch: range from configured cutoff (or script default) to HEAD.
+            bash "$checker" --range "HEAD~20..HEAD" || bash "$checker" --range "HEAD"
+          fi

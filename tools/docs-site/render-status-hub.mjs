@@ -1,35 +1,122 @@
 #!/usr/bin/env node
-// tools/docs-site/render-status-hub.mjs - TASK-DOCS-006 / TASK-DOCS-007 / TASK-IMP-074.
-// ONE page answers "where is the project". Roadmap, Backlog and Changelog stopped being
-// three tabs: they are three lenses (board / table / releases) over one filtered corpus,
-// with a task detail drawer that carries the full spec.
-// Inputs (four): task frontmatter, CHANGELOG.md version sections, VERSION, and the per-batch
-// economics ledgers under docs/batches/ (TASK-IMP-114). All four are committed bytes; all four
-// are hashed into the fp- stamp, because a stamp that does not cover an input is a stamp that
-// lies about what determined the page.
-// Node stdlib only; deterministic stamp (corpus fingerprint - no git, no wall clock); honest failures.
-// Emits: reference/status.html, reference/data/task/<ID>.js (per-task spec chunks, lazy-loaded),
-//        reference/assets/{status.css,status.js,favicon.svg} when CYBEROS_PAGE_ASSETS=1,
-//        reference/roadmap.html (redirect stub - bookmarks stay alive).
-// Usage: node render-status-hub.mjs [repoRoot] [outDir]
+// tools/docs-site/render-status-hub.mjs - TASK-DOCS-006..007 / TASK-IMP-074 / TASK-DOCS-010..014.
+// ONE page answers "where is the project". status-hub@3 is the tabless v3 canvas (status-feed@1).
+// Legacy status-hub@2 (three lenses) is still emitted as status-legacy.html for one minor cycle;
+// CYBEROS_STATUS_LEGACY=1 makes the v2 page the primary status.html (rollback lever).
+// Inputs: task frontmatter, CHANGELOG.md, VERSION, docs/batches/ (TASK-IMP-114),
+//         docs/tasks/_state/commit-links.yaml, modules/manifest.yaml, and status
+//         client/shell/CSS template bytes — all hashed into the fp- stamp.
+//         Git history feeds status-feed@1 coverage (TASK-DOCS-010/011) but is NOT folded
+//         into the page stamp (a live commit-set hash would restore the IMP-082 HEAD chase).
+// Node stdlib only; deterministic stamp (no wall clock); honest failures.
+// Emits: reference/status.html (v3 by default; v2 when CYBEROS_STATUS_LEGACY=1),
+//        reference/status-legacy.html (always the v2 page),
+//        reference/data/status-feed.json (status-feed@1),
+//        reference/data/task/<ID>.js, assets when CYBEROS_PAGE_ASSETS=1, roadmap.html stub.
+// Usage: node render-status-hub.mjs [repoRoot] [outDir] [--coverage-only]
 // Env:   CYBEROS_PROJECT     page title (default: basename of repoRoot)
 //        CYBEROS_PAGE_ASSETS 1 = emit assets/ and link them instead of inlining
 //        CYBEROS_HUB_LENIENT 1 = warn instead of failing on bad frontmatter / missing inputs
 //        CYBEROS_STATUS_SPECS 0 = skip the per-task spec chunks (drawer links out instead)
+//        CYBEROS_STATUS_LEGACY 1 = emit v2 as primary status.html (rollback)
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderMarkdown } from './md.mjs';
+import { buildStatusFeed, refreshStatusFeedCoverage } from './status-feed.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(process.argv[2] || resolve(__dirname, '..', '..'));
-const OUT = resolve(process.argv[3] || join(ROOT, 'dist', 'website'));
+const rawArgs = process.argv.slice(2);
+const COVERAGE_ONLY = rawArgs.includes('--coverage-only') || process.env.CYBEROS_STATUS_COVERAGE_ONLY === '1';
+const args = rawArgs.filter(a => a !== '--coverage-only');
+const ROOT = resolve(args[0] || resolve(__dirname, '..', '..'));
+const OUT = resolve(args[1] || join(ROOT, 'dist', 'website'));
 let NAME = process.env.CYBEROS_PROJECT || basename(ROOT);
 if (NAME.toLowerCase() === 'cyberos') NAME = 'CyberOS';
 const ASSETS = process.env.CYBEROS_PAGE_ASSETS === '1';
 const LENIENT = process.env.CYBEROS_HUB_LENIENT === '1';
 const SPECS = process.env.CYBEROS_STATUS_SPECS !== '0';
+const LEGACY_PRIMARY = process.env.CYBEROS_STATUS_LEGACY === '1';
+
+// ---- --coverage-only fast path (TASK-DOCS-017) -----------------------------------------
+// Refresh git coverage + feed fp inside an already-published docs/status tree. Skips
+// task frontmatter parse and spec-chunk re-render so code-only commits stay sub-second.
+function runCoverageOnly(root, pageDir) {
+  const feedPath = join(pageDir, 'data', 'status-feed.json');
+  const candidates = ['index.html', 'status.html', 'status-v3.html']
+    .map(n => join(pageDir, n)).filter(p => existsSync(p));
+  if (!existsSync(feedPath) || !candidates.length) {
+    console.error(`status-hub: coverage-only: no published page at ${pageDir} — run a full regen first`);
+    return 2;
+  }
+  const pagePath = candidates[0];
+  let page;
+  try {
+    const html = readFileSync(pagePath, 'utf8');
+    const m = html.match(/<script type="application\/json" id="sv3-data">([\s\S]*?)<\/script>/);
+    page = m ? JSON.parse(m[1]) : JSON.parse(readFileSync(feedPath, 'utf8'));
+  } catch (e) {
+    console.error(`status-hub: coverage-only: cannot parse existing feed (${e.message})`);
+    return 2;
+  }
+  const pageOnly = {
+    commit: page.commit,
+    specDir: page.specDir,
+    frBase: page.frBase,
+    draft_staleness: page.draft_staleness,
+    stuck_wip: page.stuck_wip,
+  };
+  const spById = new Map((page.tasks || []).map(t => [t.i, t.sp || 0]));
+  const refreshed = refreshStatusFeedCoverage(page, {
+    root,
+    warn: m => console.error(m),
+  });
+  // Canonical feed on disk: drop page-only enrichments.
+  const feedOut = { ...refreshed };
+  for (const k of Object.keys(pageOnly)) delete feedOut[k];
+  feedOut.tasks = (feedOut.tasks || []).map(({ sp, ...rest }) => rest);
+  {
+    delete feedOut.fp;
+    const json = JSON.stringify(feedOut);
+    feedOut.fp = 'fp-' + createHash('sha256').update(json).digest('hex').slice(0, 12);
+  }
+  writeFileSync(feedPath, JSON.stringify(feedOut).replace(/</g, '\\u003c') + '\n');
+
+  const pageOut = {
+    ...refreshed,
+    ...Object.fromEntries(Object.entries(pageOnly).filter(([, v]) => v !== undefined)),
+    tasks: (refreshed.tasks || []).map(t => ({ ...t, sp: spById.get(t.i) || 0 })),
+  };
+  {
+    delete pageOut.fp;
+    const json = JSON.stringify(pageOut);
+    pageOut.fp = 'fp-' + createHash('sha256').update(json).digest('hex').slice(0, 12);
+  }
+  const pageJson = JSON.stringify(pageOut).replace(/</g, '\\u003c');
+  const re = /(<script type="application\/json" id="sv3-data">)([\s\S]*?)(<\/script>)/;
+  let patched = 0;
+  for (const p of candidates) {
+    const html = readFileSync(p, 'utf8');
+    if (!re.test(html)) continue;
+    writeFileSync(p, html.replace(re, `$1${pageJson}$3`));
+    patched++;
+  }
+  if (!patched) {
+    console.error('status-hub: coverage-only: #sv3-data not found in page HTML');
+    return 2;
+  }
+  console.log(`status-hub: coverage-only refreshed ${patched} page(s) @ ${pageOut.coverageAsOf || '(no-git)'} (${pageOut.fp})`);
+  return 0;
+}
+
+if (COVERAGE_ONLY) {
+  // Prefer an explicit outDir that already holds the published page; otherwise docs/status/.
+  const pageDir = (existsSync(join(OUT, 'data', 'status-feed.json')) || existsSync(join(OUT, 'index.html')))
+    ? OUT
+    : join(ROOT, 'docs', 'status');
+  process.exit(runCoverageOnly(ROOT, pageDir));
+}
 
 const STATUSES = ['draft', 'ready_to_implement', 'implementing', 'ready_to_review', 'reviewing',
   'ready_to_test', 'testing', 'done', 'on_hold', 'closed', 'cannot_reproduce', 'duplicate'];
@@ -483,22 +570,52 @@ ${unp ? `  ${unp}` : ''}
 </section>`;
 })();
 
+// Templates are stamp inputs (TASK-DOCS-010): a client/shell edit must move fp-.
+// Primary (v3) templates are hashed; legacy templates are loaded for dual emission but
+// intentionally NOT in the page stamp (legacy is a one-cycle escape hatch).
+const tpl = (sub, name) => {
+  const env = process.env.CYBEROS_TEMPLATES;
+  for (const c of [
+    env && join(env, name),
+    join(ROOT, 'modules', 'templates', sub, name),
+    join(__dirname, 'templates', name),
+  ]) if (c && existsSync(c)) return { abs: c, rel: c, body: readFileSync(c, 'utf-8') };
+  return die(`template not found: ${name} (set CYBEROS_TEMPLATES)`);
+};
+const SHELL_T = tpl('html', 'status-hub.html');
+const TOKENS_T = tpl('cds', 'tokens.css');
+const STATUS_CSS_T = tpl('cds', 'status.css');
+const APP_T = tpl('html', 'status-app.js');
+const LEGACY_SHELL_T = tpl('html', 'status-hub-legacy.html');
+const LEGACY_CSS_T = tpl('cds', 'status-legacy.css');
+const LEGACY_APP_T = tpl('html', 'status-app-legacy.js');
+const CSS_V3 = TOKENS_T.body + '\n' + STATUS_CSS_T.body;
+const APP_V3 = APP_T.body;
+const CSS_V2 = TOKENS_T.body + '\n' + LEGACY_CSS_T.body;
+const APP_V2 = LEGACY_APP_T.body;
+
+const ledgerPath = join(ROOT, 'docs', 'tasks', '_state', 'commit-links.yaml');
+const manifestPath = join(ROOT, 'modules', 'manifest.yaml');
+
 // The default stamp is a fingerprint of the render inputs, not a git sha: 'fp-' + the first
 // 12 hex of sha256 over every task spec's raw bytes in bytewise-sorted repo-relative path
-// order, then CHANGELOG.md, then VERSION, when present. A HEAD default self-chased: the page
-// staged by the pre-commit hook carried the PARENT sha (the new commit did not exist yet),
-// so every re-render differed by the stamp alone, and committing THAT armed the next diff.
-// The page's own bytes are never an input, so render -> commit -> render is byte-stable,
-// git checkout or not. CYBEROS_COMMIT still pins an explicit stamp when set and non-empty.
+// order, then batch ledgers, CHANGELOG.md, VERSION, commit-links ledger, manifest.yaml,
+// and the status shell/client/CSS template bytes, when present.
+// Live git commit-set is intentionally NOT hashed here (IMP-082 chase). CYBEROS_COMMIT pins.
 function corpusFingerprint() {
   const h = createHash('sha256');
-  // batch ledgers join the specs here (TASK-IMP-114): they determine rendered bytes, so a stamp
-  // that skipped them would report the same fp- for two different pages.
   const files = [...specFiles, ...batchFiles].sort((a, b) => Buffer.compare(Buffer.from(a.rel), Buffer.from(b.rel)));
   for (const f of files) h.update(readFileSync(f.abs));   // per-file update - no concat buffer
   if (existsSync(clPath)) h.update(readFileSync(clPath));
   const vPath = join(ROOT, 'VERSION');
   if (existsSync(vPath)) h.update(readFileSync(vPath));
+  if (existsSync(ledgerPath)) h.update(readFileSync(ledgerPath));
+  if (existsSync(manifestPath)) h.update(readFileSync(manifestPath));
+  // template bytes by basename (stable across checkout roots) — primary v3 set only
+  for (const t of [SHELL_T, TOKENS_T, STATUS_CSS_T, APP_T]
+    .sort((a, b) => basename(a.abs).localeCompare(basename(b.abs)))) {
+    h.update(t.body);
+  }
   return 'fp-' + h.digest('hex').slice(0, 12);
 }
 const COMMIT = process.env.CYBEROS_COMMIT || corpusFingerprint();
@@ -549,16 +666,6 @@ const deck = `
     : '<p class="relnote">No release sections parsed from CHANGELOG.md.</p>'}
 </div>`;
 
-// TASK-IMP-114 §1.4 - the row RENDERS, beside the corpus counts, in the deck.
-//
-// Server-side and not in the JSON payload, deliberately. §1.7 of TASK-IMP-108 shipped `done` with
-// its report emitted into the payload and read by nothing, and its test passed because it asserted
-// the string was PRESENT rather than RENDERED. A metric nobody can see is not a metric. This panel
-// is markup, readable with JS off, like the staleness report below it.
-//
-// §1.5 - there is no threshold here, no colour ramp, no budget, and nothing that turns a row red.
-// It MEASURES. Measuring is not enforcing, and a number that starts blocking is a gate that
-// arrived without anyone deciding to add one. The operator reads the row and makes the call.
 const anyTokens = batches.some(b => 'tokens' in b);
 const economicsHtml = batches.length ? `
 <div class="panel" style="grid-column:1/-1">
@@ -589,17 +696,6 @@ const nowHtml = moving.length ? `
   ).join('')}</div>
 </section>` : '';
 
-// TASK-IMP-108 §1.7 - the report must RENDER, not merely be computed.
-//
-// The first pass emitted draft_staleness into the JSON payload and stopped. Nothing read it:
-// status-app.js has zero references to the key, so the report existed in the page and was
-// rendered by nothing. The cited test asserted the STRING appeared in the HTML - true, inside a
-// JSON blob no code consumes - so §1.7 shipped `done` with its own clause unsatisfied, and the
-// test passed because it tested the payload rather than the promise. (External review 2026-07-17.)
-//
-// Server-side, not client-side, deliberately: this file's own doctrine is that the page stays
-// readable without status-app.js (see the <noscript> table). A JS-only report would break the
-// clause again for anyone reading over file:// with JS off.
 const stalenessHtml = draftStaleness.total ? `
   <section class="now">
     <h2>Drafts awaiting triage (${draftStaleness.total})</h2>
@@ -628,7 +724,7 @@ const facets = [
 
 // No-JS: the same truth, statically. Every task in one table, every release in one list.
 const nojs = `
-<p class="relnote">JavaScript is off, so the lenses, filters and the task drawer are unavailable.
+<p class="relnote">JavaScript is off, so the interactive canvas and the task drawer are unavailable.
 Everything below is the same corpus, rendered statically.</p>
 <div class="tbl-wrap"><table><thead><tr>
 <th>id</th><th>title</th><th>module</th><th>class</th><th>priority</th><th>phase</th><th>status</th>
@@ -644,38 +740,18 @@ ${[...r.cited, ...r.dated].length ? `  <p class="relnote">tasks: ${[...r.cited, 
   ${r.sec.map(s => `<div class="rel-sec"><h4>${esc(s.h)}</h4><ul>${s.items.map(x => `<li>${x}</li>`).join('')}</ul></div>`).join('')}
 </div></article>`).join('\n')}`;
 
-// ---- the corpus the client runs on ----------------------------------------------------
+// ---- the corpus the legacy (v2) client runs on -----------------------------------------
 const data = {
   project: NAME, version: VERSION, commit: COMMIT,
   statuses: STATUSES,
-  // The client reads specDir out of the emitted JSON (status-app.js:312), so this
-  // one string is the whole producer/consumer contract for the chunk path.
   specDir: 'data/task',
-  // where spec.md lives *relative to this page* - empty when the markdown is not shipped
-  // next to the output (the website build links the rendered task page instead).
   frBase: process.env.CYBEROS_TASK_BASE || '',
   tasks, releases, bound,
 };
-// empty scalars carry no information and cost ~25% of the payload - drop them.
-// (d / b / rl / st stay: the client reads .length on them.)
 const KEEP = new Set(['i', 'k', 'dm', 't', 'm', 's', 'd', 'b', 'rl', 'st']);
 const compact = f => Object.fromEntries(Object.entries(f)
   .filter(([k, v]) => KEEP.has(k) || (Array.isArray(v) ? v.length : v !== '' && v !== null && v !== 0)));
 const dataJson = JSON.stringify({ ...data, draft_staleness: draftStaleness, stuck_wip: stuckWip, tasks: tasks.map(compact) }).replace(/</g, '\\u003c');
-
-// ---- templates ------------------------------------------------------------------------
-const tpl = (sub, name) => {
-  const env = process.env.CYBEROS_TEMPLATES;
-  for (const c of [
-    env && join(env, name),
-    join(ROOT, 'modules', 'templates', sub, name),
-    join(__dirname, 'templates', name),
-  ]) if (c && existsSync(c)) return readFileSync(c, 'utf-8');
-  return die(`template not found: ${name} (set CYBEROS_TEMPLATES)`);
-};
-const SHELL = tpl('html', 'status-hub.html');
-const CSS = tpl('cds', 'tokens.css') + '\n' + tpl('cds', 'status.css');
-const APP = tpl('html', 'status-app.js');
 
 // ---- write ----------------------------------------------------------------------------
 const REF = join(OUT, 'reference');
@@ -684,6 +760,7 @@ mkdirSync(REF, { recursive: true });
 let specBytes = 0;
 const dataDir = join(REF, 'data', 'task');
 rmSync(join(REF, 'data'), { recursive: true, force: true });   // stale chunks must not linger
+mkdirSync(join(REF, 'data'), { recursive: true });
 if (specs.size) {
   mkdirSync(dataDir, { recursive: true });
   for (const [id, html] of [...specs].sort((a, b) => a[0].localeCompare(b[0]))) {
@@ -693,9 +770,68 @@ if (specs.size) {
   }
 }
 
+// status-feed@1
+const feed = buildStatusFeed({
+  root: ROOT,
+  project: NAME,
+  version: VERSION,
+  tasks,
+  lenient: LENIENT,
+  snapshotFallback: hubAsofRaw || '',
+  warn: m => console.error(m),
+  fail: die,
+});
+// Enrich for the v3 page: page stamp, chunk contract, sp flags from hub corpus.
+const hubSp = new Map(tasks.map(t => [t.i, t.sp || 0]));
+const feedForPage = {
+  ...feed,
+  commit: COMMIT,
+  specDir: 'data/task',
+  frBase: process.env.CYBEROS_TASK_BASE || '',
+  draft_staleness: draftStaleness,
+  stuck_wip: stuckWip,
+  tasks: feed.tasks.map(t => ({ ...t, sp: hubSp.get(t.i) || 0 })),
+};
+const feedJson = JSON.stringify(feed).replace(/</g, '\\u003c');
+const feedPageJson = JSON.stringify(feedForPage).replace(/</g, '\\u003c');
+writeFileSync(join(REF, 'data', 'status-feed.json'), feedJson + '\n');
+
+const fill = (shell, slots) => {
+  let page = shell;
+  for (const [k, v] of Object.entries(slots)) page = page.split(`{{slot:${k}}}`).join(v);
+  return page.replace(/\{\{slot:[a-z_]+(:html|:json)?\}\}/g, '');
+};
+
 const initial = esc((NAME[0] || 'C').toUpperCase());
-let page = SHELL;
-for (const [k, v] of Object.entries({
+const reportsHtml = (economicsHtml || stalenessHtml || stuckWipHtml)
+  ? `<aside class="ops-reports" aria-label="Operator reports">${economicsHtml}${stalenessHtml}${stuckWipHtml}</aside>`
+  : '';
+
+const v3CssHref = LEGACY_PRIMARY ? 'assets/status-v3.css' : 'assets/status.css';
+const v3JsHref = LEGACY_PRIMARY ? 'assets/status-v3.js' : 'assets/status.js';
+const v2CssHref = LEGACY_PRIMARY ? 'assets/status.css' : 'assets/status-legacy.css';
+const v2JsHref = LEGACY_PRIMARY ? 'assets/status.js' : 'assets/status-legacy.js';
+
+const v3Page = fill(SHELL_T.body, {
+  'title': `${esc(NAME)} status`,
+  'version': esc(VERSION),
+  'stamp': esc(COMMIT),
+  'meta_plain': `${tasks.length} tasks · ${releases.length} releases`,
+  'nojs:html': nojs,
+  'reports:html': reportsHtml,
+  'data:json': feedPageJson,
+  'styles:html': ASSETS
+    ? `<link rel="stylesheet" href="${v3CssHref}">`
+    : `<style>\n${CSS_V3}\n</style>`,
+  'head:html': ASSETS ? '<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">' : '',
+  'script:html': ASSETS
+    ? `<script defer src="${v3JsHref}"></script>`
+    : `<script>\n${APP_V3}\n</script>`,
+  'footer': esc(`${NAME} — generated at ${VERSION} (${COMMIT}). Markdown is the record of truth; this page only renders it.`) +
+    ` · <a href="status-legacy.html">Legacy status page</a>`,
+});
+
+const v2Page = fill(LEGACY_SHELL_T.body, {
   'title': `${esc(NAME)} status`,
   'initial': initial,
   'subtitle': `Where ${esc(NAME)} is and what is coming — generated from task frontmatter, CHANGELOG and VERSION`,
@@ -707,20 +843,34 @@ for (const [k, v] of Object.entries({
   'facets:html': facets,
   'nojs:html': nojs,
   'data:json': dataJson,
-  'styles:html': ASSETS ? '<link rel="stylesheet" href="assets/status.css">' : `<style>\n${CSS}\n</style>`,
+  'styles:html': ASSETS
+    ? `<link rel="stylesheet" href="${v2CssHref}">`
+    : `<style>\n${CSS_V2}\n</style>`,
   'head:html': ASSETS ? '<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">' : '',
-  'script:html': ASSETS ? '<script defer src="assets/status.js"></script>' : `<script>\n${APP}\n</script>`,
-  'footer': esc(`${NAME} — generated at ${VERSION} (${COMMIT}). Markdown is the record of truth; this page only renders it.`),
-})) page = page.split(`{{slot:${k}}}`).join(v);
-page = page.replace(/\{\{slot:[a-z_]+(:html|:json)?\}\}/g, '');
-writeFileSync(join(REF, 'status.html'), page);
+  'script:html': ASSETS
+    ? `<script defer src="${v2JsHref}"></script>`
+    : `<script>\n${APP_V2}\n</script>`,
+  'footer': esc(`${NAME} — generated at ${VERSION} (${COMMIT}). Markdown is the record of truth; this page only renders it.`) +
+    ` · <a href="${LEGACY_PRIMARY ? 'status-v3.html' : 'status.html'}">Current status page (v3)</a>`,
+});
+
+const primary = LEGACY_PRIMARY ? v2Page : v3Page;
+writeFileSync(join(REF, 'status.html'), primary);
+writeFileSync(join(REF, 'status-legacy.html'), v2Page);
+if (LEGACY_PRIMARY) writeFileSync(join(REF, 'status-v3.html'), v3Page);
 
 if (ASSETS) {
   const adir = join(REF, 'assets');
   mkdirSync(adir, { recursive: true });
-  writeFileSync(join(adir, 'status.css'), CSS);
-  writeFileSync(join(adir, 'status.js'), APP);
-  const tok = n => (CSS.match(new RegExp(`--cs-color-${n}:\\s*([^;]+);`)) || [])[1]?.trim();
+  writeFileSync(join(adir, 'status.css'), LEGACY_PRIMARY ? CSS_V2 : CSS_V3);
+  writeFileSync(join(adir, 'status.js'), LEGACY_PRIMARY ? APP_V2 : APP_V3);
+  writeFileSync(join(adir, 'status-legacy.css'), CSS_V2);
+  writeFileSync(join(adir, 'status-legacy.js'), APP_V2);
+  if (LEGACY_PRIMARY) {
+    writeFileSync(join(adir, 'status-v3.css'), CSS_V3);
+    writeFileSync(join(adir, 'status-v3.js'), APP_V3);
+  }
+  const tok = n => (CSS_V3.match(new RegExp(`--cs-color-${n}:\\s*([^;]+);`)) || [])[1]?.trim();
   const umber = tok('brand-umber') || '#45210E';
   const ochre = tok('brand-ochre') || '#F4BA17';
   writeFileSync(join(adir, 'favicon.svg'),
@@ -732,18 +882,18 @@ if (ASSETS) {
 `);
 }
 
-// bookmarks stay alive: the three old tabs are the three lenses now (#roadmap -> board,
-// #backlog -> table, #changelog -> releases; status-app.js maps the legacy hashes).
+// bookmarks stay alive: roadmap stub + v3 legacy hash redirects in status-app.js
 writeFileSync(join(REF, 'roadmap.html'), `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=status.html#roadmap">
 <title>Roadmap moved</title></head>
-<body><p>The roadmap is a lens of the <a href="status.html#roadmap">status hub</a> now (TASK-DOCS-006).</p></body></html>
+<body><p>The roadmap is a band of the <a href="status.html#roadmap">status hub</a> now (TASK-DOCS-013).</p></body></html>
 `);
 
 const summary = STATUSES.filter(s => tasks.some(f => f.s === s))
   .map(s => `${tasks.filter(f => f.s === s).length} ${s}`).join(', ');
 console.log(`status-hub: ${tasks.length} tasks (${summary}), ${modules.length} modules, ${releases.length} releases, ` +
-  `VERSION ${VERSION} - one page, three lenses` +
+  `VERSION ${VERSION} - ${LEGACY_PRIMARY ? 'legacy-primary (v2)' : 'status-hub@3 canvas'}` +
   (specs.size ? `, ${specs.size} spec chunks (${(specBytes / 1048576).toFixed(1)} MB)` : ', no spec chunks (CYBEROS_STATUS_SPECS=0)') +
   (batches.length ? `, ${batches.length} batch economics rows` : '') +
-  (invalid.length ? `, ${invalid.length} invalid status` : ''));
+  (invalid.length ? `, ${invalid.length} invalid status` : '') +
+  `, status-feed@1 ${feed.fp}, legacy=status-legacy.html`);

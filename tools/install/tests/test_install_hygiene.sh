@@ -204,7 +204,7 @@ t05_hookspath_standalone() {
   T05_STANDALONE_OUT="$(_t05_install "$d")"
   { [ -f "$d/.githooks/pre-commit" ] && [ -x "$d/.githooks/pre-commit" ]; } \
     || { fail t05_hookspath_standalone "hook missing or not executable at .githooks/pre-commit"; all=0; }
-  [ "$(sed -n '2p' "$d/.githooks/pre-commit" 2>/dev/null)" = "# cyberos-status-hook v2 (managed by cyberos install)" ] \
+  [ "$(sed -n '2p' "$d/.githooks/pre-commit" 2>/dev/null)" = "# cyberos-status-hook v3 (managed by cyberos install)" ] \
     || { fail t05_hookspath_standalone "standalone v2 header not on line 2"; all=0; }
   [ ! -e "$d/.git/hooks/pre-commit" ] \
     || { fail t05_hookspath_standalone "install also wrote .git/hooks/pre-commit (inert litter)"; all=0; }
@@ -250,10 +250,10 @@ t05_no_hookspath_regression() {
   local out; out="$(_t05_install "$d")"
   [ -x "$d/.git/hooks/pre-commit" ] \
     || { fail t05_no_hookspath_regression "hook not at .git/hooks/pre-commit"; all=0; }
-  [ "$(sed -n '2p' "$d/.git/hooks/pre-commit" 2>/dev/null)" = "# cyberos-status-hook v2 (managed by cyberos install)" ] \
+  [ "$(sed -n '2p' "$d/.git/hooks/pre-commit" 2>/dev/null)" = "# cyberos-status-hook v3 (managed by cyberos install)" ] \
     || { fail t05_no_hookspath_regression "standalone v2 header not on line 2"; all=0; }
   # today's auto-sync summary line, fixed-string exact: any inserted " at <path>" breaks this
-  grep -qF "auto-sync -> pre-commit hook v2 installed (blocks if docs/status regen fails; auto-stages status page); run-gates.sh also regenerates the page after every gates run" <<<"$out" \
+  grep -qF "auto-sync -> pre-commit hook v3 installed (full or coverage-only regen; auto-stages status page); run-gates.sh also regenerates the page after every gates run" <<<"$out" \
     || { fail t05_no_hookspath_regression "auto-sync summary line drifted from today's wording"; all=0; }
   grep -qi 'hookspath' <<<"$out" \
     && { fail t05_no_hookspath_regression "hooksPath wording leaked into no-hooksPath output"; all=0; }
@@ -353,7 +353,10 @@ t06_platform_keeps_comment() {
 t06_existing_config_untouched() {
   local d="$TMP/ct-existing"; mkrepo "$d"
   mkdir -p "$d/.cyberos"
-  printf '# operator config\ntask_template: engineering-spec@1\ncustom: yes\n' > "$d/.cyberos/config.yaml"
+  # Pre-seed with a cutoff so TASK-DOCS-019's one-time additive write is a no-op;
+  # operator keys must still survive install byte-for-byte.
+  printf '# operator config\ntask_template: engineering-spec@1\ncustom: yes\ntraceability:\n  cutoff: deadbeefdeadbeefdeadbeefdeadbeefdeadbeef\n  strict: false\n  scaffold_ci: false\n' \
+    > "$d/.cyberos/config.yaml"
   cp "$d/.cyberos/config.yaml" "$TMP/ct-existing.want"
   _t06_install "$d" >/dev/null                        # re-install over the pre-seeded file
   cmp -s "$d/.cyberos/config.yaml" "$TMP/ct-existing.want" \

@@ -260,13 +260,20 @@ cp "$here/lib/rules-cone.sh" "$out/lib/rules-cone.sh"
 [ -f "$here/lib/task-migrate.sh" ] && cp "$here/lib/task-migrate.sh" "$out/lib/task-migrate.sh"
 [ -f "$here/lib/update-check.sh" ] && cp "$here/lib/update-check.sh" "$out/lib/update-check.sh"
 [ -f "$here/lib/status-page.sh" ] && cp "$here/lib/status-page.sh" "$out/lib/status-page.sh"
+# Traceability checker (TASK-DOCS-019): single implementation for commit-msg + CI.
+# Consumer CI template rides the existing `cp -R "$here/ci"` below (tools/install/ci/).
+if [ -f "$here/../../scripts/check_task_link.sh" ]; then
+  cp "$here/../../scripts/check_task_link.sh" "$out/lib/check_task_link.sh"
+  chmod +x "$out/lib/check_task_link.sh"
+fi
 # (docs-tools sources may be absent in trimmed fixture builds — vendor what exists)
 if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   mkdir -p "$out/docs-tools/templates"
   cp "$here/../../scripts/migrate_task_layout.py" "$out/docs-tools/"
   [ -f "$here/../../scripts/repair_task_yaml.py" ] && cp "$here/../../scripts/repair_task_yaml.py" "$out/docs-tools/"
-  # status page: render-status-hub.mjs + md.mjs + templates (all five or half-render fails loudly)
+  # status page: render-status-hub.mjs + status-feed.mjs + md.mjs + templates
   [ -f "$here/../docs-site/render-status-hub.mjs" ] && cp "$here/../docs-site/render-status-hub.mjs" "$out/docs-tools/"
+  [ -f "$here/../docs-site/status-feed.mjs" ] && cp "$here/../docs-site/status-feed.mjs" "$out/docs-tools/"
   [ -f "$here/../docs-site/md.mjs" ] && cp "$here/../docs-site/md.mjs" "$out/docs-tools/"
   # task-lint: deterministic machine floor under audit_rubric@2.0 (TASK-IMP-084)
   [ -f "$here/docs-tools/task-lint.mjs" ] && cp "$here/docs-tools/task-lint.mjs" "$out/docs-tools/"
@@ -312,7 +319,10 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   [ -f "$here/docs-tools/workflow-improve.mjs" ] && cp "$here/docs-tools/workflow-improve.mjs" "$out/docs-tools/"
   [ -f "$here/../../modules/templates/html/status-hub.html" ] && cp "$here/../../modules/templates/html/status-hub.html" "$out/docs-tools/templates/"
   [ -f "$here/../../modules/templates/html/status-app.js" ] && cp "$here/../../modules/templates/html/status-app.js" "$out/docs-tools/templates/"
+  [ -f "$here/../../modules/templates/html/status-hub-legacy.html" ] && cp "$here/../../modules/templates/html/status-hub-legacy.html" "$out/docs-tools/templates/"
+  [ -f "$here/../../modules/templates/html/status-app-legacy.js" ] && cp "$here/../../modules/templates/html/status-app-legacy.js" "$out/docs-tools/templates/"
   [ -f "$here/../../modules/templates/cds/status.css" ] && cp "$here/../../modules/templates/cds/status.css" "$out/docs-tools/templates/"
+  [ -f "$here/../../modules/templates/cds/status-legacy.css" ] && cp "$here/../../modules/templates/cds/status-legacy.css" "$out/docs-tools/templates/"
   [ -f "$here/../../modules/templates/cds/tokens.css" ] && cp "$here/../../modules/templates/cds/tokens.css" "$out/docs-tools/templates/"
 fi
 # Never ship retired names (pre-1.0.0)

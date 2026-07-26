@@ -1,0 +1,33 @@
+# traceability-gate — the non-negotiable rule, mechanically enforced.
+#
+# Every change introduced by a commit must be linked to one or more tasks and
+# reflected on the Status page and in the Release Notes. This job fails the PR /
+# push when any non-exempt commit newer than the cutoff lacks a canonical TASK id
+# in its message. Shared logic: scripts/check_task_link.sh (same script the local
+# commit-msg hook runs in advisory mode).
+#
+# History at/before the cutoff is never retro-failed; retroactive fixes go through
+# the reviewed commit-links ledger, not history rewrites.
+name: traceability-gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  commit-task-links:
+    name: every commit cites a task
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: check commit range
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: bash scripts/check_task_link.sh --range "${BASE}..${HEAD_SHA}"
