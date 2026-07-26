@@ -1,0 +1,27 @@
+[package]
+name = "cyberos-inv"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "INV — Wise webhook intake (TASK-INV-004)"
+
+[lib]
+name = "cyberos_inv"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+tracing = { workspace = true }
+sha2 = { workspace = true }
+base64 = "0.22"
+rsa = { version = "0.9", features = ["pem", "sha2"] }
+signature = "2"
+
+[dev-dependencies]
+serde_json = { workspace = true }
+rand = "0.8"

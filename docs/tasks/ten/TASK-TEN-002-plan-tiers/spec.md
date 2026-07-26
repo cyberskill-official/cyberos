@@ -11,7 +11,7 @@ author: "@stephencheng"
 template: task@1
 module: ten
 priority: p0
-status: ready_to_implement
+status: done
 new_files:
   - docs/tasks/ten/PLAN_CAPS.md
   - services/ten/src/plans/mod.rs

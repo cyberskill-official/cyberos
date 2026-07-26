@@ -1,0 +1,11 @@
+{
+  "schema": "cyberos.verdict@1",
+  "actor": "operator-session",
+  "timestamp": "2026-07-26T03:13:56Z",
+  "task_id": "TASK-INV-004",
+  "from": "testing",
+  "to": "done",
+  "evidence_path": "docs/batches/batch-ten-inv-ready-session-hitl.md",
+  "evidence_sha256": "78efc05e5ac447fa26c24b12d21300faac102d6aa991111ca6711702507d5f8b",
+  "artifact_sha256": "c4ba1b2838ec1fcbee7218c2b3d5881a987c3df4acefe20fa3b17955c4de08b1"
+}

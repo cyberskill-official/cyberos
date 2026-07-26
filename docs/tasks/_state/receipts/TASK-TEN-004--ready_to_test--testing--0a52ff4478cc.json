@@ -1,0 +1,7 @@
+{
+  "schema": "cyberos.transition@1",
+  "task_id": "TASK-TEN-004",
+  "from": "ready_to_test",
+  "to": "testing",
+  "receipt_sha256": "0a52ff4478cca36d1f64f37f01db70a33169aaee7a487b71d4c32252798608bc"
+}
