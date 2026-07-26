@@ -455,8 +455,8 @@ v1.10.0 payload (kept at `dist/` from the pre-bump commit or rebuilt from the ta
 
 22 consumer installs; scan commands in Phase 7.1. Worktrees (`strategem-wt-*`),
 `cyberos-12c-pr153`, `practice` are excluded duplicates; `cyberos-12g-clone`
-(v1.5.1, 579 specs) is a mothership clone - confirm with operator, expected
-action: skip or delete, never migrate independently.
+(v1.5.1, 579 specs) is a mothership clone — **P0 locked: skip forever** (never
+migrate independently; fleet scripts skip by basename).
 
 | Repo | Ver | Page | Specs | Dirty | Class |
 | --- | --- | --- | --- | --- | --- |
@@ -532,8 +532,18 @@ render-status-hub rather than a second tool; ledger at `docs/tasks/_state/`;
 per-repo cutoff = install/upgrade HEAD; legacy page kept exactly one minor cycle;
 fleet upgraded from the v2.0.0 payload, not from git main.
 
-Open (answer at the P0 gate): (1) confirm `cyberos-12g-clone` disposition;
-(2) may fleet repos be auto-committed by `commit-fleet.sh`, and which may be
-pushed; (3) should consumer CI scaffolding default on or opt-in
-(`traceability.scaffold_ci` default true or false); (4) is one minor cycle the
-right legacy-page window.
+### P0 gate — locked 2026-07-27 (operator Stephen: "go as your judgment")
+
+Recorded also at `docs/notes/status-v3-p0-decisions.md`.
+
+| # | Topic | Locked choice |
+| --- | --- | --- |
+| 1 | `cyberos-12g-clone` | **A — skip forever** (exclude from fleet discovery/migration) |
+| 2 | Fleet commit/push | **A — `commit: all cleared`, `push: none`** until a second explicit allowlist |
+| 3 | `scaffold_ci` | **A — keep `false` / opt-in** (already coded; do not flip) |
+| 4 | Legacy page window | **A — one minor cycle** (`status-legacy.html` through 2.0.x; remove at 2.1.0) |
+| 5 | Branch protection | **A — after merge**, require both `traceability-gate` + `suite-gate` on `main` (operator step; do not invent settings in this PR) |
+| 6 | Cutoff | **A — after merge**, follow-up commit on `main` sets cutoff = merge SHA (do **not** invent a cutoff while the PR is open) |
+| 7 | Ship path | **A — one PR** for the whole `feat/status-v3-platform` branch as-is |
+
+Still blocked / later HITL: P2 visual review welcome; P6 tag and P7 fleet rollout remain blocked until their gates.

@@ -2,7 +2,8 @@
 
 The approved `docs/status-v3-preview/` canvas was promoted to the platform standard in
 Phase 2 of `docs/plans/PLAN-status-v3-platform-2026-07-27/plan.md`
-(TASK-DOCS-013..016). Phase 8 docs: TASK-DOCS-028.
+(TASK-DOCS-013..016). Phase 8 docs: TASK-DOCS-028. P0 decisions:
+[`status-v3-p0-decisions.md`](status-v3-p0-decisions.md).
 
 - Generator: `tools/docs-site/render-status-hub.mjs` emits status-hub@3 (tabless canvas)
   as `reference/status.html`, plus `status-legacy.html` (v2 escape hatch) for one minor cycle.

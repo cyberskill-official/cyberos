@@ -21,12 +21,14 @@ Scope: verify packaging/channels **without** publish/deploy/tag.
 
 `traceability.scaffold_ci` defaults to **false (opt-in)**. Installer scaffolds `.github/workflows/cyberos-traceability.yml` only when the key is explicitly `true` and `.github/` exists.
 
+All P0 open questions are locked — see [`status-v3-p0-decisions.md`](status-v3-p0-decisions.md).
+
 ## Not done here (operator HITL / later phases)
 
-- P0: PR merge + required checks
+- P0 remaining: PR merge + required checks + cutoff follow-up (cutoff must not be invented pre-merge)
 - P2: operator page review (paper + night, file:// + served)
 - P6: v2.0.0 tag; flip release-range preflight to blocking
-- P7: fleet rollout under `/Users/stephencheng/Projects`
+- P7: fleet rollout under `/Users/stephencheng/Projects` (`commit: all cleared`, `push: none`; skip `cyberos-12g-clone`)
 - Publish/deploy of any channel
 - TASK-DOCS-021 mothership 148-violation triage ledger (skipped — incomplete)
 
