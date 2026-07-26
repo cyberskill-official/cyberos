@@ -1065,6 +1065,7 @@ dependencies = [
  "clap",
  "cyberos-capture",
  "cyberos-cli-exit",
+ "cyberos-metering",
  "cyberos-obs-sdk",
  "cyberos-ten",
  "cyberos-types",

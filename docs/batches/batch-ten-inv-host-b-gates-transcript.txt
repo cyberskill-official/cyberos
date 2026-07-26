@@ -1,0 +1,6 @@
+gate build:  (source: absent)
+SKIP  build     (no command configured)
+gate lint:  (source: absent)
+SKIP  lint      (no command configured)
+gate test: bash scripts/tests/run_all.sh (source: config)
+GATE  test      bash scripts/tests/run_all.sh

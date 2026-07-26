@@ -64,8 +64,27 @@ pub async fn verify_jwt(
     // TASK-OBS-003 - hand the tenant to the RED middleware (outer layer) via the response extensions, so
     // the metric's tenant_id label is real rather than "unknown".
     let tenant_id = claims.tenant_id.clone();
+    let jti = claims.jti.clone();
+    let method = request.method().clone();
+    let raw_path = request
+        .uri()
+        .path_and_query()
+        .map(|pq| pq.as_str())
+        .unwrap_or_else(|| request.uri().path());
+    let path = crate::metering_emit::path_without_query(raw_path).to_string();
     request.extensions_mut().insert(claims);
     let mut response = next.run(request).await;
+    // TASK-TEN-205 — bill successful JWT-gated requests only (never 401 early returns).
+    if response.status().is_success() {
+        let idem = format!(
+            "{}:{}:{}:{}",
+            jti,
+            method.as_str(),
+            path,
+            uuid::Uuid::new_v4()
+        );
+        crate::metering_emit::emit_api_call(&tenant_id, &idem, method.as_str(), &path);
+    }
     response
         .extensions_mut()
         .insert(cyberos_obs_sdk::TenantCtx(tenant_id));
