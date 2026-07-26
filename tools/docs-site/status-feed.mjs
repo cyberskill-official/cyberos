@@ -434,6 +434,9 @@ export function buildStatusFeed(opts) {
     feed: FEED_VERSION,
     snapshot: ident.snapshot || snapshotFallback || '',
     head: ident.head,
+    // Truth window (TASK-DOCS-018): coverage tip is HEAD at render time. A commit that
+    // stages this page cannot include its own hash (pre-commit sees the parent as HEAD).
+    coverageAsOf: ident.head,
     branch: ident.branch,
     repoUrl: ident.repoUrl,
     tags: ident.tags,
@@ -454,6 +457,65 @@ export function buildStatusFeed(opts) {
   if (!data.noGit) delete data.noGit;
   if (!data.ghosts) delete data.ghosts;
 
+  const json = JSON.stringify(data);
+  data.fp = 'fp-' + createHash('sha256').update(json).digest('hex').slice(0, 12);
+  return data;
+}
+
+/**
+ * Fast path for code-only commits (TASK-DOCS-017): refresh git coverage + identity + fp
+ * while keeping tasks/modules/phases/notes from a previously emitted feed. Does not
+ * re-parse task specs.
+ */
+export function refreshStatusFeedCoverage(prev, opts = {}) {
+  const { root, warn = console.warn } = opts;
+  const tasks = prev.tasks || [];
+  const byId = new Map(tasks.map(t => [t.i, t]));
+  const prefixes = new Set([...byId.keys()].map(id => id.split('-')[1]).filter(Boolean));
+
+  const rawCommits = readGitCommits(root);
+  const noGit = rawCommits === null;
+  if (noGit) warn('status-feed: git log unavailable — coverage-only refresh yields empty cov');
+
+  const knownHashes = new Set((rawCommits || []).map(c => c.h));
+  const ledgerPath = join(root, 'docs', 'tasks', '_state', 'commit-links.yaml');
+  let ledger = {};
+  if (existsSync(ledgerPath)) {
+    const loaded = loadLedger(readFileSync(ledgerPath, 'utf8'), byId, knownHashes.size ? knownHashes : null);
+    for (const h of loaded.unknownHashes) warn(`status-feed: WARN commit-links.yaml hash prefix not in git log: ${h}`);
+    ledger = loaded.ledger;
+  }
+
+  const orderedRelByV = {};
+  for (const r of prev.releases || []) {
+    if (r.lg) continue;
+    orderedRelByV[r.v] = { v: r.v, d: r.d || null, notes: r.notes || emptyNotes() };
+  }
+
+  const commits = (rawCommits || []).map(c => classifyCommit(c, byId, prefixes, ledger));
+  const { releases, unreleasedCov } = bucketByEpoch(commits, orderedRelByV);
+
+  const ident = noGit
+    ? { head: '', branch: '', repoUrl: '', tags: [], snapshot: prev.snapshot || '' }
+    : readGitIdentity(root);
+
+  const data = {
+    ...prev,
+    snapshot: ident.snapshot || prev.snapshot || '',
+    head: ident.head,
+    coverageAsOf: ident.head,
+    branch: ident.branch,
+    repoUrl: ident.repoUrl,
+    tags: ident.tags,
+    noGit: noGit || undefined,
+    releases,
+    unreleased: {
+      notes: (prev.unreleased && prev.unreleased.notes) || emptyNotes(),
+      cov: unreleasedCov,
+    },
+  };
+  if (!data.noGit) delete data.noGit;
+  delete data.fp;
   const json = JSON.stringify(data);
   data.fp = 'fp-' + createHash('sha256').update(json).digest('hex').slice(0, 12);
   return data;

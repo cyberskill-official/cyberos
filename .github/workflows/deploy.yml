@@ -22,9 +22,12 @@ on:
       - '.github/workflows/deploy.yml'
       # the docs site ships with the product (job: docs) - rebuild it when its sources change
       - 'docs/**'
+      - 'docs/tasks/**'               # TASK-DOCS-018: task corpus changes must refresh the served hub
       - 'modules/*/docs/**'
       - 'services/*/docs/**'
       - 'tools/docs-site/**'
+      - '.githooks/**'                # TASK-DOCS-018: regen-trigger / hook posture affects freshness
+      - 'scripts/check_task_link.sh'  # TASK-DOCS-018: enforcement script ships with the docs surface
       - 'CHANGELOG.md'
       - 'VERSION'                     # TASK-DOCS-007: hub deck shows VERSION - redeploy on bump
       - 'modules/templates/**'        # TASK-DOCS-007: CDS shells/tokens feed every generated page
@@ -285,6 +288,8 @@ jobs:
         with:
           node-version: 24.18.0
       - name: Build the site from the markdown sources
+        # Full checkout HEAD: generator includes pushed commits in served coverage (TASK-DOCS-018).
+        # Committed docs/status/ may lag by one commit (truth window); the served page closes it.
         run: bash tools/docs-site/build.sh
       # TASK-IMP-079: shared shipper - this job and release.yml's docs job used to inline the same
       # snippet with a SHARED docs.new staging dir; a branch push + tag push seconds apart ran both

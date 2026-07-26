@@ -13,7 +13,7 @@
 //        reference/status-legacy.html (always the v2 page),
 //        reference/data/status-feed.json (status-feed@1),
 //        reference/data/task/<ID>.js, assets when CYBEROS_PAGE_ASSETS=1, roadmap.html stub.
-// Usage: node render-status-hub.mjs [repoRoot] [outDir]
+// Usage: node render-status-hub.mjs [repoRoot] [outDir] [--coverage-only]
 // Env:   CYBEROS_PROJECT     page title (default: basename of repoRoot)
 //        CYBEROS_PAGE_ASSETS 1 = emit assets/ and link them instead of inlining
 //        CYBEROS_HUB_LENIENT 1 = warn instead of failing on bad frontmatter / missing inputs
@@ -24,17 +24,99 @@ import { createHash } from 'node:crypto';
 import { join, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderMarkdown } from './md.mjs';
-import { buildStatusFeed } from './status-feed.mjs';
+import { buildStatusFeed, refreshStatusFeedCoverage } from './status-feed.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(process.argv[2] || resolve(__dirname, '..', '..'));
-const OUT = resolve(process.argv[3] || join(ROOT, 'dist', 'website'));
+const rawArgs = process.argv.slice(2);
+const COVERAGE_ONLY = rawArgs.includes('--coverage-only') || process.env.CYBEROS_STATUS_COVERAGE_ONLY === '1';
+const args = rawArgs.filter(a => a !== '--coverage-only');
+const ROOT = resolve(args[0] || resolve(__dirname, '..', '..'));
+const OUT = resolve(args[1] || join(ROOT, 'dist', 'website'));
 let NAME = process.env.CYBEROS_PROJECT || basename(ROOT);
 if (NAME.toLowerCase() === 'cyberos') NAME = 'CyberOS';
 const ASSETS = process.env.CYBEROS_PAGE_ASSETS === '1';
 const LENIENT = process.env.CYBEROS_HUB_LENIENT === '1';
 const SPECS = process.env.CYBEROS_STATUS_SPECS !== '0';
 const LEGACY_PRIMARY = process.env.CYBEROS_STATUS_LEGACY === '1';
+
+// ---- --coverage-only fast path (TASK-DOCS-017) -----------------------------------------
+// Refresh git coverage + feed fp inside an already-published docs/status tree. Skips
+// task frontmatter parse and spec-chunk re-render so code-only commits stay sub-second.
+function runCoverageOnly(root, pageDir) {
+  const feedPath = join(pageDir, 'data', 'status-feed.json');
+  const candidates = ['index.html', 'status.html', 'status-v3.html']
+    .map(n => join(pageDir, n)).filter(p => existsSync(p));
+  if (!existsSync(feedPath) || !candidates.length) {
+    console.error(`status-hub: coverage-only: no published page at ${pageDir} — run a full regen first`);
+    return 2;
+  }
+  const pagePath = candidates[0];
+  let page;
+  try {
+    const html = readFileSync(pagePath, 'utf8');
+    const m = html.match(/<script type="application\/json" id="sv3-data">([\s\S]*?)<\/script>/);
+    page = m ? JSON.parse(m[1]) : JSON.parse(readFileSync(feedPath, 'utf8'));
+  } catch (e) {
+    console.error(`status-hub: coverage-only: cannot parse existing feed (${e.message})`);
+    return 2;
+  }
+  const pageOnly = {
+    commit: page.commit,
+    specDir: page.specDir,
+    frBase: page.frBase,
+    draft_staleness: page.draft_staleness,
+    stuck_wip: page.stuck_wip,
+  };
+  const spById = new Map((page.tasks || []).map(t => [t.i, t.sp || 0]));
+  const refreshed = refreshStatusFeedCoverage(page, {
+    root,
+    warn: m => console.error(m),
+  });
+  // Canonical feed on disk: drop page-only enrichments.
+  const feedOut = { ...refreshed };
+  for (const k of Object.keys(pageOnly)) delete feedOut[k];
+  feedOut.tasks = (feedOut.tasks || []).map(({ sp, ...rest }) => rest);
+  {
+    delete feedOut.fp;
+    const json = JSON.stringify(feedOut);
+    feedOut.fp = 'fp-' + createHash('sha256').update(json).digest('hex').slice(0, 12);
+  }
+  writeFileSync(feedPath, JSON.stringify(feedOut).replace(/</g, '\\u003c') + '\n');
+
+  const pageOut = {
+    ...refreshed,
+    ...Object.fromEntries(Object.entries(pageOnly).filter(([, v]) => v !== undefined)),
+    tasks: (refreshed.tasks || []).map(t => ({ ...t, sp: spById.get(t.i) || 0 })),
+  };
+  {
+    delete pageOut.fp;
+    const json = JSON.stringify(pageOut);
+    pageOut.fp = 'fp-' + createHash('sha256').update(json).digest('hex').slice(0, 12);
+  }
+  const pageJson = JSON.stringify(pageOut).replace(/</g, '\\u003c');
+  const re = /(<script type="application\/json" id="sv3-data">)([\s\S]*?)(<\/script>)/;
+  let patched = 0;
+  for (const p of candidates) {
+    const html = readFileSync(p, 'utf8');
+    if (!re.test(html)) continue;
+    writeFileSync(p, html.replace(re, `$1${pageJson}$3`));
+    patched++;
+  }
+  if (!patched) {
+    console.error('status-hub: coverage-only: #sv3-data not found in page HTML');
+    return 2;
+  }
+  console.log(`status-hub: coverage-only refreshed ${patched} page(s) @ ${pageOut.coverageAsOf || '(no-git)'} (${pageOut.fp})`);
+  return 0;
+}
+
+if (COVERAGE_ONLY) {
+  // Prefer an explicit outDir that already holds the published page; otherwise docs/status/.
+  const pageDir = (existsSync(join(OUT, 'data', 'status-feed.json')) || existsSync(join(OUT, 'index.html')))
+    ? OUT
+    : join(ROOT, 'docs', 'status');
+  process.exit(runCoverageOnly(ROOT, pageDir));
+}
 
 const STATUSES = ['draft', 'ready_to_implement', 'implementing', 'ready_to_review', 'reviewing',
   'ready_to_test', 'testing', 'done', 'on_hold', 'closed', 'cannot_reproduce', 'duplicate'];

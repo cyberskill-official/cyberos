@@ -40,17 +40,14 @@ if matches "$docs_trigger"; then
   fi
 fi
 
-# TASK-IMP-074 group A: any staged task/CHANGELOG/VERSION change regenerates docs/status/ and
-# stages it IN THE SAME COMMIT, so the status page can never lag the frontmatter it renders.
-# Best-effort-loud: a render failure warns (with the fix command) but never blocks the commit -
-# a docs-render bug must not dead-lock all task work (mirrors run-gates.sh's posture).
-status_trigger='^(docs/tasks/|CHANGELOG\.md$|VERSION$)'
-if matches "$status_trigger"; then
-  # whole block a silent no-op — so docs/status/ has not been auto-regenerated since
-  # A guard that skips when its own tool is missing is indistinguishable from success.
-  status_page="$root/.cyberos/lib/status-page.sh"
-  [ -f "$status_page" ] || status_page="$root/tools/install/lib/status-page.sh"  # self-hosting fallback
-  if [ -f "$status_page" ] && command -v node >/dev/null 2>&1; then
+# TASK-IMP-074 / TASK-DOCS-017: every commit refreshes docs/status coverage. Full regen when
+# task/CHANGELOG/VERSION inputs change; otherwise --coverage-only (git cov + stamp, skip specs)
+# so code-only commits stay sub-second. Best-effort-loud: never blocks the commit.
+status_full_trigger='^(docs/tasks/|CHANGELOG\.md$|VERSION$)'
+status_page="$root/.cyberos/lib/status-page.sh"
+[ -f "$status_page" ] || status_page="$root/tools/install/lib/status-page.sh"  # self-hosting fallback
+if [ -f "$status_page" ] && command -v node >/dev/null 2>&1; then
+  if matches "$status_full_trigger"; then
     if bash "$status_page" "$root" >/dev/null 2>&1; then
       git add "$root/docs/status/" 2>/dev/null || true
       echo "cyberos: docs/status regenerated + staged (task sources changed)"
@@ -58,8 +55,15 @@ if matches "$status_trigger"; then
       echo "cyberos: WARN docs/status regeneration failed - run: bash $status_page ." >&2
     fi
   else
-    echo "cyberos: WARN status-page tool missing at $status_page - docs/status NOT regenerated" >&2
+    if bash "$status_page" "$root" --coverage-only >/dev/null 2>&1; then
+      git add "$root/docs/status/" 2>/dev/null || true
+      echo "cyberos: docs/status coverage refreshed + staged"
+    else
+      echo "cyberos: WARN docs/status coverage-only refresh failed - run: bash $status_page . --coverage-only" >&2
+    fi
   fi
+else
+  echo "cyberos: WARN status-page tool missing at $status_page - docs/status NOT regenerated" >&2
 fi
 
 # TASK-IMP-136 §1.2: staged module sources rerun the awh module gate. .pre-commit-hooks/

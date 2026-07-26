@@ -13,6 +13,7 @@
     "feed": { "type": "integer", "const": 1 },
     "snapshot": { "type": "string" },
     "head": { "type": "string" },
+    "coverageAsOf": { "type": "string" },
     "branch": { "type": "string" },
     "repoUrl": { "type": "string" },
     "tags": { "type": "array", "items": { "type": "string" } },

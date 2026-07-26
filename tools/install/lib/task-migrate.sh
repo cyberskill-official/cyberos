@@ -52,48 +52,77 @@ _cyberos_task_migrate() {
   rm -f "$root/.cyberos/status.html" "$root/docs/status.html" 2>/dev/null || true
   rm -rf "$root/.cyberos/status-site" 2>/dev/null || true
 
-  if command -v node >/dev/null 2>&1 && [ -f "$kit/docs-tools/render-status-hub.mjs" ]; then
-    mkdir -p "$root/.cyberos/status-site" "$root/docs/status"
-    CYBEROS_HUB_LENIENT=1 CYBEROS_PAGE_ASSETS=1 CYBEROS_PROJECT="$(basename "$root")" \
-      CYBEROS_TASK_BASE="../tasks/" \
-      CYBEROS_STATUS_SPECS="${CYBEROS_STATUS_SPECS:-1}" \
-      CYBEROS_TEMPLATES="$kit/docs-tools/templates" \
-      node "$kit/docs-tools/render-status-hub.mjs" "$root" "$root/.cyberos/status-site"
-    # rebuild published folder from scratch (no stale chunks)
-    rm -rf "$root/docs/status/assets" "$root/docs/status/data"
-    mkdir -p "$root/docs/status/assets"
-    if [ -f "$root/.cyberos/status-site/reference/status.html" ]; then
-      cp "$root/.cyberos/status-site/reference/status.html" "$root/docs/status/index.html"
-      [ -f "$root/.cyberos/status-site/reference/status-legacy.html" ] && \
-        cp "$root/.cyberos/status-site/reference/status-legacy.html" "$root/docs/status/status-legacy.html"
-      [ -f "$root/.cyberos/status-site/reference/status-v3.html" ] && \
-        cp "$root/.cyberos/status-site/reference/status-v3.html" "$root/docs/status/status-v3.html"
-      [ -f "$root/.cyberos/status-site/reference/roadmap.html" ] && \
-        cp "$root/.cyberos/status-site/reference/roadmap.html" "$root/docs/status/roadmap.html"
-      cp -R "$root/.cyberos/status-site/reference/assets/." "$root/docs/status/assets/" 2>/dev/null || true
-      if [ -d "$root/.cyberos/status-site/reference/data" ]; then
-        # `cp -R src dst` CREATES dst when absent but copies INTO dst when present. The
-        # `rm -rf` above normally guarantees absence — but it is unchecked, and when it
-        # silently fails (permissions, file busy, read-only mount) this nests instead of
-        # replacing: docs/status/data/data/task/*.js, 509 files, no error, exit 0. Same
-        # semantics that made `git mv` swallow the task contract during the rename; the
-        # rule there was "refuse, do not nest", and it applies verbatim to cp.
-        #
-        # The assets line above already uses the safe `src/.` -> `dst/` contents form. This
-        # one did not. Refuse loudly rather than produce a plausible-looking wrong tree.
-        if [ -e "$root/docs/status/data" ]; then
-          echo "cyberos migrate: ERROR docs/status/data survived rm -rf — refusing to copy (cp -R would nest it into data/data/). Remove it by hand and re-run." >&2
-          return 1
+  # Resolve renderer: payload/vendored docs-tools, or platform tools/docs-site (self-host).
+  local render=""
+  local templates=""
+  if [ -f "$kit/docs-tools/render-status-hub.mjs" ]; then
+    render="$kit/docs-tools/render-status-hub.mjs"
+    templates="$kit/docs-tools/templates"
+  elif [ -f "$root/tools/docs-site/render-status-hub.mjs" ]; then
+    render="$root/tools/docs-site/render-status-hub.mjs"
+    templates="$root/modules/templates"
+  fi
+
+  if command -v node >/dev/null 2>&1 && [ -n "$render" ]; then
+    # TASK-DOCS-017: --coverage-only refreshes git cov + stamp in-place; skips specs.
+    if [ "${CYBEROS_STATUS_COVERAGE_ONLY:-0}" = "1" ]; then
+      if [ -f "$root/docs/status/data/status-feed.json" ]; then
+        CYBEROS_HUB_LENIENT=1 CYBEROS_PROJECT="$(basename "$root")" \
+          CYBEROS_TEMPLATES="$templates" \
+          node "$render" --coverage-only "$root" "$root/docs/status" \
+          && page_done=1
+        if [ "$page_done" = 1 ]; then
+          echo "cyberos migrate: coverage-only refresh -> $root/docs/status/index.html"
+        else
+          echo "cyberos migrate: WARN coverage-only failed — falling back to full regen" >&2
         fi
-        cp -R "$root/.cyberos/status-site/reference/data" "$root/docs/status/data"
+      else
+        echo "cyberos migrate: coverage-only requested but no published page — full regen"
       fi
-      page_done=1
-      echo "cyberos migrate: open $root/docs/status/index.html"
-    else
-      echo "cyberos migrate: WARN status renderer produced no reference/status.html"
     fi
-    # Drop intermediate render tree (not for commit)
-    rm -rf "$root/.cyberos/status-site" 2>/dev/null || true
+    if [ "$page_done" = 0 ]; then
+      mkdir -p "$root/.cyberos/status-site" "$root/docs/status"
+      CYBEROS_HUB_LENIENT=1 CYBEROS_PAGE_ASSETS=1 CYBEROS_PROJECT="$(basename "$root")" \
+        CYBEROS_TASK_BASE="../tasks/" \
+        CYBEROS_STATUS_SPECS="${CYBEROS_STATUS_SPECS:-1}" \
+        CYBEROS_TEMPLATES="$templates" \
+        node "$render" "$root" "$root/.cyberos/status-site"
+      # rebuild published folder from scratch (no stale chunks)
+      rm -rf "$root/docs/status/assets" "$root/docs/status/data"
+      mkdir -p "$root/docs/status/assets"
+      if [ -f "$root/.cyberos/status-site/reference/status.html" ]; then
+        cp "$root/.cyberos/status-site/reference/status.html" "$root/docs/status/index.html"
+        [ -f "$root/.cyberos/status-site/reference/status-legacy.html" ] && \
+          cp "$root/.cyberos/status-site/reference/status-legacy.html" "$root/docs/status/status-legacy.html"
+        [ -f "$root/.cyberos/status-site/reference/status-v3.html" ] && \
+          cp "$root/.cyberos/status-site/reference/status-v3.html" "$root/docs/status/status-v3.html"
+        [ -f "$root/.cyberos/status-site/reference/roadmap.html" ] && \
+          cp "$root/.cyberos/status-site/reference/roadmap.html" "$root/docs/status/roadmap.html"
+        cp -R "$root/.cyberos/status-site/reference/assets/." "$root/docs/status/assets/" 2>/dev/null || true
+        if [ -d "$root/.cyberos/status-site/reference/data" ]; then
+          # `cp -R src dst` CREATES dst when absent but copies INTO dst when present. The
+          # `rm -rf` above normally guarantees absence — but it is unchecked, and when it
+          # silently fails (permissions, file busy, read-only mount) this nests instead of
+          # replacing: docs/status/data/data/task/*.js, 509 files, no error, exit 0. Same
+          # semantics that made `git mv` swallow the task contract during the rename; the
+          # rule there was "refuse, do not nest", and it applies verbatim to cp.
+          #
+          # The assets line above already uses the safe `src/.` -> `dst/` contents form. This
+          # one did not. Refuse loudly rather than produce a plausible-looking wrong tree.
+          if [ -e "$root/docs/status/data" ]; then
+            echo "cyberos migrate: ERROR docs/status/data survived rm -rf — refusing to copy (cp -R would nest it into data/data/). Remove it by hand and re-run." >&2
+            return 1
+          fi
+          cp -R "$root/.cyberos/status-site/reference/data" "$root/docs/status/data"
+        fi
+        page_done=1
+        echo "cyberos migrate: open $root/docs/status/index.html"
+      else
+        echo "cyberos migrate: WARN status renderer produced no reference/status.html"
+      fi
+      # Drop intermediate render tree (not for commit)
+      rm -rf "$root/.cyberos/status-site" 2>/dev/null || true
+    fi
   else
     echo "cyberos migrate: WARN node or render-status-hub.mjs missing — skipped status page"
   fi
