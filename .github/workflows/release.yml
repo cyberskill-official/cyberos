@@ -60,9 +60,10 @@ jobs:
           ref: "${{ github.event.inputs.tag || github.ref_name }}"
       - name: Tag must equal v$(cat VERSION)
         run: test "v$(cat VERSION)" = "$TAG"
-      # TASK-DOCS-020: release-range traceability preflight — WARN now, block at v2.0.0 / Phase 6.
-      - name: Traceability preflight (advisory until 2.0.0)
-        continue-on-error: true
+      # TASK-DOCS-020: release-range traceability preflight — blocking from 1.12.0
+      # (operator override 2026-07-27: Status v3 ships as minor 1.12.0, not 2.0.0; enforcement
+      # flips with that platform release).
+      - name: Traceability preflight (blocking)
         run: |
           set -euo pipefail
           last="$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)"
@@ -70,11 +71,11 @@ jobs:
             echo "::warning::No previous tag found — skipping release-range traceability preflight."
             exit 0
           fi
-          echo "Checking task links in ${last}..HEAD (advisory; will block at v2.0.0)"
+          echo "Checking task links in ${last}..HEAD (blocking since 1.12.0 / TASK-DOCS-020)"
           if bash scripts/check_task_link.sh --range "${last}..HEAD"; then
             echo "traceability preflight: clean"
           else
-            echo "::warning::Unlinked commits in ${last}..HEAD — release continues (soft-fail until 2.0.0). See docs/deploy/RELEASE.md."
+            echo "::error::Unlinked commits in ${last}..HEAD — release blocked. See docs/deploy/RELEASE.md."
             exit 1
           fi
       - name: Build the payload

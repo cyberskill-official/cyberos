@@ -13,15 +13,17 @@ Task: TASK-DOCS-021
 | First-epoch unlinked (`lg` true) | 296 | None — folded history |
 | Total unlinked on page | 444 | Page truth only; CI range after cutoff is clean |
 
-## Recommended disposition (default)
+## Operator disposition (LOCKED 2026-07-27)
 
-**Accept all 148 current-epoch rows as pre-cutoff history.** Do not mass-edit `commit-links.yaml` before v2.0.0.
+**ACCEPT ALL 148 current-epoch rows as pre-cutoff history.**  
+No mass recovery via `docs/tasks/_state/commit-links.yaml`.
 
-Rationale:
+Rationale (confirmed by operator Stephen):
 
 1. Traceability CI/hooks only fail commits **newer than** the cutoff; these 148 never trip the gate.
 2. Plan Phase 4 marks ledger backfill as **optional truth-recovery**, not a release blocker.
 3. Timebox (~agent pass): full human mapping of 148 subjects → tasks is low ROI vs P2/P6/P7 gates.
+4. Release target is **1.12.0** (not 2.0.0); accept-all still holds — page truth recovery remains optional later.
 
 ### Optional follow-up (not blocking)
 

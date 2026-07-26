@@ -82,9 +82,10 @@ Before tagging, run the release-range check locally (same script CI uses):
     bash scripts/check_task_link.sh --range "${last}..HEAD"
 
 Every non-exempt commit after the configured cutoff must cite a canonical `TASK-*` id.
-`release.yml`'s payload job runs the same check as a **non-blocking warning** today
-(`continue-on-error: true`). It flips to blocking at v2.0.0 / Phase 6. Fix unlinked
-commits (amend / rebase, or split plumbing into an exempt type) before the hard cut.
+`release.yml`'s payload job runs the same check as a **blocking** step since **1.12.0**
+(TASK-DOCS-020; operator override 2026-07-27 — Status v3 platform release is a minor,
+not v2.0.0). Fix unlinked commits (ledger entry, or split plumbing into an exempt type)
+before tagging.
 
 `.github/workflows/release.yml` then builds the native binaries and publishes a draft GitHub Release with the desktop installers attached:
 

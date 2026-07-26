@@ -5,10 +5,14 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 ## Unreleased
 
 ### Added
+- Status v3 platform closeout as **1.12.0** (operator override — not 2.0.0): P2 visual approve, DOCS-021 accept-all 148 pre-cutoff, release-range preflight blocking, fleet P7 under commit-all/push-none (TASK-DOCS-020, TASK-DOCS-021, TASK-DOCS-024).
 - TEN/INV ready-queue substrate (`cyberos-ten`, `cyberos-metering`, `cyberos-inv`): plan-tier caps + plan-change decisions (TASK-TEN-002), 4-axis metering recorder/WAL/overage (TASK-TEN-004), Wise RSA-SHA256 webhook verify + migrations (TASK-INV-004).
 - LangSmith AI-trace export completion (TASK-OBS-004): per-region self-hosted routing, Prometheus export metrics, `cyberos-ai policy set --langsmith-export`, local `deploy/obs/langsmith-*.yml`, and mock-server integration tests.
 - BRAIN Phase 0 Layer-1 consent: AGENTS.md §19, `meta/consent/` scaffold, `personnel-requires-consent` invariant, dense protocol vendored by `build.sh` (TASK-IMP-061).
 - `memory-append.mjs append --dry-run` validates the payload, lease and live chain and projects the seq/hash without creating or changing any store byte (TASK-IMP-146).
+
+### Changed
+- Legacy status page window: keep `status-legacy.html` through 1.12.x; remove at next minor **1.13.0** (reinterpret of plan “remove at 2.1.0”).
 
 ### Fixed
 - SKILL-202 acceptance criteria and benchmark gates G7/G8 now cite the live `scripts/tests/test_skill_stub_lint.sh` suite; added coverage for the TASK-CUO-209 NFR delist, 20-skill untrusted-input backport, full pair-parity SCOPE and loud workflow degradation (TASK-IMP-145).

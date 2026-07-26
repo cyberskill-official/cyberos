@@ -1,6 +1,6 @@
 ---
 id: TASK-DOCS-020
-title: "Release-range preflight (warn now, block at 2.0.0)"
+title: "Release-range preflight (warn now, block at 1.12.0)"
 eu_ai_act_risk_class: not_ai
 ai_authorship: generated_then_reviewed
 client_visible: false
@@ -35,11 +35,13 @@ modified_files:
 effort_hours: 4
 ---
 
-# TASK-DOCS-020: Release-range preflight (warn now, block at 2.0.0)
+# TASK-DOCS-020: Release-range preflight (warn now, block at 1.12.0)
 
 ## Summary
 
-Deliver plan item T13 (Phase 4/6) from `docs/plans/PLAN-status-v3-platform-2026-07-27/plan.md`: tag dry-run warns on unlinked range; flips blocking with v2.0.0.
+Deliver plan item T13 (Phase 4/6) from `docs/plans/PLAN-status-v3-platform-2026-07-27/plan.md`:
+tag dry-run warns on unlinked range; flips **blocking with 1.12.0** (operator override
+2026-07-27 — plan originally said v2.0.0).
 
 ## Problem
 

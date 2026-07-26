@@ -1,6 +1,6 @@
 ---
 id: TASK-DOCS-024
-title: "v2.0.0 release: changelog, Release-As PR, tag runbook, artifacts"
+title: "1.12.0 release (was v2.0.0): changelog, Release-As PR, tag runbook, artifacts"
 eu_ai_act_risk_class: not_ai
 ai_authorship: generated_then_reviewed
 client_visible: false
@@ -35,11 +35,13 @@ modified_files:
 effort_hours: 4
 ---
 
-# TASK-DOCS-024: v2.0.0 release: changelog, Release-As PR, tag runbook, artifacts
+# TASK-DOCS-024: 1.12.0 release (operator override — was v2.0.0)
 
 ## Summary
 
-Deliver plan item T17 (Phase 6) from `docs/plans/PLAN-status-v3-platform-2026-07-27/plan.md`: P6 gate: Release-As 2.0.0 PR ready; operator cuts tag.
+Deliver plan item T17 (Phase 6) from `docs/plans/PLAN-status-v3-platform-2026-07-27/plan.md`:
+P6 gate under **operator override 2026-07-27** — Release-As **1.12.0** (not 2.0.0);
+operator cuts `v1.12.0`. Do not invent a v2.0.0 tag.
 
 ## Problem
 

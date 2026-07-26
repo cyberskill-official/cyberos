@@ -1,0 +1,11 @@
+{
+  "schema": "cyberos.verdict@1",
+  "actor": "Stephen Cheng",
+  "timestamp": "2026-07-26T22:47:01Z",
+  "task_id": "TASK-DOCS-021",
+  "from": "reviewing",
+  "to": "ready_to_test",
+  "evidence_path": "docs/batches/status-v3-p2-docs021-session-hitl.md",
+  "evidence_sha256": "8d0c3509cf5e0883126e5dafb4f62da22f1aec863a6637a14f6538e76b85d2a1",
+  "artifact_sha256": "395122d691c3b02e673a59f63e4cc4514e636d6bce1f00ff25c7bd0112bd0e37"
+}

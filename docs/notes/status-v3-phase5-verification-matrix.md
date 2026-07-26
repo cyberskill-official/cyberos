@@ -31,6 +31,7 @@ Scope: verify packaging/channels **without** publish/deploy/tag.
 ## Not done here (operator HITL / later phases)
 
 - P2: operator page review (paper + night, file:// + served)
-- P6: v2.0.0 tag; flip release-range preflight to blocking
+- P6: **1.12.0** tag (operator override — not 2.0.0); flip release-range preflight to blocking
 - P7: fleet rollout (`commit: all cleared`, `push: none`; skip `cyberos-12g-clone`); includes full `fleet-install-test.sh`
+- Legacy: keep `status-legacy.html` through 1.12.x; remove at **1.13.0**
 - Publish/tag of any channel
