@@ -73,6 +73,10 @@ impl InMemoryRecorder {
     pub fn len(&self) -> usize {
         self.events.lock().unwrap().len()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
 impl Recorder for InMemoryRecorder {
