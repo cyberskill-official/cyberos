@@ -17,6 +17,8 @@ paths = [
   '''tools/install/mcp/README\.md$''',
   '''tools/install/tests/test_install_portability\.sh$''',
   '''tools/install/tests/fixtures/secret-scan/''',
+  # Derived/gitignored build outputs (payload + docs site copies of allowlisted sources).
+  '''^dist/''',
   # Planted AWS probe fixtures for TASK-IMP-003 (must stay executable).
   '''tools/install/check-secrets\.sh$''',
   '''tools/install/tests/test_secret_scan\.sh$''',
