@@ -72,6 +72,12 @@ pub async fn verify_jwt(
         .map(|pq| pq.as_str())
         .unwrap_or_else(|| request.uri().path());
     let path = crate::metering_emit::path_without_query(raw_path).to_string();
+
+    // TASK-TEN-207 — reject over-cap api_calls before handler work (402).
+    if let Err(blocked) = crate::metering_admit::admit_api_call(&state.pg, &tenant_id).await {
+        return Err(blocked.into_response());
+    }
+
     request.extensions_mut().insert(claims);
     let mut response = next.run(request).await;
     // TASK-TEN-205 — bill successful JWT-gated requests only (never 401 early returns).

@@ -39,6 +39,8 @@ pub enum RecordError {
     TenantNotFound,
     #[error("period_frozen")]
     PeriodFrozen,
+    #[error("storage_error")]
+    Storage,
 }
 
 pub fn validate_quantity(axis: MeteringAxis, quantity: u64) -> Result<(), QuantityError> {
@@ -76,6 +78,24 @@ impl InMemoryRecorder {
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    /// Sum quantities for tenant+axis with `occurred_at >= period_start`.
+    pub fn sum_for(
+        &self,
+        tenant_id: &str,
+        axis: MeteringAxis,
+        period_start: DateTime<Utc>,
+    ) -> u64 {
+        self.events
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|(_, e)| {
+                e.tenant_id == tenant_id && e.axis == axis && e.occurred_at >= period_start
+            })
+            .map(|(_, e)| e.quantity)
+            .sum()
     }
 }
 

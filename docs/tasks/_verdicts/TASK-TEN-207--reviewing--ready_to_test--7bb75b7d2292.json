@@ -1,0 +1,11 @@
+{
+  "schema": "cyberos.verdict@1",
+  "actor": "operator-session (Stephen Cheng)",
+  "timestamp": "2026-07-26T12:30:11Z",
+  "task_id": "TASK-TEN-207",
+  "from": "reviewing",
+  "to": "ready_to_test",
+  "evidence_path": "docs/batches/batch-ten-inv-host-d-session-hitl.md",
+  "evidence_sha256": "7bb75b7d229277ee2c0e244c726301c683ad18e962fd1a484cf3d58bed994ea7",
+  "artifact_sha256": "8f7b5aed6c2645f7bd66ee6ef33265cbfd81f4b32551b07cbc7f7324ff9de04d"
+}
