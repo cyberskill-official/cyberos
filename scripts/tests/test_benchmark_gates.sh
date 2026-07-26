@@ -284,7 +284,9 @@ t_g16() { # $1 = payload dir
   ( cd "$d" && git init -q . && git config user.email g16@test && git config user.name g16 )
   # a PRE-SET operator override: the C1 wipe class is exactly this file degrading silently
   mkdir -p "$d/.cyberos"
-  printf '# operator override (g16 fixture)\ngates:\n  test: "echo g16-config-survived"\n' > "$d/.cyberos/config.yaml"
+  # Include traceability.cutoff so TASK-DOCS-019's one-time additive write is a no-op
+  # (the fixture asserts byte-identical survival of the pre-set operator file).
+  printf '# operator override (g16 fixture)\ngates:\n  test: "echo g16-config-survived"\ntraceability:\n  cutoff: deadbeefdeadbeefdeadbeefdeadbeefdeadbeef\n  strict: false\n  scaffold_ci: false\n' > "$d/.cyberos/config.yaml"
   local cfg_before; cfg_before="$(_sha "$d/.cyberos/config.yaml" | awk '{print $1}')"
 
   bash "$pay/install.sh" "$d" >"$TMP/g16.install1.log" 2>&1 \

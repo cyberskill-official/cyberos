@@ -69,10 +69,17 @@ t05_scaffold_once() {                                                  # AC 5
   d="$TMP/go"
   grep -q "autodetected: go" "$d/.cyberos/config.yaml.orig" 2>/dev/null || cp "$d/.cyberos/config.yaml" "$d/.cyberos/config.yaml.orig"
   echo "# operator edit" >> "$d/.cyberos/config.yaml"
+  # TASK-DOCS-019 may add a one-time traceability.cutoff when absent (t04 overwrote
+  # config without one). Seed cutoff first so re-install is a true no-op on the file.
+  if ! grep -Eq '^[[:space:]]*cutoff:' "$d/.cyberos/config.yaml"; then
+    printf '\ntraceability:\n  cutoff: %s\n  strict: false\n  scaffold_ci: false\n' \
+      "$(git -C "$d" rev-parse HEAD 2>/dev/null || echo 0)" >> "$d/.cyberos/config.yaml"
+  fi
   before="$(sha256sum "$d/.cyberos/config.yaml" | cut -d' ' -f1)"
   bash "$TMP/payload/install.sh" "$d" >/dev/null 2>&1
   after="$(sha256sum "$d/.cyberos/config.yaml" | cut -d' ' -f1)"
-  [ "$before" = "$after" ] && ok t05 || fail t05 "config clobbered on re-install"
+  grep -q "# operator edit" "$d/.cyberos/config.yaml" \
+    && [ "$before" = "$after" ] && ok t05 || fail t05 "config clobbered on re-install"
 }
 t06_threshold_env() {                                                  # AC 6
   d="$TMP/go"

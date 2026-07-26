@@ -74,6 +74,18 @@ Cut a release by pushing a tag (use the current `VERSION`, which the auto-bump k
     git tag v1.2.0
     git push origin v1.2.0
 
+### Traceability preflight (TASK-DOCS-020)
+
+Before tagging, run the release-range check locally (same script CI uses):
+
+    last=$(git describe --tags --abbrev=0 HEAD)
+    bash scripts/check_task_link.sh --range "${last}..HEAD"
+
+Every non-exempt commit after the configured cutoff must cite a canonical `TASK-*` id.
+`release.yml`'s payload job runs the same check as a **non-blocking warning** today
+(`continue-on-error: true`). It flips to blocking at v2.0.0 / Phase 6. Fix unlinked
+commits (amend / rebase, or split plumbing into an exempt type) before the hard cut.
+
 `.github/workflows/release.yml` then builds the native binaries and publishes a draft GitHub Release with the desktop installers attached:
 
 - desktop: the official `tauri-action` builds an installer on each OS - `.dmg` (macOS), `.msi`/`.exe` (Windows), `.AppImage` (Linux). Signing is OPT-IN: the default build is UNSIGNED and always works. macOS signing turns on only when the repo variable `MACOS_SIGN=true` AND the `APPLE_*` secrets are set (the workflow forces the Apple env empty otherwise, so a stray or malformed certificate secret can never break the build - it did, on the first v1.0.0 tag: `security import: failed to import keychain certificate`). Updater signing is likewise gated on `DESKTOP_UPDATER_SIGN=true`.

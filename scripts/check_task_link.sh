@@ -7,7 +7,8 @@
 # This script is the single implementation both entry points share:
 #   commit-msg hook  ->  check_task_link.sh --msg <msg-file>
 #       Advisory by default (prints a loud warning). Blocks when
-#       CYBEROS_STRICT_COMMITS=1 or CYBEROS_REQUIRE_TASK_LINK=1.
+#       CYBEROS_STRICT_COMMITS=1 or CYBEROS_REQUIRE_TASK_LINK=1 or
+#       .cyberos/config.yaml: traceability.strict: true.
 #   CI gate          ->  check_task_link.sh --range <A..B>
 #       Hard-fails on any non-exempt commit NEWER than the cutoff whose message
 #       (subject + body) does not cite a canonical task id.
@@ -20,14 +21,70 @@
 # Exempt (plumbing, not change): chore(release) commits, served-bundle rebuilds,
 # merges, reverts, fixups, and [skip ci] automation commits.
 #
-# Cutoff: commits at or before CUTOFF are history — visible on the status page,
-# never retro-failed here. Fixing a historical link happens in the reviewed ledger
+# Cutoff resolution (TASK-DOCS-019): CYBEROS_TRACE_CUTOFF env →
+# .cyberos/config.yaml: traceability.cutoff → repo-local default (mothership seed).
+# Commits at or before CUTOFF are history — visible on the status page, never
+# retro-failed here. Fixing a historical link happens in the reviewed ledger
 # (docs/tasks/_state/commit-links.yaml), never by rewriting git history.
 set -euo pipefail
 
-# Enforcement starts at the commit AFTER this one (set 2026-07-26, status-v3 review).
-CUTOFF="${CYBEROS_TRACE_CUTOFF:-a7e0e2121a3750e260a64e44828c0c798cceb045}"
+root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 TASK_RE='TASK-[A-Z][A-Z0-9]*-[0-9]+'
+
+# Mothership seed (Phase 0); consumer installs overwrite via install.sh.
+_DEFAULT_CUTOFF="a7e0e2121a3750e260a64e44828c0c798cceb045"
+
+_read_yaml_trace_key() {
+  # Tiny non-nested YAML reader for `traceability:` block keys (cutoff/strict/scaffold_ci).
+  local key="$1" file="$2"
+  [ -f "$file" ] || return 1
+  local in=0 line val
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      traceability:*) in=1; continue ;;
+      [a-zA-Z]*:*) [ "$in" = 1 ] && in=0 ;;
+    esac
+    [ "$in" = 1 ] || continue
+    case "$line" in
+      *" ${key}:"*|*"${key}:"*)
+        val="${line#*:}"
+        val="${val#"${val%%[![:space:]]*}"}"
+        val="${val%%#*}"
+        val="${val%"${val##*[![:space:]]}"}"
+        val="${val#\"}"; val="${val%\"}"
+        val="${val#\'}"; val="${val%\'}"
+        [ -n "$val" ] || return 1
+        printf '%s' "$val"
+        return 0
+        ;;
+    esac
+  done < "$file"
+  return 1
+}
+
+_resolve_cutoff() {
+  if [ -n "${CYBEROS_TRACE_CUTOFF:-}" ]; then
+    printf '%s' "$CYBEROS_TRACE_CUTOFF"
+    return
+  fi
+  local from_cfg
+  if from_cfg="$(_read_yaml_trace_key cutoff "$root/.cyberos/config.yaml" 2>/dev/null)"; then
+    printf '%s' "$from_cfg"
+    return
+  fi
+  printf '%s' "$_DEFAULT_CUTOFF"
+}
+
+_strict_enabled() {
+  [ "${CYBEROS_STRICT_COMMITS:-0}" = "1" ] && return 0
+  [ "${CYBEROS_REQUIRE_TASK_LINK:-0}" = "1" ] && return 0
+  local s
+  s="$(_read_yaml_trace_key strict "$root/.cyberos/config.yaml" 2>/dev/null || true)"
+  case "$s" in true|TRUE|yes|YES|1) return 0 ;; esac
+  return 1
+}
+
+CUTOFF="$(_resolve_cutoff)"
 
 exempt_subject() {
   case "$1" in
@@ -52,7 +109,7 @@ case "$mode" in
     echo "  Fix:  cite the canonical id in the subject or body, e.g.:" >&2
     echo "          feat(ten): host-e overage admission (TASK-TEN-208)" >&2
     echo "        or add a trailer line:  Task: TASK-TEN-208" >&2
-    if [ "${CYBEROS_STRICT_COMMITS:-0}" = "1" ] || [ "${CYBEROS_REQUIRE_TASK_LINK:-0}" = "1" ]; then
+    if _strict_enabled; then
       echo "  CYBEROS strict mode -> rejecting." >&2
       exit 1
     fi

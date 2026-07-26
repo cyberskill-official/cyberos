@@ -260,6 +260,12 @@ cp "$here/lib/rules-cone.sh" "$out/lib/rules-cone.sh"
 [ -f "$here/lib/task-migrate.sh" ] && cp "$here/lib/task-migrate.sh" "$out/lib/task-migrate.sh"
 [ -f "$here/lib/update-check.sh" ] && cp "$here/lib/update-check.sh" "$out/lib/update-check.sh"
 [ -f "$here/lib/status-page.sh" ] && cp "$here/lib/status-page.sh" "$out/lib/status-page.sh"
+# Traceability checker (TASK-DOCS-019): single implementation for commit-msg + CI.
+# Consumer CI template rides the existing `cp -R "$here/ci"` below (tools/install/ci/).
+if [ -f "$here/../../scripts/check_task_link.sh" ]; then
+  cp "$here/../../scripts/check_task_link.sh" "$out/lib/check_task_link.sh"
+  chmod +x "$out/lib/check_task_link.sh"
+fi
 # (docs-tools sources may be absent in trimmed fixture builds — vendor what exists)
 if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   mkdir -p "$out/docs-tools/templates"

@@ -431,7 +431,71 @@ if [ ! -f "$cfg_file" ]; then
 # coverage_threshold: 90
 $cfg_tmpl_line
 # profile: full
+# Traceability (TASK-DOCS-019). Cutoff is written live on first install/upgrade below.
+# scaffold_ci defaults to false (opt-in) — P0 open question #3 answered as opt-in.
+# traceability:
+#   cutoff: <set automatically to HEAD at install>
+#   strict: false
+#   scaffold_ci: false
 EOF
+fi
+
+# 3b2. Traceability cutoff + optional CI scaffold (TASK-DOCS-019 / TASK-DOCS-009)
+# If no cutoff is recorded yet, write HEAD-at-install so new installs enforce from day one
+# and upgrades from upgrade day (no retroactive violations).
+TRACE_CUTOFF_SET="kept"
+if [ -d "$root/.git" ] || [ -f "$root/.git" ]; then
+  _trace_head="$(git -C "$root" rev-parse HEAD 2>/dev/null || true)"
+else
+  _trace_head=""
+fi
+if [ -n "${_trace_head:-}" ] && [ -f "$cfg_file" ]; then
+  if ! grep -Eq '^[[:space:]]*cutoff:' "$cfg_file" \
+    && ! grep -Eq '^[[:space:]]*traceability:[[:space:]]*$' "$cfg_file"; then
+    {
+      echo ""
+      echo "# Traceability cutoff written by cyberos install (TASK-DOCS-019)."
+      echo "# Commits at or before this sha are history; the gate applies after it."
+      echo "traceability:"
+      echo "  cutoff: ${_trace_head}"
+      echo "  strict: false"
+      echo "  scaffold_ci: false"
+    } >> "$cfg_file"
+    TRACE_CUTOFF_SET="wrote cutoff=${_trace_head:0:8}"
+  elif grep -Eq '^[[:space:]]*traceability:[[:space:]]*$' "$cfg_file" \
+    && ! grep -Eq '^[[:space:]]+cutoff:' "$cfg_file"; then
+    # Block exists but cutoff missing — insert cutoff under the block header.
+    tmp_cfg="$cfg_file.cyberos.tmp"
+    awk -v c="$_trace_head" '
+      BEGIN { done=0 }
+      /^traceability:[[:space:]]*$/ && !done {
+        print; print "  cutoff: " c; done=1; next
+      }
+      { print }
+      END { if (!done) { print "traceability:"; print "  cutoff: " c } }
+    ' "$cfg_file" > "$tmp_cfg" && mv "$tmp_cfg" "$cfg_file"
+    TRACE_CUTOFF_SET="wrote cutoff=${_trace_head:0:8} (into existing block)"
+  fi
+fi
+
+# Opt-in CI scaffold: only when .github/ exists AND scaffold_ci is explicitly true.
+TRACE_CI_SET="skipped (scaffold_ci opt-in; set traceability.scaffold_ci: true to enable)"
+_scaffold_ci="$(grep -E '^[[:space:]]*scaffold_ci:[[:space:]]*true[[:space:]]*$' "$cfg_file" 2>/dev/null || true)"
+if [ -n "$_scaffold_ci" ] && [ -d "$root/.github" ]; then
+  mkdir -p "$root/.github/workflows"
+  _ci_src=""
+  if [ -f "$src/ci/traceability/traceability.yml" ]; then _ci_src="$src/ci/traceability/traceability.yml"
+  elif [ -f "$(dirname "$0")/ci/traceability/traceability.yml" ]; then
+    _ci_src="$(dirname "$0")/ci/traceability/traceability.yml"
+  fi
+  if [ -n "$_ci_src" ]; then
+    if [ ! -f "$root/.github/workflows/cyberos-traceability.yml" ]; then
+      cp "$_ci_src" "$root/.github/workflows/cyberos-traceability.yml"
+      TRACE_CI_SET="scaffolded .github/workflows/cyberos-traceability.yml"
+    else
+      TRACE_CI_SET="kept existing cyberos-traceability.yml"
+    fi
+  fi
 fi
 
 # 4. scaffold the backlog -----------------------------------------------------
@@ -883,9 +947,11 @@ rm -f "$gi.cyberos.tmp"
 # v2: blocking on regen failure + pipefail-safe staged list (never `git diff | grep -q`).
 # An existing foreign pre-commit is never replaced - we append a marked block once.
 HOOK_SET="skipped (CYBEROS_NO_HOOK=1)"
+MSG_HOOK_SET="skipped (CYBEROS_NO_HOOK=1)"
 if [ "${CYBEROS_NO_HOOK:-0}" != "1" ]; then
   if [ ! -d "$root/.git" ]; then
     HOOK_SET="skipped (not a git checkout)"
+    MSG_HOOK_SET="skipped (not a git checkout)"
   else
     # Resolve the EFFECTIVE hooks directory (TASK-IMP-083). git executes hooks from
     # core.hooksPath when that config is set - a relative value anchors at the repo root,
@@ -942,44 +1008,75 @@ if [ "${CYBEROS_NO_HOOK:-0}" != "1" ]; then
       # absent, or a hook WE own outright (managed header on line 2): (re)write the standalone form
       cat > "$hk" <<'HOOK'
 #!/usr/bin/env bash
-# cyberos-status-hook v2 (managed by cyberos install)
-# Regenerates docs/status/ when task sources change and STAGES it in the same commit.
-# Blocks the commit if regeneration fails (so status never lags GitHub).
+# cyberos-status-hook v3 (managed by cyberos install)
+# Every commit refreshes docs/status coverage (TASK-DOCS-017). Full regen on
+# docs/tasks|CHANGELOG|VERSION; otherwise --coverage-only. Blocks if regen fails.
 # Disable: delete this file, or re-install with CYBEROS_NO_HOOK=1.
 set -euo pipefail
 # Read staged list ONCE — never `git diff | grep -q` under pipefail (SIGPIPE skip bug).
 staged="$(git diff --cached --name-only || true)"
+if [ ! -f .cyberos/lib/status-page.sh ] || [ ! -f .cyberos/lib/task-migrate.sh ]; then
+  echo "cyberos: hook is orphaned (.cyberos/ missing) - skipping status regen." >&2
+  echo "cyberos: restore with 'npx cs install' (or bash …/install.sh), or delete .git/hooks/pre-commit." >&2
+  exit 0
+fi
+if ! command -v node >/dev/null 2>&1; then
+  echo "cyberos: ERROR node required to regenerate docs/status" >&2
+  exit 1
+fi
 if grep -Eq '^(docs/tasks/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
-  # An ORPHANED hook stands down; it does not veto the commit. .git/hooks/ is untracked
-  # and machine-local, so this file outlives .cyberos/ by construction - deleting the
-  # machine without running uninstall (or cloning a repo whose .cyberos/ is ignored)
-  # leaves the hook behind with nothing to call. It guards a RENDERED STATUS PAGE, a
-  # cosmetic concern, so exiting 1 here blocked every commit touching VERSION,
-  # CHANGELOG.md or docs/tasks/ for no correctness gain. Fail-closed is for gates that
-  # guard correctness; this is not one. uninstall.sh removes this hook on the tidy path
-  # (:93-128) - this branch covers the untidy one, which is the common one.
-  if [ ! -f .cyberos/lib/status-page.sh ] || [ ! -f .cyberos/lib/task-migrate.sh ]; then
-    echo "cyberos: hook is orphaned (.cyberos/ missing) - skipping status regen." >&2
-    echo "cyberos: restore with 'npx cs install' (or bash …/install.sh), or delete .git/hooks/pre-commit." >&2
-    exit 0
-  fi
-  if ! command -v node >/dev/null 2>&1; then
-    echo "cyberos: ERROR node required to regenerate docs/status" >&2
-    exit 1
-  fi
   echo "cyberos: regenerating docs/status/ …"
   bash .cyberos/lib/status-page.sh . || {
     echo "cyberos: ERROR status regen failed — run: bash .cyberos/lib/status-page.sh ." >&2
     exit 1
   }
-  git add docs/status 2>/dev/null || true
-  echo "cyberos: docs/status staged"
+else
+  echo "cyberos: refreshing docs/status coverage …"
+  bash .cyberos/lib/status-page.sh . --coverage-only || {
+    echo "cyberos: ERROR coverage-only regen failed — run: bash .cyberos/lib/status-page.sh . --coverage-only" >&2
+    exit 1
+  }
 fi
+git add docs/status 2>/dev/null || true
+echo "cyberos: docs/status staged"
 exit 0
 HOOK
-      HOOK_SET="pre-commit hook v2 installed${hook_at} (blocks if docs/status regen fails; auto-stages status page)"
+      HOOK_SET="pre-commit hook v3 installed${hook_at} (full or coverage-only regen; auto-stages status page)"
+    elif grep -q "cyberos-status-hook v3" "$hk" 2>/dev/null; then
+      HOOK_SET="kept your pre-commit hook${hook_at} (cyberos status-sync v3 already present)"
     elif grep -q "cyberos-status-hook v2" "$hk" 2>/dev/null; then
-      HOOK_SET="kept your pre-commit hook${hook_at} (cyberos status-sync v2 already present)"
+      # Upgrade managed v2 → v3 in place when we own the file.
+      if _cyberos_owns_hook "$hk"; then
+        cat > "$hk" <<'HOOK'
+#!/usr/bin/env bash
+# cyberos-status-hook v3 (managed by cyberos install)
+# Every commit refreshes docs/status coverage (TASK-DOCS-017). Full regen on
+# docs/tasks|CHANGELOG|VERSION; otherwise --coverage-only. Blocks if regen fails.
+# Disable: delete this file, or re-install with CYBEROS_NO_HOOK=1.
+set -euo pipefail
+staged="$(git diff --cached --name-only || true)"
+if [ ! -f .cyberos/lib/status-page.sh ] || [ ! -f .cyberos/lib/task-migrate.sh ]; then
+  echo "cyberos: hook is orphaned (.cyberos/ missing) - skipping status regen." >&2
+  exit 0
+fi
+if ! command -v node >/dev/null 2>&1; then
+  echo "cyberos: ERROR node required to regenerate docs/status" >&2
+  exit 1
+fi
+if grep -Eq '^(docs/tasks/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
+  bash .cyberos/lib/status-page.sh . || { echo "cyberos: ERROR status regen failed" >&2; exit 1; }
+else
+  bash .cyberos/lib/status-page.sh . --coverage-only || { echo "cyberos: ERROR coverage-only regen failed" >&2; exit 1; }
+fi
+git add docs/status 2>/dev/null || true
+echo "cyberos: docs/status staged"
+exit 0
+HOOK
+        chmod +x "$hk"
+        HOOK_SET="upgraded pre-commit hook v2 → v3${hook_at}"
+      else
+        HOOK_SET="kept your pre-commit hook${hook_at} (cyberos status-sync v2 already present)"
+      fi
     elif grep -q "cyberos-status-hook" "$hk" 2>/dev/null; then
       # Upgrade v1 append block → v2
       if grep -q ">>> cyberos-status-hook v1" "$hk" 2>/dev/null; then
@@ -1088,6 +1185,42 @@ HOOK
       HOOK_SET="appended status-sync v2 to your existing pre-commit hook${hook_at}"
     fi
     chmod +x "$hk"
+
+    # 6c. commit-msg traceability hook (TASK-DOCS-019) — advisory; calls vendored checker.
+    MSG_HOOK_SET="skipped"
+    if [ "${CYBEROS_NO_HOOK:-0}" != "1" ]; then
+      cm="$hooks_dir/commit-msg"
+      if [ ! -f "$cm" ] || grep -q 'cyberos-traceability-hook' "$cm" 2>/dev/null; then
+        cat > "$cm" <<'MSGHOOK'
+#!/usr/bin/env bash
+# cyberos-traceability-hook v1 (managed by cyberos install; TASK-DOCS-019)
+# Advisory commit→task link check. Strict via CYBEROS_STRICT_COMMITS=1,
+# CYBEROS_REQUIRE_TASK_LINK=1, or .cyberos/config.yaml: traceability.strict: true.
+set -euo pipefail
+checker=".cyberos/lib/check_task_link.sh"
+if [ -f "$checker" ]; then
+  bash "$checker" --msg "$1"
+fi
+exit 0
+MSGHOOK
+        chmod +x "$cm"
+        MSG_HOOK_SET="commit-msg traceability hook installed${hook_at%/pre-commit}/commit-msg"
+      else
+        if ! grep -q 'check_task_link.sh' "$cm" 2>/dev/null; then
+          cat >> "$cm" <<'MSGHOOK'
+
+# >>> cyberos-traceability-hook v1 >>>
+if [ -f .cyberos/lib/check_task_link.sh ]; then
+  bash .cyberos/lib/check_task_link.sh --msg "$1" || true
+fi
+# <<< cyberos-traceability-hook <<<
+MSGHOOK
+          MSG_HOOK_SET="appended traceability check to existing commit-msg"
+        else
+          MSG_HOOK_SET="kept existing commit-msg (already calls check_task_link)"
+        fi
+      fi
+    fi
   fi
 fi
 
@@ -1103,6 +1236,7 @@ cyberos install: done.
   migrate   -> ${MIGRATE_SET}
   status    -> ${STATUS_SET}
   auto-sync -> ${HOOK_SET}; run-gates.sh also regenerates the page after every gates run
+  trace     -> cutoff ${TRACE_CUTOFF_SET}; CI ${TRACE_CI_SET}; ${MSG_HOOK_SET:-no commit-msg hook}
   agents    -> ${AGENTS_SET}
               pointer files:${AGENT_FILES:- (none new)}
               native skills:${SKILL_DIRS:- (none new)}
