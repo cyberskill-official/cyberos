@@ -2,10 +2,22 @@
 
 Date: 2026-07-27  
 Task: TASK-DOCS-013 / Gate P2  
-Operator: Stephen  
-**Human visual acceptance is NOT done** — this package only prepares the review.
+Operator: Stephen Cheng  
 
-## Open these
+## Verdict — APPROVED AS-IS
+
+| Field | Value |
+| --- | --- |
+| Verdict | **APPROVE** (as-is; no change list) |
+| Actor | Stephen Cheng (operator) |
+| Date | 2026-07-27 |
+| Evidence SHA (main at lock) | `a22dbf706febc3ae4424bcb8a89d3ed909559af8` |
+| Machine DOM suite | pass=50 fail=0 |
+| Cited instruction | Operator lock: “P2: APPROVE the Status v3 page as-is” |
+
+Human visual acceptance is **complete**. This package remains as the review archive.
+
+## Surfaces reviewed
 
 | Surface | URL |
 | --- | --- |
@@ -16,13 +28,6 @@ Operator: Stephen
 | Live docs (v3) | https://os.cyberskill.world/docs/reference/status.html |
 | Live docs (legacy) | https://os.cyberskill.world/docs/reference/status-legacy.html |
 
-Re-serve locally if needed:
-
-```bash
-cd /Users/stephencheng/Projects/CyberSkill/cyberos-wt-status-v3
-python3 -m http.server 8877 --bind 127.0.0.1 --directory docs/status
-```
-
 ## Agent-captured screenshots (viewport)
 
 | File | What |
@@ -31,30 +36,28 @@ python3 -m http.server 8877 --bind 127.0.0.1 --directory docs/status
 | [`night-top.png`](night-top.png) | v3 night theme — Pulse band |
 | [`legacy-top.png`](legacy-top.png) | v2 lenses page (`status-legacy.html`) |
 
-## Machine evidence (already green)
+## Machine evidence (green at package time)
 
 - DOM suite: `bash tools/docs-site/tests/test_status_dom.sh` → **pass=50 fail=0**
 - Feed unit tests: `bash tools/docs-site/tests/test_status_feed.sh` → **pass=13 fail=0**
 - Offline cert: `bash tools/install/tests/test_offline_status_cert.sh` → **pass=9 fail=0**
-- Regenerated mothership page: VERSION **1.11.0**, `status-hub@3`, `status-legacy.html` present, footer legacy link present
+- Regenerated mothership page: VERSION **1.11.0** at package time, `status-hub@3`, `status-legacy.html` present, footer legacy link present
 
-## Review checklist (Stephen)
+## Checklist (all accepted via as-is approve)
 
-Walk each item; reply **approve** or list **changes**.
+1. [x] **Paper theme**
+2. [x] **Night theme**
+3. [x] **`file://` offline**
+4. [x] **Served**
+5. [x] **Six bands**
+6. [x] **Task drawer**
+7. [x] **Legacy link**
+8. [x] **Deep links**
+9. [x] **Traceability band** (148 current-epoch pre-cutoff is expected)
+10. [x] **Noscript** (optional; covered by as-is approve)
 
-1. [ ] **Paper theme** — first viewport reads as one composition; brand/title clear; no broken layout
-2. [ ] **Night theme** — toggle works; contrast OK; charts/cards still readable
-3. [ ] **`file://` offline** — open local `file://` URL; no CDN/network dependency; page usable with JS on
-4. [ ] **Served** — local `http://127.0.0.1:8877/` and/or live docs URL behave the same as `file://` for core canvas
-5. [ ] **Six bands** — Pulse / Roadmap / System map / Flow / Releases & traceability / Index all present and scroll-anchored
-6. [ ] **Task drawer** — open a task; deps/cone/spec link look right
-7. [ ] **Legacy link** — footer “Legacy status page (v2 lenses)” reaches `status-legacy.html`; Board/Table/Releases lenses work
-8. [ ] **Deep links** — spot-check `#t/…`, `#m/…`, `#r/…` (and a legacy `#board` / `#roadmap` redirect)
-9. [ ] **Traceability band** — unlinked count / rule text matches expectations (148 current-epoch is expected pre-cutoff truth)
-10. [ ] **Noscript** — optional: disable JS, confirm static table still lists tasks
+## Out of scope for P2 (handled elsewhere)
 
-## Out of scope for P2
-
-- Approving v2.0.0 / Release-As / tagging (P6)
+- P6 release **1.12.0** (not 2.0.0) — operator override
 - Fleet install/rollout (P7)
-- Mass ledger backfill of the 148 unlinked commits (see `docs/notes/status-v3-do021-violation-triage.md`)
+- Mass ledger backfill of the 148 unlinked commits (DOCS-021 accept-all)

@@ -2,9 +2,9 @@
 
 - Date: 2026-07-27
 - Author: Claude (session with operator Stephen Cheng), for handoff to executing models
-- Status: **in execution** — P0 locked & executed (PR #171/#172); Phases 0–1/3 code on `main`; Phase 2 awaiting visual HITL; Phases 6–7 blocked on Stephen GO. See `docs/notes/status-v3-p0-decisions.md`.
+- Status: **in execution** — P0–P2 locked; P6/P7 GO under operator override **1.12.0** (not 2.0.0). See `docs/notes/status-v3-p0-decisions.md`.
 - Baseline at plan write: cyberos @ `a7e0e212` (v1.10.0), branch `batch/ten-inv-host-e`
-- Execution tip (2026-07-27): `main` @ `51041133` / VERSION 1.11.0 after Status v3 merge + cutoff
+- Execution tip (2026-07-27): `main` @ `a22dbf70` / VERSION 1.11.0; release target **1.12.0**
 - Approved input: `docs/status-v3-preview/` (operator-reviewed preview; deleted after Phase 2 land)
 - Consumes into backlog via: `/cyberos:create-tasks` (task set in §7; TASK-DOCS-008..029)
 
@@ -193,7 +193,7 @@ all already proven in the preview and its 47-assertion DOM suite:
 - Surface 3, release: release tagging blocked while the release range contains
   unlinked commits - implemented as a preflight in the release runbook +
   `release.yml` payload job step calling `check_task_link.sh --range
-  <last-tag>..HEAD` (soft-fail grace window during Phase 6, hard after v2.0.0).
+  <last-tag>..HEAD` (soft-fail grace window pre-1.12.0; hard blocking from 1.12.0).
 
 ## 3. Phase plan
 
@@ -266,8 +266,8 @@ Goal: the v3 canvas becomes the emitted page everywhere the generator runs.
 
 Gate P2 (HITL): operator reviews the emitted page (paper + night, file:// and
 served); legacy page reachable; DOM suite green.
-**Status 2026-07-27: CODE COMPLETE / HITL OPEN** — DOM suite 50/50; review package at
-`docs/notes/status-v3-p2-review/README.md`. Awaiting Stephen approve/changes.
+**Status 2026-07-27: APPROVED AS-IS** — DOM suite 50/50; operator Stephen approved
+the review package at `docs/notes/status-v3-p2-review/README.md` (SHA `a22dbf70`).
 Rollback: `CYBEROS_STATUS_LEGACY=1` env in the hook/workflow callers, or revert.
 
 ### Phase 3 - regeneration on every relevant change
@@ -315,7 +315,8 @@ does not depend on the wide trigger.
    when `.github/` exists and `traceability.scaffold_ci` is not false.
 5. Release-range block: add the `--range "<last marker>..HEAD"` preflight to the
    release runbook and as a non-blocking warning step in release.yml now; flip to
-   blocking in Phase 6 alongside v2.0.0.
+   blocking in Phase 6 alongside the Status v3 platform release (**1.12.0** per
+   operator override; plan originally said v2.0.0).
 6. Mothership backfill workflow: triage the 148 current-epoch violations - for
    each, either add a reviewed ledger entry or accept as pre-cutoff history (they
    are all pre-cutoff by construction; the ledger work is optional truth-recovery,
@@ -363,30 +364,29 @@ status-hub@3 @ 1.11.0. Channel publishes still wait on P6 tag.
 Rollback: payload is rebuilt from source on revert; no channel pins v3
 independently.
 
-### Phase 6 - v2.0.0
+### Phase 6 - 1.12.0 (operator override — was v2.0.0)
 
-Major because: the emitted page format and asset layout change (consumers of
-`reference/status.html`, `docs/status/data/`, and the v2 lens hashes), the
-contribution contract changes (traceability gate), and the installer scaffold
-changes. Mechanics:
+**Operator override 2026-07-27:** treat Status v3 landing as a **minor** release
+**1.12.0**, not a breaking major. Do **not** create a `v2.0.0` tag. Legacy window
+reinterpreted: keep `status-legacy.html` through **1.12.x**, remove at **1.13.0**
+(plan originally said through 2.0.x / remove at 2.1.0).
 
-1. Land the final PR with a `feat(docs)!:` subject AND `Release-As: 2.0.0`
+Mechanics:
+
+1. Land the final PR with a conventional subject AND `Release-As: 1.12.0`
    trailer (deterministic against the classifier); version.yml commits
-   `chore(release): v2.0.0`, rebuilds `apps/web`, proves the payload.
-2. CHANGELOG 2.0.0 section written in the three types with task chips -
-   Features (v3 status experience, status-feed@1), Improvements (regeneration
-   pipeline, packaging), Fixes (none expected), plus a BREAKING notes block:
-   old lens URLs redirect, v2 page available one cycle at `status-legacy.html`,
-   traceability gate active with per-repo cutoffs.
-3. Operator tags `v2.0.0` -> release.yml full artifact run (payload, channels,
-   npm, desktop, updater-manifest, android, ios, docs) + store workflows; flip the
-   release-range traceability preflight to blocking in the same PR.
+   `chore(release): 1.12.0`, rebuilds `apps/web`, proves the payload.
+2. CHANGELOG 1.12.0 section: Status v3 platform closeout, DOCS-021 accept-all,
+   release-range preflight blocking, legacy window note (remove at 1.13.0).
+3. Operator tags `v1.12.0` -> release.yml full artifact run; flip the
+   release-range traceability preflight to **blocking** in the same PR
+   (prefer flip at 1.12.0 — enforcement platform is the point).
 4. `BUILD_NUMBER` and `stamp-release-version.mjs --check` pass (pre-commit
    enforces when VERSION staged).
 
-Gate P6 (HITL): operator cuts the tag. Rollback: do not tag; or tag v2.0.1 with
-`CYBEROS_STATUS_LEGACY` default if the page must revert while keeping the gate.
-**Status 2026-07-27: BLOCKED — needs Stephen GO** (Release-As / tag / flip blocking).
+Gate P6 (HITL): operator cuts the tag. Rollback: do not tag; or tag a follow-up
+patch with `CYBEROS_STATUS_LEGACY` default if the page must revert while keeping the gate.
+**Status 2026-07-27: GO for 1.12.0** — operator Stephen locked P6 override.
 
 ### Phase 7 - fleet discovery and migration (`/Users/stephencheng/Projects`)
 
@@ -402,33 +402,32 @@ Use the existing fleet tooling; do not write a new orchestrator.
 2. Per-repo protocol, in order, one repo at a time (small -> large: start with a
    zero-task repo, end with strategem/landing-page/shopass):
    a. Preflight: `git status` - if dirty, create safety commit on a branch
-      `pre-cyberos-2.0-backup` or stash with a recorded name; tag
-      `pre-cyberos-2.0` at HEAD. Record repo state row in the migration report.
-   b. Upgrade: `bash tools/install/install.sh <repo>` from the v2.0.0 payload
+      `pre-cyberos-1.12-backup` or stash with a recorded name; tag
+      `pre-cyberos-1.12` at HEAD when useful. Record repo state row in the migration report.
+   b. Upgrade: `bash tools/install/install.sh <repo>` from the **1.12.0** payload
       (or `rollout-fleet.sh <payload> <root>` for batch mode after the first
       three repos succeed manually). Installer preserves `config.yaml`, tasks,
       BRAIN/memory, and writes the traceability cutoff = repo HEAD.
    c. Migrate data: `task-migrate.sh` runs inside install (flat TASK-*.md ->
       spec.md layout for sachviet-class repos); status page regenerated as v3.
-   d. Validate: `audit-fleet.sh 2.0.0 <repo>`; open the page headless (the DOM
+   d. Validate: `audit-fleet.sh 1.12.0 <repo>`; open the page headless (the DOM
       suite binary runs against any emitted page: `node
       tools/docs-site/tests/test_status_dom.mjs <repo>/docs/status/index.html`);
       counts on the page equal `find docs/tasks -name spec.md | wc -l`; commit
       hook fires advisory on a test commit (then reset).
    e. Commit: `commit-fleet.sh` posture - one commit per repo,
-      `chore(cyberos): upgrade to 2.0.0 - status v3 + traceability (TASK-...)`,
-      citing the §7 fleet task. Do not push repos the operator has not cleared
-      for pushing.
+      `chore(cyberos): upgrade to 1.12.0 - status v3 + traceability (TASK-...)`,
+      citing the §7 fleet task. **Push: none** unless a second explicit allowlist.
 3. Exceptions: any repo failing b/c/d is REVERTED (`git reset --hard
-   pre-cyberos-2.0` + restore stash) and recorded, never left half-migrated.
+   pre-cyberos-1.12` + restore stash) and recorded, never left half-migrated.
 4. Report: `docs/reviews/fleet-status-v3-migration-<date>.md` - one row per repo:
    before-version, after-version, tasks, page fp, validation results, action
    taken, exception detail if any. Template in §6.
 
 Gate P7 (HITL): operator reviews the report; exceptions get follow-up tasks.
-**Status 2026-07-27: BLOCKED — needs Stephen GO** (confirm `push: none`; skip 12g-clone).
-Rollback per repo: the `pre-cyberos-2.0` tag; fleet-wide: re-run rollout with the
-v1.10.0 payload (kept at `dist/` from the pre-bump commit or rebuilt from the tag).
+**Status 2026-07-27: GO** — commit-all / push-none confirmed; skip 12g-clone.
+Rollback per repo: the `pre-cyberos-1.12` tag; fleet-wide: re-run rollout with the
+prior payload (rebuilt from the previous tag).
 
 ### Phase 8 - documentation, monitoring, close-out
 
@@ -467,7 +466,7 @@ scaffold only: `docs/notes/status-v3-do029-watch-improve-scaffold.md` (no prod l
 | Wide regen trigger | restore narrow regex | hook cost only |
 | CI gate | remove required check; keep advisory hook | contribution flow |
 | Installer defaults | `traceability.strict:false`, `scaffold_ci:false` | consumers |
-| v2.0.0 | tag not cut / v2.0.1 with legacy default | release channels |
+| 1.12.0 (was v2.0.0) | tag not cut / follow-up patch with legacy default | release channels |
 | Fleet repo | `pre-cyberos-2.0` tag reset | that repo |
 
 ## 6. Fleet inventory snapshot (2026-07-27, re-verify at execution)
@@ -515,11 +514,11 @@ Module `docs` unless noted; ids indicative - task-author assigns finals.
 | T10 | Wide regen trigger + --coverage-only fast path | 3 | T6 | P3 scenarios, <1s code-only |
 | T11 | deploy.yml trigger widening + served-page freshness check | 3 | T6 | post-deploy curl assert |
 | T12 | Installer: hook + checker in payload lib, config scaffold, CI template | 4 | T2 | fleet-install-test green |
-| T13 | Release-range preflight (warn now, block at 2.0.0) | 4/6 | T2 | tag dry-run behavior |
+| T13 | Release-range preflight (warn now, block at 1.12.0) | 4/6 | T2 | tag dry-run behavior |
 | T14 | Mothership violation triage into ledger (148 rows, optional truth recovery) | 4 | T5 | list disposition recorded |
 | T15 | Payload/channel verification matrix execution | 5 | T12 | §Phase 5 table recorded |
 | T16 | Offline scratch-repo certification | 5 | T12 | file:// scenario script |
-| T17 | v2.0.0 release: changelog, Release-As PR, tag runbook, artifacts | 6 | T13, T15 | P6 gate |
+| T17 | 1.12.0 release (was 2.0.0): changelog, Release-As PR, tag runbook, artifacts | 6 | T13, T15 | P6 gate |
 | T18 | Fleet discovery re-scan + classification report | 7 | T17 | report committed |
 | T19 | Pilot migrations (one zero-task, one medium, sachviet layout case) | 7 | T18 | 3 clean audits |
 | T20 | Fleet rollout remaining repos + exception handling | 7 | T19 | P7 gate report |
@@ -542,14 +541,16 @@ Module `docs` unless noted; ids indicative - task-author assigns finals.
    page during Phase 7.
 6. `cyberos-12g-clone` and worktrees double-counting or getting divergent
    upgrades - explicit exclusion list confirmed with operator at Phase 7 gate.
-7. Version classifier surprises - `Release-As: 2.0.0` trailer pins the outcome.
+7. Version classifier surprises - `Release-As: 1.12.0` trailer pins the outcome
+   (operator override; do not invent 2.0.0).
 
 ## 9. Decisions taken in this plan and open questions for the operator
 
 Decided (change requires operator override): fold extractor into
 render-status-hub rather than a second tool; ledger at `docs/tasks/_state/`;
-per-repo cutoff = install/upgrade HEAD; legacy page kept exactly one minor cycle;
-fleet upgraded from the v2.0.0 payload, not from git main.
+per-repo cutoff = install/upgrade HEAD; legacy page kept exactly one minor cycle
+(through 1.12.x, remove at 1.13.0); fleet upgraded from the **1.12.0** payload,
+not from git main.
 
 ### P0 gate — locked 2026-07-27 (operator Stephen: "go as your judgment")
 
@@ -560,9 +561,18 @@ Recorded also at `docs/notes/status-v3-p0-decisions.md`.
 | 1 | `cyberos-12g-clone` | **A — skip forever** (exclude from fleet discovery/migration) |
 | 2 | Fleet commit/push | **A — `commit: all cleared`, `push: none`** until a second explicit allowlist |
 | 3 | `scaffold_ci` | **A — keep `false` / opt-in** (already coded; do not flip) |
-| 4 | Legacy page window | **A — one minor cycle** (`status-legacy.html` through 2.0.x; remove at 2.1.0) |
+| 4 | Legacy page window | **A — one minor cycle** — reinterpreted 2026-07-27: through **1.12.x**; remove at **1.13.0** (was 2.0.x / 2.1.0) |
 | 5 | Branch protection | **A — after merge**, require both `traceability-gate` + `suite-gate` on `main` (operator step; do not invent settings in this PR) |
 | 6 | Cutoff | **A — after merge**, follow-up commit on `main` sets cutoff = merge SHA (do **not** invent a cutoff while the PR is open) |
 | 7 | Ship path | **A — one PR** for the whole `feat/status-v3-platform` branch as-is |
 
-Still blocked / later HITL: **P2 visual review** (package ready); **P6 tag** and **P7 fleet** remain blocked until Stephen GO.
+### Operator override lock — 2026-07-27 (post-merge)
+
+| Topic | Locked choice |
+| --- | --- |
+| P2 | **APPROVE** Status v3 as-is |
+| P6 | Release **1.12.0** (not 2.0.0); no `v2.0.0` tag; flip release-range preflight to blocking |
+| P7 | **commit-all** / **push: none**; skip `cyberos-12g-clone` |
+| DOCS-021 | Accept all 148 as pre-cutoff; no mass `commit-links.yaml` recovery |
+
+See `docs/notes/status-v3-p0-decisions.md`.

@@ -12,7 +12,7 @@ author: "@stephencheng"
 template: task@1
 module: docs
 priority: p0
-status: ready_to_review
+status: done
 verify: T
 phase: Status-v3 Phase 4
 owner: Stephen Cheng (CTO)
