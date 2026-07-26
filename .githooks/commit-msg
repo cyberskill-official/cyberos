@@ -7,6 +7,13 @@
 set -euo pipefail
 
 root="$(git rev-parse --show-toplevel 2>/dev/null || echo .)"
+
+# 1) Conventional Commits nudge (advisory; CYBEROS_STRICT_COMMITS=1 to block).
 hook="$root/.pre-commit-hooks/conventional-commit-check.sh"
-[ -f "$hook" ] || exit 0
-exec bash "$hook" "$1"
+if [ -f "$hook" ]; then bash "$hook" "$1"; fi
+
+# 2) Traceability rule: every commit cites a task (TASK-XXX-000 in subject/body or a
+#    "Task:" trailer). Advisory here; CYBEROS_REQUIRE_TASK_LINK=1 (or STRICT) blocks,
+#    and CI's traceability-gate hard-fails unlinked commits regardless.
+tlink="$root/scripts/check_task_link.sh"
+if [ -f "$tlink" ]; then bash "$tlink" --msg "$1"; fi
