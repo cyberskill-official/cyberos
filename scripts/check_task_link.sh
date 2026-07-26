@@ -31,8 +31,8 @@ set -euo pipefail
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 TASK_RE='TASK-[A-Z][A-Z0-9]*-[0-9]+'
 
-# Mothership seed (Phase 0); consumer installs overwrite via install.sh.
-_DEFAULT_CUTOFF="a7e0e2121a3750e260a64e44828c0c798cceb045"
+# Mothership seed = Status v3 P0 merge SHA (PR #171); consumer installs overwrite via install.sh.
+_DEFAULT_CUTOFF="14e4ee5551d19af743739ed7ab9a0727ec89ef48"
 
 _read_yaml_trace_key() {
   # Tiny non-nested YAML reader for `traceability:` block keys (cutoff/strict/scaffold_ci).
