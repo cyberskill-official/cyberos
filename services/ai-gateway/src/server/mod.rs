@@ -535,11 +535,31 @@ async fn chat(
         .map(|c| c.content.clone())
         .unwrap_or_default();
 
-    // TASK-OBS-004 - opt-in LangSmith export of the (redacted) call, correlated by the request trace id.
-    // Gated on the tenant's opt-in so the default path makes no redaction (Presidio) call; the export
-    // itself is fire-and-forget, so the response is never blocked on LangSmith.
+    // TASK-OBS-004 - LangSmith export of the (redacted) call, correlated by the request trace id.
+    // Opt-out records the metric without calling Presidio; opt-in redacts then fire-and-forgets so the
+    // response is never blocked on LangSmith.
     if policy.ai_policy.langsmith_export {
         export_to_langsmith(&policy, &ccr, &resolved, &resp, &content, &req_trace).await;
+    } else {
+        let _ = langsmith::export(
+            false,
+            policy.ai_policy.residency,
+            RedactedPrompt(String::new()),
+            RedactedResponse(String::new()),
+            LangSmithMetadata {
+                model_alias: ccr.alias.clone(),
+                resolved_model: resolved.model.clone(),
+                provider: resolved.provider_kind.as_metric_label().to_string(),
+                temperature: ccr.temperature,
+                max_tokens: ccr.max_tokens,
+                latency_ms: resp.latency_ms,
+                cost_usd: 0.0,
+                persona_handle: String::new(),
+                tenant_id: policy.tenant_id.clone(),
+                trace_id: req_trace.trace_id.clone(),
+                tool_calls: vec![],
+            },
+        );
     }
 
     let api = ApiChatResponse {
@@ -578,10 +598,10 @@ async fn export_to_langsmith(
     ) {
         (Ok(rp), Ok(rr)) => (rp.redacted_text, rr.redacted_text),
         _ => {
-            eprintln!(
-                    "{{\"sev\":2,\"event\":\"langsmith_redaction_failed_skipping_export\",\"trace_id\":\"{}\"}}",
-                    trace.trace_id
-                );
+            tracing::warn!(
+                trace_id = %trace.trace_id,
+                "langsmith_redaction_failed_skipping_export"
+            );
             return;
         }
     };
@@ -593,13 +613,16 @@ async fn export_to_langsmith(
         temperature: ccr.temperature,
         max_tokens: ccr.max_tokens,
         latency_ms: resp.latency_ms,
+        // Cost ledger snapshot lands with the non-streaming reconcile path; until then export 0.0.
         cost_usd: 0.0,
         persona_handle: String::new(),
         tenant_id: policy.tenant_id.clone(),
         trace_id: trace.trace_id.clone(),
+        tool_calls: vec![],
     };
     langsmith::export(
         true,
+        policy.ai_policy.residency,
         RedactedPrompt(redacted_prompt),
         RedactedResponse(redacted_response),
         metadata,

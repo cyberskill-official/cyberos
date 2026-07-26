@@ -11,7 +11,7 @@ author: "@stephencheng"
 template: task@1
 module: obs
 priority: p0
-status: ready_to_implement
+status: ready_to_review
 verify: T
 phase: P0
 milestone: P0 · slice 2
