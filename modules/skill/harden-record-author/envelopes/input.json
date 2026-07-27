@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "harden-record-author input",
+  "type": "object",
+  "required": ["report"],
+  "additionalProperties": false,
+  "properties": {
+    "report": { "type": "string", "description": "Path to the inspection-report@1 markdown. Must pass tools/inspect-lint.mjs before any finding is read." },
+    "target": { "type": "string", "description": "Working tree to change. Must match the report's target and ref, or the session halts (HRD-IN-3)." },
+    "start_at": { "type": "string", "pattern": "^INS-F-[0-9]{4}$", "description": "Override the report's named next action. Requires an explicit operator instruction." },
+    "commits": { "type": "boolean", "default": false, "description": "Commit locally per finding. Pushing is never permitted regardless (HRD-SAFE-3)." },
+    "include_deferred": { "type": "boolean", "default": false, "description": "Allow findings whose timeline class is never worked automatically. Requires naming the finding." }
+  }
+}

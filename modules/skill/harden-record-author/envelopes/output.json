@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "hardening-record@1",
+  "type": "object",
+  "required": ["source_report", "machine_floor", "plan", "worked", "self_audit"],
+  "additionalProperties": false,
+  "properties": {
+    "source_report": { "type": "string" },
+    "target_ref": { "type": "string" },
+    "machine_floor": {
+      "type": "object",
+      "required": ["exit_code"],
+      "properties": { "exit_code": { "type": "integer" }, "errors": { "type": "integer" }, "warnings": { "type": "integer" } }
+    },
+    "plan": {
+      "type": "object",
+      "required": ["ordered", "gate_verdict"],
+      "properties": {
+        "ordered": { "type": "array", "items": { "type": "object", "required": ["finding_id", "actor"], "properties": { "finding_id": { "type": "string", "pattern": "^INS-F-[0-9]{4}$" }, "actor": { "enum": ["agent", "operator", "split"] } } } },
+        "gate_verdict": { "type": "string" }
+      }
+    },
+    "worked": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "fingerprint", "actor", "run_status"],
+        "properties": {
+          "finding_id": { "type": "string", "pattern": "^INS-F-[0-9]{4}$" },
+          "fingerprint": { "type": "string", "minLength": 1, "description": "Carried unchanged from the report. Never regenerated (HRD-STATE-2)." },
+          "actor": { "enum": ["agent", "operator", "split"] },
+          "files_changed": { "type": "array", "items": { "type": "string" } },
+          "collateral": { "type": "array", "items": { "type": "string" } },
+          "acceptance_criteria_met": { "type": "array", "items": { "type": "object", "required": ["criterion", "evidence"], "properties": { "criterion": { "type": "string" }, "evidence": { "type": "string" } } } },
+          "validation_output": { "type": "string", "description": "Verbatim command output. Not a description of running it (HRD-VER-1)." },
+          "regression_gate_added": { "type": "string" },
+          "gate_proven_failing": { "type": "boolean" },
+          "run_status": { "enum": ["resolved", "blocked", "superseded", "false-positive", "accepted-risk"] },
+          "review_verdict": { "type": "object", "required": ["actor", "at", "verdict", "quote"], "properties": { "actor": { "type": "string" }, "at": { "type": "string" }, "verdict": { "type": "string" }, "quote": { "type": "string" } } }
+        }
+      }
+    },
+    "not_worked": { "type": "array", "items": { "type": "object", "required": ["finding_id", "reason"], "properties": { "finding_id": { "type": "string" }, "reason": { "type": "string" } } } },
+    "operator_procedures": { "type": "array", "items": { "type": "object", "required": ["finding_id", "steps"], "properties": { "finding_id": { "type": "string" }, "steps": { "type": "array", "items": { "type": "string" } } } } },
+    "self_audit": { "type": "object", "description": "H1 through H9, each pass. A fail must never be emitted.", "patternProperties": { "^H[1-9]$": { "type": "string", "const": "pass" } } }
+  }
+}
