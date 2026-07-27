@@ -12,7 +12,7 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 - `memory-append.mjs append --dry-run` validates the payload, lease and live chain and projects the seq/hash without creating or changing any store byte (TASK-IMP-146).
 
 ### Changed
-- Legacy status page window: keep `status-legacy.html` through 1.12.x; remove at next minor **1.13.0** (reinterpret of plan “remove at 2.1.0”).
+- Legacy status page removed at **1.13.0** (P6b); status-hub@3 is the sole emission.
 
 ### Fixed
 - SKILL-202 acceptance criteria and benchmark gates G7/G8 now cite the live `scripts/tests/test_skill_stub_lint.sh` suite; added coverage for the TASK-CUO-209 NFR delist, 20-skill untrusted-input backport, full pair-parity SCOPE and loud workflow degradation (TASK-IMP-145).
@@ -23,6 +23,16 @@ Added
 - wire /inspect and /harden channels (TASK-IMP-147) (#179)
 - add inspection-report author/audit pair (TASK-IMP-147) (#177)
 - add harden-record author/audit pair (TASK-IMP-147)
+
+Removed
+- Legacy status escape hatch: `status-legacy.html`, dual-emission assets, and `CYBEROS_STATUS_LEGACY` primary swap (P6b window closed; TASK-DOCS-013 / Status v3 closeout)
+- Confirmed absence of `docs/status-v2-preview/` and `docs/status-v3-preview/`
+
+Fixed
+- `audit-fleet.sh` false-negative `band:*` on status-hub@3 (bands live in `assets/status.js`; TASK-DOCS-029)
+
+### Changed
+- Status v3 program P0–P7 marked complete; P8 watch remains scaffold-only / optional (TASK-DOCS-008..029 groom)
 
 ## [1.12.0] - 2026-07-26
 

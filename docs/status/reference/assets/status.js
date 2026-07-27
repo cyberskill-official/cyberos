@@ -157,6 +157,10 @@
       '<span class="stamp">' + extA(ghc(D.head), "stamp-a", "snapshot " + esc(TODAY) +
         (D.head ? " @ " + esc(D.head) : "") +
         (D.commit ? " · " + esc(D.commit) : "")) + "</span>" +
+      ((D.coverageAsOf || D.head)
+        ? '<span class="vpill" title="Commit coverage tip at render time. A commit that stages this page cannot include its own hash — CI/deploy closes the gap.">coverage as of parent ' +
+          esc(D.coverageAsOf || D.head) + "</span>"
+        : "") +
       (staleDays > 1 ? '<span class="vpill stale" title="Snapshot is more than a day old — regenerate via status-page / pre-commit">snapshot ' +
         staleDays + "d old</span>" : "") +
       (D.noGit ? '<span class="vpill stale" title="Git history was unavailable at render time">no git history available</span>' : "") +
@@ -198,7 +202,6 @@
         '<span>Generated from task frontmatter + CHANGELOG.md + git history.</span>' +
         '<span class="mono">' + esc(D.commit || D.fp || "") + '</span>' +
         '<span>Feed <span class="mono">' + esc(D.fp || "") + '</span></span>' +
-        '<span><a href="status-legacy.html">Legacy status page (v2 lenses)</a></span>' +
       '</div>' +
     '</div>' +
     '<div class="scrim" id="scrim" data-act="close-drawer"></div>' +

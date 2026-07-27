@@ -1,16 +1,14 @@
 #!/usr/bin/env node
 // tools/docs-site/render-status-hub.mjs - TASK-DOCS-006..007 / TASK-IMP-074 / TASK-DOCS-010..014.
 // ONE page answers "where is the project". status-hub@3 is the tabless v3 canvas (status-feed@1).
-// Legacy status-hub@2 (three lenses) is still emitted as status-legacy.html for one minor cycle;
-// CYBEROS_STATUS_LEGACY=1 makes the v2 page the primary status.html (rollback lever).
+// Legacy status-hub@2 (status-legacy.html / CYBEROS_STATUS_LEGACY) removed at 1.13.0.
 // Inputs: task frontmatter, CHANGELOG.md, VERSION, docs/batches/ (TASK-IMP-114),
 //         docs/tasks/_state/commit-links.yaml, modules/manifest.yaml, and status
 //         client/shell/CSS template bytes — all hashed into the fp- stamp.
 //         Git history feeds status-feed@1 coverage (TASK-DOCS-010/011) but is NOT folded
 //         into the page stamp (a live commit-set hash would restore the IMP-082 HEAD chase).
 // Node stdlib only; deterministic stamp (no wall clock); honest failures.
-// Emits: reference/status.html (v3 by default; v2 when CYBEROS_STATUS_LEGACY=1),
-//        reference/status-legacy.html (always the v2 page),
+// Emits: reference/status.html (status-hub@3),
 //        reference/data/status-feed.json (status-feed@1),
 //        reference/data/task/<ID>.js, assets when CYBEROS_PAGE_ASSETS=1, roadmap.html stub.
 // Usage: node render-status-hub.mjs [repoRoot] [outDir] [--coverage-only]
@@ -18,7 +16,6 @@
 //        CYBEROS_PAGE_ASSETS 1 = emit assets/ and link them instead of inlining
 //        CYBEROS_HUB_LENIENT 1 = warn instead of failing on bad frontmatter / missing inputs
 //        CYBEROS_STATUS_SPECS 0 = skip the per-task spec chunks (drawer links out instead)
-//        CYBEROS_STATUS_LEGACY 1 = emit v2 as primary status.html (rollback)
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, resolve, dirname, basename } from 'node:path';
@@ -37,7 +34,9 @@ if (NAME.toLowerCase() === 'cyberos') NAME = 'CyberOS';
 const ASSETS = process.env.CYBEROS_PAGE_ASSETS === '1';
 const LENIENT = process.env.CYBEROS_HUB_LENIENT === '1';
 const SPECS = process.env.CYBEROS_STATUS_SPECS !== '0';
-const LEGACY_PRIMARY = process.env.CYBEROS_STATUS_LEGACY === '1';
+if (process.env.CYBEROS_STATUS_LEGACY === '1') {
+  console.error('status-hub: CYBEROS_STATUS_LEGACY removed at 1.13.0 — status-hub@3 is the only emission');
+}
 
 // ---- --coverage-only fast path (TASK-DOCS-017) -----------------------------------------
 // Refresh git coverage + feed fp inside an already-published docs/status tree. Skips
@@ -571,8 +570,6 @@ ${unp ? `  ${unp}` : ''}
 })();
 
 // Templates are stamp inputs (TASK-DOCS-010): a client/shell edit must move fp-.
-// Primary (v3) templates are hashed; legacy templates are loaded for dual emission but
-// intentionally NOT in the page stamp (legacy is a one-cycle escape hatch).
 const tpl = (sub, name) => {
   const env = process.env.CYBEROS_TEMPLATES;
   for (const c of [
@@ -586,13 +583,8 @@ const SHELL_T = tpl('html', 'status-hub.html');
 const TOKENS_T = tpl('cds', 'tokens.css');
 const STATUS_CSS_T = tpl('cds', 'status.css');
 const APP_T = tpl('html', 'status-app.js');
-const LEGACY_SHELL_T = tpl('html', 'status-hub-legacy.html');
-const LEGACY_CSS_T = tpl('cds', 'status-legacy.css');
-const LEGACY_APP_T = tpl('html', 'status-app-legacy.js');
 const CSS_V3 = TOKENS_T.body + '\n' + STATUS_CSS_T.body;
 const APP_V3 = APP_T.body;
-const CSS_V2 = TOKENS_T.body + '\n' + LEGACY_CSS_T.body;
-const APP_V2 = LEGACY_APP_T.body;
 
 const ledgerPath = join(ROOT, 'docs', 'tasks', '_state', 'commit-links.yaml');
 const manifestPath = join(ROOT, 'modules', 'manifest.yaml');
@@ -807,10 +799,8 @@ const reportsHtml = (economicsHtml || stalenessHtml || stuckWipHtml)
   ? `<aside class="ops-reports" aria-label="Operator reports">${economicsHtml}${stalenessHtml}${stuckWipHtml}</aside>`
   : '';
 
-const v3CssHref = LEGACY_PRIMARY ? 'assets/status-v3.css' : 'assets/status.css';
-const v3JsHref = LEGACY_PRIMARY ? 'assets/status-v3.js' : 'assets/status.js';
-const v2CssHref = LEGACY_PRIMARY ? 'assets/status.css' : 'assets/status-legacy.css';
-const v2JsHref = LEGACY_PRIMARY ? 'assets/status.js' : 'assets/status-legacy.js';
+const v3CssHref = 'assets/status.css';
+const v3JsHref = 'assets/status.js';
 
 const v3Page = fill(SHELL_T.body, {
   'title': `${esc(NAME)} status`,
@@ -827,48 +817,25 @@ const v3Page = fill(SHELL_T.body, {
   'script:html': ASSETS
     ? `<script defer src="${v3JsHref}"></script>`
     : `<script>\n${APP_V3}\n</script>`,
-  'footer': esc(`${NAME} — generated at ${VERSION} (${COMMIT}). Markdown is the record of truth; this page only renders it.`) +
-    ` · <a href="status-legacy.html">Legacy status page</a>`,
+  'footer': esc(`${NAME} — generated at ${VERSION} (${COMMIT}). Markdown is the record of truth; this page only renders it.`),
 });
 
-const v2Page = fill(LEGACY_SHELL_T.body, {
-  'title': `${esc(NAME)} status`,
-  'initial': initial,
-  'subtitle': `Where ${esc(NAME)} is and what is coming — generated from task frontmatter, CHANGELOG and VERSION`,
-  'search_placeholder': `Search ${tasks.length} tasks — id, title, module, owner, phase…`,
-  'meta:html': `VERSION <span class="code">${esc(VERSION)}</span> · built from <span class="code">${esc(COMMIT)}</span> · ${tasks.length} tasks · ${releases.length} releases`,
-  'deck:html': deck + economicsHtml,
-  'now:html': nowHtml + stuckWipHtml,
-  'staleness:html': stalenessHtml,
-  'facets:html': facets,
-  'nojs:html': nojs,
-  'data:json': dataJson,
-  'styles:html': ASSETS
-    ? `<link rel="stylesheet" href="${v2CssHref}">`
-    : `<style>\n${CSS_V2}\n</style>`,
-  'head:html': ASSETS ? '<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">' : '',
-  'script:html': ASSETS
-    ? `<script defer src="${v2JsHref}"></script>`
-    : `<script>\n${APP_V2}\n</script>`,
-  'footer': esc(`${NAME} — generated at ${VERSION} (${COMMIT}). Markdown is the record of truth; this page only renders it.`) +
-    ` · <a href="${LEGACY_PRIMARY ? 'status-v3.html' : 'status.html'}">Current status page (v3)</a>`,
-});
-
-const primary = LEGACY_PRIMARY ? v2Page : v3Page;
-writeFileSync(join(REF, 'status.html'), primary);
-writeFileSync(join(REF, 'status-legacy.html'), v2Page);
-if (LEGACY_PRIMARY) writeFileSync(join(REF, 'status-v3.html'), v3Page);
+writeFileSync(join(REF, 'status.html'), v3Page);
+// Drop legacy dual-emission leftovers from prior regenerations (1.13.0).
+for (const stale of ['status-legacy.html', 'status-v3.html']) {
+  const p = join(REF, stale);
+  if (existsSync(p)) rmSync(p);
+}
 
 if (ASSETS) {
   const adir = join(REF, 'assets');
   mkdirSync(adir, { recursive: true });
-  writeFileSync(join(adir, 'status.css'), LEGACY_PRIMARY ? CSS_V2 : CSS_V3);
-  writeFileSync(join(adir, 'status.js'), LEGACY_PRIMARY ? APP_V2 : APP_V3);
-  writeFileSync(join(adir, 'status-legacy.css'), CSS_V2);
-  writeFileSync(join(adir, 'status-legacy.js'), APP_V2);
-  if (LEGACY_PRIMARY) {
-    writeFileSync(join(adir, 'status-v3.css'), CSS_V3);
-    writeFileSync(join(adir, 'status-v3.js'), APP_V3);
+  writeFileSync(join(adir, 'status.css'), CSS_V3);
+  writeFileSync(join(adir, 'status.js'), APP_V3);
+  // Drop legacy assets left from prior emissions (1.13.0 removal).
+  for (const stale of ['status-legacy.css', 'status-legacy.js', 'status-v3.css', 'status-v3.js']) {
+    const p = join(adir, stale);
+    if (existsSync(p)) rmSync(p);
   }
   const tok = n => (CSS_V3.match(new RegExp(`--cs-color-${n}:\\s*([^;]+);`)) || [])[1]?.trim();
   const umber = tok('brand-umber') || '#45210E';
@@ -882,7 +849,7 @@ if (ASSETS) {
 `);
 }
 
-// bookmarks stay alive: roadmap stub + v3 legacy hash redirects in status-app.js
+// bookmarks stay alive: roadmap stub + v2 hash redirects in status-app.js
 writeFileSync(join(REF, 'roadmap.html'), `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=status.html#roadmap">
 <title>Roadmap moved</title></head>
@@ -892,8 +859,8 @@ writeFileSync(join(REF, 'roadmap.html'), `<!doctype html>
 const summary = STATUSES.filter(s => tasks.some(f => f.s === s))
   .map(s => `${tasks.filter(f => f.s === s).length} ${s}`).join(', ');
 console.log(`status-hub: ${tasks.length} tasks (${summary}), ${modules.length} modules, ${releases.length} releases, ` +
-  `VERSION ${VERSION} - ${LEGACY_PRIMARY ? 'legacy-primary (v2)' : 'status-hub@3 canvas'}` +
+  `VERSION ${VERSION} - status-hub@3 canvas` +
   (specs.size ? `, ${specs.size} spec chunks (${(specBytes / 1048576).toFixed(1)} MB)` : ', no spec chunks (CYBEROS_STATUS_SPECS=0)') +
   (batches.length ? `, ${batches.length} batch economics rows` : '') +
   (invalid.length ? `, ${invalid.length} invalid status` : '') +
-  `, status-feed@1 ${feed.fp}, legacy=status-legacy.html`);
+  `, status-feed@1 ${feed.fp}`);

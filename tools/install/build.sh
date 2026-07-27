@@ -323,10 +323,7 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   [ -f "$here/docs-tools/workflow-improve.mjs" ] && cp "$here/docs-tools/workflow-improve.mjs" "$out/docs-tools/"
   [ -f "$here/../../modules/templates/html/status-hub.html" ] && cp "$here/../../modules/templates/html/status-hub.html" "$out/docs-tools/templates/"
   [ -f "$here/../../modules/templates/html/status-app.js" ] && cp "$here/../../modules/templates/html/status-app.js" "$out/docs-tools/templates/"
-  [ -f "$here/../../modules/templates/html/status-hub-legacy.html" ] && cp "$here/../../modules/templates/html/status-hub-legacy.html" "$out/docs-tools/templates/"
-  [ -f "$here/../../modules/templates/html/status-app-legacy.js" ] && cp "$here/../../modules/templates/html/status-app-legacy.js" "$out/docs-tools/templates/"
   [ -f "$here/../../modules/templates/cds/status.css" ] && cp "$here/../../modules/templates/cds/status.css" "$out/docs-tools/templates/"
-  [ -f "$here/../../modules/templates/cds/status-legacy.css" ] && cp "$here/../../modules/templates/cds/status-legacy.css" "$out/docs-tools/templates/"
   [ -f "$here/../../modules/templates/cds/tokens.css" ] && cp "$here/../../modules/templates/cds/tokens.css" "$out/docs-tools/templates/"
 fi
 # Never ship retired names (pre-1.0.0)

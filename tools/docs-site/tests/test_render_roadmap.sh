@@ -17,10 +17,9 @@ mkfix() {
            "$d/docs/tasks/bb/TASK-BB-001-third" "$d/.git/refs/heads" \
            "$d/modules/templates/html" "$d/modules/templates/cds"
   cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" \
-     "$repo/modules/templates/html/status-hub-legacy.html" "$repo/modules/templates/html/status-app-legacy.js" \
      "$d/modules/templates/html/"
   cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" \
-     "$repo/modules/templates/cds/status-legacy.css" "$d/modules/templates/cds/"
+     "$d/modules/templates/cds/"
   echo "ref: refs/heads/main" > "$d/.git/HEAD"; echo "abcdef1234567890" > "$d/.git/refs/heads/main"
   printf -- '---\nid: TASK-AA-001\ntitle: First\nmodule: aa\npriority: MUST\nstatus: done\nclass: product\n---\nbody\n' > "$d/docs/tasks/aa/TASK-AA-001-first/spec.md"
   printf -- '---\nid: TASK-AA-002\ntitle: Second\nmodule: aa\npriority: SHOULD\nstatus: draft\nclass: improvement\n---\nbody\n' > "$d/docs/tasks/aa/TASK-AA-002-second/spec.md"
@@ -36,12 +35,12 @@ t01_builds_from_three_inputs() {
 }
 t02_board_counts_and_release_order() {
   h="$TMP/a/out/reference/status.html"
-  leg="$TMP/a/out/reference/status-legacy.html"
   grep -q 'VERSION' "$h" && grep -Eq 'built from <span class="code">fp-[0-9a-f]{12}</span>' "$h" \
     && grep -q '"s":"done"' "$h" && grep -q '"s":"implementing"' "$h" \
-    && grep -Eq 'data-bucket="done"[^>]*><b>1</b>' "$leg" && grep -Eq 'data-bucket="active"[^>]*><b>1</b>' "$leg" \
     && node -e 'const fs=require("fs");const h=fs.readFileSync(process.argv[1],"utf8");
         const d=JSON.parse(h.match(/id="sv3-data">([\s\S]*?)<\/script>/)[1].replace(/\\u003c/g,"<"));
+        const by=Object.create(null); for (const t of d.tasks||[]) by[t.s]=(by[t.s]||0)+1;
+        if ((by.done||0)!==1 || (by.implementing||0)!==1) process.exit(1);
         const rs=d.releases.filter(r=>!r.lg); process.exit(rs[0]&&rs[0].v==="2.0.0"&&rs.some(r=>r.v==="1.0.0")?0:1);' "$h" \
     && ok t02 || fail t02 "board counts / release order"
 }

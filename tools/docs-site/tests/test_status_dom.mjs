@@ -34,8 +34,7 @@ function mkFixture(root) {
   mkdirSync(join(root, 'modules/templates/cds'), { recursive: true });
   for (const f of [
     'html/status-hub.html', 'html/status-app.js',
-    'html/status-hub-legacy.html', 'html/status-app-legacy.js',
-    'cds/tokens.css', 'cds/status.css', 'cds/status-legacy.css',
+    'cds/tokens.css', 'cds/status.css',
   ]) {
     cpSync(join(repo, 'modules/templates', f), join(root, 'modules/templates', f));
   }
@@ -114,7 +113,7 @@ try {
   const html = readFileSync(join(out, 'reference', 'status.html'), 'utf8');
   assert('t01_emitted_v3', html.includes('data-template-id="status-hub@3"'), 'not status-hub@3');
   assert('t02_sv3_data', html.includes('id="sv3-data"'), 'missing sv3-data');
-  assert('t03_legacy_file', existsSync(join(out, 'reference', 'status-legacy.html')), 'no status-legacy.html');
+  assert('t03_legacy_gone', !existsSync(join(out, 'reference', 'status-legacy.html')), 'status-legacy.html still emitted');
   assert('t04_feed_json', existsSync(join(out, 'reference', 'data', 'status-feed.json')), 'no status-feed.json');
   assert('t05_noscript', html.includes('<noscript>') && html.includes('TASK-BB-001'), 'noscript table missing');
 
@@ -259,8 +258,8 @@ try {
   const d6 = dom6.window.document.getElementById('drawer');
   assert('t43_legacy_task_hash', d6 && d6.classList.contains('open'), 'legacy #task/ID did not open drawer');
 
-  // Footer legacy link
-  assert('t44_footer_legacy_link', /status-legacy\.html/.test(html), 'no legacy footer link');
+  // Footer must not link the removed legacy page
+  assert('t44_footer_no_legacy_link', !/status-legacy\.html/.test(html), 'legacy footer link still present');
 
   // Search box present
   assert('t45_search', !!document.getElementById('q'), 'no search input');
@@ -272,15 +271,16 @@ try {
   assert('t47_index_cap', /IDX\.cap\s*=\s*30/.test(html) || /cap:\s*30/.test(html), 'index cap 30 missing');
 
   // Extra assertions beyond 47 for locked-in behaviors
-  assert('t48_legacy_primary_env', (() => {
+  assert('t48_legacy_env_ignored', (() => {
     const out2 = join(TMP, 'out-leg');
     const r2 = spawnSync(process.execPath, [R, TMP, out2], {
       encoding: 'utf8', env: { ...process.env, CYBEROS_STATUS_LEGACY: '1' },
     });
     if (r2.status !== 0) return false;
     const p = readFileSync(join(out2, 'reference', 'status.html'), 'utf8');
-    return p.includes('data-template-id="status-hub@2"');
-  })(), 'CYBEROS_STATUS_LEGACY=1 did not emit v2 primary');
+    return p.includes('data-template-id="status-hub@3"')
+      && !existsSync(join(out2, 'reference', 'status-legacy.html'));
+  })(), 'CYBEROS_STATUS_LEGACY=1 must not resurrect v2 primary');
 
   assert('t49_spec_chunk', existsSync(join(out, 'reference', 'data', 'task', 'TASK-AA-001.js')), 'spec chunk missing');
   assert('t50_reduced_motion_css', /prefers-reduced-motion/.test(html), 'reduced-motion rule missing');

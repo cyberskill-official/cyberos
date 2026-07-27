@@ -11,15 +11,14 @@ PASS=0; FAIL=0
 ok()   { PASS=$((PASS+1)); echo "  ok   $1"; }
 fail() { FAIL=$((FAIL+1)); echo "  FAIL $1: $2"; }
 
-mkfix() {
+mkfixture() {
   d="$1"
   mkdir -p "$d/docs/tasks/aa/TASK-AA-001-first" "$d/docs/tasks/bb/TASK-BB-001-third" \
            "$d/.git/refs/heads" "$d/modules/templates/html" "$d/modules/templates/cds"
   cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" \
-     "$repo/modules/templates/html/status-hub-legacy.html" "$repo/modules/templates/html/status-app-legacy.js" \
      "$d/modules/templates/html/"
   cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" \
-     "$repo/modules/templates/cds/status-legacy.css" "$d/modules/templates/cds/"
+     "$d/modules/templates/cds/"
   echo "ref: refs/heads/main" > "$d/.git/HEAD"; echo "abcdef1234567890" > "$d/.git/refs/heads/main"
   printf -- '---\nid: TASK-AA-001\ntitle: First\nmodule: aa\npriority: MUST\nstatus: done\nclass: product\nphase: P0\nowner: Ada\neffort_hours: 3\nshipped: 2026-07-01\ndepends_on: []\nblocks: [TASK-BB-001]\nsubtasks:\n  - "wire it"\n  - "prove it"\n---\n## §1 — Description\n\nFirst task body paragraph.\n\n## §4 — Acceptance criteria\n\n- one\n' > "$d/docs/tasks/aa/TASK-AA-001-first/spec.md"
   printf -- '---\nid: TASK-BB-001\ntitle: Third\nmodule: bb\npriority: SHOULD\nstatus: draft\nclass: improvement\nphase: P1\ndepends_on: [TASK-AA-001]\n---\n## §1 — Description\n\nThird task body paragraph.\n' > "$d/docs/tasks/bb/TASK-BB-001-third/spec.md"
@@ -27,36 +26,29 @@ mkfix() {
   echo "2.0.0" > "$d/VERSION"
 }
 
-t01_deck_true() {                                                      # AC 1 - stamp on primary; deck on legacy
-  mkfix "$TMP/a"
+t01_deck_true() {                                                      # AC 1 - v3 stamp + version on primary
+  mkfixture "$TMP/a"
   node "$R" "$TMP/a" "$TMP/a/out" >/dev/null 2>&1
   h="$TMP/a/out/reference/status.html"
-  leg="$TMP/a/out/reference/status-legacy.html"
   grep -q 'data-template-id="status-hub@3"' "$h" \
-    && grep -Eq 'built from <span class="code">fp-[0-9a-f]{12}</span>' "$h" \
-    && grep -q 'VERSION <span class="code">2.0.0</span>' "$h" \
-    && grep -q 'Overall progress · 2 tasks · 2 modules' "$leg" \
-    && grep -Eq 'data-bucket="done"[^>]*><b>1</b>' "$leg" \
-    && grep -q 'seg-done" style="width:50.0%"' "$leg" \
-    && ok t01 || fail t01 "deck counts / stamp wrong"
+    && grep -Eq 'generated at 2\.0\.0 \(fp-[0-9a-f]{12}\)' "$h" \
+    && grep -q 'id="sv3-data"' "$h" \
+    && grep -q '"version":"2.0.0"' "$h" \
+    && [ ! -f "$TMP/a/out/reference/status-legacy.html" ] \
+    && ok t01 || fail t01 "v3 stamp / no-legacy wrong"
 }
-t02_v3_canvas_and_legacy() {                                           # AC 2 - v3 bands + legacy lenses
+t02_v3_canvas_and_legacy() {                                           # AC 2 - v3 bands; legacy emission gone
   h="$TMP/a/out/reference/status.html"
-  leg="$TMP/a/out/reference/status-legacy.html"
   ! grep -q 'role="tabpanel"' "$h" \
     && grep -q 'id="sv3-data"' "$h" \
     && grep -q 'id="pulse"' "$h" \
     && grep -q 'LEGACY_BAND' "$h" \
-    && [ "$(grep -co 'class="ln" role="tab"' "$leg")" -eq 3 ] \
-    && grep -q 'data-lens="board"' "$leg" \
-    && grep -q 'roadmap: "board", backlog: "table", changelog: "timeline"' "$leg" \
-    && [ -f "$TMP/a/out/reference/status-legacy.html" ] \
-    && ok t02 || fail t02 "v3 canvas / legacy emission"
+    && [ ! -f "$TMP/a/out/reference/status-legacy.html" ] \
+    && ! grep -q 'status-legacy.html' "$h" \
+    && ok t02 || fail t02 "v3 canvas / legacy still present"
 }
-t03_facets_and_search() {                                              # AC 3 - feed fields on primary; facets on legacy
+t03_facets_and_search() {                                              # AC 3 - feed fields + search on v3 primary
   h="$TMP/a/out/reference/status.html"
-  leg="$TMP/a/out/reference/status-legacy.html"
-  for id in f-m f-s f-p f-c f-ph f-g; do grep -q "id=\"$id\"" "$leg" || { fail t03 "facet $id missing"; return; }; done
   grep -q 'id="q"' "$h" && grep -q '"p":"MUST"' "$h" && grep -q '"c":"improvement"' "$h" \
     && grep -q '"ph":"P0"' "$h" && grep -q '"feed":1' "$h" \
     && ok t03 || fail t03 "search box or feed fields missing"
@@ -72,21 +64,18 @@ t05_deterministic() {                                                  # AC 5 - 
     && cmp -s "$TMP/a/out/reference/data/task/TASK-AA-001.js" "$TMP/a/out2/reference/data/task/TASK-AA-001.js" \
     && ok t05 || fail t05 "nondeterministic"
 }
-t06_task_page_links() {                                                  # AC 6 - task page link in legacy corpus; feed has folder key
-  mkfix "$TMP/d"
+t06_task_page_links() {                                                  # AC 6 - feed folder key on v3 page
+  mkfixture "$TMP/d"
   mkdir -p "$TMP/d/out/tasks/aa/TASK-AA-001-first"; touch "$TMP/d/out/tasks/aa/TASK-AA-001-first/index.html"
   node "$R" "$TMP/d" "$TMP/d/out" >/dev/null 2>&1
-  grep -q '"pg":"../tasks/aa/TASK-AA-001-first/index.html"' "$TMP/d/out/reference/status-legacy.html" \
-    && grep -q '"k":"aa/TASK-AA-001-first"' "$TMP/d/out/reference/status.html" \
-    && ok t06 || fail t06 "task page link / feed key absent"
+  grep -q '"k":"aa/TASK-AA-001-first"' "$TMP/d/out/reference/status.html" \
+    && ok t06 || fail t06 "feed key absent"
 }
 t07_changelog_binds_tasks() {                                            # the changelog references tasks, not prose
   h="$TMP/a/out/reference/status.html"
-  leg="$TMP/a/out/reference/status-legacy.html"
-  grep -q '"cited":\["TASK-AA-001"\]' "$leg" \
-    && grep -q 'data-task=\\"TASK-AA-001\\"' "$leg" \
-    && grep -q '"bound":\["TASK-AA-001"\]' "$leg" \
-    && grep -q 'TASK-AA-001' "$h" \
+  feed="$TMP/a/out/reference/data/status-feed.json"
+  grep -q 'TASK-AA-001' "$h" \
+    && grep -q 'TASK-AA-001' "$feed" \
     && ok t07 || fail t07 "release -> task binding missing"
 }
 t08_spec_chunks() {                                                    # full spec, lazily
@@ -103,7 +92,7 @@ t08_spec_chunks() {                                                    # full sp
 t09_nojs_and_honest_failures() {                                       # degrade, and fail loudly
   h="$TMP/a/out/reference/status.html"
   grep -q '<noscript>' "$h" && grep -q 'TASK-BB-001' "$h" || { fail t09 "no-JS fallback missing"; return; }
-  mkfix "$TMP/b"
+  mkfixture "$TMP/b"
   mkdir -p "$TMP/b/docs/tasks/aa/TASK-AA-009-broken"
   printf -- '---\nid: TASK-AA-009\nno closing fence\n' > "$TMP/b/docs/tasks/aa/TASK-AA-009-broken/spec.md"
   out="$(node "$R" "$TMP/b" "$TMP/b/out" 2>&1)"; rc=$?
@@ -179,10 +168,10 @@ t11_draft_staleness_report() {                                         # TASK-IM
 # not. Reported as a spec defect rather than silently renumbered: a renamed arm is an AC that
 # cites a test which does not exist.
 #
-# Its own fixture, not mkfix's: t01's counts and t05's cmp are asserted against $TMP/a, and a
+# Its own fixture, not mkfixture's: t01's counts and t05's cmp are asserted against $TMP/a, and a
 # suite arm that perturbs a sibling arm's fixture is a flake waiting for a bad day.
 mkbatchfix() {
-  local d="$1"; mkfix "$d"; mkdir -p "$d/docs/batches"
+  local d="$1"; mkfixture "$d"; mkdir -p "$d/docs/batches"
   # AA is done (2 route-backs), BB is not (1) -> shipped 1 of 2, route-backs 3
   sed -i.bak 's/^shipped: 2026-07-01$/shipped: 2026-07-01\nrouted_back_count: 2/' "$d/docs/tasks/aa/TASK-AA-001-first/spec.md"
   sed -i.bak 's/^status: draft$/status: draft\nrouted_back_count: 1/' "$d/docs/tasks/bb/TASK-BB-001-third/spec.md"
@@ -257,14 +246,5 @@ t01_deck_true; t02_v3_canvas_and_legacy; t03_facets_and_search; t04_supersession
 t05_deterministic; t06_task_page_links; t07_changelog_binds_tasks; t08_spec_chunks
 t09_nojs_and_honest_failures; t10_token_clean; t11_draft_staleness_report
 t09_economics_row; t10_economics_row_deterministic
-# Phase 2: rollback lever
-t12_legacy_primary() {
-  mkfix "$TMP/lp"
-  CYBEROS_STATUS_LEGACY=1 node "$R" "$TMP/lp" "$TMP/lp/out" >/dev/null 2>&1
-  grep -q 'data-template-id="status-hub@2"' "$TMP/lp/out/reference/status.html" \
-    && grep -q 'data-template-id="status-hub@3"' "$TMP/lp/out/reference/status-v3.html" \
-    && grep -q 'data-template-id="status-hub@2"' "$TMP/lp/out/reference/status-legacy.html" \
-    && ok t12_legacy_primary || fail t12_legacy_primary "CYBEROS_STATUS_LEGACY=1 did not swap primary"
-}
-t12_legacy_primary
+# Phase 2: CYBEROS_STATUS_LEGACY removed at 1.13.0 — no rollback lever arm.
 echo "----"; echo "pass=$PASS fail=$FAIL"; [ "$FAIL" -eq 0 ]

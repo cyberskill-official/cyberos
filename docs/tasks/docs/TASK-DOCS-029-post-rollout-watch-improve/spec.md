@@ -12,7 +12,8 @@ author: "@stephencheng"
 template: task@1
 module: docs
 priority: p0
-status: ready_to_review
+status: on_hold
+# Operator closeout 2026-07-27: scaffold done; production watch deferred/optional
 verify: T
 phase: Status-v3 Phase 8
 owner: Stephen Cheng (CTO)

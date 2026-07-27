@@ -202,28 +202,28 @@ Totals: 269 draft, 19 ready_to_implement, 2 ready_to_review, 263 done, 1 on_hold
 - [done] TASK-DOCS-005-fr-html-pages - Per-task CDS HTML pages - every spec renders to its own self-contained deliverable page with assets
 - [done] TASK-DOCS-006-status-hub - Status hub - one status.html: command deck + Roadmap | Backlog | Changelog tabs (supersedes roadmap.html)
 - [done] TASK-DOCS-007-status-hub-v2 - Status hub v2 - dashboard UI (module cards, progress bars, chips) + zero-touch HTML regeneration on every task/backlog/version change (improvement)
-- [ready_to_implement] TASK-DOCS-008-status-v3-land-preview-enforcement - Land status-v3 preview + enforcement trio on main behind PR (improvement)
-- [ready_to_implement] TASK-DOCS-009-traceability-cutoff-required-check - Traceability required check + cutoff registry in config.yaml (improvement)
-- [ready_to_implement] TASK-DOCS-010-status-feed-v1-emission - status-feed@1 emission + validation in render-status-hub (pair-mirrored)
-- [ready_to_implement] TASK-DOCS-011-commit-classification-epoch-ledger - Epoch/shorthand/ledger commit classification in generator
-- [ready_to_implement] TASK-DOCS-012-commit-links-ledger-relocation - Ledger relocation to docs/tasks/_state + task-lint validation (improvement)
-- [ready_to_implement] TASK-DOCS-013-status-v3-client-shell-swap - v3 client into modules/templates + shell swap + legacy emission
-- [ready_to_implement] TASK-DOCS-014-legacy-hash-redirect-noscript - Legacy hash redirect map + noscript regeneration from feed
-- [ready_to_implement] TASK-DOCS-015-status-dom-suite-port - Port v3 DOM suite to tools/docs-site/tests with jsdom (improvement)
-- [ready_to_implement] TASK-DOCS-016-delete-status-v3-preview - Delete docs/status-v3-preview and move integration docs
-- [ready_to_implement] TASK-DOCS-017-coverage-only-regen-trigger - Wide regen trigger + --coverage-only fast path (improvement)
-- [ready_to_implement] TASK-DOCS-018-deploy-trigger-served-freshness - deploy.yml trigger widening + served-page freshness check (improvement)
-- [ready_to_implement] TASK-DOCS-019-installer-traceability-scaffold - Installer: checker in payload lib, config scaffold, CI template (improvement)
-- [ready_to_implement] TASK-DOCS-020-release-range-traceability-preflight - Release-range preflight (warn now, block at 2.0.0) (improvement)
+- [done] TASK-DOCS-008-status-v3-land-preview-enforcement - Land status-v3 preview + enforcement trio on main behind PR (improvement)
+- [done] TASK-DOCS-009-traceability-cutoff-required-check - Traceability required check + cutoff registry in config.yaml (improvement)
+- [done] TASK-DOCS-010-status-feed-v1-emission - status-feed@1 emission + validation in render-status-hub (pair-mirrored)
+- [done] TASK-DOCS-011-commit-classification-epoch-ledger - Epoch/shorthand/ledger commit classification in generator
+- [done] TASK-DOCS-012-commit-links-ledger-relocation - Ledger relocation to docs/tasks/_state + task-lint validation (improvement)
+- [done] TASK-DOCS-013-status-v3-client-shell-swap - v3 client into modules/templates + shell swap + legacy emission
+- [done] TASK-DOCS-014-legacy-hash-redirect-noscript - Legacy hash redirect map + noscript regeneration from feed
+- [done] TASK-DOCS-015-status-dom-suite-port - Port v3 DOM suite to tools/docs-site/tests with jsdom (improvement)
+- [done] TASK-DOCS-016-delete-status-v3-preview - Delete docs/status-v3-preview and move integration docs
+- [done] TASK-DOCS-017-coverage-only-regen-trigger - Wide regen trigger + --coverage-only fast path (improvement)
+- [done] TASK-DOCS-018-deploy-trigger-served-freshness - deploy.yml trigger widening + served-page freshness check (improvement)
+- [done] TASK-DOCS-019-installer-traceability-scaffold - Installer: checker in payload lib, config scaffold, CI template (improvement)
+- [done] TASK-DOCS-020-release-range-traceability-preflight - Release-range preflight (warn now, block at 2.0.0) (improvement)
 - [done] TASK-DOCS-021-mothership-violation-triage-ledger - Mothership violation triage into reviewed ledger (148 rows)
-- [ready_to_implement] TASK-DOCS-022-payload-channel-verification-matrix - Payload/channel verification matrix execution (improvement)
-- [ready_to_implement] TASK-DOCS-023-offline-scratch-repo-certification - Offline scratch-repo certification for status v3 (improvement)
-- [ready_to_implement] TASK-DOCS-024-release-v2-0-0-status-v3 - v2.0.0 release: changelog, Release-As PR, tag runbook, artifacts
-- [ready_to_implement] TASK-DOCS-025-fleet-discovery-classification-report - Fleet discovery re-scan + classification report
-- [ready_to_implement] TASK-DOCS-026-fleet-pilot-migrations - Pilot migrations (zero-task, medium, sachviet layout) (improvement)
-- [ready_to_implement] TASK-DOCS-027-fleet-rollout-remaining-repos - Fleet rollout remaining repos + exception handling (improvement)
-- [ready_to_review] TASK-DOCS-028-status-feed-docs-runbook - Docs: status-feed spec, traceability runbook, help/AGENT-ENTRY text (improvement)
-- [ready_to_review] TASK-DOCS-029-post-rollout-watch-improve - Post-rollout watch + /cyberos:improve pass
+- [done] TASK-DOCS-022-payload-channel-verification-matrix - Payload/channel verification matrix execution (improvement)
+- [done] TASK-DOCS-023-offline-scratch-repo-certification - Offline scratch-repo certification for status v3 (improvement)
+- [done] TASK-DOCS-024-release-v2-0-0-status-v3 - v2.0.0 release: changelog, Release-As PR, tag runbook, artifacts
+- [done] TASK-DOCS-025-fleet-discovery-classification-report - Fleet discovery re-scan + classification report
+- [done] TASK-DOCS-026-fleet-pilot-migrations - Pilot migrations (zero-task, medium, sachviet layout) (improvement)
+- [done] TASK-DOCS-027-fleet-rollout-remaining-repos - Fleet rollout remaining repos + exception handling (improvement)
+- [done] TASK-DOCS-028-status-feed-docs-runbook - Docs: status-feed spec, traceability runbook, help/AGENT-ENTRY text (improvement)
+- [on_hold] TASK-DOCS-029-post-rollout-watch-improve - Post-rollout watch + /cyberos:improve pass
 
 ## email  (6 draft, 5 done)
 

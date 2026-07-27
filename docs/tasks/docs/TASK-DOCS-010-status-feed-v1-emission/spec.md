@@ -12,7 +12,8 @@ author: "@stephencheng"
 template: task@1
 module: docs
 priority: p0
-status: ready_to_implement
+status: done
+# Operator closeout 2026-07-27 (Stephen): work already on main; HITL override → done
 verify: T
 phase: Status-v3 Phase 1
 owner: Stephen Cheng (CTO)
