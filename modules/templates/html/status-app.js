@@ -202,7 +202,6 @@
         '<span>Generated from task frontmatter + CHANGELOG.md + git history.</span>' +
         '<span class="mono">' + esc(D.commit || D.fp || "") + '</span>' +
         '<span>Feed <span class="mono">' + esc(D.fp || "") + '</span></span>' +
-        '<span><a href="status-legacy.html">Legacy status page (v2 lenses)</a></span>' +
       '</div>' +
     '</div>' +
     '<div class="scrim" id="scrim" data-act="close-drawer"></div>' +

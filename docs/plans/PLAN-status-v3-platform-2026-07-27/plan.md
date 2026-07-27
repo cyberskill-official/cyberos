@@ -2,9 +2,9 @@
 
 - Date: 2026-07-27
 - Author: Claude (session with operator Stephen Cheng), for handoff to executing models
-- Status: **in execution** — P0–P2 locked; P6/P7 GO under operator override **1.12.0** (not 2.0.0). See `docs/notes/status-v3-p0-decisions.md`.
+- Status: **complete** — P0–P7 done; P8 watch deferred/scaffold-only (operator skip). See `docs/notes/status-v3-p0-decisions.md`.
 - Baseline at plan write: cyberos @ `a7e0e212` (v1.10.0), branch `batch/ten-inv-host-e`
-- Execution tip (2026-07-27): `main` @ `a22dbf70` / VERSION 1.11.0; release target **1.12.0**
+- Execution tip (2026-07-27 closeout): `main` @ 1.12.0 platform land + **1.13.0** legacy removal; P8 watch not started
 - Approved input: `docs/status-v3-preview/` (operator-reviewed preview; deleted after Phase 2 land)
 - Consumes into backlog via: `/cyberos:create-tasks` (task set in §7; TASK-DOCS-008..029)
 

@@ -51,10 +51,10 @@ EOF
   ln -sf "$repo/tools/docs-site/render-status-hub.mjs" "$d/.cyberos/docs-tools/render-status-hub.mjs"
   ln -sf "$repo/tools/docs-site/status-feed.mjs" "$d/.cyberos/docs-tools/status-feed.mjs"
   ln -sf "$repo/tools/docs-site/md.mjs" "$d/.cyberos/docs-tools/md.mjs"
-  for f in status-hub.html status-app.js status-hub-legacy.html status-app-legacy.js; do
+  for f in status-hub.html status-app.js; do
     ln -sf "$repo/modules/templates/html/$f" "$d/.cyberos/docs-tools/templates/$f" 2>/dev/null || true
   done
-  for f in status.css status-legacy.css tokens.css; do
+  for f in status.css tokens.css; do
     ln -sf "$repo/modules/templates/cds/$f" "$d/.cyberos/docs-tools/templates/$f" 2>/dev/null || true
   done
   (cd "$d" && git init -q && git config user.email t@t && git config user.name t \

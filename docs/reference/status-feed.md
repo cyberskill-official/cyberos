@@ -90,5 +90,5 @@ CHANGELOG, VERSION, ledger, manifest, and primary templates — not the live com
 
 - Traceability runbook: [`docs/runbooks/traceability.md`](../runbooks/traceability.md)
 - Generator: `tools/docs-site/render-status-hub.mjs`, `tools/docs-site/status-feed.mjs`
-- Legacy escape hatch: `status-legacy.html` (status-hub@2 lenses) for one minor cycle;
-  `CYBEROS_STATUS_LEGACY=1` makes it primary
+- Client: status-hub@3 tabless canvas (`modules/templates/html/status-app.js`).
+- Legacy escape hatch (`status-legacy.html` / `CYBEROS_STATUS_LEGACY`) removed at **1.13.0**.

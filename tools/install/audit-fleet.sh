@@ -193,16 +193,25 @@ for base in "$@"; do
       else
         grep -qE 'data-template-id="status-hub@[23]"' "$page" || bad="$bad page-not-hub"
         if grep -q 'data-template-id="status-hub@3"' "$page"; then
-          for band in pulse roadmap sysmap flowband ledger indexband; do
-            grep -q "id=\"$band\"" "$page" || grep -q "id=\\\\\"$band\\\\\"" "$page" || bad="$bad band:$band"
-          done
-          # v3 canvas is JS-built; bands live in the client source when assets are linked
-          if grep -q 'src="assets/status.js"' "$page" && [ -f "$r/docs/status/assets/status.js" ]; then
-            for band in pulse roadmap sysmap flowband ledger indexband; do
-              grep -q "id=\"$band\"" "$r/docs/status/assets/status.js" || bad="$bad band:$band"
-            done
+          # v3 canvas bands are JS-built (not static HTML ids). Prefer assets/status.js;
+          # fall back to inlined script / status-feed marker when assets are absent.
+          _band_src=""
+          if [ -f "$r/docs/status/assets/status.js" ]; then
+            _band_src="$r/docs/status/assets/status.js"
+          elif grep -q 'id="sv3-data"\|status-feed' "$page"; then
+            _band_src="$page"
           fi
+          if [ -n "$_band_src" ]; then
+            for band in pulse roadmap sysmap flowband ledger indexband; do
+              grep -q "id=\"$band\"" "$_band_src" || grep -q "id=\\\\\"$band\\\\\"" "$_band_src" \
+                || bad="$bad band:$band"
+            done
+          else
+            bad="$bad band:missing-v3-client"
+          fi
+          unset _band_src
         else
+          # Older hubs (status-hub@2): lenses remain static HTML markers.
           for lens in board table timeline; do
             grep -q "data-lens=\"$lens\"" "$page" || bad="$bad lens:$lens"
           done

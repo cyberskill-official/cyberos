@@ -23,7 +23,7 @@ Tasks: TASK-DOCS-025 / TASK-DOCS-026 / TASK-DOCS-027
 ## Validation notes
 
 - Spot-check: `shared`, `strategem`, `landing-page`, `sachviet`, `shopass`, `dom-defender`, `quote-mind` → `.cyberos/VERSION=1.12.0` and `status-hub@3`.
-- `audit-fleet.sh` currently false-fails v3 pages on `band:pulse` etc. because it requires `id="pulse"` in static HTML; bands are JS-built in `assets/status.js`. Treat VERSION + `status-hub@3` + `status.js` band strings as the P7 truth for this wave. Follow-up: fix audit HTML band check (file under DOCS-029 watch).
+- `audit-fleet.sh` band false-negatives on v3 (`band:pulse` etc.) fixed in mothership **1.13.0** closeout (check `assets/status.js` / feed, not static HTML ids).
 - `fleet-install-test.sh` not re-run end-to-end after rollout (would re-mutate); rollout-fleet already covered the same consumer set.
 
 ## Post-fleet push wave (operator “go”, 2026-07-27)
@@ -110,10 +110,14 @@ Disk was critically full (~2.6 Gi free); freed safe `/tmp` debris, npm cache, 
 
 ## Exceptions / remaining blockers
 
-1. **No remotes** — `cyber-click`, `styx`: local upgrade only until remotes are configured.
-2. **No-git trees** — leave as local installs (no `git init` unless requested).
-3. **Destructive deletes** — not requested; `cyberos-12g-clone` remains skipped forever.
-4. **Consumer hook debt (`my-cv`)** — restore `cyberskill` for lint-staged and/or approve puppeteer builds / relax `strict-dep-builds` so hooks pass without `--no-verify`.
+1. **No remotes** — `cyber-click`, `styx`: local upgrade only. Re-checked 2026-07-27 closeout: still **no `git remote`**; no obvious origin to wire — documented skip (do not invent remotes).
+2. **No-git trees** — leave as local installs (no `git init` unless requested): `ssl`, `filmographic`, `claude-certified-architect-foundations`, `Personal/gam`, `Hackathon/cyber-sentinel`.
+3. **Destructive deletes** — not requested; `cyberos-12g-clone` remains skipped forever (not deleted).
+4. **Consumer hook debt (`my-cv`)** — pre-commit still runs `pnpm exec cyberskill lint-staged` but `cyberskill` is not a package dependency; `pnpm-workspace.yaml` `allowBuilds.puppeteer` still placeholder text. Best-effort not completed in closeout (consumer-owned); hooks may still need `--no-verify` or a local CLI install until fixed in that repo.
+
+## Closeout addendum (2026-07-27)
+
+Session closed Status v3 program leftovers without starting DOCS-029 production watch. Mothership audit-fleet band check fixed; legacy page removed at 1.13.0.
 
 ## Rollback
 
