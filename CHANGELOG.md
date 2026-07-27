@@ -17,6 +17,13 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 ### Fixed
 - SKILL-202 acceptance criteria and benchmark gates G7/G8 now cite the live `scripts/tests/test_skill_stub_lint.sh` suite; added coverage for the TASK-CUO-209 NFR delist, 20-skill untrusted-input backport, full pair-parity SCOPE and loud workflow degradation (TASK-IMP-145).
 
+## [1.13.0] - 2026-07-27
+
+Added
+- wire /inspect and /harden channels (TASK-IMP-147) (#179)
+- add inspection-report author/audit pair (TASK-IMP-147) (#177)
+- add harden-record author/audit pair (TASK-IMP-147)
+
 ## [1.12.0] - 2026-07-26
 
 Added
