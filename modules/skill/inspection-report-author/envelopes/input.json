@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "inspection-report-author input",
+  "type": "object",
+  "required": ["target"],
+  "additionalProperties": false,
+  "properties": {
+    "target": {
+      "type": "string",
+      "description": "Local path or clone URL of the repository to inspect. Read-only."
+    },
+    "ref": {
+      "type": "string",
+      "description": "Commit, tag, or branch to inspect. Defaults to the default branch head."
+    },
+    "deployment_platform": {
+      "type": "string",
+      "description": "Where the target actually runs. Changes applicability and severity for several rows; when absent the author halts rather than assuming.",
+      "examples": ["vercel", "github-pages", "self-hosted", "desktop", "unknown"]
+    },
+    "taxonomy_override": {
+      "type": "string",
+      "description": "Path to an 'ID Name' per-line taxonomy file. Absent means the canonical taxonomy (75 rows for INSPECT-SPEC ≥1.2; 69 rows remain valid for version-gated 1.0 reports)."
+    },
+    "depth": {
+      "type": "string",
+      "enum": ["single-pass", "continue-until-saturated"],
+      "default": "single-pass",
+      "description": "The 1.0.0 pilot reached saturation single-pass on targets up to 421 files."
+    }
+  }
+}
