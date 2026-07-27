@@ -11,9 +11,11 @@ Orient the user. Present concisely:
 - `/version` — check for a newer CyberOS; on yes → install
 - `/status` — open `docs/status/index.html` (tabless status-hub@3 canvas) in the browser
 - `/help` — this overview
-- `/ship-tasks` — drive the next task (HITL)
+- `/ship-tasks` — drive the next task (HITL); "harden a task" = `class: improvement`
 - `/create-tasks` — draft tasks into the backlog
-- CLI-only: `npx cs gates`, `npx cs mcp`, `npx cs memory` (local cyberos-memory), `npx cs cuo <name>` (slash redirect stub)
+- `/inspect` — read-only full-repo inspection → `inspection-report@1` (never remediates)
+- `/harden` — remediate a lint-clean inspection report → `hardening-record@1` (not ship-tasks)
+- CLI-only: `npx cs gates`, `npx cs mcp`, `npx cs memory` (local cyberos-memory), `npx cs cuo <name>` (slash redirect stub; includes inspect/harden)
 
 3. Soft update-check runs automatically on any `.cyberos` use. Day-to-day: install once, then forget.
 

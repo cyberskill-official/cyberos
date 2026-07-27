@@ -33,7 +33,8 @@ code-review coverage-gate deployment-checklist release-notes runbook retrospecti
   #   53 -> 54: workflow-improver (TASK-IMP-110, the outer loop).
   #   54 -> 56: plan-author + plan-audit (TASK-IMP-111, the plan front door).
   #   56 -> 52: four nfr-* stubs delisted (TASK-SKILL-202).
-  [ "$n" -eq 52 ] || { fail t01 "expected 52 vendored skills, got $n"; all=0; }
+  #   52 -> 56: inspection-report-{author,audit} + harden-record-{author,audit} (TASK-IMP-147).
+  [ "$n" -eq 56 ] || { fail t01 "expected 56 vendored skills, got $n"; all=0; }
   [ "$all" -eq 1 ] && ok t01
 }
 t02_set_is_reviewable_data() {                                        # AC 2

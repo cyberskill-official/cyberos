@@ -18,7 +18,8 @@ SCOPE=(statement-of-work product-requirements-document software-requirements-spe
        software-design-document repo-context-map implementation-plan edge-case-matrix
        mock-contract-test observability-injection backlog-state-update code-review
        test-strategy coverage-gate debugging-cycle deployment-checklist release-notes
-       runbook retrospective postmortem decommissioning)
+       runbook retrospective postmortem decommissioning
+       inspection-report harden-record)
 
 rc=0
 for name in "${SCOPE[@]}"; do

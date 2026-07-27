@@ -104,12 +104,14 @@ if (cmd === "mcp") {
     "create-tasks": "/create-tasks",
     "ship-tasks": "/ship-tasks",
     improve: "/improve",
+    inspect: "/inspect",
+    harden: "/harden",
   };
   const name = rest[0];
   const listMsg =
     "cs cuo — redirect stub (not standalone execution).\n" +
     "Run one of these slash commands inside a Claude Code / agent session:\n" +
-    "  plan  create-tasks  ship-tasks  improve\n" +
+    "  plan  create-tasks  ship-tasks  improve  inspect  harden\n" +
     "Example: cs cuo plan  →  prints /plan\n";
   if (!name) {
     process.stdout.write(listMsg);

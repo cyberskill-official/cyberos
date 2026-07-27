@@ -624,8 +624,12 @@ t_no_dangling_skill_links() {
   local all=1 d="$TMP/skill-links" p; mkrepo "$d"
   _t06_install "$d" >/dev/null                       # skills install regardless of the speed flags
   local managed=".claude/skills/ship-tasks .claude/skills/task-author .claude/skills/task-audit
+.claude/skills/inspection-report-author .claude/skills/inspection-report-audit
+.claude/skills/harden-record-author .claude/skills/harden-record-audit
 .grok/skills/ship-tasks .commandcode/skills/ship-tasks .codex/skills/ship-tasks .opencode/skill/ship-tasks
-.agents/skills/ship-tasks .agents/skills/task-author .agents/skills/task-audit"
+.agents/skills/ship-tasks .agents/skills/task-author .agents/skills/task-audit
+.agents/skills/inspection-report-author .agents/skills/inspection-report-audit
+.agents/skills/harden-record-author .agents/skills/harden-record-audit"
   # precondition: install actually created the managed entries as symlinks (the fix is meaningless
   # if they landed as unmanaged copies - the 7 direct family links point into .cyberos/plugin/skills).
   local pre=0

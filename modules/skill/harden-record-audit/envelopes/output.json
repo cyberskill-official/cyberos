@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "harden-record-audit verdict",
+  "type": "object",
+  "required": ["audited_record_sha256", "verdict"],
+  "additionalProperties": false,
+  "properties": {
+    "audited_record_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "scope_breaches": { "type": "array", "items": { "type": "object", "required": ["finding_id", "path"], "properties": { "finding_id": { "type": "string" }, "path": { "type": "string" } } } },
+    "unverified_closures": { "type": "array", "items": { "type": "string" } },
+    "fingerprint_mismatches": { "type": "array", "items": { "type": "string" } },
+    "closed_without_verdict": { "type": "array", "items": { "type": "string" } },
+    "verdict": { "enum": ["pass", "route_back", "needs_human"] }
+  }
+}

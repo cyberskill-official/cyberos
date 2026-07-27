@@ -154,7 +154,7 @@ fi
 # .agents/skills/ is operator work and stays; dirs are pruned only when emptied. The tracked
 # rules pointers (.devin/rules/, .windsurf/rules/, .windsurfrules) are agent surface and are
 # kept, same as CLAUDE.md and the other pointer files.
-for _sc in ship-tasks task-author task-audit; do
+for _sc in ship-tasks task-author task-audit inspection-report-author inspection-report-audit harden-record-author harden-record-audit; do
   _p="$root/.agents/skills/$_sc"
   if [ -L "$_p" ]; then
     case "$(readlink "$_p" 2>/dev/null)" in
@@ -179,13 +179,15 @@ _reclaim_parent ".agents/skills"
 _reclaim_parent ".agents"
 
 # Then the per-agent native skill entries install writes (install.sh install_skill calls, ~L632-641):
-# claude-code gets ship-tasks + the /create-tasks pair (task-author, task-audit); grok, command-code,
+# claude-code gets ship-tasks + the /create-tasks pair + /inspect+/harden skills (TASK-IMP-147); grok, command-code,
 # codex and opencode each get ship-tasks. Each is a relative symlink into .cyberos/plugin/skills/<skill>
 # (a copy-fallback lands only where a link cannot be made). Before TASK-IMP-126, uninstall touched only
 # the .claude/skills create-tasks pair and LEFT .claude/skills/ship-tasks plus the grok/command-code/
 # codex/opencode entries pointing into the machine it was about to remove - every one a dangling link
 # (§1.2). The family/skill list below mirrors install.sh exactly; do not invent names here.
 for _fs in ".claude/skills:ship-tasks" ".claude/skills:task-author" ".claude/skills:task-audit" \
+           ".claude/skills:inspection-report-author" ".claude/skills:inspection-report-audit" \
+           ".claude/skills:harden-record-author" ".claude/skills:harden-record-audit" \
            ".grok/skills:ship-tasks" ".commandcode/skills:ship-tasks" \
            ".codex/skills:ship-tasks" ".opencode/skill:ship-tasks"; do
   _sd="${_fs%%:*}"; _sk="${_fs##*:}"; _p="$root/$_sd/$_sk"

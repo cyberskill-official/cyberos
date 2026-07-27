@@ -163,7 +163,7 @@ done
 # surface proves nothing until an install lands it, so these scenarios run the real
 # installer against a scratch repo (same build-a-payload harness as test_install_hygiene.sh)
 # and hold it to create + idempotence + resolution.
-SHARED_CMDS="ship-tasks task-author task-audit"
+SHARED_CMDS="ship-tasks task-author task-audit inspection-report-author inspection-report-audit harden-record-author harden-record-audit"
 CH_TMP="$(mktemp -d)"; trap 'rm -rf "$CH_TMP"' EXIT
 _ch_install() {   # surface-focused: skip what step 5b does not need (migrate/memory/MCP/hook)
   CYBEROS_NO_MIGRATE=1 CYBEROS_NO_MEMORY=1 CYBEROS_NO_MCP=1 CYBEROS_NO_HOOK=1 \

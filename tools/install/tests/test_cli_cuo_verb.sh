@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # test_cli_cuo_verb.sh - TASK-IMP-132 contract: `cs cuo` is a redirect stub that
-# prints the matching slash command for the four LLM-orchestrated workflows and
-# never spawns a subprocess.
+# prints the matching slash command for the LLM-orchestrated workflows and
+# never spawns a subprocess. TASK-IMP-147 adds inspect + harden.
 #
 #   t01_plan_redirect_and_recognition
-#   t02_other_three_redirects
+#   t02_other_redirects
 #   t03_bare_invocation_lists_and_exits_0
 #   t04_unrecognised_name_lists_and_exits_2
 #   t05_no_subprocess_spawned
@@ -32,25 +32,25 @@ t01_plan_redirect_and_recognition() {
   fi
 }
 
-t02_other_three_redirects() {
+t02_other_redirects() {
   local bad="" out rc
-  for pair in "create-tasks:/create-tasks" "ship-tasks:/ship-tasks" "improve:/improve"; do
+  for pair in "create-tasks:/create-tasks" "ship-tasks:/ship-tasks" "improve:/improve" "inspect:/inspect" "harden:/harden"; do
     local name="${pair%%:*}" want="${pair##*:}"
     out="$("$NODE" "$CLI" cuo "$name" 2>&1)"; rc=$?
     printf '%s' "$out" | grep -q "$want" || bad="$bad missing-$want"
     [ "$rc" -eq 0 ] || bad="$bad $name-exit-$rc"
   done
   if [ -z "$bad" ]; then
-    ok t02_other_three_redirects
+    ok t02_other_redirects
   else
-    fail t02_other_three_redirects "$bad"
+    fail t02_other_redirects "$bad"
   fi
 }
 
 t03_bare_invocation_lists_and_exits_0() {
   local out rc bad=""
   out="$("$NODE" "$CLI" cuo 2>&1)"; rc=$?
-  for n in plan create-tasks ship-tasks improve; do
+  for n in plan create-tasks ship-tasks improve inspect harden; do
     printf '%s' "$out" | grep -qw "$n" || bad="$bad missing-$n"
   done
   [ "$rc" -eq 0 ] || bad="$bad exit-$rc"
@@ -64,7 +64,7 @@ t03_bare_invocation_lists_and_exits_0() {
 t04_unrecognised_name_lists_and_exits_2() {
   local out rc bad=""
   out="$("$NODE" "$CLI" cuo nonexistent-workflow 2>&1)"; rc=$?
-  for n in plan create-tasks ship-tasks improve; do
+  for n in plan create-tasks ship-tasks improve inspect harden; do
     printf '%s' "$out" | grep -qw "$n" || bad="$bad missing-$n"
   done
   [ "$rc" -eq 2 ] || bad="$bad exit-$rc-want-2"
@@ -93,7 +93,7 @@ EOF
   rm -f "$TMP/python3.marker" "$TMP/bash.marker"
   # Absolute node; PATH only has tripwires so a spawn would hit them.
   local node_dir; node_dir="$(dirname "$NODE")"
-  for name in plan create-tasks ship-tasks improve; do
+  for name in plan create-tasks ship-tasks improve inspect harden; do
     PATH="$stub:$node_dir" "$NODE" "$CLI" cuo "$name" >/dev/null 2>&1 || true
   done
   if [ ! -f "$TMP/python3.marker" ] && [ ! -f "$TMP/bash.marker" ]; then
@@ -155,7 +155,7 @@ t06_docs_describe_as_redirect_and_count_correct() {
 }
 
 t01_plan_redirect_and_recognition
-t02_other_three_redirects
+t02_other_redirects
 t03_bare_invocation_lists_and_exits_0
 t04_unrecognised_name_lists_and_exits_2
 t05_no_subprocess_spawned
