@@ -197,6 +197,10 @@ postmortem-audit                            # SDP 14
 decommissioning-author                      # SDP 14
 decommissioning-audit                       # SDP 14
 workflow-improver                # outer loop: propose skill amendments from run evidence (TASK-IMP-110)
+inspection-report-author         # inspect→harden chain (TASK-IMP-147)
+inspection-report-audit          # inspect→harden chain (TASK-IMP-147)
+harden-record-author             # inspect→harden chain (TASK-IMP-147)
+harden-record-audit              # inspect→harden chain (TASK-IMP-147)
 VENDORED_SKILLS
 )"
 vendored_skills=0

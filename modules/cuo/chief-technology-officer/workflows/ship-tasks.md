@@ -175,6 +175,12 @@ Gate profile by class:
 
 Everything else (selection from BACKLOG.md, one task with a commit per phase, the two human gates, route-back on failure) is identical to a product task.
 
+### Not `/harden`
+
+Inspection remediation is a different command chain: `/inspect` → `inspection-report-author` / `-audit` → `/harden` → `harden-record-author` / `-audit`. That path consumes a lint-clean `inspection-report@1` and emits a `hardening-record@1`. It is **not** this workflow.
+
+When an operator says "harden a task" or points at a backlog row with `class: improvement`, stay on ship-tasks. When they point at an inspection report or ask to remediate `/inspect` findings, use `/harden` — do not synonymize the two in skill descriptions or status updates.
+
 ## 2. Deep context mapping (steps 1-2)
 
 Before any code is generated, the `repo-context-map` skill scans the repo for existing patterns for dependency injection, state management, error handling; database schemas + type interfaces in the task's declared module; files outside the task's immediate domain that the implementation would touch.

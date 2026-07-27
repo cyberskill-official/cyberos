@@ -809,6 +809,11 @@ install_skill .opencode/skill     opencode       # OpenCode (singular 'skill')
 # to point at (TASK-IMP-094).
 install_skill .claude/skills      claude-code task-author
 install_skill .claude/skills      claude-code task-audit
+# /inspect + /harden chain (TASK-IMP-147)
+install_skill .claude/skills      claude-code inspection-report-author
+install_skill .claude/skills      claude-code inspection-report-audit
+install_skill .claude/skills      claude-code harden-record-author
+install_skill .claude/skills      claude-code harden-record-audit
 # zcode + Hermes load skills from a global home ($HOME); opt in with CYBEROS_GLOBAL_SKILLS=1.
 if [ "${CYBEROS_GLOBAL_SKILLS:-0}" = "1" ]; then
   for gp in "$HOME/.claude/skills" "$HOME/.grok/skills" "$HOME/.hermes/skills" "$HOME/.commandcode/skills"; do
@@ -825,7 +830,7 @@ fi
 # CYBEROS_COPY_SKILLS=1, or the claude-code family filtered off so the counterpart is
 # absent) a plain copy of the payload skill lands instead. Create-if-absent: an entry an
 # operator put there is never touched. (TASK-IMP-094)
-SHARED_CMDS="ship-tasks task-author task-audit"
+SHARED_CMDS="ship-tasks task-author task-audit inspection-report-author inspection-report-audit harden-record-author harden-record-audit"
 if want_agent agents; then
   for _sc in $SHARED_CMDS; do
     [ -d "$CY/plugin/skills/$_sc" ] || continue
