@@ -25,4 +25,8 @@ No live shopass patch apply; no MCP tools; no merge of `/harden` into
 - **Verdict:** APPROVE (operator, 2026-07-27)
 - **Transition:** `ready_to_review` → `ready_to_test`
 - **Evidence:** PRs #177 / #178 / #179 merged to `main` (`b27d84d6`)
-- Final acceptance (`testing` → `done`) still required; agent must not set `done`.
+
+## HITL — final acceptance
+
+- **Verdict:** ACCEPT (operator, 2026-07-27)
+- **Transition:** `ready_to_test` → `done`
