@@ -4,7 +4,7 @@ title: "Ingest inspect-harden — four skills, /inspect+/harden, conductor clari
 template: task@1
 type: improvement
 module: improvement
-status: implementing
+status: ready_to_test
 priority: p1
 author: "@stephencheng"
 department: engineering
