@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "inspection-report@1",
+  "type": "object",
+  "required": ["artefact_path", "ledger_rows", "findings", "next_action", "self_audit"],
+  "additionalProperties": false,
+  "properties": {
+    "artefact_path": { "type": "string" },
+    "target": { "type": "string" },
+    "ref": { "type": "string" },
+    "ledger_rows": { "type": "integer", "enum": [69, 75], "description": "75 for INSPECT-SPEC ≥1.2; 69 remains valid for version-gated 1.0 reports" },
+    "applicable_rows": { "type": "integer", "minimum": 0, "maximum": 75 },
+    "findings": {
+      "type": "object",
+      "required": ["total", "critical", "high", "medium", "low"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "critical": { "type": "integer", "minimum": 0 },
+        "high": { "type": "integer", "minimum": 0 },
+        "medium": { "type": "integer", "minimum": 0 },
+        "low": { "type": "integer", "minimum": 0 },
+        "opportunity": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "strengths": { "type": "integer", "minimum": 0 },
+    "claim_evidence_ratio": { "type": "number", "exclusiveMinimum": 0 },
+    "next_action": {
+      "type": "object",
+      "required": ["finding_id", "fingerprint"],
+      "properties": {
+        "finding_id": { "type": "string", "pattern": "^INS-F-[0-9]{4}$" },
+        "fingerprint": { "type": "string", "minLength": 1 }
+      }
+    },
+    "self_audit": {
+      "type": "object",
+      "description": "G1 through G9, each pass. A fail must never be emitted.",
+      "patternProperties": { "^G[1-9]$": { "type": "string", "const": "pass" } }
+    }
+  }
+}
