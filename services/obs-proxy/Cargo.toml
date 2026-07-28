@@ -18,7 +18,7 @@ path = "src/main.rs"
 
 [dependencies]
 thiserror.workspace = true
-promql-parser = "0.4"
+promql-parser = "0.10"
 jsonwebtoken.workspace = true
 sha2.workspace = true
 serde.workspace = true
