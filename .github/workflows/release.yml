@@ -318,7 +318,7 @@ jobs:
       - name: Build + publish desktop installers
         id: build
         continue-on-error: true
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         with:
           projectPath: apps/desktop
           args: ${{ matrix.os == 'macos-latest' && '--target universal-apple-darwin' || '' }} ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && '--config src-tauri/tauri.updater.conf.json' || '' }}
@@ -331,7 +331,7 @@ jobs:
       # its assets, so re-running is safe. If this attempt also fails, the job fails (no continue-on-error).
       - name: Retry desktop build once (transient failure)
         if: steps.build.outcome == 'failure'
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         with:
           projectPath: apps/desktop
           args: ${{ matrix.os == 'macos-latest' && '--target universal-apple-darwin' || '' }} ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && '--config src-tauri/tauri.updater.conf.json' || '' }}
