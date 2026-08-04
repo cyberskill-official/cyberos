@@ -318,7 +318,7 @@ jobs:
       - name: Build + publish desktop installers
         id: build
         continue-on-error: true
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         with:
           projectPath: apps/desktop
           args: ${{ matrix.os == 'macos-latest' && '--target universal-apple-darwin' || '' }} ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && '--config src-tauri/tauri.updater.conf.json' || '' }}
@@ -331,7 +331,7 @@ jobs:
       # its assets, so re-running is safe. If this attempt also fails, the job fails (no continue-on-error).
       - name: Retry desktop build once (transient failure)
         if: steps.build.outcome == 'failure'
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         with:
           projectPath: apps/desktop
           args: ${{ matrix.os == 'macos-latest' && '--target universal-apple-darwin' || '' }} ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && '--config src-tauri/tauri.updater.conf.json' || '' }}
@@ -448,7 +448,7 @@ jobs:
         with:
           package-manager-cache: false
           node-version: 24
-      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with: { distribution: temurin, java-version: 21 }
       # versionName + versionCode were hardcoded ("1.0" / 1). Play REJECTS any upload whose versionCode it
       # has already seen, so publishing could never work twice. The stamper writes versionName from the
