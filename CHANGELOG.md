@@ -17,6 +17,15 @@ This is the repo-level changelog for CyberOS. For module-specific changelogs, se
 ### Fixed
 - SKILL-202 acceptance criteria and benchmark gates G7/G8 now cite the live `scripts/tests/test_skill_stub_lint.sh` suite; added coverage for the TASK-CUO-209 NFR delist, 20-skill untrusted-input backport, full pair-parity SCOPE and loud workflow degradation (TASK-IMP-145).
 
+## [1.14.0] - 2026-08-06
+
+Added
+- add fin_login_attempts for durable login rate limiting
+- least-privilege database role for the finance ledger (TASK-DATA-103)
+
+Fixed
+- stop the secret gate scanning files git cannot track
+
 ## [1.13.0] - 2026-07-27
 
 Added
