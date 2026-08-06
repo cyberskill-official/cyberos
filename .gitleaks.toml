@@ -20,6 +20,29 @@ paths = [
   # Derived/gitignored build outputs (payload + docs site copies of allowlisted sources).
   # Unanchored: gitleaks may report absolute paths.
   '''dist/''',
+  # --- Gitignored working-tree content (2026-08-06) ---
+  #
+  # check-secrets.sh runs `gitleaks dir` over the whole working tree, which
+  # includes paths git will never track. That produced 811 findings and blocked
+  # every push, making the gate unusable rather than strict - a gate that always
+  # fails teaches people to bypass it.
+  #
+  # Verified before adding each entry: `git ls-files` reports ZERO of the 811
+  # findings in a tracked file, and `git check-ignore` confirms every path below
+  # is gitignored, so nothing here can reach a commit.
+  #
+  # These do NOT relax scanning of anything git can track. If one of these paths
+  # ever stops being gitignored, remove its entry - the scanner should see it.
+  '''playground/''',            # 799 findings: vendored third-party scratch repos
+  # Anchored as (^|/) rather than ^ on purpose: check-secrets.sh invokes gitleaks
+  # with an ABSOLUTE root, so paths are reported as /Users/.../cyberos/.env and a
+  # leading ^ never matches. Written as ^\.env$ first and it silently did nothing,
+  # which is worth knowing because the same mistake in an allowlist can equally
+  # hide a real finding. The $ keeps .env.example and .env.local out of it.
+  '''(^|/)\.env$''',            # 2: local environment file
+  '''\.cyberos/''',             # 1: local install state
+  '''deploy/vps/\.env''',       # 2: VPS env files, gitignored
+  '''src-tauri/target/''',      # 5: Rust build artefacts (.rmeta binaries)
   # Planted AWS probe fixtures for TASK-IMP-003 (must stay executable).
   '''tools/install/check-secrets\.sh$''',
   '''tools/install/tests/test_secret_scan\.sh$''',
